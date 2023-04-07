@@ -51,6 +51,7 @@ type ExternalDeviceConn struct {
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 	EventTriggeredHA       bool
 	EnableJumboFrame       bool
+	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
 	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
@@ -82,22 +83,23 @@ type EditExternalDeviceConnDetail struct {
 	EnableEdgeSegmentation bool          `json:"enable_edge_segmentation,omitempty"`
 	Tunnels                []TunnelInfo  `json:"tunnels,omitempty"`
 	ActiveActiveHA         string        `json:"active_active_ha,omitempty"`
-	ManualBGPCidrs         []string      `json:"conn_bgp_manual_advertise_cidrs"`
+	ManualBGPCidrs         []string      `json:"conn_bgp_manual_advertise_cidrs,omitempty"`
 	BackupRemoteGatewayIP  string
 	PreSharedKey           string
 	BackupPreSharedKey     string
-	IkeVer                 string `json:"ike_ver"`
-	PeerVnetId             string `json:"peer_vnet_id"`
-	RemoteLanIP            string `json:"remote_lan_ip"`
-	LocalLanIP             string `json:"local_lan_ip"`
-	BackupRemoteLanIP      string `json:"backup_remote_lan_ip"`
-	BackupLocalLanIP       string `json:"backup_local_lan_ip"`
-	EventTriggeredHA       string `json:"event_triggered_ha"`
-	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
-	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
+	IkeVer                 string `json:"ike_ver,omitempty"`
+	PeerVnetId             string `json:"peer_vnet_id,omitempty"`
+	RemoteLanIP            string `json:"remote_lan_ip,omitempty"`
+	LocalLanIP             string `json:"local_lan_ip,omitempty"`
+	BackupRemoteLanIP      string `json:"backup_remote_lan_ip,omitempty"`
+	BackupLocalLanIP       string `json:"backup_local_lan_ip,omitempty"`
+	EventTriggeredHA       string `json:"event_triggered_ha,omitempty"`
+	Phase1LocalIdentifier  string `json:"ph1_identifier,omitempty"`
+	Phase1RemoteIdentifier string `json:"phase1_remote_id,omitempty"`
+	PrependAsPath          string `json:"conn_bgp_prepend_as_path,omitempty"`
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
-	WanUnderlay            bool   `json:"wan_underlay"`
-	RemoteCloudType        string `json:"remote_cloud_type"`
+	WanUnderlay            bool   `json:"wan_underlay,omitempty"`
+	RemoteCloudType        string `json:"remote_cloud_type,omitempty"`
 }
 
 type EditBgpMd5Key struct {
@@ -299,6 +301,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
 		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
+		externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
 
 		return externalDeviceConn, nil
 	}

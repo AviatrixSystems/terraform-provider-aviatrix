@@ -401,6 +401,13 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup remote remote gateway IP.",
 			},
+			"phase1_local_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public_ip",
+				ValidateFunc: validation.StringInSlice([]string{"public_ip", "private_ip"}, false),
+				Description:  "By default, gateway’s public IP is configured as the Local Identifier.",
+			},
 			"phase1_remote_identifier": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -815,6 +822,20 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if phase1LocalIdentifier, ok := d.GetOk("phase1_local_identifier"); ok {
+		s2c := &goaviatrix.EditSite2Cloud{
+			VpcID:    d.Get("vpc_id").(string),
+			ConnName: d.Get("connection_name").(string),
+		}
+		if phase1LocalIdentifier == "private_ip" {
+			s2c.Phase1LocalIdentifier = "private_ip"
+			err = client.EditSite2CloudPhase1LocalIdentifier(s2c)
+			if err != nil {
+				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %v", s2c.ConnName, err)
+			}
+		}
+	}
+
 	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 }
 
@@ -882,6 +903,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("primary_cloud_gateway_name", s2c.GwName)
 		d.Set("local_tunnel_ip", s2c.LocalTunnelIp)
 		d.Set("remote_tunnel_ip", s2c.RemoteTunnelIp)
+		d.Set("phase1_local_identifier", s2c.Phase1LocalIdentifier)
 
 		if s2c.HAEnabled == "enabled" {
 			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
@@ -1276,6 +1298,18 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			if err != nil {
 				return fmt.Errorf("failed to update backup remote identifier: %s", err)
 			}
+		}
+	}
+
+	if d.HasChange("phase1_local_identifier") {
+		s2c := &goaviatrix.EditSite2Cloud{
+			VpcID:                 d.Get("vpc_id").(string),
+			ConnName:              d.Get("connection_name").(string),
+			Phase1LocalIdentifier: d.Get("phase1_local_identifier").(string),
+		}
+		err := client.EditSite2CloudPhase1LocalIdentifier(s2c)
+		if err != nil {
+			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %v", s2c.ConnName, err)
 		}
 	}
 

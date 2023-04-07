@@ -139,6 +139,10 @@ The following arguments are supported:
 * `enable_ikev2` - (Optional) Switch to enable IKEv2. Valid values: true, false. Default value: false.
 * `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available in provider version 2.17.2+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
+
+-> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R3.1.0+, and a **site2cloud** resource was originally created with a provider version <R3.1.0 with "private_ip" for `phase1_local_identifier`, you must paste "phase1_local_identifier = 'private_ip'" into the corresponding **site2cloud** resource to avoid ‘terraform plan‘ from showing delta.
+
+* `phase1_local_identifier` - (Optional) Phase 1 local identifier. By default, gateway’s public IP is configured as the Local Identifier. Available as of provider version R3.1.0+.
 * `phase1_remote_identifier` - (Optional) List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "abcd"] when HA is enabled. Available as of provider version R2.19+.
 
 ## Attribute Reference
