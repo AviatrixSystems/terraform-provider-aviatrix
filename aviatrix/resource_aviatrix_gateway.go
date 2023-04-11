@@ -1535,6 +1535,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("spot_price", gw.SpotPrice)
 	}
 
+	enableGroGso, err := client.GetGroGsoStatus(gw)
+	if err != nil {
+		return fmt.Errorf("failed to get GRO/GSO status of gateway %s: %v", gw.GwName, err)
+	}
+	d.Set("enable_gro_gso", enableGroGso)
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("peering_ha_availability_domain", "")
 		d.Set("peering_ha_azure_eip_name_resource_group", "")
@@ -1609,12 +1615,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("peering_ha_zone", "")
 		}
 	}
-
-	enableGroGso, err := client.GetGroGsoStatus(gw)
-	if err != nil {
-		return fmt.Errorf("failed to get GRO/GSO status of gateway %s: %v", gw.GwName, err)
-	}
-	d.Set("enable_gro_gso", enableGroGso)
 
 	return nil
 }

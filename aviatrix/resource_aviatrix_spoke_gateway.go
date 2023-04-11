@@ -1618,6 +1618,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("private_mode_subnet_zone", nil)
 	}
 
+	enableGroGso, err := client.GetGroGsoStatus(gw)
+	if err != nil {
+		return fmt.Errorf("failed to get GRO/GSO status of spoke gateway %s: %v", gw.GwName, err)
+	}
+	d.Set("enable_gro_gso", enableGroGso)
+
 	if d.Get("manage_ha_gateway").(bool) {
 		if gw.HaGw.GwSize == "" {
 			d.Set("ha_availability_domain", "")
@@ -1704,12 +1710,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-
-	enableGroGso, err := client.GetGroGsoStatus(gw)
-	if err != nil {
-		return fmt.Errorf("failed to get GRO/GSO status of spoke gateway %s: %v", gw.GwName, err)
-	}
-	d.Set("enable_gro_gso", enableGroGso)
 
 	return nil
 }

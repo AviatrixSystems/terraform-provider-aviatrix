@@ -1897,6 +1897,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("private_mode_subnet_zone", nil)
 	}
 
+	enableGroGso, err := client.GetGroGsoStatus(gw)
+	if err != nil {
+		return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %v", gw.GwName, err)
+	}
+	d.Set("enable_gro_gso", enableGroGso)
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_availability_domain", "")
 		d.Set("ha_azure_eip_name_resource_group", "")
@@ -1986,12 +1992,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
 		}
 	}
-
-	enableGroGso, err := client.GetGroGsoStatus(gw)
-	if err != nil {
-		return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %v", gw.GwName, err)
-	}
-	d.Set("enable_gro_gso", enableGroGso)
 
 	return nil
 }
