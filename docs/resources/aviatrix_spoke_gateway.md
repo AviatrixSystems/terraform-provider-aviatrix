@@ -315,7 +315,10 @@ The following arguments are supported:
 
 ### BGP over LAN
 * `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_spoke_external_device_conn` resource with this Spoke Gateway. Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R3.0.2+.
-* `bgp_lan_interfaces_count` - (Optional) (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure spoke. Default value: 1. Available as of provider version R3.0.2+.
+
+-> **NOTE:** Default value of `bgp_lan_interfaces_count` has been removed as of Aviatrix Terraform Provider R3.1.0. If you are using/upgraded to Aviatrix Terraform Provider R3.1.0+, and a BGP over LAN enabled Azure **spoke_gateway** resource was originally created with a provider version <R3.1.0 with `bgp_lan_interfaces_count` not set, you must paste "bgp_lan_interfaces_count = 1" into the corresponding **spoke_gateway** resource to avoid ‘terraform plan‘ from showing delta.
+
+* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure spoke. Applies on HA Transit as well if enabled. Available as of provider version R3.0.2+.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret providers. Valid values: true, false. Default value: false.
