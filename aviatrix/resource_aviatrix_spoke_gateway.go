@@ -410,7 +410,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"bgp_lan_interfaces_count": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1,
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 				Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
@@ -800,13 +799,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if bgpOverLan && !(goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
 		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
-	bgpLanInterfacesCount := d.Get("bgp_lan_interfaces_count").(int)
-	if bgpLanInterfacesCount != 1 && (!bgpOverLan || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+	bgpLanInterfacesCount, isCountSet := d.GetOk("bgp_lan_interfaces_count")
+	if isCountSet && (!bgpOverLan || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
 		return fmt.Errorf("'bgp_lan_interfaces_count' is only valid for BGP over LAN enabled spoke for Azure (8), AzureGov (32) or AzureChina (2048)")
+	} else if !isCountSet && bgpOverLan && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("please specify 'bgp_lan_interfaces_count' for BGP over LAN enabled Azure spoke: %s", gateway.GwName)
 	}
 	if bgpOverLan {
-		gateway.BgpOverLan = "on"
-		gateway.BgpLanInterfacesCount = bgpLanInterfacesCount
+		gateway.BgpOverLan = true
+		gateway.BgpLanInterfacesCount = bgpLanInterfacesCount.(int)
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
@@ -1410,10 +1411,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_bgp_lan_ip_list", nil)
 	}
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
 	} else {
-		d.Set("bgp_lan_interfaces_count", 1)
+		d.Set("bgp_lan_interfaces_count", nil)
 	}
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
