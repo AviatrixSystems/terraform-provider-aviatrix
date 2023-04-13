@@ -9,7 +9,7 @@
    - **aviatrix_controller_access_allow_list_config**
 
 ### Enhancements:
-1. Added support of space character ``descripton`` in **aviatrix_firewall_policy**
+1. Added support for whitespace characters in **aviatrix_firewall_policy** ``description``
 
 
 ## 3.0.3 (March 24, 2023)
