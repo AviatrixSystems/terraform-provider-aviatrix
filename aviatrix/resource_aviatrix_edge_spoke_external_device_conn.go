@@ -115,6 +115,34 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"AWS", "AZURE"}, false),
 				Description:  "Remote cloud type.",
 			},
+			"ha_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Set as true if there are two external devices.",
+			},
+			"backup_bgp_remote_as_num": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ForceNew:     true,
+				Description:  "Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294.",
+				ValidateFunc: goaviatrix.ValidateASN,
+			},
+			"backup_local_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup Local LAN IP.",
+			},
+			"backup_remote_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Backup Remote LAN IP.",
+			},
 		},
 	}
 }
@@ -130,15 +158,28 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix
 		RemoteLanIP:        d.Get("remote_lan_ip").(string),
 		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
 		RemoteCloudType:    d.Get("remote_cloud_type").(string),
+		BackupLocalLanIP:   d.Get("backup_local_lan_ip").(string),
+		BackupRemoteLanIP:  d.Get("backup_remote_lan_ip").(string),
+	}
+
+	haEnabled := d.Get("ha_enabled").(bool)
+	if haEnabled {
+		externalDeviceConn.HAEnabled = "true"
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
 	if err == nil {
 		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNum
 	}
+
 	bgpRemoteAsNum, err := strconv.Atoi(d.Get("bgp_remote_as_num").(string))
 	if err == nil {
 		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNum
+	}
+
+	backupBgpLocalAsNum, err := strconv.Atoi(d.Get("backup_bgp_remote_as_num").(string))
+	if err == nil {
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
 	}
 
 	return externalDeviceConn
@@ -148,6 +189,23 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
+
+	if externalDeviceConn.HAEnabled == "true" {
+		if externalDeviceConn.BackupRemoteLanIP == "" {
+			return diag.Errorf("ha is enabled and 'tunnel_protocol' = 'LAN', please specify 'backup_remote_lan_ip'")
+		}
+
+		if externalDeviceConn.BackupBgpRemoteAsNum == 0 {
+			return diag.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
+		}
+	} else {
+		if externalDeviceConn.BackupRemoteLanIP != "" || externalDeviceConn.BackupLocalLanIP != "" {
+			return diag.Errorf("ha is not enabled, please set 'backup_remote_lan_ip' and 'backup_local_lan_ip' to empty")
+		}
+		if externalDeviceConn.BackupBgpRemoteAsNum != 0 {
+			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
+		}
+	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 	flag := false
@@ -221,12 +279,28 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	d.Set("gw_name", conn.GwName)
 	d.Set("connection_type", conn.ConnectionType)
 	d.Set("tunnel_protocol", conn.TunnelProtocol)
-	d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
-	d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	d.Set("local_lan_ip", conn.LocalLanIP)
 	d.Set("remote_lan_ip", conn.RemoteLanIP)
 	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
 	d.Set("remote_cloud_type", conn.RemoteCloudType)
+
+	if conn.BgpLocalAsNum != 0 {
+		d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
+	}
+	if conn.BgpRemoteAsNum != 0 {
+		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
+	}
+	if conn.BackupBgpRemoteAsNum != 0 {
+		d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
+	}
+
+	if conn.HAEnabled == "enabled" {
+		d.Set("ha_enabled", true)
+		d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
+		d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+	} else {
+		d.Set("ha_enabled", false)
+	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil

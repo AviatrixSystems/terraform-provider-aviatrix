@@ -48,6 +48,10 @@ The following arguments are supported:
 * `remote_cloud_type` - (Optional) Remote cloud type. Valid values: "AWS", "AZURE".
 * `number_of_retries` - (Optional) Number of retries. Default value: 0.
 * `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
+* `ha_enabled` - (Optional) Set as true if there are two external devices.
+* `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
+* `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for HA BGP over LAN connection.
+* `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required if HA enabled for 'bgp' connection.
 
 ## Import
 
