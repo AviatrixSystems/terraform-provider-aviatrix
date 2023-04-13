@@ -142,20 +142,6 @@ func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(edgeCSPHaName)
-
-	//gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
-	//	GwName: edgeCSPHaName,
-	//}
-
-	//if len(edgeCSPHa.InterfaceList) != 0 {
-	//	gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
-	//
-	//	err = client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
-	//	if err != nil {
-	//		return diag.Errorf("could not config WAN/LAN interfaces after Edge CSP HA creation: %v", err)
-	//	}
-	//}
-
 	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
 }
 

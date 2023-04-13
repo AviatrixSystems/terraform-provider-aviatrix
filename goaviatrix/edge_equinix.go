@@ -39,16 +39,13 @@ type EdgeEquinix struct {
 	RxQueueSize                        string `json:"rx_queue_size"`
 	State                              string `json:"vpc_state"`
 	NoProgressBar                      bool   `json:"no_progress_bar,omitempty"`
-	//WanInterface                       string `json:"wan_ifname"`
-	//LanInterface                       string `json:"lan_ifname"`
-	//MgmtInterface                      string `json:"mgmt_ifname"`
-	InterfaceList               []*EdgeEquinixInterface
-	Interfaces                  string `json:"interfaces"`
-	VlanList                    []*EdgeEquinixVlan
-	DnsProfileName              string `json:"dns_profile_name"`
-	EnableSingleIpSnat          bool
-	EnableAutoAdvertiseLanCidrs bool
-	LanInterfaceIpPrefix        string
+	InterfaceList                      []*EdgeEquinixInterface
+	Interfaces                         string `json:"interfaces"`
+	VlanList                           []*EdgeEquinixVlan
+	DnsProfileName                     string `json:"dns_profile_name"`
+	EnableSingleIpSnat                 bool
+	EnableAutoAdvertiseLanCidrs        bool
+	LanInterfaceIpPrefix               string
 }
 
 type EdgeEquinixInterface struct {
@@ -96,29 +93,26 @@ type EdgeEquinixResp struct {
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string   `json:"prepend_as_path"`
-	IncludeCidrList                    []string `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
-	BgpPollingTime                     int      `json:"bgp_polling_time"`
-	BgpHoldTime                        int      `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool     `json:"jumbo_frame"`
-	Latitude                           float64  `json:"latitude"`
-	Longitude                          float64  `json:"longitude"`
-	WanPublicIp                        string   `json:"public_ip"`
-	PrivateIP                          string   `json:"private_ip"`
-	RxQueueSize                        string   `json:"rx_queue_size"`
-	State                              string   `json:"vpc_state"`
-	//WanInterface                       []string     `json:"edge_csp_wan_ifname"`
-	//LanInterface                       []string     `json:"edge_csp_lan_ifname"`
-	//MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
-	InterfaceList               []*Interface `json:"interfaces"`
-	DnsProfileName              string       `json:"dns_profile_name"`
-	SingleIpSnat                bool         `json:"nat_enabled"`
-	EnableAutoAdvertiseLanCidrs bool         `json:"auto_advertise_lan_cidrs"`
+	PrependAsPathReturn                string       `json:"prepend_as_path"`
+	IncludeCidrList                    []string     `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool         `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string     `json:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string     `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool         `json:"preserve_as_path"`
+	BgpPollingTime                     int          `json:"bgp_polling_time"`
+	BgpHoldTime                        int          `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool         `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool         `json:"jumbo_frame"`
+	Latitude                           float64      `json:"latitude"`
+	Longitude                          float64      `json:"longitude"`
+	WanPublicIp                        string       `json:"public_ip"`
+	PrivateIP                          string       `json:"private_ip"`
+	RxQueueSize                        string       `json:"rx_queue_size"`
+	State                              string       `json:"vpc_state"`
+	InterfaceList                      []*Interface `json:"interfaces"`
+	DnsProfileName                     string       `json:"dns_profile_name"`
+	SingleIpSnat                       bool         `json:"nat_enabled"`
+	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
 }
 
 type EdgeEquinixListResp struct {

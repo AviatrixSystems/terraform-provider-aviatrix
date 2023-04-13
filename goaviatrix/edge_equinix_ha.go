@@ -12,22 +12,15 @@ type EdgeEquinixHa struct {
 	CID                 string `json:"CID"`
 	PrimaryGwName       string `json:"primary_gw_name"`
 	ZtpFileDownloadPath string
-	//ComputeNodeUuid           string `json:"compute_node_uuid"`
-	//Dhcp                      bool   `json:"dhcp,omitempty"`
-	//ManagementInterfaceConfig string
-	//LanInterfaceIpPrefix      string `json:"lan_ip"`
-	InterfaceList []*EdgeEquinixInterface
-	Interfaces    string `json:"interfaces"`
-	NoProgressBar bool   `json:"no_progress_bar,omitempty"`
+	InterfaceList       []*EdgeEquinixInterface
+	Interfaces          string `json:"interfaces"`
+	NoProgressBar       bool   `json:"no_progress_bar,omitempty"`
 }
 
 type EdgeEquinixHaResp struct {
-	AccountName   string `json:"account_name"`
-	PrimaryGwName string `json:"primary_gw_name"`
-	GwName        string `json:"gw_name"`
-	//Dhcp                 bool         `json:"dhcp"`
-	//ComputeNodeUuid      string       `json:"edge_csp_compute_node_uuid"`
-	//LanInterfaceIpPrefix string       `json:"lan_ip"`
+	AccountName   string                  `json:"account_name"`
+	PrimaryGwName string                  `json:"primary_gw_name"`
+	GwName        string                  `json:"gw_name"`
 	InterfaceList []*EdgeEquinixInterface `json:"interfaces"`
 }
 

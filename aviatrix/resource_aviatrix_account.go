@@ -354,6 +354,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"edge_equinix_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Edge Equinix username.",
 			},
 			"aws_role_app": {
@@ -1040,15 +1041,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	var edgeEquinixAccount *goaviatrix.EdgeEquinixAccount
-	if account.CloudType == goaviatrix.EDGEEQUINIX {
-		edgeEquinixAccount = &goaviatrix.EdgeEquinixAccount{
-			AccountName:         d.Get("account_name").(string),
-			CloudType:           d.Get("cloud_type").(int),
-			EdgeEquinixUsername: d.Get("edge_equinix_username").(string),
-		}
-	}
-
 	awsIam := d.Get("aws_iam").(bool)
 	account.AwsIam = strconv.FormatBool(awsIam)
 
@@ -1235,13 +1227,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			err := client.UpdateEdgeCSPAccount(edgeCSPAccount)
 			if err != nil {
 				return diag.Errorf("failed to update Edge CSP Account: %s", err)
-			}
-		}
-	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
-		if d.HasChange("edge_equinix_username") {
-			err := client.UpdateEdgeEquinixAccount(edgeEquinixAccount)
-			if err != nil {
-				return diag.Errorf("failed to update Edge Equinix Account: %s", err)
 			}
 		}
 	}
