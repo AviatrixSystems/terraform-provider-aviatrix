@@ -1,4 +1,4 @@
-## 3.0.4 (Unreleased)
+## 3.0.5 (Unreleased)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1724**
 - Supported Terraform version: **v1.x**
@@ -7,6 +7,12 @@
 #### Settings
 1. Implemented a new resource to support Controller Security Group Management:
    - **aviatrix_controller_access_allow_list_config**
+
+
+## 3.0.4 (April 13, 2023)
+### Notes:
+- Supported Controller version: **UserConnect-7.0.1724**
+- Supported Terraform version: **v1.x**
 
 ### Enhancements:
 1. Added support for whitespace characters in **aviatrix_firewall_policy** ``description``
