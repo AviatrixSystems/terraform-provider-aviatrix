@@ -152,6 +152,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 | aviatrix_spoke_gateway_subnet_group  | SKIP_SPOKE_GATEWAY_SUBNET_GROUP    | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 | aviatrix_spoke_transit_attachment    | SKIP_SPOKE_TRANSIT_ATTACHMENT      | aviatrix_spoke_gateway + aviatrix_transit_gateway                              |
+| aviatrix_symmetric_routing_config    | SKIP_SYMMETRIC_ROUTING_CONFIG      | AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)                     |
 | aviatrix_traffic_classifier          | SKIP_TRAFFIC_CLASSIFIER            | N/A                                                                            |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
 | aviatrix_transit_external_device_conn| SKIP_TRANSIT_EXTERNAL_DEVICE_CONN  | aviatrix_account + aviatrix_transit_gateway                                    |
