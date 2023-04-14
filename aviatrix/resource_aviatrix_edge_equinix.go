@@ -196,42 +196,6 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				Computed:    true,
 				Description: "State of Edge as a Spoke.",
 			},
-			//"wan_interface_names": {
-			//	Type:        schema.TypeList,
-			//	Optional:    true,
-			//	ForceNew:    true,
-			//	Description: "List of WAN interface names.",
-			//	DefaultFunc: func() (any, error) {
-			//		return []string{"eth0"}, nil
-			//	},
-			//	Elem: &schema.Schema{
-			//		Type: schema.TypeString,
-			//	},
-			//},
-			//"lan_interface_names": {
-			//	Type:        schema.TypeList,
-			//	Optional:    true,
-			//	ForceNew:    true,
-			//	Description: "List of LAN interface names.",
-			//	DefaultFunc: func() (any, error) {
-			//		return []string{"eth1"}, nil
-			//	},
-			//	Elem: &schema.Schema{
-			//		Type: schema.TypeString,
-			//	},
-			//},
-			//"management_interface_names": {
-			//	Type:        schema.TypeList,
-			//	Optional:    true,
-			//	ForceNew:    true,
-			//	Description: "List of management interface names.",
-			//	DefaultFunc: func() (any, error) {
-			//		return []string{"eth2"}, nil
-			//	},
-			//	Elem: &schema.Schema{
-			//		Type: schema.TypeString,
-			//	},
-			//},
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -397,12 +361,9 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		//WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
-		//LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
-		//MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
-		DnsProfileName:              d.Get("dns_profile_name").(string),
-		EnableSingleIpSnat:          d.Get("enable_single_ip_snat").(bool),
-		EnableAutoAdvertiseLanCidrs: d.Get("enable_auto_advertise_lan_cidrs").(bool),
+		DnsProfileName:                     d.Get("dns_profile_name").(string),
+		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -685,9 +646,6 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("rx_queue_size", edgeEquinixResp.RxQueueSize)
 	d.Set("state", edgeEquinixResp.State)
-	//d.Set("wan_interface_names", edgeEquinixResp.WanInterface)
-	//d.Set("lan_interface_names", edgeEquinixResp.LanInterface)
-	//d.Set("management_interface_names", edgeEquinixResp.MgmtInterface)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
