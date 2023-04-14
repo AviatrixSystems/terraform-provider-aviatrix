@@ -18,27 +18,10 @@ type EdgeNEODeviceNetwork struct {
 	InterfaceName string `json:"interface,omitempty"`
 	EnableDhcp    bool   `json:"dhcp,omitempty"`
 	GatewayIp     string `json:"gateway,omitempty"`
-	SubnetCidr    string `json:"subnetCIDR,omitempty"`
+	Ipv4Cidr      string `json:"ipv4cidr,omitempty"`
 	DnsServerIp   string `json:"dns,omitempty"`
 	ProxyServerIp string `json:"proxy,omitempty"`
-	Tags          string `json:"tags,omitempty"`
 }
-
-//"interface": "eth1",
-//"dhcp": true,
-//"gateway": "",
-//"subnetCIDR": "",
-//"dns": null,
-//"proxy": "",
-//"tags": null
-//
-//"interface": "eth4",
-//"dhcp": true,
-//"gateway": "",
-//"ipv4cidr": "",
-//"dns": null,
-//"proxy": "",
-//"ntpServer": ""
 
 type EdgeNEODeviceResp struct {
 	AccountName   string                  `json:"account_name"`

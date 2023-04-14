@@ -15,6 +15,7 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixEdgeNEODeviceOnboardingCreate,
 		ReadWithoutTimeout:   resourceAviatrixEdgeNEODeviceOnboardingRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeNEODeviceOnboardingUpdate,
 		DeleteWithoutTimeout: resourceAviatrixEdgeNEODeviceOnboardingDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -24,42 +25,37 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: "Edge CSP account name.",
+				Description: "Edge NEO account name.",
 			},
 			"device_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: "Edge CSP name.",
+				Description: "Device name.",
 			},
 			"serial_number": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: ".",
+				Description: "Serial number.",
 			},
 			"hardware_model": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: ".",
+				Description: "Hardware Model.",
 			},
 			"device_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Edge NEO device ID.",
+				Description: "Device ID.",
 			},
 			"network": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Network configurations.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"interface_name": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Interface name.",
 						},
 						"enable_dhcp": {
@@ -72,10 +68,10 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
-						"subnet_cidr": {
+						"ipv4_cidr": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Subnet CIDR.",
+							Description: "IPV4 CIDR.",
 						},
 						"dns_server_ip": {
 							Type:        schema.TypeString,
@@ -86,11 +82,6 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "Proxy server IP.",
-						},
-						"tags": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Tags.",
 						},
 					},
 				},
@@ -115,10 +106,9 @@ func marshalEdgeNEODeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.Edg
 			InterfaceName: nw1["interface_name"].(string),
 			EnableDhcp:    nw1["enable_dhcp"].(bool),
 			GatewayIp:     nw1["gateway_ip"].(string),
-			SubnetCidr:    nw1["subnet_cidr"].(string),
+			Ipv4Cidr:      nw1["ipv4_cidr"].(string),
 			DnsServerIp:   nw1["dns_server_ip"].(string),
 			ProxyServerIp: nw1["proxy_server_ip"].(string),
-			Tags:          nw1["tags"].(string),
 		}
 
 		edgeNEODevice.Network = append(edgeNEODevice.Network, nw2)
@@ -150,10 +140,6 @@ func resourceAviatrixEdgeNEODeviceOnboardingReadIfRequired(ctx context.Context, 
 	}
 	return nil
 }
-
-//func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	return nil
-//}
 
 func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
@@ -193,10 +179,9 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 		nw1["interface_name"] = nw0.InterfaceName
 		nw1["enable_dhcp"] = nw0.EnableDhcp
 		nw1["gateway_ip"] = nw0.GatewayIp
-		nw1["subnet_cidr"] = nw0.SubnetCidr
+		nw1["ipv4_cidr"] = nw0.Ipv4Cidr
 		nw1["dns_server_ip"] = nw0.DnsServerIp
 		nw1["proxy_server_ip"] = nw0.ProxyServerIp
-		nw1["tags"] = nw0.Tags
 
 		network = append(network, nw1)
 	}
@@ -207,6 +192,27 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 
 	d.SetId(accountName + "~" + deviceName)
 	return nil
+}
+
+func resourceAviatrixEdgeNEODeviceOnboardingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*goaviatrix.Client)
+
+	edgeNEODevice := marshalEdgeNEODeviceOnboardingInput(d)
+
+	if d.HasChanges("account_name", "device_name", "serial_number", "hardware_model") {
+		return diag.Errorf("account_name, device_name, serial_number and hardware_model are not allowed to be updated")
+	}
+
+	d.Partial(true)
+
+	if d.HasChange("network") {
+		if err := client.OnboardEdgeNEODevice(ctx, edgeNEODevice); err != nil {
+			return diag.Errorf("could not update network configurations during Edge NEO device update: %v", err)
+		}
+	}
+
+	d.Partial(false)
+	return resourceAviatrixEdgeNEODeviceOnboardingRead(ctx, d, meta)
 }
 
 func resourceAviatrixEdgeNEODeviceOnboardingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

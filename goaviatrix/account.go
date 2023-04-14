@@ -83,7 +83,6 @@ type Account struct {
 	GroupNames                            string   `form:"groups,omitempty"`
 	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
 	EdgeCSPUsername                       string   `json:"edge_csp_username"`
-	EdgeCSPApiEndpoint                    string   `json:"edge_csp_api_endpoint"`
 }
 
 type EdgeCSPAccount struct {
