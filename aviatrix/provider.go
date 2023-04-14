@@ -148,6 +148,7 @@ func Provider() *schema.Provider {
 			"aviatrix_private_mode_multicloud_endpoint":               resourceAviatrixPrivateModeMulticloudEndpoint(),
 			"aviatrix_proxy_config":                                   resourceAviatrixProxyConfig(),
 			"aviatrix_qos_class":                                      resourceAviatrixQosClass(),
+			"aviatrix_qos_policy":                                     resourceAviatrixQosPolicy(),
 			"aviatrix_rbac_group":                                     resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment":           resourceAviatrixRbacGroupAccessAccountAttachment(),
 			"aviatrix_rbac_group_permission_attachment":               resourceAviatrixRbacGroupPermissionAttachment(),
