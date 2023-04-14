@@ -12,9 +12,24 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.3 (UserConnect-7.0.1601)``
+``Last updated: R3.0.4 (UserConnect-7.0.1724)``
 
 ---
+
+## 3.0.4
+### Notes:
+- Release date: **(13 Apr 2023)**
+- Supported Controller version: **UserConnect-7.0.1724**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Settings
+1. Implemented a new resource to support Controller Security Group Management:
+   - **aviatrix_controller_access_allow_list_config**
+
+### Enhancements:
+1. Added support for whitespace characters in **aviatrix_firewall_policy** ``description``
+
 
 ## 3.0.3
 ### Notes:
