@@ -50,6 +50,7 @@ type EdgeSpoke struct {
 	State                              string  `json:"vpc_state"`
 	InterfaceList                      []*EdgeSpokeInterface
 	Interfaces                         string `json:"interfaces"`
+	AdvertiseLanStaticRouteList        []*AdvertiseLanStaticRoute
 }
 
 type EdgeSpokeInterface struct {
@@ -72,27 +73,36 @@ type EdgeSpokeResp struct {
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string                `json:"prepend_as_path"`
-	IncludeCidrList                    []string              `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool                  `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string              `form:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string              `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool                  `json:"preserve_as_path"`
-	BgpPollingTime                     int                   `json:"bgp_polling_time"`
-	BgpHoldTime                        int                   `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool                  `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool                  `json:"jumbo_frame"`
-	Latitude                           float64               `json:"latitude"`
-	Longitude                          float64               `json:"longitude"`
-	RxQueueSize                        string                `json:"rx_queue_size"`
-	State                              string                `json:"vpc_state"`
-	InterfaceList                      []*EdgeSpokeInterface `json:"interfaces"`
+	PrependAsPathReturn                string                     `json:"prepend_as_path"`
+	IncludeCidrList                    []string                   `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool                       `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string                   `form:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string                   `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool                       `json:"preserve_as_path"`
+	BgpPollingTime                     int                        `json:"bgp_polling_time"`
+	BgpHoldTime                        int                        `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool                       `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool                       `json:"jumbo_frame"`
+	Latitude                           float64                    `json:"latitude"`
+	Longitude                          float64                    `json:"longitude"`
+	RxQueueSize                        string                     `json:"rx_queue_size"`
+	State                              string                     `json:"vpc_state"`
+	InterfaceList                      []*EdgeSpokeInterface      `json:"interfaces"`
+	AdvertiseLanStaticRouteList        []*AdvertiseLanStaticRoute `json:"advertise_lan_static_route_list"`
 }
 
 type EdgeSpokeListResp struct {
 	Return  bool            `json:"return"`
 	Results []EdgeSpokeResp `json:"results"`
 	Reason  string          `json:"reason"`
+}
+
+type AdvertiseLanStaticRoute struct {
+	Cidr    string `json:"cidr"`
+	Nexthop string `json:"nexthop"`
+	Metric  int    `json:"metric"`
+	Dev     string `json:"dev"`
+	Domain  string `json:"domain"`
 }
 
 func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) error {
@@ -243,4 +253,21 @@ func DiffSuppressFuncEdgeSpokeCoordinate(k, old, new string, d *schema.ResourceD
 	o, _ := strconv.ParseFloat(old, 64)
 	n, _ := strconv.ParseFloat(new, 64)
 	return math.Round(o*1000000)/1000000 == math.Round(n*1000000)/1000000
+}
+
+func (c *Client) EditEdgeGatewayAdvertisedCidr(ctx context.Context, edgeSpoke *EdgeSpoke) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_gateway_advertised_cidr",
+		"gateway_name": edgeSpoke.GwName,
+	}
+
+	lanStaticRouteList, err := json.Marshal(edgeSpoke.AdvertiseLanStaticRouteList)
+	if err != nil {
+		return err
+	}
+
+	form["advertise_lan_static_route_list"] = b64.StdEncoding.EncodeToString(lanStaticRouteList)
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
 }

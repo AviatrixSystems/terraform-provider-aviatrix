@@ -237,6 +237,40 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 					},
 				},
 			},
+			"advertise_lan_static_route": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: ".",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: ".",
+						},
+						"next_hop": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: ".",
+						},
+						"metric": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: ".",
+						},
+						"dev": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: ".",
+						},
+						"domain": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: ".",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -282,6 +316,21 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 		}
 
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
+	}
+
+	advertiseLanStaticRoute := d.Get("advertise_lan_static_route").(*schema.Set).List()
+	for _, advertiseLanStaticRoute0 := range advertiseLanStaticRoute {
+		advertiseLanStaticRoute1 := advertiseLanStaticRoute0.(map[string]interface{})
+
+		advertiseLanStaticRoute2 := &goaviatrix.AdvertiseLanStaticRoute{
+			Cidr:    advertiseLanStaticRoute1["cidr"].(string),
+			Nexthop: advertiseLanStaticRoute1["next_hop"].(string),
+			Metric:  advertiseLanStaticRoute1["metric"].(int),
+			Dev:     advertiseLanStaticRoute1["dev"].(string),
+			Domain:  advertiseLanStaticRoute1["domain"].(string),
+		}
+
+		edgeSpoke.AdvertiseLanStaticRouteList = append(edgeSpoke.AdvertiseLanStaticRouteList, advertiseLanStaticRoute2)
 	}
 
 	return edgeSpoke
@@ -428,6 +477,13 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	if len(edgeSpoke.AdvertiseLanStaticRouteList) != 0 {
+		err := client.EditEdgeGatewayAdvertisedCidr(ctx, edgeSpoke)
+		if err != nil {
+			return diag.Errorf("could not set advertise lan static route list after Edge as a Spoke creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeSpokeReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -530,6 +586,23 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 
 	if err = d.Set("interfaces", interfaces); err != nil {
 		return diag.Errorf("failed to set interfaces: %s\n", err)
+	}
+
+	var advertiseLanStaticRoute []map[string]interface{}
+
+	for _, advertiseLanStaticRoute0 := range edgeSpoke.AdvertiseLanStaticRouteList {
+		advertiseLanStaticRoute1 := make(map[string]interface{})
+		advertiseLanStaticRoute1["cidr"] = advertiseLanStaticRoute0.Cidr
+		advertiseLanStaticRoute1["next_hop"] = advertiseLanStaticRoute0.Nexthop
+		advertiseLanStaticRoute1["metric"] = advertiseLanStaticRoute0.Metric
+		advertiseLanStaticRoute1["dev"] = advertiseLanStaticRoute0.Dev
+		advertiseLanStaticRoute1["domain"] = advertiseLanStaticRoute0.Domain
+
+		advertiseLanStaticRoute = append(advertiseLanStaticRoute, advertiseLanStaticRoute1)
+	}
+
+	if err = d.Set("advertise_lan_static_route", advertiseLanStaticRoute); err != nil {
+		return diag.Errorf("failed to set advertise_lan_static_route: %s\n", err)
 	}
 
 	d.SetId(edgeSpoke.GwName)
@@ -705,6 +778,13 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("could not update rx queue size during Edge as a Spoke update: %v", err)
+		}
+	}
+
+	if d.HasChange("advertise_lan_static_route") {
+		err := client.EditEdgeGatewayAdvertisedCidr(ctx, edgeSpoke)
+		if err != nil {
+			return diag.Errorf("could not update advertise lan static route during Edge as a Spoke update: %v", err)
 		}
 	}
 
