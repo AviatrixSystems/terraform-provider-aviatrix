@@ -94,6 +94,14 @@ type EdgeCSPAccount struct {
 	EdgeCSPPassword string `json:"edge_csp_password,omitempty"`
 }
 
+type EdgeNEOAccount struct {
+	CID                string `json:"CID,omitempty"`
+	Action             string `json:"action,omitempty"`
+	AccountName        string `json:"account_name,omitempty"`
+	CloudType          int    `json:"cloud_type,omitempty"`
+	EdgeNEOApiEndpoint string `json:"edge_csp_api_endpoint,omitempty"`
+}
+
 type AccountResult struct {
 	AccountList []Account `json:"account_list"`
 }
@@ -404,4 +412,16 @@ func (c *Client) UpdateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
 	edgeCSPAccount.CID = c.CID
 	edgeCSPAccount.Action = "edit_account_profile"
 	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, BasicCheck)
+}
+
+func (c *Client) CreateEdgeNEOAccount(edgeNEOAccount *EdgeNEOAccount) error {
+	edgeNEOAccount.CID = c.CID
+	edgeNEOAccount.Action = "setup_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeNEOAccount.Action, edgeNEOAccount, DuplicateBasicCheck)
+}
+
+func (c *Client) UpdateEdgeNEOAccount(edgeNEOAccount *EdgeNEOAccount) error {
+	edgeNEOAccount.CID = c.CID
+	edgeNEOAccount.Action = "edit_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeNEOAccount.Action, edgeNEOAccount, BasicCheck)
 }

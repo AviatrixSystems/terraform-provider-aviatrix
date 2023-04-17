@@ -17,6 +17,7 @@ const (
 	AWSTS      = 16384 // AWS Top Secret Region (C2S)
 	AWSS       = 32768 // AWS Secret Region (SC2S)
 	EDGECSP    = 65536
+	EDGENEO    = 262144
 )
 
 // Cloud vendor names
@@ -56,6 +57,7 @@ func GetSupportedClouds() []int {
 		AWSTS,
 		AWSS,
 		EDGECSP,
+		EDGENEO,
 	}
 }
 

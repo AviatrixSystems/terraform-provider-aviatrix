@@ -80,9 +80,9 @@ The following arguments are supported:
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
-* `wan_interface_names` - (Optional) List of WAN interface names. Default value: ["eth0"].
-* `lan_interface_names` - (Optional) List of LAN interface names. Default value: ["eth1"].
-* `management_interface_names` - (Optional) List of management interface names. Default value: ["eth2"].
+* `wan_interface_names` - (Optional) List of WAN interface names.
+* `lan_interface_names` - (Optional) List of LAN interface names.
+* `management_interface_names` - (Optional) List of management interface names.
 * `local_as_number` - (Optional) BGP AS Number to assign to Edge CSP.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend gateway BGP AS_Path field. Valid only when `local_as_number` is set. Example: ["65023", "65023"].
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable learned CIDR approval. Valid values: true, false. Default value: false.

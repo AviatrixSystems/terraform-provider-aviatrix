@@ -491,6 +491,14 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	var edgeNEOAccount *goaviatrix.EdgeNEOAccount
+	if account.CloudType == goaviatrix.EDGENEO {
+		edgeNEOAccount = &goaviatrix.EdgeNEOAccount{
+			AccountName: d.Get("account_name").(string),
+			CloudType:   d.Get("cloud_type").(int),
+		}
+	}
+
 	if _, ok := d.GetOk("rbac_groups"); ok {
 		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("rbac_groups").([]interface{})), ",")
 	}
@@ -776,6 +784,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateAWSSAccount(account)
 	} else if account.CloudType == goaviatrix.EDGECSP {
 		err = client.CreateEdgeCSPAccount(edgeCSPAccount)
+	} else if account.CloudType == goaviatrix.EDGENEO {
+		err = client.CreateEdgeNEOAccount(edgeNEOAccount)
 	} else {
 		err = client.CreateAccount(account)
 	}
