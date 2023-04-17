@@ -379,6 +379,7 @@ The following arguments are supported:
 * `private_mode_lb_vpc_id` - (Optional) VPC ID of Private Mode load balancer. Required when Private Mode is enabled on the Controller. Available in provider version R2.23+.
 * `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
 * `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
+* `enable_globla_vpc` - (Optional) Enable global VPC. Only supported for GCP spoke gateways. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 

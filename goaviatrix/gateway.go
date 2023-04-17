@@ -217,6 +217,7 @@ type Gateway struct {
 	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
+	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
 }
 
 type HaGateway struct {
