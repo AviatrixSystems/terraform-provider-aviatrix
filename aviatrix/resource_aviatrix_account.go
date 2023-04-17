@@ -769,8 +769,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if edgeCSPAccount.EdgeCSPPassword == "" {
 			return diag.Errorf("edge_csp_password is required for Edge CSP")
 		}
+	} else if account.CloudType == goaviatrix.EDGENEO {
+		log.Printf("no check is needed for Edge NEO account")
 	} else {
-		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768) or Edge CSP (65536)")
+		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768), Edge CSP (65536) or Edge NEO (262144)")
 	}
 
 	var err error
