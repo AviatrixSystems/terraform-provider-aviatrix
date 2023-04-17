@@ -64,7 +64,7 @@ resource "aviatrix_edge_equinix" "test" {
 	account_name           = aviatrix_account.test_account.account_name
 	gw_name                = "%s"
 	site_id                = "%s"
-    ztp_file_download_path = "%s"
+	ztp_file_download_path = "%s"
 	
 	interfaces {
 		name          = "eth0"

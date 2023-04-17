@@ -367,44 +367,44 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+	for _, interface0 := range interfaces {
+		interface1 := interface0.(map[string]interface{})
 
-		if2 := &goaviatrix.EdgeEquinixInterface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			Bandwidth:    if1["bandwidth"].(int),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Tag:          if1["tag"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_server_ip"].(string),
-			DnsSecondary: if1["secondary_dns_server_ip"].(string),
-			VrrpState:    if1["enable_vrrp"].(bool),
-			VirtualIp:    if1["vrrp_virtual_ip"].(string),
+		interface2 := &goaviatrix.EdgeEquinixInterface{
+			IfName:       interface1["name"].(string),
+			Type:         interface1["type"].(string),
+			Bandwidth:    interface1["bandwidth"].(int),
+			PublicIp:     interface1["wan_public_ip"].(string),
+			Tag:          interface1["tag"].(string),
+			Dhcp:         interface1["enable_dhcp"].(bool),
+			IpAddr:       interface1["ip_address"].(string),
+			GatewayIp:    interface1["gateway_ip"].(string),
+			DnsPrimary:   interface1["dns_server_ip"].(string),
+			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			VrrpState:    interface1["enable_vrrp"].(bool),
+			VirtualIp:    interface1["vrrp_virtual_ip"].(string),
 		}
 
-		edgeEquinix.InterfaceList = append(edgeEquinix.InterfaceList, if2)
+		edgeEquinix.InterfaceList = append(edgeEquinix.InterfaceList, interface2)
 	}
 
 	vlan := d.Get("vlan").(*schema.Set).List()
-	for _, v0 := range vlan {
-		v1 := v0.(map[string]interface{})
+	for _, vlan0 := range vlan {
+		vlan1 := vlan0.(map[string]interface{})
 
-		v2 := &goaviatrix.EdgeEquinixVlan{
-			ParentInterface: v1["parent_interface_name"].(string),
-			IpAddr:          v1["ip_address"].(string),
-			GatewayIp:       v1["gateway_ip"].(string),
-			PeerIpAddr:      v1["peer_ip_address"].(string),
-			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
-			VirtualIp:       v1["vrrp_virtual_ip"].(string),
-			Tag:             v1["tag"].(string),
+		vlan2 := &goaviatrix.EdgeEquinixVlan{
+			ParentInterface: vlan1["parent_interface_name"].(string),
+			IpAddr:          vlan1["ip_address"].(string),
+			GatewayIp:       vlan1["gateway_ip"].(string),
+			PeerIpAddr:      vlan1["peer_ip_address"].(string),
+			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
+			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
+			Tag:             vlan1["tag"].(string),
 		}
 
-		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
+		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
 
-		edgeEquinix.VlanList = append(edgeEquinix.VlanList, v2)
+		edgeEquinix.VlanList = append(edgeEquinix.VlanList, vlan2)
 	}
 
 	return edgeEquinix
@@ -649,43 +649,43 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	for _, if0 := range edgeEquinixResp.InterfaceList {
-		if1 := make(map[string]interface{})
-		if1["name"] = if0.IfName
-		if1["type"] = if0.Type
-		if1["bandwidth"] = if0.Bandwidth
-		if1["wan_public_ip"] = if0.PublicIp
-		if1["tag"] = if0.Tag
-		if1["enable_dhcp"] = if0.Dhcp
-		if1["ip_address"] = if0.IpAddr
-		if1["gateway_ip"] = if0.GatewayIp
-		if1["dns_server_ip"] = if0.DnsPrimary
-		if1["secondary_dns_server_ip"] = if0.DnsSecondary
-		if1["vrrp_virtual_ip"] = if0.VirtualIp
+	for _, interface0 := range edgeEquinixResp.InterfaceList {
+		interface1 := make(map[string]interface{})
+		interface1["name"] = interface0.IfName
+		interface1["type"] = interface0.Type
+		interface1["bandwidth"] = interface0.Bandwidth
+		interface1["wan_public_ip"] = interface0.PublicIp
+		interface1["tag"] = interface0.Tag
+		interface1["enable_dhcp"] = interface0.Dhcp
+		interface1["ip_address"] = interface0.IpAddr
+		interface1["gateway_ip"] = interface0.GatewayIp
+		interface1["dns_server_ip"] = interface0.DnsPrimary
+		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
+		interface1["vrrp_virtual_ip"] = interface0.VirtualIp
 
-		if if0.Type == "LAN" {
-			if1["enable_vrrp"] = if0.VrrpState
+		if interface0.Type == "LAN" {
+			interface1["enable_vrrp"] = interface0.VrrpState
 		}
 
-		if if0.Type == "LAN" && if0.SubInterfaces != nil {
-			for _, v0 := range if0.SubInterfaces {
-				v1 := make(map[string]interface{})
-				v1["parent_interface_name"] = v0.ParentInterface
-				v1["ip_address"] = v0.IpAddr
-				v1["gateway_ip"] = v0.GatewayIp
-				v1["peer_ip_address"] = v0.PeerIpAddr
-				v1["peer_gateway_ip"] = v0.PeerGatewayIp
-				v1["vrrp_virtual_ip"] = v0.VirtualIp
-				v1["tag"] = v0.Tag
+		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
+			for _, vlan0 := range interface0.SubInterfaces {
+				vlan1 := make(map[string]interface{})
+				vlan1["parent_interface_name"] = vlan0.ParentInterface
+				vlan1["ip_address"] = vlan0.IpAddr
+				vlan1["gateway_ip"] = vlan0.GatewayIp
+				vlan1["peer_ip_address"] = vlan0.PeerIpAddr
+				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIp
+				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIp
+				vlan1["tag"] = vlan0.Tag
 
-				vlanId, _ := strconv.Atoi(v0.VlanId)
-				v1["vlan_id"] = vlanId
+				vlanId, _ := strconv.Atoi(vlan0.VlanId)
+				vlan1["vlan_id"] = vlanId
 
-				vlan = append(vlan, v1)
+				vlan = append(vlan, vlan1)
 			}
 		}
 
-		interfaces = append(interfaces, if1)
+		interfaces = append(interfaces, interface1)
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {

@@ -3,7 +3,7 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_equinix_csp_ha"
 description: |-
-  Creates Aviatrix Edge Equinix HA
+  Creates an Aviatrix Edge Equinix HA
 ---
 
 # aviatrix_edge_equinix_ha

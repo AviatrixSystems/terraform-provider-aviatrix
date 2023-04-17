@@ -113,23 +113,23 @@ func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+	for _, interface0 := range interfaces {
+		interface1 := interface0.(map[string]interface{})
 
-		if2 := &goaviatrix.EdgeEquinixInterface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			Bandwidth:    if1["bandwidth"].(int),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Tag:          if1["tag"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_server_ip"].(string),
-			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+		interface2 := &goaviatrix.EdgeEquinixInterface{
+			IfName:       interface1["name"].(string),
+			Type:         interface1["type"].(string),
+			Bandwidth:    interface1["bandwidth"].(int),
+			PublicIp:     interface1["wan_public_ip"].(string),
+			Tag:          interface1["tag"].(string),
+			Dhcp:         interface1["enable_dhcp"].(bool),
+			IpAddr:       interface1["ip_address"].(string),
+			GatewayIp:    interface1["gateway_ip"].(string),
+			DnsPrimary:   interface1["dns_server_ip"].(string),
+			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
 		}
 
-		edgeEquinixHa.InterfaceList = append(edgeEquinixHa.InterfaceList, if2)
+		edgeEquinixHa.InterfaceList = append(edgeEquinixHa.InterfaceList, interface2)
 	}
 
 	return edgeEquinixHa
@@ -173,20 +173,20 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("account_name", edgeEquinixHaResp.AccountName)
 
 	var interfaces []map[string]interface{}
-	for _, if0 := range edgeEquinixHaResp.InterfaceList {
-		if1 := make(map[string]interface{})
-		if1["name"] = if0.IfName
-		if1["type"] = if0.Type
-		if1["bandwidth"] = if0.Bandwidth
-		if1["wan_public_ip"] = if0.PublicIp
-		if1["tag"] = if0.Tag
-		if1["enable_dhcp"] = if0.Dhcp
-		if1["ip_address"] = if0.IpAddr
-		if1["gateway_ip"] = if0.GatewayIp
-		if1["dns_server_ip"] = if0.DnsPrimary
-		if1["secondary_dns_server_ip"] = if0.DnsSecondary
+	for _, interface0 := range edgeEquinixHaResp.InterfaceList {
+		interface1 := make(map[string]interface{})
+		interface1["name"] = interface0.IfName
+		interface1["type"] = interface0.Type
+		interface1["bandwidth"] = interface0.Bandwidth
+		interface1["wan_public_ip"] = interface0.PublicIp
+		interface1["tag"] = interface0.Tag
+		interface1["enable_dhcp"] = interface0.Dhcp
+		interface1["ip_address"] = interface0.IpAddr
+		interface1["gateway_ip"] = interface0.GatewayIp
+		interface1["dns_server_ip"] = interface0.DnsPrimary
+		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
 
-		interfaces = append(interfaces, if1)
+		interfaces = append(interfaces, interface1)
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
