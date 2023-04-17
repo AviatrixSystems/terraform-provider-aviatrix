@@ -19,6 +19,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnCreate,
 		ReadWithoutTimeout:   resourceAviatrixEdgeSpokeExternalDeviceConnRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnUpdate,
 		DeleteWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -143,6 +144,16 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup Remote LAN IP.",
 			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
+			},
 		},
 	}
 }
@@ -232,6 +243,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
+	if _, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+
+		err = client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
+		if err != nil {
+			return diag.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -302,8 +325,44 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		d.Set("ha_enabled", false)
 	}
 
+	if conn.PrependAsPath != "" {
+		var prependAsPath []string
+		for _, str := range strings.Split(conn.PrependAsPath, " ") {
+			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+		}
+
+		err = d.Set("prepend_as_path", prependAsPath)
+		if err != nil {
+			return diag.Errorf("could not set value for prepend_as_path: %v", err)
+		}
+	}
+
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil
+}
+
+func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*goaviatrix.Client)
+	d.Partial(true)
+
+	if d.HasChange("prepend_as_path") {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			ConnectionName: d.Get("connection_name").(string),
+			GwName:         d.Get("gw_name").(string),
+		}
+
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		err := client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
+		if err != nil {
+			return diag.Errorf("could not update prepend_as_path: %v", err)
+		}
+	}
+
+	d.Partial(false)
+	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
