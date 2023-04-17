@@ -99,19 +99,19 @@ func marshalEdgeNEODeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.Edg
 	}
 
 	network := d.Get("network").(*schema.Set).List()
-	for _, nw0 := range network {
-		nw1 := nw0.(map[string]interface{})
+	for _, network0 := range network {
+		network1 := network0.(map[string]interface{})
 
-		nw2 := &goaviatrix.EdgeNEODeviceNetwork{
-			InterfaceName: nw1["interface_name"].(string),
-			EnableDhcp:    nw1["enable_dhcp"].(bool),
-			GatewayIp:     nw1["gateway_ip"].(string),
-			Ipv4Cidr:      nw1["ipv4_cidr"].(string),
-			DnsServerIp:   nw1["dns_server_ip"].(string),
-			ProxyServerIp: nw1["proxy_server_ip"].(string),
+		network2 := &goaviatrix.EdgeNEODeviceNetwork{
+			InterfaceName: network1["interface_name"].(string),
+			EnableDhcp:    network1["enable_dhcp"].(bool),
+			GatewayIp:     network1["gateway_ip"].(string),
+			Ipv4Cidr:      network1["ipv4_cidr"].(string),
+			DnsServerIp:   network1["dns_server_ip"].(string),
+			ProxyServerIp: network1["proxy_server_ip"].(string),
 		}
 
-		edgeNEODevice.Network = append(edgeNEODevice.Network, nw2)
+		edgeNEODevice.Network = append(edgeNEODevice.Network, network2)
 	}
 
 	return edgeNEODevice
@@ -174,16 +174,16 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 	d.Set("hardware_model", edgeNEODeviceResp.HardwareModel)
 
 	var network []map[string]interface{}
-	for _, nw0 := range edgeNEODeviceResp.Network {
-		nw1 := make(map[string]interface{})
-		nw1["interface_name"] = nw0.InterfaceName
-		nw1["enable_dhcp"] = nw0.EnableDhcp
-		nw1["gateway_ip"] = nw0.GatewayIp
-		nw1["ipv4_cidr"] = nw0.Ipv4Cidr
-		nw1["dns_server_ip"] = nw0.DnsServerIp
-		nw1["proxy_server_ip"] = nw0.ProxyServerIp
+	for _, network0 := range edgeNEODeviceResp.Network {
+		network1 := make(map[string]interface{})
+		network1["interface_name"] = network0.InterfaceName
+		network1["enable_dhcp"] = network0.EnableDhcp
+		network1["gateway_ip"] = network0.GatewayIp
+		network1["ipv4_cidr"] = network0.Ipv4Cidr
+		network1["dns_server_ip"] = network0.DnsServerIp
+		network1["proxy_server_ip"] = network0.ProxyServerIp
 
-		network = append(network, nw1)
+		network = append(network, network1)
 	}
 
 	if err = d.Set("network", network); err != nil {

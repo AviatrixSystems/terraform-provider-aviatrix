@@ -109,23 +109,23 @@ func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+	for _, interface0 := range interfaces {
+		interface1 := interface0.(map[string]interface{})
 
-		if2 := &goaviatrix.EdgeNEOInterface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			Bandwidth:    if1["bandwidth"].(int),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Tag:          if1["tag"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_server_ip"].(string),
-			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+		interface2 := &goaviatrix.EdgeNEOInterface{
+			IfName:       interface1["name"].(string),
+			Type:         interface1["type"].(string),
+			Bandwidth:    interface1["bandwidth"].(int),
+			PublicIp:     interface1["wan_public_ip"].(string),
+			Tag:          interface1["tag"].(string),
+			Dhcp:         interface1["enable_dhcp"].(bool),
+			IpAddr:       interface1["ip_address"].(string),
+			GatewayIp:    interface1["gateway_ip"].(string),
+			DnsPrimary:   interface1["dns_server_ip"].(string),
+			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
 		}
 
-		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, if2)
+		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, interface2)
 	}
 
 	return edgeNEOHa
