@@ -597,7 +597,8 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"enable_global_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable global VPC.",
+				Default:     false,
+				Description: "Set to true to enable global VPC. Only supported for GCP.",
 			},
 		},
 	}
@@ -1834,7 +1835,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("enable_global_vpc") && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
+		return fmt.Errorf("global vpc can only be enabled for GCP")
 	}
 
 	if d.HasChange("enable_preserve_as_path") {
