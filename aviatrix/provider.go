@@ -139,6 +139,8 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
+			"aviatrix_global_vpc_excluded_instance":                   resourceAviatrixGlobalVpcExcludedInstance(),
+			"aviatrix_global_vpc_tagging_settings":                    resourceAviatrixGlobalVpcTaggingSettings(),
 			"aviatrix_link_hierarchy":                                 resourceAviatrixLinkHierarchy(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
