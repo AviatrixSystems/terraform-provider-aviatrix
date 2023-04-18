@@ -154,6 +154,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
+			"bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "BGP MD5 authentication key.",
+			},
+			"backup_bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Backup BGP MD5 authentication key.",
+			},
 		},
 	}
 }
@@ -171,6 +183,8 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix
 		RemoteCloudType:    d.Get("remote_cloud_type").(string),
 		BackupLocalLanIP:   d.Get("backup_local_lan_ip").(string),
 		BackupRemoteLanIP:  d.Get("backup_remote_lan_ip").(string),
+		BgpMd5Key:          d.Get("bgp_md5_key").(string),
+		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -345,12 +359,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	client := meta.(*goaviatrix.Client)
 	d.Partial(true)
 
-	if d.HasChange("prepend_as_path") {
-		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-			ConnectionName: d.Get("connection_name").(string),
-			GwName:         d.Get("gw_name").(string),
-		}
+	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
 
+	if d.HasChange("prepend_as_path") {
 		var prependASPath []string
 		for _, v := range d.Get("prepend_as_path").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
@@ -361,6 +372,15 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		}
 	}
 
+	if d.HasChanges("bgp_md5_key", "backup_bgp_md5_key") {
+		externalDeviceConn.BgpMd5KeyChanged = true
+
+		err := client.CreateExternalDeviceConn(externalDeviceConn)
+		if err != nil {
+			return diag.Errorf("could not update BGP MD5 key: %s", err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }
@@ -368,10 +388,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("site_id").(string),
-		ConnectionName: d.Get("connection_name").(string),
-	}
+	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
 
 	err := client.DeleteExternalDeviceConn(externalDeviceConn)
 	if err != nil {
