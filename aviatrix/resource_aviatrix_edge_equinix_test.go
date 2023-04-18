@@ -13,27 +13,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
-	if os.Getenv("SKIP_EDGE_CSP") == "yes" {
-		t.Skip("Skipping Edge CSP test as SKIP_EDGE_CSP is set")
+func TestAccAviatrixEdgeEquinix_basic(t *testing.T) {
+	if os.Getenv("SKIP_EDGE_EQUINIX") == "yes" {
+		t.Skip("Skipping Edge Equinix test as SKIP_EDGE_EQUINIX is set")
 	}
 
-	resourceName := "aviatrix_edge_csp.test"
-	accountName := "edge-csp-acc-" + acctest.RandString(5)
-	gwName := "edge-csp-" + acctest.RandString(5)
+	resourceName := "aviatrix_edge_equinix.test"
+	accountName := "acc-" + acctest.RandString(5)
+	edgeEquinixUsername := "equinix-user-" + acctest.RandString(5)
+	gwName := "gw-" + acctest.RandString(5)
 	siteId := "site-" + acctest.RandString(5)
+	path, _ := os.Getwd()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckEdgeCSPDestroy,
+		CheckDestroy: testAccCheckEdgeEquinixDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeCSPBasic(accountName, gwName, siteId),
+				Config: testAccEdgeEquinixBasic(accountName, edgeEquinixUsername, gwName, siteId, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEdgeCSPExists(resourceName),
+					testAccCheckEdgeEquinixExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
@@ -42,30 +44,28 @@ func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ztp_file_download_path"},
 			},
 		},
 	})
 }
 
-func testAccEdgeCSPBasic(accountName, gwName, siteId string) string {
+func testAccEdgeEquinixBasic(edgeEquinixUsername, accountName, gwName, siteId, path string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_account" {
- 	account_name      = "%s"
-	cloud_type        = 65536
-	edge_csp_username = "%s"
-	edge_csp_password = "%s"
+resource "aviatrix_account" "test" {
+	account_name          = "%s"
+	cloud_type            = 524288
+	edge_equinix_username = "%s"
 }
-resource "aviatrix_edge_csp" "test" {
-	account_name      = aviatrix_account.test_account.account_name
-	gw_name           = "%s"
-	site_id           = "%s"
- 	project_uuid      = "%s"
- 	compute_node_uuid = "%s"
- 	template_uuid     = "%s"
-
+resource "aviatrix_edge_equinix" "test" {
+	account_name           = aviatrix_account.test_account.account_name
+	gw_name                = "%s"
+	site_id                = "%s"
+	ztp_file_download_path = "%s"
+	
 	interfaces {
 		name          = "eth0"
 		type          = "WAN"
@@ -88,44 +88,43 @@ resource "aviatrix_edge_csp" "test" {
 		gateway_ip  = "172.16.0.1"
 	}
 }
- `, accountName, os.Getenv("EDGE_CSP_USERNAME"), os.Getenv("EDGE_CSP_PASSWORD"), gwName, siteId,
-		os.Getenv("EDGE_CSP_PROJECT_UUID"), os.Getenv("EDGE_CSP_COMPUTE_NODE_UUID"), os.Getenv("EDGE_CSP_TEMPLATE_UUID"))
+ `, accountName, edgeEquinixUsername, gwName, siteId, path)
 }
 
-func testAccCheckEdgeCSPExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckEdgeEquinixExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("edge csp not found: %s", resourceName)
+			return fmt.Errorf("edge equinix not found: %s", resourceName)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no edge csp id is set")
+			return fmt.Errorf("no edge equinix id is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		edgeSpoke, err := client.GetEdgeCSP(context.Background(), rs.Primary.Attributes["gw_name"])
+		edgeSpoke, err := client.GetEdgeEquinix(context.Background(), rs.Primary.Attributes["gw_name"])
 		if err != nil {
 			return err
 		}
 		if edgeSpoke.GwName != rs.Primary.ID {
-			return fmt.Errorf("could not find edge csp")
+			return fmt.Errorf("could not find edge equinix")
 		}
 		return nil
 	}
 }
 
-func testAccCheckEdgeCSPDestroy(s *terraform.State) error {
+func testAccCheckEdgeEquinixDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_edge_csp" {
+		if rs.Type != "aviatrix_edge_equinix" {
 			continue
 		}
 
-		_, err := client.GetEdgeCSP(context.Background(), rs.Primary.Attributes["gw_name"])
+		_, err := client.GetEdgeEquinix(context.Background(), rs.Primary.Attributes["gw_name"])
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("edge csp still exists")
+			return fmt.Errorf("edge equinix still exists")
 		}
 	}
 

@@ -351,6 +351,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Edge CSP password.",
 			},
+			"edge_equinix_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Edge Equinix username.",
+			},
 			"aws_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -488,6 +494,15 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			CloudType:       d.Get("cloud_type").(int),
 			EdgeCSPUsername: d.Get("edge_csp_username").(string),
 			EdgeCSPPassword: d.Get("edge_csp_password").(string),
+		}
+	}
+
+	var edgeEquinixAccount *goaviatrix.EdgeEquinixAccount
+	if account.CloudType == goaviatrix.EDGEEQUINIX {
+		edgeEquinixAccount = &goaviatrix.EdgeEquinixAccount{
+			AccountName:         d.Get("account_name").(string),
+			CloudType:           d.Get("cloud_type").(int),
+			EdgeEquinixUsername: d.Get("edge_equinix_username").(string),
 		}
 	}
 
@@ -764,13 +779,17 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	} else if account.CloudType == goaviatrix.EDGECSP {
 		if edgeCSPAccount.EdgeCSPUsername == "" {
-			return diag.Errorf("edge_csp_username is required for Edge CSP")
+			return diag.Errorf("edge_csp_username is required to create an Aviatrix account for Edge CSP")
 		}
 		if edgeCSPAccount.EdgeCSPPassword == "" {
-			return diag.Errorf("edge_csp_password is required for Edge CSP")
+			return diag.Errorf("edge_csp_password is required to create an Aviatrix account for Edge CSP")
+		}
+	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
+		if edgeEquinixAccount.EdgeEquinixUsername == "" {
+			return diag.Errorf("edge_equinix_username is required to create an Aviatrix account for Edge Equinix")
 		}
 	} else if account.CloudType == goaviatrix.EDGENEO {
-		log.Printf("no check is needed for Edge NEO account")
+		log.Printf("no check is needed to create an Aviatrix account for Edge NEO")
 	} else {
 		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768), Edge CSP (65536) or Edge NEO (262144)")
 	}
@@ -786,6 +805,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateAWSSAccount(account)
 	} else if account.CloudType == goaviatrix.EDGECSP {
 		err = client.CreateEdgeCSPAccount(edgeCSPAccount)
+	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
+		err = client.CreateEdgeEquinixAccount(edgeEquinixAccount)
 	} else if account.CloudType == goaviatrix.EDGENEO {
 		err = client.CreateEdgeNEOAccount(edgeNEOAccount)
 	} else {
@@ -919,6 +940,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		} else if acc.CloudType == goaviatrix.EDGECSP {
 			d.Set("edge_csp_username", acc.EdgeCSPUsername)
+		} else if acc.CloudType == goaviatrix.EDGEEQUINIX {
+			d.Set("edge_equinix_username", acc.EdgeEquinixUsername)
 		}
 
 		d.Set("rbac_groups", acc.GroupNamesRead)

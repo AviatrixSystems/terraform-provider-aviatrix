@@ -5,19 +5,20 @@ package goaviatrix
 
 // Cloud provider ids
 const (
-	AWS        = 1
-	GCP        = 4
-	Azure      = 8
-	OCI        = 16
-	AzureGov   = 32
-	AWSGov     = 256
-	AWSChina   = 1024
-	AzureChina = 2048
-	AliCloud   = 8192
-	AWSTS      = 16384 // AWS Top Secret Region (C2S)
-	AWSS       = 32768 // AWS Secret Region (SC2S)
-	EDGECSP    = 65536
-	EDGENEO    = 262144
+	AWS         = 1
+	GCP         = 4
+	Azure       = 8
+	OCI         = 16
+	AzureGov    = 32
+	AWSGov      = 256
+	AWSChina    = 1024
+	AzureChina  = 2048
+	AliCloud    = 8192
+	AWSTS       = 16384 // AWS Top Secret Region (C2S)
+	AWSS        = 32768 // AWS Secret Region (SC2S)
+	EDGECSP     = 65536
+	EDGEEQUINIX = 524288
+	EDGENEO     = 262144
 )
 
 // Cloud vendor names
@@ -57,6 +58,7 @@ func GetSupportedClouds() []int {
 		AWSTS,
 		AWSS,
 		EDGECSP,
+		EDGEEQUINIX,
 		EDGENEO,
 	}
 }

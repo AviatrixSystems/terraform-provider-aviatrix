@@ -142,20 +142,6 @@ func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(edgeCSPHaName)
-
-	gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
-		GwName: edgeCSPHaName,
-	}
-
-	if len(edgeCSPHa.InterfaceList) != 0 {
-		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
-
-		err = client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
-		if err != nil {
-			return diag.Errorf("could not config WAN/LAN interfaces after Edge CSP HA creation: %v", err)
-		}
-	}
-
 	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
 }
 
@@ -239,7 +225,7 @@ func resourceAviatrixEdgeCSPHaDelete(ctx context.Context, d *schema.ResourceData
 
 	err := client.DeleteEdgeCSP(ctx, accountName, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge CSP: %v", err)
+		return diag.Errorf("could not delete Edge CSP HA %s: %v", d.Id(), err)
 	}
 
 	return nil

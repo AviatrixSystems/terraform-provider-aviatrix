@@ -34,7 +34,7 @@ func TestAccAviatrixEdgeCSPHa_basic(t *testing.T) {
 				Config: testAccEdgeCSPHaBasic(accountName, gwName, siteId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeCSPHaExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName+"_ha"),
+					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.11.20/24"),
 				),
 			},

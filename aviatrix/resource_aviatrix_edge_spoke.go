@@ -82,7 +82,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return old != ""
 				},
-				Description: "The location where the Edge as a CaaG ZTP file will be stored.",
+				Description: "The location where the ZTP file will be stored.",
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
