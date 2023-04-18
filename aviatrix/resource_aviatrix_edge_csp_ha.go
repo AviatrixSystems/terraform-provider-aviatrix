@@ -225,7 +225,7 @@ func resourceAviatrixEdgeCSPHaDelete(ctx context.Context, d *schema.ResourceData
 
 	err := client.DeleteEdgeCSP(ctx, accountName, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge CSP HA: %v", err)
+		return diag.Errorf("could not delete Edge CSP HA %s: %v", d.Id(), err)
 	}
 
 	return nil

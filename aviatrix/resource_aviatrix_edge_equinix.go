@@ -155,7 +155,7 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				Optional:     true,
 				Default:      defaultBgpHoldTime,
 				ValidateFunc: validation.IntBetween(12, 360),
-				Description:  "BGP Hold Time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 12 and 360.",
+				Description:  "BGP route polling time for BGP spoke gateway in seconds. Valid values are between 12 and 360.",
 			},
 			"enable_edge_transitive_routing": {
 				Type:        schema.TypeBool,
@@ -418,7 +418,7 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 
 	// checks before creation
 	if !edgeEquinix.EnableEdgeActiveStandby && edgeEquinix.EnableEdgeActiveStandbyPreemptive {
-		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+		return diag.Errorf("could not enable Preemptive Mode when Active-Standby is disabled")
 	}
 
 	if !edgeEquinix.EnableLearnedCidrsApproval && len(edgeEquinix.ApprovedLearnedCidrs) != 0 {
@@ -445,7 +445,7 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 	defer resourceAviatrixEdgeEquinixReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.CreateEdgeEquinix(ctx, edgeEquinix); err != nil {
-		return diag.Errorf("could not create Edge Equinix: %v", err)
+		return diag.Errorf("could not create Edge Equinix %s: %v", edgeEquinix.GwName, err)
 	}
 
 	// advanced configs
