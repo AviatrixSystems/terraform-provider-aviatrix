@@ -49,7 +49,7 @@ type SpokeVpc struct {
 	Async                        bool     `form:"async,omitempty"`
 	BgpOverLan                   bool     `form:"bgp_lan,omitempty"`
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string   `form:"private_mode_load_balancer,omitempty"`
+	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc"`
 }
 
