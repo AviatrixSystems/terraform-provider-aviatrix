@@ -36,7 +36,7 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 						"action": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY", "INSPECT", "D_INSPECT"}, false),
 							Description: "Action for the specified source and destination Smart Groups." +
 								"Must be one of PERMIT or DENY.",
 						},
@@ -102,6 +102,94 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							},
 							MaxItems: 64,
 						},
+						"inspection_rules": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "List of distributed-firewalling policies.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Name of the policy.",
+									},
+									"action": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY", "IDS"}, false),
+										Description: "Action for the specified source and destination Smart Groups." +
+											"Must be one of PERMIT or DENY.",
+									},
+									"dst_smart_groups": {
+										Type:        schema.TypeSet,
+										Required:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Set of destination Smart Group UUIDs for the policy.",
+									},
+									"src_smart_groups": {
+										Type:        schema.TypeSet,
+										Required:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Set of source Smart Group UUIDs for the policy.",
+									},
+									"protocol": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											return strings.EqualFold(old, new)
+										},
+										Description: "Protocol for the policy to filter.",
+									},
+									"priority": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Default:     0,
+										Description: "Priority level of the policy",
+									},
+									"logging": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+										Description: "Whether to enable logging for the policy.",
+									},
+									"watch": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+										Description: "Whether to enable watch mode for the policy.",
+									},
+									"port_ranges": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: "List of port ranges for the policy.",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"lo": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntAtLeast(0),
+													Description:  "Lower bound of port range.",
+												},
+												"hi": {
+													Type:             schema.TypeInt,
+													Optional:         true,
+													ValidateFunc:     validation.IntAtLeast(0),
+													DiffSuppressFunc: DiffSuppressFuncDistributedFirewallingPolicyPortRangeHi,
+													Description:      "Upper bound of port range.",
+												},
+											},
+										},
+										MaxItems: 64,
+									},
+									"uuid": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "UUID of the policy.",
+									},
+								},
+							},
+						},
 						"uuid": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -125,6 +213,63 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			Name:     policy["name"].(string),
 			Action:   policy["action"].(string),
 			Priority: policy["priority"].(int),
+		}
+		if distributedFirewallingPolicy.Action == "INSPECT" || distributedFirewallingPolicy.Action == "PERMIT" {
+			inspectRules := policy["inspection_rules"].([]interface{})
+			for _, ruleInterface := range inspectRules {
+				rule := ruleInterface.(map[string]interface{})
+
+				dFwInspectRule := &goaviatrix.DistributedFirewallingInspectRule{
+					Name:   rule["name"].(string),
+					Action: rule["action"].(string),
+				}
+
+				protocol := strings.ToUpper(rule["protocol"].(string))
+				if protocol == "ANY" {
+					dFwInspectRule.Protocol = "PROTOCOL_UNSPECIFIED"
+				} else {
+					dFwInspectRule.Protocol = protocol
+				}
+
+				for _, smartGroup := range rule["src_smart_groups"].(*schema.Set).List() {
+					dFwInspectRule.SrcSmartGroups = append(dFwInspectRule.SrcSmartGroups, smartGroup.(string))
+				}
+
+				for _, smartGroup := range rule["dst_smart_groups"].(*schema.Set).List() {
+					dFwInspectRule.DstSmartGroups = append(dFwInspectRule.DstSmartGroups, smartGroup.(string))
+				}
+
+				if logging, loggingOk := rule["logging"]; loggingOk {
+					distributedFirewallingPolicy.Logging = logging.(bool)
+				}
+
+				if watch, watchOk := rule["watch"]; watchOk {
+					distributedFirewallingPolicy.Watch = watch.(bool)
+				}
+
+				if uuid, uuidOk := rule["uuid"]; uuidOk {
+					distributedFirewallingPolicy.UUID = uuid.(string)
+				}
+
+				if mapContains(rule, "port_ranges") {
+					if dFwInspectRule.Protocol == "ICMP" {
+						return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
+					}
+					for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
+						portRangeMap := portRangeInterface.(map[string]interface{})
+						portRange := &goaviatrix.DistributedFirewallingPortRange{
+							Lo: portRangeMap["lo"].(int),
+						}
+
+						if hi, hiOk := portRangeMap["hi"]; hiOk {
+							portRange.Hi = hi.(int)
+						}
+
+						dFwInspectRule.PortRanges = append(dFwInspectRule.PortRanges, *portRange)
+					}
+				}
+				distributedFirewallingPolicy.InspectionRules = append(distributedFirewallingPolicy.InspectionRules, *dFwInspectRule)
+			}
 		}
 
 		protocol := strings.ToUpper(policy["protocol"].(string))
@@ -219,6 +364,9 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 
 	var policies []map[string]interface{}
 	for _, policy := range policyList.Policies {
+		if policy.SystemResource {
+			continue
+		}
 		p := make(map[string]interface{})
 		p["name"] = policy.Name
 		p["action"] = policy.Action
@@ -245,6 +393,42 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 				portRanges = append(portRanges, portRangeMap)
 			}
 			p["port_ranges"] = portRanges
+		}
+
+		if policy.InspectionRules != nil {
+			var inspectionRuleList []map[string]interface{}
+			for _, inspectPolicy := range policy.InspectionRules {
+				iP := make(map[string]interface{})
+				iP["name"] = inspectPolicy.Name
+				iP["action"] = inspectPolicy.Action
+				iP["priority"] = inspectPolicy.Priority
+				iP["src_smart_groups"] = inspectPolicy.SrcSmartGroups
+				iP["dst_smart_groups"] = inspectPolicy.DstSmartGroups
+				iP["logging"] = inspectPolicy.Logging
+				iP["watch"] = inspectPolicy.Watch
+				iP["uuid"] = inspectPolicy.UUID
+
+				if strings.EqualFold(inspectPolicy.Protocol, "PROTOCOL_UNSPECIFIED") {
+					iP["protocol"] = "ANY"
+				} else {
+					iP["protocol"] = inspectPolicy.Protocol
+				}
+
+				if inspectPolicy.Protocol != "ICMP" {
+					var portRanges []map[string]interface{}
+					for _, portRange := range inspectPolicy.PortRanges {
+						portRangeMap := map[string]interface{}{
+							"hi": portRange.Hi,
+							"lo": portRange.Lo,
+						}
+						portRanges = append(portRanges, portRangeMap)
+					}
+					iP["port_ranges"] = portRanges
+				}
+
+				inspectionRuleList = append(inspectionRuleList, iP)
+			}
+			p["inspection_rules"] = inspectionRuleList
 		}
 
 		policies = append(policies, p)

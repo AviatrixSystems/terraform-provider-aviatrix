@@ -8,6 +8,21 @@ type DistributedFirewallingPortRange struct {
 }
 
 type DistributedFirewallingPolicy struct {
+	Name            string                              `json:"name"`
+	Action          string                              `json:"action"`
+	Logging         bool                                `json:"logging,omitempty"`
+	DstSmartGroups  []string                            `json:"dst_ads"`
+	SrcSmartGroups  []string                            `json:"src_ads"`
+	PortRanges      []DistributedFirewallingPortRange   `json:"port_ranges,omitempty"`
+	Priority        int                                 `json:"priority"`
+	Protocol        string                              `json:"protocol"`
+	Watch           bool                                `json:"watch,omitempty"`
+	InspectionRules []DistributedFirewallingInspectRule `json:"nested_rules,omitempty"`
+	UUID            string                              `json:"uuid,omitempty"`
+	SystemResource  bool                                `json:"system_resource,omitempty"`
+}
+
+type DistributedFirewallingInspectRule struct {
 	Name           string                            `json:"name"`
 	Action         string                            `json:"action"`
 	Logging        bool                              `json:"logging,omitempty"`
