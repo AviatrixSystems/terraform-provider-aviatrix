@@ -16,7 +16,7 @@ import (
 func prePrivateModeCheck(t *testing.T, msgEnd string) {
 	for _, key := range []string{"CONTROLLER_VPC_ID", "AWS_REGION"} {
 		if os.Getenv(key) == "" {
-			t.Fatal(fmt.Sprintf("%s must be set for Private Mode tests using load balancers. %s", key, msgEnd))
+			t.Fatalf("%s must be set for Private Mode tests using load balancers. %s", key, msgEnd)
 		}
 	}
 }

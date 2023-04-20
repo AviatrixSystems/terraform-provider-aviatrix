@@ -15,7 +15,7 @@ import (
 
 func prePrivateModeMulticloudEndpointCheck(t *testing.T, msgCommon string) {
 	if os.Getenv("AWS_VPC_ID") == "" {
-		t.Fatal(fmt.Sprintf("%s must be set for Private Mode multicloud endpoint tests. %s", "AWS_VPC_ID", msgCommon))
+		t.Fatalf("%s must be set for Private Mode multicloud endpoint tests. %s", "AWS_VPC_ID", msgCommon)
 	}
 }
 
