@@ -599,12 +599,8 @@ func (c *Client) GetBgpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgp
 	for _, haBgpLanIp := range data.Results.HaBgpLanIpList {
 		haBgpLanIpList = append(haBgpLanIpList, strings.Split(haBgpLanIp, ":")[2])
 	}
-	for _, azureBgpLanIp := range data.Results.AzureBgpLanIpList {
-		azureBgpLanIpList = append(azureBgpLanIpList, azureBgpLanIp)
-	}
-	for _, azureHaBgpLanIp := range data.Results.AzureHaBgpLanIpList {
-		azureHaBgpLanIpList = append(azureHaBgpLanIpList, azureHaBgpLanIp)
-	}
+	azureBgpLanIpList = append(azureBgpLanIpList, data.Results.AzureBgpLanIpList...)
+	azureHaBgpLanIpList = append(azureHaBgpLanIpList, data.Results.AzureHaBgpLanIpList...)
 
 	return &TransitGatewayBgpLanIpInfo{
 		BgpLanIpList:        bgpLanIpList,

@@ -271,7 +271,7 @@ func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs [
 		"gateway_name": gateway.GwName,
 	}
 
-	if sourceIPs != nil && len(sourceIPs) != 0 {
+	if len(sourceIPs) != 0 {
 		args, err := json.Marshal(sourceIPs)
 		if err != nil {
 			return err
@@ -346,7 +346,7 @@ func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error 
 		"gateway_name": gw.GwName,
 	}
 
-	if IPs != nil && len(IPs) != 0 {
+	if len(IPs) != 0 {
 		args, err := json.Marshal(IPs)
 		if err != nil {
 			return err
