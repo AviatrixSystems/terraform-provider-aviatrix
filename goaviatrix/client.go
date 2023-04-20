@@ -87,12 +87,7 @@ func (c *Client) GetApiToken() (string, error) {
 	return data.Results.ApiToken, nil
 }
 
-// Login to the Aviatrix controller with the username/password provided in
-// the client structure.
-// Arguments:
-//   None
-// Returns:
-//   error - if any
+// Login to the Aviatrix controller with the username/password provided in the client structure.
 func (c *Client) Login() error {
 	ApiToken, err := c.GetApiToken()
 	if err != nil {
