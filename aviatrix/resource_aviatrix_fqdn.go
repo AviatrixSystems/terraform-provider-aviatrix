@@ -313,9 +313,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 		gFT["gw_name"] = gwFilterTag.Name
 
 		var ipList []string
-		for i := range gwFilterTag.SourceIPList {
-			ipList = append(ipList, gwFilterTag.SourceIPList[i])
-		}
+		ipList = append(ipList, gwFilterTag.SourceIPList...)
 		gFT["source_ip_list"] = ipList
 		mGwFilterTags[gwFilterTag.Name] = gFT
 	}

@@ -43,7 +43,7 @@ imports:
 	goimports -w $(GOFMT_FILES)
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	gofmt -s -w $(GOFMT_FILES)
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"

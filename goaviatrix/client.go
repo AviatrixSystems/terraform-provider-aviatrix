@@ -90,9 +90,12 @@ func (c *Client) GetApiToken() (string, error) {
 // Login to the Aviatrix controller with the username/password provided in
 // the client structure.
 // Arguments:
-//    None
+//
+//	None
+//
 // Returns:
-//    error - if any
+//
+//	error - if any
 func (c *Client) Login() error {
 	ApiToken, err := c.GetApiToken()
 	if err != nil {
@@ -146,15 +149,20 @@ func (c *Client) LoginForCloudn() error {
 
 // NewClient creates a Client object using the arguments provided.
 // Arguments:
-//   username - the controller username
-//   password - the controller password
-//   controllerIP - the controller IP/host
-//   HTTPClient - the http client object
+//
+//	username - the controller username
+//	password - the controller password
+//	controllerIP - the controller IP/host
+//	HTTPClient - the http client object
+//
 // Returns:
-//   Client - the newly created client
-//   error - if any
+//
+//	Client - the newly created client
+//	error - if any
+//
 // See Also:
-//   init()
+//
+//	init()
 func NewClient(username string, password string, controllerIP string, HTTPClient *http.Client, ignoreTagsConfig *IgnoreTagsConfig) (*Client, error) {
 	client := &Client{Username: username, Password: password, HTTPClient: HTTPClient, ControllerIP: controllerIP, IgnoreTagsConfig: ignoreTagsConfig}
 	return client.init(controllerIP)
@@ -168,10 +176,13 @@ func NewClientForCloudn(username string, password string, controllerIP string, H
 // init initializes the new client with the given controller IP/host.  Logs
 // in to the controller and sets up the http client.
 // Arguments:
-//    controllerIP - the controller host/IP
+//
+//	controllerIP - the controller host/IP
+//
 // Returns:
-//   Client - the updated client object
-//   error - if any
+//
+//	Client - the updated client object
+//	error - if any
 func (c *Client) init(controllerIP string) (*Client, error) {
 	if len(controllerIP) == 0 {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")

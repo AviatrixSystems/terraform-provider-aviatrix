@@ -84,7 +84,7 @@ func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-//for now, deleting gcp account will not delete the credential file
+// for now, deleting gcp account will not delete the credential file
 func resourceAviatrixVPNCertDownloadDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	err := client.DisableVPNCertDownload()

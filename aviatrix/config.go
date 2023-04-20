@@ -24,10 +24,13 @@ type Config struct {
 
 // Client gets the Aviatrix client to access the Controller
 // Arguments:
-//    None
+//
+//	None
+//
 // Returns:
-//    the aviatrix client (from goaviatrix)
-//    error (if any)
+//
+//	the aviatrix client (from goaviatrix)
+//	error (if any)
 func (c *Config) Client() (*goaviatrix.Client, error) {
 	tr := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,

@@ -17,7 +17,7 @@ type Filters struct {
 	Verdict  string `form:"verdict,omitempty" json:"verdict,omitempty"`
 }
 
-// Gateway simple struct to hold fqdn details
+// FQDN simple struct to hold fqdn details
 type FQDN struct {
 	FQDNTag         string        `form:"tag_name,omitempty" json:"tag_name,omitempty"`
 	Action          string        `form:"action,omitempty"`
@@ -97,7 +97,7 @@ func (c *Client) DeleteFQDN(fqdn *FQDN) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-//change state to 'enabled' or 'disabled'
+// UpdateFQDNStatus change state to 'enabled' or 'disabled'
 func (c *Client) UpdateFQDNStatus(fqdn *FQDN) error {
 	form := map[string]string{
 		"CID":      c.CID,
@@ -109,7 +109,7 @@ func (c *Client) UpdateFQDNStatus(fqdn *FQDN) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-//Change default mode to 'white' or 'black'
+// UpdateFQDNMode Change default mode to 'white' or 'black'
 func (c *Client) UpdateFQDNMode(fqdn *FQDN) error {
 	form := map[string]string{
 		"CID":      c.CID,
@@ -271,7 +271,7 @@ func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs [
 		"gateway_name": gateway.GwName,
 	}
 
-	if sourceIPs != nil && len(sourceIPs) != 0 {
+	if len(sourceIPs) != 0 {
 		args, err := json.Marshal(sourceIPs)
 		if err != nil {
 			return err
@@ -346,7 +346,7 @@ func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error 
 		"gateway_name": gw.GwName,
 	}
 
-	if IPs != nil && len(IPs) != 0 {
+	if len(IPs) != 0 {
 		args, err := json.Marshal(IPs)
 		if err != nil {
 			return err
@@ -511,7 +511,7 @@ func (c *Client) SetFQDNCustomNetwork(ctx context.Context, configIPs []string) e
 		"action": action,
 	}
 
-	if configIPs != nil && len(configIPs) != 0 {
+	if len(configIPs) != 0 {
 		args, err := json.Marshal(configIPs)
 		if err != nil {
 			return err

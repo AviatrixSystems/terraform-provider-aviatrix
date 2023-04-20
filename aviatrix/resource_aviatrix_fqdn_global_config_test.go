@@ -41,14 +41,14 @@ func TestAccAviatrixFQDNGlobalConfig_basic(t *testing.T) {
 }
 
 func testAccFQDNGlobalConfigBasic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aviatrix_fqdn_global_config" "test" {
 	enable_exception_rule            = false
 	enable_private_network_filtering = true
 	enable_caching                   = false
 	enable_exact_match               = true
 }
-`)
+`
 }
 
 func testAccCheckFQDNGlobalConfigExists(n string) resource.TestCheckFunc {
