@@ -37,6 +37,14 @@ const (
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
+// Example usage to validate a cloud_type attribute in a schema:
+//
+//	"cloud_type": {
+//	    Type:     schema.TypeInt,
+//	    Optional: true,
+//	    Description: "Cloud Provider ID",
+//	    ValidateFunc: validation.IntInSlice(cloud.GetSupportedClouds()),
+//	}
 func GetSupportedClouds() []int {
 	return []int{
 		AWS,
