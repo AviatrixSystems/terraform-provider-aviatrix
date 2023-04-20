@@ -19,13 +19,13 @@ type QosPolicyListResp struct {
 	QosPolicy []QosPolicyList `json:"qos_policies"`
 }
 
-func (c *Client) UpdateQosPolicy(ctx context.Context, qosPolicyList *QosPolicyList) error {
+func (c *Client) UpdateQosPolicyList(ctx context.Context, qosPolicyList *QosPolicyList) error {
 	endpoint := "qos/policy"
 
 	return c.PutAPIContext25(ctx, endpoint, qosPolicyList)
 }
 
-func (c *Client) GetQosPolicy(ctx context.Context) (*[]QosPolicyList, error) {
+func (c *Client) GetQosPolicyList(ctx context.Context) (*[]QosPolicyList, error) {
 	endpoint := "qos/policy"
 
 	var data QosPolicyListResp
@@ -41,7 +41,7 @@ func (c *Client) GetQosPolicy(ctx context.Context) (*[]QosPolicyList, error) {
 	return &data.QosPolicy, nil
 }
 
-func (c *Client) DeleteQosPolicy(ctx context.Context) error {
+func (c *Client) DeleteQosPolicyList(ctx context.Context) error {
 	endpoint := "qos/policy"
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }

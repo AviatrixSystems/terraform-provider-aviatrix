@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixQosPolicy() *schema.Resource {
+func resourceAviatrixQosPolicyList() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixQosPolicyCreate,
-		ReadWithoutTimeout:   resourceAviatrixQosPolicyRead,
-		UpdateWithoutTimeout: resourceAviatrixQosPolicyUpdate,
-		DeleteWithoutTimeout: resourceAviatrixQosPolicyDelete,
+		CreateWithoutTimeout: resourceAviatrixQosPolicyListCreate,
+		ReadWithoutTimeout:   resourceAviatrixQosPolicyListRead,
+		UpdateWithoutTimeout: resourceAviatrixQosPolicyListUpdate,
+		DeleteWithoutTimeout: resourceAviatrixQosPolicyListDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -55,7 +55,7 @@ func resourceAviatrixQosPolicy() *schema.Resource {
 	}
 }
 
-func marshalQosPolicyInput(d *schema.ResourceData) *goaviatrix.QosPolicyList {
+func marshalQosPolicyListInput(d *schema.ResourceData) *goaviatrix.QosPolicyList {
 	var qosPolicyList goaviatrix.QosPolicyList
 
 	policies := d.Get("policies").([]interface{})
@@ -77,41 +77,41 @@ func marshalQosPolicyInput(d *schema.ResourceData) *goaviatrix.QosPolicyList {
 	return &qosPolicyList
 }
 
-func resourceAviatrixQosPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	qosPolicyList := marshalQosPolicyInput(d)
+	qosPolicyList := marshalQosPolicyListInput(d)
 
 	flag := false
-	defer resourceAviatrixQosPolicyReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixQosPolicyListReadIfRequired(ctx, d, meta, &flag)
 
-	err := client.UpdateQosPolicy(ctx, qosPolicyList)
+	err := client.UpdateQosPolicyList(ctx, qosPolicyList)
 	if err != nil {
-		return diag.Errorf("failed to create qos policy: %s", err)
+		return diag.Errorf("failed to create qos policy list: %s", err)
 	}
 
-	d.SetId("qos_policy")
-	return resourceAviatrixQosPolicyReadIfRequired(ctx, d, meta, &flag)
+	d.SetId("qos_policy_list")
+	return resourceAviatrixQosPolicyListReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixQosPolicyReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixQosPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixQosPolicyRead(ctx, d, meta)
+		return resourceAviatrixQosPolicyListRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixQosPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	qosPolicyResp, err := client.GetQosPolicy(ctx)
+	qosPolicyResp, err := client.GetQosPolicyList(ctx)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read qos policy: %s", err)
+		return diag.Errorf("failed to read qos policy list: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -135,29 +135,29 @@ func resourceAviatrixQosPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixQosPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	d.Partial(true)
 	if d.HasChanges("policies") {
-		qosPolicyList := marshalQosPolicyInput(d)
+		qosPolicyList := marshalQosPolicyListInput(d)
 
-		err := client.UpdateQosPolicy(ctx, qosPolicyList)
+		err := client.UpdateQosPolicyList(ctx, qosPolicyList)
 		if err != nil {
-			return diag.Errorf("failed to update qos policy: %s", err)
+			return diag.Errorf("failed to update qos policy list: %s", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixQosPolicyRead(ctx, d, meta)
+	return resourceAviatrixQosPolicyListRead(ctx, d, meta)
 }
 
-func resourceAviatrixQosPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DeleteQosPolicy(ctx)
+	err := client.DeleteQosPolicyList(ctx)
 	if err != nil {
-		return diag.Errorf("failed to delete qos policy: %v", err)
+		return diag.Errorf("failed to delete qos policy list: %v", err)
 	}
 
 	return nil

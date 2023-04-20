@@ -1,22 +1,22 @@
 ---
 subcategory: "Copilot"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_qos_policy"
+page_title: "Aviatrix: aviatrix_qos_policy_list"
 description: |-
-  Creates Aviatrix QoS Policy
+  Creates Aviatrix QoS Policy List
 ---
 
-# aviatrix_qos_policy
+# aviatrix_qos_policy_list
 
-The **aviatrix_qos_policy** resource creates the Aviatrix QoS Policy.
+The **aviatrix_qos_policy_list** resource creates the Aviatrix QoS Policy List.
 
-!> **WARNING:** Creating the **aviatrix_qos_policy** resource will overwrite all the QoS policies. Deleting the **aviatrix_qos_policy** resource will remove all the QoS policies.
+!> **WARNING:** Creating the **aviatrix_qos_policy_list** resource will overwrite all the QoS policies. Deleting the **aviatrix_qos_policy_list** resource will remove all the QoS policies.
 
 ## Example Usage
 
 ```hcl
-# Create a QoS Policy
-resource "aviatrix_qos_policy" "test" {
+# Create a QoS Policy List
+resource "aviatrix_qos_policy_list" "test" {
   policies {
     name           = "qos_policy_1"
     dscp_values    = ["1", "AF11"]
@@ -49,8 +49,8 @@ In addition to all arguments above, the following attribute is exported:
 
 ## Import
 
-**qos_policy** can be imported using the "qos_policy", e.g.
+**qos_policy_list** can be imported using the "qos_policy_list", e.g.
 
 ```
-$ terraform import aviatrix_qos_policy.test qos_policy
+$ terraform import aviatrix_qos_policy_list.test qos_policy_list
 ```

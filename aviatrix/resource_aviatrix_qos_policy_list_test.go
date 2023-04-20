@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixQosPolicy_basic(t *testing.T) {
-	if os.Getenv("SKIP_QOS_POLICY") == "yes" {
-		t.Skip("Skipping QoS policy test as SKIP_QOS_POLICY is set")
+func TestAccAviatrixQosPolicyList_basic(t *testing.T) {
+	if os.Getenv("SKIP_QOS_POLICY_LIST") == "yes" {
+		t.Skip("Skipping QoS policy test as SKIP_QOS_POLICY_LIST is set")
 	}
 
-	resourceName := "aviatrix_qos_policy.test"
+	resourceName := "aviatrix_qos_policy_list.test"
 	qosClassName := "qos-class-" + acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
@@ -26,12 +26,12 @@ func TestAccAviatrixQosPolicy_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckQosPolicyDestroy,
+		CheckDestroy: testAccCheckQosPolicyListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQosPolicyBasic(qosClassName),
+				Config: testAccQosPolicyListBasic(qosClassName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQosPolicyExists(resourceName),
+					testAccCheckQosPolicyListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.name", "qos_policy1"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.dscp_values.0", "1"),
 				),
@@ -45,13 +45,13 @@ func TestAccAviatrixQosPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccQosPolicyBasic(qosClassName string) string {
+func testAccQosPolicyListBasic(qosClassName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_qos_class" "test" {
 	name     = "%s"
 	priority = "1"
 }
-resource "aviatrix_qos_policy" "test" {
+resource "aviatrix_qos_policy_list" "test" {
 	policies {
 		name           = "qos_policy1"
 		dscp_values    = ["1", "AF11"]
@@ -61,35 +61,35 @@ resource "aviatrix_qos_policy" "test" {
  `, qosClassName)
 }
 
-func testAccCheckQosPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckQosPolicyListExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("qos policy not found: %s", resourceName)
+			return fmt.Errorf("qos policy list not found: %s", resourceName)
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		_, err := client.GetQosPolicy(context.Background())
+		_, err := client.GetQosPolicyList(context.Background())
 		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("qos policy not found")
+			return fmt.Errorf("qos policy list not found")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckQosPolicyDestroy(s *terraform.State) error {
+func testAccCheckQosPolicyListDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_qos_policy" {
+		if rs.Type != "aviatrix_qos_policy_list" {
 			continue
 		}
 
-		_, err := client.GetQosPolicy(context.Background())
+		_, err := client.GetQosPolicyList(context.Background())
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("qos policy still exists")
+			return fmt.Errorf("qos policy list still exists")
 		}
 	}
 
