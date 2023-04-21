@@ -59,6 +59,7 @@ type ExternalDeviceConn struct {
 	AuthType               string `form:"auth_type,omitempty"`
 	EnableEdgeUnderlay     bool   `form:"edge_underlay,omitempty"`
 	RemoteCloudType        string `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool   `form:"bgp_md5_key_changed,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
