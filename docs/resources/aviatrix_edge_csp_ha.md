@@ -38,11 +38,11 @@ resource "aviatrix_edge_csp_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Edge CSP name.
+* `primary_gw_name` - (Required) Primary Edge CSP name.
 * `compute_node_uuid` - (Required) Edge CSP compute node UUID.
 
 -> **NOTE:** At least one LAN interface is required.
-* `interfaces` - (Required) WAN/LAN interfaces.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
   * `type` - (Required) Type.
   * `bandwidth` - (Optional) Bandwidth.

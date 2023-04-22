@@ -1,7 +1,7 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_equinix_csp_ha"
+page_title: "Aviatrix: aviatrix_edge_equinix_ha"
 description: |-
   Creates an Aviatrix Edge Equinix HA
 ---
@@ -47,9 +47,9 @@ resource "aviatrix_edge_equinix_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Edge Equinix name.
+* `primary_gw_name` - (Required) Primary Edge Equinix name.
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
-* `interfaces` - (Required) WAN/LAN interfaces.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
   * `type` - (Required) Type.
   * `bandwidth` - (Optional) Bandwidth.
