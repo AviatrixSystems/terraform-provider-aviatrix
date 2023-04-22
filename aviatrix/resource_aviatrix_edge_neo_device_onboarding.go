@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -73,10 +74,13 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 							Optional:    true,
 							Description: "IPV4 CIDR.",
 						},
-						"dns_server_ip": {
-							Type:        schema.TypeString,
+						"dns_server_ips": {
+							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "DNS server IP.",
+							Description: "Set of DNS server IPs.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"proxy_server_ip": {
 							Type:        schema.TypeString,
@@ -86,16 +90,29 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 					},
 				},
 			},
+			"download_config_file": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set to true to download the Edge NEO static config file.",
+			},
+			"config_file_download_path": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The location where the config file will be stored.",
+			},
 		},
 	}
 }
 
 func marshalEdgeNEODeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.EdgeNEODevice {
 	edgeNEODevice := &goaviatrix.EdgeNEODevice{
-		AccountName:   d.Get("account_name").(string),
-		DeviceName:    d.Get("device_name").(string),
-		SerialNumber:  d.Get("serial_number").(string),
-		HardwareModel: d.Get("hardware_model").(string),
+		AccountName:            d.Get("account_name").(string),
+		DeviceName:             d.Get("device_name").(string),
+		SerialNumber:           d.Get("serial_number").(string),
+		HardwareModel:          d.Get("hardware_model").(string),
+		DownloadConfigFile:     d.Get("download_config_file").(bool),
+		ConfigFileDownloadPath: d.Get("config_file_download_path").(string),
 	}
 
 	network := d.Get("network").(*schema.Set).List()
@@ -107,8 +124,11 @@ func marshalEdgeNEODeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.Edg
 			EnableDhcp:    network1["enable_dhcp"].(bool),
 			GatewayIp:     network1["gateway_ip"].(string),
 			Ipv4Cidr:      network1["ipv4_cidr"].(string),
-			DnsServerIp:   network1["dns_server_ip"].(string),
 			ProxyServerIp: network1["proxy_server_ip"].(string),
+		}
+
+		for _, dnsServerIp := range network1["dns_server_ips"].([]interface{}) {
+			network2.DnsServerIps = append(network2.DnsServerIps, dnsServerIp.(string))
 		}
 
 		edgeNEODevice.Network = append(edgeNEODevice.Network, network2)
@@ -122,11 +142,24 @@ func resourceAviatrixEdgeNEODeviceOnboardingCreate(ctx context.Context, d *schem
 
 	edgeNEODevice := marshalEdgeNEODeviceOnboardingInput(d)
 
+	if edgeNEODevice.DownloadConfigFile && edgeNEODevice.ConfigFileDownloadPath == "" {
+		diag.Errorf("config_file_download_path is required when download_config_file is true")
+	}
+	if !edgeNEODevice.DownloadConfigFile && edgeNEODevice.ConfigFileDownloadPath != "" {
+		diag.Errorf("config_file_download_path must be empty when download_config_file is false")
+	}
+
 	flag := false
 	defer resourceAviatrixEdgeNEODeviceOnboardingReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.OnboardEdgeNEODevice(ctx, edgeNEODevice); err != nil {
 		return diag.Errorf("could not onboard Edge NEO device: %v", err)
+	}
+
+	if edgeNEODevice.DownloadConfigFile {
+		if err := client.DownloadEdgeNEOConfigFile(ctx, edgeNEODevice); err != nil {
+			return diag.Errorf("could not download Edge NEO static config file: %v", err)
+		}
 	}
 
 	d.SetId(edgeNEODevice.AccountName + "~" + edgeNEODevice.DeviceName)
@@ -180,7 +213,7 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 		network1["enable_dhcp"] = network0.EnableDhcp
 		network1["gateway_ip"] = network0.GatewayIp
 		network1["ipv4_cidr"] = network0.Ipv4Cidr
-		network1["dns_server_ip"] = network0.DnsServerIp
+		network1["dns_server_ips"] = network0.DnsServerIps
 		network1["proxy_server_ip"] = network0.ProxyServerIp
 
 		network = append(network, network1)
@@ -199,6 +232,13 @@ func resourceAviatrixEdgeNEODeviceOnboardingUpdate(ctx context.Context, d *schem
 
 	edgeNEODevice := marshalEdgeNEODeviceOnboardingInput(d)
 
+	if edgeNEODevice.DownloadConfigFile && edgeNEODevice.ConfigFileDownloadPath == "" {
+		diag.Errorf("config_file_download_path is required when download_config_file is true")
+	}
+	if !edgeNEODevice.DownloadConfigFile && edgeNEODevice.ConfigFileDownloadPath != "" {
+		diag.Errorf("config_file_download_path must be empty when download_config_file is false")
+	}
+
 	if d.HasChanges("account_name", "device_name", "serial_number", "hardware_model") {
 		return diag.Errorf("account_name, device_name, serial_number and hardware_model are not allowed to be updated")
 	}
@@ -209,6 +249,33 @@ func resourceAviatrixEdgeNEODeviceOnboardingUpdate(ctx context.Context, d *schem
 		if err := client.OnboardEdgeNEODevice(ctx, edgeNEODevice); err != nil {
 			return diag.Errorf("could not update network configurations during Edge NEO device update: %v", err)
 		}
+
+		if edgeNEODevice.DownloadConfigFile {
+			if err := client.DownloadEdgeNEOConfigFile(ctx, edgeNEODevice); err != nil {
+				return diag.Errorf("could not download Edge NEO static config file: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("download_config_file") {
+		if edgeNEODevice.DownloadConfigFile {
+			if err := client.DownloadEdgeNEOConfigFile(ctx, edgeNEODevice); err != nil {
+				return diag.Errorf("could not download Edge NEO static config file: %v", err)
+			}
+		} else {
+			oldConfigFileDownloadPath, _ := d.GetChange("config_file_download_path")
+			fileName := oldConfigFileDownloadPath.(string) + edgeNEODevice.SerialNumber + "-bootstrap-config.img"
+			err := os.Remove(fileName)
+			if err != nil {
+				log.Printf("[WARN] could not remove the config file: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("config_file_download_path") {
+		if err := client.DownloadEdgeNEOConfigFile(ctx, edgeNEODevice); err != nil {
+			return diag.Errorf("could not download Edge NEO static config file: %v", err)
+		}
 	}
 
 	d.Partial(false)
@@ -218,12 +285,19 @@ func resourceAviatrixEdgeNEODeviceOnboardingUpdate(ctx context.Context, d *schem
 func resourceAviatrixEdgeNEODeviceOnboardingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	accountName := d.Get("account_name").(string)
-	serialNumber := d.Get("serial_number").(string)
+	edgeNEODevice := marshalEdgeNEODeviceOnboardingInput(d)
 
-	err := client.DeleteEdgeNEODevice(ctx, accountName, serialNumber)
+	err := client.DeleteEdgeNEODevice(ctx, edgeNEODevice.AccountName, edgeNEODevice.SerialNumber)
 	if err != nil {
 		return diag.Errorf("could not delete Edge NEO device: %v", err)
+	}
+
+	if edgeNEODevice.DownloadConfigFile {
+		fileName := edgeNEODevice.ConfigFileDownloadPath + edgeNEODevice.SerialNumber + "-bootstrap-config.img"
+		err = os.Remove(fileName)
+		if err != nil {
+			log.Printf("[WARN] could not remove the config file: %v", err)
+		}
 	}
 
 	return nil
