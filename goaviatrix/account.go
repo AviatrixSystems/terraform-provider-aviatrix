@@ -86,29 +86,14 @@ type Account struct {
 	EdgeEquinixUsername                   string   `json:"equinix_username"`
 }
 
-type EdgeCSPAccount struct {
-	CID             string `json:"CID,omitempty"`
-	Action          string `json:"action,omitempty"`
-	AccountName     string `json:"account_name,omitempty"`
-	CloudType       int    `json:"cloud_type,omitempty"`
-	EdgeCSPUsername string `json:"edge_csp_username,omitempty"`
-	EdgeCSPPassword string `json:"edge_csp_password,omitempty"`
-}
-
-type EdgeEquinixAccount struct {
+type EdgeAccount struct {
 	CID                 string `json:"CID,omitempty"`
 	Action              string `json:"action,omitempty"`
 	AccountName         string `json:"account_name,omitempty"`
 	CloudType           int    `json:"cloud_type,omitempty"`
+	EdgeCSPUsername     string `json:"edge_csp_username,omitempty"`
+	EdgeCSPPassword     string `json:"edge_csp_password,omitempty"`
 	EdgeEquinixUsername string `json:"equinix_username,omitempty"`
-}
-
-type EdgeNEOAccount struct {
-	CID                string `json:"CID,omitempty"`
-	Action             string `json:"action,omitempty"`
-	AccountName        string `json:"account_name,omitempty"`
-	CloudType          int    `json:"cloud_type,omitempty"`
-	EdgeNEOApiEndpoint string `json:"edge_csp_api_endpoint,omitempty"`
 }
 
 type AccountResult struct {
@@ -411,38 +396,18 @@ func (c *Client) AuditAccount(ctx context.Context, account *Account) error {
 	return nil
 }
 
-func (c *Client) CreateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
-	edgeCSPAccount.CID = c.CID
-	edgeCSPAccount.Action = "setup_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, DuplicateBasicCheck)
+func (c *Client) CreateEdgeAccount(edgeAccount *EdgeAccount) error {
+	edgeAccount.CID = c.CID
+	edgeAccount.Action = "setup_account_profile"
+	if edgeAccount.CloudType == EDGEEQUINIX {
+		edgeAccount.EdgeEquinixUsername = "no-reply@aviatrix.com"
+	}
+
+	return c.PostAPIContext2(context.Background(), nil, edgeAccount.Action, edgeAccount, DuplicateBasicCheck)
 }
 
-func (c *Client) UpdateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
-	edgeCSPAccount.CID = c.CID
-	edgeCSPAccount.Action = "edit_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, BasicCheck)
-}
-
-func (c *Client) CreateEdgeEquinixAccount(edgeEquinixAccount *EdgeEquinixAccount) error {
-	edgeEquinixAccount.CID = c.CID
-	edgeEquinixAccount.Action = "setup_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeEquinixAccount.Action, edgeEquinixAccount, DuplicateBasicCheck)
-}
-
-func (c *Client) UpdateEdgeEquinixAccount(edgeEquinixAccount *EdgeEquinixAccount) error {
-	edgeEquinixAccount.CID = c.CID
-	edgeEquinixAccount.Action = "edit_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeEquinixAccount.Action, edgeEquinixAccount, BasicCheck)
-}
-
-func (c *Client) CreateEdgeNEOAccount(edgeNEOAccount *EdgeNEOAccount) error {
-	edgeNEOAccount.CID = c.CID
-	edgeNEOAccount.Action = "setup_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeNEOAccount.Action, edgeNEOAccount, DuplicateBasicCheck)
-}
-
-func (c *Client) UpdateEdgeNEOAccount(edgeNEOAccount *EdgeNEOAccount) error {
-	edgeNEOAccount.CID = c.CID
-	edgeNEOAccount.Action = "edit_account_profile"
-	return c.PostAPIContext2(context.Background(), nil, edgeNEOAccount.Action, edgeNEOAccount, BasicCheck)
+func (c *Client) UpdateEdgeAccount(edgeAccount *EdgeAccount) error {
+	edgeAccount.CID = c.CID
+	edgeAccount.Action = "edit_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeAccount.Action, edgeAccount, BasicCheck)
 }
