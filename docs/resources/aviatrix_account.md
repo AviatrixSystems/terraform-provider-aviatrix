@@ -268,9 +268,6 @@ The following arguments are supported:
 * `edge_csp_username` - (Optional) Edge CSP username. Required when creating an Edge CSP account.
 * `edge_csp_password` - (Optional) Edge CSP password. Required when creating an Edge CSP account.
 
-### Edge Equinix
-* `edge_equinix_username` - (Optional) Edge Equinix username. Required when creating an Edge Equinix account.
-
 ### Misc.
 ~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`. 
 * `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Changing `audit_account` to "false" will not prevent the Controller from performing account audits. It will only prevent Terraform from displaying a warning. Valid values: true, false. Default: false. Available as of provider version 2.19+. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
