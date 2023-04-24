@@ -34,7 +34,6 @@ The following arguments are supported:
 -> **NOTE:** As of Controller version 6.8/provider version R2.23, only BGP over LAN connection is supported.
 
 * `site_id` - (Required) Edge as a Spoke site iD.
-* `connection_name` - (Required) Connection name.
 * `gw_name` - (Required) Edge as a Spoke name.
 * `bgp_local_as_num` - (Required) BGP local AS number.
 * `bgp_remote_as_num` - (Required) BGP remote AS number.
@@ -42,6 +41,10 @@ The following arguments are supported:
 * `remote_lan_ip` - (Required) Remote LAN IP.
 
 ### Optional
+
+-> **NOTE:** When `enable_edge_underlay` is false, `connection_name` is required. When `enable_edge_underlay` is true, `connection_name` must be empty. 
+
+* `connection_name` - (Optional) Connection name.
 * `connection_type` - (Optional) Connection type. Valid value: 'bgp'. Default value: 'bgp'.
 * `tunnel_protocol` - (Optional) Tunnel protocol. Valid value: 'LAN'. Default value: 'LAN'. Case insensitive.
 * `enable_edge_underlay` - (Optional) Enable BGP over WAN underlay. Valid values: true, false. Default value: false.
