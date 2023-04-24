@@ -50,6 +50,16 @@ type VersionInfo struct {
 	Previous *AviatrixVersion
 }
 
+type PlatformUpgradeResp struct {
+	Return  bool                  `json:"return"`
+	Results PlatformUpgradeStatus `json:"results"`
+	Reason  string                `json:"reason"`
+}
+
+type PlatformUpgradeStatus struct {
+	OverallStatus string `json:"overall_status,omitempty"`
+}
+
 func (av *AviatrixVersion) String(includeBuild bool) string {
 	version := fmt.Sprintf("%d.%d", av.Major, av.Minor)
 	if av.MinorBuildID != "" {
@@ -97,11 +107,11 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form["action"], data.Reason)
 	}
 
-	requestID := data.Result
+	time.Sleep(time.Second * 120)
+
 	form1 := map[string]string{
-		"action":     "check_task_status",
-		"CID":        c.CID,
-		"request_id": requestID,
+		"action": "platform_upgrade_status",
+		"CID":    c.CID,
 	}
 
 	const maxPoll = 180
@@ -114,27 +124,26 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 			time.Sleep(sleepDuration)
 			continue
 		}
+		var data1 PlatformUpgradeResp
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		err = json.Unmarshal(buf.Bytes(), &data)
+		err = json.Unmarshal(buf.Bytes(), &data1)
 		if err != nil {
-			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
-		}
-		if !data.Return {
-			if data.Reason != "REQUEST_IN_PROGRESS" {
-				return fmt.Errorf("rest API %s POST failed: %s", form["action"], data.Reason)
+			if strings.Contains(buf.String(), "503 Service Unavailable") {
+				time.Sleep(sleepDuration)
+				continue
 			}
-
-			// Not done yet
-			time.Sleep(sleepDuration)
-			continue
+			return fmt.Errorf("decode platform_upgrade_status failed: %v\n Body: %s", err, buf.String())
+		}
+		if !data1.Return {
+			return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form1["action"], data1.Reason)
 		}
 
-		// Upgrade is done, check for error
-		if strings.HasPrefix(data.Result, "Error") {
-			return fmt.Errorf("post check_task_status failed: %s", data.Result)
+		if data1.Results.OverallStatus == "completed" {
+			c.Login()
+			return nil
 		}
-		break
+		time.Sleep(sleepDuration)
 	}
 	// Waited for too long and upgrade never finished
 	if i == maxPoll {
