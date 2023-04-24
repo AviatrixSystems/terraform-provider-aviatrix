@@ -34,7 +34,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
-* `uuid` - UUID of the global VPC excluded instance.
+* `uuid` - UUID of the global VPC exclude list object.
 
 ## Import
 

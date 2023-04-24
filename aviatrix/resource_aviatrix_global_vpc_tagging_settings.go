@@ -25,7 +25,7 @@ func resourceAviatrixGlobalVpcTaggingSettings() *schema.Resource {
 			"service_state": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"semi_automatic", "automatic"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"automatic", "disabled"}, false),
 				Description:  "Service state.",
 			},
 			"enable_alert": {
@@ -115,7 +115,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsDelete(ctx context.Context, d *sche
 	client := meta.(*goaviatrix.Client)
 
 	globalVpcTaggingSettings := &goaviatrix.GlobalVpcTaggingSettings{
-		ServiceState: "disabled",
+		ServiceState: "semi_automatic",
 		EnableAlert:  false,
 	}
 	err := client.UpdateGlobalVpcTaggingSettings(ctx, globalVpcTaggingSettings)

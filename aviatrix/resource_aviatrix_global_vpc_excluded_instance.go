@@ -37,7 +37,7 @@ func resourceAviatrixGlobalVpcExcludedInstance() *schema.Resource {
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "UUID of the instance.",
+				Description: "UUID of the exclude list object.",
 			},
 		},
 	}
