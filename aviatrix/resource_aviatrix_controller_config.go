@@ -182,6 +182,10 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 
 	client := meta.(*goaviatrix.Client)
 
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+	flag := false
+	defer resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag)
+
 	log.Printf("[INFO] Configuring Aviatrix controller : %#v", d)
 
 	httpAccess := d.Get("http_access").(bool)
@@ -313,8 +317,15 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("could not update scanning interval: %v", err)
 	}
 
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixControllerConfigRead(d, meta)
+	return resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixControllerConfigReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixControllerConfigRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface{}) error {
