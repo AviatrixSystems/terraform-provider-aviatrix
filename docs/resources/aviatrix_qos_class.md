@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_qos_class
 
-The **aviatrix_qos_class** resource creates the Aviatrix QoS Class.
+The **aviatrix_qos_class** resource creates a class for the Quality of Service (QoS) mechanism in Aviatrix Edge. This feature allows classification based on DSCP value in IP Header.
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ### Required
 * `name` - (Required) Name of QoS class.
-* `priority` - (Optional) Priority of QoS class.
+* `priority` - (Optional) Priority of QoS class, requires an integer value.
 
 ## Attribute Reference
 

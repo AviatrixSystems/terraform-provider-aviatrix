@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_qos_policy_list
 
-The **aviatrix_qos_policy_list** resource creates the Aviatrix QoS Policy List.
+The **aviatrix_qos_policy_list** resource creates a list of policies (and rules) under the Quality of Service (QoS) mechanism in Aviatrix Edge. This is to be used in conjunction with **aviatrix_qos_class**es to classify based on DSCP value in IP Header.
 
 !> **WARNING:** Creating the **aviatrix_qos_policy_list** resource will overwrite all the QoS policies. Deleting the **aviatrix_qos_policy_list** resource will remove all the QoS policies.
 
@@ -16,17 +16,22 @@ The **aviatrix_qos_policy_list** resource creates the Aviatrix QoS Policy List.
 
 ```hcl
 # Create a QoS Policy List
+resource "aviatrix_qos_class" "test" {
+  name     = "test-qos-class"
+  priority = 3
+}
+
 resource "aviatrix_qos_policy_list" "test" {
   policies {
     name           = "qos_policy_1"
     dscp_values    = ["1", "AF11"]
-    qos_class_uuid = "abcd1234"
+    qos_class_uuid = aviatrix_qos_class.test.uuid
   }
 
   policies {
     name           = "qos_policy_2"
     dscp_values    = ["AF22"]
-    qos_class_uuid = "efgh5678"
+    qos_class_uuid = aviatrix_qos_class.test.uuid
   }
 }
 ```
