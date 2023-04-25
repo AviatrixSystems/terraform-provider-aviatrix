@@ -229,3 +229,48 @@ func checkAndReturnAPIResp2HaGw(resp *http.Response, v interface{}, method, acti
 
 	return data.HaGwName, nil
 }
+
+func (c *Client) PostAPIContext2WithResult(ctx context.Context, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+	return c.DoAPIContext2WithResult(ctx, "POST", v, action, d, checkFunc)
+}
+
+func (c *Client) DoAPIContext2WithResult(ctx context.Context, verb string, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
+	resp, err := c.RequestContext2(ctx, verb, Url, d)
+	if err != nil {
+		return "", fmt.Errorf("HTTP %s %q failed: %v", verb, Url, err)
+	}
+
+	return checkAndReturnAPIResp2WithResult(resp, v, verb, action, checkFunc)
+}
+
+func checkAndReturnAPIResp2WithResult(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) (string, error) {
+	type apiresp struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+
+	var data apiresp
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("reading response body %q failed: %v", action, err)
+	}
+	bodyString := buf.String()
+
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return "", fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
+		return "", err
+	}
+
+	if v != nil {
+		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
+			return "", fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+		}
+	}
+
+	return data.Results, nil
+}
