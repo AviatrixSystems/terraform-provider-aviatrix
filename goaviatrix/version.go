@@ -129,7 +129,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		buf.ReadFrom(resp.Body)
 		err = json.Unmarshal(buf.Bytes(), &data1)
 		if err != nil {
-			if strings.Contains(buf.String(), "503 Service Unavailable") {
+			if strings.Contains(buf.String(), "503 Service Unavailable") || strings.Contains(buf.String(), "502 Proxy Error") {
 				time.Sleep(sleepDuration)
 				continue
 			}
