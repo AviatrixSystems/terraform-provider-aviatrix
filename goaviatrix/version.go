@@ -107,7 +107,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form["action"], data.Reason)
 	}
 
-	time.Sleep(time.Second * 120)
+	time.Sleep(time.Second * 90)
 
 	form1 := map[string]string{
 		"action": "platform_upgrade_status",
@@ -138,7 +138,6 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		if !data1.Return {
 			return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form1["action"], data1.Reason)
 		}
-
 		if data1.Results.OverallStatus == "completed" {
 			c.Login()
 			return nil
