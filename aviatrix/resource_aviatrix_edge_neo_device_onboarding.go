@@ -127,7 +127,7 @@ func marshalEdgeNEODeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.Edg
 			ProxyServerIp: network1["proxy_server_ip"].(string),
 		}
 
-		for _, dnsServerIp := range network1["dns_server_ips"].([]interface{}) {
+		for _, dnsServerIp := range network1["dns_server_ips"].(*schema.Set).List() {
 			network2.DnsServerIps = append(network2.DnsServerIps, dnsServerIp.(string))
 		}
 
