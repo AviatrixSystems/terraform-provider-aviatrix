@@ -37,7 +37,7 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "WAN/LAN/MANAGEMENT interfaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -93,6 +93,14 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 					},
 				},
 			},
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -104,8 +112,9 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 
 func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 	edgeCSPHa := &goaviatrix.EdgeCSPHa{
-		PrimaryGwName:   d.Get("primary_gw_name").(string),
-		ComputeNodeUuid: d.Get("compute_node_uuid").(string),
+		PrimaryGwName:            d.Get("primary_gw_name").(string),
+		ComputeNodeUuid:          d.Get("compute_node_uuid").(string),
+		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -169,6 +178,12 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
 	d.Set("account_name", edgeCSPHaResp.AccountName)
 
+	if edgeCSPHaResp.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPHaResp.ManagementEgressIpPrefix, ","))
+	}
+
 	var interfaces []map[string]interface{}
 	for _, if0 := range edgeCSPHaResp.InterfaceList {
 		if1 := make(map[string]interface{})
@@ -205,12 +220,13 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 		GwName: d.Id(),
 	}
 
-	if d.HasChange("interfaces") {
+	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
+		gatewayForEdgeCSPFunctions.ManagementEgressIpPrefix = edgeCSPHa.ManagementEgressIpPrefix
 
 		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN interfaces during Edge CSP HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge CSP HA update: %v", err)
 		}
 	}
 

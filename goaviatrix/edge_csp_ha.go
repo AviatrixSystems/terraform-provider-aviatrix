@@ -17,16 +17,18 @@ type EdgeCSPHa struct {
 	InterfaceList             []*Interface
 	Interfaces                string `json:"interfaces"`
 	NoProgressBar             bool   `json:"no_progress_bar,omitempty"`
+	ManagementEgressIpPrefix  string `json:"mgmt_egress_ip,omitempty"`
 }
 
 type EdgeCSPHaResp struct {
-	AccountName          string       `json:"account_name"`
-	PrimaryGwName        string       `json:"primary_gw_name"`
-	GwName               string       `json:"gw_name"`
-	Dhcp                 bool         `json:"dhcp"`
-	ComputeNodeUuid      string       `json:"edge_csp_compute_node_uuid"`
-	LanInterfaceIpPrefix string       `json:"lan_ip"`
-	InterfaceList        []*Interface `json:"interfaces"`
+	AccountName              string       `json:"account_name"`
+	PrimaryGwName            string       `json:"primary_gw_name"`
+	GwName                   string       `json:"gw_name"`
+	Dhcp                     bool         `json:"dhcp"`
+	ComputeNodeUuid          string       `json:"edge_csp_compute_node_uuid"`
+	LanInterfaceIpPrefix     string       `json:"lan_ip"`
+	InterfaceList            []*Interface `json:"interfaces"`
+	ManagementEgressIpPrefix string       `json:"mgmt_egress_ip"`
 }
 
 type EdgeCSPHaListResp struct {
@@ -76,9 +78,10 @@ func (c *Client) GetEdgeCSPHa(ctx context.Context, gwName string) (*EdgeCSPHaRes
 
 func (c *Client) UpdateEdgeCSPHa(ctx context.Context, edgeCSP *EdgeCSP) error {
 	form := map[string]string{
-		"action": "update_edge_gateway",
-		"CID":    c.CID,
-		"name":   edgeCSP.GwName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeCSP.GwName,
+		"mgmt_egress_ip": edgeCSP.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeCSP.InterfaceList)

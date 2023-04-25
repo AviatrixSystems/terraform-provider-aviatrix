@@ -7,21 +7,23 @@ import (
 )
 
 type EdgeNEOHa struct {
-	Action        string `json:"action"`
-	CID           string `json:"CID"`
-	PrimaryGwName string `json:"primary_gw_name"`
-	DeviceId      string `json:"device_id"`
-	InterfaceList []*EdgeNEOInterface
-	Interfaces    string `json:"interfaces"`
-	NoProgressBar bool   `json:"no_progress_bar,omitempty"`
+	Action                   string `json:"action"`
+	CID                      string `json:"CID"`
+	PrimaryGwName            string `json:"primary_gw_name"`
+	DeviceId                 string `json:"device_id"`
+	InterfaceList            []*EdgeNEOInterface
+	Interfaces               string `json:"interfaces"`
+	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
+	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
 }
 
 type EdgeNEOHaResp struct {
-	AccountName   string              `json:"account_name"`
-	PrimaryGwName string              `json:"primary_gw_name"`
-	GwName        string              `json:"gw_name"`
-	DeviceId      string              `json:"device_id"`
-	InterfaceList []*EdgeNEOInterface `json:"interfaces"`
+	AccountName              string              `json:"account_name"`
+	PrimaryGwName            string              `json:"primary_gw_name"`
+	GwName                   string              `json:"gw_name"`
+	DeviceId                 string              `json:"device_id"`
+	InterfaceList            []*EdgeNEOInterface `json:"interfaces"`
+	ManagementEgressIpPrefix string              `json:"mgmt_egress_ip"`
 }
 
 type EdgeNEOHaListResp struct {
@@ -71,9 +73,10 @@ func (c *Client) GetEdgeNEOHa(ctx context.Context, gwName string) (*EdgeNEOHaRes
 
 func (c *Client) UpdateEdgeNEOHa(ctx context.Context, edgeNEO *EdgeNEO) error {
 	form := map[string]string{
-		"action": "update_edge_gateway",
-		"CID":    c.CID,
-		"name":   edgeNEO.GwName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeNEO.GwName,
+		"mgmt_egress_ip": edgeNEO.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeNEO.InterfaceList)
