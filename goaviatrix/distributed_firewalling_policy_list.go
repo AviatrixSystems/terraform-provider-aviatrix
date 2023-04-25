@@ -18,6 +18,7 @@ type DistributedFirewallingPolicy struct {
 	Priority           int                               `json:"priority"`
 	Protocol           string                            `json:"protocol"`
 	FlowAppRequirement string                            `json:"flow_app_requirement,omitempty"`
+	DecryptPolicy      string                            `json:"decrypt_policy,omitempty"`
 	Watch              bool                              `json:"watch,omitempty"`
 	UUID               string                            `json:"uuid,omitempty"`
 	SystemResource     bool                              `json:"system_resource,omitempty"`

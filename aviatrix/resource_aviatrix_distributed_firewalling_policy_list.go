@@ -74,6 +74,13 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
 							Description:  "",
 						},
+						"decrypt_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "DECRYPT_UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
+							Description:  "",
+						},
 						"priority": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -139,6 +146,7 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			Action:             policy["action"].(string),
 			Priority:           policy["priority"].(int),
 			FlowAppRequirement: policy["flow_app_requirement"].(string),
+			DecryptPolicy:      policy["decrypt_policy"].(string),
 		}
 
 		protocol := strings.ToUpper(policy["protocol"].(string))
@@ -257,6 +265,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 			p["protocol"] = policy.Protocol
 		}
 		p["flow_app_requirement"] = policy.FlowAppRequirement
+		p["decrypt_policy"] = policy.DecryptPolicy
 
 		if policy.Protocol != "ICMP" {
 			var portRanges []map[string]interface{}
