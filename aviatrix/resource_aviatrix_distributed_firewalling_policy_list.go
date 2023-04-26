@@ -36,7 +36,7 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 						"action": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
 							Description: "Action for the specified source and destination Smart Groups." +
 								"Must be one of PERMIT or DENY.",
 						},
@@ -52,6 +52,12 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "Set of source Smart Group UUIDs for the policy.",
 						},
+						"web_groups": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Set of Web Group UUIDs for the policy.",
+						},
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -60,6 +66,20 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 								return strings.EqualFold(old, new)
 							},
 							Description: "Protocol for the policy to filter.",
+						},
+						"flow_app_requirement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "APP_UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
+							Description:  "Flow application requirement for the policy.",
+						},
+						"decrypt_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "DECRYPT_UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
+							Description:  "Decryption options for the policy.",
 						},
 						"priority": {
 							Type:        schema.TypeInt,
@@ -122,9 +142,11 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 		policy := policyInterface.(map[string]interface{})
 
 		distributedFirewallingPolicy := &goaviatrix.DistributedFirewallingPolicy{
-			Name:     policy["name"].(string),
-			Action:   policy["action"].(string),
-			Priority: policy["priority"].(int),
+			Name:               policy["name"].(string),
+			Action:             policy["action"].(string),
+			Priority:           policy["priority"].(int),
+			FlowAppRequirement: policy["flow_app_requirement"].(string),
+			DecryptPolicy:      policy["decrypt_policy"].(string),
 		}
 
 		protocol := strings.ToUpper(policy["protocol"].(string))
@@ -140,6 +162,10 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 
 		for _, smartGroup := range policy["dst_smart_groups"].(*schema.Set).List() {
 			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroup.(string))
+		}
+
+		for _, webGroup := range policy["web_groups"].(*schema.Set).List() {
+			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, webGroup.(string))
 		}
 
 		if logging, loggingOk := policy["logging"]; loggingOk {
@@ -219,12 +245,16 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 
 	var policies []map[string]interface{}
 	for _, policy := range policyList.Policies {
+		if policy.SystemResource {
+			continue
+		}
 		p := make(map[string]interface{})
 		p["name"] = policy.Name
 		p["action"] = policy.Action
 		p["priority"] = policy.Priority
 		p["src_smart_groups"] = policy.SrcSmartGroups
 		p["dst_smart_groups"] = policy.DstSmartGroups
+		p["web_groups"] = policy.WebGroups
 		p["logging"] = policy.Logging
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
@@ -234,6 +264,8 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		} else {
 			p["protocol"] = policy.Protocol
 		}
+		p["flow_app_requirement"] = policy.FlowAppRequirement
+		p["decrypt_policy"] = policy.DecryptPolicy
 
 		if policy.Protocol != "ICMP" {
 			var portRanges []map[string]interface{}
