@@ -25,7 +25,7 @@ func resourceAviatrixGlobalVpcTaggingSettings() *schema.Resource {
 			"service_state": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"automatic", "disabled"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"semi_automatic", "automatic", "disabled"}, false),
 				Description:  "Service state.",
 			},
 			"enable_alert": {
@@ -80,10 +80,6 @@ func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema
 
 	globalVpcTaggingSettings, err := client.GetGlobalVpcTaggingSettings(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
 		return diag.Errorf("failed to read global vpc tagging settings: %s", err)
 	}
 

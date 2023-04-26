@@ -8,9 +8,9 @@ description: |-
 
 # aviatrix_global_vpc_tagging_settings
 
-!> **WARNING:** The default service state is "semi_automatic". Therefore, after the resource is destroyed, the service state will be reset to "semi_automatic".
-
 The **aviatrix_global_vpc_tagging_settings** resource manages how to tag newly found instances for global VPC.
+
+-> **NOTE:** The default service state is "semi_automatic". Therefore, after the resource is destroyed, the service state will be reset to "semi_automatic".
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ resource "aviatrix_global_vpc_tagging_settings" "test" {
 The following arguments are supported:
 
 ### Required
-* `service_state` - (Required) Tagging service state. Valid values: "automatic", "disabled".
+* `service_state` - (Required) Tagging service state. Valid values: "semi_automatic", "automatic", "disabled".
 * `enable_alert` - (Required) Set to true to enable alert. Valid values: true, false.
 
 ## Import

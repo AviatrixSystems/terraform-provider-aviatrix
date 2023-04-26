@@ -33,8 +33,6 @@ func (c *Client) GetGlobalVpcTaggingSettings(ctx context.Context) (*GlobalVpcTag
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
 		return nil, err
-	} else if data.Results.ServiceState == "semi_automatic" {
-		return nil, ErrNotFound
 	}
 
 	return &data.Results, nil
