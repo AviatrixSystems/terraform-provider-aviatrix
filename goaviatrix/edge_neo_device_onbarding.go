@@ -28,12 +28,13 @@ type EdgeNEODeviceNetwork struct {
 }
 
 type EdgeNEODeviceResp struct {
-	AccountName   string                  `json:"account_name"`
-	DeviceName    string                  `json:"name"`
-	DeviceId      string                  `json:"deviceId"`
-	SerialNumber  string                  `json:"serial"`
-	HardwareModel string                  `json:"hardwareId"`
-	Network       []*EdgeNEODeviceNetwork `json:"interfaces"`
+	AccountName      string                  `json:"account_name"`
+	DeviceName       string                  `json:"name"`
+	DeviceId         string                  `json:"deviceId"`
+	SerialNumber     string                  `json:"serial"`
+	HardwareModel    string                  `json:"hardwareId"`
+	Network          []*EdgeNEODeviceNetwork `json:"interfaces"`
+	ConnectionStatus string                  `json:"connectionStatus"`
 }
 
 type EdgeNEODeviceListResp struct {

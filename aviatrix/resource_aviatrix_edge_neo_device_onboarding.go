@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -159,6 +160,25 @@ func resourceAviatrixEdgeNEODeviceOnboardingCreate(ctx context.Context, d *schem
 	if edgeNEODevice.DownloadConfigFile {
 		if err := client.DownloadEdgeNEOConfigFile(ctx, edgeNEODevice); err != nil {
 			return diag.Errorf("could not download Edge NEO static config file: %v", err)
+		}
+	}
+
+	numberOfRetries := 30
+	retryInterval := 20
+	for i := 0; ; i++ {
+		edgeNEODeviceResp, err := client.GetEdgeNEODevice(ctx, edgeNEODevice.AccountName, edgeNEODevice.DeviceName)
+		if err != nil {
+			return diag.Errorf("could not read Edge NEO device during onboarding: %v", err)
+		}
+
+		if edgeNEODeviceResp.ConnectionStatus == "connected" {
+			break
+		}
+
+		if i < numberOfRetries {
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+		} else {
+			return diag.Errorf("Edge NEO device connection status could not become connected after 10 minutes")
 		}
 	}
 
