@@ -21,7 +21,7 @@ type EdgeNEOHaResp struct {
 	AccountName              string              `json:"account_name"`
 	PrimaryGwName            string              `json:"primary_gw_name"`
 	GwName                   string              `json:"gw_name"`
-	DeviceId                 string              `json:"device_id"`
+	DeviceId                 string              `json:"edge_csp_device_id"`
 	InterfaceList            []*EdgeNEOInterface `json:"interfaces"`
 	ManagementEgressIpPrefix string              `json:"mgmt_egress_ip"`
 }
