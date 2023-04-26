@@ -282,6 +282,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		match := re.FindStringSubmatch(result)
 		connName := match[1]
 		d.Set("connection_name", connName)
+		externalDeviceConn.ConnectionName = connName
 	}
 
 	if _, ok := d.GetOk("prepend_as_path"); ok {
