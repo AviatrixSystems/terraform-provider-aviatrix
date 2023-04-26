@@ -1,0 +1,39 @@
+name: Release # Workflow name displayed on GitHub
+
+on: workflow_dispatch # Trigger manually
+
+permissions:
+  contents: write
+
+jobs:
+  new-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Push git tag
+        run: |
+          version="v$(cat version)"
+          echo "Version: $version"
+          git tag $version
+          git push origin $version
+      -
+        name: Set up Go
+        uses: actions/setup-go@v3
+      -
+        name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
