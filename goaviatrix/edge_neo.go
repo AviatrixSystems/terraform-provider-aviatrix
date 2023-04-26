@@ -48,6 +48,7 @@ type EdgeNEO struct {
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
 	LanInterfaceIpPrefix               string
+	DirectAttachLan                    bool `json:"direct_attach_lan"`
 }
 
 type EdgeNEOInterface struct {
@@ -127,6 +128,7 @@ func (c *Client) CreateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	edgeNEO.Action = "create_edge_csp_gateway"
 	edgeNEO.CID = c.CID
 	edgeNEO.NoProgressBar = true
+	edgeNEO.DirectAttachLan = true
 
 	interfaces, err := json.Marshal(edgeNEO.InterfaceList)
 	if err != nil {
