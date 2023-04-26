@@ -72,14 +72,14 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Optional:     true,
 							Default:      "APP_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
-							Description:  "",
+							Description:  "Flow application requirement for the policy.",
 						},
 						"decrypt_policy": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "DECRYPT_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
-							Description:  "",
+							Description:  "Decryption options for the policy.",
 						},
 						"priority": {
 							Type:        schema.TypeInt,

@@ -38,18 +38,17 @@ func resourceAviatrixWebGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"snifilter": {
-										Type:     schema.TypeString,
-										Optional: true,
-										//ConflictsWith: []string{"urlfilter"},
+										Type:         schema.TypeString,
+										Optional:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
-										Description:  "",
+										Description:  "Server name indicator this expression matches.",
 									},
 									"urlfilter": {
 										Type:     schema.TypeString,
 										Optional: true,
 										//ConflictsWith: []string{"snifilter"},
 										ValidateFunc: validation.StringIsNotWhiteSpace,
-										Description:  "",
+										Description:  "URL address this expression matches.",
 									},
 								},
 							},

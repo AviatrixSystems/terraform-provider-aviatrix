@@ -149,6 +149,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
 | aviatrix_site2cloud_ca_cert_tag      | SKIP_S2C_CA_CERT_TAG               | N/A                                                                            |
 | aviatrix_sla_class                   | SKIP_SLA_CLASS                     | N/A                                                                            |
+| aviatrix_smart_group                 | SKIP_SMART_GROUP                   | N/A                                                                            |
 | aviatrix_spoke_external_device_conn  | SKIP_SPOKE_EXTERNAL_DEVICE_CONN    | aviatrix_account + aviatrix_spoke_gateway                                      |
 | aviatrix_spoke_ha_gateway            | SKIP_SPOKE_HA_GATEWAY              | aviatrix_account + aviatrix_vpc + aviatrix_spoke_gateway                       |
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY                 | aviatrix_gateway                                                               |
@@ -178,6 +179,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_profile                 | SKIP_VPN_PROFILE                   | aviatrix_vpn_user                                                              |
 | aviatrix_vpn_user                    | SKIP_VPN_USER                      | aviatrix_gateway                                                               |
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
+| aviatrix_web_group                   | SKIP_WEB_GROUP                     | N/A                                                                            |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
 | aviatrix_data_source_controller_metadata | SKIP_DATA_CONTROLLER_METADATA  |                                                                                |
