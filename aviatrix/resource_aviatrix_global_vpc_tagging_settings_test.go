@@ -60,8 +60,8 @@ func testAccCheckGlobalVpcTaggingSettingsExists(resourceName string) resource.Te
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		_, err := client.GetGlobalVpcTaggingSettings(context.Background())
-		if err == goaviatrix.ErrNotFound {
+		globalVpcTaggingSettings, _ := client.GetGlobalVpcTaggingSettings(context.Background())
+		if globalVpcTaggingSettings.ServiceState != "automatic" {
 			return fmt.Errorf("global vpc tagging settings not found")
 		}
 
@@ -77,8 +77,8 @@ func testAccCheckGlobalVpcTaggingSettingsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := client.GetGlobalVpcTaggingSettings(context.Background())
-		if err != goaviatrix.ErrNotFound {
+		globalVpcTaggingSettings, _ := client.GetGlobalVpcTaggingSettings(context.Background())
+		if globalVpcTaggingSettings.ServiceState == "automatic" {
 			return fmt.Errorf("global vpc tagging settings still exists")
 		}
 	}
