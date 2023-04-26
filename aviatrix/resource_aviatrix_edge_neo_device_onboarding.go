@@ -259,15 +259,15 @@ func resourceAviatrixEdgeNEODeviceOnboardingUpdate(ctx context.Context, d *schem
 		diag.Errorf("config_file_download_path must be empty when download_config_file is false")
 	}
 
-	if d.HasChanges("account_name", "device_name", "serial_number", "hardware_model") {
-		return diag.Errorf("account_name, device_name, serial_number and hardware_model are not allowed to be updated")
+	if d.HasChanges("account_name", "serial_number", "hardware_model") {
+		return diag.Errorf("account_name, serial_number and hardware_model are not allowed to be updated")
 	}
 
 	d.Partial(true)
 
-	if d.HasChange("network") {
-		if err := client.OnboardEdgeNEODevice(ctx, edgeNEODevice); err != nil {
-			return diag.Errorf("could not update network configurations during Edge NEO device update: %v", err)
+	if d.HasChanges("device_name", "network") {
+		if err := client.UpdateEdgeNEODevice(ctx, edgeNEODevice); err != nil {
+			return diag.Errorf("could not update device_name and network configurations during Edge NEO device update: %v", err)
 		}
 
 		if edgeNEODevice.DownloadConfigFile {

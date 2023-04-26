@@ -79,6 +79,18 @@ func (c *Client) GetEdgeNEODevice(ctx context.Context, accountName, deviceName s
 	return nil, ErrNotFound
 }
 
+func (c *Client) UpdateEdgeNEODevice(ctx context.Context, edgeNEODevice *EdgeNEODevice) error {
+	edgeNEODevice.Action = "update_edge_csp_device"
+	edgeNEODevice.CID = c.CID
+
+	err := c.PostAPIContext2(ctx, nil, edgeNEODevice.Action, edgeNEODevice, BasicCheck)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) DeleteEdgeNEODevice(ctx context.Context, accountName, serialNumber string) error {
 	form := map[string]string{
 		"action":       "delete_edge_csp_device",
