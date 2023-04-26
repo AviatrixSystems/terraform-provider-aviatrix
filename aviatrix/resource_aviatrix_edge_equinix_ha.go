@@ -41,7 +41,7 @@ func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "WAN/LAN/MANAGEMENT interfaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -97,6 +97,14 @@ func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 					},
 				},
 			},
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -108,8 +116,9 @@ func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 
 func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa {
 	edgeEquinixHa := &goaviatrix.EdgeEquinixHa{
-		PrimaryGwName:       d.Get("primary_gw_name").(string),
-		ZtpFileDownloadPath: d.Get("ztp_file_download_path").(string),
+		PrimaryGwName:            d.Get("primary_gw_name").(string),
+		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
+		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -172,6 +181,12 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("primary_gw_name", edgeEquinixHaResp.PrimaryGwName)
 	d.Set("account_name", edgeEquinixHaResp.AccountName)
 
+	if edgeEquinixHaResp.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeEquinixHaResp.ManagementEgressIpPrefix, ","))
+	}
+
 	var interfaces []map[string]interface{}
 	for _, interface0 := range edgeEquinixHaResp.InterfaceList {
 		interface1 := make(map[string]interface{})
@@ -208,12 +223,13 @@ func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.Resource
 		GwName: d.Id(),
 	}
 
-	if d.HasChange("interfaces") {
+	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeEquinixFunctions.InterfaceList = edgeEquinixHa.InterfaceList
+		gatewayForEdgeEquinixFunctions.ManagementEgressIpPrefix = edgeEquinixHa.ManagementEgressIpPrefix
 
 		err := client.UpdateEdgeEquinixHa(ctx, gatewayForEdgeEquinixFunctions)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN interfaces during Edge Equinix HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Equinix HA update: %v", err)
 		}
 	}
 

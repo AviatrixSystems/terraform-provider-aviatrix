@@ -37,7 +37,7 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "WAN/LAN/MANAGEMENT interfaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -93,6 +93,14 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 					},
 				},
 			},
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -104,8 +112,9 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 
 func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	edgeNEOHa := &goaviatrix.EdgeNEOHa{
-		PrimaryGwName: d.Get("primary_gw_name").(string),
-		DeviceId:      d.Get("device_id").(string),
+		PrimaryGwName:            d.Get("primary_gw_name").(string),
+		DeviceId:                 d.Get("device_id").(string),
+		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -169,6 +178,12 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("device_id", edgeNEOHaResp.DeviceId)
 	d.Set("account_name", edgeNEOHaResp.AccountName)
 
+	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
+	}
+
 	var interfaces []map[string]interface{}
 	for _, if0 := range edgeNEOHaResp.InterfaceList {
 		if1 := make(map[string]interface{})
@@ -205,12 +220,13 @@ func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData
 		GwName: d.Id(),
 	}
 
-	if d.HasChange("interfaces") {
+	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeNEOFunctions.InterfaceList = edgeNEOHa.InterfaceList
+		gatewayForEdgeNEOFunctions.ManagementEgressIpPrefix = edgeNEOHa.ManagementEgressIpPrefix
 
 		err := client.UpdateEdgeNEOHa(ctx, gatewayForEdgeNEOFunctions)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN interfaces during Edge NEO HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge NEO HA update: %v", err)
 		}
 	}
 

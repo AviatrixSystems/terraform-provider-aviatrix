@@ -8,20 +8,22 @@ import (
 )
 
 type EdgeEquinixHa struct {
-	Action              string `json:"action"`
-	CID                 string `json:"CID"`
-	PrimaryGwName       string `json:"primary_gw_name"`
-	ZtpFileDownloadPath string
-	InterfaceList       []*EdgeEquinixInterface
-	Interfaces          string `json:"interfaces"`
-	NoProgressBar       bool   `json:"no_progress_bar,omitempty"`
+	Action                   string `json:"action"`
+	CID                      string `json:"CID"`
+	PrimaryGwName            string `json:"primary_gw_name"`
+	ZtpFileDownloadPath      string
+	InterfaceList            []*EdgeEquinixInterface
+	Interfaces               string `json:"interfaces"`
+	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
+	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
 }
 
 type EdgeEquinixHaResp struct {
-	AccountName   string                  `json:"account_name"`
-	PrimaryGwName string                  `json:"primary_gw_name"`
-	GwName        string                  `json:"gw_name"`
-	InterfaceList []*EdgeEquinixInterface `json:"interfaces"`
+	AccountName              string                  `json:"account_name"`
+	PrimaryGwName            string                  `json:"primary_gw_name"`
+	GwName                   string                  `json:"gw_name"`
+	InterfaceList            []*EdgeEquinixInterface `json:"interfaces"`
+	ManagementEgressIpPrefix string                  `json:"mgmt_egress_ip"`
 }
 
 type EdgeEquinixHaListResp struct {
@@ -90,9 +92,10 @@ func (c *Client) GetEdgeEquinixHa(ctx context.Context, gwName string) (*EdgeEqui
 
 func (c *Client) UpdateEdgeEquinixHa(ctx context.Context, edgeEquinix *EdgeEquinix) error {
 	form := map[string]string{
-		"action": "update_edge_gateway",
-		"CID":    c.CID,
-		"name":   edgeEquinix.GwName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeEquinix.GwName,
+		"mgmt_egress_ip": edgeEquinix.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeEquinix.InterfaceList)

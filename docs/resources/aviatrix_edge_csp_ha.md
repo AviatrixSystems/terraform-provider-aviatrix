@@ -53,7 +53,10 @@ The following arguments are supported:
   * `dns_server_ip` - (Optional) Primary DNS server IP.
   * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
   * `tag` - (Optional) Tag.
-    
+
+### Optional
+* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].    
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attribute is exported:
