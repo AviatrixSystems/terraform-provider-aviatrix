@@ -15,6 +15,7 @@ type EdgeNEOHa struct {
 	Interfaces               string `json:"interfaces"`
 	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
 	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
+	DirectAttachLan          bool   `json:"direct_attach_lan"`
 }
 
 type EdgeNEOHaResp struct {
@@ -36,6 +37,7 @@ func (c *Client) CreateEdgeNEOHa(ctx context.Context, edgeNEOHa *EdgeNEOHa) (str
 	edgeNEOHa.CID = c.CID
 	edgeNEOHa.Action = "create_multicloud_ha_gateway"
 	edgeNEOHa.NoProgressBar = true
+	edgeNEOHa.DirectAttachLan = true
 
 	interfaces, err := json.Marshal(edgeNEOHa.InterfaceList)
 	if err != nil {
