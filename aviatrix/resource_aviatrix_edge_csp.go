@@ -600,6 +600,13 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if !edgeCSP.EnableAutoAdvertiseLanCidrs {
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
+		if err != nil {
+			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge CSP creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeCSPReadIfRequired(ctx, d, meta, &flag)
 }
 
