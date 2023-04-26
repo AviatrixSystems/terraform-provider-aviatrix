@@ -593,6 +593,13 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if !edgeNEO.EnableAutoAdvertiseLanCidrs {
+		err := client.UpdateEdgeNEO(ctx, edgeNEO)
+		if err != nil {
+			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge NEO creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
 }
 

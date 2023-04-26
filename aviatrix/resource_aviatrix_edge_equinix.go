@@ -560,6 +560,13 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	if !edgeEquinix.EnableAutoAdvertiseLanCidrs {
+		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
+		if err != nil {
+			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Equinix creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeEquinixReadIfRequired(ctx, d, meta, &flag)
 }
 
