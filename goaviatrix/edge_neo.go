@@ -82,7 +82,7 @@ type EdgeNEOResp struct {
 	GwName                             string `json:"gw_name"`
 	SiteId                             string `json:"vpc_id"`
 	DeviceId                           string `json:"edge_csp_device_id"`
-	GwSize                             string `json:"gw_resource_size"`
+	GwSize                             string `json:"edge_csp_gateway_size"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
 	DnsServerIp                        string `json:"dns_server_ip"`
