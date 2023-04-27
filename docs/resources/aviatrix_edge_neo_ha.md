@@ -10,6 +10,8 @@ description: |-
 
 The **aviatrix_edge_neo_ha** resource creates the Aviatrix Edge NEO HA.
 
+-> **NOTE:** A primary **aviatrix_edge_neo** is required to create **aviatrix_edge_neo_ha**.
+
 ## Example Usage
 
 ```hcl
@@ -52,7 +54,7 @@ The following arguments are supported:
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
     * `name` - (Required) Interface name.
     * `type` - (Required) Type.
-    * `bandwidth` - (Optional) Bandwidth.
+    * `bandwidth` - (Optional) The rate of data can be moved through the interface, requires an integer value.
     * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
     * `wan_public_ip` - (Optional) WAN public IP.
     * `ip_address` - (Optional) Interface static IP address.
