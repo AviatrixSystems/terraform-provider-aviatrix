@@ -76,3 +76,7 @@ variable "edge_csp_project_uuid" {}
 variable "edge_csp_compute_node_uuid" {}
 variable "edge_csp_template_uuid" {}
 variable "edge_csp_ha_compute_node_uuid" {}
+variable "edge_neo_device_serial_number" {}
+variable "edge_neo_device_hardware_model" {}
+variable "edge_neo_ha_device_serial_number" {}
+variable "edge_neo_ha_device_hardware_model" {}

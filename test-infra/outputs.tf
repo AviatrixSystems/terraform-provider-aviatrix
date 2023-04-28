@@ -269,3 +269,19 @@ output "EDGE_CSP_TEMPLATE_UUID" {
 output "EDGE_CSP_HA_COMPUTE_NODE_UUID" {
   value = var.edge_csp_ha_compute_node_uuid
 }
+
+output "EDGE_NEO_DEVICE_SERIAL_NUMBER" {
+  value = var.edge_neo_device_serial_number
+}
+
+output "EDGE_NEO_DEVICE_HARDWARE_MODEL" {
+  value = var.edge_neo_device_hardware_model
+}
+
+output "EDGE_NEO_HA_DEVICE_SERIAL_NUMBER" {
+  value = var.edge_neo_ha_device_serial_number
+}
+
+output "EDGE_NEO_HA_DEVICE_HARDWARE_MODEL" {
+  value = var.edge_neo_ha_device_hardware_model
+}

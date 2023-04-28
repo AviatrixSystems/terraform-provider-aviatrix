@@ -1,7 +1,7 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_equinix_csp_ha"
+page_title: "Aviatrix: aviatrix_edge_equinix_ha"
 description: |-
   Creates an Aviatrix Edge Equinix HA
 ---
@@ -9,6 +9,8 @@ description: |-
 # aviatrix_edge_equinix_ha
 
 The **aviatrix_edge_equinix_ha** resource creates the Aviatrix Edge Equinix HA.
+
+-> **NOTE:** A primary **aviatrix_edge_equinix** is required to create **aviatrix_edge_equinix_ha**.
 
 ## Example Usage
 
@@ -47,12 +49,12 @@ resource "aviatrix_edge_equinix_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Edge Equinix name.
+* `primary_gw_name` - (Required) Primary Edge Equinix name.
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
-* `interfaces` - (Required) WAN/LAN interfaces.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
   * `type` - (Required) Type.
-  * `bandwidth` - (Optional) Bandwidth.
+  * `bandwidth` - (Optional) The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.
   * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.

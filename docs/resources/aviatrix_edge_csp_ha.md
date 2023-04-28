@@ -10,6 +10,8 @@ description: |-
 
 The **aviatrix_edge_csp_ha** resource creates the Aviatrix Edge CSP HA.
 
+-> **NOTE:** A primary **aviatrix_edge_csp** is required to create **aviatrix_edge_csp_ha**.
+
 ## Example Usage
 
 ```hcl
@@ -38,14 +40,14 @@ resource "aviatrix_edge_csp_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Edge CSP name.
+* `primary_gw_name` - (Required) Primary Edge CSP name.
 * `compute_node_uuid` - (Required) Edge CSP compute node UUID.
 
 -> **NOTE:** At least one LAN interface is required.
-* `interfaces` - (Required) WAN/LAN interfaces.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
   * `type` - (Required) Type.
-  * `bandwidth` - (Optional) Bandwidth.
+  * `bandwidth` - (Optional) The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.
   * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
