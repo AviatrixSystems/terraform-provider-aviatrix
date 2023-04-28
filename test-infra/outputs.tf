@@ -278,10 +278,6 @@ output "EDGE_NEO_DEVICE_HARDWARE_MODEL" {
   value = var.edge_neo_device_hardware_model
 }
 
-output "EDGE_NEO_SITE_ID" {
-  value = var.edge_neo_site_id
-}
-
 output "EDGE_NEO_HA_DEVICE_SERIAL_NUMBER" {
   value = var.edge_neo_ha_device_serial_number
 }

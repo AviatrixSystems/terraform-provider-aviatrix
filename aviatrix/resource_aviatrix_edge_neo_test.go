@@ -22,6 +22,7 @@ func TestAccAviatrixEdgeNEO_basic(t *testing.T) {
 	accountName := "acc-" + acctest.RandString(5)
 	deviceName := "device-" + acctest.RandString(5)
 	gwName := "gw-" + acctest.RandString(5)
+	siteId := "site-" + acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,7 +32,7 @@ func TestAccAviatrixEdgeNEO_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEdgeNEODestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeNEOBasic(accountName, deviceName, gwName),
+				Config: testAccEdgeNEOBasic(accountName, deviceName, gwName, siteId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeNEOExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
@@ -50,7 +51,7 @@ func TestAccAviatrixEdgeNEO_basic(t *testing.T) {
 	})
 }
 
-func testAccEdgeNEOBasic(accountName, deviceName, gwName string) string {
+func testAccEdgeNEOBasic(accountName, deviceName, gwName, siteId string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name = "%s"
@@ -95,7 +96,7 @@ resource "aviatrix_edge_neo" "test" {
 	}
 }
  `, accountName, deviceName, os.Getenv("EDGE_NEO_DEVICE_SERIAL_NUMBER"), os.Getenv("EDGE_NEO_DEVICE_HARDWARE_MODEL"),
-		gwName, os.Getenv("EDGE_NEO_SITE_ID"))
+		gwName, siteId)
 }
 
 func testAccCheckEdgeNEOExists(resourceName string) resource.TestCheckFunc {
