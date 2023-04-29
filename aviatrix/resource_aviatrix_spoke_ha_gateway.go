@@ -42,11 +42,10 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-				Description:  "Public Subnet Info.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Public Subnet Info.",
 			},
 			"zone": {
 				Type:        schema.TypeString,
