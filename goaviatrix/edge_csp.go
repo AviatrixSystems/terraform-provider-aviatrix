@@ -46,6 +46,7 @@ type EdgeCSP struct {
 	InterfaceList                      []*Interface
 	Interfaces                         string `json:"interfaces"`
 	VlanList                           []*Vlan
+	Vlan                               string `json:"vlan"`
 	DnsProfileName                     string `json:"dns_profile_name"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
@@ -142,6 +143,17 @@ func (c *Client) CreateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 	}
 
 	edgeCSP.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	if edgeCSP.VlanList == nil || len(edgeCSP.VlanList) == 0 {
+		edgeCSP.VlanList = []*Vlan{}
+	}
+
+	vlan, err := json.Marshal(edgeCSP.VlanList)
+	if err != nil {
+		return err
+	}
+
+	edgeCSP.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	err = c.PostAPIContext2(ctx, nil, edgeCSP.Action, edgeCSP, BasicCheck)
 	if err != nil {
