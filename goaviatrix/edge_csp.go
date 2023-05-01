@@ -122,7 +122,8 @@ type EdgeCSPResp struct {
 	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
 	InterfaceList                      []*Interface `json:"interfaces"`
 	DnsProfileName                     string       `json:"dns_profile_name"`
-	SingleIpSnat                       bool         `json:"nat_enabled"`
+	EnableNat                          string       `json:"enable_nat"`
+	SnatMode                           string       `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
 }
 

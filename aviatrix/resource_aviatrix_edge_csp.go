@@ -750,7 +750,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
-	d.Set("enable_single_ip_snat", edgeCSPResp.SingleIpSnat)
+	d.Set("enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeCSPResp.GwName)
