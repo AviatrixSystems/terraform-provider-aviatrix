@@ -704,7 +704,7 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("dns_profile_name", edgeEquinixResp.DnsProfileName)
-	d.Set("enable_single_ip_snat", edgeEquinixResp.SingleIpSnat)
+	d.Set("enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeEquinixResp.GwName)
