@@ -44,6 +44,7 @@ type EdgeNEO struct {
 	InterfaceList                      []*EdgeNEOInterface
 	Interfaces                         string `json:"interfaces"`
 	VlanList                           []*EdgeNEOVlan
+	Vlan                               string `json:"vlan"`
 	DnsProfileName                     string `json:"dns_profile_name"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
@@ -136,6 +137,17 @@ func (c *Client) CreateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	}
 
 	edgeNEO.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	if edgeNEO.VlanList == nil || len(edgeNEO.VlanList) == 0 {
+		edgeNEO.VlanList = []*EdgeNEOVlan{}
+	}
+
+	vlan, err := json.Marshal(edgeNEO.VlanList)
+	if err != nil {
+		return err
+	}
+
+	edgeNEO.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	err = c.PostAPIContext2(ctx, nil, edgeNEO.Action, edgeNEO, BasicCheck)
 	if err != nil {
