@@ -10,9 +10,9 @@ type WanInterface struct {
 }
 
 type WanInterfaceResp struct {
-	Return  bool         `json:"return"`
-	Results WanInterface `json:"results"`
-	Reason  string       `json:"reason"`
+	Return  bool           `json:"return"`
+	Results []WanInterface `json:"results"`
+	Reason  string         `json:"reason"`
 }
 
 func (c *Client) GetEdgeGatewayWanInterface(ctx context.Context, gwName, wanInterfaceName string) (string, error) {
@@ -30,5 +30,5 @@ func (c *Client) GetEdgeGatewayWanInterface(ctx context.Context, gwName, wanInte
 		return "", err
 	}
 
-	return data.Results.Ip, nil
+	return data.Results[0].Ip, nil
 }
