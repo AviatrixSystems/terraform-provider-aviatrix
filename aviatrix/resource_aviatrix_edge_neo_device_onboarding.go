@@ -211,13 +211,29 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 		d.SetId(id)
 	}
 
-	edgeNEODeviceResp, err := client.GetEdgeNEODevice(ctx, accountName, deviceName)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
+	var edgeNEODeviceResp *goaviatrix.EdgeNEODeviceResp
+	var err error
+
+	for i := 0; ; i++ {
+		edgeNEODeviceResp, err = client.GetEdgeNEODevice(ctx, accountName, deviceName)
+
+		if err != nil {
+			if err == goaviatrix.ErrNotFound {
+				d.SetId("")
+				return nil
+			} else if !strings.Contains(err.Error(), "Failed to list devices: can not access dinfo") {
+				return diag.Errorf("could not read Edge NEO device due to: %v", err)
+			}
+		} else {
+			break
 		}
-		return diag.Errorf("could not read Edge NEO device: %v", err)
+
+		if i < 5 {
+			time.Sleep(time.Duration(5) * time.Second)
+		} else {
+			d.SetId("")
+			return diag.Errorf("could not read Edge NEO device after 5 retries: %s", err)
+		}
 	}
 
 	d.Set("account_name", accountName)
