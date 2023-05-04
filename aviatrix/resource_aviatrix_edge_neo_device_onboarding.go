@@ -163,20 +163,23 @@ func resourceAviatrixEdgeNEODeviceOnboardingCreate(ctx context.Context, d *schem
 		}
 	}
 
-	numberOfRetries := 30
-	retryInterval := 20
 	for i := 0; ; i++ {
 		edgeNEODeviceResp, err := client.GetEdgeNEODevice(ctx, edgeNEODevice.AccountName, edgeNEODevice.DeviceName)
+
 		if err != nil {
-			return diag.Errorf("could not read Edge NEO device during onboarding: %v", err)
+			if err == goaviatrix.ErrNotFound {
+				return diag.Errorf("could not find onboarded Edge NEO device")
+			} else if !strings.Contains(err.Error(), "Failed to list devices: can not access dinfo") {
+				return diag.Errorf("could not read Edge NEO device during onboarding due to: %v", err)
+			}
 		}
 
 		if edgeNEODeviceResp.ConnectionStatus == "connected" {
 			break
 		}
 
-		if i < numberOfRetries {
-			time.Sleep(time.Duration(retryInterval) * time.Second)
+		if i < 30 {
+			time.Sleep(time.Duration(20) * time.Second)
 		} else {
 			return diag.Errorf("Edge NEO device connection status could not become connected after 10 minutes")
 		}
@@ -228,11 +231,11 @@ func resourceAviatrixEdgeNEODeviceOnboardingRead(ctx context.Context, d *schema.
 			break
 		}
 
-		if i < 5 {
-			time.Sleep(time.Duration(5) * time.Second)
+		if i < 30 {
+			time.Sleep(time.Duration(20) * time.Second)
 		} else {
 			d.SetId("")
-			return diag.Errorf("could not read Edge NEO device after 5 retries: %s", err)
+			return diag.Errorf("could not read Edge NEO device after 10 minutes: %s", err)
 		}
 	}
 
