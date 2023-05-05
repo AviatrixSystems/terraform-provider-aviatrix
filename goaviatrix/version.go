@@ -57,7 +57,20 @@ type PlatformUpgradeResp struct {
 }
 
 type PlatformUpgradeStatus struct {
-	OverallStatus string `json:"overall_status,omitempty"`
+	PlatformUpgrade     PlatformUpgradeInfo `json:"platform_upgrade,omitempty"`
+	IsUpgradeInProgress bool                `json:"is_upgrade_in_progress,omitempty"`
+}
+
+type PlatformUpgradeInfo struct {
+	Progmsg string                `json:"progmsg,omitempty"`
+	Results PlatformUpgradeResult `json:"results,omitempty"`
+	Reason  string                `json:"reason,omitempty"`
+}
+
+type PlatformUpgradeResult struct {
+	Msg    string `json:"msg,omitempty"`
+	Reason string `json:"reason,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 func (av *AviatrixVersion) String(includeBuild bool) string {
@@ -86,6 +99,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		form["action"] = "upgrade_platform"
 		form["gateway_list"] = ""
 		form["software_version"] = version.Version
+		form["version"] = version.Version
 	}
 	resp, err := c.Post(c.baseURL, form)
 	if err != nil {
@@ -109,9 +123,10 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 
 	time.Sleep(time.Second * 90)
 
-	form1 := map[string]string{
-		"action": "platform_upgrade_status",
-		"CID":    c.CID,
+	form1 := map[string]interface{}{
+		"action":        "platform_upgrade_status",
+		"CID":           c.CID,
+		"platform_only": true,
 	}
 
 	const maxPoll = 180
@@ -138,11 +153,18 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		if !data1.Return {
 			return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form1["action"], data1.Reason)
 		}
-		if data1.Results.OverallStatus == "completed" {
+		if data1.Results.IsUpgradeInProgress {
+			time.Sleep(sleepDuration)
+			continue
+		}
+		if data1.Results.PlatformUpgrade.Results.Status == "complete" {
 			c.Login()
 			return nil
+		} else if data1.Results.PlatformUpgrade.Results.Status == "in progress" {
+			time.Sleep(sleepDuration)
+			continue
 		}
-		time.Sleep(sleepDuration)
+		return fmt.Errorf(data1.Results.PlatformUpgrade.Results.Reason)
 	}
 	// Waited for too long and upgrade never finished
 	if i == maxPoll {
