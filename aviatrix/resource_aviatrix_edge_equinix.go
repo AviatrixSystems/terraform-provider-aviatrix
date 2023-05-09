@@ -103,14 +103,12 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 			"enable_edge_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Edge Active-Standby Mode.",
 			},
 			"enable_edge_active_standby_preemptive": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Preemptive Mode for Edge Active-Standby, available only with Active-Standby enabled.",
 			},
@@ -363,7 +361,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
-		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -405,6 +402,20 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
 
 		edgeEquinix.VlanList = append(edgeEquinix.VlanList, vlan2)
+	}
+
+	if !edgeEquinix.EnableEdgeActiveStandby {
+		edgeEquinix.DisableEdgeActiveStandby = true
+	}
+
+	if !edgeEquinix.EnableEdgeActiveStandbyPreemptive {
+		edgeEquinix.DisableEdgeActiveStandbyPreemptive = true
+	}
+
+	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+		edgeEquinix.EnableAutoAdvertiseLanCidrs = "enable"
+	} else {
+		edgeEquinix.EnableAutoAdvertiseLanCidrs = "disable"
 	}
 
 	return edgeEquinix
@@ -560,7 +571,7 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if !edgeEquinix.EnableAutoAdvertiseLanCidrs {
+	if edgeEquinix.EnableAutoAdvertiseLanCidrs == "disable" {
 		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Equinix creation: %v", err)
@@ -718,6 +729,10 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 	edgeEquinix := marshalEdgeEquinixInput(d)
 
 	// checks before update
+	if !edgeEquinix.EnableEdgeActiveStandby && edgeEquinix.EnableEdgeActiveStandbyPreemptive {
+		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+	}
+
 	if !edgeEquinix.EnableLearnedCidrsApproval && len(edgeEquinix.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
@@ -881,10 +896,13 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge Equinix update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, "+
+				"DNS profile name, auto advertise LAN CIDRs, Edge active standby or Edge active standby preemptive "+
+				"during Edge CSP update: %v", err)
 		}
 	}
 

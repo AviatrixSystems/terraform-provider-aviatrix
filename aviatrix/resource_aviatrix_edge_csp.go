@@ -111,14 +111,12 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 			"enable_edge_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Edge Active-Standby Mode.",
 			},
 			"enable_edge_active_standby_preemptive": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Preemptive Mode for Edge Active-Standby, available only with Active-Standby enabled.",
 			},
@@ -405,7 +403,6 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
-		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -447,6 +444,20 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
 
 		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
+	}
+
+	if !edgeCSP.EnableEdgeActiveStandby {
+		edgeCSP.DisableEdgeActiveStandby = true
+	}
+
+	if !edgeCSP.EnableEdgeActiveStandbyPreemptive {
+		edgeCSP.DisableEdgeActiveStandbyPreemptive = true
+	}
+
+	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+		edgeCSP.EnableAutoAdvertiseLanCidrs = "enable"
+	} else {
+		edgeCSP.EnableAutoAdvertiseLanCidrs = "disable"
 	}
 
 	return edgeCSP
@@ -602,7 +613,7 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if !edgeCSP.EnableAutoAdvertiseLanCidrs {
+	if edgeCSP.EnableAutoAdvertiseLanCidrs == "disable" {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge CSP creation: %v", err)
@@ -766,6 +777,10 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 	edgeCSP := marshalEdgeCSPInput(d)
 
 	// checks before update
+	if !edgeCSP.EnableEdgeActiveStandby && edgeCSP.EnableEdgeActiveStandbyPreemptive {
+		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+	}
+
 	if !edgeCSP.EnableLearnedCidrsApproval && len(edgeCSP.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
@@ -929,10 +944,13 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge CSP update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, "+
+				"DNS profile name, auto advertise LAN CIDRs, Edge active standby or Edge active standby preemptive "+
+				"during Edge CSP update: %v", err)
 		}
 	}
 
