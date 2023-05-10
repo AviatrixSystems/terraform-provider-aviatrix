@@ -315,11 +315,6 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 					},
 				},
 			},
-			"dns_profile_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "DNS profile to be associated with gateway, select an existing template.",
-			},
 			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -361,7 +356,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
@@ -703,7 +697,6 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeEquinixResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
 
@@ -881,10 +874,10 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "enable_auto_advertise_lan_cidrs") {
 		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge Equinix update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces or auto advertise LAN CIDRs during Edge Equinix update: %v", err)
 		}
 	}
 

@@ -47,7 +47,6 @@ type EdgeCSP struct {
 	Interfaces                         string `json:"interfaces"`
 	VlanList                           []*Vlan
 	Vlan                               string `json:"vlan"`
-	DnsProfileName                     string `json:"dns_profile_name"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
 	LanInterfaceIpPrefix               string
@@ -121,7 +120,6 @@ type EdgeCSPResp struct {
 	LanInterface                       []string     `json:"edge_csp_lan_ifname"`
 	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
 	InterfaceList                      []*Interface `json:"interfaces"`
-	DnsProfileName                     string       `json:"dns_profile_name"`
 	EnableNat                          string       `json:"enable_nat"`
 	SnatMode                           string       `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
@@ -207,11 +205,10 @@ func (c *Client) DeleteEdgeCSP(ctx context.Context, accountName, name string) er
 
 func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 	form := map[string]string{
-		"action":           "update_edge_gateway",
-		"CID":              c.CID,
-		"name":             edgeCSP.GwName,
-		"mgmt_egress_ip":   edgeCSP.ManagementEgressIpPrefix,
-		"dns_profile_name": edgeCSP.DnsProfileName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeCSP.GwName,
+		"mgmt_egress_ip": edgeCSP.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeCSP.InterfaceList)
