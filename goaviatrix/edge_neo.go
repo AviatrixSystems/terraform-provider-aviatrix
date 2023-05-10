@@ -203,6 +203,7 @@ func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	form := map[string]string{
 		"action":           "update_edge_gateway",
 		"CID":              c.CID,
+		"site_id":          edgeNEO.SiteId,
 		"name":             edgeNEO.GwName,
 		"mgmt_egress_ip":   edgeNEO.ManagementEgressIpPrefix,
 		"dns_profile_name": edgeNEO.DnsProfileName,
@@ -230,6 +231,18 @@ func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 		form["auto_advertise_lan_cidrs"] = "enable"
 	} else {
 		form["auto_advertise_lan_cidrs"] = "disable"
+	}
+
+	if edgeNEO.EnableEdgeActiveStandby {
+		form["enable_active_standby"] = "true"
+	} else {
+		form["enable_active_standby"] = "false"
+	}
+
+	if edgeNEO.EnableEdgeActiveStandbyPreemptive {
+		form["enable_active_standby_preemptive"] = "true"
+	} else {
+		form["enable_active_standby_preemptive"] = "false"
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
