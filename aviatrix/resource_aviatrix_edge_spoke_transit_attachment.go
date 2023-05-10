@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -57,11 +59,11 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Description: "Enable jumbo frame.",
 			},
 			"insane_mode_tunnel_number": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     0,
-				Description: "Insane mode tunnel number.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(2, 4),
+				Description:  "Insane mode tunnel number.",
 			},
 			"spoke_prepend_as_path": {
 				Type:        schema.TypeList,
@@ -128,14 +130,6 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
-
-	if attachment.EnableInsaneMode && attachment.InsaneModeTunnelNumber == 0 {
-		diag.Errorf("'insane_mode_tunnel_number' must be set when insane mode is enabled")
-	}
-
-	if !attachment.EnableInsaneMode && attachment.InsaneModeTunnelNumber != 0 {
-		diag.Errorf("'insane_mode_tunnel_number' is only valid when insane mode is enabled")
-	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
 	flag := false
@@ -236,8 +230,6 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	d.Set("enable_insane_mode", attachment.EnableInsaneMode)
 	if attachment.EnableInsaneMode {
 		d.Set("insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
-	} else {
-		d.Set("insane_mode_tunnel_number", 0)
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {
