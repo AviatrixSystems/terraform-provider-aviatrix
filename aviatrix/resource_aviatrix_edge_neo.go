@@ -754,6 +754,10 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 	edgeNEO := marshalEdgeNEOInput(d)
 
 	// checks before update
+	if !edgeNEO.EnableEdgeActiveStandby && edgeNEO.EnableEdgeActiveStandbyPreemptive {
+		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+	}
+
 	if !edgeNEO.EnableLearnedCidrsApproval && len(edgeNEO.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}

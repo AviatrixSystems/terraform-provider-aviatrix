@@ -236,7 +236,7 @@ func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	if edgeNEO.EnableEdgeActiveStandby {
 		form["enable_active_standby"] = "true"
 	} else {
-		form["enable_active_standby"] = "false"
+		form["disable_active_standby"] = "true"
 	}
 
 	if edgeNEO.EnableEdgeActiveStandbyPreemptive {
