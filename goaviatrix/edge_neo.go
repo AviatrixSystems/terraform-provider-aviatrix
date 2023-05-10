@@ -45,7 +45,6 @@ type EdgeNEO struct {
 	Interfaces                         string `json:"interfaces"`
 	VlanList                           []*EdgeNEOVlan
 	Vlan                               string `json:"vlan"`
-	DnsProfileName                     string `json:"dns_profile_name"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
 	LanInterfaceIpPrefix               string
@@ -114,7 +113,6 @@ type EdgeNEOResp struct {
 	LanInterface                       []string            `json:"edge_csp_lan_ifname"`
 	MgmtInterface                      []string            `json:"edge_csp_mgmt_ifname"`
 	InterfaceList                      []*EdgeNEOInterface `json:"interfaces"`
-	DnsProfileName                     string              `json:"dns_profile_name"`
 	EnableNat                          string              `json:"enable_nat"`
 	SnatMode                           string              `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`
@@ -201,11 +199,10 @@ func (c *Client) DeleteEdgeNEO(ctx context.Context, accountName, name string) er
 
 func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	form := map[string]string{
-		"action":           "update_edge_gateway",
-		"CID":              c.CID,
-		"name":             edgeNEO.GwName,
-		"mgmt_egress_ip":   edgeNEO.ManagementEgressIpPrefix,
-		"dns_profile_name": edgeNEO.DnsProfileName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeNEO.GwName,
+		"mgmt_egress_ip": edgeNEO.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeNEO.InterfaceList)

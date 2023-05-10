@@ -43,7 +43,6 @@ type EdgeEquinix struct {
 	Interfaces                         string `json:"interfaces"`
 	VlanList                           []*EdgeEquinixVlan
 	Vlan                               string `json:"vlan"`
-	DnsProfileName                     string `json:"dns_profile_name"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
 	LanInterfaceIpPrefix               string
@@ -111,7 +110,6 @@ type EdgeEquinixResp struct {
 	RxQueueSize                        string       `json:"rx_queue_size"`
 	State                              string       `json:"vpc_state"`
 	InterfaceList                      []*Interface `json:"interfaces"`
-	DnsProfileName                     string       `json:"dns_profile_name"`
 	EnableNat                          string       `json:"enable_nat"`
 	SnatMode                           string       `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
@@ -217,11 +215,10 @@ func (c *Client) DeleteEdgeEquinix(ctx context.Context, accountName, name string
 
 func (c *Client) UpdateEdgeEquinix(ctx context.Context, edgeEquinix *EdgeEquinix) error {
 	form := map[string]string{
-		"action":           "update_edge_gateway",
-		"CID":              c.CID,
-		"name":             edgeEquinix.GwName,
-		"mgmt_egress_ip":   edgeEquinix.ManagementEgressIpPrefix,
-		"dns_profile_name": edgeEquinix.DnsProfileName,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"name":           edgeEquinix.GwName,
+		"mgmt_egress_ip": edgeEquinix.ManagementEgressIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeEquinix.InterfaceList)
