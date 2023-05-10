@@ -34,7 +34,7 @@ The following arguments are supported:
 * `enable_over_private_network` - (Optional) Switch to enable over the private network. Valid values: true, false. Default: true.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default: false.
 * `enable_insane_mode` - (Optional) Switch to enable insane mode. Valid values: true, false. Default: false.
-* `insane_mode_tunnel_number` - (Optional) Insane mode tunnel number. Default: 0.
+* `insane_mode_tunnel_number` - (Optional) Insane mode tunnel number, requires an integer value. Valid Range: 2-4.
 * `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Edge as a Spoke.
 * `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Transit Gateway.
 * `number_of_retries` - (Optional) Number of retries. Default value: 0.
