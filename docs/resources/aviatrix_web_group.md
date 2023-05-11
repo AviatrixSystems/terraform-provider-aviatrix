@@ -16,9 +16,10 @@ The **aviatrix_web_group** resource handles the creation and management of Web G
 # Create an Aviatrix SNI Web Group
 resource "aviatrix_web_group" "test_web_group_ip" {
   name = "web-group"
-  
-  match_expressions {
-    snifilter = "aviatrix.com"
+  selector {
+    match_expressions {
+      snifilter = "aviatrix.com"
+    }
   }
 }
 ```
@@ -26,9 +27,10 @@ resource "aviatrix_web_group" "test_web_group_ip" {
 # Create an Aviatrix URL Web Group
 resource "aviatrix_web_group" "test_web_group_ip" {
   name = "web-group"
-  
-  match_expressions {
-    urlfilter = "https://aviatrix.com/test"
+  selector {
+    match_expressions {
+      urlfilter = "https://aviatrix.com/test"
+    }
   }
 }
 ```
