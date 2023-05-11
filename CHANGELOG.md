@@ -5,12 +5,12 @@
 
 ### Features:
 #### Gateway:
-1. Implemented support of configuring GRO/GSO in **aviatrix_gateway**
+1. Implemented support for configuring GRO/GSO in **aviatrix_gateway**
 
 #### Multi-Cloud Transit:
-1. Implemented support of configuring Local Identifier in **aviatrix_site2cloud**, **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**
-2. Implemented support of configuring GRO/GSO in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-3. Implemented support of BGP over GRE on a BGP Spoke in **aviatrix_spoke_external_device_conn**
+1. Implemented support for configuring Local Identifier in **aviatrix_site2cloud**, **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**
+2. Implemented support for configuring GRO/GSO in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+3. Implemented support for BGP over GRE on a BGP Spoke in **aviatrix_spoke_external_device_conn**
 4. Implemented new resources to support Edge Equinix and HA:
    - **aviatrix_edge_equinix**
    - **aviatrix_edge_equinix_ha**
@@ -42,18 +42,18 @@
    - **aviatrix_qos_policy_list**
 
 ### Enhancements:
-1. Added support of ``fqdn`` as one of the attributes under ``selector`` in **aviatrix_smart_group**
-2. Added support of "#" for Azure gateway tags
-3. Added support of enabling BGP over LAN for Azure transit in update in **aviatrix_transit_gateway**
+1. Added support for ``fqdn`` as one of the attributes under ``selector`` in **aviatrix_smart_group**
+2. Added support for the "#" character in Azure gateway tags
+3. Added support for enabling BGP over LAN for Azure transit in update in **aviatrix_transit_gateway**
 4. Changed ``cloud_type``, ``account_name``, ``insane_mode`` and ``insane_mode_az`` to "ForceNew" in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-5. Removed default value of ``bgp_lan_interfaces_count`` in **aviatrix_transit_gateway**
-6. Remove option to config proxies in private mode config in **aviatrix_controller_private_mode_config**
-7. Restored following attributes in **aviatrix_cloudn_transit_gateway_attachment**:
+5. Removed ``bgp_lan_interfaces_count``'s default value in **aviatrix_transit_gateway**
+6. Remove the option to config proxies in private mode config in **aviatrix_controller_private_mode_config**
+7. Restored the following attributes in **aviatrix_cloudn_transit_gateway_attachment**:
    - ``enable_dead_peer_detection``
    - ``enable_learned_cidrs_approval``
    - ``approved_cidrs``
-8. Added support of "ddog-gov.com" in **aviatrix_datadog_agent**
-9. Added support of connection with HA in **aviatrix_edge_spoke_external_device_conn**
+8. Added support for "ddog-gov.com" in **aviatrix_datadog_agent**
+9. Added support for connection with HA in **aviatrix_edge_spoke_external_device_conn**
 
 ### Bug Fixes:
 1. Fixed issue where ``max_vpn_conn`` was not properly set in TF state and could not be updated in **aviatrix_gateway**
