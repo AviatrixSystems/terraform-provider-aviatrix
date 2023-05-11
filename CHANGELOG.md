@@ -47,7 +47,7 @@
 3. Added support for enabling BGP over LAN for Azure transit in update in **aviatrix_transit_gateway**
 4. Changed ``cloud_type``, ``account_name``, ``insane_mode`` and ``insane_mode_az`` to "ForceNew" in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 5. Removed ``bgp_lan_interfaces_count``'s default value in **aviatrix_transit_gateway**
-6. Remove the option to config proxies in private mode config in **aviatrix_controller_private_mode_config**
+6. Removed the option to config proxies in private mode config in **aviatrix_controller_private_mode_config**
 7. Restored the following attributes in **aviatrix_cloudn_transit_gateway_attachment**:
    - ``enable_dead_peer_detection``
    - ``enable_learned_cidrs_approval``
