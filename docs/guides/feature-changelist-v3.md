@@ -14,7 +14,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 ---
 
-``Last updated: R3.0.0 (UserConnect-7.0)``
+``Last updated: R3.1.0 (UserConnect-7.1)``
 
 
 ---
@@ -59,3 +59,15 @@ The following attributes are removed:
 |(deprecated) | firenet | manage_firewall_instance_association, firewall_instance_association | **Yes**; please use the standalone **aviatrix_firewall_instance_association** resource instead |
 |(deprecated) | aws_tgw | manage_security_domain, security_domains, manage_vpc_attachment, attached_vpc, manage_transit_gateway_attachment, attached_transit_gateway | **Yes**; please see the [migration guide](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) if `security_domain` is still managed in-line. Once migrated to use network domains, please remove any `manage_x` attributes from the **aws_tgw** resource |
 |(deprecated) | aws_tgw_connect, aws_tgw_direct_connect, aws_tgw_vpc_attachment | security_domain_name | **Yes**; please rename the attribute to `network_domain_name` instead. See the migration guide above for more information |
+
+
+## R3.1.0 (UserConnect-7.1)
+### Resource Deprecations
+
+The following logging resources are removed:
+
+| Resource       | Action Required?           |
+|:--------------:|:--------------------------:|
+| splunk_logging | **Yes**; please remove these resources from TF configuration |
+| filebeat_forwarder | **Yes**; please remove these resources from TF configuration |
+| sumologic_forwarder | **Yes**; please remove these resources from TF configuration |
