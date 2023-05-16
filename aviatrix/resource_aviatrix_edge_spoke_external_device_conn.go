@@ -168,6 +168,15 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Sensitive:   true,
 				Description: "Backup BGP MD5 authentication key.",
 			},
+			"manual_bgp_advertised_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Configure manual BGP advertised CIDRs for this connection.",
+			},
 		},
 	}
 }
@@ -297,6 +306,14 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
+	manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+	if len(manualBGPCidrs) > 0 {
+		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
+		if err != nil {
+			return diag.Errorf("could not edit manual advertised BGP cidrs: %v", err)
+		}
+	}
+
 	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
@@ -379,6 +396,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		}
 	}
 
+	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
+		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
+	}
+
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil
 }
@@ -408,6 +429,14 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		_, err := client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		if err != nil {
 			return diag.Errorf("could not update BGP MD5 key: %s", err)
+		}
+	}
+
+	if d.HasChange("manual_bgp_advertised_cidrs") {
+		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
+		if err != nil {
+			return diag.Errorf("could not edit manual advertise manual cidrs: %v", err)
 		}
 	}
 
