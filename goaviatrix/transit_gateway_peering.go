@@ -139,7 +139,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 	transitGatewayPeering.NoMaxPerformance = data.Results.NoMaxPerformance
-	if data.Results.Tunnels[0].SubTunnelCount == 1 {
+	if len(data.Results.Tunnels) >= 1 && data.Results.Tunnels[0].SubTunnelCount == 1 {
 		transitGatewayPeering.SingleTunnel = "yes"
 	} else {
 		transitGatewayPeering.SingleTunnel = "no"
