@@ -62,7 +62,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(2, 4),
+				ValidateFunc: validation.IntBetween(2, 50),
 				Description:  "Insane mode tunnel number.",
 			},
 			"spoke_prepend_as_path": {
