@@ -2601,7 +2601,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	if enableGatewayLoadBalancer && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS) {
+	if enableGatewayLoadBalancer && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS) {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS)")
 	}
 	if enableFireNet && enableTransitFireNet {
