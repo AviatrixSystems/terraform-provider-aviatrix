@@ -153,6 +153,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 
 	externalDeviceConnDetail := data.Results.Connections
 	if len(externalDeviceConnDetail.ConnectionName) != 0 {
+		inputGwName := externalDeviceConn.GwName
+
 		if len(externalDeviceConnDetail.VpcID) != 0 {
 			externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
 		}
@@ -303,6 +305,13 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
 		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
 		externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
+
+		if externalDeviceConnDetail.WanUnderlay && strings.Contains(inputGwName, "hagw") {
+			externalDeviceConn.GwName = inputGwName
+			externalDeviceConn.BgpRemoteAsNum = externalDeviceConn.BackupBgpRemoteAsNum
+			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
+			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
+		}
 
 		return externalDeviceConn, nil
 	}
