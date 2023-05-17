@@ -124,10 +124,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("enable_edge_underlay").(bool) {
-						return true
-					}
-					return false
+					return d.Get("enable_edge_underlay").(bool)
 				},
 				Description: "Set as true if there are two external devices.",
 			},
