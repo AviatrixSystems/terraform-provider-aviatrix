@@ -255,7 +255,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	}
 
 	if externalDeviceConn.EnableEdgeUnderlay && externalDeviceConn.HAEnabled == "true" {
-		return diag.Errorf("please use another edge_spoke_external_device_conn to create WAN underlay connection for Edge HA")
+		return diag.Errorf("please use a separate edge_spoke_external_device_conn to create WAN underlay connection for Edge HA")
 	}
 
 	flag := false

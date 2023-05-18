@@ -10,6 +10,8 @@ description: |-
 
 The **aviatrix_edge_spoke_external_device_conn** resource creates and manages the connection between Edge as a Spoke and an External Device. This resource is available as of provider version R2.23+.
 
+~> **NOTE:** Please use a separate **aviatrix_edge_spoke_external_device_conn** to create WAN underlay connection for Edge HA.
+
 ## Example Usage
 
 ```hcl
