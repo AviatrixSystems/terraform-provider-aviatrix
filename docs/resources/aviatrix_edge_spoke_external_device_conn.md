@@ -56,6 +56,7 @@ The following arguments are supported:
 * `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for HA BGP over LAN connection.
 * `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required if HA enabled for 'bgp' connection.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.
+* `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection.
 
 ## Import
 
