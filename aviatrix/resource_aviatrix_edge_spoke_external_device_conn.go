@@ -359,7 +359,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	conn, err := client.GetEdgeExternalDeviceConnDetail(externalDeviceConn)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
