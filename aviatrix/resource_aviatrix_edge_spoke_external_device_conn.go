@@ -171,6 +171,15 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Sensitive:   true,
 				Description: "Backup BGP MD5 authentication key.",
 			},
+			"manual_bgp_advertised_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Configure manual BGP advertised CIDRs for this connection.",
+			},
 		},
 	}
 }
@@ -434,6 +443,14 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		_, err := client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		if err != nil {
 			return diag.Errorf("could not update BGP MD5 key: %s", err)
+		}
+	}
+
+	if d.HasChange("manual_bgp_advertised_cidrs") {
+		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
+		if err != nil {
+			return diag.Errorf("could not edit manual advertise manual cidrs: %v", err)
 		}
 	}
 
