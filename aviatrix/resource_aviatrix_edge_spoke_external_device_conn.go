@@ -119,10 +119,13 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Description:  "Remote cloud type.",
 			},
 			"ha_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				ForceNew:    true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("enable_edge_underlay").(bool)
+				},
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_bgp_remote_as_num": {
@@ -251,6 +254,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
+	if externalDeviceConn.EnableEdgeUnderlay && externalDeviceConn.HAEnabled == "true" {
+		return diag.Errorf("please use a separate edge_spoke_external_device_conn to create WAN underlay connection for Edge HA")
+	}
+
 	flag := false
 	defer resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 
@@ -287,8 +294,11 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	}
 
 	if externalDeviceConn.EnableEdgeUnderlay {
-		re := regexp.MustCompile(`underlay BGP connection (.*) in its segmentation domain`)
+		re := regexp.MustCompile(`underlay BGP connection (.*) (?:in|on)`)
 		match := re.FindStringSubmatch(result)
+		if len(match) < 2 {
+			return diag.Errorf("could not get underlay BGP connection name")
+		}
 		connName := match[1]
 		d.Set("connection_name", connName)
 		externalDeviceConn.ConnectionName = connName
@@ -314,7 +324,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
-	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID)
+	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -332,22 +342,24 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	vpcID := d.Get("site_id").(string)
 	if vpcID == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'site_id' received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no 'site_id' received. Import Id is %s", id)
 		parts := strings.Split(id, "~")
-		if len(parts) != 2 {
-			return diag.Errorf("expected import ID in the form 'connection_name~site_id' instead got %q", id)
+		if len(parts) != 3 {
+			return diag.Errorf("expected import ID in the form 'connection_name~site_id~gw_name' instead got %q", id)
 		}
 		d.Set("connection_name", parts[0])
 		d.Set("site_id", parts[1])
+		d.Set("gw_name", parts[2])
 		d.SetId(id)
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:          d.Get("site_id").(string),
 		ConnectionName: d.Get("connection_name").(string),
+		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	conn, err := client.GetEdgeExternalDeviceConnDetail(externalDeviceConn)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -372,14 +384,16 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	if conn.BgpRemoteAsNum != 0 {
 		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	}
-	if conn.BackupBgpRemoteAsNum != 0 {
-		d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
-	}
 
 	if conn.HAEnabled == "enabled" {
-		d.Set("ha_enabled", true)
-		d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
-		d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+		if !conn.EnableEdgeUnderlay {
+			d.Set("ha_enabled", true)
+			if conn.BackupBgpRemoteAsNum != 0 {
+				d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
+			}
+			d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
+			d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+		}
 	} else {
 		d.Set("ha_enabled", false)
 	}
@@ -400,7 +414,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
 	}
 
-	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
+	d.SetId(conn.ConnectionName + "~" + conn.VpcID + "~" + conn.GwName)
 	return nil
 }
 
@@ -451,8 +465,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *s
 
 	if externalDeviceConn.EnableEdgeUnderlay {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
-
 		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+
 		if err != nil {
 			return diag.Errorf("failed to delete Edge as a Spoke external device connection: %s", err)
 		}
