@@ -54,4 +54,4 @@ release:
     name: terraform-provider-aviatrix
   draft: true
 changelog:
-  skip: true
+  skip: false
