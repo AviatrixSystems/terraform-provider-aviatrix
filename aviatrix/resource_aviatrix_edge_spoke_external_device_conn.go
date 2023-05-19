@@ -95,14 +95,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     0,
-				ForceNew:    true,
 				Description: "Number of retries.",
 			},
 			"retry_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     300,
-				ForceNew:    true,
 				Description: "Retry interval in seconds.",
 			},
 			"enable_edge_underlay": {
