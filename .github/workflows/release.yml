@@ -9,14 +9,22 @@ jobs:
   new-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v2
-      - name: Push git tag
+      -
+        name: Push git tag
         run: |
           version="v$(cat version)"
           echo "Version: $version"
           git tag $version
           git push origin $version
+      -
+        name: Create release notes
+        run: |
+          lastLine=$(grep -n -m2 "^## " CHANGELOG.md | tail -1 | cut -d ":" -f 1)
+          lastLine=$((lastLine - 1))
+          sed -n '2,'$lastLine'p' CHANGELOG.md >RELEASE_NOTES.md
       -
         name: Set up Go
         uses: actions/setup-go@v3
@@ -33,7 +41,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --clean --release-notes RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
