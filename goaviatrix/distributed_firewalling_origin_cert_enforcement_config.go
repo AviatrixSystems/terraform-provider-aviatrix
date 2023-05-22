@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"context"
-	"fmt"
 )
 
 type EnforcementLevel struct {
@@ -12,11 +11,11 @@ type EnforcementLevel struct {
 func (c *Client) SetEnforcementLevel(ctx context.Context, enforcementLevel *EnforcementLevel) error {
 	var endpoint string
 	if enforcementLevel.Level == "Strict" {
-		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=ENFORCED")
+		endpoint = "mitm/origin-cert-verify?level=ENFORCED"
 	} else if enforcementLevel.Level == "Ignore" {
-		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=DISABLED")
+		endpoint = "mitm/origin-cert-verify?level=DISABLED"
 	} else {
-		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=PERMISSIVE")
+		endpoint = "mitm/origin-cert-verify?level=PERMISSIVE"
 	}
 	return c.PutAPIContext25(ctx, endpoint, endpoint)
 }
