@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,10 +23,11 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig() *schema
 
 		Schema: map[string]*schema.Schema{
 			"enforcement_level": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "Permissive",
-				Description: "",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Permissive",
+				ValidateFunc: validation.StringInSlice([]string{"Strict", "Permissive", "Ignore"}, false),
+				Description:  "Which origin cert enforcement level to set to for distributed firewalling.",
 			},
 		},
 	}
@@ -42,7 +45,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate(ctx
 
 	err := client.SetEnforcementLevel(ctx, enforcementLevel)
 	if err != nil {
-		return diag.Errorf("failed to create controller access allow list config: %s", err)
+		return diag.Errorf("failed to config Distributed-firewalling origin cert enforcement level: %s", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -70,10 +73,16 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx c
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read controller access allow list config: %s", err)
+		return diag.Errorf("failed to read Distributed-firewalling origin cert enforcement level config: %s", err)
 	}
 
-	d.Set("enforcement_level", enforcementLevel.Level)
+	if enforcementLevel.Level == "ENFORCED" {
+		d.Set("enforcement_level", "Strict")
+	} else if enforcementLevel.Level == "DISABLED" {
+		d.Set("enforcement_level", "Ignore")
+	} else {
+		d.Set("enforcement_level", "Permissive")
+	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -90,7 +99,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx
 
 		err := client.UpdateEnforcementLevel(ctx, enforcementLevel)
 		if err != nil {
-			return diag.Errorf("failed to create controller access allow list config: %s", err)
+			return diag.Errorf("failed to set Distributed-firewalling origin cert enforcement config to %s in update: %s", enforcementLevel.Level, err)
 		}
 	}
 
@@ -103,7 +112,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigDelete(ctx
 
 	err := client.DeleteEnforcementLevel(ctx)
 	if err != nil {
-		return diag.Errorf("failed to delete controller access allow list config: %v", err)
+		return diag.Errorf("failed to delete Distributed-firewalling origin cert enforcement level config: %v", err)
 	}
 
 	return nil

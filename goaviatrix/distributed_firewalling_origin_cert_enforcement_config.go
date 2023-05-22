@@ -10,7 +10,14 @@ type EnforcementLevel struct {
 }
 
 func (c *Client) SetEnforcementLevel(ctx context.Context, enforcementLevel *EnforcementLevel) error {
-	endpoint := fmt.Sprintf("mitm/origin-cert-verify?level=%s", enforcementLevel.Level)
+	var endpoint string
+	if enforcementLevel.Level == "Strict" {
+		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=ENFORCED")
+	} else if enforcementLevel.Level == "Ignore" {
+		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=DISABLED")
+	} else {
+		endpoint = fmt.Sprintf("mitm/origin-cert-verify?level=PERMISSIVE")
+	}
 	return c.PutAPIContext25(ctx, endpoint, endpoint)
 }
 
@@ -27,8 +34,7 @@ func (c *Client) GetEnforcementLevel(ctx context.Context) (*EnforcementLevel, er
 }
 
 func (c *Client) UpdateEnforcementLevel(ctx context.Context, enforcementLevel *EnforcementLevel) error {
-	endpoint := fmt.Sprintf("mitm/origin-cert-verify?level=%s", enforcementLevel.Level)
-	return c.PutAPIContext25(ctx, endpoint, enforcementLevel)
+	return c.SetEnforcementLevel(ctx, enforcementLevel)
 }
 
 func (c *Client) DeleteEnforcementLevel(ctx context.Context) error {
