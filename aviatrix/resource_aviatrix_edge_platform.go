@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeNEO() *schema.Resource {
+func resourceAviatrixEdgePlatform() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeNEOCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeNEORead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeNEOUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeNEODelete,
+		CreateWithoutTimeout: resourceAviatrixEdgePlatformCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgePlatformRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgePlatformUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgePlatformDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -362,12 +362,10 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform instead. Resource " +
-			"aviatrix_edge_neo will be deprecated in the next major release.",
 	}
 }
 
-func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
+func marshalEdgePlatformInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 	edgeNEO := &goaviatrix.EdgeNEO{
 		AccountName:                        d.Get("account_name").(string),
 		GwName:                             d.Get("gw_name").(string),
@@ -445,11 +443,11 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 	return edgeNEO
 }
 
-func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeNEO := marshalEdgeNEOInput(d)
+	edgeNEO := marshalEdgePlatformInput(d)
 
 	// checks before creation
 	if !edgeNEO.EnableEdgeActiveStandby && edgeNEO.EnableEdgeActiveStandbyPreemptive {
@@ -480,7 +478,7 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 	defer resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.CreateEdgeNEO(ctx, edgeNEO); err != nil {
-		return diag.Errorf("could not create Edge NEO: %v", err)
+		return diag.Errorf("could not create Edge Platform: %v", err)
 	}
 
 	// advanced configs
@@ -501,21 +499,21 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 	if edgeNEO.LocalAsNumber != "" {
 		err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeNEO.LocalAsNumber)
 		if err != nil {
-			return diag.Errorf("could not set 'local_as_number' after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set 'local_as_number' after Edge Platform creation: %v", err)
 		}
 	}
 
 	if len(edgeNEO.PrependAsPath) != 0 {
 		err := client.SetPrependASPath(gatewayForTransitFunctions, edgeNEO.PrependAsPath)
 		if err != nil {
-			return diag.Errorf("could not set 'prepend_as_path' after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set 'prepend_as_path' after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.EnableLearnedCidrsApproval {
 		err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not enable learned CIDRs approval after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable learned CIDRs approval after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -523,7 +521,7 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeNEO.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not update approved CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not update approved CIDRs after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -531,42 +529,42 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeNEO.SpokeBgpManualAdvertisedCidrs, ",")
 		err := client.SetBgpManualSpokeAdvertisedNetworks(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not set spoke BGP manual advertised CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set spoke BGP manual advertised CIDRs after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.EnablePreserveAsPath {
 		err := client.EnableSpokePreserveAsPath(gatewayForSpokeFunctions)
 		if err != nil {
-			return diag.Errorf("could not enable spoke preserve as path after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable spoke preserve as path after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.BgpPollingTime >= 10 && edgeNEO.BgpPollingTime != defaultBgpPollingTime {
 		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
 		if err != nil {
-			return diag.Errorf("could not set bgp polling time after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set bgp polling time after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.BgpHoldTime >= 12 && edgeNEO.BgpHoldTime != defaultBgpHoldTime {
 		err := client.ChangeBgpHoldTime(gatewayForSpokeFunctions.GwName, edgeNEO.BgpHoldTime)
 		if err != nil {
-			return diag.Errorf("could not change BGP Hold Time after Edge NEO creation: %v", err)
+			return diag.Errorf("could not change BGP Hold Time after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.EnableEdgeTransitiveRouting {
 		err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
 		if err != nil {
-			return diag.Errorf("could not enable Edge transitive routing after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable Edge transitive routing after Edge Platform creation: %v", err)
 		}
 	}
 
 	if edgeNEO.EnableJumboFrame {
 		err := client.EnableJumboFrame(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not disable jumbo frame after Edge NEO creation: %v", err)
+			return diag.Errorf("could not disable jumbo frame after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -575,7 +573,7 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForEaasFunctions.Longitude = edgeNEO.Longitude
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, gatewayForEaasFunctions)
 		if err != nil {
-			return diag.Errorf("could not update geo coordinate after Edge NEO creation: %v", err)
+			return diag.Errorf("could not update geo coordinate after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -583,7 +581,7 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForGatewayFunctions.RxQueueSize = edgeNEO.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not set rx queue size after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set rx queue size after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -598,22 +596,22 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 	if !edgeNEO.EnableAutoAdvertiseLanCidrs {
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {
-			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Platform creation: %v", err)
 		}
 	}
 
-	return resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixEdgePlatformReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgePlatformReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixEdgeNEORead(ctx, d, meta)
+		return resourceAviatrixEdgePlatformRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// handle import
@@ -630,7 +628,7 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge NEO: %v", err)
+		return diag.Errorf("could not read Edge Platform: %v", err)
 	}
 
 	d.Set("account_name", edgeNEOResp.AccountName)
@@ -656,7 +654,7 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	if edgeNEOResp.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeNEOResp.GwName})
 		if err != nil {
-			return diag.Errorf("could not get advanced config for Edge NEO: %v", err)
+			return diag.Errorf("could not get advanced config for Edge Platform: %v", err)
 		}
 
 		err = d.Set("approved_learned_cidrs", spokeAdvancedConfig.ApprovedLearnedCidrs)
@@ -751,11 +749,11 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeNEO := marshalEdgeNEOInput(d)
+	edgeNEO := marshalEdgePlatformInput(d)
 
 	// checks before update
 	if !edgeNEO.EnableLearnedCidrsApproval && len(edgeNEO.ApprovedLearnedCidrs) != 0 {
@@ -799,21 +797,21 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPath(gatewayForTransitFunctions, nil)
 			if err != nil {
-				return diag.Errorf("could not delete prepend_as_path during Edge NEO update: %v", err)
+				return diag.Errorf("could not delete prepend_as_path during Edge Platform update: %v", err)
 			}
 		}
 
 		if d.HasChange("local_as_number") {
 			err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeNEO.LocalAsNumber)
 			if err != nil {
-				return diag.Errorf("could not set local_as_number during Edge NEO update: %v", err)
+				return diag.Errorf("could not set local_as_number during Edge Platform update: %v", err)
 			}
 		}
 
 		if d.HasChange("prepend_as_path") && len(edgeNEO.PrependAsPath) > 0 {
 			err := client.SetPrependASPath(gatewayForTransitFunctions, edgeNEO.PrependAsPath)
 			if err != nil {
-				return diag.Errorf("could not set prepend_as_path during Edge NEO update: %v", err)
+				return diag.Errorf("could not set prepend_as_path during Edge Platform update: %v", err)
 			}
 		}
 	}
@@ -822,12 +820,12 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		if edgeNEO.EnableLearnedCidrsApproval {
 			err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable learned cidrs approval during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable learned cidrs approval during Edge Platform update: %v", err)
 			}
 		} else {
 			err := client.DisableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable learned cidrs approval during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable learned cidrs approval during Edge Platform update: %v", err)
 			}
 		}
 	}
@@ -836,7 +834,7 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeNEO.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not update approved learned CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not update approved learned CIDRs during Edge Platform update: %v", err)
 		}
 	}
 
@@ -844,7 +842,7 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeNEO.SpokeBgpManualAdvertisedCidrs, ",")
 		err := client.SetBgpManualSpokeAdvertisedNetworks(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not set spoke BGP manual advertised CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not set spoke BGP manual advertised CIDRs during Edge Platform update: %v", err)
 		}
 	}
 
@@ -852,12 +850,12 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		if edgeNEO.EnablePreserveAsPath {
 			err := client.EnableSpokePreserveAsPath(gatewayForSpokeFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable preserve as path during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable preserve as path during Edge Platform update: %v", err)
 			}
 		} else {
 			err := client.DisableSpokePreserveAsPath(gatewayForSpokeFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable preserve as path during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable preserve as path during Edge Platform update: %v", err)
 			}
 		}
 	}
@@ -865,14 +863,14 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("bgp_polling_time") {
 		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
 		if err != nil {
-			return diag.Errorf("could not set bgp polling time during Edge NEO update: %v", err)
+			return diag.Errorf("could not set bgp polling time during Edge Platform update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_hold_time") {
 		err := client.ChangeBgpHoldTime(edgeNEO.GwName, edgeNEO.BgpHoldTime)
 		if err != nil {
-			return diag.Errorf("could not change bgp hold time during Edge NEO update: %v", err)
+			return diag.Errorf("could not change bgp hold time during Edge Platform update: %v", err)
 		}
 	}
 
@@ -880,12 +878,12 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		if edgeNEO.EnableEdgeTransitiveRouting {
 			err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
 			if err != nil {
-				return diag.Errorf("could not enable transitive routing during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable transitive routing during Edge Platform update: %v", err)
 			}
 		} else {
 			err := client.DisableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
 			if err != nil {
-				return diag.Errorf("could not disable transitive routing during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable transitive routing during Edge Platform update: %v", err)
 			}
 		}
 	}
@@ -894,12 +892,12 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		if edgeNEO.EnableJumboFrame {
 			err := client.EnableJumboFrame(gatewayForGatewayFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable jumbo frame during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable jumbo frame during Edge Platform update: %v", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(gatewayForGatewayFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable jumbo frame during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable jumbo frame during Edge Platform update: %v", err)
 			}
 		}
 	}
@@ -909,7 +907,7 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForEaasFunctions.Longitude = edgeNEO.Longitude
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, gatewayForEaasFunctions)
 		if err != nil {
-			return diag.Errorf("could not update geo coordinate during Edge NEO update: %v", err)
+			return diag.Errorf("could not update geo coordinate during Edge Platform update: %v", err)
 		}
 	}
 
@@ -917,14 +915,14 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		gatewayForGatewayFunctions.RxQueueSize = edgeNEO.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not update rx queue size during Edge NEO update: %v", err)
+			return diag.Errorf("could not update rx queue size during Edge Platform update: %v", err)
 		}
 	}
 
 	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge Platform update: %v", err)
 		}
 	}
 
@@ -947,10 +945,10 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	d.Partial(false)
 
-	return resourceAviatrixEdgeNEORead(ctx, d, meta)
+	return resourceAviatrixEdgePlatformRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	accountName := d.Get("account_name").(string)
@@ -958,7 +956,7 @@ func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, 
 
 	err := client.DeleteEdgeNEO(ctx, accountName, gwName)
 	if err != nil {
-		return diag.Errorf("could not delete Edge NEO: %v", err)
+		return diag.Errorf("could not delete Edge Platform: %v", err)
 	}
 
 	return nil

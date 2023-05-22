@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeNEOHa() *schema.Resource {
+func resourceAviatrixEdgeZededaHa() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeNEOHaCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeNEOHaRead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeNEOHaUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeNEOHaDelete,
+		CreateWithoutTimeout: resourceAviatrixEdgeZededaHaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgeZededaHaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeZededaHaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgeZededaHaDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -28,11 +28,11 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 				ForceNew:    true,
 				Description: "Primary gateway name.",
 			},
-			"device_id": {
+			"compute_node_uuid": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Edge NEO device ID.",
+				Description: "Compute node UUID.",
 			},
 			"interfaces": {
 				Type:        schema.TypeSet,
@@ -104,59 +104,57 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Edge NEO account name.",
+				Description: "Edge Zededa account name.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform_ha instead. Resource " +
-			"aviatrix_edge_neo_ha will be deprecated in the next major release.",
 	}
 }
 
-func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
-	edgeNEOHa := &goaviatrix.EdgeNEOHa{
+func marshalEdgeZededaHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
+	edgeCSPHa := &goaviatrix.EdgeCSPHa{
 		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		DeviceId:                 d.Get("device_id").(string),
+		ComputeNodeUuid:          d.Get("compute_node_uuid").(string),
 		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+	for _, if0 := range interfaces {
+		if1 := if0.(map[string]interface{})
 
-		interface2 := &goaviatrix.EdgeNEOInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			Bandwidth:    interface1["bandwidth"].(int),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+		if2 := &goaviatrix.Interface{
+			IfName:       if1["name"].(string),
+			Type:         if1["type"].(string),
+			Bandwidth:    if1["bandwidth"].(int),
+			PublicIp:     if1["wan_public_ip"].(string),
+			Tag:          if1["tag"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
+			GatewayIp:    if1["gateway_ip"].(string),
+			DnsPrimary:   if1["dns_server_ip"].(string),
+			DnsSecondary: if1["secondary_dns_server_ip"].(string),
 		}
 
-		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, interface2)
+		edgeCSPHa.InterfaceList = append(edgeCSPHa.InterfaceList, if2)
 	}
 
-	return edgeNEOHa
+	return edgeCSPHa
 }
 
-func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeNEOHa := marshalEdgeNEOHaInput(d)
+	edgeCSPHa := marshalEdgeZededaHaInput(d)
 
-	edgeNEOHaName, err := client.CreateEdgeNEOHa(ctx, edgeNEOHa)
+	edgeCSPHaName, err := client.CreateEdgeCSPHa(ctx, edgeCSPHa)
 	if err != nil {
-		return diag.Errorf("failed to create Edge NEO HA: %s", err)
+		return diag.Errorf("failed to create Edge Zededa HA: %s", err)
 	}
 
-	d.SetId(edgeNEOHaName)
-	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
+	d.SetId(edgeCSPHaName)
+	return resourceAviatrixEdgeZededaHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Get("primary_gw_name").(string) == "" {
@@ -167,27 +165,27 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 		d.SetId(id)
 	}
 
-	edgeNEOHaResp, err := client.GetEdgeNEOHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeCSPHaResp, err := client.GetEdgeCSPHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge NEO HA: %v", err)
+		return diag.Errorf("could not read Edge Zededa HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeNEOHaResp.PrimaryGwName)
-	d.Set("device_id", edgeNEOHaResp.DeviceId)
-	d.Set("account_name", edgeNEOHaResp.AccountName)
+	d.Set("primary_gw_name", edgeCSPHaResp.PrimaryGwName)
+	d.Set("compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
+	d.Set("account_name", edgeCSPHaResp.AccountName)
 
-	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
+	if edgeCSPHaResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
-	for _, if0 := range edgeNEOHaResp.InterfaceList {
+	for _, if0 := range edgeCSPHaResp.InterfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
@@ -207,43 +205,43 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
 
-	d.SetId(edgeNEOHaResp.GwName)
+	d.SetId(edgeCSPHaResp.GwName)
 	return nil
 }
 
-func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeNEOHa := marshalEdgeNEOHaInput(d)
+	edgeCSPHa := marshalEdgeZededaHaInput(d)
 
 	d.Partial(true)
 
-	gatewayForEdgeNEOFunctions := &goaviatrix.EdgeNEO{
+	gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
 		GwName: d.Id(),
 	}
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
-		gatewayForEdgeNEOFunctions.InterfaceList = edgeNEOHa.InterfaceList
-		gatewayForEdgeNEOFunctions.ManagementEgressIpPrefix = edgeNEOHa.ManagementEgressIpPrefix
+		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
+		gatewayForEdgeCSPFunctions.ManagementEgressIpPrefix = edgeCSPHa.ManagementEgressIpPrefix
 
-		err := client.UpdateEdgeNEOHa(ctx, gatewayForEdgeNEOFunctions)
+		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge NEO HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Zededa HA update: %v", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
+	return resourceAviatrixEdgeZededaHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	accountName := d.Get("account_name").(string)
 
-	err := client.DeleteEdgeNEO(ctx, accountName, d.Id())
+	err := client.DeleteEdgeCSP(ctx, accountName, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge NEO: %v", err)
+		return diag.Errorf("could not delete Edge Zededa HA %s: %v", d.Id(), err)
 	}
 
 	return nil

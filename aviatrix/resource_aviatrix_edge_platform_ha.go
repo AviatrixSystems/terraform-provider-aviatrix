@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeNEOHa() *schema.Resource {
+func resourceAviatrixEdgePlatformHa() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeNEOHaCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeNEOHaRead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeNEOHaUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeNEOHaDelete,
+		CreateWithoutTimeout: resourceAviatrixEdgePlatformHaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgePlatformHaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgePlatformHaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgePlatformHaDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -107,12 +107,10 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 				Description: "Edge NEO account name.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform_ha instead. Resource " +
-			"aviatrix_edge_neo_ha will be deprecated in the next major release.",
 	}
 }
 
-func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
+func marshalEdgePlatformHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	edgeNEOHa := &goaviatrix.EdgeNEOHa{
 		PrimaryGwName:            d.Get("primary_gw_name").(string),
 		DeviceId:                 d.Get("device_id").(string),
@@ -142,21 +140,21 @@ func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	return edgeNEOHa
 }
 
-func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeNEOHa := marshalEdgeNEOHaInput(d)
+	edgeNEOHa := marshalEdgePlatformHaInput(d)
 
 	edgeNEOHaName, err := client.CreateEdgeNEOHa(ctx, edgeNEOHa)
 	if err != nil {
-		return diag.Errorf("failed to create Edge NEO HA: %s", err)
+		return diag.Errorf("failed to create Edge Platform HA: %s", err)
 	}
 
 	d.SetId(edgeNEOHaName)
-	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
+	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Get("primary_gw_name").(string) == "" {
@@ -173,7 +171,7 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge NEO HA: %v", err)
+		return diag.Errorf("could not read Edge Platform HA: %v", err)
 	}
 
 	d.Set("primary_gw_name", edgeNEOHaResp.PrimaryGwName)
@@ -211,10 +209,10 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeNEOHa := marshalEdgeNEOHaInput(d)
+	edgeNEOHa := marshalEdgePlatformHaInput(d)
 
 	d.Partial(true)
 
@@ -228,22 +226,22 @@ func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData
 
 		err := client.UpdateEdgeNEOHa(ctx, gatewayForEdgeNEOFunctions)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge NEO HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Platform HA update: %v", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
+	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	accountName := d.Get("account_name").(string)
 
 	err := client.DeleteEdgeNEO(ctx, accountName, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge NEO: %v", err)
+		return diag.Errorf("could not delete Edge Platform HA: %v", err)
 	}
 
 	return nil

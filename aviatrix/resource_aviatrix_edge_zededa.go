@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeNEO() *schema.Resource {
+func resourceAviatrixEdgeZededa() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeNEOCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeNEORead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeNEOUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeNEODelete,
+		CreateWithoutTimeout: resourceAviatrixEdgeZededaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgeZededaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeZededaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgeZededaDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -44,17 +44,23 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 				ForceNew:    true,
 				Description: "Site ID.",
 			},
-			"device_id": {
+			"project_uuid": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Edge NEO device ID.",
+				Description: "Edge CSP project UUID.",
 			},
-			"gw_size": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"small", "medium", "large", "x-large"}, false),
-				Description:  "Gateway size (CPU and Memory).",
+			"compute_node_uuid": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Edge CSP compute node UUID.",
+			},
+			"template_uuid": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Edge CSP template UUID.",
 			},
 			"management_egress_ip_prefix_list": {
 				Type:        schema.TypeSet,
@@ -200,7 +206,7 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 			},
 			"wan_interface_names": {
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "List of WAN interface names.",
 				Elem: &schema.Schema{
@@ -209,7 +215,7 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 			},
 			"lan_interface_names": {
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "List of LAN interface names.",
 				Elem: &schema.Schema{
@@ -218,7 +224,7 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 			},
 			"management_interface_names": {
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "List of management interface names.",
 				Elem: &schema.Schema{
@@ -362,18 +368,17 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform instead. Resource " +
-			"aviatrix_edge_neo will be deprecated in the next major release.",
 	}
 }
 
-func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
-	edgeNEO := &goaviatrix.EdgeNEO{
+func marshalEdgeZededaInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
+	edgeCSP := &goaviatrix.EdgeCSP{
 		AccountName:                        d.Get("account_name").(string),
 		GwName:                             d.Get("gw_name").(string),
 		SiteId:                             d.Get("site_id").(string),
-		DeviceId:                           d.Get("device_id").(string),
-		GwSize:                             d.Get("gw_size").(string),
+		ProjectUuid:                        d.Get("project_uuid").(string),
+		ComputeNodeUuid:                    d.Get("compute_node_uuid").(string),
+		TemplateUuid:                       d.Get("template_uuid").(string),
 		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
 		DnsServerIp:                        d.Get("dns_server_ip").(string),
@@ -402,218 +407,218 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+	for _, if0 := range interfaces {
+		if1 := if0.(map[string]interface{})
 
-		interface2 := &goaviatrix.EdgeNEOInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			Bandwidth:    interface1["bandwidth"].(int),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
-			VrrpState:    interface1["enable_vrrp"].(bool),
-			VirtualIp:    interface1["vrrp_virtual_ip"].(string),
+		if2 := &goaviatrix.Interface{
+			IfName:       if1["name"].(string),
+			Type:         if1["type"].(string),
+			Bandwidth:    if1["bandwidth"].(int),
+			PublicIp:     if1["wan_public_ip"].(string),
+			Tag:          if1["tag"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
+			GatewayIp:    if1["gateway_ip"].(string),
+			DnsPrimary:   if1["dns_server_ip"].(string),
+			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+			VrrpState:    if1["enable_vrrp"].(bool),
+			VirtualIp:    if1["vrrp_virtual_ip"].(string),
 		}
 
-		edgeNEO.InterfaceList = append(edgeNEO.InterfaceList, interface2)
+		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
 	}
 
 	vlan := d.Get("vlan").(*schema.Set).List()
-	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
+	for _, v0 := range vlan {
+		v1 := v0.(map[string]interface{})
 
-		vlan2 := &goaviatrix.EdgeNEOVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
+		v2 := &goaviatrix.Vlan{
+			ParentInterface: v1["parent_interface_name"].(string),
+			IpAddr:          v1["ip_address"].(string),
+			GatewayIp:       v1["gateway_ip"].(string),
+			PeerIpAddr:      v1["peer_ip_address"].(string),
+			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
+			VirtualIp:       v1["vrrp_virtual_ip"].(string),
+			Tag:             v1["tag"].(string),
 		}
 
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
 
-		edgeNEO.VlanList = append(edgeNEO.VlanList, vlan2)
+		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
 	}
 
-	return edgeNEO
+	return edgeCSP
 }
 
-func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeNEO := marshalEdgeNEOInput(d)
+	edgeCSP := marshalEdgeZededaInput(d)
 
 	// checks before creation
-	if !edgeNEO.EnableEdgeActiveStandby && edgeNEO.EnableEdgeActiveStandbyPreemptive {
+	if !edgeCSP.EnableEdgeActiveStandby && edgeCSP.EnableEdgeActiveStandbyPreemptive {
 		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
 	}
 
-	if !edgeNEO.EnableLearnedCidrsApproval && len(edgeNEO.ApprovedLearnedCidrs) != 0 {
+	if !edgeCSP.EnableLearnedCidrsApproval && len(edgeCSP.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
-	if len(edgeNEO.PrependAsPath) != 0 {
-		if edgeNEO.LocalAsNumber == "" {
+	if len(edgeCSP.PrependAsPath) != 0 {
+		if edgeCSP.LocalAsNumber == "" {
 			return diag.Errorf("'prepend_as_path' must be empty if 'local_as_number' is not set")
 		}
 	}
 
-	if edgeNEO.Latitude != "" && edgeNEO.Longitude != "" {
-		latitude, _ := strconv.ParseFloat(edgeNEO.Latitude, 64)
-		longitude, _ := strconv.ParseFloat(edgeNEO.Longitude, 64)
+	if edgeCSP.Latitude != "" && edgeCSP.Longitude != "" {
+		latitude, _ := strconv.ParseFloat(edgeCSP.Latitude, 64)
+		longitude, _ := strconv.ParseFloat(edgeCSP.Longitude, 64)
 		if latitude == 0 && longitude == 0 {
 			return diag.Errorf("latitude and longitude must not be zero at the same time")
 		}
 	}
 
 	// create
-	d.SetId(edgeNEO.GwName)
+	d.SetId(edgeCSP.GwName)
 	flag := false
-	defer resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixEdgeZededaReadIfRequired(ctx, d, meta, &flag)
 
-	if err := client.CreateEdgeNEO(ctx, edgeNEO); err != nil {
-		return diag.Errorf("could not create Edge NEO: %v", err)
+	if err := client.CreateEdgeCSP(ctx, edgeCSP); err != nil {
+		return diag.Errorf("could not create Edge Zededa: %v", err)
 	}
 
 	// advanced configs
 	// use following variables to reuse functions for transit, spoke, gateway and EaaS
 	gatewayForTransitFunctions := &goaviatrix.TransitVpc{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForSpokeFunctions := &goaviatrix.SpokeVpc{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForGatewayFunctions := &goaviatrix.Gateway{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 
-	if edgeNEO.LocalAsNumber != "" {
-		err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeNEO.LocalAsNumber)
+	if edgeCSP.LocalAsNumber != "" {
+		err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeCSP.LocalAsNumber)
 		if err != nil {
-			return diag.Errorf("could not set 'local_as_number' after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set 'local_as_number' after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if len(edgeNEO.PrependAsPath) != 0 {
-		err := client.SetPrependASPath(gatewayForTransitFunctions, edgeNEO.PrependAsPath)
+	if len(edgeCSP.PrependAsPath) != 0 {
+		err := client.SetPrependASPath(gatewayForTransitFunctions, edgeCSP.PrependAsPath)
 		if err != nil {
-			return diag.Errorf("could not set 'prepend_as_path' after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set 'prepend_as_path' after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.EnableLearnedCidrsApproval {
+	if edgeCSP.EnableLearnedCidrsApproval {
 		err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not enable learned CIDRs approval after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable learned CIDRs approval after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if len(edgeNEO.ApprovedLearnedCidrs) != 0 {
-		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeNEO.ApprovedLearnedCidrs
+	if len(edgeCSP.ApprovedLearnedCidrs) != 0 {
+		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeCSP.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not update approved CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not update approved CIDRs after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if len(edgeNEO.SpokeBgpManualAdvertisedCidrs) != 0 {
-		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeNEO.SpokeBgpManualAdvertisedCidrs, ",")
+	if len(edgeCSP.SpokeBgpManualAdvertisedCidrs) != 0 {
+		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeCSP.SpokeBgpManualAdvertisedCidrs, ",")
 		err := client.SetBgpManualSpokeAdvertisedNetworks(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not set spoke BGP manual advertised CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set spoke BGP manual advertised CIDRs after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.EnablePreserveAsPath {
+	if edgeCSP.EnablePreserveAsPath {
 		err := client.EnableSpokePreserveAsPath(gatewayForSpokeFunctions)
 		if err != nil {
-			return diag.Errorf("could not enable spoke preserve as path after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable spoke preserve as path after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.BgpPollingTime >= 10 && edgeNEO.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
+	if edgeCSP.BgpPollingTime >= 10 && edgeCSP.BgpPollingTime != defaultBgpPollingTime {
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpPollingTime))
 		if err != nil {
-			return diag.Errorf("could not set bgp polling time after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set bgp polling time after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.BgpHoldTime >= 12 && edgeNEO.BgpHoldTime != defaultBgpHoldTime {
-		err := client.ChangeBgpHoldTime(gatewayForSpokeFunctions.GwName, edgeNEO.BgpHoldTime)
+	if edgeCSP.BgpHoldTime >= 12 && edgeCSP.BgpHoldTime != defaultBgpHoldTime {
+		err := client.ChangeBgpHoldTime(gatewayForSpokeFunctions.GwName, edgeCSP.BgpHoldTime)
 		if err != nil {
-			return diag.Errorf("could not change BGP Hold Time after Edge NEO creation: %v", err)
+			return diag.Errorf("could not change BGP Hold Time after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.EnableEdgeTransitiveRouting {
-		err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
+	if edgeCSP.EnableEdgeTransitiveRouting {
+		err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeCSP.GwName)
 		if err != nil {
-			return diag.Errorf("could not enable Edge transitive routing after Edge NEO creation: %v", err)
+			return diag.Errorf("could not enable Edge transitive routing after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.EnableJumboFrame {
+	if edgeCSP.EnableJumboFrame {
 		err := client.EnableJumboFrame(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not disable jumbo frame after Edge NEO creation: %v", err)
+			return diag.Errorf("could not disable jumbo frame after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.Latitude != "" || edgeNEO.Longitude != "" {
-		gatewayForEaasFunctions.Latitude = edgeNEO.Latitude
-		gatewayForEaasFunctions.Longitude = edgeNEO.Longitude
+	if edgeCSP.Latitude != "" || edgeCSP.Longitude != "" {
+		gatewayForEaasFunctions.Latitude = edgeCSP.Latitude
+		gatewayForEaasFunctions.Longitude = edgeCSP.Longitude
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, gatewayForEaasFunctions)
 		if err != nil {
-			return diag.Errorf("could not update geo coordinate after Edge NEO creation: %v", err)
+			return diag.Errorf("could not update geo coordinate after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.RxQueueSize != "" {
-		gatewayForGatewayFunctions.RxQueueSize = edgeNEO.RxQueueSize
+	if edgeCSP.RxQueueSize != "" {
+		gatewayForGatewayFunctions.RxQueueSize = edgeCSP.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not set rx queue size after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set rx queue size after Edge Zededa creation: %v", err)
 		}
 	}
 
-	if edgeNEO.EnableSingleIpSnat {
-		gatewayForGatewayFunctions.GatewayName = edgeNEO.GwName
+	if edgeCSP.EnableSingleIpSnat {
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
 		err := client.EnableSNat(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("failed to enable single IP SNAT: %s", err)
 		}
 	}
 
-	if !edgeNEO.EnableAutoAdvertiseLanCidrs {
-		err := client.UpdateEdgeNEO(ctx, edgeNEO)
+	if !edgeCSP.EnableAutoAdvertiseLanCidrs {
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
-			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge NEO creation: %v", err)
+			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Zededa creation: %v", err)
 		}
 	}
 
-	return resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixEdgeZededaReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeZededaReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixEdgeNEORead(ctx, d, meta)
+		return resourceAviatrixEdgeZededaRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// handle import
@@ -624,39 +629,40 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 		d.SetId(id)
 	}
 
-	edgeNEOResp, err := client.GetEdgeNEO(ctx, d.Get("gw_name").(string))
+	edgeCSPResp, err := client.GetEdgeCSP(ctx, d.Get("gw_name").(string))
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge NEO: %v", err)
+		return diag.Errorf("could not read Edge Zededa: %v", err)
 	}
 
-	d.Set("account_name", edgeNEOResp.AccountName)
-	d.Set("gw_name", edgeNEOResp.GwName)
-	d.Set("site_id", edgeNEOResp.SiteId)
-	d.Set("device_id", edgeNEOResp.DeviceId)
-	d.Set("gw_size", edgeNEOResp.GwSize)
-	d.Set("enable_management_over_private_network", edgeNEOResp.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeNEOResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeNEOResp.SecondaryDnsServerIp)
-	d.Set("local_as_number", edgeNEOResp.LocalAsNumber)
-	d.Set("prepend_as_path", edgeNEOResp.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeNEOResp.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeNEOResp.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeNEOResp.EnableLearnedCidrsApproval)
+	d.Set("account_name", edgeCSPResp.AccountName)
+	d.Set("gw_name", edgeCSPResp.GwName)
+	d.Set("site_id", edgeCSPResp.SiteId)
+	d.Set("project_uuid", edgeCSPResp.ProjectUuid)
+	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
+	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
+	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
+	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
+	d.Set("secondary_dns_server_ip", edgeCSPResp.SecondaryDnsServerIp)
+	d.Set("local_as_number", edgeCSPResp.LocalAsNumber)
+	d.Set("prepend_as_path", edgeCSPResp.PrependAsPath)
+	d.Set("enable_edge_active_standby", edgeCSPResp.EnableEdgeActiveStandby)
+	d.Set("enable_edge_active_standby_preemptive", edgeCSPResp.EnableEdgeActiveStandbyPreemptive)
+	d.Set("enable_learned_cidrs_approval", edgeCSPResp.EnableLearnedCidrsApproval)
 
-	if edgeNEOResp.ManagementEgressIpPrefix == "" {
+	if edgeCSPResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeNEOResp.ManagementEgressIpPrefix, ","))
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	}
 
-	if edgeNEOResp.EnableLearnedCidrsApproval {
-		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeNEOResp.GwName})
+	if edgeCSPResp.EnableLearnedCidrsApproval {
+		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeCSPResp.GwName})
 		if err != nil {
-			return diag.Errorf("could not get advanced config for Edge NEO: %v", err)
+			return diag.Errorf("could not get advanced config for Edge Zededa: %v", err)
 		}
 
 		err = d.Set("approved_learned_cidrs", spokeAdvancedConfig.ApprovedLearnedCidrs)
@@ -668,71 +674,71 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
-	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeNEOResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
-		len(goaviatrix.Difference(edgeNEOResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeNEOResp.SpokeBgpManualAdvertisedCidrs)
+	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeCSPResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
+		len(goaviatrix.Difference(edgeCSPResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
+		d.Set("spoke_bgp_manual_advertise_cidrs", edgeCSPResp.SpokeBgpManualAdvertisedCidrs)
 	} else {
 		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
 
-	d.Set("enable_preserve_as_path", edgeNEOResp.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeNEOResp.BgpPollingTime)
-	d.Set("bgp_hold_time", edgeNEOResp.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeNEOResp.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeNEOResp.EnableJumboFrame)
-	if edgeNEOResp.Latitude != 0 || edgeNEOResp.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeNEOResp.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeNEOResp.Longitude))
+	d.Set("enable_preserve_as_path", edgeCSPResp.EnablePreserveAsPath)
+	d.Set("bgp_polling_time", edgeCSPResp.BgpPollingTime)
+	d.Set("bgp_hold_time", edgeCSPResp.BgpHoldTime)
+	d.Set("enable_edge_transitive_routing", edgeCSPResp.EnableEdgeTransitiveRouting)
+	d.Set("enable_jumbo_frame", edgeCSPResp.EnableJumboFrame)
+	if edgeCSPResp.Latitude != 0 || edgeCSPResp.Longitude != 0 {
+		d.Set("latitude", fmt.Sprintf("%.6f", edgeCSPResp.Latitude))
+		d.Set("longitude", fmt.Sprintf("%.6f", edgeCSPResp.Longitude))
 	} else {
 		d.Set("latitude", "")
 		d.Set("longitude", "")
 	}
 
-	d.Set("rx_queue_size", edgeNEOResp.RxQueueSize)
-	d.Set("state", edgeNEOResp.State)
-	d.Set("wan_interface_names", edgeNEOResp.WanInterface)
-	d.Set("lan_interface_names", edgeNEOResp.LanInterface)
-	d.Set("management_interface_names", edgeNEOResp.MgmtInterface)
+	d.Set("rx_queue_size", edgeCSPResp.RxQueueSize)
+	d.Set("state", edgeCSPResp.State)
+	d.Set("wan_interface_names", edgeCSPResp.WanInterface)
+	d.Set("lan_interface_names", edgeCSPResp.LanInterface)
+	d.Set("management_interface_names", edgeCSPResp.MgmtInterface)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	for _, interface0 := range edgeNEOResp.InterfaceList {
-		interface1 := make(map[string]interface{})
-		interface1["name"] = interface0.IfName
-		interface1["type"] = interface0.Type
-		interface1["bandwidth"] = interface0.Bandwidth
-		interface1["wan_public_ip"] = interface0.PublicIp
-		interface1["tag"] = interface0.Tag
-		interface1["enable_dhcp"] = interface0.Dhcp
-		interface1["ip_address"] = interface0.IpAddr
-		interface1["gateway_ip"] = interface0.GatewayIp
-		interface1["dns_server_ip"] = interface0.DnsPrimary
-		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
-		interface1["vrrp_virtual_ip"] = interface0.VirtualIp
+	for _, if0 := range edgeCSPResp.InterfaceList {
+		if1 := make(map[string]interface{})
+		if1["name"] = if0.IfName
+		if1["type"] = if0.Type
+		if1["bandwidth"] = if0.Bandwidth
+		if1["wan_public_ip"] = if0.PublicIp
+		if1["tag"] = if0.Tag
+		if1["enable_dhcp"] = if0.Dhcp
+		if1["ip_address"] = if0.IpAddr
+		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DnsPrimary
+		if1["secondary_dns_server_ip"] = if0.DnsSecondary
+		if1["vrrp_virtual_ip"] = if0.VirtualIp
 
-		if interface0.Type == "LAN" {
-			interface1["enable_vrrp"] = interface0.VrrpState
+		if if0.Type == "LAN" {
+			if1["enable_vrrp"] = if0.VrrpState
 		}
 
-		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
-			for _, vlan0 := range interface0.SubInterfaces {
-				vlan1 := make(map[string]interface{})
-				vlan1["parent_interface_name"] = vlan0.ParentInterface
-				vlan1["ip_address"] = vlan0.IpAddr
-				vlan1["gateway_ip"] = vlan0.GatewayIp
-				vlan1["peer_ip_address"] = vlan0.PeerIpAddr
-				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIp
-				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIp
-				vlan1["tag"] = vlan0.Tag
+		if if0.Type == "LAN" && if0.SubInterfaces != nil {
+			for _, v0 := range if0.SubInterfaces {
+				v1 := make(map[string]interface{})
+				v1["parent_interface_name"] = v0.ParentInterface
+				v1["ip_address"] = v0.IpAddr
+				v1["gateway_ip"] = v0.GatewayIp
+				v1["peer_ip_address"] = v0.PeerIpAddr
+				v1["peer_gateway_ip"] = v0.PeerGatewayIp
+				v1["vrrp_virtual_ip"] = v0.VirtualIp
+				v1["tag"] = v0.Tag
 
-				vlanId, _ := strconv.Atoi(vlan0.VlanId)
-				vlan1["vlan_id"] = vlanId
+				vlanId, _ := strconv.Atoi(v0.VlanId)
+				v1["vlan_id"] = vlanId
 
-				vlan = append(vlan, vlan1)
+				vlan = append(vlan, v1)
 			}
 		}
 
-		interfaces = append(interfaces, interface1)
+		interfaces = append(interfaces, if1)
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
@@ -743,34 +749,34 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeNEOResp.DnsProfileName)
-	d.Set("enable_single_ip_snat", edgeNEOResp.EnableNat == "yes" && edgeNEOResp.SnatMode == "primary")
-	d.Set("enable_auto_advertise_lan_cidrs", edgeNEOResp.EnableAutoAdvertiseLanCidrs)
+	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
+	d.Set("enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
+	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
-	d.SetId(edgeNEOResp.GwName)
+	d.SetId(edgeCSPResp.GwName)
 	return nil
 }
 
-func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeNEO := marshalEdgeNEOInput(d)
+	edgeCSP := marshalEdgeZededaInput(d)
 
 	// checks before update
-	if !edgeNEO.EnableLearnedCidrsApproval && len(edgeNEO.ApprovedLearnedCidrs) != 0 {
+	if !edgeCSP.EnableLearnedCidrsApproval && len(edgeCSP.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
-	if len(edgeNEO.PrependAsPath) != 0 {
-		if edgeNEO.LocalAsNumber == "" {
+	if len(edgeCSP.PrependAsPath) != 0 {
+		if edgeCSP.LocalAsNumber == "" {
 			return diag.Errorf("'prepend_as_path' must be empty if 'local_as_number' is not set")
 		}
 	}
 
-	if edgeNEO.Latitude != "" && edgeNEO.Longitude != "" {
-		latitude, _ := strconv.ParseFloat(edgeNEO.Latitude, 64)
-		longitude, _ := strconv.ParseFloat(edgeNEO.Longitude, 64)
+	if edgeCSP.Latitude != "" && edgeCSP.Longitude != "" {
+		latitude, _ := strconv.ParseFloat(edgeCSP.Latitude, 64)
+		longitude, _ := strconv.ParseFloat(edgeCSP.Longitude, 64)
 		if latitude == 0 && longitude == 0 {
 			return diag.Errorf("latitude and longitude must not be zero at the same time")
 		}
@@ -781,157 +787,157 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 	// update configs
 	// use following variables to reuse functions for transit, spoke and gateway
 	gatewayForTransitFunctions := &goaviatrix.TransitVpc{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForSpokeFunctions := &goaviatrix.SpokeVpc{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForGatewayFunctions := &goaviatrix.Gateway{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 	gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
-		GwName: edgeNEO.GwName,
+		GwName: edgeCSP.GwName,
 	}
 
 	if d.HasChanges("local_as_number", "prepend_as_path") {
-		if (d.HasChange("local_as_number") && d.HasChange("prepend_as_path")) || len(edgeNEO.PrependAsPath) == 0 {
+		if (d.HasChange("local_as_number") && d.HasChange("prepend_as_path")) || len(edgeCSP.PrependAsPath) == 0 {
 			// prependASPath must be deleted from the controller before local_as_number can be changed
 			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPath(gatewayForTransitFunctions, nil)
 			if err != nil {
-				return diag.Errorf("could not delete prepend_as_path during Edge NEO update: %v", err)
+				return diag.Errorf("could not delete prepend_as_path during Edge Zededa update: %v", err)
 			}
 		}
 
 		if d.HasChange("local_as_number") {
-			err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeNEO.LocalAsNumber)
+			err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeCSP.LocalAsNumber)
 			if err != nil {
-				return diag.Errorf("could not set local_as_number during Edge NEO update: %v", err)
+				return diag.Errorf("could not set local_as_number during Edge Zededa update: %v", err)
 			}
 		}
 
-		if d.HasChange("prepend_as_path") && len(edgeNEO.PrependAsPath) > 0 {
-			err := client.SetPrependASPath(gatewayForTransitFunctions, edgeNEO.PrependAsPath)
+		if d.HasChange("prepend_as_path") && len(edgeCSP.PrependAsPath) > 0 {
+			err := client.SetPrependASPath(gatewayForTransitFunctions, edgeCSP.PrependAsPath)
 			if err != nil {
-				return diag.Errorf("could not set prepend_as_path during Edge NEO update: %v", err)
+				return diag.Errorf("could not set prepend_as_path during Edge Zededa update: %v", err)
 			}
 		}
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
-		if edgeNEO.EnableLearnedCidrsApproval {
+		if edgeCSP.EnableLearnedCidrsApproval {
 			err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable learned cidrs approval during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable learned cidrs approval during Edge Zededa update: %v", err)
 			}
 		} else {
 			err := client.DisableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable learned cidrs approval during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable learned cidrs approval during Edge Zededa update: %v", err)
 			}
 		}
 	}
 
-	if edgeNEO.EnableLearnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
-		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeNEO.ApprovedLearnedCidrs
+	if edgeCSP.EnableLearnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
+		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeCSP.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not update approved learned CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not update approved learned CIDRs during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("spoke_bgp_manual_advertise_cidrs") {
-		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeNEO.SpokeBgpManualAdvertisedCidrs, ",")
+		gatewayForTransitFunctions.BgpManualSpokeAdvertiseCidrs = strings.Join(edgeCSP.SpokeBgpManualAdvertisedCidrs, ",")
 		err := client.SetBgpManualSpokeAdvertisedNetworks(gatewayForTransitFunctions)
 		if err != nil {
-			return diag.Errorf("could not set spoke BGP manual advertised CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not set spoke BGP manual advertised CIDRs during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("enable_preserve_as_path") {
-		if edgeNEO.EnablePreserveAsPath {
+		if edgeCSP.EnablePreserveAsPath {
 			err := client.EnableSpokePreserveAsPath(gatewayForSpokeFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable preserve as path during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable preserve as path during Edge Zededa update: %v", err)
 			}
 		} else {
 			err := client.DisableSpokePreserveAsPath(gatewayForSpokeFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable preserve as path during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable preserve as path during Edge Zededa update: %v", err)
 			}
 		}
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpPollingTime))
 		if err != nil {
-			return diag.Errorf("could not set bgp polling time during Edge NEO update: %v", err)
+			return diag.Errorf("could not set bgp polling time during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_hold_time") {
-		err := client.ChangeBgpHoldTime(edgeNEO.GwName, edgeNEO.BgpHoldTime)
+		err := client.ChangeBgpHoldTime(edgeCSP.GwName, edgeCSP.BgpHoldTime)
 		if err != nil {
-			return diag.Errorf("could not change bgp hold time during Edge NEO update: %v", err)
+			return diag.Errorf("could not change bgp hold time during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("enable_edge_transitive_routing") {
-		if edgeNEO.EnableEdgeTransitiveRouting {
-			err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
+		if edgeCSP.EnableEdgeTransitiveRouting {
+			err := client.EnableEdgeSpokeTransitiveRouting(ctx, edgeCSP.GwName)
 			if err != nil {
-				return diag.Errorf("could not enable transitive routing during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable transitive routing during Edge Zededa update: %v", err)
 			}
 		} else {
-			err := client.DisableEdgeSpokeTransitiveRouting(ctx, edgeNEO.GwName)
+			err := client.DisableEdgeSpokeTransitiveRouting(ctx, edgeCSP.GwName)
 			if err != nil {
-				return diag.Errorf("could not disable transitive routing during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable transitive routing during Edge Zededa update: %v", err)
 			}
 		}
 	}
 
 	if d.HasChange("enable_jumbo_frame") {
-		if edgeNEO.EnableJumboFrame {
+		if edgeCSP.EnableJumboFrame {
 			err := client.EnableJumboFrame(gatewayForGatewayFunctions)
 			if err != nil {
-				return diag.Errorf("could not enable jumbo frame during Edge NEO update: %v", err)
+				return diag.Errorf("could not enable jumbo frame during Edge Zededa update: %v", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(gatewayForGatewayFunctions)
 			if err != nil {
-				return diag.Errorf("could not disable jumbo frame during Edge NEO update: %v", err)
+				return diag.Errorf("could not disable jumbo frame during Edge Zededa update: %v", err)
 			}
 		}
 	}
 
 	if d.HasChanges("latitude", "longitude") {
-		gatewayForEaasFunctions.Latitude = edgeNEO.Latitude
-		gatewayForEaasFunctions.Longitude = edgeNEO.Longitude
+		gatewayForEaasFunctions.Latitude = edgeCSP.Latitude
+		gatewayForEaasFunctions.Longitude = edgeCSP.Longitude
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, gatewayForEaasFunctions)
 		if err != nil {
-			return diag.Errorf("could not update geo coordinate during Edge NEO update: %v", err)
+			return diag.Errorf("could not update geo coordinate during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("rx_queue_size") {
-		gatewayForGatewayFunctions.RxQueueSize = edgeNEO.RxQueueSize
+		gatewayForGatewayFunctions.RxQueueSize = edgeCSP.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
-			return diag.Errorf("could not update rx queue size during Edge NEO update: %v", err)
+			return diag.Errorf("could not update rx queue size during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
-		err := client.UpdateEdgeNEO(ctx, edgeNEO)
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge NEO update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge Zededa update: %v", err)
 		}
 	}
 
 	if d.HasChange("enable_single_ip_snat") {
-		gatewayForGatewayFunctions.GatewayName = edgeNEO.GwName
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
 
-		if edgeNEO.EnableSingleIpSnat {
+		if edgeCSP.EnableSingleIpSnat {
 			err := client.EnableSNat(gatewayForGatewayFunctions)
 			if err != nil {
 				return diag.Errorf("failed to enable single IP SNAT during update: %s", err)
@@ -947,18 +953,18 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	d.Partial(false)
 
-	return resourceAviatrixEdgeNEORead(ctx, d, meta)
+	return resourceAviatrixEdgeZededaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	accountName := d.Get("account_name").(string)
 	gwName := d.Get("gw_name").(string)
 
-	err := client.DeleteEdgeNEO(ctx, accountName, gwName)
+	err := client.DeleteEdgeCSP(ctx, accountName, gwName)
 	if err != nil {
-		return diag.Errorf("could not delete Edge NEO: %v", err)
+		return diag.Errorf("could not delete Edge Zededa: %v", err)
 	}
 
 	return nil

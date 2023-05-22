@@ -368,6 +368,8 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
 		},
+		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_zededa instead. Resource " +
+			"aviatrix_edge_csp will be deprecated in the next major release.",
 	}
 }
 
