@@ -8,9 +8,11 @@ description: |-
 
 # aviatrix_edge_csp_ha
 
-The **aviatrix_edge_csp_ha** resource creates the Aviatrix Edge CSP HA.
+-> **NOTE:** From V3.1.1 on, please use resource **aviatrix_edge_zededa_ha** instead. Resource **aviatrix_edge_csp_ha** will be deprecated in the next major release.
 
 -> **NOTE:** A primary **aviatrix_edge_csp** is required to create **aviatrix_edge_csp_ha**.
+
+The **aviatrix_edge_csp_ha** resource creates the Aviatrix Edge CSP HA.
 
 ## Example Usage
 

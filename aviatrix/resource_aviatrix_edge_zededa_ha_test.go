@@ -19,8 +19,8 @@ func TestAccAviatrixEdgeZededaHa_basic(t *testing.T) {
 	}
 
 	resourceName := "aviatrix_edge_zededa_ha.test"
-	accountName := "edge-csp-acc-" + acctest.RandString(5)
-	gwName := "edge-csp-" + acctest.RandString(5)
+	accountName := "edge-zededa-acc-" + acctest.RandString(5)
+	gwName := "edge-zededa-" + acctest.RandString(5)
 	siteId := "site-" + acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
@@ -50,10 +50,10 @@ func TestAccAviatrixEdgeZededaHa_basic(t *testing.T) {
 func testAccEdgeZededaHaBasic(accountName, gwName, siteId string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
- 	account_name      = "%s"
-	cloud_type        = 65536
-	edge_csp_username = "%s"
-	edge_csp_password = "%s"
+ 	account_name         = "%s"
+	cloud_type           = 65536
+	edge_zededa_username = "%s"
+	edge_zededa_password = "%s"
 }
 resource "aviatrix_edge_zededa" "test" {
 	account_name      = aviatrix_account.test_account.account_name

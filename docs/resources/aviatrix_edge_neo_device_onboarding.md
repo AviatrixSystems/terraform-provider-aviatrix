@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_edge_neo_device_onboarding
 
+-> **NOTE:** From V3.1.1 on, please use resource **aviatrix_edge_platform_device_onboarding** instead. Resource **aviatrix_edge_neo_device_onboarding** will be deprecated in the next major release.
+
 The **aviatrix_edge_neo_device_onboarding** resource onboards the Edge NEO device.
 
 ## Example Usage

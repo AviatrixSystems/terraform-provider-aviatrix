@@ -1,23 +1,23 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_csp_ha"
+page_title: "Aviatrix: aviatrix_edge_zededa_ha"
 description: |-
-  Creates Aviatrix Edge CSP HA
+  Creates Aviatrix Edge Zededa HA
 ---
 
-# aviatrix_edge_csp_ha
+# aviatrix_edge_zededa_ha
 
-The **aviatrix_edge_csp_ha** resource creates the Aviatrix Edge CSP HA.
+The **aviatrix_edge_zededa_ha** resource creates the Aviatrix Edge Zededa HA.
 
--> **NOTE:** A primary **aviatrix_edge_csp** is required to create **aviatrix_edge_csp_ha**.
+-> **NOTE:** A primary **aviatrix_edge_zededa** is required to create **aviatrix_edge_zededa_ha**.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge CSP HA
-resource "aviatrix_edge_csp_ha" "test" {
-  primary_gw_name   = "primary_edge_csp"
+# Create an Edge Zededa HA
+resource "aviatrix_edge_zededa_ha" "test" {
+  primary_gw_name   = "primary_edge_zededa"
   compute_node_uuid = "abcde12345"
 
   interfaces {
@@ -40,8 +40,8 @@ resource "aviatrix_edge_csp_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Primary Edge CSP name.
-* `compute_node_uuid` - (Required) Edge CSP compute node UUID.
+* `primary_gw_name` - (Required) Primary Edge Zededa name.
+* `compute_node_uuid` - (Required) Edge Zededa compute node UUID.
 
 -> **NOTE:** At least one LAN interface is required.
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
@@ -63,12 +63,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
-* `account_name` - Edge CSP account name.
+* `account_name` - Edge Zededa account name.
 
 ## Import
 
-**edge_csp_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "_hagw" e.g.
+**edge_zededa_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "_hagw" e.g.
 
 ```
-$ terraform import aviatrix_edge_csp_ha.test primary_gw_name_hagw
+$ terraform import aviatrix_edge_zededa_ha.test primary_gw_name_hagw
 ```

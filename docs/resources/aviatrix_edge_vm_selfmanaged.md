@@ -1,20 +1,20 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_spoke"
+page_title: "Aviatrix: aviatrix_edge_vm_selfmanaged"
 description: |-
-  Creates Aviatrix Edge as a Spoke
+  Creates Aviatrix Edge VM Selfmanaged
 ---
 
-# aviatrix_edge_spoke
+# aviatrix_edge_vm_selfmanaged
 
-The **aviatrix_edge_spoke** resource creates the Aviatrix Edge as a Spoke. This resource is available as of provider version R2.23+.
+The **aviatrix_edge_vm_selfmanaged** resource creates the Aviatrix Edge VM Selfmanaged. This resource is available as of provider version R2.23+.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge as a Spoke
-resource "aviatrix_edge_spoke" "test" {
+# Create an Edge VM Selfmanaged
+resource "aviatrix_edge_vm_selfmanaged" "test" {
   gw_name                = "edge-test"
   site_id                = "site-123"
   ztp_file_type          = "iso"
@@ -54,7 +54,7 @@ resource "aviatrix_edge_spoke" "test" {
 The following arguments are supported:
 
 ### Required
-* `gw_name` - (Required) Edge as a Spoke name.
+* `gw_name` - (Required) Edge VM Selfmanaged name.
 * `site_id` - (Required) Site ID.
 * `ztp_file_type` - (Required) ZTP file type. Valid values: "iso", "cloud-init".
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
@@ -75,7 +75,7 @@ The following arguments are supported:
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
 
 ### Advanced Options
-* `local_as_number` - (Optional) BGP AS Number to assign to Edge as a Spoke.
+* `local_as_number` - (Optional) BGP AS Number to assign to Edge VM Selfmanaged.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend gateway BGP AS_Path field. Valid only when `local_as_number` is set. Example: ["65023", "65023"].
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable learned CIDR approval. Valid values: true, false. Default value: false.
 * `approved_learned_cidrs` - (Optional) Set of approved learned CIDRs. Valid only when `enable_learned_cidrs_approval` is set to true. Example: ["10.1.0.0/116", "10.2.0.0/16"].
@@ -85,20 +85,20 @@ The following arguments are supported:
 * `bgp_hold_time` - (Optional) BGP hold time. Unit is in seconds. Valid values are between 12 and 360. Default value: 180.
 * `enable_edge_transitive_routing` - (Optional) Switch to enable Edge transitive routing. Valid values: true, false. Default value: false.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
-* `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: "47.7511".
-* `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: "120.7401".
+* `latitude` - (Optional) Latitude of Edge VM Selfmanaged. Valid values are between -90 and 90. Example: "47.7511".
+* `longitude` - (Optional) Longitude of Edge VM Selfmanaged. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attribute is exported:
 
-* `state` - State of Edge as a Spoke.
+* `state` - State of Edge VM Selfmanaged.
 
 ## Import
 
-**edge_spoke** can be imported using the `gw_name`, e.g.
+**edge_vm_selfmanaged** can be imported using the `gw_name`, e.g.
 
 ```
-$ terraform import aviatrix_edge_spoke.test gw_name
+$ terraform import aviatrix_edge_vm_selfmanaged.test gw_name
 ```
