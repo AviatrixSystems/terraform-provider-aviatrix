@@ -265,7 +265,7 @@ The following arguments are supported:
 * `awss_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
 
 ### Edge CSP
-~> **NOTE:** From V3.1.1 on, please use `edge_zededa_username` and `edge_zededa_password` instead, `edge_csp_username` and `edge_csp_password` will be deprecated in the next major release.
+~> **NOTE:** Since V3.1.1+, please use `edge_zededa_username` and `edge_zededa_password` instead, `edge_csp_username` and `edge_csp_password` will be deprecated in the V3.2.0 release.
 * `edge_csp_username` - (Optional) Edge CSP username. Required when creating an Edge CSP account.
 * `edge_csp_password` - (Optional) Edge CSP password. Required when creating an Edge CSP account.
 

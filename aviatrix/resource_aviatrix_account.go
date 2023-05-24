@@ -345,8 +345,8 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"edge_zededa_username"},
 				Description:   "Edge CSP username.",
-				Deprecated: "From V3.1.1 on, please use edge_zededa_username instead, edge_csp_username will be " +
-					"deprecated in the next major release.",
+				Deprecated: "Since V3.1.1+, please use edge_zededa_username instead, edge_csp_username will be " +
+					"deprecated in the V3.2.0 release.",
 			},
 			"edge_csp_password": {
 				Type:          schema.TypeString,
@@ -354,8 +354,8 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:     true,
 				ConflictsWith: []string{"edge_zededa_password"},
 				Description:   "Edge CSP password.",
-				Deprecated: "From V3.1.1 on, please use edge_zededa_password instead, edge_csp_password will be " +
-					"deprecated in the next major release.",
+				Deprecated: "Since V3.1.1+, please use edge_zededa_password instead, edge_csp_password will be " +
+					"deprecated in the V3.2.0 release.",
 			},
 			"edge_zededa_username": {
 				Type:          schema.TypeString,

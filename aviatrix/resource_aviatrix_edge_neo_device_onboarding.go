@@ -103,8 +103,8 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 				Description: "The location where the config file will be stored.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform_device_onboarding instead. Resource " +
-			"aviatrix_edge_neo_device_onboarding will be deprecated in the next major release.",
+		DeprecationMessage: "Since V3.1.1+, please use resource aviatrix_edge_platform_device_onboarding instead. Resource " +
+			"aviatrix_edge_neo_device_onboarding will be deprecated in the V3.2.0 release.",
 	}
 }
 

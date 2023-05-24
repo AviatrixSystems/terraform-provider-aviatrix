@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_edge_csp
 
--> **NOTE:** From V3.1.1 on, please use resource **aviatrix_edge_zededa** instead. Resource **aviatrix_edge_csp** will be deprecated in the next major release.
+-> **NOTE:** Since V3.1.1+, please use resource **aviatrix_edge_zededa** instead. Resource **aviatrix_edge_csp** will be deprecated in the V3.2.0 release.
 
 The **aviatrix_edge_csp** resource creates the Aviatrix Edge CSP.
 

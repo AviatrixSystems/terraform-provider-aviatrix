@@ -238,8 +238,8 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				},
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_vm_selfmanaged instead. Resource " +
-			"aviatrix_edge_spoke will be deprecated in the next major release.",
+		DeprecationMessage: "Since V3.1.1+, please use resource aviatrix_edge_vm_selfmanaged instead. Resource " +
+			"aviatrix_edge_spoke will be deprecated in the V3.2.0 release.",
 	}
 }
 

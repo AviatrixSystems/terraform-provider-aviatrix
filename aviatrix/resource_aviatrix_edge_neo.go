@@ -362,8 +362,8 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
 		},
-		DeprecationMessage: "From V3.1.1 on, please use resource aviatrix_edge_platform instead. Resource " +
-			"aviatrix_edge_neo will be deprecated in the next major release.",
+		DeprecationMessage: "Since V3.1.1+, please use resource aviatrix_edge_platform instead. Resource " +
+			"aviatrix_edge_neo will be deprecated in the V3.2.0 release.",
 	}
 }
 
