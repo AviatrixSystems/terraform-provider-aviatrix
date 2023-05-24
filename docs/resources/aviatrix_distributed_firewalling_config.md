@@ -25,7 +25,7 @@ resource "aviatrix_distributed_firewalling_config" "test" {
 The following arguments are supported:
 
 ### Required
-* `enable_distributed_firewalling` - (Optional) Whether to enable Private Mode on an Aviatrix Controller. Valid values: true, false. Default value: false.
+* `enable_distributed_firewalling` - (Optional) Whether to enable Aviatrix Distributed Firewalling on an Aviatrix Controller. Valid values: true, false. Default value: false.
 
 ## Import
 
