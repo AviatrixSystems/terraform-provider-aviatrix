@@ -105,6 +105,8 @@ func Provider() *schema.Provider {
 			"aviatrix_controller_private_oob":                         resourceAviatrixControllerPrivateOob(),
 			"aviatrix_controller_security_group_management_config":    resourceAviatrixControllerSecurityGroupManagementConfig(),
 			"aviatrix_copilot_association":                            resourceAviatrixCopilotAssociation(),
+			"aviatrix_copilot_simple_deployment":                      resourceAviatrixCopilotSimpleDeployment(),
+			"aviatrix_copilot_fault_tolerant_deployment":              resourceAviatrixCopilotFaultTolerantDeployment(),
 			"aviatrix_copilot_security_group_management_config":       resourceAviatrixCopilotSecurityGroupManagementConfig(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
@@ -119,6 +121,7 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_neo":                                       resourceAviatrixEdgeNEO(),
 			"aviatrix_edge_neo_device_onboarding":                     resourceAviatrixEdgeNEODeviceOnboarding(),
 			"aviatrix_edge_neo_ha":                                    resourceAviatrixEdgeNEOHa(),
+<<<<<<< HEAD
 			"aviatrix_edge_platform":                                  resourceAviatrixEdgePlatform(),
 			"aviatrix_edge_platform_device_onboarding":                resourceAviatrixEdgePlatformDeviceOnboarding(),
 			"aviatrix_edge_platform_ha":                               resourceAviatrixEdgePlatformHa(),
@@ -128,6 +131,11 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_vm_selfmanaged":                            resourceAviatrixEdgeVmSelfmanaged(),
 			"aviatrix_edge_zededa":                                    resourceAviatrixEdgeZededa(),
 			"aviatrix_edge_zededa_ha":                                 resourceAviatrixEdgeZededaHa(),
+=======
+			"aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
+			"aviatrix_edge_spoke_external_device_conn":                resourceAviatrixEdgeSpokeExternalDeviceConn(),
+			"aviatrix_edge_spoke_transit_attachment":                  resourceAviatrixEdgeSpokeTransitAttachment(),
+>>>>>>> b8b0452d (AVX-29319: support simple and fault tolerant copilot deployment)
 			"aviatrix_filebeat_forwarder":                             resourceAviatrixFilebeatForwarder(),
 			"aviatrix_firenet":                                        resourceAviatrixFireNet(),
 			"aviatrix_firewall":                                       resourceAviatrixFirewall(),
