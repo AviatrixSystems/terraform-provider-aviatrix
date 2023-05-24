@@ -14,7 +14,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigCreate,
 		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingProxyCaConfigRead,
-		//UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigUpdate,
+		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigUpdate,
 		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -25,13 +25,14 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "Content of proxy cert certificate to create only one cert.",
 			},
 			"ca_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				ForceNew:    true,
-				Description: "",
+				Description: "Content of proxy cert key to create only one cert.",
 			},
 			"unique_serial": {
 				Type:        schema.TypeString,
@@ -53,15 +54,10 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 				Computed:    true,
 				Description: "Expiration time of created cert.",
 			},
-			"sans": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Expiration time of created cert.",
-			},
 			"upload_info": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Expiration time of created cert.",
+				Description: "Upload info of created cert.",
 			},
 		},
 	}
@@ -76,7 +72,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Conte
 	}
 
 	if err := client.SetNewCertificate(ctx, proxyCaConfig); err != nil {
-		return diag.Errorf("failed to create s2c ca cert tag: %v", err)
+		return diag.Errorf("failed to set new Distributed-firewalling proxy ca certificate: %v", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -96,33 +92,50 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read controller access allow list config: %s", err)
+		return diag.Errorf("failed to read Distributed-firewalling proxy ca cert config: %s", err)
 	}
+	d.Set("ca_cert", proxyCaConfig.CaCert+"\n")
 
-	d.Set("unique_serial", proxyCaConfig.SerialNumber)
-	d.Set("issuer_name", proxyCaConfig.Issuer)
-	d.Set("common_name", proxyCaConfig.CommonName)
-	d.Set("expiration_time", proxyCaConfig.ExpirationDate)
-	d.Set("sans", proxyCaConfig.SANs)
-	d.Set("upload_info", proxyCaConfig.UploadInfo)
+	proxyCaCertInstance, err := client.GetMetaCaCertificate(ctx)
+	if err == nil {
+		d.Set("unique_serial", proxyCaCertInstance.SerialNumber)
+		d.Set("issuer_name", proxyCaCertInstance.Issuer)
+		d.Set("common_name", proxyCaCertInstance.CommonName)
+		d.Set("expiration_time", proxyCaCertInstance.ExpirationDate)
+		d.Set("upload_info", proxyCaCertInstance.UploadInfo)
+	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
+func resourceAviatrixDistributedFirewallingProxyCaConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*goaviatrix.Client)
+
+	d.Partial(true)
+	if d.HasChanges("ca_cert", "ca_key") {
+		proxyCaConfig := &goaviatrix.ProxyCaConfig{
+			CaCert: d.Get("ca_cert").(string),
+			CaKey:  d.Get("ca_key").(string),
+		}
+
+		if err := client.SetNewCertificate(ctx, proxyCaConfig); err != nil {
+			return diag.Errorf("failed to set new Distributed-firewalling proxy ca certificate in update: %v", err)
+		}
+	}
+
+	d.Partial(false)
+
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+	return resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx, d, meta)
+}
+
 func resourceAviatrixDistributedFirewallingProxyCaConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	for _, cert := range d.Get("ca_certificates").(*schema.Set).List() {
-		certInstance := cert.(map[string]interface{})
-		cert := &goaviatrix.CaCertInstance{
-			ID: certInstance["id"].(string),
-		}
-
-		err := client.DeleteCertInstance(ctx, cert)
-		if err != nil {
-			return diag.Errorf("failed to delete ca cert %s: %s", cert.ID, err)
-		}
+	err := client.DeleteCaCertificate(ctx)
+	if err != nil {
+		return diag.Errorf("failed to delete Distributed-firewalling proxy ca cert : %s", err)
 	}
 
 	return nil
