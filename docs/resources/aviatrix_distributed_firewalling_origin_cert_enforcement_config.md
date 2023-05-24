@@ -19,7 +19,6 @@ resource "aviatrix_distributed_firewalling_origin_cert_enforcement_config" "test
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

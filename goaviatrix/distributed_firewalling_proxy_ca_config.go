@@ -59,10 +59,12 @@ func (c *Client) GetCaCertificate(ctx context.Context) (*ProxyCaConfig, error) {
 }
 
 func (c *Client) GetMetaCaCertificate(ctx context.Context) (*ProxyCaCertInstance, error) {
-	endpoint := fmt.Sprintf("mitm/ca?info")
-
+	endpoint := fmt.Sprintf("mitm/ca")
+	form := map[string]string{
+		"info": "true",
+	}
 	var data ProxyCaCertInstance
-	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
+	err := c.GetAPIContext25(ctx, &data, endpoint, form)
 	if err != nil {
 		return nil, err
 	}
