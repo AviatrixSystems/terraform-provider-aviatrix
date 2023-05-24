@@ -34,11 +34,6 @@ func TestAccAviatrixCopilotFaultTolerantDeployment_basic(t *testing.T) {
 					testAccCheckCopilotFaultTolerantDeploymentExists(resourceName),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       false,
-				ImportStateVerify: false,
-			},
 		},
 	})
 }

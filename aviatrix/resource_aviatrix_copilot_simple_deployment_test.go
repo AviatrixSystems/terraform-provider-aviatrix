@@ -34,11 +34,6 @@ func TestAccAviatrixCopilotSimpleDeployment_basic(t *testing.T) {
 					testAccCheckCopilotSimpleDeploymentExists(resourceName),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       false,
-				ImportStateVerify: false,
-			},
 		},
 	})
 }
