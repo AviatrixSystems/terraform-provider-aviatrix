@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"context"
-	"fmt"
 )
 
 type ProxyCaConfig struct {
@@ -26,7 +25,7 @@ type ProxyCaCertInstance struct {
 }
 
 func (c *Client) SetNewCertificate(ctx context.Context, proxyCaConfig *ProxyCaConfig) error {
-	endpoint := fmt.Sprintf("mitm/ca")
+	endpoint := "mitm/ca"
 
 	files := []File{
 		{
@@ -47,7 +46,7 @@ func (c *Client) SetNewCertificate(ctx context.Context, proxyCaConfig *ProxyCaCo
 }
 
 func (c *Client) GetCaCertificate(ctx context.Context) (*ProxyCaConfig, error) {
-	endpoint := fmt.Sprintf("mitm/ca-2")
+	endpoint := "mitm/ca-2"
 
 	var data ProxyCaConfig
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
@@ -59,7 +58,7 @@ func (c *Client) GetCaCertificate(ctx context.Context) (*ProxyCaConfig, error) {
 }
 
 func (c *Client) GetMetaCaCertificate(ctx context.Context) (*ProxyCaCertInstance, error) {
-	endpoint := fmt.Sprintf("mitm/ca")
+	endpoint := "mitm/ca"
 	form := map[string]string{
 		"info": "true",
 	}
@@ -73,6 +72,6 @@ func (c *Client) GetMetaCaCertificate(ctx context.Context) (*ProxyCaCertInstance
 }
 
 func (c *Client) DeleteCaCertificate(ctx context.Context) error {
-	endpoint := fmt.Sprintf("mitm/ca")
+	endpoint := "mitm/ca"
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
