@@ -42,21 +42,21 @@ resource "aviatrix_remote_syslog" "test_remote_syslog" {
 The following arguments are supported:
 
 ### Required
-* `index` (Optional) Profile index. An index from 0 to 9 is supported. 0 by default.
-* `name` (Required) Profile name.  
-* `server` (Required) Server IP.
-* `port` (Required) Port number.
-* `protocol` (Optional) TCP or UDP. TCP by default.
+* `index` - (Optional) Profile index. An index from 0 to 9 is supported. 0 by default.
+* `server` - (Required) Server IP.
+* `port` - (Required) Port number.
+* `protocol` - (Optional) TCP or UDP. TCP by default.
 
 ### Optional
-* `ca_certificate_file` (Optional) The Certificate Authority (CA) certificate. Use the `file` function to read from a file.
-* `public_certificate_file` (Optional) The public certificate of the controller signed by the same CA. Use the `file` function to read from a file.
-* `private_key_file` (Optional) The private key of the controller that pairs with the public certificate. Use the `file` function to read from a file.
+* `name` - (Optional) Profile name.
+* `ca_certificate_file` - (Optional) The Certificate Authority (CA) certificate. Use the `file` function to read from a file.
+* `public_certificate_file` - (Optional) The public certificate of the controller signed by the same CA. Use the `file` function to read from a file.
+* `private_key_file` - (Optional) The private key of the controller that pairs with the public certificate. Use the `file` function to read from a file.
 
 ~> **NOTE:** To enable TLS, either `ca_certificate_file`, or the combination of `ca_certificate_file`, `public_certificate_file` and `private_key_file` should be used.
 
-* `template` (Optional) Optional custom template.
-* `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
+* `template` - (Optional) Optional custom template.
+* `excluded_gateways` - (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Attribute Reference
 
