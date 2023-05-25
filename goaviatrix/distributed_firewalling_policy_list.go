@@ -8,20 +8,21 @@ type DistributedFirewallingPortRange struct {
 }
 
 type DistributedFirewallingPolicy struct {
-	Name               string                            `json:"name"`
-	Action             string                            `json:"action"`
-	Logging            bool                              `json:"logging,omitempty"`
-	DstSmartGroups     []string                          `json:"dst_ads"`
-	SrcSmartGroups     []string                          `json:"src_ads"`
-	WebGroups          []string                          `json:"web_filters,omitempty"`
-	PortRanges         []DistributedFirewallingPortRange `json:"port_ranges,omitempty"`
-	Priority           int                               `json:"priority"`
-	Protocol           string                            `json:"protocol"`
-	FlowAppRequirement string                            `json:"flow_app_requirement,omitempty"`
-	DecryptPolicy      string                            `json:"decrypt_policy,omitempty"`
-	Watch              bool                              `json:"watch,omitempty"`
-	UUID               string                            `json:"uuid,omitempty"`
-	SystemResource     bool                              `json:"system_resource,omitempty"`
+	Name                   string                            `json:"name"`
+	Action                 string                            `json:"action"`
+	Logging                bool                              `json:"logging,omitempty"`
+	DstSmartGroups         []string                          `json:"dst_ads"`
+	SrcSmartGroups         []string                          `json:"src_ads"`
+	WebGroups              []string                          `json:"web_filters,omitempty"`
+	PortRanges             []DistributedFirewallingPortRange `json:"port_ranges,omitempty"`
+	Priority               int                               `json:"priority"`
+	Protocol               string                            `json:"protocol"`
+	FlowAppRequirement     string                            `json:"flow_app_requirement,omitempty"`
+	DecryptPolicy          string                            `json:"decrypt_policy,omitempty"`
+	Watch                  bool                              `json:"watch,omitempty"`
+	ExcludeSgOrchestration bool                              `json:"exclude_sg_orchestration,omitempty"`
+	UUID                   string                            `json:"uuid,omitempty"`
+	SystemResource         bool                              `json:"system_resource,omitempty"`
 }
 
 type DistributedFirewallingPolicyList struct {
