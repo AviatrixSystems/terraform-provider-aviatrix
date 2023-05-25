@@ -247,7 +247,7 @@ output "EDGE_SPOKE_SITE_ID" {
 }
 
 output "EDGE_CSP_USERNAME" {
-  value = var.edge_spoke_site_id
+  value = var.edge_csp_username
 }
 
 output "EDGE_CSP_PASSWORD" {
@@ -284,4 +284,44 @@ output "EDGE_NEO_HA_DEVICE_SERIAL_NUMBER" {
 
 output "EDGE_NEO_HA_DEVICE_HARDWARE_MODEL" {
   value = var.edge_neo_ha_device_hardware_model
+}
+
+output "EDGE_PLATFORM_DEVICE_SERIAL_NUMBER" {
+  value = var.edge_platform_device_serial_number
+}
+
+output "EDGE_PLATFORM_DEVICE_HARDWARE_MODEL" {
+  value = var.edge_platform_device_hardware_model
+}
+
+output "EDGE_PLATFORM_HA_DEVICE_SERIAL_NUMBER" {
+  value = var.edge_platform_ha_device_serial_number
+}
+
+output "EDGE_PLATFORM_HA_DEVICE_HARDWARE_MODEL" {
+  value = var.edge_platform_ha_device_hardware_model
+}
+
+output "EDGE_ZEDEDA_USERNAME" {
+  value = var.edge_zededa_username
+}
+
+output "EDGE_ZEDEDA_PASSWORD" {
+  value = var.edge_zededa_password
+}
+
+output "EDGE_ZEDEDA_PROJECT_UUID" {
+  value = var.edge_zededa_project_uuid
+}
+
+output "EDGE_ZEDEDA_COMPUTE_NODE_UUID" {
+  value = var.edge_zededa_compute_node_uuid
+}
+
+output "EDGE_ZEDEDA_TEMPLATE_UUID" {
+  value = var.edge_zededa_template_uuid
+}
+
+output "EDGE_ZEDEDA_HA_COMPUTE_NODE_UUID" {
+  value = var.edge_zededa_ha_compute_node_uuid
 }

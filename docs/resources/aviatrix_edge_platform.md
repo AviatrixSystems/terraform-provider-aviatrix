@@ -1,24 +1,22 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_neo"
+page_title: "Aviatrix: aviatrix_edge_platform"
 description: |-
-  Creates Aviatrix Edge NEO
+  Creates Aviatrix Edge Platform
 ---
 
-# aviatrix_edge_neo
+# aviatrix_edge_platform
 
--> **NOTE:** Since V3.1.1+, please use resource **aviatrix_edge_platform** instead. Resource **aviatrix_edge_neo** will be deprecated in the V3.2.0 release.
-
-The **aviatrix_edge_neo** resource creates the Aviatrix Edge NEO.
+The **aviatrix_edge_platform** resource creates the Aviatrix Edge Platform.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge NEO
-resource "aviatrix_edge_neo" "test" {
-  account_name               = "edge_neo-account"
-  gw_name                    = "neo-test"
+# Create an Edge Platform
+resource "aviatrix_edge_platform" "test" {
+  account_name               = "edge-platform-account"
+  gw_name                    = "edge-platform-test"
   site_id                    = "site-123"
   device_id                  = "abcd123"
   gw_size                    = "small"
@@ -55,8 +53,8 @@ resource "aviatrix_edge_neo" "test" {
 The following arguments are supported:
 
 ### Required
-* `account_name` - (Required) Edge NEO account name.
-* `gw_name` - (Required) Edge NEO name.
+* `account_name` - (Required) Edge Platform account name.
+* `gw_name` - (Required) Edge Platform name.
 * `site_id` - (Required) Site ID.
 * `device_id` - (Required) Device ID.
 * `gw_size` - (Required) Gateway size. Valid values: "small", "medium", "large", "x-large".
@@ -87,7 +85,7 @@ The following arguments are supported:
 * `wan_interface_names` - (Optional) List of WAN interface names. Default value: ["eth0"].
 * `lan_interface_names` - (Optional) List of LAN interface names. Default value: ["eth1"].
 * `management_interface_names` - (Optional) List of management interface names. Default value: ["eth2"].
-* `local_as_number` - (Optional) BGP AS Number to assign to Edge NEO.
+* `local_as_number` - (Optional) BGP AS Number to assign to Edge Platform.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend gateway BGP AS_Path field. Valid only when `local_as_number` is set. Example: ["65023", "65023"].
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable learned CIDR approval. Valid values: true, false. Default value: false.
 * `approved_learned_cidrs` - (Optional) Set of approved learned CIDRs. Valid only when `enable_learned_cidrs_approval` is set to true. Example: ["10.1.0.0/116", "10.2.0.0/16"].
@@ -97,8 +95,8 @@ The following arguments are supported:
 * `bgp_hold_time` - (Optional) BGP hold time in seconds. Valid values are between 12 and 360. Default value: 180.
 * `enable_edge_transitive_routing` - (Optional) Switch to enable Edge transitive routing. Valid values: true, false. Default value: false.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
-* `latitude` - (Optional) Latitude of Edge NEO. Valid values are between -90 and 90. Example: "47.7511".
-* `longitude` - (Optional) Longitude of Edge Neo. Valid values are between -180 and 180. Example: "120.7401".
+* `latitude` - (Optional) Latitude of Edge Platform. Valid values are between -90 and 90. Example: "47.7511".
+* `longitude` - (Optional) Longitude of Edge Platform. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 * `vlan` - (Required) VLAN configuration.
     * `parent_interface_name` - (Required) Parent interface name.
@@ -117,12 +115,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
-* `state` - State of Edge NEO.
+* `state` - State of Edge Platform.
 
 ## Import
 
-**edge_neo** can be imported using the `gw_name`, e.g.
+**edge_platform** can be imported using the `gw_name`, e.g.
 
 ```
-$ terraform import aviatrix_edge_equinix.test gw_name
+$ terraform import aviatrix_edge_platform.test gw_name
 ```
