@@ -191,3 +191,90 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, Url string, 
 		}
 	}
 }
+
+// PostFileContext25 will encode the files and parameters with multipart form encoding.
+func (c *Client) PostFileContext25(ctx context.Context, path string, params map[string]string, files []File) error {
+	return c.DoAPIFileContext25(ctx, "POST", path, params, files)
+}
+
+func (c *Client) DoAPIFileContext25(ctx context.Context, verb string, path string, params map[string]string, files []File) error {
+	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, path)
+	resp, err := c.RequestFileContext25(ctx, verb, Url, params, files)
+	if err != nil {
+		return fmt.Errorf("HTTP %s %q failed: %v", verb, path, err)
+	}
+
+	return checkAndReturnAPIResp25(resp, nil, verb, path)
+}
+
+func (c *Client) RequestFileContext25(ctx context.Context, verb string, Url string, params map[string]string, files []File) (*http.Response, error) {
+	log.Tracef("%s %s", verb, Url)
+
+	try, maxTries, backoff := 0, 2, 500*time.Millisecond
+	var req *http.Request
+	var err error
+	var apiError *APIError
+	var resp *http.Response
+
+	body, contentType, err := encodeMultipartFormData(params, files)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err = http.NewRequestWithContext(ctx, verb, Url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+
+	for {
+		try++
+
+		// Set CID as Authorization header for v2.5
+		req.Header.Set("Authorization", fmt.Sprintf("cid %s", c.CID))
+
+		resp, err = c.HTTPClient.Do(req)
+		if err != nil {
+			return resp, err
+		}
+
+		if resp.StatusCode == 403 {
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(resp.Body)
+			resp.Body.Close()
+
+			// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
+			resp.Body = io.NopCloser(buf)
+
+			bodyString := buf.String()
+			apiError = new(APIError)
+			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(apiError); err != nil {
+				return resp, fmt.Errorf("Json Decode into error message failed: %v\n Body: %s", err, bodyString)
+			}
+
+			if !strings.Contains(apiError.Message, "Invalid CID") {
+				log.Debugf("[DEBUG] API Response Error: %s\n", apiError.Message)
+				return resp, err
+			}
+
+			log.Tracef("CID invalid or expired. Trying to login again")
+			if err = c.Login(); err != nil {
+				return resp, err
+			}
+			log.WithFields(log.Fields{
+				"try": try,
+				"err": "CID is invalid",
+			}).Warnf("HTTP request failed with expired CID")
+
+			if try == maxTries {
+				return resp, fmt.Errorf("%v", apiError.Message)
+			}
+			time.Sleep(backoff)
+			// Double the backoff time after each failed try
+			backoff *= 2
+		} else {
+			log.Debugf("[DEBUG] HTTP Response: %v\n", resp)
+			return resp, err
+		}
+	}
+}
