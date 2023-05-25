@@ -105,14 +105,12 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 			"enable_edge_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Edge Active-Standby Mode.",
 			},
 			"enable_edge_active_standby_preemptive": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Preemptive Mode for Edge Active-Standby, available only with Active-Standby enabled.",
 			},
@@ -396,7 +394,6 @@ func marshalEdgePlatformInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
-		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -438,6 +435,20 @@ func marshalEdgePlatformInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
 
 		edgeNEO.VlanList = append(edgeNEO.VlanList, vlan2)
+	}
+
+	if !edgeNEO.EnableEdgeActiveStandby {
+		edgeNEO.DisableEdgeActiveStandby = true
+	}
+
+	if !edgeNEO.EnableEdgeActiveStandbyPreemptive {
+		edgeNEO.DisableEdgeActiveStandbyPreemptive = true
+	}
+
+	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+		edgeNEO.EnableAutoAdvertiseLanCidrs = "enable"
+	} else {
+		edgeNEO.EnableAutoAdvertiseLanCidrs = "disable"
 	}
 
 	return edgeNEO
@@ -593,7 +604,7 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if !edgeNEO.EnableAutoAdvertiseLanCidrs {
+	if edgeNEO.EnableAutoAdvertiseLanCidrs == "disable" {
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Platform creation: %v", err)
@@ -756,6 +767,10 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 	edgeNEO := marshalEdgePlatformInput(d)
 
 	// checks before update
+	if !edgeNEO.EnableEdgeActiveStandby && edgeNEO.EnableEdgeActiveStandbyPreemptive {
+		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+	}
+
 	if !edgeNEO.EnableLearnedCidrsApproval && len(edgeNEO.ApprovedLearnedCidrs) != 0 {
 		return diag.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
@@ -919,10 +934,13 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name", "enable_auto_advertise_lan_cidrs") {
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge Platform update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/VLAN interfaces, "+
+				"DNS profile name, auto advertise LAN CIDRs, Edge active standby or Edge active standby preemptive "+
+				"during Edge Platform update: %v", err)
 		}
 	}
 

@@ -19,37 +19,39 @@ type EdgeNEO struct {
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network,omitempty"`
 	DnsServerIp                        string `json:"dns_server_ip,omitempty"`
 	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary,omitempty"`
-	EnableEdgeActiveStandby            bool   `json:"enable_active_standby"`
-	EnableEdgeActiveStandbyPreemptive  bool   `json:"enable_active_standby_preemptive"`
-	LocalAsNumber                      string `json:"local_as_number"`
+	EnableEdgeActiveStandby            bool   `json:"enable_active_standby,omitempty"`
+	DisableEdgeActiveStandby           bool   `json:"disable_active_standby,omitempty"`
+	EnableEdgeActiveStandbyPreemptive  bool   `json:"enable_active_standby_preemptive,omitempty"`
+	DisableEdgeActiveStandbyPreemptive bool   `json:"disable_active_standby_preemptive,omitempty"`
+	LocalAsNumber                      string `json:"local_as_number,omitempty"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string   `json:"prepend_as_path"`
-	IncludeCidrList                    []string `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
-	BgpPollingTime                     int      `json:"bgp_polling_time"`
-	BgpHoldTime                        int      `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool     `json:"jumbo_frame"`
+	PrependAsPathReturn                string   `json:"prepend_as_path,omitempty"`
+	IncludeCidrList                    []string `json:"include_cidr_list,omitempty"`
+	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval,omitempty"`
+	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	EnablePreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
+	BgpPollingTime                     int      `json:"bgp_polling_time,omitempty"`
+	BgpHoldTime                        int      `json:"bgp_hold_time,omitempty"`
+	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing,omitempty"`
+	EnableJumboFrame                   bool     `json:"jumbo_frame,omitempty"`
 	Latitude                           string
 	Longitude                          string
-	RxQueueSize                        string `json:"rx_queue_size"`
-	State                              string `json:"vpc_state"`
+	RxQueueSize                        string `json:"rx_queue_size,omitempty"`
+	State                              string `json:"vpc_state,omitempty"`
 	NoProgressBar                      bool   `json:"no_progress_bar,omitempty"`
-	WanInterface                       string `json:"wan_ifnames"`
-	LanInterface                       string `json:"lan_ifnames"`
-	MgmtInterface                      string `json:"mgmt_ifnames"`
+	WanInterface                       string `json:"wan_ifnames,omitempty"`
+	LanInterface                       string `json:"lan_ifnames,omitempty"`
+	MgmtInterface                      string `json:"mgmt_ifnames,omitempty"`
 	InterfaceList                      []*EdgeNEOInterface
-	Interfaces                         string `json:"interfaces"`
+	Interfaces                         string `json:"interfaces,omitempty"`
 	VlanList                           []*EdgeNEOVlan
-	Vlan                               string `json:"vlan"`
-	DnsProfileName                     string `json:"dns_profile_name"`
+	Vlan                               string `json:"vlan,omitempty"`
+	DnsProfileName                     string `json:"dns_profile_name,omitempty"`
 	EnableSingleIpSnat                 bool
-	EnableAutoAdvertiseLanCidrs        bool
+	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
-	DirectAttachLan                    bool `json:"direct_attach_lan"`
+	DirectAttachLan                    bool `json:"direct_attach_lan,omitempty"`
 }
 
 type EdgeNEOInterface struct {
@@ -200,20 +202,15 @@ func (c *Client) DeleteEdgeNEO(ctx context.Context, accountName, name string) er
 }
 
 func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
-	form := map[string]string{
-		"action":           "update_edge_gateway",
-		"CID":              c.CID,
-		"name":             edgeNEO.GwName,
-		"mgmt_egress_ip":   edgeNEO.ManagementEgressIpPrefix,
-		"dns_profile_name": edgeNEO.DnsProfileName,
-	}
+	edgeNEO.Action = "update_edge_gateway"
+	edgeNEO.CID = c.CID
 
 	interfaces, err := json.Marshal(edgeNEO.InterfaceList)
 	if err != nil {
 		return err
 	}
 
-	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+	edgeNEO.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
 	if edgeNEO.VlanList == nil || len(edgeNEO.VlanList) == 0 {
 		edgeNEO.VlanList = []*EdgeNEOVlan{}
@@ -224,13 +221,7 @@ func (c *Client) UpdateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 		return err
 	}
 
-	form["vlan"] = b64.StdEncoding.EncodeToString(vlan)
+	edgeNEO.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
-	if edgeNEO.EnableAutoAdvertiseLanCidrs {
-		form["auto_advertise_lan_cidrs"] = "enable"
-	} else {
-		form["auto_advertise_lan_cidrs"] = "disable"
-	}
-
-	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, edgeNEO.Action, edgeNEO, BasicCheck)
 }

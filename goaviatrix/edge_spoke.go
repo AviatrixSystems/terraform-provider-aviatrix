@@ -28,28 +28,30 @@ type EdgeSpoke struct {
 	ZtpFileType                        string `json:"ztp_file_type,omitempty"`
 	ZtpFileDownloadPath                string
 	ActiveStandby                      string `json:"active_standby,omitempty"`
-	EnableEdgeActiveStandby            bool   `json:"edge_active_standby"`
-	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
-	LocalAsNumber                      string `json:"local_as_number"`
+	EnableEdgeActiveStandby            bool   `json:"enable_active_standby,omitempty"`
+	DisableEdgeActiveStandby           bool   `json:"disable_active_standby,omitempty"`
+	EnableEdgeActiveStandbyPreemptive  bool   `json:"enable_active_standby_preemptive,omitempty"`
+	DisableEdgeActiveStandbyPreemptive bool   `json:"disable_active_standby_preemptive,omitempty"`
+	LocalAsNumber                      string `json:"local_as_number,omitempty"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string   `json:"prepend_as_path"`
-	IncludeCidrList                    []string `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string `form:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
-	BgpPollingTime                     int      `json:"bgp_polling_time"`
-	BgpHoldTime                        int      `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool     `json:"jumbo_frame"`
+	PrependAsPathReturn                string   `json:"prepend_as_path,omitempty"`
+	IncludeCidrList                    []string `json:"include_cidr_list,omitempty"`
+	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval,omitempty"`
+	ApprovedLearnedCidrs               []string `form:"approved_learned_cidrs,omitempty,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	EnablePreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
+	BgpPollingTime                     int      `json:"bgp_polling_time,omitempty"`
+	BgpHoldTime                        int      `json:"bgp_hold_time,omitempty"`
+	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing,omitempty"`
+	EnableJumboFrame                   bool     `json:"jumbo_frame,omitempty"`
 	Latitude                           string
 	Longitude                          string
-	LatitudeReturn                     float64 `json:"latitude"`
-	LongitudeReturn                    float64 `json:"longitude"`
-	RxQueueSize                        string  `json:"rx_queue_size"`
-	State                              string  `json:"vpc_state"`
+	LatitudeReturn                     float64 `json:"latitude,omitempty"`
+	LongitudeReturn                    float64 `json:"longitude,omitempty"`
+	RxQueueSize                        string  `json:"rx_queue_size,omitempty"`
+	State                              string  `json:"vpc_state,omitempty"`
 	InterfaceList                      []*EdgeSpokeInterface
-	Interfaces                         string `json:"interfaces"`
+	Interfaces                         string `json:"interfaces,omitempty"`
 }
 
 type EdgeSpokeInterface struct {
@@ -164,21 +166,17 @@ func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpokeRes
 }
 
 func (c *Client) UpdateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) error {
-	form := map[string]string{
-		"action":         "update_edge_gateway",
-		"CID":            c.CID,
-		"gateway_name":   edgeSpoke.GwName,
-		"mgmt_egress_ip": edgeSpoke.ManagementEgressIpPrefix,
-	}
+	edgeSpoke.Action = "update_edge_gateway"
+	edgeSpoke.CID = c.CID
 
 	interfaces, err := json.Marshal(edgeSpoke.InterfaceList)
 	if err != nil {
 		return err
 	}
 
-	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, edgeSpoke.Action, edgeSpoke, BasicCheck)
 }
 
 func (c *Client) DeleteEdgeSpoke(ctx context.Context, name string) error {
