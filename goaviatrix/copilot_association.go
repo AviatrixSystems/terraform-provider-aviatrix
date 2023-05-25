@@ -20,8 +20,9 @@ func (c *Client) DisableCopilotAssociation(ctx context.Context) error {
 }
 
 type CopilotAssociationStatus struct {
-	Status bool
-	IP     string
+	Status   bool   `json:"status"`
+	IP       string `json:"ip"`
+	PublicIp string `json:"public_ip"`
 }
 
 func (c *Client) GetCopilotAssociationStatus(ctx context.Context) (*CopilotAssociationStatus, error) {
