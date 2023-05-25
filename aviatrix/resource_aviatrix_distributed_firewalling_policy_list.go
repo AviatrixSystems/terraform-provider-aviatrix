@@ -99,6 +99,12 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Default:     false,
 							Description: "Whether to enable watch mode for the policy.",
 						},
+						"exclude_sg_orchestration": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "If this flag is set to true, this policy will be ignored for SG orchestration.",
+						},
 						"port_ranges": {
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -142,11 +148,12 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 		policy := policyInterface.(map[string]interface{})
 
 		distributedFirewallingPolicy := &goaviatrix.DistributedFirewallingPolicy{
-			Name:               policy["name"].(string),
-			Action:             policy["action"].(string),
-			Priority:           policy["priority"].(int),
-			FlowAppRequirement: policy["flow_app_requirement"].(string),
-			DecryptPolicy:      policy["decrypt_policy"].(string),
+			Name:                   policy["name"].(string),
+			Action:                 policy["action"].(string),
+			Priority:               policy["priority"].(int),
+			FlowAppRequirement:     policy["flow_app_requirement"].(string),
+			DecryptPolicy:          policy["decrypt_policy"].(string),
+			ExcludeSgOrchestration: policy["exclude_sg_orchestration"].(bool),
 		}
 
 		protocol := strings.ToUpper(policy["protocol"].(string))
@@ -258,6 +265,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["logging"] = policy.Logging
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
+		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
 
 		if strings.EqualFold(policy.Protocol, "PROTOCOL_UNSPECIFIED") {
 			p["protocol"] = "ANY"
