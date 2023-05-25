@@ -107,6 +107,8 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				Description: "Edge CSP account name.",
 			},
 		},
+		DeprecationMessage: "Since V3.1.1+, please use resource aviatrix_edge_zededa_ha instead. Resource " +
+			"aviatrix_edge_csp_ha will be deprecated in the V3.2.0 release.",
 	}
 }
 

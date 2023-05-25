@@ -1,25 +1,23 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_neo_ha"
+page_title: "Aviatrix: aviatrix_edge_platform_ha"
 description: |-
-  Creates an Aviatrix Edge NEO HA
+  Creates an Aviatrix Edge Platform HA
 ---
 
-# aviatrix_edge_neo_ha
+# aviatrix_edge_platform_ha
 
--> **NOTE:** Since V3.1.1+, please use resource **aviatrix_edge_platform_ha** instead. Resource **aviatrix_edge_neo_ha** will be deprecated in the V3.2.0 release.
+-> **NOTE:** A primary **aviatrix_edge_platform** is required to create **aviatrix_edge_platform_ha**.
 
--> **NOTE:** A primary **aviatrix_edge_neo** is required to create **aviatrix_edge_neo_ha**.
-
-The **aviatrix_edge_neo_ha** resource creates the Aviatrix Edge NEO HA.
+The **aviatrix_edge_platform_ha** resource creates the Aviatrix Edge Platform HA.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge NEO HA
-resource "aviatrix_edge_neo_ha" "test" {
-  primary_gw_name = "primary_edge_neo"
+# Create an Edge Platform HA
+resource "aviatrix_edge_platform_ha" "test" {
+  primary_gw_name = "primary_edge_platform"
   device_id       = "device5678"
 
   interfaces {
@@ -51,7 +49,7 @@ resource "aviatrix_edge_neo_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Primary Edge NEO name.
+* `primary_gw_name` - (Required) Primary Edge Platform name.
 * `device_id` - (Required) Device ID.
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
     * `name` - (Required) Interface name.
@@ -72,12 +70,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
-* `account_name` - Edge NEO account name.
+* `account_name` - Edge Platform account name.
 
 ## Import
 
-**edge_neo_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "_hagw" e.g.
+**edge_platform_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "_hagw" e.g.
 
 ```
-$ terraform import aviatrix_edge_neo_ha.test primary_gw_name_hagw
+$ terraform import aviatrix_edge_platform_ha.test primary_gw_name_hagw
 ```
