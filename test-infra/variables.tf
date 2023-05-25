@@ -80,3 +80,13 @@ variable "edge_neo_device_serial_number" {}
 variable "edge_neo_device_hardware_model" {}
 variable "edge_neo_ha_device_serial_number" {}
 variable "edge_neo_ha_device_hardware_model" {}
+variable "edge_platform_device_serial_number" {}
+variable "edge_platform_device_hardware_model" {}
+variable "edge_platform_ha_device_serial_number" {}
+variable "edge_platform_ha_device_hardware_model" {}
+variable "edge_zededa_username" {}
+variable "edge_zededa_password" {}
+variable "edge_zededa_project_uuid" {}
+variable "edge_zededa_compute_node_uuid" {}
+variable "edge_zededa_template_uuid" {}
+variable "edge_zededa_ha_compute_node_uuid" {}

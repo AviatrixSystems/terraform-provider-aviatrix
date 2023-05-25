@@ -182,7 +182,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud and Edge CSP are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 2048 for AzureChina, 8192 for Alibaba Cloud, 65536 for Edge CSP.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud, Edge CSP/Zededa, Edge Equinix and Edge NEO/Platform are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 2048 for AzureChina, 8192 for Alibaba Cloud, 65536 for Edge CSP/Zededa, 524288 for Edge Equinix, 262144 for Edge NEO/Platform.
 
 ### AWS
 ~> **NOTE:** As of Aviatrix provider version R2.19+, the Aviatrix Controller supports the use of custom IAM roles through the `aws_role_app` and `aws_role_ec2` attributes. If the Controller's IAM role is changed through the AWS console, please run `terraform apply -refresh=false` in order to update `aws_role_app` and `aws_role_ec2`. `audit_account` must be set to "false" when using custom IAM roles.
@@ -265,8 +265,13 @@ The following arguments are supported:
 * `awss_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
 
 ### Edge CSP
+~> **NOTE:** Since V3.1.1+, please use `edge_zededa_username` and `edge_zededa_password` instead, `edge_csp_username` and `edge_csp_password` will be deprecated in the V3.2.0 release.
 * `edge_csp_username` - (Optional) Edge CSP username. Required when creating an Edge CSP account.
 * `edge_csp_password` - (Optional) Edge CSP password. Required when creating an Edge CSP account.
+
+### Edge Zededa
+* `edge_zededa_username` - (Optional) Edge Zededa username. Required when creating an Edge Zededa account.
+* `edge_zededa_password` - (Optional) Edge Zededa password. Required when creating an Edge Zededa account.
 
 ### Misc.
 ~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`. 
