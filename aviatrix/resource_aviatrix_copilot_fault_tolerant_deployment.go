@@ -173,7 +173,7 @@ func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d
 			return diag.Errorf("could not get copilot association status: %v", err)
 		}
 
-		if copilotAssociationStatus.Status {
+		if err != goaviatrix.ErrNotFound && copilotAssociationStatus.Status {
 			break
 		}
 

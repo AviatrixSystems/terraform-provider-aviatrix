@@ -127,7 +127,7 @@ func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schem
 			return diag.Errorf("could not get copilot association status: %v", err)
 		}
 
-		if copilotAssociationStatus.Status {
+		if err != goaviatrix.ErrNotFound && copilotAssociationStatus.Status {
 			break
 		}
 

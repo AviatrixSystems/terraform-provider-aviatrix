@@ -7,15 +7,15 @@ type CopilotSimpleDeployment struct {
 	CID                              string `json:"CID,omitempty"`
 	CloudType                        int    `json:"cloud_type,omitempty"`
 	AccountName                      string `json:"account_name,omitempty"`
-	Region                           string `json:"region_name,omitempty"`
+	Region                           string `json:"vpc_region,omitempty"`
 	VpcId                            string `json:"vpc_id,omitempty"`
-	Subnet                           string `json:"subnet,omitempty"`
+	Subnet                           string `json:"subnet_cidr,omitempty"`
 	ControllerServiceAccountUsername string `json:"controller_service_account_username,omitempty"`
 	ControllerServiceAccountPassword string `json:"controller_service_account_password,omitempty"`
 	IsCluster                        bool   `json:"is_cluster,omitempty"`
 	InstanceSize                     string `json:"instance_size,omitempty"`
 	DataVolumeSize                   int    `json:"data_volume_size,omitempty"`
-	Async                            bool   `form:"async,omitempty"`
+	Async                            bool   `json:"async,omitempty"`
 }
 
 type CopilotFaultTolerantDeployment struct {
@@ -31,7 +31,7 @@ type CopilotFaultTolerantDeployment struct {
 	ControllerServiceAccountUsername string             `json:"controller_service_account_username,omitempty"`
 	ControllerServiceAccountPassword string             `json:"controller_service_account_password,omitempty"`
 	IsCluster                        bool               `json:"is_cluster,omitempty"`
-	Async                            bool               `form:"async,omitempty"`
+	Async                            bool               `json:"async,omitempty"`
 }
 
 type MainCopilot struct {
