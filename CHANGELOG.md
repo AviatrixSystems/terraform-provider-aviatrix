@@ -27,7 +27,7 @@
 1. Added support for updating ``enable_edge_active_standby`` and ``enable_edge_active_standby_preemptive`` in Edge resources
 2. Updated valid range of ``insane_mode_tunnel_number`` to "2-50" in **aviatrix_edge_spoke_transit_attachment**
 3. Added support for ``manual_bgp_advertised_cidrs`` in **aviatrix_edge_spoke_external_device_conn**
-4. Changed ``profile_name`` to optional in **aviatrix_remote_syslog**
+4. Changed ``profile_name`` to be optional in **aviatrix_remote_syslog**
 
 ### Bug Fixes:
 1. Fixed issue where creating BGP underlay for Edge HA failed for **aviatrix_edge_spoke_external_device_conn**
