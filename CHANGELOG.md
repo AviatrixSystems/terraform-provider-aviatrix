@@ -1,4 +1,40 @@
-## 3.1.0 (Unreleased)
+## 3.1.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.1**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented a new resource to support Edge VM Selfmanaged:
+   - **aviatrix_edge_vm_selfmanaged**
+2. Implemented new resources to support Edge Platform device onboarding, Edge Platform and HA:
+   - **aviatrix_edge_platform_device_onboarding**
+   - **aviatrix_edge_platform**
+   - **aviatrix_edge_platform_ha**
+3. Implemented a new attribute to support ignoring DFW policy for SG orchestration in **aviatrix_distributed_firewalling_policy_list**:
+   - ``exclude_sg_orchestration``
+4. Implemented a new resource to support configuring how proxy handles bad origin certificates:
+   - **aviatrix_distributed_firewalling_origin_cert_enforcement_config**
+5. Implemented a new resource to allow customer directed change of MITM CA cert/key:
+   - **aviatrix_distributed_firewalling_proxy_ca_config**
+
+#### Copilot:
+1. Implemented new resources to support Copilot simple deployment and fault tolerant deployment:
+   - **aviatrix_copilot_simple_deployment**
+   - **aviatrix_copilot_fault_tolerant_deployment**
+
+### Enhancements:
+1. Added support for updating ``enable_edge_active_standby`` and ``enable_edge_active_standby_preemptive`` in Edge resources
+2. Updated valid range of ``insane_mode_tunnel_number`` to "2-50" in **aviatrix_edge_spoke_transit_attachment**
+3. Added support for ``manual_bgp_advertised_cidrs`` in **aviatrix_edge_spoke_external_device_conn**
+4. Changed ``profile_name`` to be optional in **aviatrix_remote_syslog**
+
+### Bug Fixes:
+1. Fixed issue where creating BGP underlay for Edge HA failed for **aviatrix_edge_spoke_external_device_conn**
+2. Fixed issue where retrieving transit gateway peering info from a corrupted database caused provider crash
+
+
+## 3.1.0 (May 11, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1**
 - Supported Terraform version: **v1.x**
@@ -62,7 +98,7 @@
 ### Preview Features:
 1. Implemented support of MITM/IDS: Request URL filtering:
    - New resource: **aviatrix_web_group**
-   - New attributes in **aviatrix_spoke_gateway**:
+   - New attributes in **aviatrix_distributed_firewalling_policy_list**:
       - ``web_groups``
       - ``flow_app_requirement``
       - ``decrypt_policy``
