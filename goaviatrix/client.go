@@ -403,6 +403,10 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		buf.ReadFrom(resp.Body)
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
+			if strings.Contains(buf.String(), "502 Proxy Error") || strings.Contains(buf.String(), "503 Service Unavailable") {
+				time.Sleep(sleepDuration)
+				continue
+			}
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
 		if !data.Return {
