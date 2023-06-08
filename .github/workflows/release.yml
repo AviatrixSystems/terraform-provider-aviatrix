@@ -13,6 +13,18 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
+        name: Validate CHANGELOG
+        run: |
+          expectedLine="## $(cat version) (Unreleased)"
+          firstLine=$(head -n 1 "CHANGELOG.md")
+          if [ "$firstLine" != "$expectedLine" ]; then
+            echo "The CHANGELOG.md does not start with the expected line"
+            echo "Expected: $expectedLine"
+            echo "Actual: $firstLine"
+            exit 1
+          fi
+
+      -
         name: Push git tag
         run: |
           version="v$(cat version)"
@@ -24,7 +36,8 @@ jobs:
         run: |
           lastLine=$(grep -n -m2 "^## " CHANGELOG.md | tail -1 | cut -d ":" -f 1)
           lastLine=$((lastLine - 1))
-          sed -n '2,'$lastLine'p' CHANGELOG.md >RELEASE_NOTES.md
+          echo "## $(cat version) ($(date +"%B %d, %Y"))" >RELEASE_NOTES.md
+          sed -n '2,'$lastLine'p' CHANGELOG.md >>RELEASE_NOTES.md
       -
         name: Set up Go
         uses: actions/setup-go@v3
