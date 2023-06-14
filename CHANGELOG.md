@@ -19,7 +19,7 @@
    - **aviatrix_distributed_firewalling_proxy_ca_config**
 
 #### Copilot:
-1. Implemented new resources to support Copilot simple deployment and fault tolerant deployment:
+1. Implemented new resources to support Copilot simple and fault-tolerant deployments:
    - **aviatrix_copilot_simple_deployment**
    - **aviatrix_copilot_fault_tolerant_deployment**
 
