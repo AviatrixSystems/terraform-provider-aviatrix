@@ -32,7 +32,7 @@
 ### Bug Fixes:
 1. Fixed issue where creating BGP underlay for Edge HA failed for **aviatrix_edge_spoke_external_device_conn**
 2. Fixed issue where retrieving transit gateway peering info from a corrupted database caused provider crash
-3. Fixed issue where task status check could fail for proxy error
+3. Fixed issue where task status check could fail due to proxy error
 4. Fixed issue where enabling single IP SNAT failed during spoke gateway creation
 
 
