@@ -12,9 +12,48 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.1.0 (UserConnect-7.1)``
+``Last updated: R3.1.1 (UserConnect-7.1.1794)``
 
 ---
+
+## 3.1.1
+### Notes:
+- Release date: **(14 Jun 2023)**
+- Supported Controller version: **UserConnect-7.1.1794**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented a new resource to support Edge VM Selfmanaged:
+   - **aviatrix_edge_vm_selfmanaged**
+2. Implemented new resources to support Edge Platform device onboarding, Edge Platform and HA:
+   - **aviatrix_edge_platform_device_onboarding**
+   - **aviatrix_edge_platform**
+   - **aviatrix_edge_platform_ha**
+3. Implemented a new attribute to support ignoring DFW policy for SG orchestration in **aviatrix_distributed_firewalling_policy_list**:
+   - ``exclude_sg_orchestration``
+4. Implemented a new resource to support configuring how proxy handles bad origin certificates:
+   - **aviatrix_distributed_firewalling_origin_cert_enforcement_config**
+5. Implemented a new resource to allow customer directed change of MITM CA cert/key:
+   - **aviatrix_distributed_firewalling_proxy_ca_config**
+
+#### Copilot:
+1. Implemented new resources to support Copilot simple and fault-tolerant deployments:
+   - **aviatrix_copilot_simple_deployment**
+   - **aviatrix_copilot_fault_tolerant_deployment**
+
+### Enhancements:
+1. Added support for updating ``enable_edge_active_standby`` and ``enable_edge_active_standby_preemptive`` in Edge resources
+2. Updated valid range of ``insane_mode_tunnel_number`` to "2-50" in **aviatrix_edge_spoke_transit_attachment**
+3. Added support for ``manual_bgp_advertised_cidrs`` in **aviatrix_edge_spoke_external_device_conn**
+4. Changed ``profile_name`` to be optional in **aviatrix_remote_syslog**
+
+### Bug Fixes:
+1. Fixed issue where creating BGP underlay for Edge HA failed for **aviatrix_edge_spoke_external_device_conn**
+2. Fixed issue where retrieving transit gateway peering info from a corrupted database caused provider crash
+3. Fixed issue where task status check could fail due to proxy error
+4. Fixed issue where enabling single IP SNAT failed during spoke gateway creation
+
 
 ## 3.1.0
 ### Notes:
