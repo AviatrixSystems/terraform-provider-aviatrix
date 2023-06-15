@@ -1,6 +1,6 @@
 ## 3.1.1 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-7.1**
+- Supported Controller version: **UserConnect-7.1.1794**
 - Supported Terraform version: **v1.x**
 
 ### Features:
