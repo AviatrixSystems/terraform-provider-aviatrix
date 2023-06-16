@@ -1,6 +1,8 @@
 [run]
   deadline = "10m"
   tests = true
+  skip-files = [ ".*goaviatrix/client_mock\\.go" ]
+
 
 [linters]
   disable-all = true

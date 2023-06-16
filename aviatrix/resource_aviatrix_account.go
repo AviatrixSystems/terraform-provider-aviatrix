@@ -833,7 +833,7 @@ func resourceAviatrixAccountReadIfRequired(ctx context.Context, d *schema.Resour
 }
 
 func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := meta.(goaviatrix.ClientInterface)
 
 	var diags diag.Diagnostics
 
@@ -1251,7 +1251,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 
 // for now, deleting gcp account will not delete the credential file
 func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := meta.(goaviatrix.ClientInterface)
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
 	}
