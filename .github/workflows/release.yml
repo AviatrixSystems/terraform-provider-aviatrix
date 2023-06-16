@@ -36,7 +36,7 @@ jobs:
         run: |
           lastLine=$(grep -n -m2 "^## " CHANGELOG.md | tail -1 | cut -d ":" -f 1)
           lastLine=$((lastLine - 1))
-          echo "## $(cat version) ($(date +"%B %d, %Y"))" >RELEASE_NOTES.md
+          echo "## $(cat version) ($(TZ='PST8PDT' date +"%B %d, %Y"))" >RELEASE_NOTES.md
           sed -n '2,'$lastLine'p' CHANGELOG.md >>RELEASE_NOTES.md
       -
         name: Set up Go
