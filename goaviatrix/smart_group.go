@@ -191,3 +191,73 @@ func (c *Client) DeleteSmartGroup(ctx context.Context, uuid string) error {
 	endpoint := fmt.Sprintf("app-domains/%s", uuid)
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
+
+func (c *Client) GetSmartGroups(ctx context.Context) ([]*SmartGroup, error) {
+	endpoint := "app-domains"
+
+	type SmartGroupMatchExpressionResult struct {
+		All map[string]string `json:"all"`
+	}
+
+	type SmartGroupAnyResult struct {
+		Any []SmartGroupMatchExpressionResult `json:"any"`
+	}
+
+	type SmartGroupResult struct {
+		UUID     string              `json:"uuid"`
+		Name     string              `json:"name"`
+		Selector SmartGroupAnyResult `json:"selector"`
+	}
+
+	type SmartGroupResp struct {
+		SmartGroups []SmartGroupResult `json:"app_domains"`
+	}
+
+	var data SmartGroupResp
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var smartGroups []*SmartGroup
+	for _, smartGroupResult := range data.SmartGroups {
+		if smartGroupResult.UUID != "" {
+			smartGroup := &SmartGroup{
+				Name: smartGroupResult.Name,
+				UUID: smartGroupResult.UUID,
+			}
+
+			for _, filterResult := range smartGroupResult.Selector.Any {
+				filterMap := filterResult.All
+
+				filter := &SmartGroupMatchExpression{
+					CIDR:        filterMap["cidr"],
+					FQDN:        filterMap["fqdn"],
+					Type:        filterMap["type"],
+					Site:        filterMap["site"],
+					ResId:       filterMap["res_id"],
+					AccountId:   filterMap["account_id"],
+					AccountName: filterMap["account_name"],
+					Name:        filterMap["name"],
+					Region:      filterMap["region"],
+					Zone:        filterMap["zone"],
+				}
+
+				tags := make(map[string]string)
+				for key, value := range filterMap {
+					if strings.HasPrefix(key, "tags.") {
+						tags[strings.TrimPrefix(key, "tags.")] = value
+					}
+				}
+
+				if len(tags) > 0 {
+					filter.Tags = tags
+				}
+
+				smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
+			}
+			smartGroups = append(smartGroups, smartGroup)
+		}
+	}
+	return smartGroups, nil
+}
