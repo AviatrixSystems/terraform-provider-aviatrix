@@ -205,6 +205,7 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway":                              dataSourceAviatrixGateway(),
 			"aviatrix_gateway_image":                        dataSourceAviatrixGatewayImage(),
 			"aviatrix_network_domains":                      dataSourceAviatrixNetworkDomains(),
+			"aviatrix_smart_groups":                         dataSourceAviatrixSmartGroups(),
 			"aviatrix_spoke_gateway":                        dataSourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_gateways":                       dataSourceAviatrixSpokeGateways(),
 			"aviatrix_spoke_gateway_inspection_subnets":     dataSourceAviatrixSpokeGatewayInspectionSubnets(),
