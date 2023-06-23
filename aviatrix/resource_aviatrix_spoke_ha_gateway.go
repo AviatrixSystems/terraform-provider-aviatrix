@@ -345,7 +345,7 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("gw_size") {
 		gateway.GwName = d.Get("gw_name").(string)
-		gateway.GwSize = d.Get("gw_size").(string)
+		gateway.VpcSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway %s: %s", gateway.GwName, err)
