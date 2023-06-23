@@ -6,7 +6,7 @@ description: |-
   Gets a list of all Network Domains.
 ---
 
-# aviatrix_all_network_domains
+# aviatrix_network_domains
 
 The **aviatrix_network_domains** data source provides details about all Network Domains created by the Aviatrix Controller. Available as of provider version 2.23+.
 
