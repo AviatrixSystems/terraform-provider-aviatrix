@@ -65,8 +65,6 @@ The following arguments are supported:
 * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
 
 ~> **NOTE:** `keep_alive_via_lan_interface_enabled` - Option to enable/disable keep_alive_via_lan_interface will be removed in Aviatrix provider v3.2.0. As of provider v3.1.2, disabling keep_alive_via_lan_interface will NOT be allowed.
-If you have set 'keep_alive_via_lan_interface_enabled = true', no action is needed at this time. After you upgrade to Aviatrix provider v3.2.0, you can safely remove the 'keep_alive_via_lan_interface_enabled' attribute from your configuration.
-If you have set 'keep_alive_via_lan_interface_enabled = false', you must enable it before you can upgrade to Aviatrix provider v3.2.0.
 
 The following arguments are deprecated:
 
