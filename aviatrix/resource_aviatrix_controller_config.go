@@ -280,9 +280,11 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
-	err = client.SetControllerVpcDnsServer(enableVpcDnsServer)
-	if err != nil {
-		return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+	if enableVpcDnsServer {
+		err = client.SetControllerVpcDnsServer(enableVpcDnsServer)
+		if err != nil {
+			return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+		}
 	}
 
 	if _, useFilePath := d.GetOk("ca_certificate_file_path"); useFilePath {
