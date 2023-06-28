@@ -56,9 +56,12 @@ func resourceAviatrixFireNet() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
 			},
 			"keep_alive_via_lan_interface_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Deprecated: "Option to enable/disable keep_alive_via_lan_interface will be removed in Aviatrix provider v3.2.0. As of provider v3.1.2, disabling keep_alive_via_lan_interface will NOT be allowed." +
+					"\n\nIf you have set 'keep_alive_via_lan_interface_enabled = true', no action is needed at this time. After you upgrade to Aviatrix provider v3.2.0, you can safely remove the 'keep_alive_via_lan_interface_enabled' attribute from your configuration." +
+					"\n\nIf you have set 'keep_alive_via_lan_interface_enabled = false', you must enable it before you can upgrade to Aviatrix provider v3.2.0.",
 				Description: "Enable Keep Alive via Firewall LAN Interface.",
 			},
 			"tgw_segmentation_for_egress_enabled": {
