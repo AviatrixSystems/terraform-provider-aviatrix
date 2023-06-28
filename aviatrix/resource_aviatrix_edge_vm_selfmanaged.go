@@ -234,6 +234,13 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 					},
 				},
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time.",
+			},
 		},
 	}
 }
@@ -429,6 +436,13 @@ func resourceAviatrixEdgeVmSelfmanagedCreate(ctx context.Context, d *schema.Reso
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(edgeSpoke.GwName, detectionTime.(int))
+		if err != nil {
+			return diag.Errorf("could not set tunnel detection time after Edge VM Selfmanaged creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeVmSelfmanagedReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -532,6 +546,8 @@ func resourceAviatrixEdgeVmSelfmanagedRead(ctx context.Context, d *schema.Resour
 	if err = d.Set("interfaces", interfaces); err != nil {
 		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
+
+	d.Set("tunnel_detection_time", edgeSpoke.TunnelDetectionTime)
 
 	d.SetId(edgeSpoke.GwName)
 	return nil
@@ -712,6 +728,24 @@ func resourceAviatrixEdgeVmSelfmanagedUpdate(ctx context.Context, d *schema.Reso
 		if err != nil {
 			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT interfaces, "+
 				"Edge active standby or Edge active standby preemptive during Edge as a Spoke update: %v", err)
+		}
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return diag.Errorf("could not get default tunnel detection time during Edge VM Selfmanaged update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(edgeSpoke.GwName, detectionTime)
+		if err != nil {
+			return diag.Errorf("could not modify tunnel detection time during Edge VM Selfmanaged update: %v", err)
 		}
 	}
 

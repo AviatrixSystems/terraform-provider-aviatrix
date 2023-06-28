@@ -120,6 +120,7 @@ type EdgeNEOResp struct {
 	EnableNat                          string              `json:"enable_nat"`
 	SnatMode                           string              `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`
+	TunnelDetectionTime                int                 `json:"detection_time"`
 }
 
 type EdgeNEOListResp struct {

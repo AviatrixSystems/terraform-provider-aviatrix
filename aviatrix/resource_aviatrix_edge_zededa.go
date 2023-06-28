@@ -365,6 +365,13 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 				Default:     true,
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time.",
+			},
 		},
 	}
 }
@@ -618,6 +625,13 @@ func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(edgeCSP.GwName, detectionTime.(int))
+		if err != nil {
+			return diag.Errorf("could not set tunnel detection time after Edge Zededa creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeZededaReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -763,6 +777,7 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
+	d.Set("tunnel_detection_time", edgeCSPResp.TunnelDetectionTime)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
@@ -967,6 +982,24 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return diag.Errorf("could not get default tunnel detection time during Edge Zededa update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(edgeCSP.GwName, detectionTime)
+		if err != nil {
+			return diag.Errorf("could not modify tunnel detection time during Edge Zededa update: %v", err)
+		}
 	}
 
 	d.Partial(false)

@@ -89,6 +89,7 @@ type EdgeSpokeResp struct {
 	RxQueueSize                        string                `json:"rx_queue_size"`
 	State                              string                `json:"vpc_state"`
 	InterfaceList                      []*EdgeSpokeInterface `json:"interfaces"`
+	TunnelDetectionTime                int                   `json:"detection_time"`
 }
 
 type EdgeSpokeListResp struct {

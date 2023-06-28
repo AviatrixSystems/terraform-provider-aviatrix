@@ -330,6 +330,13 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				Default:     true,
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time.",
+			},
 		},
 	}
 }
@@ -578,6 +585,13 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(edgeEquinix.GwName, detectionTime.(int))
+		if err != nil {
+			return diag.Errorf("could not set tunnel detection time after Edge Equinix creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeEquinixReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -717,6 +731,7 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	d.Set("dns_profile_name", edgeEquinixResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
+	d.Set("tunnel_detection_time", edgeEquinixResp.TunnelDetectionTime)
 
 	d.SetId(edgeEquinixResp.GwName)
 	return nil
@@ -921,6 +936,24 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 			}
 		}
 
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return diag.Errorf("could not get default tunnel detection time during Edge Equinix update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(edgeEquinix.GwName, detectionTime)
+		if err != nil {
+			return diag.Errorf("could not modify tunnel detection time during Edge Equinix update: %v", err)
+		}
 	}
 
 	d.Partial(false)

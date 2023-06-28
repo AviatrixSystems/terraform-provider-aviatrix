@@ -359,6 +359,13 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 				Default:     true,
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time.",
+			},
 		},
 	}
 }
@@ -611,6 +618,13 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(edgeNEO.GwName, detectionTime.(int))
+		if err != nil {
+			return diag.Errorf("could not set tunnel detection time after Edge Platform creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgePlatformReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -755,6 +769,7 @@ func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("dns_profile_name", edgeNEOResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeNEOResp.EnableNat == "yes" && edgeNEOResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeNEOResp.EnableAutoAdvertiseLanCidrs)
+	d.Set("tunnel_detection_time", edgeNEOResp.TunnelDetectionTime)
 
 	d.SetId(edgeNEOResp.GwName)
 	return nil
@@ -959,6 +974,24 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 			}
 		}
 
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return diag.Errorf("could not get default tunnel detection time during Edge Platform update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(edgeNEO.GwName, detectionTime)
+		if err != nil {
+			return diag.Errorf("could not modify tunnel detection time during Edge Platform update: %v", err)
+		}
 	}
 
 	d.Partial(false)

@@ -110,6 +110,7 @@ The following arguments are supported:
 * `dns_profile_name` - (Optional) DNS profile to be associated with gateway, select an existing template.
 * `enable_single_ip_snat` - (Optional) Enable Single IP SNAT. Valid values: true, false. Default value: false.
 * `enable_auto_advertise_lan_cidrs` - (Optional) Enable auto advertise LAN CIDRs. Valid values: true, false. Default value: true.
+* `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed).
 
 ## Attribute Reference
 

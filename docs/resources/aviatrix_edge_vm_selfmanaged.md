@@ -88,6 +88,7 @@ The following arguments are supported:
 * `latitude` - (Optional) Latitude of Edge VM Selfmanaged. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge VM Selfmanaged. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
+* `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed).
 
 ## Attribute Reference
 
