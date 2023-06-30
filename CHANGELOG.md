@@ -1,4 +1,4 @@
-## 3.1.1 (Unreleased)
+## 3.1.1 (June 14, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.1794**
 - Supported Terraform version: **v1.x**
@@ -109,6 +109,17 @@
 1. Removed support of **aviatrix_splunk_logging**, **aviatrix_filebeat_forwarder** and **aviatrix_sumologic_forwarder**
 
 
+## 3.0.6 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.0.1768**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where in-place update to enable Transit FireNet with GWLB failed in **aviatrix_transit_gateway**
+2. Fixed issue where newly launched controller failed to be upgraded to 7.1
+3. Fixed issue where retrieving Transit Gateway Peering info might cause provider to crash in **aviatrix_transit_gateway_peering**
+
+
 ## 3.0.5 (April 13, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1724**
@@ -169,10 +180,10 @@
 2. Added support of ``name`` as one of the attributes under ``selector`` in **aviatrix_smart_group**
 
 ### Bug Fixes:
-1. Fixed the issue where white space is allowed for ``phase1_remote_identifier`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn**
-2. Fixed the issue where ``cloud_image_id`` is allowed for Azure in **aviatrix_firewall_instance**
-3. Fixed the issue where S2C creation failed for an exception error
-4. Fixed the re-ordering issue of ``rtb_list1`` and ``rtb_list2`` in **aviatrix_aws_peer**
+1. Fixed issue where white space is allowed for ``phase1_remote_identifier`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn**
+2. Fixed issue where ``cloud_image_id`` is allowed for Azure in **aviatrix_firewall_instance**
+3. Fixed issue where S2C creation failed for an exception error
+4. Fixed re-ordering issue of ``rtb_list1`` and ``rtb_list2`` in **aviatrix_aws_peer**
 
 
 ## 3.0.1 (January 09, 2023)
