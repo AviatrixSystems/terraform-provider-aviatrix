@@ -62,7 +62,7 @@ The following arguments are supported:
 * `tgw_segmentation_for_egress_enabled` - (Optional) Enable TGW segmentation for egress. Valid values: true or false. Default value: false. Available as of provider version R2.19+.
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
 
-* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
+* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Supported for AWS and OCI related clouds only. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
 
 ~> **NOTE:** `keep_alive_via_lan_interface_enabled` - Option to enable/disable keep_alive_via_lan_interface will be removed in Aviatrix provider v3.2.0. As of provider v3.1.2, disabling keep_alive_via_lan_interface will NOT be allowed.
 
