@@ -116,7 +116,7 @@
 
 ### Bug Fixes:
 1. Fixed issue where in-place update to enable Transit FireNet with GWLB fails in **aviatrix_transit_gateway**
-2. Fixed issue where newly launched controller failed to be upgraded to 7.1
+2. Fixed issue where newly launched Controller fails to upgrade to 7.1
 3. Fixed issue where retrieving Transit Gateway Peering info might cause provider to crash in **aviatrix_transit_gateway_peering**
 
 
