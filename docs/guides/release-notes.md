@@ -12,9 +12,22 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.5 (UserConnect-7.0.1724)``
+``Last updated: R3.0.6 (UserConnect-7.0.1768)``
 
 ---
+
+
+## 3.0.6
+### Notes:
+- Release date: **(30 Jun 2023)**
+- Supported Controller version: **UserConnect-7.0.1768**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where in-place update to enable Transit FireNet with GWLB fails in **aviatrix_transit_gateway**
+2. Fixed issue where newly launched Controller fails to upgrade to 7.1
+3. Fixed issue where retrieving Transit Gateway Peering info might cause provider to crash in **aviatrix_transit_gateway_peering**
+
 
 ## 3.0.5
 ### Notes:
