@@ -14,25 +14,25 @@ var _ ClientInterface = &ClientInterfaceMock{}
 
 // ClientInterfaceMock is a mock implementation of ClientInterface.
 //
-// 	func TestSomethingThatUsesClientInterface(t *testing.T) {
+//	func TestSomethingThatUsesClientInterface(t *testing.T) {
 //
-// 		// make and configure a mocked ClientInterface
-// 		mockedClientInterface := &ClientInterfaceMock{
-// 			AuditAccountFunc: func(ctx context.Context, account *Account) error {
-// 				panic("mock out the AuditAccount method")
-// 			},
-// 			DeleteAccountFunc: func(account *Account) error {
-// 				panic("mock out the DeleteAccount method")
-// 			},
-// 			GetAccountFunc: func(account *Account) (*Account, error) {
-// 				panic("mock out the GetAccount method")
-// 			},
-// 		}
+//		// make and configure a mocked ClientInterface
+//		mockedClientInterface := &ClientInterfaceMock{
+//			AuditAccountFunc: func(ctx context.Context, account *Account) error {
+//				panic("mock out the AuditAccount method")
+//			},
+//			DeleteAccountFunc: func(account *Account) error {
+//				panic("mock out the DeleteAccount method")
+//			},
+//			GetAccountFunc: func(account *Account) (*Account, error) {
+//				panic("mock out the GetAccount method")
+//			},
+//		}
 //
-// 		// use mockedClientInterface in code that requires ClientInterface
-// 		// and then make assertions.
+//		// use mockedClientInterface in code that requires ClientInterface
+//		// and then make assertions.
 //
-// 	}
+//	}
 type ClientInterfaceMock struct {
 	// AuditAccountFunc mocks the AuditAccount method.
 	AuditAccountFunc func(ctx context.Context, account *Account) error
@@ -88,7 +88,8 @@ func (mock *ClientInterfaceMock) AuditAccount(ctx context.Context, account *Acco
 
 // AuditAccountCalls gets all the calls that were made to AuditAccount.
 // Check the length with:
-//     len(mockedClientInterface.AuditAccountCalls())
+//
+//	len(mockedClientInterface.AuditAccountCalls())
 func (mock *ClientInterfaceMock) AuditAccountCalls() []struct {
 	Ctx     context.Context
 	Account *Account
@@ -121,7 +122,8 @@ func (mock *ClientInterfaceMock) DeleteAccount(account *Account) error {
 
 // DeleteAccountCalls gets all the calls that were made to DeleteAccount.
 // Check the length with:
-//     len(mockedClientInterface.DeleteAccountCalls())
+//
+//	len(mockedClientInterface.DeleteAccountCalls())
 func (mock *ClientInterfaceMock) DeleteAccountCalls() []struct {
 	Account *Account
 } {
@@ -152,7 +154,8 @@ func (mock *ClientInterfaceMock) GetAccount(account *Account) (*Account, error) 
 
 // GetAccountCalls gets all the calls that were made to GetAccount.
 // Check the length with:
-//     len(mockedClientInterface.GetAccountCalls())
+//
+//	len(mockedClientInterface.GetAccountCalls())
 func (mock *ClientInterfaceMock) GetAccountCalls() []struct {
 	Account *Account
 } {
