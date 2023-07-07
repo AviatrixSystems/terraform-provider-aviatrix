@@ -591,6 +591,31 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "FQDN gateway lan interface id.",
 			},
+			"pbr": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Policy Based Routing config",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							Description: "PBR status",
+						},
+						"pbr_subnet_cidr": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "VPC ID of proxy",
+						},
+						"pbr_default_gateway_ip": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Instance ID of proxy.",
+						},
+					},
+				},
+			},
 		},
 	}
 }

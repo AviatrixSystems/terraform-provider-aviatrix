@@ -684,6 +684,20 @@ func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
+func (c *Client) EnablePBR(gateway *Gateway) error {
+	form := map[string]string{
+		"CID":                     c.CID,
+		"action":                  "enable_vpn_gateway_pbr",
+		"vpn_cidr":                gateway.VpnCidr,
+		"gateway_name":            gateway.GwName,
+		"pbr_subnet_cidr":         gateway.PbrSubnet,
+		"pbr_default_gateway_ip:": gateway.PbrDefaultGateway,
+		// "nat_translation_logging_enabled": gateway.NatTranslationLoggingEnabled,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
 func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	form := map[string]string{
 		"CID":                c.CID,
