@@ -1,11 +1,31 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
+
+type CloudnNeighborAsNumberWrapper string
+
+func (w *CloudnNeighborAsNumberWrapper) UnmarshalJSON(data []byte) (err error) {
+	if port, err := strconv.Atoi(string(data)); err == nil {
+		str := strconv.Itoa(port)
+		*w = CloudnNeighborAsNumberWrapper(str)
+		return nil
+	}
+	var str string
+	err = myUnmarshal(data, &str)
+	if err != nil {
+		return err
+	}
+	return myUnmarshal([]byte(str), w)
+}
 
 type CloudnTransitGatewayAttachment struct {
 	DeviceName                       string `form:"device_name"`
@@ -27,6 +47,23 @@ type CloudnTransitGatewayAttachment struct {
 	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
 	PrependAsPath                    string   `json:"conn_bgp_prepend_as_path"`
 	Async                            bool     `form:"async,omitempty"`
+}
+
+type CloudnTransitGatewayAttachmentResp struct {
+	DeviceName                       string
+	TransitGatewayName               string
+	ConnectionName                   string
+	TransitGatewayBgpAsn             string                        `json:"bgp_local_asn_number"`
+	CloudnBgpAsn                     string                        `json:"bgp_remote_asn_number"`
+	CloudnLanInterfaceNeighborIP     string                        `json:"cloudn_neighbor_ip"`
+	CloudnLanInterfaceNeighborBgpAsn CloudnNeighborAsNumberWrapper `json:"cloudn_neighbor_as_number"`
+	EnableOverPrivateNetwork         bool                          `json:"direct_connect_primary"`
+	EnableJumboFrame                 bool                          `json:"jumbo_frame"`
+	EnableDeadPeerDetection          bool
+	DpdConfig                        string   `json:"dpd_config"`
+	EnableLearnedCidrsApproval       string   `json:"conn_learned_cidrs_approval"`
+	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
+	PrependAsPath                    string   `json:"conn_bgp_prepend_as_path"`
 }
 
 func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attachment *CloudnTransitGatewayAttachment) error {
@@ -51,7 +88,7 @@ func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attac
 	return c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
 }
 
-func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName string) (*CloudnTransitGatewayAttachment, error) {
+func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName string) (*CloudnTransitGatewayAttachmentResp, error) {
 	deviceName, err := c.GetDeviceName(connName)
 	if err != nil {
 		if err == ErrNotFound {
@@ -69,7 +106,7 @@ func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName
 	}
 
 	type site2cloudResp struct {
-		Connections CloudnTransitGatewayAttachment
+		Connections CloudnTransitGatewayAttachmentResp
 	}
 
 	type resp struct {
@@ -94,7 +131,7 @@ func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName
 		return nil
 	}
 	var data resp
-	err = c.GetAPIContext(ctx, &data, form["action"], form, check)
+	err = c.GetAPIContextCloudnTransitGatewayAttachment(ctx, &data, form["action"], form, check)
 	if err != nil {
 		return nil, err
 	}
@@ -191,4 +228,46 @@ func (c *Client) DeleteDeviceAttachment(connectionName string) error {
 	}
 
 	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) GetAPIContextCloudnTransitGatewayAttachment(ctx context.Context, v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+	Url, err := c.urlEncode(d)
+	if err != nil {
+		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+	}
+
+	try, maxTries, backoff := 0, 5, 500*time.Millisecond
+	var resp *http.Response
+	for {
+		try++
+		resp, err = c.GetContext(ctx, Url, nil)
+		if err == nil {
+			break
+		}
+
+		if try == maxTries {
+			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+		}
+		time.Sleep(backoff)
+		// Double the backoff time after each failed try
+		backoff *= 2
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	var data APIResp
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
+		return err
+	}
+
+	err = myUnmarshal(buf.Bytes(), &v)
+	if err != nil {
+		return fmt.Errorf("json unmarshal failed: %v\n Body: %s", err, buf.String())
+	}
+
+	return nil
 }
