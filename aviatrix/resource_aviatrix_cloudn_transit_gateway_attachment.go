@@ -244,7 +244,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	d.Set("transit_gateway_bgp_asn", attachment.TransitGatewayBgpAsn)
 	d.Set("cloudn_bgp_asn", attachment.CloudnBgpAsn)
 	d.Set("cloudn_lan_interface_neighbor_ip", attachment.CloudnLanInterfaceNeighborIP)
-	d.Set("cloudn_lan_interface_neighbor_bgp_asn", strconv.Itoa(attachment.CloudnLanInterfaceNeighborBgpAsn))
+	d.Set("cloudn_lan_interface_neighbor_bgp_asn", string(attachment.CloudnLanInterfaceNeighborBgpAsn))
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_dead_peer_detection", attachment.EnableDeadPeerDetection)
