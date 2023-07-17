@@ -167,6 +167,7 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("primary_gw_name", edgeVmSelfmanagedHaResp.PrimaryGwName)
+	d.Set("site_id", edgeVmSelfmanagedHaResp.SiteId)
 
 	if edgeVmSelfmanagedHaResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
