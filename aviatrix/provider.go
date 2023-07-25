@@ -129,6 +129,7 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_spoke_external_device_conn":                        resourceAviatrixEdgeSpokeExternalDeviceConn(),
 			"aviatrix_edge_spoke_transit_attachment":                          resourceAviatrixEdgeSpokeTransitAttachment(),
 			"aviatrix_edge_vm_selfmanaged":                                    resourceAviatrixEdgeVmSelfmanaged(),
+			"aviatrix_edge_vm_selfmanaged_ha":                                 resourceAviatrixEdgeVmSelfmanagedHa(),
 			"aviatrix_edge_zededa":                                            resourceAviatrixEdgeZededa(),
 			"aviatrix_edge_zededa_ha":                                         resourceAviatrixEdgeZededaHa(),
 			"aviatrix_filebeat_forwarder":                                     resourceAviatrixFilebeatForwarder(),
