@@ -230,6 +230,8 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 		if site2cloud.HAEnabled == "yes" {
 			form["cert_based_s2c_ha_remote_id"] = site2cloud.BackupRemoteIdentifier
 		}
+	} else {
+		form["auth_type"] = "psk"
 	}
 
 	form["ha_enabled"] = site2cloud.HAEnabled
