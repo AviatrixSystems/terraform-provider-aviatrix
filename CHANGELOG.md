@@ -1,3 +1,15 @@
+## 3.1.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.1.1794**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Changed ``insane_mode`` to "ForceNew" in **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed issue where default PSK was not configured correctly for default ``auth_type`` in **aviatrix_site2cloud**
+
+
 ## 3.1.1 (June 14, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.1794**
@@ -109,7 +121,7 @@
 1. Removed support of **aviatrix_splunk_logging**, **aviatrix_filebeat_forwarder** and **aviatrix_sumologic_forwarder**
 
 
-## 3.0.6 (Unreleased)
+## 3.0.6 (June 30, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1768**
 - Supported Terraform version: **v1.x**
