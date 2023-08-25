@@ -13,7 +13,7 @@ The **aviatrix_copilot_security_group_management_config** resource allows manage
 ## Example Usage
 
 ```hcl
-# Enable the CoPilot Security Group Management
+# Enable the CoPilot Security Group Management when CoPilot runs in AWS
 resource "aviatrix_copilot_security_group_management_config" "test" {
     enable_copilot_security_group_management = true
     cloud_type                               = 1
@@ -23,7 +23,17 @@ resource "aviatrix_copilot_security_group_management_config" "test" {
     instance_id                              = "i-1234567890"
 }
 ```
-
+```hcl
+# Enable the CoPilot Security Group Management  when CoPilot runs in Azure
+resource "aviatrix_copilot_security_group_management_config" "test" {
+    enable_copilot_security_group_management = true
+    cloud_type                               = 8
+    account_name                             = "azure-account"
+    region                                   = "West Europe"
+    vpc_id                                   = "shared-vnet:shared-rg:1234567-123c-42a1-b3d7-e1234567890"
+    instance_id                              = "copilot-vm:SHARED-RG"
+}
+```
 
 ## Argument Reference
 
