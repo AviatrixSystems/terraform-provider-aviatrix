@@ -12,9 +12,22 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.6 (UserConnect-7.0.1768)``
+``Last updated: R3.1.2 (UserConnect-7.1.2131)``
 
 ---
+
+## 3.1.2
+### Notes:
+- Release date: **(29 Aug 2023)**
+- Supported Controller version: **UserConnect-7.1.2131**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Changed ``insane_mode`` to "ForceNew" in **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed issue where default PSK was not configured correctly for default ``auth_type`` in **aviatrix_site2cloud**
+
 
 ## 3.1.1
 ### Notes:
