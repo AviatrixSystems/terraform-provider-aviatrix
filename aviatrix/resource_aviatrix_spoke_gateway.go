@@ -442,7 +442,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     false,
 				Description: "If set true, the spot instance will be deleted on eviction. Otherwise, the instance will be deallocated on eviction. Only supports Azure.",
 			},
 			"rx_queue_size": {
@@ -1638,7 +1637,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.EnableSpotInstance {
 		d.Set("enable_spot_instance", true)
 		d.Set("spot_price", gw.SpotPrice)
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.DeleteSpot {
 			d.Set("delete_spot", gw.DeleteSpot)
 		}
 	}
