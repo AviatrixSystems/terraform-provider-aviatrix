@@ -439,14 +439,6 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 		edgeNEO.VlanList = append(edgeNEO.VlanList, vlan2)
 	}
 
-	if !edgeNEO.EnableEdgeActiveStandby {
-		edgeNEO.DisableEdgeActiveStandby = true
-	}
-
-	if !edgeNEO.EnableEdgeActiveStandbyPreemptive {
-		edgeNEO.DisableEdgeActiveStandbyPreemptive = true
-	}
-
 	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
 		edgeNEO.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
@@ -610,6 +602,13 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge NEO creation: %v", err)
+		}
+	}
+
+	if edgeNEO.EnableEdgeActiveStandby || edgeNEO.EnableEdgeActiveStandbyPreemptive {
+		err := client.UpdateEdgeNEO(ctx, edgeNEO)
+		if err != nil {
+			return diag.Errorf("could not update Edge active standby or Edge active standby preemptive after Edge NEO creation: %v", err)
 		}
 	}
 

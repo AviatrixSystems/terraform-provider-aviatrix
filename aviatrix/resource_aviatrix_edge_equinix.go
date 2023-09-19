@@ -404,14 +404,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		edgeEquinix.VlanList = append(edgeEquinix.VlanList, vlan2)
 	}
 
-	if !edgeEquinix.EnableEdgeActiveStandby {
-		edgeEquinix.DisableEdgeActiveStandby = true
-	}
-
-	if !edgeEquinix.EnableEdgeActiveStandbyPreemptive {
-		edgeEquinix.DisableEdgeActiveStandbyPreemptive = true
-	}
-
 	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
 		edgeEquinix.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
@@ -575,6 +567,13 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge Equinix creation: %v", err)
+		}
+	}
+
+	if edgeEquinix.EnableEdgeActiveStandby || edgeEquinix.EnableEdgeActiveStandbyPreemptive {
+		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
+		if err != nil {
+			return diag.Errorf("could not update Edge active standby or Edge active standby preemptive after Edge Equinix creation: %v", err)
 		}
 	}
 
