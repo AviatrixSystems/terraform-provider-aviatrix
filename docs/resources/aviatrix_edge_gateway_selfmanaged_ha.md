@@ -1,24 +1,22 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_vm_selfmanaged_ha"
+page_title: "Aviatrix: aviatrix_edge_gateway_selfmanaged_ha"
 description: |-
-  Creates Aviatrix Edge VM Selfmanaged HA
+  Creates Aviatrix Edge Gateway Selfmanaged HA
 ---
 
-# aviatrix_edge_vm_selfmanaged_ha
+# aviatrix_edge_gateway_selfmanaged_ha
 
--> **NOTE:** Since V3.1.2+, please use resource **aviatrix_edge_gateway_selfmanaged_ha** instead. Resource **aviatrix_edge_vm_selfmanaged_ha** will be deprecated in the V3.2.0 release.
+-> **NOTE:** A primary **aviatrix_edge_gateway_selfmanaged** is required to create **aviatrix_edge_gateway_selfmanaged_ha**.
 
--> **NOTE:** A primary **aviatrix_edge_vm_selfmanaged** is required to create **aviatrix_edge_vm_selfmanaged_ha**.
-
-The **aviatrix_edge_vm_selfmanaged_ha** resource creates the Aviatrix Edge VM Selfmanaged HA.
+The **aviatrix_edge_gateway_selfmanaged_ha** resource creates the Aviatrix Edge Gateway Selfmanaged HA.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge VM Selfmanaged HA
-resource "aviatrix_edge_vm_selfmanaged_ha" "test" {
+# Create an Edge Gateway Selfmanaged HA
+resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
   primary_gw_name        = "primary-edge-vm-selfmanaged"
   site_id                = "site-123"
   ztp_file_type          = "iso"
@@ -44,7 +42,7 @@ resource "aviatrix_edge_vm_selfmanaged_ha" "test" {
 The following arguments are supported:
 
 ### Required
-* `primary_gw_name` - (Required) Name of the primary Edge VM Selfmanaged.
+* `primary_gw_name` - (Required) Name of the primary Edge Gateway Selfmanaged.
 * `site_id` - (Required) Site ID.
 
 -> **NOTE:** At least one LAN interface is required.
