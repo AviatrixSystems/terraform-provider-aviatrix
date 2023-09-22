@@ -235,6 +235,8 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 				},
 			},
 		},
+		DeprecationMessage: "Since V3.1.2+, please use resource aviatrix_edge_gateway_selfmanaged instead. Resource " +
+			"aviatrix_edge_vm_selfmanaged will be deprecated in the V3.2.0 release.",
 	}
 }
 
