@@ -16,7 +16,8 @@ type TransitGatewayPeering struct {
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
 	PrivateIPPeering                    string `form:"private_ip_peering,omitempty"`
 	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty"`
-	TunnelCount                         int    `form:"tunnel_count,omitempty"`
+	InsaneModeTunnelCount               int    `json:"insane_mode_tunnel_count"`
+	TunnelCount                         int    `form:"tunnel_count"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
@@ -47,6 +48,7 @@ type TransitGatewayPeeringDetailsResults struct {
 	PrivateNetworkPeering  bool                        `json:"private_network_peering"`
 	Tunnels                []TunnelsDetail             `json:"tunnels"`
 	InsaneModeOverInternet bool                        `json:"insane_mode_over_internet"`
+	InsaneModeTunnelCount  int                         `json:"insane_mode_tunnel_count"`
 	TunnelCount            int                         `json:"tunnel_count"`
 	NoMaxPerformance       bool                        `json:"no_max_performance"`
 }
@@ -139,6 +141,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 	transitGatewayPeering.NoMaxPerformance = data.Results.NoMaxPerformance
+	transitGatewayPeering.InsaneModeTunnelCount = data.Results.InsaneModeTunnelCount
 	if len(data.Results.Tunnels) >= 1 && data.Results.Tunnels[0].SubTunnelCount == 1 {
 		transitGatewayPeering.SingleTunnel = "yes"
 	} else {
