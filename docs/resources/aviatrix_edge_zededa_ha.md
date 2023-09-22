@@ -67,8 +67,8 @@ In addition to all arguments above, the following attribute is exported:
 
 ## Import
 
-**edge_zededa_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "_hagw" e.g.
+**edge_zededa_ha** can be imported using the `primary_gw_name` in the form `primary_gw_name` + "-hagw" e.g.
 
 ```
-$ terraform import aviatrix_edge_zededa_ha.test primary_gw_name_hagw
+$ terraform import aviatrix_edge_zededa_ha.test primary_gw_name-hagw
 ```
