@@ -446,14 +446,6 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
 	}
 
-	if !edgeCSP.EnableEdgeActiveStandby {
-		edgeCSP.DisableEdgeActiveStandby = true
-	}
-
-	if !edgeCSP.EnableEdgeActiveStandbyPreemptive {
-		edgeCSP.DisableEdgeActiveStandbyPreemptive = true
-	}
-
 	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
 		edgeCSP.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
@@ -617,6 +609,13 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
 			return diag.Errorf("could not disable auto advertise LAN CIDRs after Edge CSP creation: %v", err)
+		}
+	}
+
+	if edgeCSP.EnableEdgeActiveStandby || edgeCSP.EnableEdgeActiveStandbyPreemptive {
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
+		if err != nil {
+			return diag.Errorf("could not update Edge active standby or Edge active standby preemptive after Edge CSP creation: %v", err)
 		}
 	}
 

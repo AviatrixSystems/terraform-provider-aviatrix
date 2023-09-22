@@ -284,14 +284,6 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
 	}
 
-	if !edgeSpoke.EnableEdgeActiveStandby {
-		edgeSpoke.DisableEdgeActiveStandby = true
-	}
-
-	if !edgeSpoke.EnableEdgeActiveStandbyPreemptive {
-		edgeSpoke.DisableEdgeActiveStandbyPreemptive = true
-	}
-
 	return edgeSpoke
 }
 
@@ -429,6 +421,13 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("could not set rx queue size after Edge as a Spoke creation: %v", err)
+		}
+	}
+
+	if edgeSpoke.EnableEdgeActiveStandby || edgeSpoke.EnableEdgeActiveStandbyPreemptive {
+		err := client.UpdateEdgeSpoke(ctx, edgeSpoke)
+		if err != nil {
+			return diag.Errorf("could not update Edge active standby or Edge active standby preemptive after Edge as a Spoke creation: %v", err)
 		}
 	}
 
