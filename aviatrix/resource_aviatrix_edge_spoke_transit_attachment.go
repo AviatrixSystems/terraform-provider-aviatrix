@@ -61,8 +61,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 			"insane_mode_tunnel_number": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(2, 50),
+				ValidateFunc: validation.IntBetween(0, 50),
 				Description:  "Insane mode tunnel number.",
 			},
 			"spoke_prepend_as_path": {
@@ -288,6 +287,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 			return diag.Errorf("could not update transit_prepend_as_path: %v", err)
 		}
 
+	}
+
+	if d.HasChange("insane_mode_tunnel_number") {
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: spokeGwName,
+			TransitGatewayName2: transitGwName,
+			TunnelCount:         d.Get("insane_mode_tunnel_number").(int),
+		}
+
+		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
+		if err != nil {
+			return diag.Errorf("could not update insane_mode_tunnel_number for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
+		}
 	}
 
 	d.Partial(false)
