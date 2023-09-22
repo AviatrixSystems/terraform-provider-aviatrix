@@ -36,7 +36,7 @@ func TestAccAviatrixSpokeTransitAttachment_basic(t *testing.T) {
 					testAccCheckSpokeTransitAttachmentExists(resourceName, &spokeTransitAttachment),
 					resource.TestCheckResourceAttr(resourceName, "spoke_gw_name", fmt.Sprintf("tfs-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "transit_gw_name", fmt.Sprintf("tft-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "tunnel_count", fmt.Sprintf("4")),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_count","4"),
 				),
 			},
 			{
