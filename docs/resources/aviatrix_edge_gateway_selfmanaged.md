@@ -1,22 +1,20 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_edge_vm_selfmanaged"
+page_title: "Aviatrix: aviatrix_edge_gateway_selfmanaged"
 description: |-
-  Creates Aviatrix Edge VM Selfmanaged
+  Creates Aviatrix Edge Gateway Selfmanaged
 ---
 
-# aviatrix_edge_vm_selfmanaged
+# aviatrix_edge_gateway_selfmanaged
 
--> **NOTE:** Since V3.1.2+, please use resource **aviatrix_edge_gateway_selfmanaged** instead. Resource **aviatrix_edge_vm_selfmanaged** will be deprecated in the V3.2.0 release.
-
-The **aviatrix_edge_vm_selfmanaged** resource creates the Aviatrix Edge VM Selfmanaged. This resource is available as of provider version R2.23+.
+The **aviatrix_edge_gateway_selfmanaged** resource creates the Aviatrix Edge Gateway Selfmanaged.
 
 ## Example Usage
 
 ```hcl
-# Create an Edge VM Selfmanaged
-resource "aviatrix_edge_vm_selfmanaged" "test" {
+# Create an Edge Gateway Selfmanaged
+resource "aviatrix_edge_gateway_selfmanaged" "test" {
   gw_name                = "edge-test"
   site_id                = "site-123"
   ztp_file_type          = "iso"
@@ -95,12 +93,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
-* `state` - State of Edge VM Selfmanaged.
+* `state` - State of Edge Gateway Selfmanaged.
 
 ## Import
 
-**edge_vm_selfmanaged** can be imported using the `gw_name`, e.g.
+**edge_gateway_selfmanaged** can be imported using the `gw_name`, e.g.
 
 ```
-$ terraform import aviatrix_edge_vm_selfmanaged.test gw_name
+$ terraform import aviatrix_edge_gateway_selfmanaged.test gw_name
 ```

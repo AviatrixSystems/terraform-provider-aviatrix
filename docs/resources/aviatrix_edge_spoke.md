@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_edge_spoke
 
--> **NOTE:** Since V3.1.1+, please use resource **aviatrix_edge_vm_selfmanaged** instead. Resource **aviatrix_edge_spoke** will be deprecated in the V3.2.0 release.
+-> **NOTE:** Since V3.1.2+, please use resource **aviatrix_edge_gateway_selfmanaged** instead. Resource **aviatrix_edge_spoke** will be deprecated in the V3.2.0 release.
 
 The **aviatrix_edge_spoke** resource creates the Aviatrix Edge as a Spoke. This resource is available as of provider version R2.23+.
 

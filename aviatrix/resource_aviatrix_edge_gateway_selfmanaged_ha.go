@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeVmSelfmanagedHa() *schema.Resource {
+func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeVmSelfmanagedHaCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeVmSelfmanagedHaRead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeVmSelfmanagedHaUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeVmSelfmanagedHaDelete,
+		CreateWithoutTimeout: resourceAviatrixEdgeGatewaySelfmanagedHaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgeGatewaySelfmanagedHaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeGatewaySelfmanagedHaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgeGatewaySelfmanagedHaDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -101,13 +101,11 @@ func resourceAviatrixEdgeVmSelfmanagedHa() *schema.Resource {
 				},
 			},
 		},
-		DeprecationMessage: "Since V3.1.2+, please use resource aviatrix_edge_gateway_selfmanaged_ha instead. Resource " +
-			"aviatrix_edge_vm_selfmanaged_ha will be deprecated in the V3.2.0 release.",
 	}
 }
 
-func marshalEdgeVmSelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmSelfmanagedHa {
-	edgeVmSelfmanagedHa := &goaviatrix.EdgeVmSelfmanagedHa{
+func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmSelfmanagedHa {
+	edgeGatewaySelfmanagedHa := &goaviatrix.EdgeVmSelfmanagedHa{
 		PrimaryGwName:            d.Get("primary_gw_name").(string),
 		SiteId:                   d.Get("site_id").(string),
 		ZtpFileType:              d.Get("ztp_file_type").(string),
@@ -128,27 +126,27 @@ func marshalEdgeVmSelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmS
 			GatewayIp: if1["gateway_ip"].(string),
 		}
 
-		edgeVmSelfmanagedHa.InterfaceList = append(edgeVmSelfmanagedHa.InterfaceList, if2)
+		edgeGatewaySelfmanagedHa.InterfaceList = append(edgeGatewaySelfmanagedHa.InterfaceList, if2)
 	}
 
-	return edgeVmSelfmanagedHa
+	return edgeGatewaySelfmanagedHa
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeVmSelfmanagedHa := marshalEdgeVmSelfmanagedHaInput(d)
+	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
 
-	edgeVmSelfmanagedHaName, err := client.CreateEdgeVmSelfmanagedHa(ctx, edgeVmSelfmanagedHa)
+	edgeGatewaySelfmanagedHaName, err := client.CreateEdgeVmSelfmanagedHa(ctx, edgeGatewaySelfmanagedHa)
 	if err != nil {
-		return diag.Errorf("failed to create Edge VM Selfmanaged HA: %s", err)
+		return diag.Errorf("failed to create Edge Gateway Selfmanaged HA: %s", err)
 	}
 
-	d.SetId(edgeVmSelfmanagedHaName)
-	return resourceAviatrixEdgeVmSelfmanagedHaRead(ctx, d, meta)
+	d.SetId(edgeGatewaySelfmanagedHaName)
+	return resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Get("primary_gw_name").(string) == "" {
@@ -159,26 +157,26 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 		d.SetId(id)
 	}
 
-	edgeVmSelfmanagedHaResp, err := client.GetEdgeVmSelfmanagedHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeGatewaySelfmanagedHaResp, err := client.GetEdgeVmSelfmanagedHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge VM Selfmanaged HA: %v", err)
+		return diag.Errorf("could not read Edge Gateway Selfmanaged HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeVmSelfmanagedHaResp.PrimaryGwName)
-	d.Set("site_id", edgeVmSelfmanagedHaResp.SiteId)
+	d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
+	d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteId)
 
-	if edgeVmSelfmanagedHaResp.ManagementEgressIpPrefix == "" {
+	if edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeVmSelfmanagedHaResp.ManagementEgressIpPrefix, ","))
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
-	for _, if0 := range edgeVmSelfmanagedHaResp.InterfaceList {
+	for _, if0 := range edgeGatewaySelfmanagedHaResp.InterfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
@@ -194,50 +192,50 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
 
-	d.SetId(edgeVmSelfmanagedHaResp.GwName)
+	d.SetId(edgeGatewaySelfmanagedHaResp.GwName)
 	return nil
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeVmSelfmanagedHa := marshalEdgeVmSelfmanagedHaInput(d)
+	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
 
 	d.Partial(true)
 
-	gatewayForEdgeVmSelfmanagedFunctions := &goaviatrix.EdgeSpoke{
+	gatewayForEdgeGatewaySelfmanagedFunctions := &goaviatrix.EdgeSpoke{
 		GwName: d.Id(),
 	}
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
-		gatewayForEdgeVmSelfmanagedFunctions.InterfaceList = edgeVmSelfmanagedHa.InterfaceList
-		gatewayForEdgeVmSelfmanagedFunctions.ManagementEgressIpPrefix = edgeVmSelfmanagedHa.ManagementEgressIpPrefix
+		gatewayForEdgeGatewaySelfmanagedFunctions.InterfaceList = edgeGatewaySelfmanagedHa.InterfaceList
+		gatewayForEdgeGatewaySelfmanagedFunctions.ManagementEgressIpPrefix = edgeGatewaySelfmanagedHa.ManagementEgressIpPrefix
 
-		err := client.UpdateEdgeVmSelfmanagedHa(ctx, gatewayForEdgeVmSelfmanagedFunctions)
+		err := client.UpdateEdgeVmSelfmanagedHa(ctx, gatewayForEdgeGatewaySelfmanagedFunctions)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge VM Selfmanaged HA update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Gateway Selfmanaged HA update: %v", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixEdgeVmSelfmanagedHaRead(ctx, d, meta)
+	return resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	err := client.DeleteEdgeSpoke(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge VM Selfmanaged HA %s: %v", d.Id(), err)
+		return diag.Errorf("could not delete Edge Gateway Selfmanaged HA %s: %v", d.Id(), err)
 	}
 
-	edgeVmSelfmanagedHa := marshalEdgeVmSelfmanagedHaInput(d)
+	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
 
 	var fileName string
-	if edgeVmSelfmanagedHa.ZtpFileType == "iso" {
-		fileName = edgeVmSelfmanagedHa.ZtpFileDownloadPath + "/" + edgeVmSelfmanagedHa.PrimaryGwName + "-" + edgeVmSelfmanagedHa.SiteId + "-ha.iso"
+	if edgeGatewaySelfmanagedHa.ZtpFileType == "iso" {
+		fileName = edgeGatewaySelfmanagedHa.ZtpFileDownloadPath + "/" + edgeGatewaySelfmanagedHa.PrimaryGwName + "-" + edgeGatewaySelfmanagedHa.SiteId + "-ha.iso"
 	} else {
-		fileName = edgeVmSelfmanagedHa.ZtpFileDownloadPath + "/" + edgeVmSelfmanagedHa.PrimaryGwName + "-" + edgeVmSelfmanagedHa.SiteId + "-ha-cloud-init.txt"
+		fileName = edgeGatewaySelfmanagedHa.ZtpFileDownloadPath + "/" + edgeGatewaySelfmanagedHa.PrimaryGwName + "-" + edgeGatewaySelfmanagedHa.SiteId + "-ha-cloud-init.txt"
 	}
 
 	err = os.Remove(fileName)
