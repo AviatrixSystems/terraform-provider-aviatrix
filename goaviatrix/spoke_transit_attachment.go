@@ -20,7 +20,7 @@ type SpokeTransitAttachment struct {
 	EnableOverPrivateNetwork bool   `form:"over_private_network,omitempty"`
 	EnableJumboFrame         bool   `form:"jumbo_frame,omitempty"`
 	EnableInsaneMode         bool   `form:"insane_mode,omitempty"`
-	InsaneModeTunnelNumber   int    `form:"tunnel_count,omitempty"`
+	InsaneModeTunnelNumber   int    `form:"insane_mode_tunnel_count,omitempty"`
 	NoMaxPerformance         bool   `form:"no_max_performance,omitempty"`
 	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
 	EdgeWanInterfacesResp    []string
