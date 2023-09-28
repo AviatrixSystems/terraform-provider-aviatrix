@@ -38,7 +38,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	EnableOverPrivateNetwork bool       `json:"private_network_peering"`
 	EnableJumboFrame         bool       `json:"jumbo_frame"`
 	EnableInsaneMode         bool       `json:"insane_mode"`
-	InsaneModeTunnelNumber   int        `json:"tunnel_count"`
+	InsaneModeTunnelNumber   int        `json:"insane_mode_tunnel_count"`
 	EdgeWanInterfaces        []string   `json:"src_wan_interfaces"`
 }
 
