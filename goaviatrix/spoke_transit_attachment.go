@@ -20,7 +20,7 @@ type SpokeTransitAttachment struct {
 	EnableOverPrivateNetwork bool   `form:"over_private_network,omitempty"`
 	EnableJumboFrame         bool   `form:"jumbo_frame,omitempty"`
 	EnableInsaneMode         bool   `form:"insane_mode,omitempty"`
-	InsaneModeTunnelNumber   int    `form:"insane_mode_tunnel_count,omitempty"`
+	InsaneModeTunnelNumber   int    `form:"tunnel_count,omitempty"`
 	NoMaxPerformance         bool   `form:"no_max_performance,omitempty"`
 	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
 	EdgeWanInterfacesResp    []string
@@ -38,7 +38,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	EnableOverPrivateNetwork bool       `json:"private_network_peering"`
 	EnableJumboFrame         bool       `json:"jumbo_frame"`
 	EnableInsaneMode         bool       `json:"insane_mode"`
-	InsaneModeTunnelNumber   int        `json:"tunnel_count"`
+	InsaneModeTunnelNumber   int        `json:"insane_mode_tunnel_count"`
 	EdgeWanInterfaces        []string   `json:"src_wan_interfaces"`
 }
 
