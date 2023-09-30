@@ -51,7 +51,8 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 49),
 				Description: "(Optional) Advanced option. Number of public tunnels. Required with both Spoke and Transit" +
-					"to be insane mode enabled. Type: Integer. Valid Range: 1-49. Available as of provider version R3.1.3+.",
+					"to be insane mode enabled and max performance enabled. Type: Integer. Valid Range: 1-49." +
+					"Available as of provider version R3.1.3+.",
 			},
 			"enable_max_performance": {
 				Type:     schema.TypeBool,
@@ -103,6 +104,10 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 
 	if !spoke.EnableBgp && (len(attachment.SpokePrependAsPath) != 0 || len(attachment.TransitPrependAsPath) != 0) {
 		return fmt.Errorf("'spoke_prepend_as_path' and 'transit_prepend_as_path' are only valid for BGP enabled spoke gateway")
+	}
+
+	if attachment.NoMaxPerformance && attachment.InsaneModeTunnelNumber > 0 {
+		return fmt.Errorf("'tunnel_count' can only be specified with max performance enabled. Please set 'enable_max_performance' to true")
 	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
@@ -222,7 +227,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	}
 
 	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
-	if transitGatewayPeering.InsaneModeTunnelCount > 0 {
+	if !transitGatewayPeering.NoMaxPerformance && transitGatewayPeering.InsaneModeTunnelCount > 0 {
 		d.Set("tunnel_count", transitGatewayPeering.InsaneModeTunnelCount)
 	}
 
@@ -300,6 +305,10 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta i
 			TransitGatewayName1: spokeGwName,
 			TransitGatewayName2: transitGwName,
 			TunnelCount:         d.Get("tunnel_count").(int),
+		}
+
+		if transitGatewayPeering.TunnelCount > 0 && !d.Get("enable_max_performance").(bool) {
+			return fmt.Errorf("'tunnel_count' can't be updated with max performance disabled")
 		}
 
 		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
