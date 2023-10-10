@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -59,11 +57,9 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Description: "Enable jumbo frame.",
 			},
 			"insane_mode_tunnel_number": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(2, 50),
-				Description:  "Insane mode tunnel number.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Insane mode tunnel number. Valid range for HPE over private network: 0-49. Valid range for HPE over internet: 2-20.",
 			},
 			"spoke_prepend_as_path": {
 				Type:        schema.TypeList,
@@ -130,6 +126,13 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
+
+	if attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 0 || attachment.InsaneModeTunnelNumber > 49) {
+		return diag.Errorf("valid range for HPE over private network: 0-49")
+	}
+	if !attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 2 || attachment.InsaneModeTunnelNumber > 20) {
+		return diag.Errorf("valid range for HPE over internet: 2-20")
+	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
 	flag := false
@@ -288,6 +291,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 			return diag.Errorf("could not update transit_prepend_as_path: %v", err)
 		}
 
+	}
+
+	if d.HasChange("insane_mode_tunnel_number") {
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: spokeGwName,
+			TransitGatewayName2: transitGwName,
+			TunnelCount:         d.Get("insane_mode_tunnel_number").(int),
+		}
+
+		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
+		if err != nil {
+			return diag.Errorf("could not update insane_mode_tunnel_number for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
+		}
 	}
 
 	d.Partial(false)
