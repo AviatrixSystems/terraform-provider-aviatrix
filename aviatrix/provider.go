@@ -201,6 +201,7 @@ func Provider() *schema.Provider {
 			"aviatrix_caller_identity":                      dataSourceAviatrixCallerIdentity(),
 			"aviatrix_controller_metadata":                  dataSourceAviatrixControllerMetadata(),
 			"aviatrix_device_interfaces":                    dataSourceAviatrixDeviceInterfaces(),
+			"aviatrix_edge_gateway_wan_interfaces":          dataSourceAviatrixEdgeGatewayWanInterfaces(),
 			"aviatrix_edge_gateway_wan_interface_discovery": dataSourceAviatrixEdgeGatewayWanInterfaceDiscovery(),
 			"aviatrix_firenet":                              dataSourceAviatrixFireNet(),
 			"aviatrix_firenet_firewall_manager":             dataSourceAviatrixFireNetFirewallManager(),

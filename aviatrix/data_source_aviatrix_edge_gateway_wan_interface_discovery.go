@@ -39,9 +39,9 @@ func dataSourceAviatrixEdgeGatewayWanInterfaceDiscoveryRead(ctx context.Context,
 	gwName := d.Get("gw_name").(string)
 	wanInterfaceName := d.Get("wan_interface_name").(string)
 
-	ip, err := client.GetEdgeGatewayWanInterface(ctx, gwName, wanInterfaceName)
+	ip, err := client.GetEdgeGatewayWanIp(ctx, gwName, wanInterfaceName)
 	if err != nil {
-		return diag.Errorf("couldn't get wan interface for gateway %s: %s", gwName, err)
+		return diag.Errorf("couldn't get wan interface ip for edge gateway %s: %s", gwName, err)
 	}
 
 	d.Set("ip_address", ip)
