@@ -432,6 +432,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description:  "Price for spot instance. NOT supported for production deployment.",
 				RequiredWith: []string{"enable_spot_instance"},
 			},
+			"delete_spot": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "If set true, the spot instance will be deleted on eviction. Otherwise, the instance will be deallocated on eviction. Only supports Azure.",
+			},
 			"rx_queue_size": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -931,12 +937,21 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	enableSpotInstance := d.Get("enable_spot_instance").(bool)
 	spotPrice := d.Get("spot_price").(string)
+	deleteSpot := d.Get("delete_spot").(bool)
 	if enableSpotInstance {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return fmt.Errorf("enable_spot_instance only supports AWS related cloud types")
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("enable_spot_instance only supports AWS and Azure related cloud types")
 		}
+
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && deleteSpot {
+			return fmt.Errorf("delete_spot only supports Azure")
+		}
+
 		gateway.EnableSpotInstance = true
 		gateway.SpotPrice = spotPrice
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			gateway.DeleteSpot = deleteSpot
+		}
 	}
 
 	rxQueueSize := d.Get("rx_queue_size").(string)
@@ -1533,6 +1548,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if gw.EnableSpotInstance {
 		d.Set("enable_spot_instance", true)
 		d.Set("spot_price", gw.SpotPrice)
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.DeleteSpot {
+			d.Set("delete_spot", gw.DeleteSpot)
+		}
 	}
 
 	enableGroGso, err := client.GetGroGsoStatus(gw)

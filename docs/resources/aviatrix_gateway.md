@@ -381,6 +381,7 @@ The following arguments are supported:
 ### Spot Instance
 * `enable_spot_instance` - (Optional) Enable spot instance. NOT supported for production deployment.
 * `spot_price` - (Optional) Price for spot instance. NOT supported for production deployment.
+* `delete_spot` - (Optional) If set true, the spot instance will be deleted on eviction. Otherwise, the instance will be deallocated on eviction. Only supports Azure. NOT supported for production deployment.
 
 ### Gateway Upgrade
 * `software_version` - (Optional/Computed) The software version of the gateway. If set, we will attempt to update the gateway to the specified version if current version is different. If left blank, the gateway upgrade can be managed with the `aviatrix_controller_config` resource. Type: String. Example: "6.5.821". Available as of provider version R2.20.0.

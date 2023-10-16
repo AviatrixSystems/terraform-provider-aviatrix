@@ -52,6 +52,7 @@ type TransitVpc struct {
 	FaultDomain                  string   `form:"fault_domain,omitempty"`
 	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
 	SpotPrice                    string   `form:"spot_price,omitempty"`
+	DeleteSpot                   bool     `form:"delete_spot,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
 	BgpLanSpecifySubnet          string   `form:"bgp_lan_subnet"`
