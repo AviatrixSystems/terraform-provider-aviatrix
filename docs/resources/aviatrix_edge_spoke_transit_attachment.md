@@ -28,6 +28,7 @@ The following arguments are supported:
 
 * `spoke_gw_name` - (Required) Name of the Edge as a Spoke to attach to transit network.
 * `transit_gw_name` - (Required) Name of the transit gateway to attach the Edge as a Spoke to.
+* `edge_wan_interfaces` - (Required) Set of Edge WAN interfaces.
 
 ### Options
 
