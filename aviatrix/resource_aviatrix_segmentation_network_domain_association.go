@@ -29,7 +29,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Attachment name, either Spoke or Edge.",
+				Description: "Attachment name. For spoke gateways, use spoke gateway name. For VLAN, use <site-id>:<vlan-id>.",
 			},
 			"transit_gateway_name": {
 				Type:        schema.TypeString,
@@ -81,7 +81,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.Resource
 	attachmentName := d.Get("attachment_name").(string)
 	if networkDomainName == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no segmentation_network_domain_association network_domain_name received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no network_domain_name received. Import Id is %s", id)
 		d.SetId(id)
 		parts := strings.Split(id, "~")
 		networkDomainName = parts[0]

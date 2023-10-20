@@ -27,7 +27,7 @@ The following arguments are supported:
 ### Required
 
 * `network_domain_name` - (Required) Name of the Segmentation Network Domain.
-* `attachment_name` - (Required) Name of the transit gateway attachment, Spoke or Edge, to associate with the network domain.
+* `attachment_name` - (Required) Attachment name to associate with the network domain. For spoke gateways, use spoke gateway name. For VLAN, use <site-id>:<vlan-id>.
 
 ### Optional
 

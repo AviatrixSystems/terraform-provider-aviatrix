@@ -173,7 +173,9 @@ func (c *Client) GetSegmentationSecurityDomainAssociation(association *Segmentat
 	found := false
 	for _, attachment := range data.Results.Attachments {
 		if attachment.Type == "EDGESPOKE" {
-			attachment.Name = strings.Split(attachment.Name, ":")[0]
+			siteId := strings.Split(attachment.Name, ":")[0]
+			vlanId := strings.Split(attachment.Name, ":")[2]
+			attachment.Name = siteId + ":" + vlanId
 		}
 
 		if attachment.Domain == association.SecurityDomainName && attachment.Name == association.AttachmentName {
