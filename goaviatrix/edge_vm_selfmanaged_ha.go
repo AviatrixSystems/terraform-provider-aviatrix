@@ -25,6 +25,7 @@ type EdgeVmSelfmanagedHaResp struct {
 	PrimaryGwName            string                `json:"primary_gw_name"`
 	GwName                   string                `json:"gw_name"`
 	SiteId                   string                `json:"vpc_id"`
+	ZtpFileType              string                `json:"ztp_file_type"`
 	InterfaceList            []*EdgeSpokeInterface `json:"interfaces"`
 	ManagementEgressIpPrefix string                `json:"mgmt_egress_ip"`
 }

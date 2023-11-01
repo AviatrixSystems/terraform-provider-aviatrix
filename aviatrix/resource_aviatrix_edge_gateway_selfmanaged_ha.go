@@ -169,6 +169,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 	d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
 	d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteId)
 
+	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "iso" || edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud-init" {
+		d.Set("ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)
+	}
+
 	if edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {

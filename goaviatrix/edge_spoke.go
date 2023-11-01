@@ -70,6 +70,7 @@ type EdgeSpokeResp struct {
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
 	DnsServerIp                        string `json:"dns_server_ip"`
 	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary"`
+	ZtpFileType                        string `json:"ztp_file_type"`
 	EnableEdgeActiveStandby            bool   `json:"edge_active_standby"`
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
