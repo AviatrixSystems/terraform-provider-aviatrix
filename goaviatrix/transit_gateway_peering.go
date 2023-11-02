@@ -17,7 +17,7 @@ type TransitGatewayPeering struct {
 	PrivateIPPeering                    string `form:"private_ip_peering,omitempty"`
 	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty"`
 	InsaneModeTunnelCount               int    `json:"insane_mode_tunnel_count"`
-	TunnelCount                         int    `form:"tunnel_count"`
+	TunnelCount                         int    `form:"tunnel_count,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
@@ -28,6 +28,23 @@ type TransitGatewayPeering struct {
 	Action                              string `form:"action,omitempty"`
 	SingleTunnel                        string `form:"single_tunnel,omitempty"`
 	NoMaxPerformance                    bool   `form:"no_max_performance,omitempty"`
+}
+
+type TransitGatewayPeeringEdit struct {
+	TransitGatewayName1            string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
+	TransitGatewayName2            string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
+	Gateway1ExcludedCIDRs          string `form:"src_filter_list,omitempty"`
+	Gateway2ExcludedCIDRs          string `form:"dst_filter_list,omitempty"`
+	Gateway1ExcludedTGWConnections string `form:"source_exclude_connections,omitempty"`
+	Gateway2ExcludedTGWConnections string `form:"destination_exclude_connections,omitempty"`
+	PrivateIPPeering               string `form:"private_ip_peering,omitempty"`
+	InsaneModeOverInternet         bool   `form:"insane_mode_over_internet,omitempty"`
+	InsaneModeTunnelCount          int    `json:"insane_mode_tunnel_count"`
+	TunnelCount                    int    `form:"tunnel_count"`
+	CID                            string `form:"CID,omitempty"`
+	Action                         string `form:"action,omitempty"`
+	SingleTunnel                   string `form:"single_tunnel,omitempty"`
+	NoMaxPerformance               bool   `form:"no_max_performance,omitempty"`
 }
 
 type TransitGatewayPeeringAPIResp struct {
@@ -152,6 +169,13 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 }
 
 func (c *Client) UpdateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
+	transitGatewayPeering.CID = c.CID
+	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
+
+	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
+}
+
+func (c *Client) UpdateTransitGatewayPeeringTunnelCount(transitGatewayPeering *TransitGatewayPeeringEdit) error {
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
 
