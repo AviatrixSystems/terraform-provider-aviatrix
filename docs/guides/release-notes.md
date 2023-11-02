@@ -12,9 +12,19 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.1.2 (UserConnect-7.1.2131)``
+``Last updated: R3.1.3 (UserConnect-7.1.2131)``
 
 ---
+
+## 3.1.3
+### Notes:
+- Release date: **(2 Nov 2023)**
+- Supported Controller version: **UserConnect-7.1.2131**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where ``terraform plan`` fails to read CloudN transit gateway attachment due to JSON decode error after Controller was upgraded to 7.1.x in **aviatrix_cloudn_transit_gateway_attachment**
+
 
 ## 3.1.2
 ### Notes:
