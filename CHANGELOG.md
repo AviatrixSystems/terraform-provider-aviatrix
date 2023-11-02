@@ -1,4 +1,13 @@
-## 3.1.2 (Unreleased)
+## 3.1.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.1.2131**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where ``terraform plan`` fails to read cloudn transit gateway attachment due to json decode error after controller being upgrade to 7.1.* in **aviatrix_cloudn_transit_gateway_attachment**
+
+
+## 3.1.2 (August 29, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.2131**
 - Supported Terraform version: **v1.x**
