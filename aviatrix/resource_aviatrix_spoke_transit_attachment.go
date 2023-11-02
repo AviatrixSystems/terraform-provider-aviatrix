@@ -301,7 +301,7 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("tunnel_count") {
-		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeeringEdit{
 			TransitGatewayName1: spokeGwName,
 			TransitGatewayName2: transitGwName,
 			TunnelCount:         d.Get("tunnel_count").(int),
@@ -311,7 +311,7 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta i
 			return fmt.Errorf("'tunnel_count' can't be updated with max performance disabled")
 		}
 
-		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
+		err := client.UpdateTransitGatewayPeeringTunnelCount(transitGatewayPeering)
 		if err != nil {
 			return fmt.Errorf("could not update tunnel_count for spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
 		}
