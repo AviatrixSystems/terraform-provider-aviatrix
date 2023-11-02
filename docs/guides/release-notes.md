@@ -23,7 +23,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 - Supported Terraform version: **v1.x**
 
 ### Bug Fixes:
-1. Fixed issue where ``terraform plan`` fails to read CloudN transit gateway attachment due to JSON decode error after controller was upgraded to 7.1.x in **aviatrix_cloudn_transit_gateway_attachment**
+1. Fixed issue where ``terraform plan`` fails to read CloudN transit gateway attachment due to JSON decode error after Controller was upgraded to 7.1.x in **aviatrix_cloudn_transit_gateway_attachment**
 
 
 ## 3.1.2
