@@ -472,6 +472,10 @@ func resourceAviatrixEdgeVmSelfmanagedRead(ctx context.Context, d *schema.Resour
 	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
 
+	if edgeSpoke.ZtpFileType == "iso" || edgeSpoke.ZtpFileType == "cloud-init" {
+		d.Set("ztp_file_type", edgeSpoke.ZtpFileType)
+	}
+
 	if edgeSpoke.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
