@@ -231,6 +231,70 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"enable_vrrp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Enable VRRP.",
+						},
+						"vrrp_virtual_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "VRRP virtual IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
+						},
+					},
+				},
+			},
+			"vlan": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "VLAN configuration.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parent_interface_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Parent interface name.",
+						},
+						"vlan_id": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "VLAN ID.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "LAN sub-interface IP address.",
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface gateway IP.",
+						},
+						"peer_ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface IP address on HA gateway.",
+						},
+						"peer_gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface gateway IP on HA gateway.",
+						},
+						"vrrp_virtual_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface virtual IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
+						},
 					},
 				},
 			},
@@ -276,9 +340,31 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.Edge
 			PublicIp:  if1["wan_public_ip"].(string),
 			IpAddr:    if1["ip_address"].(string),
 			GatewayIp: if1["gateway_ip"].(string),
+			VrrpState: if1["enable_vrrp"].(bool),
+			VirtualIp: if1["vrrp_virtual_ip"].(string),
+			Tag:       if1["tag"].(string),
 		}
 
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
+	}
+
+	vlan := d.Get("vlan").(*schema.Set).List()
+	for _, vlan0 := range vlan {
+		vlan1 := vlan0.(map[string]interface{})
+
+		vlan2 := &goaviatrix.EdgeSpokeVlan{
+			ParentInterface: vlan1["parent_interface_name"].(string),
+			IpAddr:          vlan1["ip_address"].(string),
+			GatewayIp:       vlan1["gateway_ip"].(string),
+			PeerIpAddr:      vlan1["peer_ip_address"].(string),
+			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
+			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
+			Tag:             vlan1["tag"].(string),
+		}
+
+		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+
+		edgeSpoke.VlanList = append(edgeSpoke.VlanList, vlan2)
 	}
 
 	return edgeSpoke
@@ -519,7 +605,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 	d.Set("state", edgeSpoke.State)
 
 	var interfaces []map[string]interface{}
-
+	var vlan []map[string]interface{}
 	for _, if0 := range edgeSpoke.InterfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
@@ -528,12 +614,40 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
+		if1["vrrp_virtual_ip"] = if0.VirtualIp
+		if1["tag"] = if0.Tag
+
+		if if0.Type == "LAN" {
+			if1["enable_vrrp"] = if0.VrrpState
+		}
+
+		if if0.Type == "LAN" && if0.SubInterfaces != nil {
+			for _, vlan0 := range if0.SubInterfaces {
+				vlan1 := make(map[string]interface{})
+				vlan1["parent_interface_name"] = vlan0.ParentInterface
+				vlan1["ip_address"] = vlan0.IpAddr
+				vlan1["gateway_ip"] = vlan0.GatewayIp
+				vlan1["peer_ip_address"] = vlan0.PeerIpAddr
+				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIp
+				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIp
+				vlan1["tag"] = vlan0.Tag
+
+				vlanId, _ := strconv.Atoi(vlan0.VlanId)
+				vlan1["vlan_id"] = vlanId
+
+				vlan = append(vlan, vlan1)
+			}
+		}
 
 		interfaces = append(interfaces, if1)
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
 		return diag.Errorf("failed to set interfaces: %s\n", err)
+	}
+
+	if err = d.Set("vlan", vlan); err != nil {
+		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
 	d.SetId(edgeSpoke.GwName)
@@ -709,11 +823,11 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "enable_edge_active_standby",
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "enable_edge_active_standby",
 		"enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeSpoke(ctx, edgeSpoke)
 		if err != nil {
-			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT interfaces, "+
+			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT/VLAN interfaces, "+
 				"Edge active standby or Edge active standby preemptive during Edge as a Spoke update: %v", err)
 		}
 	}

@@ -65,6 +65,9 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `enable_vrrp` - (Optional) Enable VRRP. Valid values: true, false. Default value: false.
+  * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
+  * `tag` - (Optional) Tag.
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix.
@@ -73,8 +76,6 @@ The following arguments are supported:
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
-
-### Advanced Options
 * `local_as_number` - (Optional) BGP AS Number to assign to Edge VM Selfmanaged.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend gateway BGP AS_Path field. Valid only when `local_as_number` is set. Example: ["65023", "65023"].
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable learned CIDR approval. Valid values: true, false. Default value: false.
@@ -88,6 +89,15 @@ The following arguments are supported:
 * `latitude` - (Optional) Latitude of Edge VM Selfmanaged. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge VM Selfmanaged. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
+* `vlan` - (Required) VLAN configuration.
+  * `parent_interface_name` - (Required) Parent interface name.
+  * `vlan_id` - (Required) VLAN ID.
+  * `ip_address` - (Optional) LAN sub-interface IP address.
+  * `gateway_ip` - (Optional) LAN sub-interface gateway IP.
+  * `peer_ip_address` - (Optional) LAN sub-interface IP address on HA gateway.
+  * `peer_gateway_ip` - (Optional) LAN sub-interface gateway IP on HA gateway.
+  * `vrrp_virtual_ip` - (Optional) LAN sub-interface virtual IP.
+  * `tag` - (Optional) Tag.
 
 ## Attribute Reference
 
