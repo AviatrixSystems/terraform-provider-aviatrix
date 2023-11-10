@@ -94,10 +94,10 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Description: "Retry interval in seconds.",
 			},
 			"edge_wan_interfaces": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Edge WAN interfaces.",
+				Description: "Set of Edge WAN interfaces.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -116,7 +116,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		InsaneModeTunnelNumber:   d.Get("insane_mode_tunnel_number").(int),
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
-		EdgeWanInterfaces:        strings.Join(getStringList(d, "edge_wan_interfaces"), ","),
+		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -253,7 +253,22 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		d.Set("transit_prepend_as_path", nil)
 	}
 
-	d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
+	edgeSpoke, err := client.GetEdgeSpoke(ctx, spokeGwName)
+	if err != nil {
+		return diag.Errorf("couldn't get wan interfaces for edge gateway %s: %s", spokeGwName, err)
+	}
+	var defaultWanInterfaces []string
+	for _, if0 := range edgeSpoke.InterfaceList {
+		if if0.Type == "WAN" {
+			defaultWanInterfaces = append(defaultWanInterfaces, if0.IfName)
+		}
+	}
+
+	edgeWanInterfacesInput := getStringSet(d, "edge_wan_interfaces")
+
+	if !(len(attachment.EdgeWanInterfacesResp) == 0 || (len(edgeWanInterfacesInput) == 0 && goaviatrix.Equivalent(attachment.EdgeWanInterfacesResp, defaultWanInterfaces))) {
+		d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
+	}
 
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return nil
