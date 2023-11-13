@@ -274,6 +274,7 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 			ParamName:      "gcloud_project_credentials",
 			UseFileContent: account.GcloudProjectCredentialsContents != "",
 			FileContent:    account.GcloudProjectCredentialsContents,
+			FileName:       "aviatrix-gcp.json",
 		},
 	}
 
