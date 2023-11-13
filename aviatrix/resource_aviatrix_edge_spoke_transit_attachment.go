@@ -117,11 +117,13 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
 
-	if attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 0 || attachment.InsaneModeTunnelNumber > 49) {
-		return diag.Errorf("valid range for HPE over private network: 0-49")
-	}
-	if !attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 2 || attachment.InsaneModeTunnelNumber > 20) {
-		return diag.Errorf("valid range for HPE over internet: 2-20")
+	if attachment.EnableInsaneMode {
+		if attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 0 || attachment.InsaneModeTunnelNumber > 49) {
+			return diag.Errorf("valid range for HPE over private network: 0-49")
+		}
+		if !attachment.EnableOverPrivateNetwork && (attachment.InsaneModeTunnelNumber < 2 || attachment.InsaneModeTunnelNumber > 20) {
+			return diag.Errorf("valid range for HPE over internet: 2-20")
+		}
 	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
@@ -251,6 +253,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
+	enableInsaneMode := d.Get("enable_insane_mode").(bool)
+	enableOverPrivateNetwork := d.Get("enable_over_private_network").(bool)
+	insaneModeTunnelNumber := d.Get("insane_mode_tunnel_number").(int)
+
+	if enableInsaneMode {
+		if enableOverPrivateNetwork && (insaneModeTunnelNumber < 0 || insaneModeTunnelNumber > 49) {
+			return diag.Errorf("valid range for HPE over private network: 0-49")
+		}
+		if !enableOverPrivateNetwork && (insaneModeTunnelNumber < 2 || insaneModeTunnelNumber > 20) {
+			return diag.Errorf("valid range for HPE over internet: 2-20")
+		}
+	}
+
 	d.Partial(true)
 
 	spokeGwName := d.Get("spoke_gw_name").(string)
@@ -286,7 +301,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 			TransitGatewayName1: spokeGwName,
 			TransitGatewayName2: transitGwName,
-			TunnelCount:         d.Get("insane_mode_tunnel_number").(int),
+			TunnelCount:         insaneModeTunnelNumber,
 		}
 
 		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
