@@ -102,12 +102,12 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
-	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
 		err := client.CreateSpokeTransitAttachment(attachment)
 		if err != nil {
-			if strings.Contains(err.Error(), "is not up") {
+			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
 					return fmt.Errorf("could not attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 				}
