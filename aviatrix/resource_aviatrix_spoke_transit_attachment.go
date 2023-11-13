@@ -114,7 +114,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
-	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
 		err := client.CreateSpokeTransitAttachment(attachment)
