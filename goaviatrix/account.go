@@ -37,7 +37,7 @@ type Account struct {
 	ProjectCredentialsFilename            string `form:"filename,omitempty"` //Applies for both GCP and OCI
 	ProjectCredentialsContents            string `form:"contents,omitempty"` //Applies for both GCP and OCI
 	GcloudProjectCredentialsFilepathLocal string `form:"gcloud_project_credentials_local,omitempty"`
-	GcloudProjectCredentialsLocal         string `form:"gcloud_project_local,omitempty"`
+	GcloudProjectCredentialsContents      string `form:"gcloud_project_credentials_contents,omitempty"`
 	GcloudProjectName                     string `form:"gcloud_project_name,omitempty" json:"project,omitempty"`
 	OciTenancyID                          string `form:"oci_tenancy_id" json:"oci_tenancy_id,omitempty"`
 	OciUserID                             string `form:"oci_user_id" json:"oci_user_id,omitempty"`
@@ -114,7 +114,7 @@ func (c *Client) CreateAccount(account *Account) error {
 	return c.PostAPI(account.Action, account, DuplicateBasicCheck)
 }
 
-// Create an OCI account and if the file content is passed, it takes precedence over the file path.
+// Create an GCP account and if the file content is passed, it takes precedence over the file path.
 //
 // If both the file path and file content, the file content will be used.
 func (c *Client) CreateGCPAccount(account *Account) error {
@@ -131,8 +131,9 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 		{
 			Path:           account.GcloudProjectCredentialsFilepathLocal,
 			ParamName:      "gcloud_project_credentials",
-			UseFileContent: account.GcloudProjectCredentialsLocal != "",
-			FileContent:    account.GcloudProjectCredentialsLocal,
+			UseFileContent: account.GcloudProjectCredentialsContents != "",
+			FileContent:    account.GcloudProjectCredentialsContents,
+			FileName:       "aviatrix-gcp.json",
 		},
 	}
 
@@ -269,8 +270,10 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 
 	files := []File{
 		{
-			Path:      account.GcloudProjectCredentialsFilepathLocal,
-			ParamName: "gcloud_project_credentials",
+			Path:           account.GcloudProjectCredentialsFilepathLocal,
+			ParamName:      "gcloud_project_credentials",
+			UseFileContent: account.GcloudProjectCredentialsContents != "",
+			FileContent:    account.GcloudProjectCredentialsContents,
 		},
 	}
 

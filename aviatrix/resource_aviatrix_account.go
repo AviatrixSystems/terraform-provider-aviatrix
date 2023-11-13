@@ -113,6 +113,11 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Description: "GCloud Project credentials local file path.",
 			},
+			"gcloud_project_credentials_contents": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCloud Project credentials content.",
+			},
 			"arm_subscription_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -159,6 +164,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "OCI API Private Key local file path.",
+			},
+			"oci_api_private_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "OCI API Private Key content.",
 			},
 			"azuregov_subscription_id": {
 				Type:        schema.TypeString,
@@ -453,6 +464,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
+		GcloudProjectCredentialsContents:      d.Get("gcloud_project_credentials_contents").(string),
 		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
@@ -465,6 +477,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
+		OciApiPrivateKey:                      d.Get("oci_api_private_key").(string),
 		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
 		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
 		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
@@ -548,14 +561,14 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key' and 'aws_secret_key' can only be set when 'cloud_type' is AWS (1)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "" || account.GcloudProjectCredentialsContents != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'gcloud_project_id', 'gcloud_project_credentials_filepath' and 'gcloud_project_credentials_contents' can only be set when 'cloud_type' is GCP (4)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.Azure) && (account.ArmSubscriptionId != "" || account.ArmApplicationClientId != "" || account.ArmApplicationClientSecret != "" || account.ArmApplicationEndpoint != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'arm_subscription_id', 'arm_directory_id', 'arm_application_id' and 'arm_application_key' can only be set when 'cloud_type' is Azure (8)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'oci_compartment_id', oci_api_private_key_file_path', 'oci_tenancy_id' and 'oci_uesr_id' can only be set when cloud_type is OCI (16)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "" || account.OciApiPrivateKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'oci_compartment_id', oci_api_private_key_file_path', 'oci_api_private_key', 'oci_tenancy_id' and 'oci_user_id' can only be set when cloud_type is OCI (16)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureGov) && (account.AzuregovSubscriptionId != "" || account.AzuregovApplicationEndpoint != "" || account.AzuregovApplicationClientId != "" || account.AzuregovApplicationClientSecret != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'azuregov_subscription_id', 'azuregov_directory_id', 'azuregov_application_id' and 'azuregov_application_key' can only be set when 'cloud_type' is AzureGov (32)")
@@ -616,8 +629,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
-		if account.GcloudProjectCredentialsFilepathLocal == "" {
-			return diag.Errorf("gcloud project credentials local filepath needed to upload file to controller")
+		if account.GcloudProjectCredentialsFilepathLocal == "" && account.GcloudProjectCredentialsContents == "" {
+			return diag.Errorf("gcloud project credentials needed to upload file to controller")
 		}
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 	} else if account.CloudType == goaviatrix.Azure {
@@ -643,8 +656,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.OciCompartmentID == "" {
 			return diag.Errorf("oci compartment ocid needed for oracle cloud")
 		}
-		if account.OciApiPrivateKeyFilePath == "" {
-			return diag.Errorf("oci api private key filepath needed to upload file to controller")
+		if account.OciApiPrivateKeyFilePath == "" && account.OciApiPrivateKey == "" {
+			return diag.Errorf("oci api private key needed to upload file to controller")
 		}
 	} else if account.CloudType == goaviatrix.AWSGov {
 		if account.AwsgovAccountNumber == "" {
@@ -987,6 +1000,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
+		GcloudProjectCredentialsContents:      d.Get("gcloud_project_credentials_contents").(string),
 		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
@@ -999,6 +1013,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
+		OciApiPrivateKey:                      d.Get("oci_api_private_key").(string),
 		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
 		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
 		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
@@ -1086,14 +1101,14 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key' and 'aws_secret_key' can only be set when 'cloud_type' is AWS (1)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "" || account.GcloudProjectCredentialsContents != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'gcloud_project_id', 'gcloud_project_credentials_filepath' and 'gcloud_project_credentials_contents' can only be set when 'cloud_type' is GCP (4)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.Azure) && (account.ArmSubscriptionId != "" || account.ArmApplicationClientId != "" || account.ArmApplicationClientSecret != "" || account.ArmApplicationEndpoint != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'arm_subscription_id', 'arm_directory_id', 'arm_application_id' and 'arm_application_key' can only be set when 'cloud_type' is Azure (8)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'oci_compartment_id', oci_api_private_key_file_path', 'oci_tenancy_id' and 'oci_uesr_id' can only be set when cloud_type is OCI (16)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "" || account.OciApiPrivateKey != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'oci_compartment_id', 'oci_api_private_key_file_path', 'oci_tenancy_id', 'oci_private_key' and 'oci_user_id' can only be set when cloud_type is OCI (16)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureGov) && (account.AzuregovSubscriptionId != "" || account.AzuregovApplicationEndpoint != "" || account.AzuregovApplicationClientId != "" || account.AzuregovApplicationClientSecret != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'azuregov_subscription_id', 'azuregov_directory_id', 'azuregov_application_id' and 'azuregov_application_key' can only be set when 'cloud_type' is AzureGov (32)")
@@ -1137,7 +1152,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
-		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
+		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") || d.HasChange("gcloud_project_credentials") {
 			err := client.UpdateGCPAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
@@ -1151,7 +1166,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if account.CloudType == goaviatrix.OCI {
-		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") {
+		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") || d.HasChange("oci_api_private_key") {
 			return diag.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == goaviatrix.AWSGov {
