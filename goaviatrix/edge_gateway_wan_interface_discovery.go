@@ -15,7 +15,7 @@ type WanInterfaceResp struct {
 	Reason  string         `json:"reason"`
 }
 
-func (c *Client) GetEdgeGatewayWanInterface(ctx context.Context, gwName, wanInterfaceName string) (string, error) {
+func (c *Client) GetEdgeGatewayWanIp(ctx context.Context, gwName, wanInterfaceName string) (string, error) {
 	form := map[string]string{
 		"action":        "discovery_edge_gateway_wan_ip",
 		"CID":           c.CID,
