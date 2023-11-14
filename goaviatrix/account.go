@@ -43,7 +43,7 @@ type Account struct {
 	OciUserID                             string `form:"oci_user_id" json:"oci_user_id,omitempty"`
 	OciCompartmentID                      string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
 	OciApiPrivateKeyFilePath              string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
-	OciApiPrivateKey                      string `form:"oci_api_key" json:"oci_api_private_key,omitempty"`
+	OciApiPrivateKey                      string `form:"oci_oci_api_private_key" json:"oci_api_private_key,omitempty"`
 	AzuregovSubscriptionId                string `form:"azure_gov_subscription_id,omitempty" json:"arm_gov_subscription_id,omitempty"`
 	AzuregovApplicationEndpoint           string `form:"azure_gov_application_endpoint,omitempty" json:"arm_gov_ad_tenant_id,omitempty"`
 	AzuregovApplicationClientId           string `form:"azure_gov_application_client_id,omitempty" json:"arm_gov_ad_client_id,omitempty"`
@@ -160,7 +160,8 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 			Path:           account.OciApiPrivateKeyFilePath,
 			ParamName:      "oci_api_key",
 			UseFileContent: account.OciApiPrivateKey != "",
-			FileContent:    account.OciApiPrivateKey,
+			FileContent:    strings.TrimSpace(account.OciApiPrivateKey), // Trim space is needed to remove the newline at the end of the file. An error is thrown if the file has a newline at the end.
+			FileName:       "aviatrix-oci.pem",
 		},
 	}
 
