@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var ErrNotFound = fmt.Errorf("ErrNotFound")
@@ -272,4 +274,13 @@ func ValidateRtbId(val interface{}, key string) (warns []string, errs []error) {
 	}
 
 	return warns, errs
+}
+
+// getStringSet will convert a TypeSet attribute to a slice of string
+func getStringSet(d *schema.ResourceData, k string) []string {
+	var sl []string
+	for _, v := range d.Get(k).(*schema.Set).List() {
+		sl = append(sl, v.(string))
+	}
+	return sl
 }

@@ -101,6 +101,15 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncEdgeSpokeTransitAttachmentEdgeWanInterfaces,
+			},
+			"default_edge_wan_interfaces": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Default Edge WAN interfaces.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -270,6 +279,10 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	if !(len(attachment.EdgeWanInterfacesResp) == 0 || (len(edgeWanInterfacesInput) == 0 && goaviatrix.Equivalent(attachment.EdgeWanInterfacesResp, defaultWanInterfaces))) {
 		d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
+	}
+
+	if len(defaultWanInterfaces) != 0 && len(attachment.EdgeWanInterfacesResp) != 0 {
+		d.Set("default_edge_wan_interfaces", defaultWanInterfaces)
 	}
 
 	d.SetId(spokeGwName + "~" + transitGwName)
