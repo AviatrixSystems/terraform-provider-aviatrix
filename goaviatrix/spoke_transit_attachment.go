@@ -154,7 +154,7 @@ func DiffSuppressFuncEdgeSpokeTransitAttachmentEdgeWanInterfaces(k, old, new str
 	edgeWanInterfacesOld := ExpandStringList(o.(*schema.Set).List())
 	edgeWanInterfacesNew := ExpandStringList(n.(*schema.Set).List())
 
-	defaultWanInterfaces := getStringSet(d, "edge_wan_interfaces")
+	defaultWanInterfaces := getStringSet(d, "default_edge_wan_interfaces")
 
 	if (len(edgeWanInterfacesOld) != 0 && Equivalent(edgeWanInterfacesOld, defaultWanInterfaces) && len(edgeWanInterfacesNew) == 0) ||
 		(len(edgeWanInterfacesOld) == 0 && len(edgeWanInterfacesNew) != 0 && Equivalent(edgeWanInterfacesNew, defaultWanInterfaces)) {
