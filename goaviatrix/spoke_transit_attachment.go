@@ -151,8 +151,8 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 
 func DiffSuppressFuncEdgeSpokeTransitAttachmentEdgeWanInterfaces(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("edge_wan_interfaces")
-	edgeWanInterfacesOld := ExpandStringList(o.([]interface{}))
-	edgeWanInterfacesNew := ExpandStringList(n.([]interface{}))
+	edgeWanInterfacesOld := ExpandStringList(o.(*schema.Set).List())
+	edgeWanInterfacesNew := ExpandStringList(n.(*schema.Set).List())
 
 	defaultWanInterfaces := getStringSet(d, "edge_wan_interfaces")
 
