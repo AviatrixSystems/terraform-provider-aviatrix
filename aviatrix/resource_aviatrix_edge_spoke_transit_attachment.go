@@ -277,7 +277,10 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	edgeWanInterfacesInput := getStringSet(d, "edge_wan_interfaces")
 
-	if !(len(attachment.EdgeWanInterfacesResp) == 0 || (len(edgeWanInterfacesInput) == 0 && goaviatrix.Equivalent(attachment.EdgeWanInterfacesResp, defaultWanInterfaces))) {
+	if len(attachment.EdgeWanInterfacesResp) == 0 || (len(edgeWanInterfacesInput) == 0 && goaviatrix.Equivalent(attachment.EdgeWanInterfacesResp, defaultWanInterfaces)) ||
+		(len(edgeWanInterfacesInput) != 0 && goaviatrix.Equivalent(edgeWanInterfacesInput, defaultWanInterfaces)) {
+		d.Set("edge_wan_interfaces", nil)
+	} else {
 		d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
 	}
 
