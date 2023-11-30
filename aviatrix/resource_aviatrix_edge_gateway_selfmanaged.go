@@ -560,6 +560,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		d.Set("ztp_file_type", edgeSpoke.ZtpFileType)
 	}
 
+	if edgeSpoke.ZtpFileType == "cloud_init" {
+		d.Set("ztp_file_type", "cloud-init")
+	}
+
 	if edgeSpoke.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
