@@ -128,6 +128,17 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 
 	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
+	if edgeSpoke.VlanList == nil || len(edgeSpoke.VlanList) == 0 {
+		edgeSpoke.VlanList = []*EdgeSpokeVlan{}
+	}
+
+	vlan, err := json.Marshal(edgeSpoke.VlanList)
+	if err != nil {
+		return err
+	}
+
+	edgeSpoke.Vlan = b64.StdEncoding.EncodeToString(vlan)
+
 	resp, err := c.PostAPIContext2Download(ctx, edgeSpoke.Action, edgeSpoke, BasicCheck)
 	if err != nil {
 		return err
@@ -193,6 +204,17 @@ func (c *Client) UpdateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	}
 
 	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	if edgeSpoke.VlanList == nil || len(edgeSpoke.VlanList) == 0 {
+		edgeSpoke.VlanList = []*EdgeSpokeVlan{}
+	}
+
+	vlan, err := json.Marshal(edgeSpoke.VlanList)
+	if err != nil {
+		return err
+	}
+
+	edgeSpoke.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	return c.PostAPIContext2(ctx, nil, edgeSpoke.Action, edgeSpoke, BasicCheck)
 }
