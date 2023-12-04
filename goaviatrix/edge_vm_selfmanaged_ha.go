@@ -1,9 +1,11 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
+	"io"
 	"os"
 )
 
@@ -79,9 +81,21 @@ func (c *Client) CreateEdgeVmSelfmanagedHa(ctx context.Context, edgeVmSelfmanage
 		return "", err
 	}
 
-	_, err = outFile.WriteString(data.Result)
-	if err != nil {
-		return "", err
+	if edgeVmSelfmanagedHa.ZtpFileType == "iso" {
+		decodedResult, err := b64.StdEncoding.DecodeString(data.Result)
+		if err != nil {
+			return "", err
+		}
+
+		_, err = io.Copy(outFile, bytes.NewReader(decodedResult))
+		if err != nil {
+			return "", err
+		}
+	} else {
+		_, err = outFile.WriteString(data.Result)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return gwName, nil
