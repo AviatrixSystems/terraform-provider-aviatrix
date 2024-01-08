@@ -51,7 +51,7 @@ type CloudnTransitGatewayAttachment struct {
 
 type CloudnTransitGatewayAttachmentResp struct {
 	DeviceName                       string
-	TransitGatewayName               string
+	TransitGatewayName               string `json:"gw_name"`
 	ConnectionName                   string
 	TransitGatewayBgpAsn             string                        `json:"bgp_local_asn_number"`
 	CloudnBgpAsn                     string                        `json:"bgp_remote_asn_number"`
