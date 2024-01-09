@@ -1,3 +1,12 @@
+## 2.24.4 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.9.822**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
+
+
 ## 2.24.3 (March 20, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.9.349**
@@ -66,7 +75,7 @@
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
 
-## 2.23.6 (Unreleased)
+## 2.23.6 (January 09, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1826**
 - Supported Terraform version: **v1.x**
