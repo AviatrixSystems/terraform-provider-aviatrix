@@ -1,4 +1,13 @@
-## 2.23.5 (Unreleased)
+## 2.23.6 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8.1509**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
+
+
+## 2.23.5 (March 14, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1509**
 - Supported Terraform version: **v1.x**
