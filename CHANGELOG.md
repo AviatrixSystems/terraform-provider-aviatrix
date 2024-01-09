@@ -375,7 +375,7 @@
 
 ## 2.23.6 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.8.1509**
+- Supported Controller version: **UserConnect-6.8.1826**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements:
