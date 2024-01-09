@@ -12,9 +12,19 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.23.5 (UserConnect-6.8.1509)``
+``Last updated: R2.23.6 (UserConnect-6.8.1826)``
 
 ---
+
+
+## 2.23.6
+### Notes:
+- Release date: **(9 Jan 2023)**
+- Supported Controller version: **UserConnect-6.8.1826**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
 
 
 ## 2.23.5
