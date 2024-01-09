@@ -10,7 +10,7 @@ The [Terraform](https://terraform.io) provider for [Aviatrix](https://aviatrix.c
   - For those using an M1 Macbook, please install the darwin-**arm64** package instead of the darwin-amd64 package
     - Use [this](https://go.dev/dl/go1.18.2.darwin-arm64.pkg) link for the darwin-arm package (1.18.2) (Latest as of 24 Feb 2023)
     - You may find the latest download options [here](https://go.dev/dl/) otherwise
--	Create a directory, `go/`, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit `~/.bash_profile` to setup the GOPATH environment variable)
+-	Create a directory, `go/`, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit `~/.bash_profile` to setup the GOPATH environment variable
 
 ## Instructions
 ### 1. Clone our Aviatrix Terraform repository
