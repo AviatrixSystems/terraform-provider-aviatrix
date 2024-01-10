@@ -28,7 +28,7 @@
 2. Fixed issue where the association fails in **aviatrix_segmentation_network_domain_association**
 3. Fixed issue where ``edge_wan_interfaces`` being not set caused force replacement of **aviatrix_edge_spoke_transit_attachment**
 4. Fixed issue where the format of ``attachment_name`` was not correct in **aviatrix_segmentation_network_domain_association**
-5. Fixed issue where enabling active standby mode for Edge gateways fails
+5. Fixed issue where enabling Active Standby mode for Edge gateways fails
 6. Fixed issue where ``transit_gateway_name`` was not set in TF state in **aviatrix_cloudn_transit_gateway_attachment**
 7. Fixed a decoding issue in **aviatrix_cloudn_transit_gateway_attachment**
 8. Fixed issue where resizing gateway size fails in **aviatrix_spoke_ha_gateway**

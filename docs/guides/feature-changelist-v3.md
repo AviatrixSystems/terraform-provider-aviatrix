@@ -14,7 +14,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 ---
 
-``Last updated: R3.1.0 (UserConnect-7.1)``
+``Last updated: R3.1.4 (UserConnect-7.1.3006)``
 
 
 ---
@@ -71,3 +71,10 @@ The following logging resources are removed:
 | splunk_logging | **Yes**; please remove these resources from TF configuration |
 | filebeat_forwarder | **Yes**; please remove these resources from TF configuration |
 | sumologic_forwarder | **Yes**; please remove these resources from TF configuration |
+
+
+## R3.1.4 (UserConnect-7.1.3006)**
+### Attribute Deprecations
+| Diff | Resource | Attribute | Action Required? |
+|:----:|:--------:|:---------:|:----------------:|
+|(deprecated) | firenet | keep_alive_via_lan_interface_enabled | **Yes**; as of 3.1.2, disabling keepalive will not be allowed. If this attribute is set to true for AWS or OCI FireNets, no action is required. If this attribute is set to false for non-GWLB AWS or OCI FireNets, please set value to true |
