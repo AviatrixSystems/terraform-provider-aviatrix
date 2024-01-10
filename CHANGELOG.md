@@ -25,19 +25,19 @@
 
 ### Bug Fixes:
 1. Fixed issue where the format of image file generated for Edge gateways was not correct
-2. Fixed issue where the association failed in **aviatrix_segmentation_network_domain_association**
+2. Fixed issue where the association fails in **aviatrix_segmentation_network_domain_association**
 3. Fixed issue where ``edge_wan_interfaces`` being not set caused force replacement of **aviatrix_edge_spoke_transit_attachment**
 4. Fixed issue where the format of ``attachment_name`` was not correct in **aviatrix_segmentation_network_domain_association**
-5. Fixed issue where enabling active standby mode for Edge gateways failed
+5. Fixed issue where enabling active standby mode for Edge gateways fails
 6. Fixed issue where ``transit_gateway_name`` was not set in TF state in **aviatrix_cloudn_transit_gateway_attachment**
 7. Fixed a decoding issue in **aviatrix_cloudn_transit_gateway_attachment**
-8. Fixed issue where resizing gateway size failed in **aviatrix_spoke_ha_gateway**
-9. Fixed issue where updating ``remote_subnet`` failed in **aviatrix_transit_external_device_conn**
-10. Fixed issue where updating ``ha_private_mode_subnet_zone`` failed for private mode in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+8. Fixed issue where resizing gateway size fails in **aviatrix_spoke_ha_gateway**
+9. Fixed issue where updating ``remote_subnet`` fails in **aviatrix_transit_external_device_conn**
+10. Fixed issue where updating ``ha_private_mode_subnet_zone`` fails for Private Mode in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 11. Fixed issue where Single IP SNAT was not set correctly in **aviatrix_spoke_gateway**
 
 ### Deprecations
-1. Deprecated **keep_alive_via_lan_interface_enabled** and it will be removed in Aviatrix provider 3.2.0
+1. Deprecated ``keep_alive_via_lan_interface_enabled`` in **aviatrix_firenet**. It will be removed from the Aviatrix provider in the next upcoming 3.2.0 release
 
 
 ## 3.1.3 (November 02, 2023)
@@ -93,10 +93,10 @@
 4. Changed ``profile_name`` to be optional in **aviatrix_remote_syslog**
 
 ### Bug Fixes:
-1. Fixed issue where creating BGP underlay for Edge HA failed for **aviatrix_edge_spoke_external_device_conn**
+1. Fixed issue where creating BGP underlay for Edge HA fails for **aviatrix_edge_spoke_external_device_conn**
 2. Fixed issue where retrieving transit gateway peering info from a corrupted database caused provider crash
 3. Fixed issue where task status check could fail due to proxy error
-4. Fixed issue where enabling single IP SNAT failed during spoke gateway creation
+4. Fixed issue where enabling single IP SNAT fails during spoke gateway creation
 
 
 ## 3.1.0 (May 11, 2023)
@@ -158,7 +158,7 @@
 
 ### Bug Fixes:
 1. Fixed issue where ``max_vpn_conn`` was not properly set in TF state and could not be updated in **aviatrix_gateway**
-2. Fixed issue where retries inconsistently failed in **aviatrix_edge_spoke_transit_attachment**
+2. Fixed issue where retries inconsistently fails in **aviatrix_edge_spoke_transit_attachment**
 
 ### Preview Features:
 1. Implemented support of MITM/IDS: Request URL filtering:
@@ -254,7 +254,7 @@
 ### Bug Fixes:
 1. Fixed issue where white space is allowed for ``phase1_remote_identifier`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn**
 2. Fixed issue where ``cloud_image_id`` is allowed for Azure in **aviatrix_firewall_instance**
-3. Fixed issue where S2C creation failed for an exception error
+3. Fixed issue where S2C creation fails for an exception error
 4. Fixed re-ordering issue of ``rtb_list1`` and ``rtb_list2`` in **aviatrix_aws_peer**
 
 
