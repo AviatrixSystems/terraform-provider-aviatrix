@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_smart_groups
 
-The **aviatrix_smart_groups** data source provides details about all Smart Groups created by the Aviatrix Controller. Available as of provider version 3.1.2+.
+The **aviatrix_smart_groups** data source provides details about all Smart Groups created by the Aviatrix Controller. Available as of provider version 3.1.4+.
 
 ## Example Usage
 
