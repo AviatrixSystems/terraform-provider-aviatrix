@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.24.4 (UserConnect-6.9.822)``
+``Last updated: R3.0.7 (UserConnect-7.0.2239)``
 
 ---
 
@@ -150,6 +150,16 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ### Deprecations
 1. Removed support of **aviatrix_splunk_logging**, **aviatrix_filebeat_forwarder** and **aviatrix_sumologic_forwarder**
+
+
+## 3.0.7
+### Notes:
+- Release date: **(10 Jan 2023)**
+- Supported Controller version: **UserConnect-7.0.2239**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
 
 
 ## 3.0.6
