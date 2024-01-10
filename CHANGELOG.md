@@ -1,3 +1,12 @@
+## 3.0.7 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.0.2239**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
+
+
 ## 3.0.6 (June 30, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1768**
@@ -173,7 +182,7 @@
 8. Deprecated **aviatrix_trans_peer** and it will be removed in Aviatrix provider 3.0.1
 
 
-## 2.24.4 (Unreleased)
+## 2.24.4 (January 10, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-6.9.822**
 - Supported Terraform version: **v1.x**
