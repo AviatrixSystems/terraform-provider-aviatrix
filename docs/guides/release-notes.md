@@ -12,9 +12,52 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.7 (UserConnect-7.0.2239)``
+``Last updated: R3.1.4 (UserConnect-7.1.3006)``
 
 ---
+
+## 3.1.4
+### Notes:
+- Release date: **(10 Jan 2023)**
+- Supported Controller version: **UserConnect-7.1.3006**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for VLAN and VRRP in **aviatrix_edge_gateway_selfmanaged**
+2. Implemented a new attribute in **aviatrix_edge_spoke_external_device_conn** to support configuring BGP Advertised CIDRs:
+   - ``manual_bgp_advertised_cidrs``
+3. Implemented a new resource to replace **aviatrix_edge_vm_selfmanged** and **aviatrix_edge_spoke**:
+   - **aviatrix_edge_gateway_selfmanged**
+4. Implemented a new attribute in **aviatrix_spoke_transit_attachment** to support configuring tunnel count:
+   - ``tunnel_count``
+
+#### Secured Networking
+1. Implemented a new data source to list all **aviatrix_smart_group**:
+   - **aviatrix_smart_groups**
+
+### Enhancements:
+1. Added support for setting ``ztp_file_type`` into state in **aviatrix_edge_gateway_selfmanaged**
+2. Changed ``transit_gateway_name`` to "Optional" and "Computed" in **aviatrix_segmentation_network_domain_association**
+3. Removed "ForceNew" property of ``number_of_retries`` and ``retry_interval`` in **aviatrix_edge_spoke_external_device_conn**
+4. Enhanced retry mechanism for attaching spoke to transit in **resource_aviatrix_spoke_transit_attachment**
+
+### Bug Fixes:
+1. Fixed issue where the format of image file generated for Edge gateways was not correct
+2. Fixed issue where the association fails in **aviatrix_segmentation_network_domain_association**
+3. Fixed issue where ``edge_wan_interfaces`` being not set caused force replacement of **aviatrix_edge_spoke_transit_attachment**
+4. Fixed issue where the format of ``attachment_name`` was not correct in **aviatrix_segmentation_network_domain_association**
+5. Fixed issue where enabling Active Standby mode for Edge gateways fails
+6. Fixed issue where ``transit_gateway_name`` was not set in TF state in **aviatrix_cloudn_transit_gateway_attachment**
+7. Fixed a decoding issue in **aviatrix_cloudn_transit_gateway_attachment**
+8. Fixed issue where resizing gateway size fails in **aviatrix_spoke_ha_gateway**
+9. Fixed issue where updating ``remote_subnet`` fails in **aviatrix_transit_external_device_conn**
+10. Fixed issue where updating ``ha_private_mode_subnet_zone`` fails for Private Mode in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+11. Fixed issue where Single IP SNAT was not set correctly in **aviatrix_spoke_gateway**
+
+### Deprecations
+1. Deprecated ``keep_alive_via_lan_interface_enabled`` in **aviatrix_firenet**. It will be removed from the Aviatrix provider in the next upcoming 3.2.0 release
+
 
 ## 3.1.3
 ### Notes:
