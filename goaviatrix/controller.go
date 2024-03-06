@@ -155,15 +155,20 @@ func (c *Client) GetSecurityGroupManagementStatus() (*SecurityGroupInfo, error) 
 
 func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBackupConfiguration) error {
 	form := map[string]string{
-		"CID":            c.CID,
-		"action":         "enable_cloudn_backup_config",
-		"cloud_type":     strconv.Itoa(cloudnBackupConfiguration.BackupCloudType),
-		"acct_name":      cloudnBackupConfiguration.BackupAccountName,
-		"bucket_name":    cloudnBackupConfiguration.BackupBucketName,
-		"storage_name":   cloudnBackupConfiguration.BackupStorageName,
-		"container_name": cloudnBackupConfiguration.BackupContainerName,
-		"region":         cloudnBackupConfiguration.BackupRegion,
+		"CID":        c.CID,
+		"action":     "enable_cloudn_backup_config",
+		"cloud_type": strconv.Itoa(cloudnBackupConfiguration.BackupCloudType),
+		"acct_name":  cloudnBackupConfiguration.BackupAccountName,
+		"region":     cloudnBackupConfiguration.BackupRegion,
 	}
+	// Azure has a set of different parameters that must be set.
+	if IsCloudType(cloudnBackupConfiguration.BackupCloudType, AzureArmRelatedCloudTypes) {
+		form["storage_name"] = cloudnBackupConfiguration.BackupStorageName
+		form["container_name"] = cloudnBackupConfiguration.BackupContainerName
+	} else {
+		form["bucket_name"] = cloudnBackupConfiguration.BackupBucketName
+	}
+
 	if cloudnBackupConfiguration.MultipleBackups == "true" {
 		form["multiple_bkup"] = "true"
 	}
