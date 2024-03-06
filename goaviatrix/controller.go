@@ -162,7 +162,7 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 		"region":     cloudnBackupConfiguration.BackupRegion,
 	}
 	// Azure has a set of different parameters that must be set.
-	if IsCloudType(cloudnBackupConfiguration.BackupCloudType, AzureArmRelatedCloudTypes)	{
+	if IsCloudType(cloudnBackupConfiguration.BackupCloudType, AzureArmRelatedCloudTypes) {
 		form["storage_name"] = cloudnBackupConfiguration.BackupStorageName
 		form["container_name"] = cloudnBackupConfiguration.BackupContainerName
 	} else {
