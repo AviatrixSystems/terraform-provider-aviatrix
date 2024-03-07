@@ -211,11 +211,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
 		d.Set("vendor_type", "fqdn_gateway")
 		d.Set("firewall_name", "")
-		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") || fireNetDetail.CloudType == strconv.Itoa(goaviatrix.GCP) {
-			d.Set("lan_interface", "")
-		} else {
-			d.Set("lan_interface", instanceInfo.LanInterface)
-		}
+		d.Set("lan_interface", "")
 		d.Set("management_interface", "")
 		d.Set("egress_interface", "")
 	} else {

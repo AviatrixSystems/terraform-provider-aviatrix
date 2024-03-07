@@ -789,16 +789,13 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("renegotiation_interval", -1)
 		}
 
-		fqdnGatewayLanInterface := fmt.Sprintf("av-nic-%s_eth1", gw.GwName)
 		fqdnLanCidr, ok := gw.ArmFqdnLanCidr[gw.GwName]
 		if ok && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
 			d.Set("fqdn_lan_cidr", fqdnLanCidr)
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("fqdn_lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
 			d.Set("fqdn_lan_cidr", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
 		} else {
-			d.Set("fqdn_lan_interface", "")
 			d.Set("fqdn_lan_cidr", "")
 		}
 
