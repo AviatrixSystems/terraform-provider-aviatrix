@@ -37,11 +37,13 @@ type Account struct {
 	ProjectCredentialsFilename            string `form:"filename,omitempty"` //Applies for both GCP and OCI
 	ProjectCredentialsContents            string `form:"contents,omitempty"` //Applies for both GCP and OCI
 	GcloudProjectCredentialsFilepathLocal string `form:"gcloud_project_credentials_local,omitempty"`
+	GcloudProjectCredentialsContents      string `form:"gcloud_project_credentials_contents,omitempty"`
 	GcloudProjectName                     string `form:"gcloud_project_name,omitempty" json:"project,omitempty"`
 	OciTenancyID                          string `form:"oci_tenancy_id" json:"oci_tenancy_id,omitempty"`
 	OciUserID                             string `form:"oci_user_id" json:"oci_user_id,omitempty"`
 	OciCompartmentID                      string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
 	OciApiPrivateKeyFilePath              string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
+	OciApiPrivateKey                      string `form:"oci_oci_api_private_key" json:"oci_api_private_key,omitempty"`
 	AzuregovSubscriptionId                string `form:"azure_gov_subscription_id,omitempty" json:"arm_gov_subscription_id,omitempty"`
 	AzuregovApplicationEndpoint           string `form:"azure_gov_application_endpoint,omitempty" json:"arm_gov_ad_tenant_id,omitempty"`
 	AzuregovApplicationClientId           string `form:"azure_gov_application_client_id,omitempty" json:"arm_gov_ad_client_id,omitempty"`
@@ -112,6 +114,9 @@ func (c *Client) CreateAccount(account *Account) error {
 	return c.PostAPI(account.Action, account, DuplicateBasicCheck)
 }
 
+// Create an GCP account and if the file content is passed, it takes precedence over the file path.
+//
+// If both the file path and file content, the file content will be used.
 func (c *Client) CreateGCPAccount(account *Account) error {
 	params := map[string]string{
 		"CID":                 c.CID,
@@ -124,14 +129,20 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 
 	files := []File{
 		{
-			Path:      account.GcloudProjectCredentialsFilepathLocal,
-			ParamName: "gcloud_project_credentials",
+			Path:           account.GcloudProjectCredentialsFilepathLocal,
+			ParamName:      "gcloud_project_credentials",
+			UseFileContent: account.GcloudProjectCredentialsContents != "",
+			FileContent:    account.GcloudProjectCredentialsContents,
+			FileName:       "aviatrix-gcp.json",
 		},
 	}
 
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
+// Create an OCI account and if the file content is passed, it takes precedence over the file path.
+//
+// If both the file path and file content, the file content will be used.
 func (c *Client) CreateOCIAccount(account *Account) error {
 	params := map[string]string{
 		"CID":                c.CID,
@@ -146,8 +157,11 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 
 	files := []File{
 		{
-			Path:      account.OciApiPrivateKeyFilePath,
-			ParamName: "oci_api_key",
+			Path:           account.OciApiPrivateKeyFilePath,
+			ParamName:      "oci_api_key",
+			UseFileContent: account.OciApiPrivateKey != "",
+			FileContent:    strings.TrimSpace(account.OciApiPrivateKey), // Trim space is needed to remove the newline at the end of the file. An error is thrown if the file has a newline at the end.
+			FileName:       "aviatrix-oci.pem",
 		},
 	}
 
@@ -257,8 +271,11 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 
 	files := []File{
 		{
-			Path:      account.GcloudProjectCredentialsFilepathLocal,
-			ParamName: "gcloud_project_credentials",
+			Path:           account.GcloudProjectCredentialsFilepathLocal,
+			ParamName:      "gcloud_project_credentials",
+			UseFileContent: account.GcloudProjectCredentialsContents != "",
+			FileContent:    account.GcloudProjectCredentialsContents,
+			FileName:       "aviatrix-gcp.json",
 		},
 	}
 
