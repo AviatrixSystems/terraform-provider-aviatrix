@@ -46,8 +46,8 @@ The following arguments are supported:
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
   * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. Valid values: 'all', 'tcp', 'udp', 'icmp'. 'Default: 'all'.
 
-  !> `interface` must be empty when using a route-based connection in a policy.
-  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must be empty when `connection` is set.
+  !> `interface` must not be set when using a route-based connection in a policy.
+  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must not be set when `connection` is set.
   * `connection` - (Optional) This is a qualifier condition that specifies output connection where the rule applies. Default value: "None".
   * `mark` - (Optional) This is a qualifier condition that specifies a tag or mark of a TCP session where the rule applies. When not specified, this field is not used.
   * `snat_ips` - (Optional) This is a rule field that specifies the changed source IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule fields must be specified for this rule to take effect.
