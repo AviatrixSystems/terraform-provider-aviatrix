@@ -44,8 +44,8 @@ The following arguments are supported:
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
   * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
   
-  !> `interface` must be empty when using a route-based connection in a policy.
-  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must be empty when `connection` is set.
+  !> `interface` must not be set when using a route-based connection in a policy.
+  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must not be set when `connection` is set. If `connection` is not specified or “None”, interface must be “eth0” by default.
   * `connection` - (Optional) This is a qualifier condition that specifies output connection where the rule applies. Default value: "None".
   * `mark` - (Optional) This is a rule field that specifies a tag or mark of a TCP session when all qualifier conditions meet. When not specified, this field is not used.
   * `dnat_ips` - (Optional) This is a rule field that specifies the translated destination IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
