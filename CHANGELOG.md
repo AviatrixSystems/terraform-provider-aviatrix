@@ -1,4 +1,4 @@
-## 3.1.4 (Unreleased)
+## 3.1.4 (January 11, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.3006**
 - Supported Terraform version: **v1.x**
