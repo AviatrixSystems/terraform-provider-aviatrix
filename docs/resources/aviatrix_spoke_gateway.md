@@ -332,12 +332,12 @@ The following arguments are supported:
 * `enable_skip_public_route_table_update` - (Optional) Skip programming VPC public route table. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 * `enable_auto_advertise_s2c_cidrs` - (Optional) Auto Advertise Spoke Site2Cloud CIDRs. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 
-### [Learned CIDRs Approval for BGP Spoke Gateway](https://docs.aviatrix.com/HowTos/transit_approval.html)
+### [Learned CIDRs Approval for BGP Spoke Gateway](https://docs.aviatrix.com/documentation/latest/building-your-network/transit-bgp-route-approval.html)
 
 -> **NOTE:** `enable_learned_cidrs_approval` can be set to true only if `learned_cidrs_approval_mode` is set to 'gateway'.
 
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable learned CIDR approval for BGP Spoke Gateway. Valid values: true, false. Default value: false.
-* `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Either "gateway" (approval on a per-gateway basis) or "connection" (approval on a per-connection basis). Only "gateway" is supported for BGP SPOKE Gateway. Default value: "gateway". Available as of provider version R2.21+.
+* `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Only "gateway" (approval on a per-gateway basis) is supported and only if BGP is enabled. Default value: "gateway". Available as of provider version R2.21+.
 * `approved_learned_cidrs` - (Optional) A set of approved learned CIDRs. Only valid when `enable_learned_cidrs_approval` is set to true. Example: ["10.250.0.0/16", "10.251.0.0/16"]. Available as of provider version R2.21+.
 
 ### [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet)

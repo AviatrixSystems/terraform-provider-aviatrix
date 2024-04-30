@@ -386,7 +386,7 @@ The following arguments are supported:
 * `excluded_advertised_spoke_routes` - (Optional) A list of comma-separated CIDRs to be advertised to on-prem as 'Excluded CIDR List'. When configured, it inspects all the advertised CIDRs from its spoke gateways and remove those included in the 'Excluded CIDR List'. Example: "10.4.0.0/16,10.5.0.0/16".
 * `customized_transit_vpc_routes` - (Optional) A list of CIDRs to be customized for the transit VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. To be effective, `enable_advertise_transit_cidr` or firewall management access for a Transit FireNet gateway must be enabled. Example: ["10.0.0.0/16", "10.2.0.0/16"].
 
-### [Learned CIDRs Approval](https://docs.aviatrix.com/HowTos/transit_approval.html)
+### [Learned CIDRs Approval](https://docs.aviatrix.com/documentation/latest/building-your-network/transit-bgp-route-approval.html)
 
 -> **NOTE:** `enable_learned_cidrs_approval` can be set to true only if `learned_cidrs_approval_mode` is set to 'gateway'. If `learned_cidrs_approval_mode` is set to 'connection' then enabling learned CIDRs approval is handled within each individual connection resource.
 
