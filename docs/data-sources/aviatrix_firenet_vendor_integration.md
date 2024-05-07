@@ -46,7 +46,7 @@ data "aviatrix_firenet_vendor_integration" "foo" {
 The following arguments are supported:
 
 * `vpc_id` - (Required) VPC ID. Example: AWS: "vpc-abcd1234", Azure: "vnet_name:resource_group_name:resource_guid"
-* `instance_id` - (Required) ID of Firewall instance.
+* `instance_id` - (Required) ID of Firewall instance. Example: AWS: "i-09ade2592661316f8", Azure: "firewall_instance_name:resource_group_name"
 * `vendor_type` - (Required) Select PAN. Valid values: "Generic", "Palo Alto Networks VM-Series", "Aviatrix FQDN Gateway" and "Fortinet FortiGate".
 * `public_ip` - (Optional) The IP address of the firewall management interface for API calls from the Aviatrix Controller. If not set, the public IP of the firewall instance will be used. If the private IP is provided, please make sure that the controller can access the firewall.
 * `username` - (Optional) Firewall login name for API calls from the Controller. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
