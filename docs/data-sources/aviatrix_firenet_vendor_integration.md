@@ -15,7 +15,7 @@ Use this data source to do 'save' or 'sync' for vendor integration purposes for 
 ## Example Usage
 
 ```hcl
-# Aviatrix FireNet Vendor Integration Data Source
+# Aviatrix AWS FireNet Vendor Integration Data Source
 data "aviatrix_firenet_vendor_integration" "foo" {
   vpc_id        = "vpc-abcd123"
   instance_id   = "i-09ade2592661316f8"
@@ -23,7 +23,20 @@ data "aviatrix_firenet_vendor_integration" "foo" {
   public_ip     = "10.11.12.13"
   username      = "admin"
   password      = "Avx123456#"
-  firewall_name = "Avx-Firewall-Instance"
+  firewall_name = "Avx-AWS-Firewall-Instance"
+  save          = true
+}
+```
+```hcl
+# Aviatrix Azure FireNet Vendor Integration Data Source
+data "aviatrix_firenet_vendor_integration" "foo" {
+  vpc_id        = "vnet_name:resource_group_name:resource_guid"
+  instance_id   = "firewall_instance_name:resource_group_name"
+  vendor_type   = "Palo Alto Networks VM-Series"
+  public_ip     = "10.11.12.13"
+  username      = "admin"
+  password      = "Avx123456#"
+  firewall_name = "Avx-Azure-Firewall-Instance"
   save          = true
 }
 ```
@@ -32,8 +45,8 @@ data "aviatrix_firenet_vendor_integration" "foo" {
 
 The following arguments are supported:
 
-* `vpc_id` - (Required) VPC ID.
-* `instance_id` - (Required) ID of Firewall instance.
+* `vpc_id` - (Required) VPC ID. Example: AWS: "vpc-abcd1234", Azure: "vnet_name:resource_group_name:resource_guid"
+* `instance_id` - (Required) ID of Firewall instance. Example: AWS: "i-09ade2592661316f8", Azure: "firewall_instance_name:resource_group_name"
 * `vendor_type` - (Required) Select PAN. Valid values: "Generic", "Palo Alto Networks VM-Series", "Aviatrix FQDN Gateway" and "Fortinet FortiGate".
 * `public_ip` - (Optional) The IP address of the firewall management interface for API calls from the Aviatrix Controller. If not set, the public IP of the firewall instance will be used. If the private IP is provided, please make sure that the controller can access the firewall.
 * `username` - (Optional) Firewall login name for API calls from the Controller. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
