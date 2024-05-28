@@ -1,9 +1,9 @@
 ---
-subcategory: "CloudN"
+subcategory: "Edge"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_device_interfaces"
 description: |-
-  Gets the WAN primary interfaces and IPs for a device.
+  Gets the WAN primary interfaces and IPs for a CloudN device.
 ---
 
 # aviatrix_device_interfaces

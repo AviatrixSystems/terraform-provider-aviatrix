@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudN"
+subcategory: "Edge"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_cloudn_registration"
 description: |-
