@@ -60,7 +60,7 @@ func defaultTransport(caCertPath string, verifyCert bool) (*http.Transport, erro
 	if verifyCert && caCertPath != "" {
 		caCert, err := os.ReadFile(caCertPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read CA certificate: %v", err)
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
 		}
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
