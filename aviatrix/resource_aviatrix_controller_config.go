@@ -26,11 +26,16 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			// The http_access API hasn't worked correctly
+			// since at least version 7.1. We leave the schema
+			// element here so that we don't break any existing
+			// Terraform code, but it doesn't do anything.
 			"http_access": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Switch for http access. Default: false.",
+				Description: "Switch for HTTP access. Default: false.",
+				Deprecated:  "HTTP access is no longer supported and will not be configured on the controller.",
 			},
 			"fqdn_exception_rule": {
 				Type:        schema.TypeBool,
@@ -188,28 +193,6 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Configuring Aviatrix controller : %#v", d)
 
-	httpAccess := d.Get("http_access").(bool)
-	if httpAccess {
-		curStatus, _ := client.GetHttpAccessEnabled()
-		if curStatus == "True" {
-			log.Printf("[INFO] Http Access is already enabled")
-		} else {
-			err = client.EnableHttpAccess()
-			time.Sleep(10 * time.Second)
-		}
-	} else {
-		curStatus, _ := client.GetHttpAccessEnabled()
-		if curStatus == "False" {
-			log.Printf("[INFO] Http Access is already disabled")
-		} else {
-			err = client.DisableHttpAccess()
-			time.Sleep(10 * time.Second)
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("failed to configure controller http access: %s", err)
-	}
-
 	fqdnExceptionRule := d.Get("fqdn_exception_rule").(bool)
 	if fqdnExceptionRule {
 		curStatus, _ := client.GetExceptionRuleStatus()
@@ -332,16 +315,6 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Getting controller %s configuration", d.Id())
-	result, err := client.GetHttpAccessEnabled()
-	if err != nil {
-		return fmt.Errorf("could not read Aviatrix Controller http access configuration: %s", err)
-	}
-
-	if result == "True" {
-		d.Set("http_access", true)
-	} else {
-		d.Set("http_access", false)
-	}
 
 	res, err := client.GetExceptionRuleStatus()
 	if err != nil {
@@ -442,25 +415,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Updating Controller configuration: %#v", d)
 	d.Partial(true)
-
-	if d.HasChange("http_access") {
-		httpAccess := d.Get("http_access").(bool)
-		if httpAccess {
-			err := client.EnableHttpAccess()
-			time.Sleep(10 * time.Second)
-			if err != nil {
-				log.Printf("[ERROR] Failed to enable http access on controller %s", d.Id())
-				return err
-			}
-		} else {
-			err := client.DisableHttpAccess()
-			time.Sleep(10 * time.Second)
-			if err != nil {
-				log.Printf("[ERROR] Failed to disable http access on controller %s", d.Id())
-				return err
-			}
-		}
-	}
 
 	if d.HasChange("fqdn_exception_rule") {
 		fqdnExceptionRule := d.Get("fqdn_exception_rule").(bool)
@@ -658,16 +612,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	d.Set("http_access", false)
-	curStatusHttp, _ := client.GetHttpAccessEnabled()
-	if curStatusHttp != "Disabled" {
-		err := client.DisableHttpAccess()
-		time.Sleep(10 * time.Second)
-		if err != nil {
-			log.Printf("[ERROR] Failed to disable http access on controller %s", d.Id())
-			return err
-		}
-	}
 
 	d.Set("fqdn_exception_rule", true)
 	curStatusException, _ := client.GetExceptionRuleStatus()
