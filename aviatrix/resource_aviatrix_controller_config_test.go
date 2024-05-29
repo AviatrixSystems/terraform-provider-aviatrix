@@ -37,7 +37,6 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerConfigExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
-					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_vpc_dns_server", "true"),
 				),
 			},
@@ -63,7 +62,6 @@ resource "aviatrix_account" "test_account" {
 }
 resource "aviatrix_controller_config" "test_controller_config" {
 	fqdn_exception_rule   = false
-	http_access           = true
 	enable_vpc_dns_server = true
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
@@ -90,16 +88,9 @@ func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckControllerConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_config" {
 			continue
-		}
-
-		_, err := client.GetHttpAccessEnabled()
-		if err != nil {
-			return fmt.Errorf("could not retrieve Http Access Status due to err: %v", err)
 		}
 	}
 

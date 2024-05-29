@@ -15,14 +15,12 @@ The **aviatrix_controller_config** resource allows management of an Aviatrix Con
 ```hcl
 # Create an Aviatrix Controller Config
 resource "aviatrix_controller_config" "test_controller_config" {
-  http_access         = true
   fqdn_exception_rule = false
 }
 ```
 ```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade Without Upgrading Gateways
 resource "aviatrix_controller_config" "test_controller_config" {
-  http_access             = true
   fqdn_exception_rule     = false
   target_version          = "latest"
   manage_gateway_upgrades = false
@@ -31,7 +29,6 @@ resource "aviatrix_controller_config" "test_controller_config" {
 ```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade + Upgrade All Gateways
 resource "aviatrix_controller_config" "test_controller_config" {
-  http_access         = true
   fqdn_exception_rule = false
   target_version      = "latest"
 }
@@ -73,7 +70,6 @@ The following arguments are supported:
 * `manage_gateway_upgrades` - (Optional) If true, aviatrix_controller_config will upgrade all gateways when target_version is set. If false, only the controller will be upgraded when target_version is set. In that case gateway upgrades should be handled in each gateway resource individually using the software_version and image_version attributes. Type: boolean. Default: true. Available as of provider version R2.20.0+.
 
 ### Security Options
-* `http_access` - (Optional) Switch for HTTP access. Valid values: true, false. Default value: false.
 * `fqdn_exception_rule` - (Optional) Enable/disable packets without an SNI field to pass through gateway(s). Valid values: true, false. Default value: true. For more information on this setting, please see [here](https://docs.aviatrix.com/HowTos/FQDN_Whitelists_Ref_Design.html#exception-rule)
 * `aws_guard_duty_scanning_interval` - (Optional) Configure the AWS Guard Duty scanning interval. Valid values: 5, 10, 15, 30 or 60. Default value: 60. Available as of provider version R2.18+.
 
