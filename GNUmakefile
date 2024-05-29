@@ -20,7 +20,7 @@ endif
 build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-aviatrix_v99.0.0
+	go build -ldflags "-X github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix.Version=99.0.0" -o $(DESTINATION)/terraform-provider-aviatrix_v99.0.0
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -86,4 +86,3 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck tools vendor-status test-compile website-lint website website-test
-
