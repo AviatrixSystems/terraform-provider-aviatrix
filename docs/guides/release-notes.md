@@ -16,9 +16,18 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
+## 3.1.5 (TBD, 2024)
+###
+- Supported Controller version: **UserConnect-TBD**
+- Supported Terraform version: **v1.x**
+
+### Deprecations
+1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
+
+
 ## 3.1.4
 ### Notes:
-- Release date: **(10 Jan 2023)**
+- Release date: **(11 Jan 2024)**
 - Supported Controller version: **UserConnect-7.1.3006**
 - Supported Terraform version: **v1.x**
 

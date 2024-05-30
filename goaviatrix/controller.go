@@ -59,38 +59,6 @@ type ResourceCounts struct {
 	Count int    `json:"Count"`
 }
 
-func (c *Client) EnableHttpAccess() error {
-	form := map[string]string{
-		"CID":       c.CID,
-		"action":    "config_http_access",
-		"operation": "enable",
-	}
-	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-func (c *Client) DisableHttpAccess() error {
-	form := map[string]string{
-		"CID":       c.CID,
-		"action":    "config_http_access",
-		"operation": "disable",
-	}
-	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-func (c *Client) GetHttpAccessEnabled() (string, error) {
-	var data ControllerHttpAccessResp
-	form := map[string]string{
-		"CID":       c.CID,
-		"action":    "config_http_access",
-		"operation": "get",
-	}
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
-	if err != nil {
-		return "", err
-	}
-	return data.Result, nil
-}
-
 func (c *Client) EnableExceptionRule() error {
 	form := map[string]string{
 		"CID":    c.CID,
