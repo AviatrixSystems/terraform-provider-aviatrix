@@ -4,52 +4,95 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"runtime"
+
+	"os"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 )
 
+var Version string
+
 // Config contains the configuration for the Aviatrix provider
-// (Username, Password, and Controller IP)
 type Config struct {
-	Username     string
-	Password     string
+	// Username is the username for accessing the Aviatrix Controller.
+	Username string
+	// Password is the password for accessing the Aviatrix Controller.
+	Password string
+	// ControllerIP Is the IP address of the Aviatrix Controller.
 	ControllerIP string
-	VerifyCert   bool
+	// VerifyCert signals whether to verify the server's certificate chain and
+	// hostname.
+	VerifyCert bool
+	// PathToCACert represents the path to the CA Certificate to use when
+	// communicating with the Aviatrix Controller.
 	PathToCACert string
-	IgnoreTags   *goaviatrix.IgnoreTagsConfig
+	// IgnoreTags represents keys or key prefixes that should be ignored
+	// across all resources handled by this provider for situations where
+	// external systems are managing certain tags.
+	IgnoreTags *goaviatrix.IgnoreTagsConfig
 }
 
-// Client gets the Aviatrix client to access the Controller
-// Arguments:
-//
-//	None
-//
-// Returns:
-//
-//	the aviatrix client (from goaviatrix)
-//	error (if any)
-func (c *Config) Client() (*goaviatrix.Client, error) {
-	tr := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !c.VerifyCert,
-		},
+// wrapTransport represents an HTTP transport used for setting the user-agent
+// for all requests.
+type wrapTransport struct {
+	transport http.RoundTripper
+	userAgent string
+}
+
+// RoundTrip implements the HTTP transport interface sending user-agent for all
+// requests.
+func (wtr *wrapTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	req.Header.Set("User-Agent", wtr.userAgent)
+	return wtr.transport.RoundTrip(req)
+}
+
+// defaultTransport returns the default HTTP transport to use when accessing the
+// Aviatrix Controller.
+func defaultTransport(caCertPath string, verifyCert bool) (*http.Transport, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: !verifyCert,
 	}
 
-	if c.VerifyCert && c.PathToCACert != "" {
-		caCert, err := ioutil.ReadFile(c.PathToCACert)
+	if verifyCert && caCertPath != "" {
+		caCert, err := os.ReadFile(caCertPath)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
 		}
 		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-		tr.TLSClientConfig.RootCAs = caCertPool
+		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+			return nil, fmt.Errorf("failed to append CA certificate to pool")
+		}
+		tlsConfig.RootCAs = caCertPool
 	}
 
-	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr}, c.IgnoreTags)
+	return &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: tlsConfig,
+	}, nil
+}
+
+// getUserAgent returns a string representing the user-agent used by the terraform client.
+func getUserAgent() string {
+	return fmt.Sprintf("terraform-provider-aviatrix/%s (%s; %s; %s)", Version, runtime.GOOS, runtime.GOARCH, runtime.Version())
+}
+
+// Client returns a client for accessing the Aviatrix Controller
+func (c *Config) Client() (*goaviatrix.Client, error) {
+	tr, err := defaultTransport(c.PathToCACert, c.VerifyCert)
+	if err != nil {
+		return nil, err
+	}
+
+	// Wrap the transport so we always send the user-agent on all requests.
+	wtr := &wrapTransport{
+		userAgent: getUserAgent(),
+		transport: tr,
+	}
+	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: wtr}, c.IgnoreTags)
 
 	log.Printf("[INFO] Aviatrix Client configured for use")
 
