@@ -224,7 +224,7 @@ func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bo
 	// Check if the number of snat policies has not changed so that interface can be set when a policy is added.
 	// Without this check, the value for interface will be suppressed and interface = "" will
 	// be passed to the API even if interface = "eth0" in the configuration.
-	if !d.HasChange("snat_policy.#") && !(connection == "" || connection == "None") {
+	if !d.HasChange("snat_policy.#") && !d.HasChange("dnat_policy.#") && !(connection == "" || connection == "None") {
 		return old == "" && new == "eth0"
 	}
 	return false
