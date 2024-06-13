@@ -91,7 +91,9 @@ type EditSite2Cloud struct {
 	GwName                        string `form:"primary_cloud_gateway_name,omitempty"`
 	NetworkType                   string `form:"network_type,omitempty"`
 	CloudSubnetCidr               string `form:"cloud_subnet_cidr,omitempty"`
-	CloudSubnetVirtual            string `form:"cloud_subnet_virtual,omitempty"`
+	CloudSubnetVirtual            string `form:"cloud_virt_subnet,omitempty"`
+	RemoteSubnet                  string `form:"remote_cidr,omitempty"`
+	RemoteSubnetVirtual           string `form:"remote_virt_subnet,omitempty"`
 	RemoteSourceRealCIDRs         string `form:"remote_src_real_cidrs,omitempty"`
 	RemoteSourceVirtualCIDRs      string `form:"remote_src_virt_cidrs,omitempty"`
 	RemoteDestinationRealCIDRs    string `form:"remote_dst_real_cidrs,omitempty"`
