@@ -221,12 +221,13 @@ func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bo
 	connectionKey := strings.Replace(k, "interface", "connection", 1)
 	connection := d.Get(connectionKey).(string)
 
-	// Check if the number of snat or dnat policies has not changed so that
-	// interface can be set when a policy is added. Without this check, the
-	// value for interface will be suppressed and interface = "" will
-	// be passed to the API even if interface = "eth0" in the configuration.
-	// TODO(AVX-54006): This should be fixed on the controller side inthe future
-	// so that this check is no longer necessary.
+	// If this is a "connection" based NAT, check if the number of SNAT or DNAT
+	// policies have changed. If they have, we set the interface to the default
+	// value of "eth0" and ensure that is sent in the request, otherwise it will
+	// be rejected.
+	// TODO(AVX-54006): The interface should not be required in this particular
+	// case.  This should be fixed on the controller side in the future so that
+	// this check is no longer necessary.
 	if !d.HasChange("snat_policy.#") && !d.HasChange("dnat_policy.#") && !(connection == "" || connection == "None") {
 		return old == "" && new == "eth0"
 	}
