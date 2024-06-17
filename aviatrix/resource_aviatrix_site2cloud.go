@@ -1187,7 +1187,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			GwName:                        d.Get("primary_cloud_gateway_name").(string),
 			VpcID:                         d.Get("vpc_id").(string),
 			ConnName:                      d.Get("connection_name").(string),
-			NetworkType:                   "3",
 			RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
 			RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
 			RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
