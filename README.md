@@ -84,6 +84,42 @@ $ make fmt
 $ make build13
 ```
 
+### 5. Debugging the provider
+To debug the provider in an IDE or with delve, start the provider with the following command:
+
+```sh
+$GOPATH/bin/terraform-provider-aviatrix -debug
+```
+
+Run the following command if you are using PowerShell:
+```sh
+"$env:GOROOT/bin/terraform-provider-aviatrix" -debug
+```
+
+The output of the provider will look like this:
+
+```
+{"@level":"debug","@message":"plugin address","@timestamp":"2024-06-20T11:59:55.493839+02:00","address":"/var/folders/sh/tf1ct6kd3vnfckhrtlkmrz200000gp/T/plugin3596224496","network":"unix"}
+Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
+
+	TF_REATTACH_PROVIDERS='{"AviatrixSystems/aviatrix":{"Protocol":"grpc","ProtocolVersion":5,"Pid":33330,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/sh/tf1ct6kd3vnfckhrtlkmrz200000gp/T/plugin3596224496"}}}'
+```
+
+Now attach your debugger to the running process and add breakpoints.
+
+Finally, start terraform using the active provider like this:
+
+```sh
+$ export TF_REATTACH_PROVIDERS='{"AviatrixSystems/aviatrix":{"Protocol":"grpc","ProtocolVersion":5,"Pid":33330,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/sh/tf1ct6kd3vnfckhrtlkmrz200000gp/T/plugin3596224496"}}}'
+$ terraform plan
+```
+
+Run the following command if you are using PowerShell:
+```sh
+$ $Env:TF_REATTACH_PROVIDERS = '{"AviatrixSystems/aviatrix":{"Protocol":"grpc","ProtocolVersion":5,"Pid":33509,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/sh/tf1ct6kd3vnfckhrtlkmrz200000gp/T/plugin3596224496"}}}'
+$ terraform plan
+```
+
 ---
 ## Legacy Instructions (kept for reference)
 **WARNING:** The following instructions are kept for legacy purposes. ONLY follow these instructions below IF you are trying to build an old version of the Aviatrix provider AND are using an old Terraform version (0.12)
