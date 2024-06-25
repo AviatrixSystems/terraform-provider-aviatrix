@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -109,18 +110,10 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "network_mode"},
 			},
 			"network_mode": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
-				ValidateDiagFunc: func(i interface{}, path cty.Path) diag.Diagnostics {
-					networkMode := i.(string)
-					switch networkMode {
-					case "FLAT", "OVERLAY":
-						return nil
-					default:
-						return diag.Errorf("invalid network mode: %s", networkMode)
-					}
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
+				ValidateFunc: validation.StringInSlice([]string{"FLAT", "OVERLAY"}, false),
 				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "public"},
 			},
 			"project": {
