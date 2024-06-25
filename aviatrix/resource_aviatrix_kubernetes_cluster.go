@@ -26,8 +26,10 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// will be computed if arn is set
+				Computed:     true,
 				Description:  "Id of the kubernetes cluster.",
 				ExactlyOneOf: []string{"cluster_id", "arn"},
 			},
@@ -224,7 +226,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("failed to read kubernetes credential: %s", err)
 	}
 
-	//d.Set("cluster_id", kubernetesCluster.ClusterId)
+	d.Set("cluster_id", kubernetesCluster.ClusterId)
 	if kubernetesCluster.Credential != nil {
 		credential := kubernetesCluster.Credential
 		d.Set("use_csp_credentials", credential.UseCspCredentials)

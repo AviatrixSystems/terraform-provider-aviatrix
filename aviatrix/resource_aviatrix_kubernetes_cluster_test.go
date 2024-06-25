@@ -120,7 +120,7 @@ func TestAccAviatrixKubernetesCluster_AWS_ARN(t *testing.T) {
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "arn", "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"),
-					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "123456789012/us-west-2/cluster/test-cluster-id"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 				),
 			},
