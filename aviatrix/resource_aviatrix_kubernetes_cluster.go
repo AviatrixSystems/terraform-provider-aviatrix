@@ -158,7 +158,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 		if err != nil {
 			return nil, err
 		}
-		clusterId = fmt.Sprintf("%s/%s/%s", accountId, region, name)
+		clusterId = fmt.Sprintf("%s-%s-%s", accountId, region, strings.TrimPrefix(name, "cluster/"))
 	} else {
 		clusterId = d.Get("cluster_id").(string)
 	}

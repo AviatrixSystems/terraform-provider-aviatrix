@@ -114,13 +114,13 @@ func TestAccAviatrixKubernetesCluster_AWS_ARN(t *testing.T) {
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "123456789012/us-west-2/cluster/test-cluster-id",
+						ClusterId: "123456789012-us-west-2-test-cluster-id",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "arn", "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "123456789012/us-west-2/cluster/test-cluster-id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "123456789012-us-west-2-test-cluster-id"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 				),
 			},
@@ -241,7 +241,7 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id4"),
-					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "account_name", "test-account"),
 				),
 			},
