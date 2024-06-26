@@ -138,6 +138,11 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 	}
 }
 
+// parseArn parses the ARN and returns the account ID, region and name
+//
+// Example:
+//
+//	parseArn("arn:aws:eks:us-east-2:123456789012:cluster/testcluster") => "123456789012", "us-east-2", "testcluster", nil
 func parseArn(arn string) (accountId string, region string, name string, err error) {
 	if !strings.HasPrefix(arn, "arn:") {
 		err = errors.New("ARN must start with 'arn:'")
@@ -147,7 +152,7 @@ func parseArn(arn string) (accountId string, region string, name string, err err
 	if len(sections) != 6 {
 		err = errors.New("ARN must have 6 sections")
 	}
-	return sections[4], sections[3], sections[5], nil
+	return sections[4], sections[3], strings.TrimPrefix(sections[5], "cluster/"), nil
 }
 
 func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.KubernetesCluster, error) {
@@ -158,7 +163,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 		if err != nil {
 			return nil, err
 		}
-		clusterId = fmt.Sprintf("%s-%s-%s", accountId, region, strings.TrimPrefix(name, "cluster/"))
+		clusterId = fmt.Sprintf("%s-%s-%s", accountId, region, name)
 	} else {
 		clusterId = d.Get("cluster_id").(string)
 	}
