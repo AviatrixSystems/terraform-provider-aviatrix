@@ -219,7 +219,7 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 					platform = "test-platform"
 					version = "test-version"
 					network_mode = "OVERLAY"
-					public = true
+					is_publicly_accessible = true
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{

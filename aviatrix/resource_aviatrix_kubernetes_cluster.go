@@ -65,47 +65,47 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 			"account_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Account name owning the cluster.",
-				RequiredWith: []string{"account_id", "name", "vpc_id", "region", "version", "platform", "public", "network_mode"},
+				Description:  "Name of the account with management privileges over the cluster",
+				RequiredWith: []string{"account_id", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				Description:  "Account ID owning the cluster.",
-				RequiredWith: []string{"account_name", "name", "vpc_id", "region", "version", "platform", "public", "network_mode"},
+				Description:  "Account ID owning the cluster",
+				RequiredWith: []string{"account_name", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "Display name of the cluster",
-				RequiredWith: []string{"account_id", "account_name", "vpc_id", "region", "version", "platform", "public", "network_mode"},
+				RequiredWith: []string{"account_id", "account_name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"vpc_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Id of the VPC where the cluster is deployed.",
-				RequiredWith: []string{"account_id", "account_name", "name", "region", "version", "platform", "public", "network_mode"},
+				Description:  "Id of the VPC where the cluster is deployed",
+				RequiredWith: []string{"account_id", "account_name", "name", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"region": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "Region where the cluster is deployed.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "version", "platform", "public", "network_mode"},
+				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "version", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "Version of the Kubernetes cluster.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "platform", "public", "network_mode"},
+				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "platform", "is_publicly_accessible", "network_mode"},
 			},
 			"platform": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "Platform of the Kubernetes cluster, e.g. kops, kubeadm or any other free string.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "public", "network_mode"},
+				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "is_publicly_accessible", "network_mode"},
 			},
-			"public": {
+			"is_publicly_accessible": {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				Description:  "Whether the API server is publicly accessible outside the virtual network.",
@@ -116,7 +116,7 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 				Optional:     true,
 				Description:  "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
 				ValidateFunc: validation.StringInSlice([]string{"FLAT", "OVERLAY"}, false),
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "public"},
+				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible"},
 			},
 			"project": {
 				Type:        schema.TypeString,
@@ -180,7 +180,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 			Region:      d.Get("region").(string),
 			Version:     d.Get("version").(string),
 			Platform:    d.Get("platform").(string),
-			Public:      d.Get("public").(bool),
+			Public:      d.Get("is_publicly_accessible").(bool),
 			NetworkMode: d.Get("network_mode").(string),
 		}
 		if project, ok := d.GetOk("project"); ok {
@@ -241,7 +241,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		d.Set("region", kubernetesCluster.Resource.Region)
 		d.Set("version", kubernetesCluster.Resource.Version)
 		d.Set("platform", kubernetesCluster.Resource.Platform)
-		d.Set("public", kubernetesCluster.Resource.Public)
+		d.Set("is_publicly_accessible", kubernetesCluster.Resource.Public)
 		d.Set("network_mode", kubernetesCluster.Resource.NetworkMode)
 		if len(kubernetesCluster.Resource.Project) > 0 {
 			d.Set("project", kubernetesCluster.Resource.Project)
