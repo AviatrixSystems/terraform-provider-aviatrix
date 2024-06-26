@@ -223,7 +223,8 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 
 	kubernetesCluster, err := client.GetKubernetesCluster(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("failed to read kubernetes credential: %s", err)
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("cluster_id", kubernetesCluster.ClusterId)
