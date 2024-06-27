@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"7.1"}
+var supportedVersions = []string{"7.2"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -153,6 +153,7 @@ func Provider() *schema.Provider {
 			"aviatrix_geo_vpn":                                                resourceAviatrixGeoVPN(),
 			"aviatrix_global_vpc_excluded_instance":                           resourceAviatrixGlobalVpcExcludedInstance(),
 			"aviatrix_global_vpc_tagging_settings":                            resourceAviatrixGlobalVpcTaggingSettings(),
+			"aviatrix_kubernetes_cluster":                                     resourceAviatrixKubernetesCluster(),
 			"aviatrix_link_hierarchy":                                         resourceAviatrixLinkHierarchy(),
 			"aviatrix_netflow_agent":                                          resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                          resourceAviatrixPeriodicPing(),
