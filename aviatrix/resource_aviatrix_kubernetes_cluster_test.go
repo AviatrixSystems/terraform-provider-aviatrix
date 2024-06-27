@@ -153,12 +153,12 @@ EOT
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
 						ClusterId: "test-cluster-id2",
 						Credential: &goaviatrix.KubernetesCredential{
-							KubeConfig: ValidKubeconfig,
+							KubeConfig: ValidKubeconfig + "\n",
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id2"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kube_config", ValidKubeconfig),
+					resource.TestCheckResourceAttr(resourceName, "kube_config", ValidKubeconfig+"\n"),
 				),
 			},
 		},
@@ -210,16 +210,20 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 				resource "aviatrix_kubernetes_cluster" "test" {
 					cluster_id = "test-cluster-id4"
 					use_csp_credentials = true
-
-					account_name = "test-account"
-					account_id = "test-account-id"
-					name = "test-name"
-					region = "test-region"
-					vpc_id = "test-vpc"	
-					platform = "test-platform"
-					version = "test-version"
-					network_mode = "OVERLAY"
-					is_publicly_accessible = true
+					cluster_details {
+						account_name = "test-account"
+						account_id = "test-account-id"
+						name = "test-name"
+						region = "test-region"
+						vpc_id = "test-vpc"	
+						platform = "test-platform"
+						version = "test-version"
+						network_mode = "OVERLAY"
+						is_publicly_accessible = true
+						tags = {
+							"key1" = "value1"	
+						}
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
@@ -237,12 +241,17 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 							Version:     "test-version",
 							NetworkMode: "OVERLAY",
 							Public:      true,
-							Tags:        []goaviatrix.Tag{},
+							Tags: []goaviatrix.Tag{
+								{
+									Key:   "key1",
+									Value: "value1",
+								},
+							},
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id4"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "account_name", "test-account"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_details.0.account_name", "test-account"),
 				),
 			},
 		},
@@ -264,36 +273,36 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 			{
 				Config: `
 					resource "aviatrix_kubernetes_cluster" "test" {
-						cluster_id = "test-cluster-id"
+						cluster_id = "test-cluster-id6"
 						use_csp_credentials = true
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id",
+						ClusterId: "test-cluster-id6",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
 					}),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 				),
 			},
 			{
 				Config: `
 					resource "aviatrix_kubernetes_cluster" "test" {
-						cluster_id = "test-cluster-id"
+						cluster_id = "test-cluster-id6"
 						use_csp_credentials = false
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id",
+						ClusterId: "test-cluster-id6",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: false,
 						},
 					}),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
 				),
 			},

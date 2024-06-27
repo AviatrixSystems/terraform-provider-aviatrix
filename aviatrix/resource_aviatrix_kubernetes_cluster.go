@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 )
@@ -62,77 +62,77 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 					return oldTrimmed == newTrimmed
 				},
 			},
-			"account_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Name of the account with management privileges over the cluster",
-				RequiredWith: []string{"account_id", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Description:  "Account ID owning the cluster",
-				RequiredWith: []string{"account_name", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Display name of the cluster",
-				RequiredWith: []string{"account_id", "account_name", "vpc_id", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"vpc_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Id of the VPC where the cluster is deployed",
-				RequiredWith: []string{"account_id", "account_name", "name", "region", "version", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Region where the cluster is deployed.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "version", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Version of the Kubernetes cluster.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "platform", "is_publicly_accessible", "network_mode"},
-			},
-			"platform": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Platform of the Kubernetes cluster, e.g. kops, kubeadm or any other free string.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "is_publicly_accessible", "network_mode"},
-			},
-			"is_publicly_accessible": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Description:  "Whether the API server is publicly accessible outside the virtual network.",
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "network_mode"},
-			},
-			"network_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
-				ValidateFunc: validation.StringInSlice([]string{"FLAT", "OVERLAY"}, false),
-				RequiredWith: []string{"account_id", "account_name", "name", "vpc_id", "region", "version", "platform", "is_publicly_accessible"},
-			},
-			"project": {
-				Type:        schema.TypeString,
+			"cluster_details": {
+				Type:        schema.TypeList,
+				MaxItems:    1,
 				Optional:    true,
-				Description: "Project name if the cluster is deployed in GCP.",
-			},
-			"compartment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Compartment id if the cluster is deployed in OCI.",
-			},
-			"tags": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Map of tags.",
+				Description: "For custom built clusters that are not managed by the CSP, cluster details must be provided.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"account_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the account with management privileges over the cluster",
+						},
+						"account_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Account ID owning the cluster",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Display name of the cluster",
+						},
+						"vpc_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Id of the VPC where the cluster is deployed",
+						},
+						"region": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Region where the cluster is deployed.",
+						},
+						"version": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Version of the Kubernetes cluster.",
+						},
+						"platform": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Platform of the Kubernetes cluster, e.g. kops, kubeadm or any other free string.",
+						},
+						"is_publicly_accessible": {
+							Type:        schema.TypeBool,
+							Required:    true,
+							Description: "Whether the API server is publicly accessible outside the virtual network.",
+						},
+						"network_mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
+							ValidateFunc: validation.StringInSlice([]string{"FLAT", "OVERLAY"}, false),
+						},
+						"project": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Project name if the cluster is deployed in GCP.",
+						},
+						"compartment": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Compartment id if the cluster is deployed in OCI.",
+						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Map of tags.",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -151,6 +151,7 @@ func parseArn(arn string) (accountId string, region string, name string, err err
 	sections := strings.SplitN(arn, ":", 6)
 	if len(sections) != 6 {
 		err = errors.New("ARN must have 6 sections")
+		return
 	}
 	return sections[4], sections[3], strings.TrimPrefix(sections[5], "cluster/"), nil
 }
@@ -176,25 +177,26 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 		},
 	}
 
-	if accountName, ok := d.GetOk("account_name"); ok {
+	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
+		clusterDetails := clusterDetails.([]interface{})[0].(map[string]interface{})
 		resource := goaviatrix.ClusterResource{
-			AccountName: accountName.(string),
-			AccountId:   d.Get("account_id").(string),
-			Name:        d.Get("name").(string),
-			VpcId:       d.Get("vpc_id").(string),
-			Region:      d.Get("region").(string),
-			Version:     d.Get("version").(string),
-			Platform:    d.Get("platform").(string),
-			Public:      d.Get("is_publicly_accessible").(bool),
-			NetworkMode: d.Get("network_mode").(string),
+			AccountName: clusterDetails["account_name"].(string),
+			AccountId:   clusterDetails["account_id"].(string),
+			Name:        clusterDetails["name"].(string),
+			VpcId:       clusterDetails["vpc_id"].(string),
+			Region:      clusterDetails["region"].(string),
+			Version:     clusterDetails["version"].(string),
+			Platform:    clusterDetails["platform"].(string),
+			Public:      clusterDetails["is_publicly_accessible"].(bool),
+			NetworkMode: clusterDetails["network_mode"].(string),
 		}
-		if project, ok := d.GetOk("project"); ok {
+		if project, ok := clusterDetails["project"]; ok {
 			resource.Project = project.(string)
 		}
-		if compartment, ok := d.GetOk("compartment"); ok {
+		if compartment, ok := clusterDetails["compartment"]; ok {
 			resource.Compartment = compartment.(string)
 		}
-		if tags, ok := d.Get("tags").(map[string]interface{}); ok {
+		if tags, ok := clusterDetails["tags"].(map[string]interface{}); ok {
 			for key, value := range tags {
 				resource.Tags = append(resource.Tags, goaviatrix.Tag{
 					Key:   key,
@@ -239,28 +241,31 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		d.Set("kube_config", credential.KubeConfig)
 	}
 	if kubernetesCluster.Resource != nil {
-		d.Set("account_name", kubernetesCluster.Resource.AccountName)
-		d.Set("account_id", kubernetesCluster.Resource.AccountId)
-		d.Set("name", kubernetesCluster.Resource.Name)
-		d.Set("vpc_id", kubernetesCluster.Resource.VpcId)
-		d.Set("region", kubernetesCluster.Resource.Region)
-		d.Set("version", kubernetesCluster.Resource.Version)
-		d.Set("platform", kubernetesCluster.Resource.Platform)
-		d.Set("is_publicly_accessible", kubernetesCluster.Resource.Public)
-		d.Set("network_mode", kubernetesCluster.Resource.NetworkMode)
-		if len(kubernetesCluster.Resource.Project) > 0 {
-			d.Set("project", kubernetesCluster.Resource.Project)
+		details := make(map[string]interface{})
+		resource := kubernetesCluster.Resource
+		details["account_name"] = resource.AccountName
+		details["account_id"] = resource.AccountId
+		details["name"] = resource.Name
+		details["vpc_id"] = resource.VpcId
+		details["region"] = resource.Region
+		details["version"] = resource.Version
+		details["platform"] = resource.Platform
+		details["is_publicly_accessible"] = resource.Public
+		details["network_mode"] = resource.NetworkMode
+		if len(resource.Project) > 0 {
+			details["project"] = resource.Project
 		}
-		if len(kubernetesCluster.Resource.Compartment) > 0 {
-			d.Set("compartment", kubernetesCluster.Resource.Compartment)
+		if len(resource.Compartment) > 0 {
+			details["compartment"] = resource.Compartment
 		}
-		if len(kubernetesCluster.Resource.Tags) > 0 {
-			tags := make(map[string]string)
-			for _, tag := range kubernetesCluster.Resource.Tags {
+		if len(resource.Tags) > 0 {
+			tags := make(map[string]interface{})
+			for _, tag := range resource.Tags {
 				tags[tag.Key] = tag.Value
 			}
-			d.Set("tags", tags)
+			details["tags"] = tags
 		}
+		d.Set("cluster_details", []map[string]interface{}{details})
 	}
 
 	return nil
