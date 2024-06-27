@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -12,6 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+)
+
+var (
+	clusterTagValueRegex = regexp.MustCompile(`^[\w\s_.:/=+@-]{0,128}$`)
 )
 
 func resourceAviatrixKubernetesCluster() *schema.Resource {
@@ -126,9 +131,24 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 							Description: "Compartment id if the cluster is deployed in OCI.",
 						},
 						"tags": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							ValidateDiagFunc: func(i interface{}, path cty.Path) diag.Diagnostics {
+								tags := i.(map[string]interface{})
+								for key, value := range tags {
+									if !clusterTagValueRegex.MatchString(key) {
+										return diag.Errorf("tag key must be alphanumeric or one of _.:/=+@-")
+									}
+									if !clusterTagValueRegex.MatchString(value.(string)) {
+										return diag.Errorf("tag value must be alphanumeric or one of _.:/=+@-")
+									}
+								}
+								return nil
+
+							},
 							Description: "Map of tags.",
 						},
 					},
