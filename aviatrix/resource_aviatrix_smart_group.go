@@ -3,11 +3,16 @@ package aviatrix
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+)
+
+var (
+	k8sNameRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 )
 
 func resourceAviatrixSmartGroup() *schema.Resource {
@@ -58,8 +63,31 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet", "k8s"}, false),
 										Description:  "Type of resource this expression matches.",
+									},
+									"k8s_cluster_id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Kubernetes Cluster ID this expression matches.",
+									},
+									"k8s_pod": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Pod name"),
+										Description:  "Name of the Kubernetes Pod this expression matches.",
+									},
+									"k8s_service": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Service name"),
+										Description:  "Name of the Kubernetes Service this expression matches.",
+									},
+									"k8s_namespace": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Namespace name"),
+										Description:  "Name of the Kubernetes Namespace this expression matches.",
 									},
 									"res_id": {
 										Type:        schema.TypeString,
@@ -142,13 +170,17 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 				return nil, fmt.Errorf("%q is required when %q, %q and %q are all empty", "type", "cidr", "fqdn", "site")
 			}
 			filter = &goaviatrix.SmartGroupMatchExpression{
-				Type:        selectorInfo["type"].(string),
-				ResId:       selectorInfo["res_id"].(string),
-				AccountId:   selectorInfo["account_id"].(string),
-				AccountName: selectorInfo["account_name"].(string),
-				Name:        selectorInfo["name"].(string),
-				Region:      selectorInfo["region"].(string),
-				Zone:        selectorInfo["zone"].(string),
+				Type:         selectorInfo["type"].(string),
+				ResId:        selectorInfo["res_id"].(string),
+				AccountId:    selectorInfo["account_id"].(string),
+				AccountName:  selectorInfo["account_name"].(string),
+				Name:         selectorInfo["name"].(string),
+				Region:       selectorInfo["region"].(string),
+				Zone:         selectorInfo["zone"].(string),
+				K8sClusterId: selectorInfo["k8s_cluster_id"].(string),
+				K8sPodName:   selectorInfo["k8s_pod"].(string),
+				K8sService:   selectorInfo["k8s_service"].(string),
+				K8sNamespace: selectorInfo["k8s_namespace"].(string),
 			}
 
 			if _, ok := selectorInfo["tags"]; ok {
@@ -214,17 +246,21 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	for _, filter := range smartGroup.Selector.Expressions {
 		filterMap := map[string]interface{}{
-			"type":         filter.Type,
-			"cidr":         filter.CIDR,
-			"fqdn":         filter.FQDN,
-			"site":         filter.Site,
-			"res_id":       filter.ResId,
-			"account_id":   filter.AccountId,
-			"account_name": filter.AccountName,
-			"name":         filter.Name,
-			"region":       filter.Region,
-			"zone":         filter.Zone,
-			"tags":         filter.Tags,
+			"type":           filter.Type,
+			"cidr":           filter.CIDR,
+			"fqdn":           filter.FQDN,
+			"site":           filter.Site,
+			"res_id":         filter.ResId,
+			"account_id":     filter.AccountId,
+			"account_name":   filter.AccountName,
+			"name":           filter.Name,
+			"region":         filter.Region,
+			"zone":           filter.Zone,
+			"tags":           filter.Tags,
+			"k8s_cluster_id": filter.K8sClusterId,
+			"k8s_pod":        filter.K8sPodName,
+			"k8s_service":    filter.K8sService,
+			"k8s_namespace":  filter.K8sNamespace,
 		}
 
 		expressions = append(expressions, filterMap)

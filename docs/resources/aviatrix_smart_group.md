@@ -37,6 +37,20 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
     match_expressions {
       site = "site-test-0"
     }
+    
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+      k8s_namespace  = "testnamespace"
+      k8s_service    = "testservice"
+    }
+    
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+      k8s_namespace  = "testnamespace"
+      k8s_pod        = "testpod"
+    }
   }
 }
 ```
@@ -53,13 +67,23 @@ The following arguments are supported:
     * `cidr` - (Optional) - CIDR block or IP Address this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
     * `fqdn` - (Optional) - FQDN address this expression matches. `fqdn` cannot be used with any other filters in the same `match_expressions` block.
     * `site` - (Optional) - Edge Site-ID this expression matches. `site` cannot be used with any other filters in the same `match_expressions` block.
-    * `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc" or "subnet". `type` is required when `cidr`, `fqdn` and `site` are all not used.
+    * `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc", "subnet" or "k8s". `type` is required when `cidr`, `fqdn` and `site` are all not used.
     * `res_id` - (Optional) - Resource ID this expression matches.
     * `account_id` - (Optional) - Account ID this expression matches.
     * `account_name` - (Optional) - Account name this expression matches.
     * `name` - (Optional) - Name this expression matches.
     * `region` - (Optional) - Region this expression matches.
     * `zone` - (Optional) - Zone this expression matches.
+    * `k8s_cluster_id` - (Optional) - Resource ID of the Kubernetes cluster this expression matches. The resource ID can be found in the `cluster_id` attribute of the `aviatrix_kubernetes_cluster` resource.
+      This property can only be used when `type` is set to "k8s".
+    * `k8s_namespace` - (Optional) - Kubernetes namespace this expression matches.
+      This property can only be used when `type` is set to "k8s".
+    * `k8s_service` - (Optional) - Kubernetes service name this expression matches.
+      This property can only be used when `type` is set to "k8s".
+      This property must not be used when `k8s_pod` is set.
+    * `k8s_pod` - (Optional) - Kubernetes pod name this expression matches. 
+      This property can only be used when `type` is set to "k8s".
+      This property must not be used when `k8s_service` is set.
     * `tags` - (Optional) - Map of tags this expression matches.
 
 ## Attribute Reference
