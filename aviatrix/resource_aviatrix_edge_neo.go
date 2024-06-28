@@ -244,6 +244,7 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.",
+							Deprecated:  "Bandwidth will be removed in a future release.",
 						},
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
