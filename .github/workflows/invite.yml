@@ -25,6 +25,7 @@ jobs:
         id: get_workflow_token
         uses: peter-murray/workflow-application-token-action@8e1ba3bf1619726336414f1014e37f17fbadf1db
         with:
+          organization: AviatrixSystems
           application_id: ${{ secrets.MEMBERS_AUTOMATION_TOKEN_ID }}
           application_private_key: ${{ secrets.MEMBERS_AUTOMATION_PRIVATE_KEY }}
 
