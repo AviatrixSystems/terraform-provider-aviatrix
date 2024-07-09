@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	k8sNameRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+	// dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
+	// K8s resource names must adhere to this.
+	dns1123FmtRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 )
 
 func resourceAviatrixSmartGroup() *schema.Resource {
@@ -74,19 +76,19 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 									"k8s_pod": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Pod name"),
+										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Pod name"),
 										Description:  "Name of the Kubernetes Pod this expression matches.",
 									},
 									"k8s_service": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Service name"),
+										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Service name"),
 										Description:  "Name of the Kubernetes Service this expression matches.",
 									},
 									"k8s_namespace": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(k8sNameRe, "must be a valid Kubernetes Namespace name"),
+										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Namespace name"),
 										Description:  "Name of the Kubernetes Namespace this expression matches.",
 									},
 									"res_id": {
