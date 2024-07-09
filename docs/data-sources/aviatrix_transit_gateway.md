@@ -90,7 +90,6 @@ In addition to all arguments above, the following attributes are exported:
 * `learned_cidrs_approval_mode` - Learned CIDRs approval mode.
 * `approved_learned_cidrs` - Approved learned CIDRs.
 * `bgp_polling_time` - BGP route polling time.
-* `bgp_bfd_polling_time` - BGP BFD route polling time.
 * `prepend_as_path` - List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
 * `bgp_ecmp` - Status of Equal Cost Multi Path (ECMP) routing for the next hop.
 * `enable_segmentation` - Status of segmentation.

@@ -629,7 +629,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("bgp_hold_time", gw.BgpHoldTime)
 		} else {
 			d.Set("learned_cidrs_approval_mode", "gateway")
-			d.Set("bgp_polling_time", 5)
+			d.Set("bgp_polling_time", 50)
 			d.Set("bgp_hold_time", 180)
 		}
 
