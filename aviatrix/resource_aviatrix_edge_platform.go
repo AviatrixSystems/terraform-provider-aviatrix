@@ -686,6 +686,7 @@ func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("enable_preserve_as_path", edgeNEOResp.EnablePreserveAsPath)
 	d.Set("bgp_polling_time", edgeNEOResp.BgpPollingTime)
+	d.Set("bgp_bfd_polling_time", edgeNEOResp.BgpBfdPollingTime)
 	d.Set("bgp_hold_time", edgeNEOResp.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeNEOResp.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeNEOResp.EnableJumboFrame)
@@ -879,6 +880,13 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge Platform update: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_bfd_polling_time") {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpBfdPollingTime))
+		if err != nil {
+			return diag.Errorf("could not set bgp bfd polling time during Edge Platform update: %v", err)
 		}
 	}
 

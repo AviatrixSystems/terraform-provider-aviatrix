@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
   * `bgp_lan_interfaces` - Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit.
   * `bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device connection creation. Only supports GCP. Available as of provider version R2.21.0+.
   * `bgp_polling_time` - BGP route polling time. Unit is in seconds.
+  * `bgp_bfd_polling_time` - BGP BFD route polling time. Unit is in seconds.
   * `cloud_instance_id` - Instance ID of the transit gateway.
   * `cloud_type` - Type of cloud service provider.
   * `connected_transit"` -  Status of Connected Transit of transit gateway.

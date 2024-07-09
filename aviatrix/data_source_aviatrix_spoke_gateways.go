@@ -274,6 +274,11 @@ func dataSourceAviatrixSpokeGateways() *schema.Resource {
 							Computed:    true,
 							Description: "BGP route polling time for BGP Spoke Gateway. Unit is in seconds.",
 						},
+						"bgp_bfd_polling_time": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds.",
+						},
 						"bgp_hold_time": {
 							Type:        schema.TypeInt,
 							Computed:    true,
@@ -462,10 +467,12 @@ func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.Resource
 		if gw.EnableBgp {
 			spokeGateway["learned_cidrs_approval_mode"] = gw.LearnedCidrsApprovalMode
 			spokeGateway["bgp_polling_time"] = gw.BgpPollingTime
+			spokeGateway["bgp_bfd_polling_time"] = gw.BgpBfdPollingTime
 			spokeGateway["bgp_hold_time"] = gw.BgpHoldTime
 		} else {
 			spokeGateway["learned_cidrs_approval_mode"] = "gateway"
 			spokeGateway["bgp_polling_time"] = 50
+			spokeGateway["bgp_bfd_polling_time"] = 50
 			spokeGateway["bgp_hold_time"] = 180
 		}
 
