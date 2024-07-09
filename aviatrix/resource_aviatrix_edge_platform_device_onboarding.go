@@ -206,7 +206,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
 		parts := strings.Split(id, "~")
-		if len(parts) != 32 {
+		if len(parts) != 2 {
 			return diag.Errorf("Invalid Import ID received, ID must be in the format account_name~device_name")
 		}
 		accountName = parts[0]
