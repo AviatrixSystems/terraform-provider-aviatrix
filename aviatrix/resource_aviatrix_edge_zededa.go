@@ -160,8 +160,8 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultBgpBfdPollingTime,
-				ValidateFunc: validation.IntBetween(10, 50),
-				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
+				ValidateFunc: validation.IntBetween(1, 10),
+				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
@@ -900,7 +900,7 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpBfdPollingTime))
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Zededa update: %v", err)
 		}

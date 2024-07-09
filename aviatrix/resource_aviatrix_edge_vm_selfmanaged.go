@@ -148,13 +148,6 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 50),
 				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
-			"bgp_bfd_polling_time": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      defaultBgpBfdPollingTime,
-				ValidateFunc: validation.IntBetween(10, 50),
-				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
-			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -266,7 +259,6 @@ func marshalEdgeVmSelfmanagedInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
 		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
 		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_bfd_polling_time").(int),
 		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
 		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
 		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
@@ -518,7 +510,6 @@ func resourceAviatrixEdgeVmSelfmanagedRead(ctx context.Context, d *schema.Resour
 
 	d.Set("enable_preserve_as_path", edgeSpoke.EnablePreserveAsPath)
 	d.Set("bgp_polling_time", edgeSpoke.BgpPollingTime)
-	d.Set("bgp_bfd_polling_time", edgeSpoke.BgpBfdPollingTime)
 	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
@@ -671,13 +662,6 @@ func resourceAviatrixEdgeVmSelfmanagedUpdate(ctx context.Context, d *schema.Reso
 		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpPollingTime))
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge VM Selfmanaged update: %v", err)
-		}
-	}
-
-	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpBfdPollingTime))
-		if err != nil {
-			return diag.Errorf("could not set bgp bfd polling time during Edge VM Selfmanaged update: %v", err)
 		}
 	}
 

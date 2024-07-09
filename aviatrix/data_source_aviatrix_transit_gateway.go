@@ -338,11 +338,6 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "BGP route polling time. Unit is in seconds.",
 			},
-			"bgp_bfd_polling_time": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "BGP BFD route polling time. Unit is in seconds.",
-			},
 			"prepend_as_path": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -754,7 +749,6 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("enable_jumbo_frame", gw.JumboFrame)
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
-		d.Set("bgp_bfd_polling_time", strconv.Itoa(gw.BgpBfdPollingTime))
 		d.Set("bgp_hold_time", gw.BgpHoldTime)
 		d.Set("local_as_number", gw.LocalASNumber)
 		d.Set("bgp_ecmp", gw.BgpEcmp)
