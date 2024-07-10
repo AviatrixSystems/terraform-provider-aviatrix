@@ -8,17 +8,21 @@ import (
 )
 
 type SmartGroupMatchExpression struct {
-	CIDR        string `json:"cidr,omitempty"`
-	FQDN        string `json:"fqdn,omitempty"`
-	Type        string `json:"type,omitempty"`
-	Site        string `json:"site,omitempty"`
-	ResId       string `json:"res_id,omitempty"`
-	AccountId   string `json:"account_id,omitempty"`
-	AccountName string `json:"account_name,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Region      string `json:"region,omitempty"`
-	Zone        string `json:"zone,omitempty"`
-	Tags        map[string]string
+	CIDR         string `json:"cidr,omitempty"`
+	FQDN         string `json:"fqdn,omitempty"`
+	Type         string `json:"type,omitempty"`
+	Site         string `json:"site,omitempty"`
+	ResId        string `json:"res_id,omitempty"`
+	AccountId    string `json:"account_id,omitempty"`
+	AccountName  string `json:"account_name,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Region       string `json:"region,omitempty"`
+	Zone         string `json:"zone,omitempty"`
+	K8sService   string `json:"k8s_service,omitempty"`
+	K8sNamespace string `json:"k8s_namespace,omitempty"`
+	K8sClusterId string `json:"k8s_cluster_id,omitempty"`
+	K8sPodName   string `json:"k8s_pod,omitempty"`
+	Tags         map[string]string
 }
 
 type SmartGroupSelector struct {
@@ -63,6 +67,18 @@ func smartGroupFilterToMap(filter *SmartGroupMatchExpression) map[string]string 
 	}
 	if len(filter.Zone) > 0 {
 		filterMap["zone"] = filter.Zone
+	}
+	if len(filter.K8sClusterId) > 0 {
+		filterMap["k8s_cluster_id"] = filter.K8sClusterId
+	}
+	if len(filter.K8sNamespace) > 0 {
+		filterMap["k8s_namespace"] = filter.K8sNamespace
+	}
+	if len(filter.K8sService) > 0 {
+		filterMap["k8s_service"] = filter.K8sService
+	}
+	if len(filter.K8sPodName) > 0 {
+		filterMap["k8s_pod"] = filter.K8sPodName
 	}
 
 	if len(filter.Tags) > 0 {
@@ -150,16 +166,20 @@ func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, e
 				filterMap := filterResult.All
 
 				filter := &SmartGroupMatchExpression{
-					CIDR:        filterMap["cidr"],
-					FQDN:        filterMap["fqdn"],
-					Type:        filterMap["type"],
-					Site:        filterMap["site"],
-					ResId:       filterMap["res_id"],
-					AccountId:   filterMap["account_id"],
-					AccountName: filterMap["account_name"],
-					Name:        filterMap["name"],
-					Region:      filterMap["region"],
-					Zone:        filterMap["zone"],
+					CIDR:         filterMap["cidr"],
+					FQDN:         filterMap["fqdn"],
+					Type:         filterMap["type"],
+					Site:         filterMap["site"],
+					ResId:        filterMap["res_id"],
+					AccountId:    filterMap["account_id"],
+					AccountName:  filterMap["account_name"],
+					Name:         filterMap["name"],
+					Region:       filterMap["region"],
+					Zone:         filterMap["zone"],
+					K8sClusterId: filterMap["k8s_cluster_id"],
+					K8sNamespace: filterMap["k8s_namespace"],
+					K8sService:   filterMap["k8s_service"],
+					K8sPodName:   filterMap["k8s_pod"],
 				}
 
 				tags := make(map[string]string)
@@ -231,16 +251,20 @@ func (c *Client) GetSmartGroups(ctx context.Context) ([]*SmartGroup, error) {
 				filterMap := filterResult.All
 
 				filter := &SmartGroupMatchExpression{
-					CIDR:        filterMap["cidr"],
-					FQDN:        filterMap["fqdn"],
-					Type:        filterMap["type"],
-					Site:        filterMap["site"],
-					ResId:       filterMap["res_id"],
-					AccountId:   filterMap["account_id"],
-					AccountName: filterMap["account_name"],
-					Name:        filterMap["name"],
-					Region:      filterMap["region"],
-					Zone:        filterMap["zone"],
+					CIDR:         filterMap["cidr"],
+					FQDN:         filterMap["fqdn"],
+					Type:         filterMap["type"],
+					Site:         filterMap["site"],
+					ResId:        filterMap["res_id"],
+					AccountId:    filterMap["account_id"],
+					AccountName:  filterMap["account_name"],
+					Name:         filterMap["name"],
+					Region:       filterMap["region"],
+					Zone:         filterMap["zone"],
+					K8sClusterId: filterMap["k8s_cluster_id"],
+					K8sNamespace: filterMap["k8s_namespace"],
+					K8sService:   filterMap["k8s_service"],
+					K8sPodName:   filterMap["k8s_pod"],
 				}
 
 				tags := make(map[string]string)
