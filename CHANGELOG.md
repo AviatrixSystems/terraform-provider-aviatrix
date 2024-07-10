@@ -17,6 +17,7 @@
   - **aviatrix_edge_zededa**
   - **aviatrix_edge_zededa_ha**
 
+
 ## 3.1.4 (January 11, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.3006**
