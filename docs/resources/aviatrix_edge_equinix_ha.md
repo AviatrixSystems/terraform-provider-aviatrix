@@ -79,3 +79,6 @@ In addition to all arguments above, the following attribute is exported:
 ```
 $ terraform import aviatrix_edge_equinix_ha.test primary_gw_name-hagw
 ```
+
+## Deprecations
+* Deprecated ``bandwidth`` in **WAN/LAN/MGMT interfaces**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
