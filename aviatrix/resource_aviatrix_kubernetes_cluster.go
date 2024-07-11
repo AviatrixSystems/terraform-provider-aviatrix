@@ -2,8 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -32,23 +30,9 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				// will be computed if arn is set
-				Computed:     true,
-				Description:  "Id of the kubernetes cluster.",
-				ExactlyOneOf: []string{"cluster_id", "arn"},
-			},
-			"arn": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "AWS ARN of the cluster if it is an EKS cluster.",
-				ValidateDiagFunc: func(i interface{}, path cty.Path) diag.Diagnostics {
-					arn := i.(string)
-					if _, _, _, err := parseArn(arn); err != nil {
-						return diag.Errorf("invalid ARN: %s", err)
-					}
-					return nil
-				},
+				Description: "Id of the kubernetes cluster. For EKS clusters the ARN of the cluster.",
 			},
 			"use_csp_credentials": {
 				Type:        schema.TypeBool,
@@ -158,39 +142,9 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 	}
 }
 
-// parseArn parses the ARN and returns the account ID, region and name
-//
-// Example:
-//
-//	parseArn("arn:aws:eks:us-east-2:123456789012:cluster/testcluster") => "123456789012", "us-east-2", "testcluster", nil
-func parseArn(arn string) (accountId string, region string, name string, err error) {
-	if !strings.HasPrefix(arn, "arn:") {
-		err = errors.New("ARN must start with 'arn:'")
-		return
-	}
-	sections := strings.SplitN(arn, ":", 6)
-	if len(sections) != 6 {
-		err = errors.New("ARN must have 6 sections")
-		return
-	}
-	return sections[4], sections[3], strings.TrimPrefix(sections[5], "cluster/"), nil
-}
-
 func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.KubernetesCluster, error) {
-	var clusterId string
-	arn, ok := d.GetOk("arn")
-	if ok {
-		accountId, region, name, err := parseArn(arn.(string))
-		if err != nil {
-			return nil, err
-		}
-		clusterId = fmt.Sprintf("%s-%s-%s", accountId, region, name)
-	} else {
-		clusterId = d.Get("cluster_id").(string)
-	}
-
 	kubernetesCluster := &goaviatrix.KubernetesCluster{
-		ClusterId: clusterId,
+		ClusterId: d.Get("cluster_id").(string),
 		Credential: &goaviatrix.KubernetesCredential{
 			UseCspCredentials: d.Get("use_csp_credentials").(bool),
 			KubeConfig:        d.Get("kube_config").(string),
