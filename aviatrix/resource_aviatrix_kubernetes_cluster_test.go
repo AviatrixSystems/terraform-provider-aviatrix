@@ -108,19 +108,18 @@ func TestAccAviatrixKubernetesCluster_AWS_ARN(t *testing.T) {
 			{
 				Config: `
 					resource "aviatrix_kubernetes_cluster" "test" {
-						arn = "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"
+						cluster_id = "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"
 						use_csp_credentials = true
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "123456789012-us-west-2-test-cluster-id",
+						ClusterId: "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
 					}),
-					resource.TestCheckResourceAttr(resourceName, "arn", "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "123456789012-us-west-2-test-cluster-id"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 				),
 			},

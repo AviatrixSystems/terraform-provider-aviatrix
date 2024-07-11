@@ -19,7 +19,7 @@ This resource is available as of provider version R3.0+.
 ```hcl
 # Create an Aviatrix Kubernetes Cluster so that the controller allows building Aviatrix Smart Groups from an AWS EKS cluster
 resource "aviatrix_kubernetes_cluster" "rptest" {
-  arn                 = data.aws_eks_cluster.eks_cluster.arn
+  cluster_id          = data.aws_eks_cluster.eks_cluster.arn
   use_csp_credentials = true
 }
 
@@ -115,9 +115,7 @@ The following arguments are supported:
 
 ### Required
 
-* Exactly one of `cluster_id` or `arn` must be provided.
-  * `cluster_id` - (Optional) The ID of the Kubernetes cluster. If the cluster to be configured is an AKS cluster this should be the full resource ID of the AKS cluster. If the cluster is a custom built cluster this can be any unique identifier.
-  * `arn` - (Optional) The ARN of the Kubernetes cluster if the cluster to be configured is an AWS EKS cluster.
+* `cluster_id` - The ID of the Kubernetes cluster. If the cluster is an EKS cluster this should be the ARN of the EKS cluster. If the cluster to be configured is an AKS cluster this should be the full resource ID of the AKS cluster. If the cluster is a custom-built cluster this can be any unique identifier.
 
 ### Optional
 
