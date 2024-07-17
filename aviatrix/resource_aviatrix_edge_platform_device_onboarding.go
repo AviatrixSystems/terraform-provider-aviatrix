@@ -76,7 +76,7 @@ func resourceAviatrixEdgePlatformDeviceOnboarding() *schema.Resource {
 							Description: "IPV4 CIDR.",
 						},
 						"dns_server_ips": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "Set of DNS server IPs.",
 							Elem: &schema.Schema{
@@ -128,7 +128,7 @@ func marshalEdgePlatformDeviceOnboardingInput(d *schema.ResourceData) *goaviatri
 			ProxyServerIp: network1["proxy_server_ip"].(string),
 		}
 
-		for _, dnsServerIp := range network1["dns_server_ips"].(*schema.Set).List() {
+		for _, dnsServerIp := range network1["dns_server_ips"].([]interface{}) {
 			network2.DnsServerIps = append(network2.DnsServerIps, dnsServerIp.(string))
 		}
 
