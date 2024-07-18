@@ -1,4 +1,4 @@
-# 3.1.5 (July 18, 2024)
+## 3.1.5 (July 18, 2024)
 
 ###
 - Supported Controller version: **UserConnect-7.1.4105**
