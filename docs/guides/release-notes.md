@@ -12,14 +12,24 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.1.4 (UserConnect-7.1.3006)``
+``Last updated: R3.1.5 (UserConnect-7.1.4105)``
 
 ---
 
-## 3.1.5 (TBD, 2024)
-###
-- Supported Controller version: **UserConnect-TBD**
+## 3.1.5
+### Notes:
+- Release date: **(18 July 2024)**
+- Supported Controller version: **UserConnect-7.1.4105**
 - Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue in **resource_aviatrix_firewall_instance_association** and **resource_aviatrix_gateway** for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
+2. Fixed issue in **aviatrix_site2cloud** where updating ``remote_subnet_cidr`` and ``local_subnet_cidr`` was not handled correctly.
+3. Fixed issue where **aviatrix_gateway_dnat** resources could not be added when using a Site to Cloud connection.
+
+### Features:
+#### Provider:
+1. Added support for the Terraform provider to properly set the user-agent when making requests.
 
 ### Deprecations
 1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
