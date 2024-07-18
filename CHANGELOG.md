@@ -1,6 +1,6 @@
 ## 3.1.5 (July 18, 2024)
 
-###
+### Notes:
 - Supported Controller version: **UserConnect-7.1.4105**
 - Supported Terraform version: **v1.x**
 
