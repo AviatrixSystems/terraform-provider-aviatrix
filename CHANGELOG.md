@@ -7,7 +7,7 @@
 ### Bug Fixes:
 
 1. Fixed issue in **resource_aviatrix_firewall_instance_association** and **resource_aviatrix_gateway** for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
-
+2. Fixed issue in **aviatrix_edge_platform_device_onboarding** where   importing was failing.
 ### Features:
 #### Provider:
 1. Added support for the Terraform provider to properly set the user-agent when making requests.
