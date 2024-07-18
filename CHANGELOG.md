@@ -4,7 +4,7 @@
 - Supported Controller version: **UserConnect-7.1.4105**
 - Supported Terraform version: **v1.x**
 
-## Bug Fixes:
+### Bug Fixes:
 
 1. Fixed issue in Firenet and FQDN Gateway for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
 2. Fixed issue in **aviatrix_site2cloud** where updating ``remote_subnet_cidr`` and ``local_subnet_cidr`` was not handled correctly.
