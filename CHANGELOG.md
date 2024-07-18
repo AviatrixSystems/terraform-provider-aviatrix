@@ -15,7 +15,6 @@
 ### Deprecations:
 
 1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
-2. Deprecated ``bandwidth`` in WAN/LAN/MGMT interfaces in the following resources. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
   - **aviatrix_edge_csp**
   - **aviatrix_edge_csp_ha**
   - **aviatrix_edge_equinix**
