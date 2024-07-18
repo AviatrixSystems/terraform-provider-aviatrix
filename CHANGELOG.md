@@ -7,8 +7,6 @@
 ### Bug Fixes:
 
 1. Fixed issue in **resource_aviatrix_firewall_instance_association** and **resource_aviatrix_gateway** for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
-2. Fixed issue in **aviatrix_site2cloud** where updating ``remote_subnet_cidr`` and ``local_subnet_cidr`` was not handled correctly.
-3. Fixed issue where **aviatrix_gateway_dnat** resources could not be added when using a Site to Cloud connection.
 4. Fixed issue in **aviatrix_edge_platform_device_onboarding** where importing was failing.
 
 ### Features:
