@@ -15,17 +15,6 @@
 ### Deprecations:
 
 1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
-  - **aviatrix_edge_csp**
-  - **aviatrix_edge_csp_ha**
-  - **aviatrix_edge_equinix**
-  - **aviatrix_edge_equinix_ha**
-  - **aviatrix_edge_neo**
-  - **aviatrix_edge_neo_ha**
-  - **aviatrix_edge_platform**
-  - **aviatrix_edge_platform_ha**
-  - **aviatrix_edge_zededa**
-  - **aviatrix_edge_zededa_ha**
-
 
 ## 3.1.4 (January 11, 2024)
 ### Notes:
