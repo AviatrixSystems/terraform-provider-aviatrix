@@ -11,13 +11,11 @@
 3. Fixed issue where **aviatrix_gateway_dnat** resources could not be added when using a Site to Cloud connection.
 4. Fixed issue in **aviatrix_edge_platform_device_onboarding** where importing was failing.
 
-## Features:
-
-### Provider:
-
+### Features:
+#### Provider:
 1. Added support for the Terraform provider to properly set the user-agent when making requests.
 
-## Deprecations:
+### Deprecations:
 
 1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
 2. Deprecated ``bandwidth`` in WAN/LAN/MGMT interfaces in the following resources. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
