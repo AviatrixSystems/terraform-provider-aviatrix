@@ -61,8 +61,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"device_id": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Edge as a transit device id.",
 			},
 			"vpc_reg": {
@@ -697,6 +697,46 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Public IP address of the HA Transit Gateway.",
+			},
+			"interface_mapping": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Mapping of interface names to types and identifiers.",
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "List containing interface type and id.",
+				},
+			},
+			"interface_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the edge interface.",
+			},
+			"public_private_mapping": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Mapping of interface names to lists of IP address pairs.",
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"private_ip": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Private IP address.",
+							},
+							"public_ip": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Public IP address.",
+							},
+						},
+					},
+					Description: "List of IP address pairs.",
+				},
 			},
 		},
 	}
