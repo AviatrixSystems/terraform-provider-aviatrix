@@ -25,6 +25,7 @@ type SpokeTransitAttachment struct {
 	InsaneModeTunnelNumber   int    `form:"tunnel_count,omitempty"`
 	NoMaxPerformance         bool   `form:"no_max_performance,omitempty"`
 	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
+	DstWanInterfaces         string `from:"dst_wan_interfaces,omitempty"`
 	EdgeWanInterfacesResp    []string
 }
 
@@ -41,6 +42,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	EnableJumboFrame         bool       `json:"jumbo_frame"`
 	EnableInsaneMode         bool       `json:"insane_mode"`
 	InsaneModeTunnelNumber   int        `json:"insane_mode_tunnel_count"`
+	DstWanInterfaces         string     `json:"dst_wan_interfaces"`
 	EdgeWanInterfaces        []string   `json:"src_wan_interfaces"`
 }
 
@@ -129,6 +131,7 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 	spokeTransitAttachment.EnableInsaneMode = data.Results.EnableInsaneMode
 	spokeTransitAttachment.InsaneModeTunnelNumber = data.Results.InsaneModeTunnelNumber
 	spokeTransitAttachment.EdgeWanInterfacesResp = data.Results.EdgeWanInterfaces
+	spokeTransitAttachment.DstWanInterfaces = data.Results.DstWanInterfaces
 
 	if data.Results.Site1.ConnBgpPrependAsPath != "" {
 		var prependAsPath []string

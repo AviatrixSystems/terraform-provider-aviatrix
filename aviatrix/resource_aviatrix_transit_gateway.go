@@ -59,6 +59,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:      "VPC-ID/VNet-Name of cloud provider.",
 				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
 			},
+			"device_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Edge as a transit device id.",
+			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -705,6 +711,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		GwName:                   d.Get("gw_name").(string),
 		VpcID:                    d.Get("vpc_id").(string),
 		VpcSize:                  d.Get("gw_size").(string),
+		DeviceID:                 d.Get("device_id").(string),
 		Subnet:                   d.Get("subnet").(string),
 		EnableHybridConnection:   d.Get("enable_hybrid_connection").(bool),
 		EnableSummarizeCidrToTgw: d.Get("enable_transit_summarize_cidr_to_tgw").(bool),
@@ -1623,6 +1630,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_name", gw.AccountName)
 	d.Set("gw_name", gw.GwName)
 	d.Set("subnet", gw.VpcNet)
+	d.Set("device_id", gw.DeviceID)
 	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 	d.Set("eip", gw.PublicIP)
 	d.Set("public_ip", gw.PublicIP)
