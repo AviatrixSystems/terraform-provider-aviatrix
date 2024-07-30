@@ -140,7 +140,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     false,
+				Default:     false, // should default value be present?
 				Description: "Enable jumbo frame.",
 			},
 			"src_wan_interfaces": {
@@ -188,6 +188,8 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 		NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
 		EnableJumboFrame:               d.Get("enable_jumbo_frame").(bool),
+		SrcWanInterfaces:               d.Get("src_wan_interfaces").(string),
+		DstWanInterfaces:               d.Get("dst_wan_interfaces").(string),
 	}
 	if d.Get("enable_peering_over_private_network").(bool) {
 		transitGatewayPeering.PrivateIPPeering = "yes"

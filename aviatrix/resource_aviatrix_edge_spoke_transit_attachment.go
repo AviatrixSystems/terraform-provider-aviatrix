@@ -113,7 +113,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 			},
 			"dst_wan_interfaces": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Optional:    true, // Should a default be set?
 				Description: "Select Edge Transit WAN interface(s) to attach, comma separated",
 			},
 		},

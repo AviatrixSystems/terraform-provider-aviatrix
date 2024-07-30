@@ -62,7 +62,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"device_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "Edge as a transit device id.",
 			},
 			"vpc_reg": {
@@ -751,7 +750,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		GwName:                   d.Get("gw_name").(string),
 		VpcID:                    d.Get("vpc_id").(string),
 		VpcSize:                  d.Get("gw_size").(string),
-		DeviceID:                 d.Get("device_id").(string),
 		Subnet:                   d.Get("subnet").(string),
 		EnableHybridConnection:   d.Get("enable_hybrid_connection").(bool),
 		EnableSummarizeCidrToTgw: d.Get("enable_transit_summarize_cidr_to_tgw").(bool),

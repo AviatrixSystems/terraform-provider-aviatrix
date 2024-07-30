@@ -87,7 +87,7 @@ type TunnelsDetail struct {
 
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
 	transitGatewayPeering.CID = c.CID
-	transitGatewayPeering.Action = "_transit_gateway_peering"
+	transitGatewayPeering.Action = "create_inter_transit_gateway_peering"
 	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
 }
 
