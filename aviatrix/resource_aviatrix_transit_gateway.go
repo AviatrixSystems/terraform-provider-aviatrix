@@ -980,6 +980,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 		}
 
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+			gateway.EIPMap = d.Get("eip_map").(string)
+		}
+
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.VpcID = d.Get("vpc_id").(string)
 			if gateway.VpcID == "" {
