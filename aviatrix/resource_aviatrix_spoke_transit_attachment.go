@@ -88,6 +88,11 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether the spoke gateway is BGP enabled or not.",
 			},
+			"dst_wan_interfaces": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Select Edge Transit WAN interface(s) to attach, comma separated",
+			},
 		},
 	}
 }
@@ -202,6 +207,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	d.Set("spoke_gw_name", attachment.SpokeGwName)
 	d.Set("transit_gw_name", attachment.TransitGwName)
 	d.Set("spoke_bgp_enabled", attachment.SpokeBgpEnabled)
+	d.Set("dst_wan_interfaces", attachment.DstWanInterfaces)
 
 	if attachment.RouteTables != "" {
 		var routeTables []string
@@ -346,6 +352,7 @@ func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.Spok
 		TransitPrependAsPath:   getStringList(d, "transit_prepend_as_path"),
 		InsaneModeTunnelNumber: d.Get("tunnel_count").(int),
 		NoMaxPerformance:       !d.Get("enable_max_performance").(bool),
+		DstWanInterfaces:       d.Get("dst_wan_interfaces").(string),
 	}
 
 	return spokeTransitAttachment

@@ -220,6 +220,7 @@ type Gateway struct {
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
 	DeviceID                        string                              `json:"device_id,omitempty"`
+	EIPMap                          string                              `json:"eip_map,omitempty"`
 }
 
 type HaGateway struct {

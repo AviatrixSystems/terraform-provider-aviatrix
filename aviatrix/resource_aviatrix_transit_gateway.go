@@ -709,33 +709,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					Description: "List containing interface type and id.",
 				},
 			},
-			"interface_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Name of the edge interface.",
+			"interfaces": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "A Base64 encoded string representing interface configuration.",
+				ValidateFunc: validateBase64,
 			},
-			"public_private_mapping": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Description: "Mapping of interface names to lists of IP address pairs.",
-				Elem: &schema.Schema{
-					Type: schema.TypeList,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"private_ip": {
-								Type:        schema.TypeString,
-								Required:    true,
-								Description: "Private IP address.",
-							},
-							"public_ip": {
-								Type:        schema.TypeString,
-								Required:    true,
-								Description: "Public IP address.",
-							},
-						},
-					},
-					Description: "List of IP address pairs.",
-				},
+			"eip_map": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "A JSON string representing the EIP mapping.",
+				ValidateFunc: validateJSON,
 			},
 		},
 	}
@@ -789,6 +773,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// The API uses the same string field to hold both subnet and zone
 		// parameters.
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
+	}
+
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		gateway.EIPMap = d.Get("eip_map").(string)
 	}
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -1705,6 +1693,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
 	} else {
 		d.Set("bgp_lan_interfaces_count", nil)
+	}
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		d.Set("eip_map", gw.EIPMap)
 	}
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {

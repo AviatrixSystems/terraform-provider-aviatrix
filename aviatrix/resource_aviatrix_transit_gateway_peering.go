@@ -139,9 +139,8 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
-				Default:     false, // should default value be present?
-				Description: "Enable jumbo frame.",
+				Default:     false,
+				Description: "Enable jumbo frame for over private peering with Edge Transit",
 			},
 			"src_wan_interfaces": {
 				Type:        schema.TypeString,
@@ -352,6 +351,8 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		}
 	}
 	d.Set("enable_jumbo_frame", transitGatewayPeering.EnableJumboFrame)
+	d.Set("src_wan_interfaces", transitGatewayPeering.SrcWanInterfaces)
+	d.Set("dst_wan_interfaces", transitGatewayPeering.DstWanInterfaces)
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering == "yes")
 	if transitGatewayPeering.PrivateIPPeering == "yes" {
 		d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel == "yes")
