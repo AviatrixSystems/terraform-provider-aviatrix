@@ -788,6 +788,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
 	}
 
+	// interfaces is set for all edge transit gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		gateway.Interfaces = d.Get("interfaces").(string)
+	}
+
+	// interface_mapping is set for only the self-managed and AEP transit gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGECSP|goaviatrix.EDGENEO) {
+		gateway.InterfaceMapping = d.Get("interface_mapping").(string)
+
+	}
+
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -1656,7 +1667,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_name", gw.AccountName)
 	d.Set("gw_name", gw.GwName)
 	d.Set("subnet", gw.VpcNet)
-	d.Set("device_id", gw.DeviceID)
 	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 	d.Set("eip", gw.PublicIP)
 	d.Set("public_ip", gw.PublicIP)
@@ -1696,6 +1706,16 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		d.Set("eip_map", gw.EIPMap)
+	}
+	cloudType := d.Get("cloud_type").(int)
+	// interfaces is set for all edge transit gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		d.Set("interfaces", gw.Interfaces)
+	}
+
+	// interface_mapping is set for only the self-managed and AEP transit gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGECSP|goaviatrix.EDGENEO) {
+		d.Set("interface_mapping", gw.InterfaceMapping)
 	}
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {

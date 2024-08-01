@@ -61,6 +61,8 @@ type TransitVpc struct {
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	Transit                      bool     `form:"transit,omitempty"`
 	DeviceID                     string   `form:"device_id,omitempty"`
+	Interfaces                   string   `form:"interfaces,omitempty"`
+	InterfaceMapping             string   `form:"interface_mapping,omitempty"`
 	EIPMap                       string   `json:"eip_map,omitempty"`
 }
 
