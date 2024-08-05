@@ -2510,6 +2510,15 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	}
 
+	// TODO: Check if the cloud_type is edge and then update the edge gateway
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		gateway.EIPMap = d.Get("eip_map").(string)
+		err := client.UpdateGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix Edge Transit Gateway: %s", err)
+		}
+	}
+
 	if d.Get("enable_transit_firenet").(bool) {
 		primaryGwSize := d.Get("gw_size").(string)
 		if d.HasChange("gw_size") {
