@@ -706,7 +706,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
-					Description: "List containing interface type and id.",
+					Description: "List containing AEP/self managed interface, transit interface and interface number",
 				},
 			},
 			"interfaces": {
@@ -794,9 +794,42 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	// interface_mapping is set for only the self-managed and AEP transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGECSP|goaviatrix.EDGENEO) {
-		gateway.InterfaceMapping = d.Get("interface_mapping").(string)
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+		interfaceMappings := d.Get("interface_mapping").(map[string]interface{})
+		var processedMappings []string
+		wanPresent := false
+		lanPresent := false
+		mgmtPresent := false
+		for ifaceName, mapping := range interfaceMappings {
+			ifaceInfo := mapping.([]interface{})
+			// Check if the interface type is "wan", "lan", or "mgmt"
+			ifaceType := ifaceInfo[0].(string)
+			switch ifaceType {
+			case "wan":
+				wanPresent = true
+			case "lan":
+				lanPresent = true
+			case "mgmt":
+				mgmtPresent = true
+			default:
+				return fmt.Errorf("invalid interface type '%s' for interface '%s'", ifaceType, ifaceName)
+			}
+			ifaceMapping := fmt.Sprintf("%s,%s", ifaceInfo[0].(string), ifaceInfo[1].(string))
+			completeMapping := fmt.Sprintf("%s:%s", ifaceName, ifaceMapping)
+			processedMappings = append(processedMappings, completeMapping)
+		}
 
+		// Check if all required interface types are present
+		if !wanPresent {
+			return fmt.Errorf("missing required interface type 'wan'")
+		}
+		if !lanPresent {
+			return fmt.Errorf("missing required interface type 'lan'")
+		}
+		if !mgmtPresent {
+			return fmt.Errorf("missing required interface type 'mgmt'")
+		}
+		gateway.InterfaceMapping = strings.Join(processedMappings, ";")
 	}
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -1714,7 +1747,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// interface_mapping is set for only the self-managed and AEP transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGECSP|goaviatrix.EDGENEO) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		d.Set("interface_mapping", gw.InterfaceMapping)
 	}
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
@@ -2097,6 +2130,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
+	// Clarification : Can the user update EAT interface after its created. Add/Delete EAT interface
 	d.Partial(true)
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)

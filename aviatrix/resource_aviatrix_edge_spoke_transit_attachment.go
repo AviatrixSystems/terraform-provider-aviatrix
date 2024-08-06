@@ -116,6 +116,12 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Optional:    true,
 				Description: "Select Edge Transit WAN interface(s) to attach, comma separated",
 			},
+			"cloud_type": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				Description:  "Type of cloud service provider, requires an integer value. Use 1 for AWS.",
+				ValidateFunc: validateCloudType,
+			},
 		},
 	}
 }
@@ -132,6 +138,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
 		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
 		DstWanInterfaces:         d.Get("dst_wan_interfaces").(string),
+		CloudType:                d.Get("cloud_type").(int),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -249,6 +256,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_insane_mode", attachment.EnableInsaneMode)
 	d.Set("dst_wan_interfaces", attachment.DstWanInterfaces)
+	d.Set("cloud_type", attachment.CloudType)
 	if attachment.EnableInsaneMode {
 		d.Set("insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
 	}

@@ -27,6 +27,7 @@ type SpokeTransitAttachment struct {
 	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
 	DstWanInterfaces         string `from:"dst_wan_interfaces,omitempty"`
 	EdgeWanInterfacesResp    []string
+	CloudType                int
 }
 
 type EdgeSpokeTransitAttachmentResp struct {
