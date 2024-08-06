@@ -24,6 +24,8 @@ type TransitHaGateway struct {
 	TagList               string `json:"tag_string"`
 	TagJson               string `json:"tag_json"`
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
+	PeerBackupPort        string `json:"peer_backup_port,omitempty"`
+	ConnectionType        string `json:"connection_type,omitempty"`
 }
 
 func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {

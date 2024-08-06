@@ -220,6 +220,7 @@ type Gateway struct {
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
 	DeviceID                        string                              `json:"device_id,omitempty"`
+	SiteID                          string                              `json:"site_id,omitempty"`
 	EIPMap                          string                              `json:"eip_map,omitempty"`
 	Interfaces                      string                              `json:"interfaces,omitempty"`
 	InterfaceMapping                string                              `json:"interface_mapping,omitempty"`
@@ -243,6 +244,8 @@ type HaGateway struct {
 	ImageVersion        string             `json:"gw_image_name"`
 	SoftwareVersion     string             `json:"gw_software_version"`
 	HaBgpLanInterfaces  []BundleVpcLanInfo `json:"gce_ha_bgp_lan_info,omitempty"`
+	PeerBackupPort      string             `json:"peer_backup_port,omitempty"`
+	ConnectionType      string             `json:"connection_type,omitempty"`
 }
 
 type PolicyRule struct {

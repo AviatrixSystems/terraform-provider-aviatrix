@@ -62,7 +62,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"device_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Edge as a transit device id.",
+				Description: "Device ID for the EAT gateway.",
+			},
+			"site_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Site id for the EAT gateway.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
@@ -718,8 +723,20 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"eip_map": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				Description:  "A JSON string representing the EIP mapping.",
 				ValidateFunc: validateJSON,
+			},
+			"peer_backup_port": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Peer backup port for the transit gateway.",
+			},
+			"connection_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Connection type for the transit gateway.",
 			},
 		},
 	}
@@ -775,7 +792,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 	}
 
+	// set the EAT attributes for Equinix and AEP cloud types
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		gateway.DeviceID = d.Get("device_id").(string)
+		gateway.SiteID = d.Get("site_id").(string)
+		gateway.Interfaces = d.Get("interfaces").(string)
 		gateway.EIPMap = d.Get("eip_map").(string)
 	}
 
@@ -788,27 +809,19 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
 	}
 
-	// interfaces is set for all edge transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		gateway.Interfaces = d.Get("interfaces").(string)
-	}
-
 	// interface_mapping is set for only the self-managed and AEP transit gateways
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		interfaceMappings := d.Get("interface_mapping").(map[string]interface{})
 		var processedMappings []string
 		wanPresent := false
-		lanPresent := false
 		mgmtPresent := false
 		for ifaceName, mapping := range interfaceMappings {
 			ifaceInfo := mapping.([]interface{})
-			// Check if the interface type is "wan", "lan", or "mgmt"
+			// Check if the interface type is "wan" or "mgmt"
 			ifaceType := ifaceInfo[0].(string)
 			switch ifaceType {
 			case "wan":
 				wanPresent = true
-			case "lan":
-				lanPresent = true
 			case "mgmt":
 				mgmtPresent = true
 			default:
@@ -822,9 +835,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// Check if all required interface types are present
 		if !wanPresent {
 			return fmt.Errorf("missing required interface type 'wan'")
-		}
-		if !lanPresent {
-			return fmt.Errorf("missing required interface type 'lan'")
 		}
 		if !mgmtPresent {
 			return fmt.Errorf("missing required interface type 'mgmt'")
@@ -1273,6 +1283,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {
 			transitHaGw.AvailabilityDomain = haAvailabilityDomain
 			transitHaGw.FaultDomain = haFaultDomain
+		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+			transitHaGw.PeerBackupPort = d.Get("peer_backup_port").(string)
+			transitHaGw.ConnectionType = d.Get("connection_type").(string)
 		}
 
 		if privateModeInfo.EnablePrivateMode {
@@ -1738,14 +1751,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("bgp_lan_interfaces_count", nil)
 	}
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		d.Set("device_id", gw.DeviceID)
+		d.Set("site_id", gw.SiteID)
+		d.Set("interfaces", gw.Interfaces)
 		d.Set("eip_map", gw.EIPMap)
 	}
 	cloudType := d.Get("cloud_type").(int)
-	// interfaces is set for all edge transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		d.Set("interfaces", gw.Interfaces)
-	}
-
 	// interface_mapping is set for only the self-managed and AEP transit gateways
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		d.Set("interface_mapping", gw.InterfaceMapping)
@@ -2077,6 +2088,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 	d.Set("ha_image_version", gw.HaGw.ImageVersion)
 	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
+	d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
+	d.Set("connection_type", gw.HaGw.ConnectionType)
 	lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
 	if err != nil && err != goaviatrix.ErrNotFound {
 		log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
