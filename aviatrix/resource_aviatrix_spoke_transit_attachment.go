@@ -89,9 +89,10 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Description: "Indicates whether the spoke gateway is BGP enabled or not.",
 			},
 			"dst_wan_interfaces": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Select Edge Transit WAN interface(s) to attach, comma separated",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Select Edge Transit WAN interface(s) to attach, comma separated",
+				ValidateFunc: validateWanInterfaces,
 			},
 		},
 	}

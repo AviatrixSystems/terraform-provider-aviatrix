@@ -396,3 +396,16 @@ func validateJSON(val interface{}, key string) ([]string, []error) {
 	}
 	return nil, nil
 }
+
+func validateWanInterfaces(val interface{}, key string) (warnings []string, errs []error) {
+	v := val.(string)
+	interfaces := strings.Split(v, ",")
+	validInterfaceName := regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
+
+	for _, iface := range interfaces {
+		if !validInterfaceName.MatchString(strings.TrimSpace(iface)) {
+			errs = append(errs, fmt.Errorf("%q must be a comma-separated list of valid interface names, got: %s", key, iface))
+		}
+	}
+	return warnings, errs
+}

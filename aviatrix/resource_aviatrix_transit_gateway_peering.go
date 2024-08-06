@@ -143,14 +143,16 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Description: "Enable jumbo frame for over private peering with Edge Transit",
 			},
 			"src_wan_interfaces": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Select src Edge Transit WAN interface(s) to attach, comma separated",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Select src Edge Transit WAN interface(s) to attach, comma separated",
+				ValidateFunc: validateWanInterfaces,
 			},
 			"dst_wan_interfaces": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Select dst Edge Transit WAN interface(s) to attach, comma separated",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Select dst Edge Transit WAN interface(s) to attach, comma separated",
+				ValidateFunc: validateWanInterfaces,
 			},
 		},
 	}
