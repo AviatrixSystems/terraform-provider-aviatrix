@@ -60,6 +60,11 @@ type TransitVpc struct {
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	Transit                      bool     `form:"transit,omitempty"`
+	DeviceID                     string   `form:"device_id,omitempty"`
+	SiteID                       string   `form:"site_id,omitempty"`
+	Interfaces                   string   `form:"interfaces,omitempty"`
+	InterfaceMapping             string   `form:"interface_mapping,omitempty"`
+	EIPMap                       string   `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

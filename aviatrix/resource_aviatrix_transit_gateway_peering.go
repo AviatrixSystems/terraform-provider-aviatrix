@@ -113,7 +113,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
-				Description: "(Optional) Advanced option. Enable Insane Mode Encryption over Internet. Transit gateways must be in Insane Mode. " +
+				Description: "(Optional) Advanced option. Enable HPE mode for peering with Edge Transit. Transit gateways must be in Insane Mode. " +
 					"Currently, only inter-cloud connections between AWS and Azure are supported. Required with valid `tunnel_count`. " +
 					"Conflicts with `enable_peering_over_private_network` and `enable_single_tunnel_mode`. Type: Boolean. Default: false. " +
 					"Available as of provider version R2.19+.",
@@ -135,6 +135,24 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Description: "Indicates whether the maximum amount of HPE tunnels will be created. " +
 					"Only valid when the two transit gateways are each launched in Insane Mode and in the same cloud type. " +
 					"Available as of provider version R2.22.2+.",
+			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable jumbo frame for over private peering with Edge Transit",
+			},
+			"src_wan_interfaces": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Select src Edge Transit WAN interface(s) to attach, comma separated",
+				ValidateFunc: validateWanInterfaces,
+			},
+			"dst_wan_interfaces": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Select dst Edge Transit WAN interface(s) to attach, comma separated",
+				ValidateFunc: validateWanInterfaces,
 			},
 		},
 	}
@@ -170,6 +188,9 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
 		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 		NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
+		EnableJumboFrame:               d.Get("enable_jumbo_frame").(bool),
+		SrcWanInterfaces:               d.Get("src_wan_interfaces").(string),
+		DstWanInterfaces:               d.Get("dst_wan_interfaces").(string),
 	}
 	if d.Get("enable_peering_over_private_network").(bool) {
 		transitGatewayPeering.PrivateIPPeering = "yes"
@@ -331,7 +352,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 			return fmt.Errorf("could not set prepend_as_path2: %v", err)
 		}
 	}
-
+	d.Set("enable_jumbo_frame", transitGatewayPeering.EnableJumboFrame)
+	d.Set("src_wan_interfaces", transitGatewayPeering.SrcWanInterfaces)
+	d.Set("dst_wan_interfaces", transitGatewayPeering.DstWanInterfaces)
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering == "yes")
 	if transitGatewayPeering.PrivateIPPeering == "yes" {
 		d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel == "yes")
