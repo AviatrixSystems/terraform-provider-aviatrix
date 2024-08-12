@@ -222,8 +222,8 @@ type Gateway struct {
 	DeviceID                        string                              `json:"device_id,omitempty"`
 	SiteID                          string                              `json:"site_id,omitempty"`
 	EIPMap                          string                              `json:"eip_map,omitempty"`
-	Interfaces                      string                              `json:"interfaces,omitempty"`
-	InterfaceMapping                string                              `json:"interface_mapping,omitempty"`
+	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
+	InterfaceMapping                []EdgeTransitInterfaceMapping       `json:"interface_mapping,omitempty"`
 }
 
 type HaGateway struct {

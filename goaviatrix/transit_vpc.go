@@ -62,8 +62,8 @@ type TransitVpc struct {
 	Transit                      bool     `form:"transit,omitempty"`
 	DeviceID                     string   `form:"device_id,omitempty"`
 	SiteID                       string   `form:"site_id,omitempty"`
-	Interfaces                   string   `form:"interfaces,omitempty"`
-	InterfaceMapping             string   `form:"interface_mapping,omitempty"`
+	Interfaces                   []string `form:"interfaces,omitempty"`
+	InterfaceMapping             []string `form:"interface_mapping,omitempty"`
 	EIPMap                       string   `json:"eip_map,omitempty"`
 }
 
@@ -130,6 +130,22 @@ type TransitGwFireNetInterfacesResp struct {
 	Return  bool                       `json:"return"`
 	Results TransitGwFireNetInterfaces `json:"results"`
 	Reason  string                     `json:"reason"`
+}
+
+type EdgeTransitInterface struct {
+	IfName         string   `json:"ifname"`
+	Type           string   `json:"type"`
+	PublicIp       string   `json:"public_ip,omitempty"`
+	Dhcp           bool     `json:"dhcp,omitempty"`
+	IpAddr         string   `json:"ipaddr,omitempty"`
+	GatewayIp      string   `json:"gateway_ip,omitempty"`
+	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+}
+
+type EdgeTransitInterfaceMapping struct {
+	IfName     string `json:"ifname"`
+	Type       string `json:"type"`
+	Identifier string `json:"identifier"`
 }
 
 type TransitGatewayBgpLanIpInfoResp struct {

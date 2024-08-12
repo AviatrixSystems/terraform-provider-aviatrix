@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -703,22 +704,79 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Public IP address of the HA Transit Gateway.",
 			},
 			"interface_mapping": {
-				Type:        schema.TypeMap,
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Mapping of interface names to types and identifiers.",
-				Elem: &schema.Schema{
-					Type: schema.TypeList,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
+				ForceNew:    true,
+				Description: "Mapping of interface names to types and identifiers. Each entry specifies the interface name, its type, and an identifier.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"interface_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the interface, e.g., 'eth0'.",
+						},
+						"interface_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type of the interface, e.g., 'WAN', 'LAN', or 'MGMT'.",
+							ValidateFunc: validation.StringInSlice([]string{"wan", "lan", "mgmt"}, false),
+						},
+						"identifier": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Identifier for the interface, e.g., '0', '1', etc.",
+						},
 					},
-					Description: "List containing AEP/self managed interface, transit interface and interface number",
 				},
 			},
+
 			"interfaces": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "A Base64 encoded string representing interface configuration.",
-				ValidateFunc: validateBase64,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of WAN/Management interfaces, each represented as a map.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name, e.g., 'eth0', 'eth1'.",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type. Valid values are 'WAN', 'LAN' or 'MANAGEMENT'.",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The gateway IP address associated with this interface.",
+						},
+						"ip_addr": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The static IP address assigned to this interface.",
+						},
+						"public_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The public IP address associated with this interface (if applicable).",
+						},
+						"dhcp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether DHCP is enabled on this interface.",
+						},
+						"secondary_private_cidr_list": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of secondary private CIDR blocks associated with this interface.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"eip_map": {
 				Type:         schema.TypeString,
@@ -792,11 +850,62 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 	}
 
-	// set the EAT attributes for Equinix and AEP cloud types
+	// set the EAT attributes only for Equinix and AEP cloud types
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		gateway.DeviceID = d.Get("device_id").(string)
 		gateway.SiteID = d.Get("site_id").(string)
-		gateway.Interfaces = d.Get("interfaces").(string)
+		interfaces := d.Get("interfaces").([]interface{})
+		for _, iface := range interfaces {
+			ifaceInfo := iface.(map[string]interface{})
+			ifaceName := ifaceInfo["ifname"].(string)
+			ifaceType := ifaceInfo["type"].(string)
+			ifaceGatewayIP := ifaceInfo["gateway_ip"].(string)
+			ifaceIP := ifaceInfo["ipaddr"].(string)
+			ifacePublicIP := ifaceInfo["public_ip"].(string)
+			ifaceDHCP := ifaceInfo["dhcp"].(bool)
+			ifaceSecondaryCIDRs := ifaceInfo["secondary_private_cidr_list"].([]interface{})
+			var secondaryCIDRs []string
+			for _, cidr := range ifaceSecondaryCIDRs {
+				secondaryCIDRs = append(secondaryCIDRs, cidr.(string))
+			}
+			ifaceData := goaviatrix.EdgeTransitInterface{
+				IfName:         ifaceName,
+				Type:           ifaceType,
+				GatewayIp:      ifaceGatewayIP,
+				PublicIp:       ifacePublicIP,
+				Dhcp:           ifaceDHCP,
+				IpAddr:         ifaceIP,
+				SecondaryCIDRs: secondaryCIDRs,
+			}
+			// Convert ifaceData to a JSON string
+			ifaceDataJSON, err := json.Marshal(ifaceData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal interface data: %v", err)
+			}
+
+			// Append the JSON string to gateway.Interfaces
+			gateway.Interfaces = append(gateway.Interfaces, string(ifaceDataJSON))
+		}
+
+		// set the values for interface_mapping
+		ifaceMappings := d.Get("interface_mapping").([]interface{})
+		for _, ifaceMapping := range ifaceMappings {
+			ifaceMappingInfo := ifaceMapping.(map[string]interface{})
+			ifaceName := ifaceMappingInfo["interface_name"].(string)
+			ifaceType := ifaceMappingInfo["interface_type"].(string)
+			ifaceIdentifier := ifaceMappingInfo["identifier"].(string)
+			ifaceMappingData := goaviatrix.EdgeTransitInterfaceMapping{
+				IfName:     ifaceName,
+				Type:       ifaceType,
+				Identifier: ifaceIdentifier,
+			}
+			// Convert ifaceMappingData to a JSON string
+			ifaceMappingDataJSON, err := json.Marshal(ifaceMappingData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal interface mapping data: %v", err)
+			}
+			gateway.InterfaceMapping = append(gateway.InterfaceMapping, string(ifaceMappingDataJSON))
+		}
 		gateway.EIPMap = d.Get("eip_map").(string)
 	}
 
@@ -807,39 +916,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	} else {
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
-	}
-
-	// interface_mapping is set for only the self-managed and AEP transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-		interfaceMappings := d.Get("interface_mapping").(map[string]interface{})
-		var processedMappings []string
-		wanPresent := false
-		mgmtPresent := false
-		for ifaceName, mapping := range interfaceMappings {
-			ifaceInfo := mapping.([]interface{})
-			// Check if the interface type is "wan" or "mgmt"
-			ifaceType := ifaceInfo[0].(string)
-			switch ifaceType {
-			case "wan":
-				wanPresent = true
-			case "mgmt":
-				mgmtPresent = true
-			default:
-				return fmt.Errorf("invalid interface type '%s' for interface '%s'", ifaceType, ifaceName)
-			}
-			ifaceMapping := fmt.Sprintf("%s,%s", ifaceInfo[0].(string), ifaceInfo[1].(string))
-			completeMapping := fmt.Sprintf("%s:%s", ifaceName, ifaceMapping)
-			processedMappings = append(processedMappings, completeMapping)
-		}
-
-		// Check if all required interface types are present
-		if !wanPresent {
-			return fmt.Errorf("missing required interface type 'wan'")
-		}
-		if !mgmtPresent {
-			return fmt.Errorf("missing required interface type 'mgmt'")
-		}
-		gateway.InterfaceMapping = strings.Join(processedMappings, ";")
 	}
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -1753,14 +1829,61 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		d.Set("device_id", gw.DeviceID)
 		d.Set("site_id", gw.SiteID)
-		d.Set("interfaces", gw.Interfaces)
+		// set interfaces from gw.interfaces
+		if len(gw.Interfaces) != 0 {
+			var interfaces []map[string]interface{}
+			for _, intf := range gw.Interfaces {
+				interfaceDict := make(map[string]interface{})
+				interfaceDict["ifname"] = intf.IfName
+				interfaceDict["type"] = intf.Type
+				if intf.PublicIp != "" {
+					interfaceDict["public_ip"] = intf.PublicIp
+				}
+				if intf.Dhcp {
+					interfaceDict["dhcp"] = intf.Dhcp
+				}
+				if intf.IpAddr != "" {
+					interfaceDict["ipaddr"] = intf.IpAddr
+				}
+				if intf.GatewayIp != "" {
+					interfaceDict["gateway_ip"] = intf.GatewayIp
+				}
+				// set the seocndary cidrs if exists in interfaces
+				if len(intf.SecondaryCIDRs) != 0 {
+					var secondaryCidrs []map[string]interface{}
+					for _, cidr := range intf.SecondaryCIDRs {
+						cidrDict := make(map[string]interface{})
+						cidrDict["cidr"] = cidr
+						secondaryCidrs = append(secondaryCidrs, cidrDict)
+					}
+					interfaceDict["secondary_cidrs"] = secondaryCidrs
+				}
+				interfaces = append(interfaces, interfaceDict)
+			}
+			if err = d.Set("interfaces", interfaces); err != nil {
+				return fmt.Errorf("could not set interfaces into state: %v", err)
+			}
+		}
 		d.Set("eip_map", gw.EIPMap)
 	}
-	cloudType := d.Get("cloud_type").(int)
 	// interface_mapping is set for only the self-managed and AEP transit gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-		d.Set("interface_mapping", gw.InterfaceMapping)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EDGENEO) {
+		// set interface mapping
+		if len(gw.InterfaceMapping) != 0 {
+			var interfaceMapping []map[string]interface{}
+			for _, intf := range gw.InterfaceMapping {
+				interfaceDict := make(map[string]interface{})
+				interfaceDict["ifname"] = intf.IfName
+				interfaceDict["type"] = intf.Type
+				interfaceDict["identifier"] = intf.Identifier
+				interfaceMapping = append(interfaceMapping, interfaceDict)
+			}
+			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
+				return fmt.Errorf("could not set interface_mapping into state: %v", err)
+			}
+		}
 	}
+
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 		if len(gw.BgpLanInterfaces) != 0 {
