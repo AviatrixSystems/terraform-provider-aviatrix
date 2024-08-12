@@ -62,8 +62,8 @@ type TransitVpc struct {
 	Transit                      bool     `form:"transit,omitempty"`
 	DeviceID                     string   `form:"device_id,omitempty"`
 	SiteID                       string   `form:"site_id,omitempty"`
-	Interfaces                   []string `form:"interfaces,omitempty"`
-	InterfaceMapping             []string `form:"interface_mapping,omitempty"`
+	Interfaces                   string   `json:"interfaces,omitempty"`
+	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	EIPMap                       string   `json:"eip_map,omitempty"`
 }
 

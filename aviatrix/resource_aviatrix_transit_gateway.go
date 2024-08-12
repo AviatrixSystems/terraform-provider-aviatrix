@@ -855,6 +855,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.DeviceID = d.Get("device_id").(string)
 		gateway.SiteID = d.Get("site_id").(string)
 		interfaces := d.Get("interfaces").([]interface{})
+		ifDataString := []string{}
 		for _, iface := range interfaces {
 			ifaceInfo := iface.(map[string]interface{})
 			ifaceName := ifaceInfo["ifname"].(string)
@@ -882,13 +883,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to marshal interface data: %v", err)
 			}
-
-			// Append the JSON string to gateway.Interfaces
-			gateway.Interfaces = append(gateway.Interfaces, string(ifaceDataJSON))
+			ifDataString = append(ifDataString, string(ifaceDataJSON))
 		}
+		gateway.Interfaces = strings.Join(ifDataString, ",")
 
 		// set the values for interface_mapping
 		ifaceMappings := d.Get("interface_mapping").([]interface{})
+		ifMappingDataString := []string{}
 		for _, ifaceMapping := range ifaceMappings {
 			ifaceMappingInfo := ifaceMapping.(map[string]interface{})
 			ifaceName := ifaceMappingInfo["interface_name"].(string)
@@ -904,8 +905,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to marshal interface mapping data: %v", err)
 			}
-			gateway.InterfaceMapping = append(gateway.InterfaceMapping, string(ifaceMappingDataJSON))
+			ifMappingDataString = append(ifMappingDataString, string(ifaceMappingDataJSON))
 		}
+		gateway.InterfaceMapping = strings.Join(ifMappingDataString, ",")
 		gateway.EIPMap = d.Get("eip_map").(string)
 	}
 
