@@ -133,36 +133,6 @@ resource "aviatrix_account" "temp_acc_alibaba" {
  ```
   
 ```hcl
-# Create an Aviatrix AWS Top Secret Region Account
-resource "aviatrix_account" "temp_acc_aws_top_secret" {
-  account_name         = "username"
-  cloud_type           = 16384
-  awsts_account_number = "123456789012"
-  awsts_cap_url        = "https://some.domain.com"
-  awsts_cap_agency     = "ABCDEFG"
-  awsts_cap_mission    = "Test-C2S-dev"
-  awsts_cap_role_name  = "C2S-role-TestRole"
-  awsts_cap_cert       = "path/to/cap_cert_file"
-  awsts_cap_cert_key   = "path/to/cap_cert_key_file"
-  awsts_ca_chain_cert  = "path/to/cap_chain_cert_file"
-}
-```
-```hcl
-# Create an Aviatrix AWS Secret Region Account
-resource "aviatrix_account" "temp_acc_aws_secret" {
-  account_name          = "username"
-  cloud_type            = 32768
-  awss_account_number   = "123456789012"
-  awss_cap_url          = "https://some.domain.com"
-  awss_cap_agency       = "ABCDEFG"
-  awss_cap_account_name = "Test-SC2S-dev"
-  awss_cap_role_name    = "SC2S-role-TestRole"
-  awss_cap_cert         = "path/to/cap_cert_file"
-  awss_cap_cert_key     = "path/to/cap_cert_key_file"
-  awss_ca_chain_cert    = "path/to/cap_chain_cert_file"
-}
-```
-```hcl
 # Create an Aviatrix AWS Account with IAM roles and RBAC group: group-c
 resource "aviatrix_account" "temp_acc_aws" {
   account_name       = "username"

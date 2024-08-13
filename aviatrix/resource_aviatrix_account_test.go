@@ -114,58 +114,6 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 			t.Fatal("AZURECHINA_APPLICATION_KEY must be set for AzureChina acceptance tests. " + msgEnd)
 		}
 	}
-	if os.Getenv("SKIP_ACCOUNT_AWSTS") == "no" {
-		if os.Getenv("AWSTS_ACCOUNT_NUMBER") == "" {
-			t.Fatal("AWSTS_ACCOUNT_NUMBER must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_URL") == "" {
-			t.Fatal("AWSTS_CAP_URL must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_AGENCY") == "" {
-			t.Fatal("AWSTS_CAP_AGENCY must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_MISSION") == "" {
-			t.Fatal("AWSTS_CAP_MISSION must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_ROLE_NAME") == "" {
-			t.Fatal("AWSTS_CAP_ROLE_NAME must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_CERT") == "" {
-			t.Fatal("AWSTS_CAP_CERT must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CAP_CERT_KEY") == "" {
-			t.Fatal("AWSTS_CAP_CERT_KEY must be set for AWS C2S acceptance tests.")
-		}
-		if os.Getenv("AWSTS_CA_CHAIN_CERT") == "" {
-			t.Fatal("AWSTS_CA_CHAIN_CERT must be set for AWS C2S acceptance tests.")
-		}
-	}
-	if os.Getenv("SKIP_ACCOUNT_AWSS") == "no" {
-		if os.Getenv("AWSS_ACCOUNT_NUMBER") == "" {
-			t.Fatal("AWSS_ACCOUNT_NUMBER must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_URL") == "" {
-			t.Fatal("AWSS_CAP_URL must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_AGENCY") == "" {
-			t.Fatal("AWSS_CAP_AGENCY must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_ACCOUNT_NAME") == "" {
-			t.Fatal("AWSS_CAP_ACCOUNT_NAME must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_ROLE_NAME") == "" {
-			t.Fatal("AWSS_CAP_ROLE_NAME must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_CERT") == "" {
-			t.Fatal("AWSS_CAP_CERT must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CAP_CERT_KEY") == "" {
-			t.Fatal("AWSS_CAP_CERT_KEY must be set for AWS SC2S acceptance tests.")
-		}
-		if os.Getenv("AWSS_CA_CHAIN_CERT") == "" {
-			t.Fatal("AWSS_CA_CHAIN_CERT must be set for AWS SC2S acceptance tests.")
-		}
-	}
 }
 
 func TestAccAviatrixAccount_basic(t *testing.T) {
@@ -184,16 +132,14 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	skipAWSCHINAIAM := os.Getenv("SKIP_ACCOUNT_AWSCHINA_IAM")
 	skipAWSCHINA := os.Getenv("SKIP_ACCOUNT_AWSCHINA")
 	skipAZURECHINA := os.Getenv("SKIP_ACCOUNT_AZURECHINA")
-	skipAWSTS := os.Getenv("SKIP_ACCOUNT_AWSTS")
-	skipAWSS := os.Getenv("SKIP_ACCOUNT_AWSS")
 
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAZUREGOV == "yes" && skipAWSGOV == "yes" && skipAWSCHINAIAM == "yes" && skipAWSCHINA == "yes" && skipAZURECHINA == "yes" && skipAWSTS == "yes" && skipAWSS == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAZUREGOV == "yes" && skipAWSGOV == "yes" && skipAWSCHINAIAM == "yes" && skipAWSCHINA == "yes" && skipAZURECHINA == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_AZURE, " +
 			"SKIP_ACCOUNT_OCI, SKIP_ACCOUNT_AZUREGOV, SKIP_ACCOUNT_AWSGOV, SKIP_ACCOUNT_AWSCHINA_IAM, SKIP_ACCOUNT_AWSCHINA, " +
-			"SKIP_ACCOUNT_AZURECHINA, SKIP_ACCOUNT_AWSTS and SKIP_ACCOUNT_AWSS are all set, even though SKIP_ACCOUNT isn't set")
+			"SKIP_ACCOUNT_AZURECHINA are all set, even though SKIP_ACCOUNT isn't set")
 	}
 
 	if skipAWS == "yes" {
@@ -425,44 +371,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		})
 	}
 
-	if skipAWSTS == "yes" {
-		t.Log("Skipping AWS Top Secret Region (C2S) Access Account test as SKIP_ACCOUNT_AWSTS is set")
-	} else {
-		resourceName := "aviatrix_account.awsts"
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "awsts_cap_cert", "awsts_cap_cert_key", "awsts_ca_chain_cert")
-		resource.Test(t, resource.TestCase{
-			PreCheck: func() {
-				testAccPreCheck(t)
-				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
-			},
-			Providers:    testAccProviders,
-			CheckDestroy: testAccCheckAccountDestroy,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccAccountConfigAWSTS(rInt),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-awsc2s-%d", rInt)),
-						resource.TestCheckResourceAttr(resourceName, "awsts_account_number", os.Getenv("AWSTS_ACCOUNT_NUMBER")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_url", os.Getenv("AWSTS_CAP_URL")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_agency", os.Getenv("AWSTS_CAP_AGENCY")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_mission", os.Getenv("AWSTS_CAP_MISSION")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_role_name", os.Getenv("AWSTS_CAP_ROLE_NAME")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_cert", os.Getenv("AWSTS_CAP_CERT")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_cap_cert_key", os.Getenv("AWSTS_CAP_CERT_KEY")),
-						resource.TestCheckResourceAttr(resourceName, "awsts_ca_chain_cert", os.Getenv("AWSTS_CA_CHAIN_CERT")),
-					),
-				},
-				{
-					ResourceName:            resourceName,
-					ImportState:             true,
-					ImportStateVerify:       true,
-					ImportStateVerifyIgnore: importStateVerifyIgnore,
-				},
-			},
-		})
-	}
-
 	if skipAWSCHINA == "yes" {
 		t.Log("Skipping AWS China Access Account test as SKIP_ACCOUNT_AWSCHINA is set")
 	} else {
@@ -519,44 +427,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "azurechina_directory_id", os.Getenv("AZURECHINA_DIRECTORY_ID")),
 						resource.TestCheckResourceAttr(resourceName, "azurechina_application_id", os.Getenv("AZURECHINA_APPLICATION_ID")),
 						resource.TestCheckResourceAttr(resourceName, "azurechina_application_key", os.Getenv("AZURECHINA_APPLICATION_KEY")),
-					),
-				},
-				{
-					ResourceName:            resourceName,
-					ImportState:             true,
-					ImportStateVerify:       true,
-					ImportStateVerifyIgnore: importStateVerifyIgnore,
-				},
-			},
-		})
-	}
-
-	if skipAWSS == "yes" {
-		t.Log("Skipping AWS Secret Region (SC2S) Access Account test as SKIP_ACCOUNT_AWSS is set")
-	} else {
-		resourceName := "aviatrix_account.aws_s"
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "awss_cap_cert", "awss_cap_cert_key", "awss_ca_chain_cert")
-		resource.Test(t, resource.TestCase{
-			PreCheck: func() {
-				testAccPreCheck(t)
-				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
-			},
-			Providers:    testAccProviders,
-			CheckDestroy: testAccCheckAccountDestroy,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccAccountConfigAWSS(rInt),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-awssc2s-%d", rInt)),
-						resource.TestCheckResourceAttr(resourceName, "awss_account_number", os.Getenv("AWSS_ACCOUNT_NUMBER")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_url", os.Getenv("AWSS_CAP_URL")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_agency", os.Getenv("AWSS_CAP_AGENCY")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_account_name", os.Getenv("AWSS_CAP_ACCOUNT_NAME")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_role_name", os.Getenv("AWSS_CAP_ROLE_NAME")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_cert", os.Getenv("AWSS_CAP_CERT")),
-						resource.TestCheckResourceAttr(resourceName, "awss_cap_cert_key", os.Getenv("AWSS_CAP_CERT_KEY")),
-						resource.TestCheckResourceAttr(resourceName, "awss_ca_chain_cert", os.Getenv("AWSS_CA_CHAIN_CERT")),
 					),
 				},
 				{
@@ -683,44 +553,6 @@ resource "aviatrix_account" "azurechina" {
 }
 	`, rInt, os.Getenv("AZURECHINA_SUBSCRIPTION_ID"), os.Getenv("AZURECHINA_DIRECTORY_ID"),
 		os.Getenv("AZURECHINA_APPLICATION_ID"), os.Getenv("AZURECHINA_APPLICATION_KEY"))
-}
-
-func testAccAccountConfigAWSTS(rInt int) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "awsts" {
-	account_name         = "tfa-awsc2s-%d"
-	cloud_type           = 16384
-	awsts_account_number = "%s"
-	awsts_cap_url        = "%s"
-	awsts_cap_agency     = "%s"
-	awsts_cap_mission    = "%s"
-	awsts_cap_role_name  = "%s"
-	awsts_cap_cert       = "%s"
-	awsts_cap_cert_key   = "%s"
-	awsts_ca_chain_cert  = "%s"
-}`, rInt, os.Getenv("AWSTS_ACCOUNT_NUMBER"), os.Getenv("AWSTS_CAP_URL"),
-		os.Getenv("AWSTS_CAP_AGENCY"), os.Getenv("AWSTS_CAP_MISSION"),
-		os.Getenv("AWSTS_CAP_ROLE_NAME"), os.Getenv("AWSTS_CAP_CERT"),
-		os.Getenv("AWSTS_CAP_CERT_KEY"), os.Getenv("AWSTS_CA_CHAIN_CERT"))
-}
-
-func testAccAccountConfigAWSS(rInt int) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "aws_s" {
-	account_name          = "tfa-awssc2s-%d"
-	cloud_type            = 32768
-	awss_account_number   = "%s"
-	awss_cap_url          = "%s"
-	awss_cap_agency       = "%s"
-	awss_cap_account_name = "%s"
-	awss_cap_role_name    = "%s"
-	awss_cap_cert         = "%s"
-	awss_cap_cert_key     = "%s"
-	awss_ca_chain_cert    = "%s"
-}`, rInt, os.Getenv("AWSS_ACCOUNT_NUMBER"), os.Getenv("AWSS_CAP_URL"),
-		os.Getenv("AWSS_CAP_AGENCY"), os.Getenv("AWSS_CAP_ACCOUNT_NAME"),
-		os.Getenv("AWSS_CAP_ROLE_NAME"), os.Getenv("AWSS_CAP_CERT"),
-		os.Getenv("AWSS_CAP_CERT_KEY"), os.Getenv("AWSS_CA_CHAIN_CERT"))
 }
 
 func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.TestCheckFunc {
