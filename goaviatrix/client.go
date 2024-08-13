@@ -61,7 +61,6 @@ type Client struct {
 	baseURL          string
 	IgnoreTagsConfig *IgnoreTagsConfig
 	cachedAccounts   []Account
-	cacheTimestamp   time.Time
 	cacheMutex       sync.Mutex
 }
 
