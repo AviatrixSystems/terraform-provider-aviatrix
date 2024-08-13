@@ -113,81 +113,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "Alibaba Cloud Account ID to associate with Aviatrix account.",
 			},
-			"awsts_account_number": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region Account Number.",
-			},
-			"awsts_cap_url": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Endpoint URL.",
-			},
-			"awsts_cap_agency": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Agency.",
-			},
-			"awsts_cap_mission": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Mission.",
-			},
-			"awsts_cap_role_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Role Name.",
-			},
-			"awss_account_number": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region Account Number.",
-			},
-			"awss_cap_url": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Endpoint URL.",
-			},
-			"awss_cap_agency": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Agency.",
-			},
-			"awss_cap_account_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Account Name.",
-			},
-			"awss_cap_role_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Role Name.",
-			},
-			"awsts_cap_cert_path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Certificate file path on the controller.",
-			},
-			"awsts_cap_cert_key_path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region CAP Certificate Key file path on the controller.",
-			},
-			"aws_ca_cert_path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Top Secret Region or Secret Region Custom Certificate Authority file path on the controller.",
-			},
-			"awss_cap_cert_path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Certificate file path on the controller.",
-			},
-			"awss_cap_cert_key_path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
-			},
 		},
 	}
 }
@@ -246,26 +171,6 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 
 	if acc.CloudType == goaviatrix.AliCloud {
 		d.Set("alicloud_account_id", acc.AwsAccountNumber)
-	}
-
-	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSTS) {
-		d.Set("awsts_account_number", acc.AwsTsAccountNumber)
-		d.Set("awsts_cap_url", acc.AwsTsCapUrl)
-		d.Set("awsts_cap_agency", acc.AwsTsCapAgency)
-		d.Set("awsts_cap_mission", acc.AwsTsCapMission)
-		d.Set("awsts_cap_role_name", acc.AwsTsCapRoleName)
-		d.Set("awsts_cap_cert_path", acc.AwsTsCapCertPath)
-		d.Set("awsts_cap_cert_key_path", acc.AwsTsCapCertKeyPath)
-		d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
-	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSS) {
-		d.Set("awss_account_number", acc.AwsSAccountNumber)
-		d.Set("awss_cap_url", acc.AwsSCapUrl)
-		d.Set("awss_cap_agency", acc.AwsSCapAgency)
-		d.Set("awss_cap_account_name", acc.AwsSCapAccountName)
-		d.Set("awss_cap_role_name", acc.AwsSCapRoleName)
-		d.Set("awss_cap_cert_path", acc.AwsSCapCertPath)
-		d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
-		d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 	}
 
 	d.SetId(acc.AccountName)

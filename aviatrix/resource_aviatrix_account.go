@@ -477,27 +477,6 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
 		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
 		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
-		AwsTsAccountNumber:                    d.Get("awsts_account_number").(string),
-		AwsTsCapUrl:                           d.Get("awsts_cap_url").(string),
-		AwsTsCapAgency:                        d.Get("awsts_cap_agency").(string),
-		AwsTsCapMission:                       d.Get("awsts_cap_mission").(string),
-		AwsTsCapRoleName:                      d.Get("awsts_cap_role_name").(string),
-		AwsTsCapCert:                          d.Get("awsts_cap_cert").(string),
-		AwsTsCapCertKey:                       d.Get("awsts_cap_cert_key").(string),
-		AwsTsCaChainCert:                      d.Get("awsts_ca_chain_cert").(string),
-		AwsTsCapCertPath:                      d.Get("awsts_cap_cert_path").(string),
-		AwsTsCapCertKeyPath:                   d.Get("awsts_cap_cert_key_path").(string),
-		AwsCaCertPath:                         d.Get("aws_ca_cert_path").(string),
-		AwsSAccountNumber:                     d.Get("awss_account_number").(string),
-		AwsSCapUrl:                            d.Get("awss_cap_url").(string),
-		AwsSCapAgency:                         d.Get("awss_cap_agency").(string),
-		AwsSCapAccountName:                    d.Get("awss_cap_account_name").(string),
-		AwsSCapRoleName:                       d.Get("awss_cap_role_name").(string),
-		AwsSCapCert:                           d.Get("awss_cap_cert").(string),
-		AwsSCapCertKey:                        d.Get("awss_cap_cert_key").(string),
-		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
-		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
-		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
 	edgeAccount := &goaviatrix.EdgeAccount{
@@ -571,12 +550,6 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
-	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSTS) && (account.AwsTsAccountNumber != "" || account.AwsTsCapUrl != "" || account.AwsTsCapAgency != "" || account.AwsTsCapMission != "" || account.AwsTsCapRoleName != "" || account.AwsTsCapCert != "" || account.AwsTsCapCertKey != "" || account.AwsTsCaChainCert != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'awsts_account_number', 'awsts_cap_url', 'awsts_cap_agency', 'awsts_cap_mission', 'awsts_cap_role_name', awsts_cap_cert', 'awsts_cap_cert_key' and 'awsts_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
-	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
@@ -727,56 +700,6 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AlicloudSecretKey == "" {
 			return diag.Errorf("alicloud_secret_key is required for alibaba cloud")
 		}
-	} else if account.CloudType == goaviatrix.AWSTS {
-		if account.AwsTsAccountNumber == "" {
-			return diag.Errorf("AWS Top Secret account number is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapUrl == "" {
-			return diag.Errorf("AWS Top Secret CAP endpoint url is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapAgency == "" {
-			return diag.Errorf("AWS Top Secret CAP agency is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapMission == "" {
-			return diag.Errorf("AWS Top Secret CAP mission is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapRoleName == "" {
-			return diag.Errorf("AWS Top Secret CAP role name is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapCert == "" {
-			return diag.Errorf("AWS Top Secret CAP cert file is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCapCertKey == "" {
-			return diag.Errorf("AWS Top Secret CAP cert key file is needed when creating an account for AWS Top Secret cloud")
-		}
-		if account.AwsTsCaChainCert == "" {
-			return diag.Errorf("AWS Top Secret custom CA Chain file  is needed when creating an account for AWS Top Secret cloud")
-		}
-	} else if account.CloudType == goaviatrix.AWSS {
-		if account.AwsSAccountNumber == "" {
-			return diag.Errorf("AWS Secret account number is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapUrl == "" {
-			return diag.Errorf("AWS Secret CAP endpoint url is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapAgency == "" {
-			return diag.Errorf("AWS Secret CAP agency is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapAccountName == "" {
-			return diag.Errorf("AWS Secret CAP Account Name is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapRoleName == "" {
-			return diag.Errorf("AWS Secret CAP role name is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapCert == "" {
-			return diag.Errorf("AWS Secret CAP cert file is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCapCertKey == "" {
-			return diag.Errorf("AWS Secret CAP cert key file is needed when creating an account for AWS Secret cloud")
-		}
-		if account.AwsSCaChainCert == "" {
-			return diag.Errorf("AWS Secret custom CA Chain file is needed when creating an account for AWS Secret cloud")
-		}
 	} else if account.CloudType == goaviatrix.EDGECSP {
 		//if edgeAccount.EdgeCSPUsername == "" {
 		//	return diag.Errorf("edge_csp_username is required to create an Aviatrix account for Edge CSP")
@@ -800,10 +723,6 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateGCPAccount(account)
 	} else if account.CloudType == goaviatrix.OCI {
 		err = client.CreateOCIAccount(account)
-	} else if account.CloudType == goaviatrix.AWSTS {
-		err = client.CreateAWSTSAccount(account)
-	} else if account.CloudType == goaviatrix.AWSS {
-		err = client.CreateAWSSAccount(account)
 	} else if account.CloudType == goaviatrix.EDGECSP || account.CloudType == goaviatrix.EDGEEQUINIX || account.CloudType == goaviatrix.EDGENEO {
 		err = client.CreateEdgeAccount(edgeAccount)
 	} else {
@@ -915,26 +834,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
-		} else if acc.CloudType == goaviatrix.AWSTS {
-			d.Set("awsts_account_number", acc.AwsTsAccountNumber)
-			d.Set("awsts_cap_url", acc.AwsTsCapUrl)
-			d.Set("awsts_cap_agency", acc.AwsTsCapAgency)
-			d.Set("awsts_cap_mission", acc.AwsTsCapMission)
-			d.Set("awsts_cap_role_name", acc.AwsTsCapRoleName)
-
-			d.Set("awsts_cap_cert_path", acc.AwsTsCapCertPath)
-			d.Set("awsts_cap_cert_key_path", acc.AwsTsCapCertKeyPath)
-			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
-		} else if acc.CloudType == goaviatrix.AWSS {
-			d.Set("awss_account_number", acc.AwsSAccountNumber)
-			d.Set("awss_cap_url", acc.AwsSCapUrl)
-			d.Set("awss_cap_agency", acc.AwsSCapAgency)
-			d.Set("awss_cap_account_name", acc.AwsSCapAccountName)
-			d.Set("awss_cap_role_name", acc.AwsSCapRoleName)
-
-			d.Set("awss_cap_cert_path", acc.AwsSCapCertPath)
-			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
-			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		} else if acc.CloudType == goaviatrix.EDGECSP {
 			if d.Get("edge_csp_password").(string) != "" {
 				d.Set("edge_csp_username", acc.EdgeCSPUsername)
@@ -1011,27 +910,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
 		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
 		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
-		AwsTsAccountNumber:                    d.Get("awsts_account_number").(string),
-		AwsTsCapUrl:                           d.Get("awsts_cap_url").(string),
-		AwsTsCapAgency:                        d.Get("awsts_cap_agency").(string),
-		AwsTsCapMission:                       d.Get("awsts_cap_mission").(string),
-		AwsTsCapRoleName:                      d.Get("awsts_cap_role_name").(string),
-		AwsTsCapCert:                          d.Get("awsts_cap_cert").(string),
-		AwsTsCapCertKey:                       d.Get("awsts_cap_cert_key").(string),
-		AwsTsCaChainCert:                      d.Get("awsts_ca_chain_cert").(string),
-		AwsTsCapCertPath:                      d.Get("awsts_cap_cert_path").(string),
-		AwsTsCapCertKeyPath:                   d.Get("awsts_cap_cert_key_path").(string),
-		AwsCaCertPath:                         d.Get("aws_ca_cert_path").(string),
-		AwsSAccountNumber:                     d.Get("awss_account_number").(string),
-		AwsSCapUrl:                            d.Get("awss_cap_url").(string),
-		AwsSCapAgency:                         d.Get("awss_cap_agency").(string),
-		AwsSCapAccountName:                    d.Get("awss_cap_account_name").(string),
-		AwsSCapRoleName:                       d.Get("awss_cap_role_name").(string),
-		AwsSCapCert:                           d.Get("awss_cap_cert").(string),
-		AwsSCapCertKey:                        d.Get("awss_cap_cert_key").(string),
-		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
-		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
-		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
 	edgeAccount := &goaviatrix.EdgeAccount{
@@ -1109,12 +987,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
-	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSTS) && (account.AwsTsAccountNumber != "" || account.AwsTsCapUrl != "" || account.AwsTsCapAgency != "" || account.AwsTsCapMission != "" || account.AwsTsCapRoleName != "" || account.AwsTsCapCert != "" || account.AwsTsCapCertKey != "" || account.AwsTsCaChainCert != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'awsts_account_number', 'awsts_cap_url', 'awsts_cap_agency', 'awsts_cap_mission', 'awsts_cap_role_name', awsts_cap_cert', 'awsts_cap_cert_key' and 'awsts_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
-	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
@@ -1199,34 +1071,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
-			}
-		}
-	} else if account.CloudType == goaviatrix.AWSTS {
-		fileChanges := map[string]bool{
-			"awsts_cap_cert":      d.HasChange("awsts_cap_cert") && account.AwsTsCapCert != "",
-			"awsts_cap_cert_key":  d.HasChange("awsts_cap_cert_key") && account.AwsTsCapCertKey != "",
-			"awsts_ca_chain_cert": d.HasChange("awsts_ca_chain_cert") && account.AwsTsCaChainCert != "",
-		}
-		hasFileChanges := fileChanges["awsts_cap_cert"] || fileChanges["awsts_cap_cert_key"] || fileChanges["awsts_ca_chain_cert"]
-
-		if d.HasChanges("awsts_account_number", "awsts_cap_url", "awsts_cap_agency", "awsts_cap_mission", "awsts_cap_role_name") || hasFileChanges {
-			err := client.UpdateAWSTSAccount(account, fileChanges)
-			if err != nil {
-				return diag.Errorf("failed to update AWS Secret Aviatrix Account: %v", err)
-			}
-		}
-	} else if account.CloudType == goaviatrix.AWSS {
-		fileChanges := map[string]bool{
-			"awss_cap_cert":      d.HasChange("awss_cap_cert") && account.AwsSCapCert != "",
-			"awss_cap_cert_key":  d.HasChange("awss_cap_cert_key") && account.AwsSCapCertKey != "",
-			"awss_ca_chain_cert": d.HasChange("awss_ca_chain_cert") && account.AwsSCaChainCert != "",
-		}
-		hasFileChanges := fileChanges["awss_cap_cert"] || fileChanges["awss_cap_cert_key"] || fileChanges["awss_ca_chain_cert"]
-
-		if d.HasChanges("awss_account_number", "awss_cap_url", "awss_cap_agency", "awss_cap_account_name", "awss_cap_role_name") || hasFileChanges {
-			err := client.UpdateAWSSAccount(account, fileChanges)
-			if err != nil {
-				return diag.Errorf("failed to update AWS Top Secret Aviatrix Account: %v", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.EDGECSP {
