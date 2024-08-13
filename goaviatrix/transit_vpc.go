@@ -1,8 +1,6 @@
 package goaviatrix
 
 import (
-	b64 "encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -67,7 +65,6 @@ type TransitVpc struct {
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	InterfaceList                []EdgeTransitInterface
-	InterfaceMappingList         []EdgeTransitInterfaceMapping
 	EIPMap                       string `json:"eip_map,omitempty"`
 }
 
@@ -146,12 +143,6 @@ type EdgeTransitInterface struct {
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
 }
 
-type EdgeTransitInterfaceMapping struct {
-	IfName     string `json:"ifname"`
-	Type       string `json:"type"`
-	Identifier string `json:"identifier"`
-}
-
 type TransitGatewayBgpLanIpInfoResp struct {
 	Return  bool                                 `json:"return"`
 	Results TransitGatewayBgpLanIpInfoRespResult `json:"results"`
@@ -176,19 +167,6 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
 	gateway.Async = true
-
-	interfaces, err := json.Marshal(gateway.InterfaceList)
-	if err != nil {
-		return err
-	}
-	gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
-
-	interfaceMapping, err := json.Marshal(gateway.InterfaceMappingList)
-	if err != nil {
-		return err
-	}
-	gateway.InterfaceMapping = b64.StdEncoding.EncodeToString(interfaceMapping)
-
 	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 

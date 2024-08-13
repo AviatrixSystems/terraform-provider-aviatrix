@@ -1,7 +1,6 @@
 package aviatrix
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -388,22 +387,6 @@ func validateJSON(val interface{}, key string) ([]string, []error) {
 		return nil, []error{fmt.Errorf("invalid JSON: %s", err)}
 	}
 	return nil, nil
-}
-
-func validateJSONorBase64(val interface{}, key string) (warns []string, errs []error) {
-	v := val.(string)
-	// Check if it's valid JSON
-	var js json.RawMessage
-	if json.Unmarshal([]byte(v), &js) == nil {
-		return
-	}
-	// Check if it's valid Base64
-	if _, err := base64.StdEncoding.DecodeString(v); err == nil {
-		return
-	}
-
-	errs = append(errs, fmt.Errorf("%q must be a valid JSON string or a Base64 encoded string, got: %s", key, v))
-	return
 }
 
 func validateWanInterfaces(val interface{}, key string) (warnings []string, errs []error) {

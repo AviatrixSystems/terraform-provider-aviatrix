@@ -1,0 +1,656 @@
+Outputs:
+
+aep_account = {
+  "account_name" = "edge_aep"
+  "edge_csp_api_endpoint" = "https://api.staging.edge.aviatrix.com"
+}
+aws_vm_1_name = "e2e-aws-vm-1-public-vm0-us-east-2"
+aws_vm_2_name = "e2e-aws-vm-2-public-vm0-us-west-2"
+edge_spokes = [
+  {
+    "account_name" = "edge_aep"
+    "cloud_type" = "262144"
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-3-WAN",
+          "Edge-LAN",
+          "MGMT",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eas-1"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "direct_attach_lan" = true
+    "edge_onprem_ip" = "192.168.12.31"
+    "enable_active_standby" = false
+    "enable_active_standby_preemptive" = false
+    "gw_resource_size" = "SMALL"
+    "hardware_model" = "ESXI-VM-1-WAN-Not-Shared"
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.22.11/24"
+        "public_ip" = ""
+        "type" = "WAN"
+      },
+      {
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.31/24"
+        "type" = "LAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+    ]
+    "lan_ifnames" = "eth1"
+    "local_as_num" = "65441"
+    "mgmt_egress_ip" = ""
+    "mgmt_ifnames" = "eth2"
+    "mgmt_over_private_network" = "false"
+    "name" = "e2e-edge-spoke-1"
+    "site_id" = "site-1"
+    "wan_ifnames" = "eth0"
+  },
+  {
+    "account_name" = "edge_aep"
+    "cloud_type" = "262144"
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-3-WAN",
+          "Edge-LAN",
+          "MGMT",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eas-1-ha"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "edge_onprem_ip" = "192.168.12.32"
+    "hardware_model" = "ESXI-VM-1-WAN-Not-Shared"
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.22.12/24"
+        "public_ip" = ""
+        "type" = "WAN"
+      },
+      {
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.32/24"
+        "type" = "LAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+    ]
+    "mgmt_egress_ip" = ""
+    "name" = "e2e-edge-spoke-1-hagw"
+    "primary_gw_name" = "e2e-edge-spoke-1"
+  },
+]
+edge_transits = [
+  {
+    "account_name" = "edge_aep"
+    "bgp_over_lan_spec" = [
+      {
+        "backup_local_lan_ip" = "192.168.12.34"
+        "backup_remote_lan_ip" = "192.168.12.254"
+        "connection_name" = "eat-1-bgpolan-1"
+        "enable_ha" = "true"
+        "external_device_as_number" = "64999"
+        "local_lan_ip" = "192.168.12.33"
+        "remote_lan_ip" = "192.168.12.254"
+        "routing_protocol" = "bgp"
+        "test_id" = "EaT S2C TEST1: EaT BGPoLAN connection, EaT with HA, single remote"
+        "tunnel_protocol" = "LAN"
+      },
+    ]
+    "cloud_type" = "262144"
+    "connected_transit" = true
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-4-WAN",
+          "Edge-3-WAN",
+          "MGMT",
+          "Edge-1-WAN",
+          "Edge-LAN",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eat-1"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "direct_attach_lan" = false
+    "edge_onprem_ip" = "192.168.200.254"
+    "enable_active_standby" = false
+    "enable_active_standby_preemptive" = false
+    "gw_resource_size" = "SMALL"
+    "hardware_model" = "ESXI-VM-EAAT-4-WAN-No-LAN"
+    "interface_mapping" = {
+      "eth0" = [
+        "wan",
+        "0",
+      ]
+      "eth1" = [
+        "wan",
+        "1",
+      ]
+      "eth2" = [
+        "wan",
+        "2",
+      ]
+      "eth3" = [
+        "mgmt",
+        "0",
+      ]
+      "eth4" = [
+        "wan",
+        "3",
+      ]
+    }
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.23.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.23.13/24"
+        "public_ip" = ""
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.12.1"
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.33/24"
+        "type" = "WAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth3"
+        "ipaddr" = "192.168.22.13/24"
+        "secondary_private_cidr_list" = [
+          "192.168.22.112/29",
+        ]
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.20.1"
+        "ifname" = "eth4"
+        "ipaddr" = "192.168.20.13/24"
+        "secondary_private_cidr_list" = [
+          "192.168.20.112/29",
+        ]
+        "type" = "WAN"
+      },
+    ]
+    "is_transit" = true
+    "lan_ifnames" = ""
+    "local_as_num" = "65443"
+    "mgmt_egress_ip" = ""
+    "mgmt_ifnames" = "eth3"
+    "mgmt_over_private_network" = "false"
+    "multitier_transit" = true
+    "name" = "e2e-edge-transit-1"
+    "site_id" = "tsite-1"
+    "spoke_attachment_spec" = [
+      {
+        "dst_wan_interfaces" = "eth3"
+        "edge_wan_interfaces" = "eth0"
+        "insane_mode" = true
+        "jumbo_frame" = false
+        "over_private_network" = true
+        "spoke_gw" = "e2e-edge-spoke-1"
+        "test_id" = "EaT peering TEST1: EaS to EaT peering, over private, non-HPE"
+        "transit_gw" = "e2e-edge-transit-1"
+      },
+      {
+        "dst_wan_interfaces" = "eth4"
+        "insane_mode" = true
+        "jumbo_frame" = false
+        "over_private_network" = false
+        "spoke_gw" = "e2e-aws-spoke-2"
+        "test_id" = "EaT peering TEST2: AWS spoke to EaT peering, over public, HPE"
+        "transit_gw" = "e2e-edge-transit-1"
+        "tunnel_count" = 2
+      },
+    ]
+    "wan_ifnames" = "eth0,eth1,eth2,eth4"
+  },
+  {
+    "account_name" = "edge_aep"
+    "backup_link_config" = [
+      {
+        "connection_type" = "private"
+        "peer_backup_port" = "eth1"
+        "peer_gw_name" = "e2e-edge-transit-1"
+        "self_backup_port" = "eth1"
+      },
+    ]
+    "cloud_type" = "262144"
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-4-WAN",
+          "Edge-3-WAN",
+          "MGMT",
+          "Edge-2-WAN",
+          "Edge-LAN",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eat-1-ha"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "edge_onprem_ip" = "192.168.200.254"
+    "hardware_model" = "ESXI-VM-EAAT-4-WAN-No-LAN"
+    "interface_mapping" = {
+      "eth0" = [
+        "wan",
+        "0",
+      ]
+      "eth1" = [
+        "wan",
+        "1",
+      ]
+      "eth2" = [
+        "wan",
+        "2",
+      ]
+      "eth3" = [
+        "mgmt",
+        "0",
+      ]
+      "eth4" = [
+        "wan",
+        "3",
+      ]
+    }
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.23.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.23.14/24"
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.12.1"
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.34/24"
+        "type" = "WAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth3"
+        "ipaddr" = "192.168.22.14/24"
+        "secondary_private_cidr_list" = [
+          "192.168.22.128/29",
+        ]
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.21.1"
+        "ifname" = "eth4"
+        "ipaddr" = "192.168.21.14/24"
+        "secondary_private_cidr_list" = [
+          "192.168.21.128/29",
+        ]
+        "type" = "WAN"
+      },
+    ]
+    "mgmt_egress_ip" = ""
+    "mgmt_over_private_network" = "false"
+    "name" = "e2e-edge-transit-1-hagw"
+    "primary_gw_name" = "e2e-edge-transit-1"
+  },
+  {
+    "account_name" = "edge_aep"
+    "cloud_type" = "262144"
+    "connected_transit" = true
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-1-WAN",
+          "Edge-3-WAN",
+          "MGMT",
+          "Edge-3-WAN",
+          "Edge-LAN",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eat-2"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "direct_attach_lan" = false
+    "enable_active_standby" = false
+    "enable_active_standby_preemptive" = false
+    "gw_resource_size" = "SMALL"
+    "hardware_model" = "ESXI-VM-EAAT-4-WAN-No-LAN"
+    "interface_mapping" = {
+      "eth0" = [
+        "wan",
+        "0",
+      ]
+      "eth1" = [
+        "wan",
+        "1",
+      ]
+      "eth2" = [
+        "wan",
+        "2",
+      ]
+      "eth3" = [
+        "mgmt",
+        "0",
+      ]
+      "eth4" = [
+        "wan",
+        "3",
+      ]
+    }
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.20.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.20.15/24"
+        "public_ip" = ""
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.12.1"
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.35/24"
+        "type" = "WAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth3"
+        "ipaddr" = "192.168.22.15/24"
+        "secondary_private_cidr_list" = [
+          "192.168.22.144/29",
+        ]
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth4"
+        "ipaddr" = "192.168.22.17/24"
+        "secondary_private_cidr_list" = [
+          "192.168.22.18/32",
+        ]
+        "type" = "WAN"
+      },
+    ]
+    "is_transit" = true
+    "lan_ifnames" = ""
+    "local_as_num" = "65402"
+    "mgmt_egress_ip" = ""
+    "mgmt_ifnames" = "eth3"
+    "mgmt_over_private_network" = "false"
+    "multitier_transit" = true
+    "name" = "e2e-edge-transit-2"
+    "site_id" = "tsite-2"
+    "transit_attachment_spec" = [
+      {
+        "dst_wan_interfaces" = "eth3"
+        "gateway1" = "e2e-edge-transit-1"
+        "gateway2" = "e2e-edge-transit-2"
+        "insane_mode" = true
+        "jumbo_frame" = false
+        "over_private_network" = true
+        "src_wan_interfaces" = "eth3"
+        "test_id" = "EaT peering TEST3: EaT to EaT peering, over private, non-HPE"
+      },
+      {
+        "dst_wan_interfaces" = "eth4"
+        "gateway1" = "e2e-aws-transit-1"
+        "gateway2" = "e2e-edge-transit-2"
+        "insane_mode" = true
+        "jumbo_frame" = false
+        "over_private_network" = false
+        "test_id" = "EaT peering TEST4: AWS transit to EaT peering, over public, HPE"
+        "tunnel_count" = 2
+      },
+    ]
+    "wan_ifnames" = "eth0,eth1,eth2,eth4"
+  },
+  {
+    "account_name" = "edge_aep"
+    "backup_link_config" = [
+      {
+        "connection_type" = "private"
+        "peer_backup_port" = "eth1"
+        "peer_gw_name" = "e2e-edge-transit-2"
+        "self_backup_port" = "eth1"
+      },
+    ]
+    "cloud_type" = "262144"
+    "deployment_spec" = {
+      "eve_vm_spec" = {
+        "device_portgroups" = [
+          "Edge-1-WAN",
+          "Edge-3-WAN",
+          "MGMT",
+          "Edge-4-WAN",
+          "Edge-LAN",
+        ]
+        "eve_vm_cpu" = 4
+        "eve_vm_datastore_name" = "datastore1"
+        "eve_vm_iso_path" = "[datastore1] AEP-staging.iso"
+        "eve_vm_mem" = 12288
+        "eve_vm_name" = "eat-2-ha"
+        "eve_vm_storage" = 128
+      }
+      "hypervisor" = {
+        "ip" = ""
+        "password" = ""
+        "port" = 443
+        "username" = "root"
+      }
+      "platform" = {
+        "type" = "EdgeCSP"
+      }
+      "serial_id" = ""
+    }
+    "device_id" = ""
+    "hardware_model" = "ESXI-VM-EAAT-4-WAN-No-LAN"
+    "interface_mapping" = {
+      "eth0" = [
+        "wan",
+        "0",
+      ]
+      "eth1" = [
+        "wan",
+        "1",
+      ]
+      "eth2" = [
+        "wan",
+        "2",
+      ]
+      "eth3" = [
+        "mgmt",
+        "0",
+      ]
+      "eth4" = [
+        "wan",
+        "3",
+      ]
+    }
+    "interfaces" = [
+      {
+        "gateway_ip" = "192.168.20.1"
+        "ifname" = "eth0"
+        "ipaddr" = "192.168.20.16/24"
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.12.1"
+        "ifname" = "eth1"
+        "ipaddr" = "192.168.12.36/24"
+        "type" = "WAN"
+      },
+      {
+        "dhcp" = true
+        "ifname" = "eth2"
+        "type" = "MANAGEMENT"
+      },
+      {
+        "gateway_ip" = "192.168.22.1"
+        "ifname" = "eth3"
+        "ipaddr" = "192.168.22.16/24"
+        "secondary_private_cidr_list" = [
+          "192.168.22.160/29",
+        ]
+        "type" = "WAN"
+      },
+      {
+        "gateway_ip" = "192.168.23.1"
+        "ifname" = "eth4"
+        "ipaddr" = "192.168.23.16/24"
+        "secondary_private_cidr_list" = [
+          "192.168.23.160/29",
+        ]
+        "type" = "WAN"
+      },
+    ]
+    "mgmt_egress_ip" = ""
+    "mgmt_over_private_network" = "false"
+    "name" = "e2e-edge-transit-2-hagw"
+    "primary_gw_name" = "e2e-edge-transit-2"
+  },
+]
+metal_device_ip = "147.75.72.186"
+metal_device_password = "%(Q7R<9tTv"
+metal_gateway_ip = "147.75.198.41"
+public_ip_block = "147.75.198.40/29"
+usable_public_ip = "147.75.198.42 - 147.75.198.46"
+
+
+
+[
+    {
+        "gateway_ip": "192.168.20.1",
+        "ifname": "eth0",
+        "ipaddr": "192.168.20.11/24",
+        "public_ip": "",
+        "type": "WAN"
+    },
+    {
+        "gateway_ip": "192.168.21.1",
+        "ifname": "eth1",
+        "ipaddr": "192.168.21.11/24",
+        "secondary_private_cidr_list": [
+            "192.168.21.16/29"
+        ],
+        "type": "WAN"
+    },
+    {
+        "dhcp": true,
+        "ifname": "eth2",
+        "type": "MANAGEMENT"
+    },
+    {
+        "gateway_ip": "192.168.22.1",
+        "ifname": "eth3",
+        "ipaddr": "192.168.22.11/24",
+        "type": "WAN"
+    },
+    {
+        "gateway_ip": "192.168.23.1",
+        "ifname": "eth4",
+        "ipaddr": "192.168.23.11/24",
+        "type": "WAN"
+    }
+]
