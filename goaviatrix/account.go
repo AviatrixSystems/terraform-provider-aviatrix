@@ -133,8 +133,6 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
-
-
 func (c *Client) ListAccounts() ([]Account, error) {
 	// If cached accounts are recent enough, return them
 	c.cacheMutex.Lock()
