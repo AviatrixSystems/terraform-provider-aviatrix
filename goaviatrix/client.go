@@ -16,6 +16,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ajg/form"
@@ -59,6 +60,8 @@ type Client struct {
 	ControllerIP     string
 	baseURL          string
 	IgnoreTagsConfig *IgnoreTagsConfig
+	cachedAccounts   []Account
+	cacheMutex       sync.Mutex
 }
 
 type GetApiTokenResp struct {

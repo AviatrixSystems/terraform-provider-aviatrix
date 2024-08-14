@@ -218,18 +218,38 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
-func (c *Client) GetAccount(account *Account) (*Account, error) {
+func (c *Client) ListAccounts() ([]Account, error) {
+	// If cached accounts are recent enough, return them
+	c.cacheMutex.Lock()
+	defer c.cacheMutex.Unlock()
+	if c.cachedAccounts != nil {
+		return c.cachedAccounts, nil
+	}
+
+	// Otherwise, fetch from the backend
+
 	form := map[string]string{
 		"CID":    c.CID,
 		"action": "list_accounts",
 	}
-
 	var resp AccountListResp
 	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
-	accList := resp.Results.AccountList
+	accounts := resp.Results.AccountList
+
+	// Cache the result
+	c.cachedAccounts = accounts
+
+	return accounts, nil
+}
+
+func (c *Client) GetAccount(account *Account) (*Account, error) {
+	accList, err := c.ListAccounts()
+	if err != nil {
+		return nil, err
+	}
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
