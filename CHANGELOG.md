@@ -1,3 +1,9 @@
+
+
+### Deprecations:
+
+1. Removed support for AWS secret/top-secret regions
+
 ## 3.1.5 (Unreleased)
 
 ### Notes:
