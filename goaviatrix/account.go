@@ -154,38 +154,82 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
-func (c *Client) ListAccounts() ([]Account, error) {
-	// If cached accounts are recent enough, return them
-	c.cacheMutex.Lock()
-	defer c.cacheMutex.Unlock()
-	if c.cachedAccounts != nil {
-		return c.cachedAccounts, nil
+func (c *Client) CreateAWSTSAccount(account *Account) error {
+	params := map[string]string{
+		"CID":                       c.CID,
+		"action":                    "setup_account_profile",
+		"account_name":              account.AccountName,
+		"cloud_type":                strconv.Itoa(account.CloudType),
+		"aws_orange_account_number": account.AwsTsAccountNumber,
+		"aws_orange_cap_url":        account.AwsTsCapUrl,
+		"aws_orange_cap_agency":     account.AwsTsCapAgency,
+		"aws_orange_cap_mission":    account.AwsTsCapMission,
+		"aws_orange_cap_role_name":  account.AwsTsCapRoleName,
+		"groups":                    account.GroupNames,
 	}
 
-	// Otherwise, fetch from the backend
+	files := []File{
+		{
+			Path:      account.AwsTsCapCert,
+			ParamName: "aws_orange_cap_cert",
+		},
+		{
+			Path:      account.AwsTsCapCertKey,
+			ParamName: "aws_orange_cap_cert_key",
+		},
+		{
+			Path:      account.AwsTsCaChainCert,
+			ParamName: "aws_orange_ca_chain_cert",
+		},
+	}
 
+	return c.PostFileAPI(params, files, BasicCheck)
+}
+
+func (c *Client) CreateAWSSAccount(account *Account) error {
+	params := map[string]string{
+		"CID":                      c.CID,
+		"action":                   "setup_account_profile",
+		"account_name":             account.AccountName,
+		"cloud_type":               strconv.Itoa(account.CloudType),
+		"aws_red_account_number":   account.AwsSAccountNumber,
+		"aws_red_cap_url":          account.AwsSCapUrl,
+		"aws_red_cap_agency":       account.AwsSCapAgency,
+		"aws_red_cap_account_name": account.AwsSCapAccountName,
+		"aws_red_cap_role_name":    account.AwsSCapRoleName,
+		"groups":                   account.GroupNames,
+	}
+
+	files := []File{
+		{
+			Path:      account.AwsSCapCert,
+			ParamName: "aws_red_cap_cert",
+		},
+		{
+			Path:      account.AwsSCapCertKey,
+			ParamName: "aws_red_cap_cert_key",
+		},
+		{
+			Path:      account.AwsSCaChainCert,
+			ParamName: "aws_red_ca_chain_cert",
+		},
+	}
+
+	return c.PostFileAPI(params, files, DuplicateBasicCheck)
+}
+
+func (c *Client) GetAccount(account *Account) (*Account, error) {
 	form := map[string]string{
 		"CID":    c.CID,
 		"action": "list_accounts",
 	}
+
 	var resp AccountListResp
 	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
-	accounts := resp.Results.AccountList
-
-	// Cache the result
-	c.cachedAccounts = accounts
-
-	return accounts, nil
-}
-
-func (c *Client) GetAccount(account *Account) (*Account, error) {
-	accList, err := c.ListAccounts()
-	if err != nil {
-		return nil, err
-	}
+	accList := resp.Results.AccountList
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
