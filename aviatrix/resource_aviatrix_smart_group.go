@@ -15,6 +15,8 @@ var (
 	// dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
 	// K8s resource names must adhere to this.
 	dns1123FmtRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+	nonTagKeys   = []string{goaviatrix.ExternalKey, goaviatrix.S2CKey, goaviatrix.CidrKey, goaviatrix.FqdnKey}
+	typeKeys     = []string{goaviatrix.TypeKey, goaviatrix.ResIdKey, goaviatrix.AccountIdKey, goaviatrix.AccountNameKey, goaviatrix.NameKey, goaviatrix.RegionKey, goaviatrix.ZoneKey, goaviatrix.TagsPrefix}
 )
 
 func resourceAviatrixSmartGroup() *schema.Resource {
@@ -28,7 +30,7 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			goaviatrix.NameKey: {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the Smart Group.",
@@ -44,19 +46,19 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cidr": {
+									goaviatrix.CidrKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.Any(validation.IsCIDR, validation.IsIPAddress),
 										Description:  "CIDR block or IP Address this expression matches.",
 									},
-									"fqdn": {
+									goaviatrix.FqdnKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 										Description:  "FQDN address this expression matches.",
 									},
-									"site": {
+									goaviatrix.SiteKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
@@ -68,64 +70,80 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet", "k8s"}, false),
 										Description:  "Type of resource this expression matches.",
 									},
-									"k8s_cluster_id": {
+									goaviatrix.K8sClusterIdKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Kubernetes Cluster ID this expression matches.",
 									},
-									"k8s_pod": {
+									goaviatrix.K8sPodNameKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Pod name"),
 										Description:  "Name of the Kubernetes Pod this expression matches.",
 									},
-									"k8s_service": {
+									goaviatrix.K8sServiceKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Service name"),
 										Description:  "Name of the Kubernetes Service this expression matches.",
 									},
-									"k8s_namespace": {
+									goaviatrix.K8sNamespaceKey: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Namespace name"),
 										Description:  "Name of the Kubernetes Namespace this expression matches.",
 									},
-									"res_id": {
+									goaviatrix.ResIdKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Resource ID this expression matches.",
 									},
-									"account_id": {
+									goaviatrix.AccountIdKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Account ID this expression matches.",
 									},
-									"account_name": {
+									goaviatrix.AccountNameKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Account name this expression matches.",
 									},
-									"name": {
+									goaviatrix.NameKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Name this expression matches.",
 									},
-									"region": {
+									goaviatrix.RegionKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Region this expression matches.",
 									},
-									"zone": {
+									goaviatrix.ZoneKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Zone this expression matches.",
 									},
-									"tags": {
+									goaviatrix.TagsPrefix: {
 										Type:        schema.TypeMap,
 										Optional:    true,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "Map of tags this expression matches.",
+									},
+									goaviatrix.ExtArgsPrefix: {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Map of external arguments this expression matches.",
+									},
+									goaviatrix.S2CKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Name of remote site.",
+									},
+									goaviatrix.ExternalKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Identifier of remote data source.",
 									},
 								},
 							},
@@ -155,39 +173,29 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 		selectorInfo := selectorInterface.(map[string]interface{})
 		var filter *goaviatrix.SmartGroupMatchExpression
 
-		if mapContains(selectorInfo, "cidr") || mapContains(selectorInfo, "fqdn") || mapContains(selectorInfo, "site") {
-			for _, key := range []string{"type", "res_id", "account_id", "account_name", "name", "region", "zone", "tags"} {
-				if mapContains(selectorInfo, key) {
-					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
+		if matchingKey, ok := goaviatrix.MapContainsOneOfKeys(selectorInfo, nonTagKeys); ok {
+			if matchingType, okType := goaviatrix.MapContainsOneOfKeys(selectorInfo, typeKeys); okType {
+				return nil, fmt.Errorf("%q must be empty when %q is set", matchingType, matchingKey)
+			}
+
+			filter = goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
+			if matchingKey == goaviatrix.ExternalKey {
+				if extArgsMap, ok := selectorInfo[goaviatrix.ExtArgsPrefix]; ok {
+					extArgs := make(map[string]string)
+					for key, value := range extArgsMap.(map[string]interface{}) {
+						extArgs[key] = value.(string)
+					}
+					filter.ExtArgs = extArgs
 				}
 			}
-
-			filter = &goaviatrix.SmartGroupMatchExpression{
-				CIDR: selectorInfo["cidr"].(string),
-				FQDN: selectorInfo["fqdn"].(string),
-				Site: selectorInfo["site"].(string),
-			}
 		} else {
-			if !mapContains(selectorInfo, "type") {
+			if !goaviatrix.MapContains(selectorInfo, goaviatrix.TypeKey) {
 				return nil, fmt.Errorf("%q is required when %q, %q and %q are all empty", "type", "cidr", "fqdn", "site")
 			}
-			filter = &goaviatrix.SmartGroupMatchExpression{
-				Type:         selectorInfo["type"].(string),
-				ResId:        selectorInfo["res_id"].(string),
-				AccountId:    selectorInfo["account_id"].(string),
-				AccountName:  selectorInfo["account_name"].(string),
-				Name:         selectorInfo["name"].(string),
-				Region:       selectorInfo["region"].(string),
-				Zone:         selectorInfo["zone"].(string),
-				K8sClusterId: selectorInfo["k8s_cluster_id"].(string),
-				K8sPodName:   selectorInfo["k8s_pod"].(string),
-				K8sService:   selectorInfo["k8s_service"].(string),
-				K8sNamespace: selectorInfo["k8s_namespace"].(string),
-			}
-
-			if _, ok := selectorInfo["tags"]; ok {
+			filter = goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
+			if tagsMap, ok := selectorInfo[goaviatrix.TagsPrefix]; ok {
 				tags := make(map[string]string)
-				for key, value := range selectorInfo["tags"].(map[string]interface{}) {
+				for key, value := range tagsMap.(map[string]interface{}) {
 					tags[key] = value.(string)
 				}
 				filter.Tags = tags
@@ -247,24 +255,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 	var expressions []interface{}
 
 	for _, filter := range smartGroup.Selector.Expressions {
-		filterMap := map[string]interface{}{
-			"type":           filter.Type,
-			"cidr":           filter.CIDR,
-			"fqdn":           filter.FQDN,
-			"site":           filter.Site,
-			"res_id":         filter.ResId,
-			"account_id":     filter.AccountId,
-			"account_name":   filter.AccountName,
-			"name":           filter.Name,
-			"region":         filter.Region,
-			"zone":           filter.Zone,
-			"tags":           filter.Tags,
-			"k8s_cluster_id": filter.K8sClusterId,
-			"k8s_pod":        filter.K8sPodName,
-			"k8s_service":    filter.K8sService,
-			"k8s_namespace":  filter.K8sNamespace,
-		}
-
+		filterMap := goaviatrix.SmartGroupFilterToMapMapped(filter)
 		expressions = append(expressions, filterMap)
 	}
 

@@ -201,6 +201,106 @@ func TestAccAviatrixSmartGroup_reject_bad_k8s_names(t *testing.T) {
 	})
 }
 
+func TestAccAviatrixSmartGroup_s2c(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.s2c"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupK8s(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "s2c-test-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.s2c", "test-mapped-s2c"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAviatrixSmartGroup_exteranl_threat(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.threat"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupK8s(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "threat-test-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.external", "threatiq"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAviatrixSmartGroup_exteranl_geo(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.geo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupK8s(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "geo-test-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.external", "geo"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.coutry_os_code", "FR"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSmartGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]

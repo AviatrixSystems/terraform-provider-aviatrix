@@ -51,6 +51,14 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_namespace  = "testnamespace"
       k8s_pod        = "testpod"
     }
+
+    match_expressions {
+      s2c = "remote-site-name"
+    }
+
+    match_expressions {
+      external = "External_ID"
+    }
   }
 }
 ```
