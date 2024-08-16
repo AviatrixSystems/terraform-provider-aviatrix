@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,10 +15,6 @@ var (
 	// dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
 	// K8s resource names must adhere to this.
 	dns1123FmtRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
-	// nonTagKeys are the selector key names that don't expect a "tags" key in the selector
-	nonTagKeys = []string{goaviatrix.ExternalKey, goaviatrix.S2CKey, goaviatrix.CidrKey, goaviatrix.FqdnKey}
-	// tagKeys are the selector key names that are associated with a type-based selector. This set of keys should be disjoint from the nonTagKeys
-	tagKeys = []string{goaviatrix.TypeKey, goaviatrix.ResIdKey, goaviatrix.AccountIdKey, goaviatrix.AccountNameKey, goaviatrix.NameKey, goaviatrix.RegionKey, goaviatrix.ZoneKey, goaviatrix.TagsPrefix}
 )
 
 func resourceAviatrixSmartGroup() *schema.Resource {
@@ -174,40 +169,24 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
 		selectorInfo := selectorInterface.(map[string]interface{})
-		var filter *goaviatrix.SmartGroupMatchExpression
-
-		// Handle the case of the non-tag selector
-		if matchingKey, ok := goaviatrix.MapContainsOneOfKeys(selectorInfo, nonTagKeys); ok {
-			// Error if both the tagged and non-tagged selectors are present together
-			if matchingType, okType := goaviatrix.MapContainsOneOfKeys(selectorInfo, tagKeys); okType {
-				return nil, fmt.Errorf("%q must be empty when %q is set", matchingType, matchingKey)
-			}
-
-			filter = goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
-			if matchingKey == goaviatrix.ExternalKey {
-				// build a map out of the external arguments
-				if extArgsMap, ok := selectorInfo[goaviatrix.ExtArgsPrefix]; ok {
-					extArgs := make(map[string]string)
-					for key, value := range extArgsMap.(map[string]interface{}) {
-						extArgs[key] = value.(string)
-					}
-					filter.ExtArgs = extArgs
+		filter := goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
+		if goaviatrix.MapContains(selectorInfo, goaviatrix.ExternalKey) {
+			// build a map out of the external arguments
+			if extArgsMap, ok := selectorInfo[goaviatrix.ExtArgsPrefix]; ok {
+				extArgs := make(map[string]string)
+				for key, value := range extArgsMap.(map[string]interface{}) {
+					extArgs[key] = value.(string)
 				}
-			}
-		} else if !goaviatrix.MapContains(selectorInfo, goaviatrix.TypeKey) {
-			return nil, fmt.Errorf("%q is required when %q are all empty", goaviatrix.TypeKey, strings.Join(nonTagKeys, ", "))
-		} else {
-			// No non-tagged keys only tagged keys
-			filter = goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
-			if tagsMap, ok := selectorInfo[goaviatrix.TagsPrefix]; ok {
-				tags := make(map[string]string)
-				for key, value := range tagsMap.(map[string]interface{}) {
-					tags[key] = value.(string)
-				}
-				filter.Tags = tags
+				filter.ExtArgs = extArgs
 			}
 		}
-
+		if tagsMap, ok := selectorInfo[goaviatrix.TagsPrefix]; ok {
+			tags := make(map[string]string)
+			for key, value := range tagsMap.(map[string]interface{}) {
+				tags[key] = value.(string)
+			}
+			filter.Tags = tags
+		}
 		smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 	}
 
