@@ -127,6 +127,7 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_platform":                                          resourceAviatrixEdgePlatform(),
 			"aviatrix_edge_platform_device_onboarding":                        resourceAviatrixEdgePlatformDeviceOnboarding(),
 			"aviatrix_edge_platform_ha":                                       resourceAviatrixEdgePlatformHa(),
+			"aviatrix_edge_proxy_profile":                                     resourceAviatrixEdgeProxyProfileConfig(),
 			"aviatrix_edge_spoke":                                             resourceAviatrixEdgeSpoke(),
 			"aviatrix_edge_spoke_external_device_conn":                        resourceAviatrixEdgeSpokeExternalDeviceConn(),
 			"aviatrix_edge_spoke_transit_attachment":                          resourceAviatrixEdgeSpokeTransitAttachment(),
