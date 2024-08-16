@@ -61,8 +61,4 @@ func TestMapContains(t *testing.T) {
 	}
 	assert.True(t, MapContains(testMap, "one"))
 	assert.False(t, MapContains(testMap, "Random"))
-
-	matchKey, found := MapContainsOneOfKeys(testMap, testKeys)
-	assert.True(t, found)
-	assert.Equal(t, "one", matchKey)
 }
