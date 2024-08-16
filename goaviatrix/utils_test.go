@@ -65,11 +65,4 @@ func TestMapContains(t *testing.T) {
 	matchKey, found := MapContainsOneOfKeys(testMap, testKeys)
 	assert.True(t, found)
 	assert.Equal(t, "one", matchKey)
-
-	_, found = MapContainsOneOfKeys(testMap, []string{"random1, random2"})
-	assert.False(t, found)
-
-	matchKey, found = MapContainsOneOfKeys(testMap, []string{"random1, random2", "three"})
-	assert.True(t, found)
-	assert.Equal(t, "three", matchKey)
 }

@@ -304,15 +304,3 @@ func MapContains(m map[string]interface{}, key string) bool {
 		return !reflect.ValueOf(val).IsZero()
 	}
 }
-
-// MapContainsOneOfKeys tests if any of the values in the keys parameter has an
-// entry in the m map. If a key is found in the map, the first key found is returned
-// along with the value true.  Otherwise an empty string and false are retured
-func MapContainsOneOfKeys(m map[string]interface{}, keys []string) (string, bool) {
-	for _, key := range keys {
-		if MapContains(m, key) {
-			return key, true
-		}
-	}
-	return "", false
-}
