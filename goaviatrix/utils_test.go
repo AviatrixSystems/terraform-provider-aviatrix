@@ -1,8 +1,10 @@
 package goaviatrix
 
-import "testing"
+import (
+	"testing"
 
-import "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestValidateASN(t *testing.T) {
 	tt := []struct {
