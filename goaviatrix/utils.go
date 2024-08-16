@@ -286,6 +286,7 @@ func getStringSet(d *schema.ResourceData, k string) []string {
 	return sl
 }
 
+// MapContains returns true if the key parameter has an entry in the m map
 func MapContains(m map[string]interface{}, key string) bool {
 	val, exists := m[key]
 	if !exists {
@@ -304,6 +305,9 @@ func MapContains(m map[string]interface{}, key string) bool {
 	}
 }
 
+// MapContainsOneOfKeys tests if any of the values in the keys parameter has an
+// entry in the m map. If a key is found in the map, the first key found is returned
+// along with the value true.  Otherwise an empty string and false are retured
 func MapContainsOneOfKeys(m map[string]interface{}, keys []string) (string, bool) {
 	for _, key := range keys {
 		if MapContains(m, key) {

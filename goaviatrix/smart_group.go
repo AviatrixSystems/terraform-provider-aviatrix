@@ -76,6 +76,12 @@ const (
 	K8sPodNameKey   = "ka8s_pod"
 	S2CKey          = "s2c"
 	ExternalKey     = "external"
+
+	AnyKey      = "any"
+	AllKey      = "all"
+	SelectorKey = "selector"
+
+	ApiEndpoint = "app-domains"
 )
 
 func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupMatchExpression {
@@ -111,14 +117,20 @@ func setFilter(filterField string, filterMap map[string]interface{}, fieldKey st
 	}
 }
 
-func SmartGroupFilterToMapMapped(filter *SmartGroupMatchExpression) map[string]interface{} {
+// SmartGroupFilterToResource returns the contents of the filter structure in a map that will
+// pass the smart group TF resource schema
+func SmartGroupFilterToResource(filter *SmartGroupMatchExpression) map[string]interface{} {
 	return smartGroupFilterToMapBasic(filter, true)
 }
 
-func SmartGroupFilterToMap(filter *SmartGroupMatchExpression) map[string]interface{} {
+// SmartGroupFilterToAPIMap returns the contents of the filter structure in a map that can
+// be passed to the Smart Group API
+func SmartGroupFilterToAPIMap(filter *SmartGroupMatchExpression) map[string]interface{} {
 	return smartGroupFilterToMapBasic(filter, false)
 }
 
+// smartGroupFilterToMapBasic is underlying function to SmartGroupFilterToResource and SmartGroupFiltertoAPIMap
+// The keepMaps argument dictates how the map keys ("tags" and "ext_args") are translated for each case.
 func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool) map[string]interface{} {
 	filterMap := make(map[string]interface{})
 
@@ -164,31 +176,30 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 
 func makeSmartGroupForm(smartGroup *SmartGroup) map[string]interface{} {
 	form := map[string]interface{}{
-		"name": smartGroup.Name,
+		NameKey: smartGroup.Name,
 	}
 
-	var or []map[string]map[string]interface{}
+	var orGroup []map[string]map[string]interface{}
 	for _, smartGroupSelector := range smartGroup.Selector.Expressions {
-		and := map[string]map[string]interface{}{
-			"all": SmartGroupFilterToMap(smartGroupSelector),
+		andGroup := map[string]map[string]interface{}{
+			AllKey: SmartGroupFilterToAPIMap(smartGroupSelector),
 		}
 
-		or = append(or, and)
+		orGroup = append(orGroup, andGroup)
 	}
 
-	form["selector"] = map[string]interface{}{
-		"any": or,
+	form[SelectorKey] = map[string]interface{}{
+		AnyKey: orGroup,
 	}
 
 	return form
 }
 
 func (c *Client) CreateSmartGroup(ctx context.Context, smartGroup *SmartGroup) (string, error) {
-	endpoint := "app-domains"
 	form := makeSmartGroupForm(smartGroup)
 
 	var data SmartGroupResp
-	if err := c.PostAPIContext25(ctx, &data, endpoint, form); err != nil {
+	if err := c.PostAPIContext25(ctx, &data, ApiEndpoint, form); err != nil {
 		return "", err
 	}
 	return data.UUID, nil
@@ -205,7 +216,7 @@ func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, e
 
 	for _, smartGroupResult := range data.SmartGroups {
 		if smartGroupResult.UUID == uuid {
-			return cleanupSmartGroup(smartGroupResult), nil
+			return createSmartGroup(smartGroupResult), nil
 		}
 	}
 	return nil, ErrNotFound
@@ -234,13 +245,15 @@ func (c *Client) GetSmartGroups(ctx context.Context) ([]*SmartGroup, error) {
 	var smartGroups []*SmartGroup
 	for _, smartGroupResult := range data.SmartGroups {
 		if smartGroupResult.UUID != "" {
-			smartGroups = append(smartGroups, cleanupSmartGroup(smartGroupResult))
+			smartGroups = append(smartGroups, createSmartGroup(smartGroupResult))
 		}
 	}
 	return smartGroups, nil
 }
 
-func cleanupSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
+// createSmartGroup transforms the result returned by the API into the structure expected by the
+// rest of the terraform smart group resource logic
+func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 	smartGroup := &SmartGroup{
 		Name: smartGroupResult.Name,
 		UUID: smartGroupResult.UUID,
