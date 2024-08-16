@@ -223,6 +223,7 @@ type Gateway struct {
 	SiteID                          string                              `json:"site_id,omitempty"`
 	EIPMap                          string                              `json:"eip_map,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
+	InterfaceMapping                string                              `json:"interface_mapping,omitempty"`
 }
 
 type HaGateway struct {
