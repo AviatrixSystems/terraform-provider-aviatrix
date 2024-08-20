@@ -1,6 +1,10 @@
 package goaviatrix
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestValidateASN(t *testing.T) {
 	tt := []struct {
@@ -47,4 +51,14 @@ func TestValidateASN(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMapContains(t *testing.T) {
+	testMap := make(map[string]interface{})
+	testKeys := []string{"one", "two", "three"}
+	for _, key := range testKeys {
+		testMap[key] = key
+	}
+	assert.True(t, MapContains(testMap, "one"))
+	assert.False(t, MapContains(testMap, "Random"))
 }
