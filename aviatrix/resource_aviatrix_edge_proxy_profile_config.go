@@ -77,7 +77,7 @@ func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
 	}
 
-	proxy, err := client.GetEdgeNEOProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
+	proxy, err := client.GetEdgePlatformProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -101,7 +101,7 @@ func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta int
 func resourceAviatrixEdgeProxyProfileConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DeleteEdgeNEOProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
+	err := client.DeleteEdgePlatformProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
 	if err != nil {
 		return fmt.Errorf("failed to delete proxy profile: %s", err)
 	}
@@ -109,8 +109,8 @@ func resourceAviatrixEdgeProxyProfileConfigDelete(d *schema.ResourceData, meta i
 	return nil
 }
 
-func marshalEdgeProxyProfileConfigInput(d *schema.ResourceData) *goaviatrix.EdgeNEOProxyProfile {
-	return &goaviatrix.EdgeNEOProxyProfile{
+func marshalEdgeProxyProfileConfigInput(d *schema.ResourceData) *goaviatrix.EdgePlatformProxyProfile {
+	return &goaviatrix.EdgePlatformProxyProfile{
 		Address:     d.Get("ip_address").(string),
 		Port:        d.Get("port").(int),
 		CACert:      d.Get("ca_certificate").(string),
