@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type EdgeNEOProxyProfile struct {
+type EdgePlatformProxyProfile struct {
 	Action      string `json:"action"`
 	CID         string `json:"CID"`
 	AccountName string `json:"account_name"`
@@ -15,7 +15,7 @@ type EdgeNEOProxyProfile struct {
 	CACert      string `json:"ca_cert"`
 }
 
-type EdgeNEOProxyProfileResp struct {
+type EdgePlatformProxyProfileResp struct {
 	ProxyID           string     `json:"proxyID"`
 	Name              string     `json:"name"`
 	IPAddress         string     `json:"address"`
@@ -27,14 +27,14 @@ type EdgeNEOProxyProfileResp struct {
 	ExpiredAt         *time.Time `json:"expiredAt,omitempty"`
 }
 
-type EdgeNEOProxyProfileListResponse struct {
+type EdgePlatformProxyProfileListResponse struct {
 	Return    bool `json:"return"`
-	Results   []EdgeNEOProxyProfileResp
+	Results   []EdgePlatformProxyProfileResp
 	Reason    string `json:"reason"`
 	Errortype string `json:"errortype"`
 }
 
-func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgeNEOProxyProfile) error {
+func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgePlatformProxyProfile) error {
 	edgeNEOProxyProfile.Action = "create_edge_csp_proxy_profile"
 	edgeNEOProxyProfile.CID = c.CID
 
@@ -46,14 +46,14 @@ func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile
 	return nil
 }
 
-func (c *Client) GetEdgeNEOProxyProfile(ctx context.Context, accountName, profileName string) (*EdgeNEOProxyProfileResp, error) {
+func (c *Client) GetEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) (*EdgePlatformProxyProfileResp, error) {
 	form := map[string]string{
 		"action":       "list_edge_csp_proxy_profiles",
 		"CID":          c.CID,
 		"account_name": accountName,
 	}
 
-	var data EdgeNEOProxyProfileListResponse
+	var data EdgePlatformProxyProfileListResponse
 
 	err := c.PostAPIContext2(ctx, &data, form["action"], form, BasicCheck)
 	if err != nil {
@@ -70,8 +70,8 @@ func (c *Client) GetEdgeNEOProxyProfile(ctx context.Context, accountName, profil
 	return nil, ErrNotFound
 }
 
-func (c *Client) DeleteEdgeNEOProxyProfile(ctx context.Context, accountName, profileName string) error {
-	proxyProfile, err := c.GetEdgeNEOProxyProfile(ctx, accountName, profileName)
+func (c *Client) DeleteEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) error {
+	proxyProfile, err := c.GetEdgePlatformProxyProfile(ctx, accountName, profileName)
 	if err == ErrNotFound {
 		return nil
 	} else if err != nil {
