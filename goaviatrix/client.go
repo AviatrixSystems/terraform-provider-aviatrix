@@ -48,6 +48,7 @@ type ClientInterface interface {
 	DeleteAccount(account *Account) error
 	GetAccount(account *Account) (*Account, error)
 	AuditAccount(ctx context.Context, account *Account) error
+	InvalidateCache()
 }
 
 // Client for accessing the Aviatrix Controller
