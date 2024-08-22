@@ -435,7 +435,7 @@ func resourceAviatrixAccount() *schema.Resource {
 
 func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
-
+	defer client.InvalidateCache()
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
@@ -868,7 +868,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
-
+	defer client.InvalidateCache()
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
@@ -1088,7 +1088,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	}
-
 	d.Partial(false)
 	return resourceAviatrixAccountRead(ctx, d, meta)
 }
@@ -1101,12 +1100,11 @@ func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix account: %#v", account)
-
+	defer client.InvalidateCache()
 	err := client.DeleteAccount(account)
 	if err != nil {
 		return diag.Errorf("failed to delete Aviatrix Account: %s", err)
 	}
-
 	return nil
 }
 
