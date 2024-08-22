@@ -980,10 +980,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 		}
 
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-			gateway.EIPMap = d.Get("eip_map").(string)
-		}
-
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.VpcID = d.Get("vpc_id").(string)
 			if gateway.VpcID == "" {
@@ -1902,8 +1898,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set the interface map
 		d.Set("interface_map", gw.InterfaceMapping)
-		d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
-		d.Set("connection_type", gw.HaGw.ConnectionType)
 		d.Set("eip_map", gw.EIPMap)
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -2270,6 +2264,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 		d.Set("ha_image_version", gw.HaGw.ImageVersion)
 		d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+			d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
+			d.Set("connection_type", gw.HaGw.ConnectionType)
+		}
 		lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
 		if err != nil && err != goaviatrix.ErrNotFound {
 			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
@@ -2307,6 +2305,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	return nil
+
 }
 
 func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
