@@ -218,6 +218,12 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
+func (c *Client) InvalidateCache() {
+	c.cacheMutex.Lock()
+	defer c.cacheMutex.Unlock()
+	c.cachedAccounts = nil
+}
+
 func (c *Client) ListAccounts() ([]Account, error) {
 	// If cached accounts are recent enough, return them
 	c.cacheMutex.Lock()
