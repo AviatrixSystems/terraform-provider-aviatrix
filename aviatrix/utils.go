@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -361,22 +360,4 @@ func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
 		}
 	}
 	return false
-}
-
-func mapContains(m map[string]interface{}, key string) bool {
-	val, exists := m[key]
-	if !exists {
-		return false
-	}
-
-	switch v := val.(type) {
-	case string:
-		return len(v) > 0
-	case map[string]interface{}:
-		return len(v) > 0
-	case []interface{}:
-		return len(v) > 0
-	default:
-		return !reflect.ValueOf(val).IsZero()
-	}
 }

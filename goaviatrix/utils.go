@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -283,4 +284,23 @@ func getStringSet(d *schema.ResourceData, k string) []string {
 		sl = append(sl, v.(string))
 	}
 	return sl
+}
+
+// MapContains returns true if the key parameter has an entry in the m map
+func MapContains(m map[string]interface{}, key string) bool {
+	val, exists := m[key]
+	if !exists {
+		return false
+	}
+
+	switch v := val.(type) {
+	case string:
+		return len(v) > 0
+	case map[string]interface{}:
+		return len(v) > 0
+	case []interface{}:
+		return len(v) > 0
+	default:
+		return !reflect.ValueOf(val).IsZero()
+	}
 }

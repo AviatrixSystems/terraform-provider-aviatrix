@@ -183,7 +183,7 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.Watch = watch.(bool)
 		}
 
-		if mapContains(policy, "port_ranges") {
+		if goaviatrix.MapContains(policy, "port_ranges") {
 			if distributedFirewallingPolicy.Protocol == "ICMP" {
 				return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 			}
