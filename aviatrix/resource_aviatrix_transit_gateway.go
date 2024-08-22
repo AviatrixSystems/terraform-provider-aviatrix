@@ -1898,6 +1898,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set the interface map
 		d.Set("interface_map", gw.InterfaceMapping)
+		d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
+		d.Set("connection_type", gw.HaGw.ConnectionType)
 		d.Set("eip_map", gw.EIPMap)
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -2264,10 +2266,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 		d.Set("ha_image_version", gw.HaGw.ImageVersion)
 		d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-			d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
-			d.Set("connection_type", gw.HaGw.ConnectionType)
-		}
 		lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
 		if err != nil && err != goaviatrix.ErrNotFound {
 			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)

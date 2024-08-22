@@ -224,6 +224,8 @@ type Gateway struct {
 	EIPMap                          string                              `json:"eip_map,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                string                              `json:"interface_mapping,omitempty"`
+	PeerBackupPort                  string                              `json:"peer_backup_port,omitempty"`
+	ConnectionType                  string                              `json:"connection_type,omitempty"`
 }
 
 type HaGateway struct {
