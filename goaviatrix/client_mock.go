@@ -86,6 +86,9 @@ func (mock *ClientInterfaceMock) AuditAccount(ctx context.Context, account *Acco
 	return mock.AuditAccountFunc(ctx, account)
 }
 
+func (mock *ClientInterfaceMock) InvalidateCache() {
+}
+
 // AuditAccountCalls gets all the calls that were made to AuditAccount.
 // Check the length with:
 //
