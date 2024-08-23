@@ -26,6 +26,9 @@ type TransitHaGateway struct {
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
 	BackupLinkList        []BackupLinkInterface
 	BackupLinkConfig      string `json:"backup_link_config,omitempty"`
+	InterfaceMapping      string `json:"interface_mapping,omitempty"`
+	Interfaces            string `json:"interfaces,omitempty"`
+	DeviceID              string `json:"device_id,omitempty"`
 }
 
 type BackupLinkInterface struct {

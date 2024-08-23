@@ -114,13 +114,13 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 			"dst_wan_interfaces": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Select Edge Transit WAN interface(s) to attach, comma separated",
+				Description:  "Destination WAN interface for edge gateways where teh peering terminates, comma separated",
 				ValidateFunc: validateWanInterfaces,
 			},
 			"cloud_type": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				Description:  "Type of cloud service provider, requires an integer value. Use 1 for AWS.",
+				Description:  "Type of cloud service provider, requires an integer value. Use 1 for AWS, 4 for GCP, 8 for Azure. Refer other types in documentation.",
 				ValidateFunc: validateCloudType,
 			},
 		},

@@ -14,8 +14,6 @@ const (
 	AWSChina    = 1024
 	AzureChina  = 2048
 	AliCloud    = 8192
-	AWSTS       = 16384  // AWS Top Secret Region (C2S)
-	AWSS        = 32768  // AWS Secret Region (SC2S)
 	EDGECSP     = 65536  // Zededa
 	EDGEEQUINIX = 524288 // Equinix
 	EDGENEO     = 262144 // AEP
