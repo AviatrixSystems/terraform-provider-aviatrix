@@ -886,12 +886,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			// Encode the JSON byte slice to a Base64 string
 			gateway.InterfaceMapping = string(interfaceMappingJSON)
 		}
-		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
-		d.SetId(gateway.GwName)
-		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-		err = client.LaunchTransitVpc(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+
+		if (d.Get("peer_backup_port").(string) == "") && (d.Get("connection_type").(string) == "") {
+			log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
+			d.SetId(gateway.GwName)
+			defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
+			err = client.LaunchTransitVpc(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+			}
 		}
 
 		// create ha gateway
@@ -1901,6 +1904,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set the interface map
 		d.Set("interface_map", gw.InterfaceMapping)
+		if gw.PeerBackupPort != "" && gw.ConnectionType != "" {
+			d.Set("peer_backup_port", gw.PeerBackupPort)
+			d.Set("connection_type", gw.ConnectionType)
+		}
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
@@ -2266,10 +2273,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 		d.Set("ha_image_version", gw.HaGw.ImageVersion)
 		d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-			d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
-			d.Set("connection_type", gw.HaGw.ConnectionType)
-		}
 		lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
 		if err != nil && err != goaviatrix.ErrNotFound {
 			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
