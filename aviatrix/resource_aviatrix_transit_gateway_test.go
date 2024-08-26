@@ -190,7 +190,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				preGatewayCheck(t, msgCommonAEP)
+				preGatewayCheckEdge(t, msgCommonAEP)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckTransitGatewayDestroy,
