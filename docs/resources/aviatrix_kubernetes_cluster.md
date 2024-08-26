@@ -8,17 +8,16 @@ description: |-
 
 # aviatrix_kubernetes_cluster
 
-The **aviatrix_kubernetes_cluster** resource allows you to configure a Kubernetes cluster.
-Aviatrix Smart Groups can be built based on applications running in these clusters. 
-<!-- TODO: Add version, 7.2? -->
-This resource is available as of provider version R3.0+.
+The **aviatrix_kubernetes_cluster** resource allows you to register a Kubernetes cluster at the controller.
+This allows the controller to build Aviatrix Smart Groups from applications running in the Kubernetes cluster.
+This resource is available as of provider version R3.2+.
 
 ## Example Usage
 
 
 ```hcl
-# Create an Aviatrix Kubernetes Cluster so that the controller allows building Aviatrix Smart Groups from an AWS EKS cluster
-resource "aviatrix_kubernetes_cluster" "rptest" {
+# Register an EKS cluster so that the controller allows building Aviatrix Smart Groups from its workloads
+resource "aviatrix_kubernetes_cluster" "eks_cluster" {
   cluster_id          = data.aws_eks_cluster.eks_cluster.arn
   use_csp_credentials = true
 }
@@ -29,20 +28,20 @@ data "aws_eks_cluster" "eks_cluster" {
 ```
 
 ```hcl
-# Create an Aviatrix Kubernetes Cluster so that the controller allows building Aviatrix Smart Groups from an Azure AKS cluster
-resource "aviatrix_kubernetes_cluster" "rptest" {
-  cluster_id          = data.azurerm_kubernetes_cluster.mycluster.id
+# Register an AKS cluster so that the controller allows building Aviatrix Smart Groups from its workloads
+resource "aviatrix_kubernetes_cluster" "aks_cluster" {
+  cluster_id          = lower(data.azurerm_kubernetes_cluster.aks_cluster.id)
   use_csp_credentials = true
 }
 
-data "azurerm_kubernetes_cluster" "mycluster" {
-  name                = "myakscluster"
+data "azurerm_kubernetes_cluster" "aks_cluster" {
+  name                = "mycluster"
   resource_group_name = "my-example-resource-group"
 }
 ```
 
 ```hcl
-# Create an Aviatrix Kubernetes Cluster for a custom built cluster in AWS
+# Register a custom built cluster in AWS so that the controller allows building Aviatrix Smart Groups from its workloads
 data "aws_vpc" "vpc" {
   tags = {
     Name = "spoke-east-2-vpc"
@@ -76,7 +75,7 @@ resource "aviatrix_kubernetes_cluster" "my_cluster" {
 ```
 
 ```hcl
-# Create an Aviatrix Kubernetes Cluster for a custom built cluster in Azure with an overlay network
+# Register a custom built cluster in Azure so that the controller allows building Aviatrix Smart Groups from its workloads
 data "azurerm_virtual_network" "vnet" {
   name                = "testvnet"
   resource_group_name = "testresourcegroup"
@@ -115,7 +114,13 @@ The following arguments are supported:
 
 ### Required
 
-* `cluster_id` - The ID of the Kubernetes cluster. If the cluster is an EKS cluster this should be the ARN of the EKS cluster. If the cluster to be configured is an AKS cluster this should be the full resource ID of the AKS cluster. If the cluster is a custom-built cluster this can be any unique identifier.
+* `cluster_id` - The ID of the Kubernetes cluster. 
+
+   If the cluster to be registered is an EKS cluster this should be the ARN of the EKS cluster. 
+   
+   If the cluster to be registered is an AKS cluster this should be the full resource ID of the AKS cluster converted to lower case. 
+
+   If the cluster is a custom-built cluster this can be any unique identifier.
 
 ### Optional
 
