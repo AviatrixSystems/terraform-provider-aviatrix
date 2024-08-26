@@ -752,14 +752,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"eip_map": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				Description:  "A JSON string representing the EIP mapping.",
-				ValidateFunc: validateJSON,
-			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -876,7 +868,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return err
 		}
 		gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
-		gateway.EIPMap = d.Get("eip_map").(string)
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 			// set the static interface mapping for AEP
@@ -908,7 +899,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
 			Eip:           d.Get("ha_eip").(string),
-			InsaneMode:    "no",
+			DeviceID:      d.Get("device_id").(string),
+			InsaneMode:    "yes",
 		}
 		peerBackupPort, peerBackupPortOk := d.GetOk("peer_backup_port")
 		connectionType, connectionTypeOk := d.GetOk("connection_type")
@@ -927,6 +919,24 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
+			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+				// set the static interface mapping for AEP
+				interfaceMapping := map[string][]string{
+					"eth0": {"wan", "0"},
+					"eth1": {"wan", "1"},
+					"eth2": {"wan", "2"},
+					"eth3": {"mgmt", "0"},
+					"eth4": {"wan", "3"},
+				}
+				// Convert interfaceMapping to JSON byte slice
+				interfaceMappingJSON, err := json.Marshal(interfaceMapping)
+				if err != nil {
+					return fmt.Errorf("failed to marshal interface mapping to json: %v", err)
+				}
+				// Encode the JSON byte slice to a Base64 string
+				transitHaGw.InterfaceMapping = string(interfaceMappingJSON)
+			}
+			transitHaGw.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
 			_, err = client.CreateTransitHaGw(transitHaGw)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
@@ -1880,15 +1890,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				if intf.GatewayIp != "" {
 					interfaceDict["gateway_ip"] = intf.GatewayIp
 				}
-				// set the seocndary cidrs if exists in interfaces
-				if len(intf.SecondaryCIDRs) != 0 {
-					var secondaryCidrs []map[string]interface{}
-					for _, cidr := range intf.SecondaryCIDRs {
-						cidrDict := make(map[string]interface{})
-						cidrDict["cidr"] = cidr
-						secondaryCidrs = append(secondaryCidrs, cidrDict)
-					}
-					interfaceDict["secondary_cidrs"] = secondaryCidrs
+				if len(intf.SecondaryCIDRs) > 0 {
+					interfaceDict["secondary_private_cidr_list"] = intf.SecondaryCIDRs
 				}
 				interfaces = append(interfaces, interfaceDict)
 			}
@@ -1898,7 +1901,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set the interface map
 		d.Set("interface_map", gw.InterfaceMapping)
-		d.Set("eip_map", gw.EIPMap)
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
@@ -2732,15 +2734,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to disable connected transit: %s", err)
 			}
-		}
-	}
-
-	// TODO: Check if the cloud_type is edge and then update the edge gateway
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		gateway.EIPMap = d.Get("eip_map").(string)
-		err := client.UpdateGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Edge Transit Gateway: %s", err)
 		}
 	}
 
