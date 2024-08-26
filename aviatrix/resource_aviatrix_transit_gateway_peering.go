@@ -113,7 +113,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
-				Description: "(Optional) Advanced option. Enable HPE mode for peering with Edge Transit. Transit gateways must be in Insane Mode. " +
+				Description: "(Optional) Advanced option. Enable Insane Mode Encryption over Internet. Transit gateways must be in Insane Mode. " +
 					"Currently, only inter-cloud connections between AWS and Azure are supported. Required with valid `tunnel_count`. " +
 					"Conflicts with `enable_peering_over_private_network` and `enable_single_tunnel_mode`. Type: Boolean. Default: false. " +
 					"Available as of provider version R2.19+.",

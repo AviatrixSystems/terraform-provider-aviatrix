@@ -755,12 +755,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Peer backup port for the transit gateway.",
+				Description: "Peer backup port for the edge transit gateway.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Connection type for the transit gateway.",
+				Description: "Connection type for the edge transit gateway.",
 			},
 		},
 	}

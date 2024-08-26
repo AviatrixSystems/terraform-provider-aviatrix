@@ -361,24 +361,3 @@ func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
 	}
 	return false
 }
-
-func validateJSON(val interface{}, key string) ([]string, []error) {
-	var js json.RawMessage
-	if err := json.Unmarshal([]byte(val.(string)), &js); err != nil {
-		return nil, []error{fmt.Errorf("invalid JSON: %s", err)}
-	}
-	return nil, nil
-}
-
-func validateWanInterfaces(val interface{}, key string) (warnings []string, errs []error) {
-	v := val.(string)
-	interfaces := strings.Split(v, ",")
-	validInterfaceName := regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
-
-	for _, iface := range interfaces {
-		if !validInterfaceName.MatchString(strings.TrimSpace(iface)) {
-			errs = append(errs, fmt.Errorf("%q must be a comma-separated list of valid interface names, got: %s", key, iface))
-		}
-	}
-	return warnings, errs
-}
