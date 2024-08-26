@@ -111,18 +111,6 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"dst_wan_interfaces": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Destination WAN interface for edge gateways where teh peering terminates, comma separated",
-				ValidateFunc: validateWanInterfaces,
-			},
-			"cloud_type": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				Description:  "Type of cloud service provider, requires an integer value. Use 1 for AWS, 4 for GCP, 8 for Azure. Refer other types in documentation.",
-				ValidateFunc: validateCloudType,
-			},
 		},
 	}
 }
@@ -138,7 +126,6 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
 		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
-		DstWanInterfaces:         d.Get("dst_wan_interfaces").(string),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -255,7 +242,6 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_insane_mode", attachment.EnableInsaneMode)
-	d.Set("dst_wan_interfaces", attachment.DstWanInterfaces)
 	if attachment.EnableInsaneMode {
 		d.Set("insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
 	}
