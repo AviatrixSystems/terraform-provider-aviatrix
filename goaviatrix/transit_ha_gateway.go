@@ -24,6 +24,18 @@ type TransitHaGateway struct {
 	TagList               string `json:"tag_string"`
 	TagJson               string `json:"tag_json"`
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
+	BackupLinkList        []BackupLinkInterface
+	BackupLinkConfig      string `json:"backup_link_config,omitempty"`
+	InterfaceMapping      string `json:"interface_mapping,omitempty"`
+	Interfaces            string `json:"interfaces,omitempty"`
+	DeviceID              string `json:"device_id,omitempty"`
+}
+
+type BackupLinkInterface struct {
+	PeerGwName     string `json:"peer_gw_name"`
+	PeerBackupPort string `json:"peer_backup_port"`
+	SelfBackupPort string `json:"self_backup_port"`
+	ConnectionType string `json:"connection_type"`
 }
 
 func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {

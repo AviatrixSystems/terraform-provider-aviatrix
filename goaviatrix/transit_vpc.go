@@ -60,6 +60,12 @@ type TransitVpc struct {
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	Transit                      bool     `form:"transit,omitempty"`
+	DeviceID                     string   `form:"device_id,omitempty"`
+	SiteID                       string   `form:"site_id,omitempty"`
+	Interfaces                   string   `json:"interfaces,omitempty"`
+	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
+	InterfaceList                []EdgeTransitInterface
+	EIPMap                       string `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -127,6 +133,16 @@ type TransitGwFireNetInterfacesResp struct {
 	Reason  string                     `json:"reason"`
 }
 
+type EdgeTransitInterface struct {
+	IfName         string   `json:"ifname"`
+	Type           string   `json:"type"`
+	PublicIp       string   `json:"public_ip,omitempty"`
+	Dhcp           bool     `json:"dhcp,omitempty"`
+	IpAddr         string   `json:"ipaddr,omitempty"`
+	GatewayIp      string   `json:"gateway_ip,omitempty"`
+	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+}
+
 type TransitGatewayBgpLanIpInfoResp struct {
 	Return  bool                                 `json:"return"`
 	Results TransitGatewayBgpLanIpInfoRespResult `json:"results"`
@@ -151,7 +167,6 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
 	gateway.Async = true
-
 	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 
