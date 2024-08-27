@@ -901,7 +901,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		transitHaGw := &goaviatrix.TransitHaGateway{
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
-			Eip:           d.Get("ha_eip").(string),
 			DeviceID:      d.Get("device_id").(string),
 			InsaneMode:    "yes",
 		}

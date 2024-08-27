@@ -162,7 +162,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"dst_wan_interfaces": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Destination WAN interface for edge gateways where teh peering terminates, comma separated",
+				Description: "Destination WAN interface for edge gateways where the peering terminates, comma separated",
 			},
 		},
 	}
