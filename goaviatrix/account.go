@@ -133,6 +133,11 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
+func (c *Client) RefreshCache() {
+	c.InvalidateCache()
+	c.ListAccounts()
+}
+
 func (c *Client) InvalidateCache() {
 	c.cacheMutex.Lock()
 	defer c.cacheMutex.Unlock()
@@ -171,6 +176,14 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	for i := range accList {
+		if accList[i].AccountName == account.AccountName {
+			log.Infof("Found Aviatrix Account %s", account.AccountName)
+			return &accList[i], nil
+		}
+	}
+	log.Warnf("Couldn't find account %s, refreshing cache...", account.AccountName)
+	c.RefreshCache()
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
