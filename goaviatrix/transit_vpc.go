@@ -60,6 +60,12 @@ type TransitVpc struct {
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	Transit                      bool     `form:"transit,omitempty"`
+	DeviceID                     string   `form:"device_id,omitempty"`
+	SiteID                       string   `form:"site_id,omitempty"`
+	Interfaces                   string   `json:"interfaces,omitempty"`
+	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
+	InterfaceList                []EdgeTransitInterface
+	EIPMap                       string `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -77,6 +83,16 @@ type TransitGatewayAdvancedConfig struct {
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
 	ApprovedLearnedCidrs              []string
+}
+
+type EdgeTransitInterface struct {
+	IfName         string   `json:"ifname"`
+	Type           string   `json:"type"`
+	PublicIp       string   `json:"public_ip,omitempty"`
+	Dhcp           bool     `json:"dhcp,omitempty"`
+	IpAddr         string   `json:"ipaddr,omitempty"`
+	GatewayIp      string   `json:"gateway_ip,omitempty"`
+	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
 }
 
 type StandbyConnection struct {
