@@ -168,7 +168,8 @@ func (c *Client) ListAccounts() ([]Account, error) {
 	// Cache the result
 	c.cachedAccounts = accounts
 
-	return accounts, nil
+	// Return a copy of the cache to avoid needing locks in GetAccount.
+	return append([]Account(nil), c.cachedAccounts...), nil
 }
 
 func (c *Client) GetAccount(account *Account) (*Account, error) {
