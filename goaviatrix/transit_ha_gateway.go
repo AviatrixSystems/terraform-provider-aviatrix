@@ -12,18 +12,18 @@ type TransitHaGateway struct {
 	PrimaryGwName         string `json:"primary_gw_name"`
 	GwName                string `json:"ha_gw_name"`
 	GwSize                string `json:"gw_size"`
-	Subnet                string `json:"gw_subnet"`
-	VpcRegion             string `json:"region"`
-	Zone                  string `json:"zone"`
-	AvailabilityDomain    string `json:"availability_domain"`
-	FaultDomain           string `json:"fault_domain"`
-	BgpLanVpcId           string `json:"bgp_lan_vpc"`
-	BgpLanSubnet          string `json:"bgp_lan_specify_subnet"`
+	Subnet                string `json:"gw_subnet,omitempty"`
+	VpcRegion             string `json:"region,omitempty"`
+	Zone                  string `json:"zone,omitempty"`
+	AvailabilityDomain    string `json:"availability_domain,omitempty"`
+	FaultDomain           string `json:"fault_domain,omitempty"`
+	BgpLanVpcId           string `json:"bgp_lan_vpc,omitempty"`
+	BgpLanSubnet          string `json:"bgp_lan_specify_subnet,omitempty"`
 	Eip                   string `json:"eip,omitempty"`
 	InsaneMode            string `json:"insane_mode"`
-	TagList               string `json:"tag_string"`
-	TagJson               string `json:"tag_json"`
-	AutoGenHaGwName       string `json:"autogen_hagw_name"`
+	TagList               string `json:"tag_string,omitempty"`
+	TagJson               string `json:"tag_json,omitempty"`
+	AutoGenHaGwName       string `json:"autogen_hagw_name,omitempty"`
 	BackupLinkList        []BackupLinkInterface
 	BackupLinkConfig      string `json:"backup_link_config,omitempty"`
 	InterfaceMapping      string `json:"interface_mapping,omitempty"`

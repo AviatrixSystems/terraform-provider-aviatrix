@@ -710,7 +710,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "A list of WAN/Management interfaces, each represented as a map.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ifname": {
+						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Interface name, e.g., 'eth0', 'eth1'.",
@@ -726,7 +726,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Optional:    true,
 							Description: "The gateway IP address associated with this interface.",
 						},
-						"ipaddr": {
+						"ip_address": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "The static IP address assigned to this interface.",
@@ -794,8 +794,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			var ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
 			var ifaceDHCP bool
 			var secondaryCIDRs []string
-			// Check and set 'ifname'
-			if val, exists := ifaceInfo["ifname"]; exists && val != nil {
+			// Check and set 'interface name'
+			if val, exists := ifaceInfo["name"]; exists && val != nil {
 				ifaceName, ok = val.(string)
 				if !ok {
 					return fmt.Errorf("ifname is not a string")
@@ -815,8 +815,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("gateway_ip is not a string")
 				}
 			}
-			// Check and set 'ipaddr'
-			if val, exists := ifaceInfo["ipaddr"]; exists && val != nil {
+			// Check and set 'ip_address'
+			if val, exists := ifaceInfo["ip_address"]; exists && val != nil {
 				ifaceIP, ok = val.(string)
 				if !ok {
 					return fmt.Errorf("ipaddr is not a string")
@@ -853,12 +853,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				}
 			}
 			ifaceData := goaviatrix.EdgeTransitInterface{
-				IfName:         ifaceName,
+				Name:           ifaceName,
 				Type:           ifaceType,
 				GatewayIp:      ifaceGatewayIP,
 				PublicIp:       ifacePublicIP,
 				Dhcp:           ifaceDHCP,
-				IpAddr:         ifaceIP,
+				IpAddress:      ifaceIP,
 				SecondaryCIDRs: secondaryCIDRs,
 			}
 			gateway.InterfaceList = append(gateway.InterfaceList, ifaceData)
@@ -1878,7 +1878,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			var interfaces []map[string]interface{}
 			for _, intf := range gw.Interfaces {
 				interfaceDict := make(map[string]interface{})
-				interfaceDict["ifname"] = intf.IfName
+				interfaceDict["name"] = intf.Name
 				interfaceDict["type"] = intf.Type
 				if intf.PublicIp != "" {
 					interfaceDict["public_ip"] = intf.PublicIp
@@ -1886,8 +1886,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				if intf.Dhcp {
 					interfaceDict["dhcp"] = intf.Dhcp
 				}
-				if intf.IpAddr != "" {
-					interfaceDict["ipaddr"] = intf.IpAddr
+				if intf.IpAddress != "" {
+					interfaceDict["ip_address"] = intf.IpAddress
 				}
 				if intf.GatewayIp != "" {
 					interfaceDict["gateway_ip"] = intf.GatewayIp

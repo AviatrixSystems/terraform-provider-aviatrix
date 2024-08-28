@@ -134,11 +134,11 @@ type TransitGwFireNetInterfacesResp struct {
 }
 
 type EdgeTransitInterface struct {
-	IfName         string   `json:"ifname"`
+	Name           string   `json:"ifname"`
 	Type           string   `json:"type"`
 	PublicIp       string   `json:"public_ip,omitempty"`
 	Dhcp           bool     `json:"dhcp,omitempty"`
-	IpAddr         string   `json:"ipaddr,omitempty"`
+	IpAddress      string   `json:"ipaddr,omitempty"`
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
 }
