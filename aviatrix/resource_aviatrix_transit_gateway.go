@@ -752,6 +752,26 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
+			"eip_map": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"private_ip": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"public_ip": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				Optional:    true,
+				Description: "Map of interfaces containing the private IP to public IP EIP assignment",
+			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -798,7 +818,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if val, exists := ifaceInfo["name"]; exists && val != nil {
 				ifaceName, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("ifname is not a string")
+					return fmt.Errorf("name is not a string")
 				}
 			}
 			// Check and set 'type'
@@ -819,7 +839,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if val, exists := ifaceInfo["ip_address"]; exists && val != nil {
 				ifaceIP, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("ipaddr is not a string")
+					return fmt.Errorf("ip address is not a string")
 				}
 			}
 			// Check and set 'public_ip'
@@ -1871,12 +1891,13 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		d.Set("device_id", gw.DeviceID)
 		d.Set("site_id", gw.SiteID)
-		// TODO: should this be b64 encoded? set the interfaces from gw.Interfaces
+		d.Set("bgp_lan_ip_list", nil)
+		d.Set("ha_bgp_lan_ip_list", nil)
 		if len(gw.Interfaces) != 0 {
 			var interfaces []map[string]interface{}
-			for _, intf := range gw.Interfaces {
+			sortedInterfaces := sortInterfacesByCustomOrder(gw.Interfaces)
+			for _, intf := range sortedInterfaces {
 				interfaceDict := make(map[string]interface{})
 				interfaceDict["name"] = intf.Name
 				interfaceDict["type"] = intf.Type
@@ -1892,17 +1913,22 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				if intf.GatewayIp != "" {
 					interfaceDict["gateway_ip"] = intf.GatewayIp
 				}
-				if len(intf.SecondaryCIDRs) > 0 {
-					interfaceDict["secondary_private_cidr_list"] = intf.SecondaryCIDRs
+				if intf.SecondaryCIDRs != nil {
+					secondaryCIDRs := make([]string, 0)
+					for _, cidr := range intf.SecondaryCIDRs {
+						if cidr != "" {
+							secondaryCIDRs = append(secondaryCIDRs, cidr)
+						}
+					}
+					interfaceDict["secondary_private_cidr_list"] = secondaryCIDRs
 				}
 				interfaces = append(interfaces, interfaceDict)
+				log.Printf("[TRACE] Interface Dictionary %s: %#v", intf.Name, interfaceDict)
 			}
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
 			}
 		}
-		// set the interface map
-		d.Set("interface_map", gw.InterfaceMapping)
 		if gw.PeerBackupPort != "" && gw.ConnectionType != "" {
 			d.Set("peer_backup_port", gw.PeerBackupPort)
 			d.Set("connection_type", gw.ConnectionType)
