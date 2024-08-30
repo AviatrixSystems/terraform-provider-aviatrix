@@ -62,12 +62,13 @@ func resourceAviatrixEdgeProxyProfileConfigCreate(d *schema.ResourceData, meta i
 	client := meta.(*goaviatrix.Client)
 
 	proxy := marshalEdgeProxyProfileConfigInput(d)
-	if err := client.CreateEdgeProxyProfile(context.Background(), proxy); err != nil {
+	createdProxy, err := client.CreateEdgeProxyProfile(context.Background(), proxy)
+	if err != nil {
 		return fmt.Errorf("could not config proxy: %v", err)
 	}
 
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixEdgeProxyProfileConfigRead(d, meta)
+	d.SetId(createdProxy.ProxyID)
+	return nil
 }
 
 func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta interface{}) error {
@@ -91,10 +92,10 @@ func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta int
 	d.Set("proxy_profile_id", proxy.ProxyID)
 	d.Set("name", proxy.Name)
 	if proxy.CaCert != nil && *proxy.CaCert != "" {
-		d.Set("caCert", proxy.CaCert)
+		d.Set("ca_certificate", proxy.CaCert)
 	}
 
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+	d.SetId(proxy.ProxyID)
 	return nil
 }
 

@@ -34,16 +34,18 @@ type EdgePlatformProxyProfileListResponse struct {
 	Errortype string `json:"errortype"`
 }
 
-func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgePlatformProxyProfile) error {
+func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgePlatformProxyProfile) (*EdgePlatformProxyProfileResp, error) {
 	edgeNEOProxyProfile.Action = "create_edge_csp_proxy_profile"
 	edgeNEOProxyProfile.CID = c.CID
 
-	err := c.PostAPIContext2(ctx, nil, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
+	var data EdgePlatformProxyProfileResp
+
+	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &data, nil
 }
 
 func (c *Client) GetEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) (*EdgePlatformProxyProfileResp, error) {
