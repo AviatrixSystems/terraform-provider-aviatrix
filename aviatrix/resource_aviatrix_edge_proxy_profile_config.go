@@ -90,6 +90,8 @@ func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta int
 		d.Set("ca_certificate", proxy.CaCert)
 	}
 
+	fmt.Printf("read proxy profile: %v\n", proxy)
+
 	d.SetId(proxy.ProxyID)
 	return nil
 }
