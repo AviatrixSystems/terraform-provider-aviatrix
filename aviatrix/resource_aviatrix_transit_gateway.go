@@ -1929,10 +1929,32 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interfaces into state: %v", err)
 			}
 		}
-		if gw.PeerBackupPort != "" && gw.ConnectionType != "" {
-			d.Set("peer_backup_port", gw.PeerBackupPort)
-			d.Set("connection_type", gw.ConnectionType)
+		if gw.HaGw.GwSize == "" {
+			d.Set("ha_availability_domain", "")
+			d.Set("ha_azure_eip_name_resource_group", "")
+			d.Set("ha_cloud_instance_id", "")
+			d.Set("ha_eip", "")
+			d.Set("ha_fault_domain", "")
+			d.Set("ha_gw_name", "")
+			d.Set("ha_gw_size", "")
+			d.Set("ha_image_version", "")
+			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_lan_interface_cidr", "")
+			d.Set("ha_oob_availability_zone", "")
+			d.Set("ha_oob_management_subnet", "")
+			d.Set("ha_private_ip", "")
+			d.Set("ha_security_group_id", "")
+			d.Set("ha_software_version", "")
+			d.Set("ha_subnet", "")
+			d.Set("ha_zone", "")
+			d.Set("ha_public_ip", "")
+			d.Set("ha_private_mode_subnet_zone", "")
+			return nil
 		}
+		d.Set("ha_gw_size", gw.HaGw.GwSize)
+		d.Set("ha_gw_name", gw.HaGw.GwName)
+		d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
+		d.Set("connection_type", gw.HaGw.ConnectionType)
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
@@ -3728,6 +3750,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	//If HA is enabled, delete HA GW first.
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
+
 	if haSubnet != "" || haZone != "" {
 		gateway.GwName += "-hagw"
 
