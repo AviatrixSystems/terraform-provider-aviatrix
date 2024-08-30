@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -73,10 +72,6 @@ func resourceAviatrixEdgeProxyProfileConfigCreate(d *schema.ResourceData, meta i
 
 func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-
-	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
-		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
-	}
 
 	proxy, err := client.GetEdgePlatformProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
 	if err != nil {
