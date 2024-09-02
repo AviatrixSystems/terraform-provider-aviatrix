@@ -46,7 +46,7 @@ type APIRequest struct {
 //go:generate moq -rm -out client_mock.go . ClientInterface
 type ClientInterface interface {
 	DeleteAccount(account *Account) error
-	GetAccount(account *Account) (*Account, error)
+	GetAccount(account *Account) (Account, error)
 	AuditAccount(ctx context.Context, account *Account) error
 	InvalidateCache()
 }
