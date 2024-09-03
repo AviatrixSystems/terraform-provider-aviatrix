@@ -302,34 +302,34 @@ resource "aviatrix_transit_gateway" "test-edge-transit-1" {
     device_id = "b23fd92a-32be-4ae0-9741-a2d12161c177"
     site_id = "site-3"
     interfaces {
-        gateway_ip = "192.168.20.1"
-        ifname     = "eth0"
-        ipaddr    = "192.168.20.11/24"
-        type       = "WAN"
+        gateway_ip    = "192.168.20.1"
+        name          = "eth0"
+        ip_address    = "192.168.20.11/24"
+        type          = "WAN"
     }
     interfaces {
-        gateway_ip = "192.168.21.1"
-        ifname     = "eth1"
-        ipaddr    = "192.168.21.11/24"
-        type       = "WAN"
+        gateway_ip                  = "192.168.21.1"
+        name                        = "eth1"
+        ip_address                  = "192.168.21.11/24"
+        type                        = "WAN"
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
     interfaces {
         dhcp   = true
-        ifname = "eth2"
+        name = "eth2"
         type   = "MANAGEMENT"
     }
     interfaces {
-        gateway_ip                  = "192.168.22.1"
-        ifname                      = "eth3"
-        ipaddr                     = "192.168.22.11/24"
-        type                        = "WAN"
+        gateway_ip   = "192.168.22.1"
+        name         = "eth3"
+        ip_address   = "192.168.22.11/24"
+        type         = "WAN"
     }
     interfaces {
-        gateway_ip                  = "192.168.23.1"
-        ifname                      = "eth4"
-        ipaddr                     = "192.168.23.11/24"
-        type                        = "WAN"
+        gateway_ip   = "192.168.23.1"
+        name         = "eth4"
+        ip_address   = "192.168.23.11/24"
+        type         = "WAN"
     }
 }
 ```
@@ -346,34 +346,34 @@ resource "aviatrix_transit_gateway" "test-edge-transit-1-hagw" {
     peer_backup_port = "eth1"
     connection_type = "private"
     interfaces {
-        gateway_ip = "192.168.20.1"
-        ifname     = "eth0"
-        ipaddr    = "192.168.20.12/24"
-        type       = "WAN"
+        gateway_ip  = "192.168.20.1"
+        name        = "eth0"
+        ip_address  = "192.168.20.12/24"
+        type        = "WAN"
     }
     interfaces {
-        gateway_ip = "192.168.21.1"
-        ifname     = "eth1"
-        ipaddr    = "192.168.21.12/24"
-        type       = "WAN"
+        gateway_ip                  = "192.168.21.1"
+        name                        = "eth1"
+        ip_address                  = "192.168.21.12/24"
+        type                        = "WAN"
         secondary_private_cidr_list = ["192.168.21.32/29"]
     }
     interfaces {
-        dhcp   = true
-        ifname = "eth2"
-        type   = "MANAGEMENT"
+        dhcp    = true
+        name    = "eth2"
+        type    = "MANAGEMENT"
     }
     interfaces {
-        gateway_ip                  = "192.168.22.1"
-        ifname                      = "eth3"
-        ipaddr                     = "192.168.22.12/24"
-        type                        = "WAN"
+        gateway_ip   = "192.168.22.1"
+        name         = "eth3"
+        ip_address   = "192.168.22.12/24"
+        type         = "WAN"
     }
     interfaces {
-        gateway_ip                  = "192.168.23.1"
-        ifname                      = "eth4"
-        ipaddr                     = "192.168.23.12/24"
-        type                        = "WAN"
+        gateway_ip   = "192.168.23.1"
+        name         = "eth4"
+        ip_address   = "192.168.23.12/24"
+        type         = "WAN"
     }
 }
 ```
