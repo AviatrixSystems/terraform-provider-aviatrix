@@ -65,18 +65,6 @@ type TransitVpc struct {
 	Interfaces                   string                 `json:"interfaces,omitempty"`
 	InterfaceMapping             string                 `json:"interface_mapping,omitempty"`
 	InterfaceList                []EdgeTransitInterface `json:"interface_list,omitempty"`
-	EIPMap                       string                 `json:"eip_map,omitempty"`
-	EIPMapList                   []EIPMap               `json:"eip_map_list,omitempty"`
-}
-
-type EIPMap struct {
-	InterfaceName string       `json:"interface_name"`
-	EIP           []EIPMapping `json:"eip"`
-}
-
-type EIPMapping struct {
-	PrivateIP string `json:"private_ip"`
-	PublicIP  string `json:"public_ip"`
 }
 
 type TransitGatewayAdvancedConfig struct {

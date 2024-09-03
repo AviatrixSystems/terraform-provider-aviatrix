@@ -752,26 +752,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"eip_map": {
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeList,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"private_ip": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"public_ip": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-						},
-					},
-				},
-				Optional:    true,
-				Description: "Map of interfaces containing the private IP to public IP EIP assignment",
-			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,

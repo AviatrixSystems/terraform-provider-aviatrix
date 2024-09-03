@@ -221,7 +221,6 @@ type Gateway struct {
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
 	DeviceID                        string                              `json:"device_id,omitempty"`
 	SiteID                          string                              `json:"site_id,omitempty"`
-	EIPMap                          string                              `json:"eip_map,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 }
 
