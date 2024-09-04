@@ -718,8 +718,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Description:  "Interface type. Valid values are 'WAN', 'LAN' or 'MANAGEMENT'.",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
+							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
