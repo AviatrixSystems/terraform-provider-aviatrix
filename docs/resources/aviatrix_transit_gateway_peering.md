@@ -36,13 +36,13 @@ resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
 ```hcl
 # Create an Aviatrix Edge Transit Gateway Peering
 resource "aviatrix_transit_gateway_peering" "test_edge_transit_gateway_peering" {
-  transit_gateway_name1                       = "test-edge-transit-1"
-  transit_gateway_name2                       = "test-edge-transit-2"
-  over_private_network         = true
-  jumbo_frame = false
-  insane_mode = true
-  src_wan_interfaces = "eth1"
-  dst_wan_interfaces = "eth1"
+  transit_gateway_name1   = "test-edge-transit-1"
+  transit_gateway_name2   = "test-edge-transit-2"
+  over_private_network    = true
+  jumbo_frame             = false
+  insane_mode             = true
+  src_wan_interfaces      = "eth1"
+  dst_wan_interfaces      = "eth1"
 }
 ```
 
@@ -69,8 +69,8 @@ The following arguments are supported:
 * `over_private_network` - (Optional) This underlay connects over the private network for peering with Edge Transit. Required only for edge transit attachments.
 * `jumbo_frame` - (Optional) Enable jumbo frame for over private peering with Edge Transit. Required only for edge transit attachments.
 * `insane_mode` - (Optional) Enable HPE mode for peering with Edge Transit. Required only for edge transit attachments.
-* `src_wan_interfaces` - (Optional) Source WAN interface for edge gateways where the peering originates. These values are comma seperated. Required only for edge transit attachments.
-* `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where teh peering terminates.These values are comma seperated. Required only for edge transit attachments.
+* `src_wan_interfaces` - (Optional) Source WAN interface for edge gateways where the peering originates. Required only for edge transit attachments.
+* `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where the peering terminates. Required only for edge transit attachments.
 
   
 ~> **NOTE:** `enable_single_tunnel_mode` is only valid when `enable_peering_over_private_network` is set to `true`. Private Transit Gateway Peering with Single-Tunnel Mode expands the existing Insane Mode Transit Gateway Peering Over Private Network to apply it to single IPSec tunnel. One use case is for low speed encryption between cloud networks.

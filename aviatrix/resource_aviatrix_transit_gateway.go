@@ -710,7 +710,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "A list of WAN/Management interfaces, each represented as a map.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ifname": {
+						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Interface name, e.g., 'eth0', 'eth1'.",
@@ -718,15 +718,15 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Description:  "Interface type. Valid values are 'WAN', 'LAN' or 'MANAGEMENT'.",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
+							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "The gateway IP address associated with this interface.",
 						},
-						"ipaddr": {
+						"ip_address": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "The static IP address assigned to this interface.",
@@ -794,18 +794,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			var ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
 			var ifaceDHCP bool
 			var secondaryCIDRs []string
-			// Check and set 'ifname'
-			if val, exists := ifaceInfo["ifname"]; exists && val != nil {
+			// Check and set 'interface name'
+			if val, exists := ifaceInfo["name"]; exists && val != nil {
 				ifaceName, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("ifname is not a string")
+					return fmt.Errorf("interface name is not a string")
 				}
 			}
 			// Check and set 'type'
 			if val, exists := ifaceInfo["type"]; exists && val != nil {
 				ifaceType, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("type is not a string")
+					return fmt.Errorf("interface type is not a string")
 				}
 			}
 			// Check and set 'gateway_ip'
@@ -815,11 +815,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("gateway_ip is not a string")
 				}
 			}
-			// Check and set 'ipaddr'
-			if val, exists := ifaceInfo["ipaddr"]; exists && val != nil {
+			// Check and set 'ip_address'
+			if val, exists := ifaceInfo["ip_address"]; exists && val != nil {
 				ifaceIP, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("ipaddr is not a string")
+					return fmt.Errorf("ip address is not a string")
 				}
 			}
 			// Check and set 'public_ip'
@@ -853,12 +853,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				}
 			}
 			ifaceData := goaviatrix.EdgeTransitInterface{
-				IfName:         ifaceName,
+				Name:           ifaceName,
 				Type:           ifaceType,
 				GatewayIp:      ifaceGatewayIP,
 				PublicIp:       ifacePublicIP,
 				Dhcp:           ifaceDHCP,
-				IpAddr:         ifaceIP,
+				IpAddress:      ifaceIP,
 				SecondaryCIDRs: secondaryCIDRs,
 			}
 			gateway.InterfaceList = append(gateway.InterfaceList, ifaceData)
@@ -1871,14 +1871,15 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		d.Set("device_id", gw.DeviceID)
 		d.Set("site_id", gw.SiteID)
-		// TODO: should this be b64 encoded? set the interfaces from gw.Interfaces
+		d.Set("bgp_lan_ip_list", nil)
+		d.Set("ha_bgp_lan_ip_list", nil)
 		if len(gw.Interfaces) != 0 {
 			var interfaces []map[string]interface{}
-			for _, intf := range gw.Interfaces {
+			sortedInterfaces := sortInterfacesByCustomOrder(gw.Interfaces)
+			for _, intf := range sortedInterfaces {
 				interfaceDict := make(map[string]interface{})
-				interfaceDict["ifname"] = intf.IfName
+				interfaceDict["name"] = intf.Name
 				interfaceDict["type"] = intf.Type
 				if intf.PublicIp != "" {
 					interfaceDict["public_ip"] = intf.PublicIp
@@ -1886,14 +1887,20 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				if intf.Dhcp {
 					interfaceDict["dhcp"] = intf.Dhcp
 				}
-				if intf.IpAddr != "" {
-					interfaceDict["ipaddr"] = intf.IpAddr
+				if intf.IpAddress != "" {
+					interfaceDict["ip_address"] = intf.IpAddress
 				}
 				if intf.GatewayIp != "" {
 					interfaceDict["gateway_ip"] = intf.GatewayIp
 				}
-				if len(intf.SecondaryCIDRs) > 0 {
-					interfaceDict["secondary_private_cidr_list"] = intf.SecondaryCIDRs
+				if intf.SecondaryCIDRs != nil {
+					secondaryCIDRs := make([]string, 0)
+					for _, cidr := range intf.SecondaryCIDRs {
+						if cidr != "" {
+							secondaryCIDRs = append(secondaryCIDRs, cidr)
+						}
+					}
+					interfaceDict["secondary_private_cidr_list"] = secondaryCIDRs
 				}
 				interfaces = append(interfaces, interfaceDict)
 			}
@@ -1901,12 +1908,32 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interfaces into state: %v", err)
 			}
 		}
-		// set the interface map
-		d.Set("interface_map", gw.InterfaceMapping)
-		if gw.PeerBackupPort != "" && gw.ConnectionType != "" {
-			d.Set("peer_backup_port", gw.PeerBackupPort)
-			d.Set("connection_type", gw.ConnectionType)
+		if gw.HaGw.GwSize == "" {
+			d.Set("ha_availability_domain", "")
+			d.Set("ha_azure_eip_name_resource_group", "")
+			d.Set("ha_cloud_instance_id", "")
+			d.Set("ha_eip", "")
+			d.Set("ha_fault_domain", "")
+			d.Set("ha_gw_name", "")
+			d.Set("ha_gw_size", "")
+			d.Set("ha_image_version", "")
+			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_lan_interface_cidr", "")
+			d.Set("ha_oob_availability_zone", "")
+			d.Set("ha_oob_management_subnet", "")
+			d.Set("ha_private_ip", "")
+			d.Set("ha_security_group_id", "")
+			d.Set("ha_software_version", "")
+			d.Set("ha_subnet", "")
+			d.Set("ha_zone", "")
+			d.Set("ha_public_ip", "")
+			d.Set("ha_private_mode_subnet_zone", "")
+			return nil
 		}
+		d.Set("ha_gw_size", gw.HaGw.GwSize)
+		d.Set("ha_gw_name", gw.HaGw.GwName)
+		d.Set("peer_backup_port", gw.HaGw.PeerBackupPort)
+		d.Set("connection_type", gw.HaGw.ConnectionType)
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
@@ -3702,6 +3729,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	//If HA is enabled, delete HA GW first.
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
+
 	if haSubnet != "" || haZone != "" {
 		gateway.GwName += "-hagw"
 
