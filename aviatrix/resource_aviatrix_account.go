@@ -435,7 +435,6 @@ func resourceAviatrixAccount() *schema.Resource {
 
 func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
-	defer client.InvalidateCache()
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
@@ -729,31 +728,17 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateAccount(account)
 	}
 
-	if _, ok := err.(goaviatrix.DuplicateError); ok {
-		return diag.Errorf("failed to create Aviatrix Account: %s", err)
-	}
-
-	d.SetId(account.AccountName)
-	flag := false
-	defer resourceAviatrixAccountReadIfRequired(ctx, d, meta, &flag)
 	if err != nil {
 		return diag.Errorf("failed to create Aviatrix Account: %s", err)
 	}
 
-	return resourceAviatrixAccountReadIfRequired(ctx, d, meta, &flag)
-}
-
-func resourceAviatrixAccountReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
-	if !(*flag) {
-		*flag = true
-		return resourceAviatrixAccountRead(ctx, d, meta)
-	}
-	return nil
+	d.SetId(account.AccountName)
+	client.InvalidateCache()
+	return resourceAviatrixAccountRead(ctx, d, meta)
 }
 
 func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(goaviatrix.ClientInterface)
-
 	var diags diag.Diagnostics
 
 	accountName := d.Get("account_name").(string)
@@ -780,75 +765,74 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("aviatrix Account: %s", err)
 	}
 
-	if acc != nil {
-		d.Set("account_name", acc.AccountName)
-		d.Set("cloud_type", acc.CloudType)
-		if acc.CloudType == goaviatrix.AWS {
-			d.Set("aws_account_number", acc.AwsAccountNumber)
-			if acc.AwsRoleEc2 != "" {
-				//force default setting and save to .tfstate file
-				d.Set("aws_access_key", "")
-				d.Set("aws_secret_key", "")
-				d.Set("aws_iam", true)
-				d.Set("aws_role_app", acc.AwsRoleApp)
-				d.Set("aws_role_ec2", acc.AwsRoleEc2)
-				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
-			} else {
-				d.Set("aws_iam", false)
-			}
-		} else if acc.CloudType == goaviatrix.GCP {
-			d.Set("gcloud_project_id", acc.GcloudProjectName)
-		} else if acc.CloudType == goaviatrix.Azure {
-			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
-		} else if acc.CloudType == goaviatrix.AWSGov {
-			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
-			if acc.AwsgovRoleEc2 != "" {
-				d.Set("awsgov_access_key", "")
-				d.Set("awsgov_secret_key", "")
-				d.Set("awsgov_iam", true)
-				d.Set("awsgov_role_app", acc.AwsgovRoleApp)
-				d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
-				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
-			} else {
-				d.Set("awsgov_iam", false)
-			}
-		} else if acc.CloudType == goaviatrix.AzureGov {
-			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
-		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
-			d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
-			if acc.AwsChinaRoleEc2 != "" {
-				// Force access key and secret key to be empty
-				d.Set("awschina_access_key", "")
-				d.Set("awschina_secret_key", "")
-				d.Set("awschina_iam", true)
-				d.Set("awschina_role_app", acc.AwsChinaRoleApp)
-				d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
-				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
-			} else {
-				d.Set("awschina_iam", false)
-			}
-		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
-			d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
-		} else if acc.CloudType == goaviatrix.AliCloud {
-			d.Set("alicloud_account_id", acc.AwsAccountNumber)
-		} else if acc.CloudType == goaviatrix.EDGECSP {
-			if d.Get("edge_csp_password").(string) != "" {
-				d.Set("edge_csp_username", acc.EdgeCSPUsername)
-			} else if d.Get("edge_zededa_password").(string) != "" {
-				d.Set("edge_zededa_username", acc.EdgeCSPUsername)
-			} else {
-				// let user choose when importing CSP/Zededa account
-				d.Set("edge_csp_username", acc.EdgeCSPUsername)
-				d.Set("edge_zededa_username", acc.EdgeCSPUsername)
-			}
+	d.Set("account_name", acc.AccountName)
+	d.Set("cloud_type", acc.CloudType)
+	if acc.CloudType == goaviatrix.AWS {
+		d.Set("aws_account_number", acc.AwsAccountNumber)
+		if acc.AwsRoleEc2 != "" {
+			//force default setting and save to .tfstate file
+			d.Set("aws_access_key", "")
+			d.Set("aws_secret_key", "")
+			d.Set("aws_iam", true)
+			d.Set("aws_role_app", acc.AwsRoleApp)
+			d.Set("aws_role_ec2", acc.AwsRoleEc2)
+			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+		} else {
+			d.Set("aws_iam", false)
+		}
+	} else if acc.CloudType == goaviatrix.GCP {
+		d.Set("gcloud_project_id", acc.GcloudProjectName)
+	} else if acc.CloudType == goaviatrix.Azure {
+		d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+	} else if acc.CloudType == goaviatrix.AWSGov {
+		d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+		if acc.AwsgovRoleEc2 != "" {
+			d.Set("awsgov_access_key", "")
+			d.Set("awsgov_secret_key", "")
+			d.Set("awsgov_iam", true)
+			d.Set("awsgov_role_app", acc.AwsgovRoleApp)
+			d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
+			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+		} else {
+			d.Set("awsgov_iam", false)
+		}
+	} else if acc.CloudType == goaviatrix.AzureGov {
+		d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
+	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
+		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
+		if acc.AwsChinaRoleEc2 != "" {
+			// Force access key and secret key to be empty
+			d.Set("awschina_access_key", "")
+			d.Set("awschina_secret_key", "")
+			d.Set("awschina_iam", true)
+			d.Set("awschina_role_app", acc.AwsChinaRoleApp)
+			d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
+			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+		} else {
+			d.Set("awschina_iam", false)
+		}
+	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
+		d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
+	} else if acc.CloudType == goaviatrix.AliCloud {
+		d.Set("alicloud_account_id", acc.AwsAccountNumber)
+	} else if acc.CloudType == goaviatrix.EDGECSP {
+		if d.Get("edge_csp_password").(string) != "" {
+			d.Set("edge_csp_username", acc.EdgeCSPUsername)
+		} else if d.Get("edge_zededa_password").(string) != "" {
+			d.Set("edge_zededa_username", acc.EdgeCSPUsername)
+		} else {
+			// let user choose when importing CSP/Zededa account
+			d.Set("edge_csp_username", acc.EdgeCSPUsername)
+			d.Set("edge_zededa_username", acc.EdgeCSPUsername)
 		}
 
-		d.Set("rbac_groups", acc.GroupNamesRead)
-		d.SetId(acc.AccountName)
 	}
+
+	d.Set("rbac_groups", acc.GroupNamesRead)
+	d.SetId(acc.AccountName)
 
 	// Don't check account audit during import. In terraform version 0.14.11 or earlier, returning diag.Warning during import
 	// will cause it to fail silently. It will not return an error, but the state file will not be updated after.
