@@ -798,14 +798,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if val, exists := ifaceInfo["name"]; exists && val != nil {
 				ifaceName, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("name is not a string")
+					return fmt.Errorf("interface name is not a string")
 				}
 			}
 			// Check and set 'type'
 			if val, exists := ifaceInfo["type"]; exists && val != nil {
 				ifaceType, ok = val.(string)
 				if !ok {
-					return fmt.Errorf("type is not a string")
+					return fmt.Errorf("interface type is not a string")
 				}
 			}
 			// Check and set 'gateway_ip'
@@ -1903,7 +1903,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 					interfaceDict["secondary_private_cidr_list"] = secondaryCIDRs
 				}
 				interfaces = append(interfaces, interfaceDict)
-				log.Printf("[TRACE] Interface Dictionary %s: %#v", intf.Name, interfaceDict)
 			}
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
