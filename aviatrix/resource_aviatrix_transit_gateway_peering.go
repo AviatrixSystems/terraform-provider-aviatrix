@@ -157,12 +157,12 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"src_wan_interfaces": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Source WAN interface for edge gateways where the peering originates, comma separated",
+				Description: "Source WAN interface for edge gateways where the peering originates",
 			},
 			"dst_wan_interfaces": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Destination WAN interface for edge gateways where the peering terminates, comma separated",
+				Description: "Destination WAN interface for edge gateways where the peering terminates",
 			},
 		},
 	}

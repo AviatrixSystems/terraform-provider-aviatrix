@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -379,4 +380,33 @@ func mapContains(m map[string]interface{}, key string) bool {
 	default:
 		return !reflect.ValueOf(val).IsZero()
 	}
+}
+
+// Define the interface order including eth0, eth1, eth2, eth3, eth4
+var interfaceOrder = []string{"eth0", "eth1", "eth2", "eth3", "eth4"}
+
+// Create a mapping of each type to its index in the interface order
+func createOrderMap(order []string) map[string]int {
+	orderMap := make(map[string]int)
+	for i, value := range order {
+		orderMap[value] = i
+	}
+	return orderMap
+}
+
+// Sorting function that uses the interface order
+func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface) []goaviatrix.EdgeTransitInterface {
+	orderMap := createOrderMap(interfaceOrder)
+	sort.SliceStable(interfaces, func(i, j int) bool {
+		iIndex, iExists := orderMap[interfaces[i].Name]
+		jIndex, jExists := orderMap[interfaces[j].Name]
+		if !iExists {
+			iIndex = len(orderMap)
+		}
+		if !jExists {
+			jIndex = len(orderMap)
+		}
+		return iIndex < jIndex
+	})
+	return interfaces
 }
