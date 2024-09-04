@@ -406,7 +406,7 @@ The following arguments are supported:
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
-  * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface. The values are coma separated.
+  * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
 
 
 ### HA
