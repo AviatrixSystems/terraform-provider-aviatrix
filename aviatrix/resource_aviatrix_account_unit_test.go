@@ -84,9 +84,9 @@ func TestResourceAviatrixAccountDelete_WhenDeleteAccountFails(t *testing.T) {
 
 func TestResourceAviatrixAccountRead_AccountWithAudit(t *testing.T) {
 	client := &goaviatrix.ClientInterfaceMock{
-		GetAccountFunc: func(account *goaviatrix.Account) (*goaviatrix.Account, error) {
+		GetAccountFunc: func(account *goaviatrix.Account) (goaviatrix.Account, error) {
 			assert.Equal(t, "unit_test_account", account.AccountName)
-			return &goaviatrix.Account{
+			return goaviatrix.Account{
 				AccountName:      "unit_test_account",
 				CloudType:        goaviatrix.AWS,
 				AwsAccountNumber: "123456789012",
