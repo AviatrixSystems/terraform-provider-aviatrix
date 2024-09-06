@@ -291,6 +291,92 @@ resource "aviatrix_transit_gateway" "test" {
   private_mode_subnet_zone = "us-east-1a"
 }
 ```
+```hcl
+#Create an Aviatrix Edge Transit Gateway in AEP
+resource "aviatrix_transit_gateway" "test-edge-transit-1" {
+    cloud_type = 262144
+    account_name = "edge_aep"
+    gw_name = "test-edge-transit-1"
+    vpc_id = "site-4=1"
+    gw_size = "SMALL"
+    device_id = "b23fd92a-32be-4ae0-9741-a2d12161c177"
+    site_id = "site-3"
+    interfaces {
+        gateway_ip    = "192.168.20.1"
+        name          = "eth0"
+        ip_address    = "192.168.20.11/24"
+        type          = "WAN"
+    }
+    interfaces {
+        gateway_ip                  = "192.168.21.1"
+        name                        = "eth1"
+        ip_address                  = "192.168.21.11/24"
+        type                        = "WAN"
+        secondary_private_cidr_list = ["192.168.21.16/29"]
+    }
+    interfaces {
+        dhcp   = true
+        name = "eth2"
+        type   = "MANAGEMENT"
+    }
+    interfaces {
+        gateway_ip   = "192.168.22.1"
+        name         = "eth3"
+        ip_address   = "192.168.22.11/24"
+        type         = "WAN"
+    }
+    interfaces {
+        gateway_ip   = "192.168.23.1"
+        name         = "eth4"
+        ip_address   = "192.168.23.11/24"
+        type         = "WAN"
+    }
+}
+```
+```hcl
+#Create an Aviatrix Edge Transit HA Gateway in AEP
+resource "aviatrix_transit_gateway" "test-edge-transit-1-hagw" {
+    cloud_type = 262144
+    account_name = "edge_aep"
+    gw_name = "test-edge-transit-1"
+    vpc_id = "site-1"
+    gw_size = "SMALL"
+    device_id = "0ec1266c-3877-40b7-8c61-8245d69e394a"
+    site_id = "site-3"
+    peer_backup_port = "eth1"
+    connection_type = "private"
+    interfaces {
+        gateway_ip  = "192.168.20.1"
+        name        = "eth0"
+        ip_address  = "192.168.20.12/24"
+        type        = "WAN"
+    }
+    interfaces {
+        gateway_ip                  = "192.168.21.1"
+        name                        = "eth1"
+        ip_address                  = "192.168.21.12/24"
+        type                        = "WAN"
+        secondary_private_cidr_list = ["192.168.21.32/29"]
+    }
+    interfaces {
+        dhcp    = true
+        name    = "eth2"
+        type    = "MANAGEMENT"
+    }
+    interfaces {
+        gateway_ip   = "192.168.22.1"
+        name         = "eth3"
+        ip_address   = "192.168.22.12/24"
+        type         = "WAN"
+    }
+    interfaces {
+        gateway_ip   = "192.168.23.1"
+        name         = "eth4"
+        ip_address   = "192.168.23.12/24"
+        type         = "WAN"
+    }
+}
+```
 
 ## Argument Reference
 
@@ -312,6 +398,16 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `site_id` - (Optional) Site id for the EAT gateway. Required and valid only for edge transit gateways AEP and Equinix.
+* `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
+  * `name` - (Required) Interface name e.g. eth0, eth1, eh2 etc.
+  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
+  * `ip_address` - (Optional) The static IP address assigned to this interface.
+  * `public_ip` - (Optional) The public IP address associated with this interface.
+  * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
+  * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
+
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
@@ -323,6 +419,8 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 * `ha_availability_domain` - (Optional) HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `peer_backup_port` - (Optional) Peer backup port for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
+* `connection_type` - (Optional) Connection type for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
 
 ### Insane Mode
 * `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS China, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI, Azure, AzureGov, AzureChina, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.

@@ -78,7 +78,7 @@ func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) 
 		selectorInfo := selectorInterface.(map[string]interface{})
 		var filter *goaviatrix.WebGroupMatchExpression
 
-		if mapContains(selectorInfo, "snifilter") && mapContains(selectorInfo, "urlfilter") {
+		if goaviatrix.MapContains(selectorInfo, "snifilter") && goaviatrix.MapContains(selectorInfo, "urlfilter") {
 			return nil, fmt.Errorf("snifilter and urlfilter can't be set at the same time under the same match_expressions")
 		}
 

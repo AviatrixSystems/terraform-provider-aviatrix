@@ -28,6 +28,19 @@ func preGatewayCheck(t *testing.T, msgCommon string) {
 	}
 }
 
+func preGatewayCheckEdge(t *testing.T, msgCommon string) {
+	preAccountCheck(t, msgCommon)
+
+	aepVpcId := os.Getenv("AEP_VPC_ID")
+	if aepVpcId == "" {
+		t.Fatal("Environment variable AEP_VPC_ID is not set" + msgCommon)
+	}
+	aepRegion := os.Getenv("AEP_DEVICE_ID")
+	if aepRegion == "" {
+		t.Fatal("Environment variable AEP_DEVICE_ID is not set" + msgCommon)
+	}
+}
+
 func preGatewayCheckGCP(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 

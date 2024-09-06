@@ -24,7 +24,7 @@ var _ ClientInterface = &ClientInterfaceMock{}
 //			DeleteAccountFunc: func(account *Account) error {
 //				panic("mock out the DeleteAccount method")
 //			},
-//			GetAccountFunc: func(account *Account) (*Account, error) {
+//			GetAccountFunc: func(account *Account) (Account, error) {
 //				panic("mock out the GetAccount method")
 //			},
 //		}
@@ -41,7 +41,7 @@ type ClientInterfaceMock struct {
 	DeleteAccountFunc func(account *Account) error
 
 	// GetAccountFunc mocks the GetAccount method.
-	GetAccountFunc func(account *Account) (*Account, error)
+	GetAccountFunc func(account *Account) (Account, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -84,6 +84,9 @@ func (mock *ClientInterfaceMock) AuditAccount(ctx context.Context, account *Acco
 	mock.calls.AuditAccount = append(mock.calls.AuditAccount, callInfo)
 	mock.lockAuditAccount.Unlock()
 	return mock.AuditAccountFunc(ctx, account)
+}
+
+func (mock *ClientInterfaceMock) InvalidateCache() {
 }
 
 // AuditAccountCalls gets all the calls that were made to AuditAccount.
@@ -137,7 +140,7 @@ func (mock *ClientInterfaceMock) DeleteAccountCalls() []struct {
 }
 
 // GetAccount calls GetAccountFunc.
-func (mock *ClientInterfaceMock) GetAccount(account *Account) (*Account, error) {
+func (mock *ClientInterfaceMock) GetAccount(account *Account) (Account, error) {
 	if mock.GetAccountFunc == nil {
 		panic("ClientInterfaceMock.GetAccountFunc: method is nil but ClientInterface.GetAccount was just called")
 	}

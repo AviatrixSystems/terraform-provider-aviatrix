@@ -19,6 +19,18 @@ resource "aviatrix_edge_spoke_transit_attachment" "test_attachment" {
   transit_gw_name = "transit-gw"
 }
 ```
+```hcl
+# Create an Aviatrix Edge as a Spoke to Edge as a Transit Attachment
+resource "aviatrix_edge_spoke_transit_attachment" "test_attachment_2" {
+  spoke_gw_name               = "e2e-edge-spoke-1"
+  transit_gw_name             = "test-edge-transit-1"
+  enable_over_private_network = true
+  enable_jumbo_frame          = false
+  enable_insane_mode          = true
+  dst_wan_interfaces          = "eth1"
+  edge_wan_interfaces         = ["eth0"]
+}
+```
 
 ## Argument Reference
 
@@ -40,6 +52,7 @@ The following arguments are supported:
 * `number_of_retries` - (Optional) Number of retries. Default value: 0.
 * `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
 * `edge_wan_interfaces` - (Optional) Set of Edge WAN interfaces.
+* `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where the peering terminates. Required only for edge as a transit attachment.
 
 ## Import
 

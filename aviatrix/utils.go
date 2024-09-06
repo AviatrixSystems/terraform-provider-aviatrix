@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -363,20 +363,31 @@ func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
 	return false
 }
 
-func mapContains(m map[string]interface{}, key string) bool {
-	val, exists := m[key]
-	if !exists {
-		return false
-	}
+// Define the interface order including eth0, eth1, eth2, eth3, eth4
+var interfaceOrder = []string{"eth0", "eth1", "eth2", "eth3", "eth4"}
 
-	switch v := val.(type) {
-	case string:
-		return len(v) > 0
-	case map[string]interface{}:
-		return len(v) > 0
-	case []interface{}:
-		return len(v) > 0
-	default:
-		return !reflect.ValueOf(val).IsZero()
+// Create a mapping of each type to its index in the interface order
+func createOrderMap(order []string) map[string]int {
+	orderMap := make(map[string]int)
+	for i, value := range order {
+		orderMap[value] = i
 	}
+	return orderMap
+}
+
+// Sorting function that uses the interface order
+func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface) []goaviatrix.EdgeTransitInterface {
+	orderMap := createOrderMap(interfaceOrder)
+	sort.SliceStable(interfaces, func(i, j int) bool {
+		iIndex, iExists := orderMap[interfaces[i].Name]
+		jIndex, jExists := orderMap[interfaces[j].Name]
+		if !iExists {
+			iIndex = len(orderMap)
+		}
+		if !jExists {
+			jIndex = len(orderMap)
+		}
+		return iIndex < jIndex
+	})
+	return interfaces
 }

@@ -133,8 +133,14 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
+func (c *Client) InvalidateCache() {
+	c.cacheMutex.Lock()
+	defer c.cacheMutex.Unlock()
+	c.cachedAccounts = nil
+}
+
 func (c *Client) ListAccounts() ([]Account, error) {
-	// If cached accounts are recent enough, return them
+	// If we have cached accounts, return them.
 	c.cacheMutex.Lock()
 	defer c.cacheMutex.Unlock()
 	if c.cachedAccounts != nil {
@@ -142,7 +148,6 @@ func (c *Client) ListAccounts() ([]Account, error) {
 	}
 
 	// Otherwise, fetch from the backend
-
 	form := map[string]string{
 		"CID":    c.CID,
 		"action": "list_accounts",
@@ -152,27 +157,31 @@ func (c *Client) ListAccounts() ([]Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	accounts := resp.Results.AccountList
+	c.cachedAccounts = resp.Results.AccountList
 
-	// Cache the result
-	c.cachedAccounts = accounts
-
-	return accounts, nil
+	return c.cachedAccounts, nil
 }
 
-func (c *Client) GetAccount(account *Account) (*Account, error) {
+// GetAccount returns the account from the cache. We return an account object
+// instead of a pointer to ensure that the caller receives a copy of the
+// account data rather than a reference to the cached object. This helps avoid
+// potential issues with unintended modifications to the cached account data by
+// the caller.
+func (c *Client) GetAccount(account *Account) (Account, error) {
 	accList, err := c.ListAccounts()
 	if err != nil {
-		return nil, err
+		return Account{}, err
 	}
+	c.cacheMutex.Lock()
+	defer c.cacheMutex.Unlock()
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
-			return &accList[i], nil
+			return accList[i], nil
 		}
 	}
 	log.Errorf("Couldn't find Aviatrix account %s", account.AccountName)
-	return nil, ErrNotFound
+	return Account{}, ErrNotFound
 }
 
 func (c *Client) UpdateAccount(account *Account) error {

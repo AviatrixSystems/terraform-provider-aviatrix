@@ -427,10 +427,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		var subscriptionId string
-		if acc != nil {
-			subscriptionId = acc.ArmSubscriptionId
-		}
+		subscriptionId := acc.ArmSubscriptionId
 
 		var resourceGroup string
 		if vC.ResourceGroup != "" {
