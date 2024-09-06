@@ -83,10 +83,10 @@ func resourceAviatrixEdgePlatformDeviceOnboarding() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"proxy_server_ip": {
+						"proxy_profile_id": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Proxy server IP.",
+							Description: "Proxy Profile ID.",
 						},
 					},
 				},
@@ -121,11 +121,11 @@ func marshalEdgePlatformDeviceOnboardingInput(d *schema.ResourceData) *goaviatri
 		network1 := network0.(map[string]interface{})
 
 		network2 := &goaviatrix.EdgeNEODeviceNetwork{
-			InterfaceName: network1["interface_name"].(string),
-			EnableDhcp:    network1["enable_dhcp"].(bool),
-			GatewayIp:     network1["gateway_ip"].(string),
-			Ipv4Cidr:      network1["ipv4_cidr"].(string),
-			ProxyServerIp: network1["proxy_server_ip"].(string),
+			InterfaceName:  network1["interface_name"].(string),
+			EnableDhcp:     network1["enable_dhcp"].(bool),
+			GatewayIp:      network1["gateway_ip"].(string),
+			Ipv4Cidr:       network1["ipv4_cidr"].(string),
+			ProxyProfileId: network1["proxy_profile_id"].(string),
 		}
 
 		for _, dnsServerIp := range network1["dns_server_ips"].(*schema.Set).List() {
@@ -253,7 +253,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 		network1["gateway_ip"] = network0.GatewayIp
 		network1["ipv4_cidr"] = network0.Ipv4Cidr
 		network1["dns_server_ips"] = network0.DnsServerIps
-		network1["proxy_server_ip"] = network0.ProxyServerIp
+		network1["proxy_profile_id"] = network0.ProxyProfileId
 
 		network = append(network, network1)
 	}
