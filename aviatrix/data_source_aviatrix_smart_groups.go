@@ -36,61 +36,81 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"cidr": {
+												goaviatrix.CidrKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "CIDR block or IP Address this expression matches.",
 												},
-												"fqdn": {
+												goaviatrix.FqdnKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "FQDN address this expression matches.",
 												},
-												"site": {
+												goaviatrix.SiteKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Edge Site-ID this expression matches.",
 												},
-												"type": {
+												goaviatrix.TypeKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Type of resource this expression matches.",
 												},
-												"res_id": {
+												goaviatrix.ResIdKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Resource ID this expression matches.",
 												},
-												"account_id": {
+												goaviatrix.AccountIdKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Account ID this expression matches.",
 												},
-												"account_name": {
+												goaviatrix.AccountNameKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Account name this expression matches.",
 												},
-												"name": {
+												goaviatrix.NameKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Name this expression matches.",
 												},
-												"region": {
+												goaviatrix.RegionKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Region this expression matches.",
 												},
-												"zone": {
+												goaviatrix.ZoneKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Zone this expression matches.",
 												},
-												"tags": {
+												goaviatrix.TagsPrefix: {
 													Type:        schema.TypeMap,
 													Computed:    true,
 													Elem:        &schema.Schema{Type: schema.TypeString},
 													Description: "Map of tags this expression matches.",
+												},
+												goaviatrix.K8sClusterIdKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Kubernetes Cluster ID this expression matches.",
+												},
+												goaviatrix.K8sPodNameKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Pod this expression matches.",
+												},
+												goaviatrix.K8sServiceKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Service this expression matches.",
+												},
+												goaviatrix.K8sNamespaceKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Namespace this expression matches.",
 												},
 											},
 										},
@@ -125,17 +145,21 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 
 		for _, filter := range smartGroup.Selector.Expressions {
 			filterMap := map[string]interface{}{
-				"type":         filter.Type,
-				"cidr":         filter.CIDR,
-				"fqdn":         filter.FQDN,
-				"site":         filter.Site,
-				"res_id":       filter.ResId,
-				"account_id":   filter.AccountId,
-				"account_name": filter.AccountName,
-				"name":         filter.Name,
-				"region":       filter.Region,
-				"zone":         filter.Zone,
-				"tags":         filter.Tags,
+				goaviatrix.TypeKey:         filter.Type,
+				goaviatrix.CidrKey:         filter.CIDR,
+				goaviatrix.FqdnKey:         filter.FQDN,
+				goaviatrix.SiteKey:         filter.Site,
+				goaviatrix.ResIdKey:        filter.ResId,
+				goaviatrix.AccountIdKey:    filter.AccountId,
+				goaviatrix.AccountNameKey:  filter.AccountName,
+				goaviatrix.NameKey:         filter.Name,
+				goaviatrix.RegionKey:       filter.Region,
+				goaviatrix.ZoneKey:         filter.Zone,
+				goaviatrix.TagsPrefix:      filter.Tags,
+				goaviatrix.K8sClusterIdKey: filter.K8sClusterId,
+				goaviatrix.K8sNamespaceKey: filter.K8sNamespace,
+				goaviatrix.K8sServiceKey:   filter.K8sService,
+				goaviatrix.K8sPodNameKey:   filter.K8sPodName,
 			}
 
 			expressions = append(expressions, filterMap)
