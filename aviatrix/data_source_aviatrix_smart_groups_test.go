@@ -3,14 +3,15 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAviatrixSmartGroups_basic(t *testing.T) {
-	rName := acctest.RandString(5)
 	resourceName := "data.aviatrix_smart_groups.test"
 
 	skipAcc := os.Getenv("SKIP_DATA_SMART_GROUPS")
@@ -25,7 +26,7 @@ func TestAccDataSourceAviatrixSmartGroups_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAviatrixSmartGroupsConfigBasic(rName),
+				Config: testAccDataSourceAviatrixSmartGroupsConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "smart_groups.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "smart_groups.0.uuid"),
@@ -35,16 +36,8 @@ func TestAccDataSourceAviatrixSmartGroups_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAviatrixSmartGroupsConfigBasic(rName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test" {
-	account_name       = "tfa-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
-}
+func testAccDataSourceAviatrixSmartGroupsConfigBasic() string {
+	return `
 resource "aviatrix_smart_group" "test" {
 	name = "aaa-smart-group"
 	selector {
@@ -58,5 +51,87 @@ data "aviatrix_smart_groups" "test"{
         aviatrix_smart_group.test
   ]
 }
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
+`
+}
+
+func TestAccDataSourceAviatrixSmartGroups_k8s(t *testing.T) {
+	resourceName := "data.aviatrix_smart_groups.test"
+
+	skipAcc := os.Getenv("SKIP_DATA_SMART_GROUPS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Data Source Smart Groups tests as SKIP_DATA_SMART_GROUPS is set")
+	}
+
+	clusterId1 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	namespace1 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	service1 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	clusterId2 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	namespace2 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	pod2 := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+
+	expect := func(resourceName string, keySuffix string, value string) func(state *terraform.State) error {
+		return func(state *terraform.State) error {
+			rm := state.RootModule()
+			resource := rm.Resources[resourceName]
+			attrs := resource.Primary.Attributes
+
+			for k, v := range attrs {
+				if value == v {
+					if strings.HasSuffix(k, keySuffix) {
+						return nil
+					}
+					return fmt.Errorf("invalid key %s for value %s", k, value)
+				}
+			}
+			return fmt.Errorf("value %s not found", value)
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAviatrixSmartGroupsConfigK8s(clusterId1, namespace1, service1, clusterId2, namespace2, pod2),
+				Check: resource.ComposeTestCheckFunc(
+					expect(resourceName, ".k8s_cluster_id", clusterId1),
+					expect(resourceName, ".k8s_namespace", namespace1),
+					expect(resourceName, ".k8s_service", service1),
+					expect(resourceName, ".k8s_cluster_id", clusterId2),
+					expect(resourceName, ".k8s_namespace", namespace2),
+					expect(resourceName, ".k8s_pod", pod2),
+					expect(resourceName, ".type", "k8s"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAviatrixSmartGroupsConfigK8s(clusterId1, namespace1, service1, clusterId2, namespace2, pod2 string) string {
+	return fmt.Sprintf(`
+ resource "aviatrix_smart_group" "test" {
+ 	name = "test-smart-group"
+ 	selector {
+ 		match_expressions {
+             type           = "k8s"
+ 			k8s_cluster_id = "%s"
+ 		    k8s_namespace  = "%s"
+ 		    k8s_service    = "%s"
+ 		}
+ 		match_expressions {
+ 			type           = "k8s"
+ 			k8s_cluster_id = "%s"
+ 			k8s_namespace  = "%s"
+ 			k8s_pod        = "%s"
+ 		}
+ 	}
+ }
+ data "aviatrix_smart_groups" "test"{
+ 	depends_on = [
+         aviatrix_smart_group.test
+   ]
+ }
+ `, clusterId1, namespace1, service1, clusterId2, namespace2, pod2)
 }

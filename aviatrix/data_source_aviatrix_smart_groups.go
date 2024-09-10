@@ -92,6 +92,26 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Elem:        &schema.Schema{Type: schema.TypeString},
 													Description: "Map of tags this expression matches.",
 												},
+												"k8s_cluster_id": {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Kubernetes Cluster ID this expression matches.",
+												},
+												"k8s_pod": {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Pod this expression matches.",
+												},
+												"k8s_service": {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Service this expression matches.",
+												},
+												"k8s_namespace": {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Name of the Kubernetes Namespace this expression matches.",
+												},
 											},
 										},
 									},
@@ -125,17 +145,21 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 
 		for _, filter := range smartGroup.Selector.Expressions {
 			filterMap := map[string]interface{}{
-				"type":         filter.Type,
-				"cidr":         filter.CIDR,
-				"fqdn":         filter.FQDN,
-				"site":         filter.Site,
-				"res_id":       filter.ResId,
-				"account_id":   filter.AccountId,
-				"account_name": filter.AccountName,
-				"name":         filter.Name,
-				"region":       filter.Region,
-				"zone":         filter.Zone,
-				"tags":         filter.Tags,
+				"type":           filter.Type,
+				"cidr":           filter.CIDR,
+				"fqdn":           filter.FQDN,
+				"site":           filter.Site,
+				"res_id":         filter.ResId,
+				"account_id":     filter.AccountId,
+				"account_name":   filter.AccountName,
+				"name":           filter.Name,
+				"region":         filter.Region,
+				"zone":           filter.Zone,
+				"tags":           filter.Tags,
+				"k8s_cluster_id": filter.K8sClusterId,
+				"k8s_namespace":  filter.K8sNamespace,
+				"k8s_service":    filter.K8sService,
+				"k8s_pod":        filter.K8sPodName,
 			}
 
 			expressions = append(expressions, filterMap)
