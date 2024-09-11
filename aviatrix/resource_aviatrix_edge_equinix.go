@@ -374,6 +374,7 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
 		}
 
+		// vrrp_state and virtual_ip are only applicable for LAN interfaces
 		if interface1["type"].(string) == "LAN" && interface1["enable_vrrp"].(bool) {
 			interface2.VrrpState = interface1["enable_vrrp"].(bool)
 			interface2.VirtualIp = interface1["vrrp_virtual_ip"].(string)
