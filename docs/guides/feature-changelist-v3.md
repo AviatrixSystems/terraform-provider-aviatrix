@@ -87,6 +87,12 @@ The following logging resources are removed:
 |(deprecated) | controller_config | http_access | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
 
 
+## R3.2.0 (UserConnect-7.2)**
+### Attribute Deprecations
+| Diff | Resource | Attribute | Action Required? |
+|:----:|:--------:|:---------:|:----------------:|
+|(deprecated) | edge_equinix, edge_equinix_ha, edge_csp, edge_csp_ha, edge_neo, edge_neo_ha, edge_platform, edge_platform_ha, edge_zededa, edge_zededa_ha | bandwidth | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
+
 
 
 
