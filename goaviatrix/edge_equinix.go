@@ -54,6 +54,7 @@ type EdgeEquinix struct {
 type EdgeEquinixInterface struct {
 	IfName        string             `json:"ifname"`
 	Type          string             `json:"type"`
+	Bandwidth     int                `json:"bandwidth,omitempty"`
 	PublicIp      string             `json:"public_ip"`
 	Tag           string             `json:"tag"`
 	Dhcp          bool               `json:"dhcp"`
