@@ -371,7 +371,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		interface2 := &goaviatrix.EdgeEquinixInterface{
 			IfName:       interface1["name"].(string),
 			Type:         interface1["type"].(string),
-			Bandwidth:    interface1["bandwidth"].(int),
 			PublicIp:     interface1["wan_public_ip"].(string),
 			Tag:          interface1["tag"].(string),
 			Dhcp:         interface1["enable_dhcp"].(bool),
@@ -675,7 +674,6 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 		interface1 := make(map[string]interface{})
 		interface1["name"] = interface0.IfName
 		interface1["type"] = interface0.Type
-		interface1["bandwidth"] = interface0.Bandwidth
 		interface1["wan_public_ip"] = interface0.PublicIp
 		interface1["tag"] = interface0.Tag
 		interface1["enable_dhcp"] = interface0.Dhcp
