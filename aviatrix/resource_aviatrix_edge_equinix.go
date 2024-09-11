@@ -211,12 +211,6 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 							Description:  "Interface type.",
 							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
 						},
-						"bandwidth": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.",
-							Deprecated:  "Bandwidth will be removed in a future release.",
-						},
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
@@ -371,7 +365,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		interface2 := &goaviatrix.EdgeEquinixInterface{
 			IfName:       interface1["name"].(string),
 			Type:         interface1["type"].(string),
-			Bandwidth:    interface1["bandwidth"].(int),
 			PublicIp:     interface1["wan_public_ip"].(string),
 			Tag:          interface1["tag"].(string),
 			Dhcp:         interface1["enable_dhcp"].(bool),
@@ -379,8 +372,11 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 			GatewayIp:    interface1["gateway_ip"].(string),
 			DnsPrimary:   interface1["dns_server_ip"].(string),
 			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
-			VrrpState:    interface1["enable_vrrp"].(bool),
-			VirtualIp:    interface1["vrrp_virtual_ip"].(string),
+		}
+
+		if interface1["type"].(string) == "LAN" && interface1["enable_vrrp"].(bool) {
+			interface2.VrrpState = interface1["enable_vrrp"].(bool)
+			interface2.VirtualIp = interface1["vrrp_virtual_ip"].(string)
 		}
 
 		edgeEquinix.InterfaceList = append(edgeEquinix.InterfaceList, interface2)
@@ -671,7 +667,6 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 		interface1 := make(map[string]interface{})
 		interface1["name"] = interface0.IfName
 		interface1["type"] = interface0.Type
-		interface1["bandwidth"] = interface0.Bandwidth
 		interface1["wan_public_ip"] = interface0.PublicIp
 		interface1["tag"] = interface0.Tag
 		interface1["enable_dhcp"] = interface0.Dhcp
