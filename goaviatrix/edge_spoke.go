@@ -57,16 +57,16 @@ type EdgeSpoke struct {
 }
 
 type EdgeSpokeInterface struct {
-	IfName        string             `json:"ifname"`
-	Type          string             `json:"type"`
-	Dhcp          bool               `json:"dhcp"`
-	PublicIp      string             `json:"public_ip"`
-	IpAddr        string             `json:"ipaddr"`
-	GatewayIp     string             `json:"gateway_ip"`
-	SubInterfaces []*EdgeEquinixVlan `json:"subinterfaces"`
-	VrrpState     bool               `json:"vrrp_state"`
-	VirtualIp     string             `json:"virtual_ip"`
-	Tag           string             `json:"tag"`
+	IfName        string           `json:"ifname"`
+	Type          string           `json:"type"`
+	Dhcp          bool             `json:"dhcp"`
+	PublicIp      string           `json:"public_ip"`
+	IpAddr        string           `json:"ipaddr"`
+	GatewayIp     string           `json:"gateway_ip"`
+	SubInterfaces []*EdgeSpokeVlan `json:"subinterfaces"`
+	VrrpState     bool             `json:"vrrp_state"`
+	VirtualIp     string           `json:"virtual_ip"`
+	Tag           string           `json:"tag"`
 }
 
 type EdgeSpokeVlan struct {

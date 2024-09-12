@@ -127,7 +127,6 @@ func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 		interface2 := &goaviatrix.EdgeNEOInterface{
 			IfName:       interface1["name"].(string),
 			Type:         interface1["type"].(string),
-			Bandwidth:    interface1["bandwidth"].(int),
 			PublicIp:     interface1["wan_public_ip"].(string),
 			Tag:          interface1["tag"].(string),
 			Dhcp:         interface1["enable_dhcp"].(bool),
@@ -192,7 +191,6 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
-		if1["bandwidth"] = if0.Bandwidth
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["tag"] = if0.Tag
 		if1["enable_dhcp"] = if0.Dhcp
