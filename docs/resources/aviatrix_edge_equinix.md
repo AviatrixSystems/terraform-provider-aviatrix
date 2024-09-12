@@ -55,6 +55,7 @@ The following arguments are supported:
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
+  * `bandwidth` - (Optional) The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.
   * `type` - (Required) Type. Valid values: WAN, LAN, or MANAGEMENT.
   * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
   * `wan_public_ip` - (Optional) WAN public IP.
