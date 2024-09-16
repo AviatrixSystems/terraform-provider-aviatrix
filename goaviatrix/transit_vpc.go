@@ -63,8 +63,8 @@ type TransitVpc struct {
 }
 
 type TransitGatewayAdvancedConfig struct {
-	BgpPollingTime                    string
-	BgpBfdPollingTime                 string
+	BgpPollingTime                    int
+	BgpBfdPollingTime                 int
 	PrependASPath                     []string
 	LocalASNumber                     string
 	BgpEcmpEnabled                    bool
@@ -466,8 +466,8 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 	}
 
 	return &TransitGatewayAdvancedConfig{
-		BgpPollingTime:                    strconv.Itoa(data.Results.BgpPollingTime),
-		BgpBfdPollingTime:                 strconv.Itoa(data.Results.BgpBfdPollingTime),
+		BgpPollingTime:                    data.Results.BgpPollingTime,
+		BgpBfdPollingTime:                 data.Results.BgpBfdPollingTime,
 		PrependASPath:                     filteredStrings,
 		LocalASNumber:                     data.Results.LocalASNumber,
 		BgpEcmpEnabled:                    data.Results.BgpEcmpEnabled == "yes",
