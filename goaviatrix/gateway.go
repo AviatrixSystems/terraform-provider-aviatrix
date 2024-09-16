@@ -174,7 +174,7 @@ type Gateway struct {
 	TunnelDetectionTime             int                                 `json:"detection_time"`
 	BgpHoldTime                     int                                 `json:"bgp_hold_time"`
 	BgpPollingTime                  int                                 `json:"bgp_polling_time"`
-	BgpBfdPollingTime               int                                 `json:"bgp_bfd_polling_time,omitempty"`
+	BgpBfdPollingTime               int                                 `json:"bgp_bfd_polling_time"`
 	PrependASPath                   string                              `json:"prepend_as_path"`
 	LocalASNumber                   string                              `json:"local_as_number"`
 	BgpEcmp                         bool                                `json:"bgp_ecmp"`

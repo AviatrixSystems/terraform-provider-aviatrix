@@ -855,7 +855,7 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeEquinix.BgpBfdPollingTime)
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeEquinix.BgpBfdPollingTime))
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Equinix update: %v", err)
 		}

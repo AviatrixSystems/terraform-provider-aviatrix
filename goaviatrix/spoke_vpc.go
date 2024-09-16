@@ -56,6 +56,7 @@ type SpokeVpc struct {
 
 type SpokeGatewayAdvancedConfig struct {
 	BgpPollingTime                    string
+	BgpBfdPollingTime                 string
 	PrependASPath                     []string
 	LocalASNumber                     string
 	BgpEcmpEnabled                    bool
@@ -362,13 +363,13 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpBfdPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime int) error {
+func (c *Client) SetBgpBfdPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime string) error {
 	action := "change_bgp_bfd_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime int    `form:"bgp_bfd_polling_time"`
+		PollingTime string `form:"bgp_bfd_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,
