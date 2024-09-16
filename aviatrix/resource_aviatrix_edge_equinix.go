@@ -520,9 +520,16 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if edgeEquinix.BgpPollingTime >= 10 && edgeEquinix.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeEquinix.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeEquinix.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time after Edge Equinix creation: %v", err)
+		}
+	}
+
+	if edgeEquinix.BgpBfdPollingTime >= 1 && edgeEquinix.BgpBfdPollingTime != defaultBgpBfdPollingTime {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeEquinix.BgpBfdPollingTime)
+		if err != nil {
+			return diag.Errorf("could not set bgp bfd polling time after Edge Equinix creation: %v", err)
 		}
 	}
 
@@ -847,14 +854,14 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeEquinix.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeEquinix.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge Equinix update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeEquinix.BgpBfdPollingTime))
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeEquinix.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Equinix update: %v", err)
 		}

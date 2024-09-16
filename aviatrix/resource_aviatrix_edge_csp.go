@@ -156,6 +156,13 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 50),
 				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
+			"bgp_bfd_polling_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpBfdPollingTime,
+				ValidateFunc: validation.IntBetween(1, 10),
+				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -393,6 +400,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
 		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
 		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
+		BgpBfdPollingTime:                  d.Get("bgp_bfd_polling_time").(int),
 		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
 		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
 		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
@@ -554,9 +562,16 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if edgeCSP.BgpPollingTime >= 10 && edgeCSP.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time after Edge CSP creation: %v", err)
+		}
+	}
+
+	if edgeCSP.BgpBfdPollingTime >= 1 && edgeCSP.BgpBfdPollingTime != defaultBgpBfdPollingTime {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpBfdPollingTime)
+		if err != nil {
+			return diag.Errorf("could not set bgp bfd polling time after Edge CSP creation: %v", err)
 		}
 	}
 
@@ -696,6 +711,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("enable_preserve_as_path", edgeCSPResp.EnablePreserveAsPath)
 	d.Set("bgp_polling_time", edgeCSPResp.BgpPollingTime)
+	d.Set("bgp_bfd_polling_time", edgeCSPResp.BgpBfdPollingTime)
 	d.Set("bgp_hold_time", edgeCSPResp.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeCSPResp.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeCSPResp.EnableJumboFrame)
@@ -886,7 +902,14 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpPollingTime)
+		if err != nil {
+			return diag.Errorf("could not set bgp polling time during Edge CSP update: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_bfd_polling_time") {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge CSP update: %v", err)
 		}

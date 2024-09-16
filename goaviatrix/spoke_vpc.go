@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -55,8 +54,8 @@ type SpokeVpc struct {
 }
 
 type SpokeGatewayAdvancedConfig struct {
-	BgpPollingTime                    string
-	BgpBfdPollingTime                 string
+	BgpPollingTime                    int
+	BgpBfdPollingTime                 int
 	PrependASPath                     []string
 	LocalASNumber                     string
 	BgpEcmpEnabled                    bool
@@ -236,7 +235,8 @@ func (c *Client) GetSpokeGatewayAdvancedConfig(spokeGateway *SpokeVpc) (*SpokeGa
 	}
 
 	return &SpokeGatewayAdvancedConfig{
-		BgpPollingTime:                    strconv.Itoa(data.Results.BgpPollingTime),
+		BgpPollingTime:                    data.Results.BgpPollingTime,
+		BgpBfdPollingTime:                 data.Results.BgpBfdPollingTime,
 		PrependASPath:                     filteredStrings,
 		LocalASNumber:                     data.Results.LocalASNumber,
 		BgpEcmpEnabled:                    data.Results.BgpEcmpEnabled == "yes",
@@ -348,13 +348,13 @@ func (c *Client) SetPrependASPathSpoke(spokeGateway *SpokeVpc, prependASPath []s
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime string) error {
+func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime int) error {
 	action := "change_bgp_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime string `form:"bgp_polling_time"`
+		PollingTime int    `form:"bgp_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,
@@ -363,13 +363,13 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpBfdPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime string) error {
+func (c *Client) SetBgpBfdPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime int) error {
 	action := "change_bgp_bfd_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime string `form:"bgp_bfd_polling_time"`
+		PollingTime int    `form:"bgp_bfd_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,

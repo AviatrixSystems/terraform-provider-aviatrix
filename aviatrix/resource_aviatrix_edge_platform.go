@@ -553,9 +553,16 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if edgeNEO.BgpPollingTime >= 10 && edgeNEO.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeNEO.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time after Edge Platform creation: %v", err)
+		}
+	}
+
+	if edgeNEO.BgpBfdPollingTime >= 1 && edgeNEO.BgpBfdPollingTime != defaultBgpBfdPollingTime {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeNEO.BgpBfdPollingTime)
+		if err != nil {
+			return diag.Errorf("could not set bgp bfd polling time after Edge Platform creation: %v", err)
 		}
 	}
 
@@ -885,14 +892,14 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeNEO.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge Platform update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeNEO.BgpBfdPollingTime))
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeNEO.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Platform update: %v", err)
 		}

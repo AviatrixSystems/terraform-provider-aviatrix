@@ -473,9 +473,16 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	}
 
 	if edgeSpoke.BgpPollingTime >= 10 && edgeSpoke.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time after Edge Gateway Selfmanaged creation: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_bfd_polling_time") {
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
+		if err != nil {
+			return diag.Errorf("could not set bgp bfd polling time after Edge Gateway Selfmanaged creation: %v", err)
 		}
 	}
 
@@ -780,14 +787,14 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge Gateway Selfmanaged update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpBfdPollingTime))
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Gateway Selfmanaged update: %v", err)
 		}
