@@ -442,6 +442,7 @@ The following arguments are supported:
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
 * `enable_active_standby_preemptive` - (Optional) Enables Preemptive Mode for Active-Standby. Available only with BGP enabled, HA enabled and Active-Standby enabled. Valid values: true, false. Default value: false.
 * `bgp_polling_time` - (Optional) BGP route polling time. Unit is in seconds. Valid values are between 10 and 50. Default value: "50".
+* `bgp_bfd_polling_time` - (Optional) BGP BFD route polling time in seconds. Valid values are between 1 and 10. Default value: 5.
 * `bgp_hold_time` - (Optional) BGP hold time. Unit is in seconds. Valid values are between 12 and 360. Default value: 180.
 * `prepend_as_path` - (Optional) List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
 * `local_as_number` - (Optional) Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.

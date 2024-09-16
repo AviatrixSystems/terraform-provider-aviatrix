@@ -787,7 +787,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpBfdPollingTime))
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Gateway Selfmanaged update: %v", err)
 		}

@@ -900,7 +900,7 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("bgp_bfd_polling_time") {
-		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeCSP.BgpBfdPollingTime)
+		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeCSP.BgpBfdPollingTime))
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time during Edge Zededa update: %v", err)
 		}

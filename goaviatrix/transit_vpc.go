@@ -372,13 +372,13 @@ func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime st
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpBfdPollingTime(transitGateway *TransitVpc, newPollingTime int) error {
+func (c *Client) SetBgpBfdPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
 	action := "change_bgp_bfd_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime int    `form:"bgp_bfd_polling_time"`
+		PollingTime string `form:"bgp_bfd_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,
