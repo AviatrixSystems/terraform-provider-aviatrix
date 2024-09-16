@@ -33,7 +33,7 @@ type EdgeNEODeviceResp struct {
 	DeviceId         string                  `json:"deviceId"`
 	SerialNumber     string                  `json:"serial"`
 	HardwareModel    string                  `json:"hardwareId"`
-	Network          []*EdgeNEODeviceNetwork `json:"interfaces"`
+	Network          []*EdgeNEODeviceNetwork `json:"network"`
 	ConnectionStatus string                  `json:"connectionStatus"`
 }
 
