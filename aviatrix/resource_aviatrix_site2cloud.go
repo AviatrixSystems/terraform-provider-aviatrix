@@ -1051,7 +1051,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
 		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
-		editSite2cloud.NetworkType = "1"
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %s", err)
@@ -1070,7 +1069,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
 		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
-		editSite2cloud.NetworkType = "1"
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_virtual: %s", err)
@@ -1081,9 +1079,8 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_cidr").(string) != "" {
 			return fmt.Errorf("'remote_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
-		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
-		editSite2cloud.CloudSubnetVirtual = d.Get("remote_subnet_virtual").(string)
-		editSite2cloud.NetworkType = "2"
+		editSite2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
+		editSite2cloud.RemoteSubnetVirtual = d.Get("remote_subnet_virtual").(string)
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
@@ -1100,9 +1097,8 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		if d.Get("connection_type").(string) == "unmapped" && d.Get("remote_subnet_virtual").(string) != "" {
 			return fmt.Errorf("'remote_subnet_virtual' should be empty for connection type: ummapped")
 		}
-		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
-		editSite2cloud.CloudSubnetVirtual = d.Get("remote_subnet_virtual").(string)
-		editSite2cloud.NetworkType = "2"
+		editSite2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
+		editSite2cloud.RemoteSubnetVirtual = d.Get("remote_subnet_virtual").(string)
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_virtual: %s", err)
@@ -1191,7 +1187,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			GwName:                        d.Get("primary_cloud_gateway_name").(string),
 			VpcID:                         d.Get("vpc_id").(string),
 			ConnName:                      d.Get("connection_name").(string),
-			NetworkType:                   "3",
 			RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
 			RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
 			RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
