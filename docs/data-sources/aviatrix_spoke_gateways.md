@@ -70,6 +70,7 @@ The following attributes are exported:
     * `local_as_number` - Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.
     * `prepend_as_path` - List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
     * `bgp_polling_time` - BGP route polling time. Unit is in seconds.
+    * `bgp_bfd_polling_time` - BGP BFD route polling time. Unit is in seconds. Valid values are between 1 and 10. Default value: 5.
     * `bgp_hold_time` - BGP Hold Time.
     * `enable_spot_instance` - Enable spot instance. NOT supported for production deployment.
     * `spot_price` - Price for spot instance. NOT supported for production deployment.

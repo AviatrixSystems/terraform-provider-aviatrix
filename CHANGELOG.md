@@ -59,6 +59,7 @@
     - **avaitrix_edge_platform**
     - **aviatrix_edge_zededa**
     - **aviatrix_spoke_gateway**
+    - **aviatrix_edge_spoke_gateway**
     - **aviatrix_transit_gateway**
 
 

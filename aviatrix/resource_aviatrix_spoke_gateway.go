@@ -391,6 +391,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 50),
 				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
+			"bgp_bfd_polling_time": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     defaultBgpBfdPollingTime,
+				Description: "BGP BFD route polling time. Unit is in seconds. Valid values are between 1 and 10.",
+			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -1320,6 +1326,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
+		err := client.SetBgpBfdPollingTimeSpoke(gateway, strconv.Itoa(val.(int)))
+		if err != nil {
+			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+		}
+	}
+
 	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
 		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
 		if err != nil {
@@ -1481,10 +1494,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.EnableBgp {
 		d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
 		d.Set("bgp_polling_time", gw.BgpPollingTime)
+		d.Set("bgp_bdf_polling_time", gw.BgpBfdPollingTime)
 		d.Set("bgp_hold_time", gw.BgpHoldTime)
 	} else {
 		d.Set("learned_cidrs_approval_mode", "gateway")
 		d.Set("bgp_polling_time", 50)
+		d.Set("bgp_bdf_polling_time", defaultBgpBfdPollingTime)
 		d.Set("bgp_hold_time", 180)
 	}
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
@@ -2643,6 +2658,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		err := client.SetBgpPollingTimeSpoke(gateway, strconv.Itoa(bgpPollingTime.(int)))
 		if err != nil {
 			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_bfd_polling_time") {
+		bgpBfdPollingTime := d.Get("bgp_bfd_polling_time")
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpBfdPollingTimeSpoke(gateway, strconv.Itoa(bgpBfdPollingTime.(int)))
+		if err != nil {
+			return fmt.Errorf("could not update bgp bfd polling time during Spoke Gateway update: %v", err)
 		}
 	}
 
