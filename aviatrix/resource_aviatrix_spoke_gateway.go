@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1320,14 +1319,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		err := client.SetBgpPollingTimeSpoke(gateway, strconv.Itoa(val.(int)))
+		err := client.SetBgpPollingTimeSpoke(gateway, val.(int))
 		if err != nil {
 			return fmt.Errorf("could not set bgp polling time: %v", err)
 		}
 	}
 
 	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
-		err := client.SetBgpBfdPollingTimeSpoke(gateway, strconv.Itoa(val.(int)))
+		err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
 		if err != nil {
 			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
 		}
@@ -2655,7 +2654,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		gateway := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		err := client.SetBgpPollingTimeSpoke(gateway, strconv.Itoa(bgpPollingTime.(int)))
+		err := client.SetBgpPollingTimeSpoke(gateway, bgpPollingTime.(int))
 		if err != nil {
 			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %v", err)
 		}
@@ -2666,7 +2665,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		gateway := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		err := client.SetBgpBfdPollingTimeSpoke(gateway, strconv.Itoa(bgpBfdPollingTime.(int)))
+		err := client.SetBgpBfdPollingTimeSpoke(gateway, bgpBfdPollingTime.(int))
 		if err != nil {
 			return fmt.Errorf("could not update bgp bfd polling time during Spoke Gateway update: %v", err)
 		}
