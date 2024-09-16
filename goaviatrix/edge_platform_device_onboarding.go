@@ -19,12 +19,12 @@ type EdgeNEODevice struct {
 }
 
 type EdgeNEODeviceNetwork struct {
-	InterfaceName string   `json:"interface,omitempty"`
-	EnableDhcp    bool     `json:"dhcp,omitempty"`
-	GatewayIp     string   `json:"gateway,omitempty"`
-	Ipv4Cidr      string   `json:"ipv4cidr,omitempty"`
-	DnsServerIps  []string `json:"dns,omitempty"`
-	ProxyServerIp string   `json:"proxy,omitempty"`
+	InterfaceName  string   `json:"interface,omitempty"`
+	EnableDhcp     bool     `json:"dhcp,omitempty"`
+	GatewayIp      string   `json:"gateway,omitempty"`
+	Ipv4Cidr       string   `json:"ipv4cidr,omitempty"`
+	DnsServerIps   []string `json:"dns,omitempty"`
+	ProxyProfileId string   `json:"proxyID,omitempty"`
 }
 
 type EdgeNEODeviceResp struct {
