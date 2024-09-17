@@ -483,7 +483,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 		}
 	}
 
-	if d.HasChange("bgp_bfd_polling_time") {
+	if edgeSpoke.BgpBfdPollingTime >= 1 && edgeSpoke.BgpBfdPollingTime != defaultBgpBfdPollingTime {
 		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp bfd polling time after Edge Gateway Selfmanaged creation: %v", err)

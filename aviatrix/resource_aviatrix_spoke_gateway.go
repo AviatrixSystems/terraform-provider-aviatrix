@@ -1320,16 +1320,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		err := client.SetBgpPollingTimeSpoke(gateway, val.(int))
-		if err != nil {
-			return fmt.Errorf("could not set bgp polling time: %v", err)
+		bgp_polling_time := val.(int)
+		if bgp_polling_time >= 10 && bgp_polling_time != defaultBgpPollingTime {
+			err := client.SetBgpPollingTimeSpoke(gateway, bgp_polling_time)
+			if err != nil {
+				return fmt.Errorf("could not set bgp polling time: %v", err)
+			}
 		}
 	}
 
 	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
-		err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
-		if err != nil {
-			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+		bgp_bfd_polling_time := val.(int)
+		if bgp_bfd_polling_time >= 1 && bgp_bfd_polling_time != defaultBgpBfdPollingTime {
+			err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
+			if err != nil {
+				return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+			}
 		}
 	}
 
