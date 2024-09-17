@@ -391,10 +391,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
 			"bgp_bfd_polling_time": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     defaultBgpBfdPollingTime,
-				Description: "BGP BFD route polling time. Unit is in seconds. Valid values are between 1 and 10.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpBfdPollingTime,
+				ValidateFunc: validation.IntBetween(1, 10),
+				Description:  "BGP BFD route polling time. Unit is in seconds. Valid values are between 1 and 10.",
 			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
@@ -1319,16 +1320,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		err := client.SetBgpPollingTimeSpoke(gateway, val.(int))
-		if err != nil {
-			return fmt.Errorf("could not set bgp polling time: %v", err)
+		bgp_polling_time := val.(int)
+		if bgp_polling_time >= 10 && bgp_polling_time != defaultBgpPollingTime {
+			err := client.SetBgpPollingTimeSpoke(gateway, bgp_polling_time)
+			if err != nil {
+				return fmt.Errorf("could not set bgp polling time: %v", err)
+			}
 		}
 	}
 
 	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
-		err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
-		if err != nil {
-			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+		bgp_bfd_polling_time := val.(int)
+		if bgp_bfd_polling_time >= 1 && bgp_bfd_polling_time != defaultBgpBfdPollingTime {
+			err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
+			if err != nil {
+				return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+			}
 		}
 	}
 
