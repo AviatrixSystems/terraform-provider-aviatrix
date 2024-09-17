@@ -54,6 +54,7 @@ type EdgeCSP struct {
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
+	BgpBfdConfig                       *BgpBfdConfig `json:"bgp_bfd,omitempty"`
 }
 
 type Interface struct {
@@ -80,6 +81,12 @@ type Vlan struct {
 	PeerGatewayIp   string `json:"peer_gateway_ip"`
 	VirtualIp       string `json:"virtual_ip"`
 	Tag             string `json:"tag"`
+}
+
+type BgpBfdConfig struct {
+	TransmitInterval int `json:"transmit_interval"`
+	ReceiveInterval  int `json:"receive_interval"`
+	Multiplier       int `json:"multiplier"`
 }
 
 type EdgeCSPResp struct {

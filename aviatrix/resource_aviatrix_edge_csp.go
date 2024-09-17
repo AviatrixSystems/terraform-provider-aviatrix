@@ -163,6 +163,34 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 10),
 				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
+			"bgp_bfd": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "BGP BFD configuration details applied to a BGP session.",
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transmit_interval": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "BFD transmit interval in milliseconds.",
+							Default:     300,
+						},
+						"receive_interval": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "BFD receive interval in milliseconds.",
+							Default:     300,
+						},
+						"multiplier": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "BFD multiplier.",
+							Default:     3,
+						},
+					},
+				},
+			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -452,6 +480,19 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
 
 		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
+	}
+
+	// TODO: add the check for enable_bgp_bfd
+	bgp_bfd := d.Get("bgp_bfd").([]interface{})
+	for _, bfd0 := range bgp_bfd {
+		bfd1 := bfd0.(map[string]interface{})
+
+		bfd2 := &goaviatrix.BgpBfdConfig{
+			TransmitInterval: bfd1["transmit_interval"].(int),
+			ReceiveInterval:  bfd1["receive_interval"].(int),
+			Multiplier:       bfd1["multiplier"].(int),
+		}
+		edgeCSP.BgpBfdConfig = bfd2
 	}
 
 	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
