@@ -1,9 +1,9 @@
 ---
-subcategory: "CloudN"
+subcategory: "Edge"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_device_interface_config"
 description: |-
-  Configures WAN primary interface and IP for a device.
+  Configures WAN primary interface and IP for a CloudN device.
 ---
 
 # aviatrix_device_interface_config

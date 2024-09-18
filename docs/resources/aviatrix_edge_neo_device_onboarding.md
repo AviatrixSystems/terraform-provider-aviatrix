@@ -1,5 +1,5 @@
 ---
-subcategory: "Multi-Cloud Transit"
+subcategory: "Edge"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_edge_neo_device_onboarding"
 description: |-
