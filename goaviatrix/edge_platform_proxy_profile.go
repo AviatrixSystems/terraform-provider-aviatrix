@@ -32,14 +32,14 @@ type EdgePlatformProxyProfileResp struct {
 	ExpiredAt         *time.Time `json:"expiredAt,omitempty"`
 }
 
-type EdgePlatformProxyProfileCreateUpdateResponse struct {
+type EdgePlatformProxyProfileCreateResponse struct {
 	Return    bool `json:"return"`
 	Results   EdgePlatformProxyProfileResp
 	Reason    string `json:"reason"`
 	Errortype string `json:"errortype"`
 }
 
-type EdgePlatformProxyProfileCreateUpdateResponse2 struct {
+type EdgePlatformProxyProfileUpdateResponse struct {
 	Return    bool   `json:"return"`
 	Results   string `json:"results"`
 	Reason    string `json:"reason"`
@@ -57,7 +57,7 @@ func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile
 	edgeNEOProxyProfile.Action = "create_edge_csp_proxy_profile"
 	edgeNEOProxyProfile.CID = c.CID
 
-	var data EdgePlatformProxyProfileCreateUpdateResponse
+	var data EdgePlatformProxyProfileCreateResponse
 	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (c *Client) UpdateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile
 	edgeNEOProxyProfile.Action = "update_edge_csp_proxy_profile"
 	edgeNEOProxyProfile.CID = c.CID
 
-	var data EdgePlatformProxyProfileCreateUpdateResponse2
+	var data EdgePlatformProxyProfileUpdateResponse
 	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
 	if err != nil {
 		return err
