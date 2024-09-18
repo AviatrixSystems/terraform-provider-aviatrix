@@ -46,12 +46,14 @@ type EdgeExternalDeviceConn struct {
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
-	BgpMd5Key              string `json:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string `json:"backup_bgp_md5_key,omitempty"`
-	AuthType               string `json:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool   `json:"edge_underlay,omitempty"`
-	RemoteCloudType        string `json:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool   `json:"bgp_md5_key_changed,omitempty"`
+	BgpMd5Key              string          `json:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string          `json:"backup_bgp_md5_key,omitempty"`
+	AuthType               string          `json:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool            `json:"edge_underlay,omitempty"`
+	RemoteCloudType        string          `json:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool            `json:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig           []*BgpBfdConfig `json:"bgp_bfd,omitempty"`
+	EnableBfd              bool            `json:"enable_bfd,omitempty"`
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {
