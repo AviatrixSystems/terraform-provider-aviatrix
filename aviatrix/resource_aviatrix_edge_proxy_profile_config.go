@@ -8,9 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type proxyProfile struct {
+	Action      string  `json:"action"`
+	CID         string  `json:"CID"`
+	AccountName string  `json:"account_name"`
+	Name        string  `json:"proxy_name"`
+	Address     *string `json:"address"`
+	Port        *int    `json:"port"`
+	CACert      *string `json:"ca_cert"`
+}
+
 func resourceAviatrixEdgeProxyProfileConfig() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixEdgeProxyProfileConfigCreate,
+		Update: resourceAviatrixEdgeProxyProfileConfigUpdate,
 		Read:   resourceAviatrixEdgeProxyProfileConfigRead,
 		Delete: resourceAviatrixEdgeProxyProfileConfigDelete,
 		Importer: &schema.ResourceImporter{
@@ -33,20 +44,17 @@ func resourceAviatrixEdgeProxyProfileConfig() *schema.Resource {
 			"ip_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "HTTPS proxy IP.",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "HTTPS proxy Port.",
 			},
 			"ca_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
-				Description: "Server CA Certificate file.",
+				Description: "Server CA Certificate in base64 encoded PEM format",
 			},
 			"proxy_profile_id": {
 				Type:        schema.TypeString,
@@ -57,16 +65,83 @@ func resourceAviatrixEdgeProxyProfileConfig() *schema.Resource {
 	}
 }
 
+func edgePlatformProxyProfileFromProxyProfile(proxy *proxyProfile) *goaviatrix.EdgePlatformProxyProfile {
+	return &goaviatrix.EdgePlatformProxyProfile{
+		AccountName: proxy.AccountName,
+		Name:        proxy.Name,
+		Address: func() string {
+			if proxy.Address == nil {
+				return ""
+			}
+			return *proxy.Address
+		}(),
+		Port: func() int {
+			if proxy.Port == nil {
+				return 0
+			}
+			return *proxy.Port
+		}(),
+		CACert: func() string {
+			if proxy.CACert == nil {
+				return ""
+			}
+			return *proxy.CACert
+		}(),
+	}
+}
+
 func resourceAviatrixEdgeProxyProfileConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	proxy := marshalEdgeProxyProfileConfigInput(d)
-	createdProxy, err := client.CreateEdgeProxyProfile(context.Background(), proxy)
+	createdProxy, err := client.CreateEdgeProxyProfile(context.Background(), edgePlatformProxyProfileFromProxyProfile(proxy))
 	if err != nil {
 		return fmt.Errorf("could not config proxy: %v", err)
 	}
 
 	d.SetId(createdProxy.ProxyID)
+	return nil
+}
+
+func resourceAviatrixEdgeProxyProfileConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+	proxy := marshalEdgeProxyProfileConfigInput(d)
+
+	client := meta.(*goaviatrix.Client)
+	existingProxy, err := client.GetEdgePlatformProxyProfile(context.Background(), proxy.AccountName, proxy.Name)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("couldn't get proxy configuration: %s", err)
+	}
+
+	modifiedProxy := &goaviatrix.EdgePlatformProxyProfileUpdate{
+		EdgePlatformProxyProfile: goaviatrix.EdgePlatformProxyProfile{
+			AccountName: proxy.AccountName,
+			Name:        proxy.Name,
+			Address:     existingProxy.IPAddress,
+			Port:        int(existingProxy.Port),
+			CACert:      *existingProxy.CaCert,
+		},
+		ProxyID: existingProxy.ProxyID,
+	}
+
+	if proxy.Address != nil {
+		modifiedProxy.Address = *proxy.Address
+	}
+	if proxy.Port != nil {
+		modifiedProxy.Port = *proxy.Port
+	}
+	if proxy.CACert != nil {
+		modifiedProxy.CACert = *proxy.CACert
+	}
+
+	if err := client.UpdateEdgeProxyProfile(context.Background(), modifiedProxy); err != nil {
+		return fmt.Errorf("could not config proxy: %v", err)
+	}
+
+	d.SetId(modifiedProxy.ProxyID)
 	return nil
 }
 
@@ -105,12 +180,22 @@ func resourceAviatrixEdgeProxyProfileConfigDelete(d *schema.ResourceData, meta i
 	return nil
 }
 
-func marshalEdgeProxyProfileConfigInput(d *schema.ResourceData) *goaviatrix.EdgePlatformProxyProfile {
-	return &goaviatrix.EdgePlatformProxyProfile{
-		Address:     d.Get("ip_address").(string),
-		Port:        d.Get("port").(int),
-		CACert:      d.Get("ca_certificate").(string),
+func marshalEdgeProxyProfileConfigInput(d *schema.ResourceData) *proxyProfile {
+	profile := &proxyProfile{
 		AccountName: d.Get("account_name").(string),
 		Name:        d.Get("proxy_profile_name").(string),
 	}
+	if v, ok := d.GetOk("ip_address"); ok {
+		addr := v.(string)
+		profile.Address = &addr
+	}
+	if v, ok := d.GetOk("port"); ok {
+		port := v.(int)
+		profile.Port = &port
+	}
+	if v, ok := d.GetOk("ca_certificate"); ok {
+		cert := v.(string)
+		profile.CACert = &cert
+	}
+	return profile
 }

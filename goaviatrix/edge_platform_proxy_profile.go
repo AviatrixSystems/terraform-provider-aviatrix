@@ -15,6 +15,11 @@ type EdgePlatformProxyProfile struct {
 	CACert      string `json:"ca_cert"`
 }
 
+type EdgePlatformProxyProfileUpdate struct {
+	EdgePlatformProxyProfile
+	ProxyID string `json:"proxy_id"`
+}
+
 type EdgePlatformProxyProfileResp struct {
 	ProxyID           string     `json:"proxyID"`
 	Name              string     `json:"name"`
@@ -27,9 +32,16 @@ type EdgePlatformProxyProfileResp struct {
 	ExpiredAt         *time.Time `json:"expiredAt,omitempty"`
 }
 
-type EdgePlatformProxyProfileCreateResponse struct {
+type EdgePlatformProxyProfileCreateUpdateResponse struct {
 	Return    bool `json:"return"`
 	Results   EdgePlatformProxyProfileResp
+	Reason    string `json:"reason"`
+	Errortype string `json:"errortype"`
+}
+
+type EdgePlatformProxyProfileCreateUpdateResponse2 struct {
+	Return    bool   `json:"return"`
+	Results   string `json:"results"`
 	Reason    string `json:"reason"`
 	Errortype string `json:"errortype"`
 }
@@ -45,13 +57,25 @@ func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile
 	edgeNEOProxyProfile.Action = "create_edge_csp_proxy_profile"
 	edgeNEOProxyProfile.CID = c.CID
 
-	var data EdgePlatformProxyProfileCreateResponse
+	var data EdgePlatformProxyProfileCreateUpdateResponse
 	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) UpdateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgePlatformProxyProfileUpdate) error {
+	edgeNEOProxyProfile.Action = "update_edge_csp_proxy_profile"
+	edgeNEOProxyProfile.CID = c.CID
+
+	var data EdgePlatformProxyProfileCreateUpdateResponse2
+	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Client) GetEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) (*EdgePlatformProxyProfileResp, error) {
