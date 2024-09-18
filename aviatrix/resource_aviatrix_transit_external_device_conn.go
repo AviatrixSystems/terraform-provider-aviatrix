@@ -14,6 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	defaultBfdReceiveInterval  = 300
+	defaultBfdTransmitInterval = 300
+	defaultBfdMultiplier       = 3
+)
+
 func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitExternalDeviceConnCreate,
@@ -388,6 +394,43 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup Local LAN IP. Required for GCP BGP over LAN Connection with HA enabled.",
 			},
+			"enable_bfd": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable BGP BFD connection.",
+			},
+			"bgp_bfd": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "BGP BFD configuration details applied to a BGP session.",
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transmit_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD transmit interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdTransmitInterval,
+						},
+						"receive_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD receive interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdReceiveInterval,
+						},
+						"multiplier": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD detection multiplier.",
+							ValidateFunc: validation.IntBetween(2, 255),
+							Default:      defaultBfdMultiplier,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -490,6 +533,34 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bgp'")
 	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNum != 0 || externalDeviceConn.BgpRemoteAsNum != 0) {
 		return fmt.Errorf("'bgp_local_as_num' and 'bgp_remote_as_num' are needed for connection type of 'bgp' not 'static'")
+	}
+
+	enableBFD := d.Get("enable_bfd").(bool)
+	if enableBFD {
+		externalDeviceConn.EnableBfd = enableBFD
+		bgp_bfd := d.Get("bgp_bfd").([]interface{})
+		for _, bfd0 := range bgp_bfd {
+			bfd1 := bfd0.(map[string]interface{})
+			transmitInterval := defaultBfdTransmitInterval
+			receiveInterval := defaultBfdReceiveInterval
+			multiplier := defaultBfdMultiplier
+			if value, ok := bfd1["transmit_interval"].(int); ok {
+				transmitInterval = value
+			}
+			if value, ok := bfd1["receive_interval"].(int); ok {
+				receiveInterval = value
+			}
+			if value, ok := bfd1["multiplier"].(int); ok {
+				multiplier = value
+			}
+
+			bfd2 := &goaviatrix.BgpBfdConfig{
+				TransmitInterval: transmitInterval,
+				ReceiveInterval:  receiveInterval,
+				Multiplier:       multiplier,
+			}
+			externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
+		}
 	}
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
@@ -1003,6 +1074,32 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			}
 
 			d.Set("phase1_remote_identifier", ph1RemoteId)
+		}
+
+		if conn.EnableBfd {
+			d.Set("enable_bfd", true)
+			if len(conn.BgpBfdConfig) > 0 {
+				var bgpBfdConfig []map[string]interface{}
+				for _, bfd := range conn.BgpBfdConfig {
+					bfdMap := make(map[string]interface{})
+					bfdMap["transmit_interval"] = defaultBfdTransmitInterval
+					bfdMap["receive_interval"] = defaultBfdReceiveInterval
+					bfdMap["multiplier"] = defaultBfdMultiplier
+					if bfd.TransmitInterval != 0 {
+						bfdMap["transmit_interval"] = bfd.TransmitInterval
+					}
+					if bfd.ReceiveInterval != 0 {
+						bfdMap["receive_interval"] = bfd.ReceiveInterval
+					}
+					if bfd.Multiplier != 0 {
+						bfdMap["multiplier"] = bfd.Multiplier
+					}
+					bgpBfdConfig = append(bgpBfdConfig, bfdMap)
+				}
+				d.Set("bgp_bfd", bgpBfdConfig)
+			}
+		} else {
+			d.Set("enable_bfd", false)
 		}
 
 		if conn.PrependAsPath != "" {

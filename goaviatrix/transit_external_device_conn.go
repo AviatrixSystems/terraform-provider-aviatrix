@@ -54,12 +54,14 @@ type ExternalDeviceConn struct {
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
-	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
-	AuthType               string `form:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool   `form:"edge_underlay,omitempty"`
-	RemoteCloudType        string `form:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool   `form:"bgp_md5_key_changed,omitempty"`
+	BgpMd5Key              string          `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string          `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string          `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool            `form:"edge_underlay,omitempty"`
+	RemoteCloudType        string          `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool            `form:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig           []*BgpBfdConfig `json:"bgp_bfd,omitempty"`
+	EnableBfd              bool            `form:"enable_bfd,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -101,6 +103,12 @@ type EditExternalDeviceConnDetail struct {
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
 	WanUnderlay            bool   `json:"wan_underlay,omitempty"`
 	RemoteCloudType        string `json:"remote_cloud_type,omitempty"`
+}
+
+type BgpBfdConfig struct {
+	TransmitInterval int `json:"transmit_interval"`
+	ReceiveInterval  int `json:"receive_interval"`
+	Multiplier       int `json:"multiplier"`
 }
 
 type EditBgpMd5Key struct {

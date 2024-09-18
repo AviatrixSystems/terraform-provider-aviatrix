@@ -178,6 +178,43 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Description: "Configure manual BGP advertised CIDRs for this connection.",
 			},
+			"enable_bfd": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable BGP BFD connection.",
+			},
+			"bgp_bfd": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "BGP BFD configuration details applied to a BGP session.",
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transmit_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD transmit interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdTransmitInterval,
+						},
+						"receive_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD receive interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdReceiveInterval,
+						},
+						"multiplier": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD detection multiplier.",
+							ValidateFunc: validation.IntBetween(2, 255),
+							Default:      defaultBfdMultiplier,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -217,6 +254,34 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix
 	backupBgpLocalAsNum, err := strconv.Atoi(d.Get("backup_bgp_remote_as_num").(string))
 	if err == nil {
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
+	}
+
+	enableBFD := d.Get("enable_bfd").(bool)
+	if enableBFD {
+		externalDeviceConn.EnableBfd = enableBFD
+		bgp_bfd := d.Get("bgp_bfd").([]interface{})
+		for _, bfd0 := range bgp_bfd {
+			bfd1 := bfd0.(map[string]interface{})
+			transmitInterval := defaultBfdTransmitInterval
+			receiveInterval := defaultBfdReceiveInterval
+			multiplier := defaultBfdMultiplier
+			if value, ok := bfd1["transmit_interval"].(int); ok {
+				transmitInterval = value
+			}
+			if value, ok := bfd1["receive_interval"].(int); ok {
+				receiveInterval = value
+			}
+			if value, ok := bfd1["multiplier"].(int); ok {
+				multiplier = value
+			}
+
+			bfd2 := &goaviatrix.BgpBfdConfig{
+				TransmitInterval: transmitInterval,
+				ReceiveInterval:  receiveInterval,
+				Multiplier:       multiplier,
+			}
+			externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
+		}
 	}
 
 	return externalDeviceConn
@@ -381,6 +446,32 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	}
 	if conn.BgpRemoteAsNum != 0 {
 		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
+	}
+
+	if conn.EnableBfd {
+		d.Set("enable_bfd", true)
+		if len(conn.BgpBfdConfig) > 0 {
+			var bgpBfdConfig []map[string]interface{}
+			for _, bfd := range conn.BgpBfdConfig {
+				bfdMap := make(map[string]interface{})
+				bfdMap["transmit_interval"] = defaultBfdTransmitInterval
+				bfdMap["receive_interval"] = defaultBfdReceiveInterval
+				bfdMap["multiplier"] = defaultBfdMultiplier
+				if bfd.TransmitInterval != 0 {
+					bfdMap["transmit_interval"] = bfd.TransmitInterval
+				}
+				if bfd.ReceiveInterval != 0 {
+					bfdMap["receive_interval"] = bfd.ReceiveInterval
+				}
+				if bfd.Multiplier != 0 {
+					bfdMap["multiplier"] = bfd.Multiplier
+				}
+				bgpBfdConfig = append(bgpBfdConfig, bfdMap)
+			}
+			d.Set("bgp_bfd", bgpBfdConfig)
+		}
+	} else {
+		d.Set("enable_bfd", false)
 	}
 
 	if conn.HAEnabled == "enabled" {
