@@ -57,7 +57,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"vpc_id": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ForceNew:         true,
 				Description:      "VPC-ID/VNet-Name of cloud provider.",
 				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
@@ -753,6 +753,20 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
+			"interface_mapping": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Mapping of interface names to types and indices.",
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Interface type (e.g., 'wan', 'mgmt') and index.",
+					},
+					MaxItems: 2,
+				},
+			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -778,7 +792,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			CloudType:   d.Get("cloud_type").(int),
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string),
-			VpcID:       d.Get("vpc_id").(string),
 			VpcRegion:   d.Get("vpc_reg").(string),
 			VpcSize:     d.Get("gw_size").(string),
 			DeviceID:    d.Get("device_id").(string),
@@ -871,14 +884,28 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			// set the static interface mapping for AEP
-			interfaceMapping := map[string][]string{
-				"eth0": {"wan", "0"},
-				"eth1": {"wan", "1"},
-				"eth2": {"wan", "2"},
-				"eth3": {"mgmt", "0"},
-				"eth4": {"wan", "3"},
+			// interfaceMapping := map[string][]string{
+			// 	"eth0": {"wan", "0"},
+			// 	"eth1": {"wan", "1"},
+			// 	"eth2": {"wan", "2"},
+			// 	"eth3": {"mgmt", "0"},
+			// 	"eth4": {"wan", "3"},
+			// }
+			interfaceMappingInput := d.Get("interface_mapping").(map[string]interface{})
+			interfaceMapping := make(map[string][]string)
+
+			for key, value := range interfaceMappingInput {
+				// Each value is a list of two strings (interface type and index)
+				mappingList := value.([]interface{})
+				if len(mappingList) == 2 {
+					interfaceType := mappingList[0].(string)
+					interfaceIndex := mappingList[1].(string)
+					interfaceMapping[key] = []string{interfaceType, interfaceIndex}
+				} else {
+					return fmt.Errorf("invalid interface mapping for %s", key)
+				}
 			}
+
 			// Convert interfaceMapping to JSON byte slice
 			interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 			if err != nil {
@@ -1908,6 +1935,17 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
 			}
+		}
+		// set interface mapping
+		interfaceMapping := gw.InterfaceMapping
+		interfaceMappingList := make(map[string]interface{})
+		for k, v := range interfaceMapping {
+			interfaceMappingList[k] = []interface{}{v[0], v[1]}
+		}
+		// Set the interface_mapping value
+		err := d.Set("interface_mapping", interfaceMappingList)
+		if err != nil {
+			return fmt.Errorf("failed to set interface mapping: %v", err)
 		}
 		if gw.HaGw.GwSize == "" {
 			d.Set("ha_availability_domain", "")
