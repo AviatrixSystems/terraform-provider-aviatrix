@@ -524,6 +524,54 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		}
 	}
 
+	// Update the BGP BFD config if bfd is enabled and config has changed
+	enableBfd := d.Get("enable_bfd").(bool)
+	if enableBfd && d.HasChange("bgp_bfd") {
+		// get the new BGP BFD config
+		bgpBfdConfig := d.Get("bgp_bfd").([]interface{})
+		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
+		for _, v := range bgpBfdConfig {
+			bfdConfig := v.(map[string]interface{})
+			if bfdConfig["transmit_interval"].(int) == 0 {
+				bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+			}
+			if bfdConfig["receive_interval"].(int) == 0 {
+				bfdConfig["receive_interval"] = defaultBfdReceiveInterval
+			}
+			if bfdConfig["multiplier"].(int) == 0 {
+				bfdConfig["multiplier"] = defaultBfdMultiplier
+			}
+			bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
+				TransmitInterval: bfdConfig["transmit_interval"].(int),
+				ReceiveInterval:  bfdConfig["receive_interval"].(int),
+				Multiplier:       bfdConfig["multiplier"].(int),
+			})
+		}
+
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			GwName:         d.Get("gw_name").(string),
+			ConnectionName: d.Get("connection_name").(string),
+			EnableBfd:      d.Get("enable_bfd").(bool),
+			BgpBfdConfig:   bgpBfdConfigList,
+		}
+		err := client.EditConnectionBgpBfd(externalDeviceConn)
+		if err != nil {
+			return diag.Errorf("could not update BGP BFD config: %v", err)
+		}
+	} else {
+		if d.HasChange("enable_bfd") {
+			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+				GwName:         d.Get("gw_name").(string),
+				ConnectionName: d.Get("connection_name").(string),
+				EnableBfd:      d.Get("enable_bfd").(bool),
+			}
+			err := client.EditConnectionBgpBfd(externalDeviceConn)
+			if err != nil {
+				return diag.Errorf("could not disable BGP BFD config: %v", err)
+			}
+		}
+	}
+
 	if externalDeviceConn.EnableEdgeUnderlay && d.HasChanges("bgp_md5_key", "backup_bgp_md5_key") {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 
