@@ -383,6 +383,23 @@ func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *
 	}, BasicCheck)
 }
 
+func (c *Client) EditConnectionBgpBfd(externalDeviceConn *ExternalDeviceConn) error {
+	action := "edit_connection_bgp_bfd"
+	data := map[string]interface{}{
+		"CID":                c.CID,
+		"action":             action,
+		"gateway_name":       externalDeviceConn.GwName,
+		"connection_name":    externalDeviceConn.ConnectionName,
+		"connection_bgp_bfd": externalDeviceConn.EnableBfd,
+	}
+	if externalDeviceConn.EnableBfd {
+		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig[0].ReceiveInterval
+		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig[0].TransmitInterval
+		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig[0].Multiplier
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
 func (c *Client) EditBgpMd5Key(editBgpMd5Key *EditBgpMd5Key) error {
 	editBgpMd5Key.CID = c.CID
 	editBgpMd5Key.Action = "update_bgp_connection_md5_signature"
