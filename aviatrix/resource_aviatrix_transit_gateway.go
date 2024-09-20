@@ -57,7 +57,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"vpc_id": {
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
 				Description:      "VPC-ID/VNet-Name of cloud provider.",
 				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
@@ -754,17 +754,27 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 			},
 			"interface_mapping": {
-				Type:        schema.TypeMap,
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Mapping of interface names to types and indices.",
-				Elem: &schema.Schema{
-					Type: schema.TypeList,
-					Elem: &schema.Schema{
-						Type:        schema.TypeString,
-						Required:    true,
-						Description: "Interface type (e.g., 'wan', 'mgmt') and index.",
+				Description: "List of interface names with types and indices.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name (e.g., 'eth0', 'eth1').",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface type (e.g., 'wan', 'mgmt').",
+						},
+						"index": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface index (e.g., '0', '1').",
+						},
 					},
-					MaxItems: 2,
 				},
 			},
 			"peer_backup_port": {
@@ -792,6 +802,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			CloudType:   d.Get("cloud_type").(int),
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string),
+			VpcID:       d.Get("vpc_id").(string),
 			VpcRegion:   d.Get("vpc_reg").(string),
 			VpcSize:     d.Get("gw_size").(string),
 			DeviceID:    d.Get("device_id").(string),
@@ -884,28 +895,21 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			// interfaceMapping := map[string][]string{
-			// 	"eth0": {"wan", "0"},
-			// 	"eth1": {"wan", "1"},
-			// 	"eth2": {"wan", "2"},
-			// 	"eth3": {"mgmt", "0"},
-			// 	"eth4": {"wan", "3"},
-			// }
-			interfaceMappingInput := d.Get("interface_mapping").(map[string]interface{})
+			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
 			interfaceMapping := make(map[string][]string)
-
-			for key, value := range interfaceMappingInput {
-				// Each value is a list of two strings (interface type and index)
-				mappingList := value.([]interface{})
-				if len(mappingList) == 2 {
-					interfaceType := mappingList[0].(string)
-					interfaceIndex := mappingList[1].(string)
-					interfaceMapping[key] = []string{interfaceType, interfaceIndex}
-				} else {
-					return fmt.Errorf("invalid interface mapping for %s", key)
+			for _, value := range interfaceMappingInput {
+				mappingMap, ok := value.(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("invalid type for interface mapping, expected a map")
 				}
+				interfaceName, ok1 := mappingMap["name"].(string)
+				interfaceType, ok2 := mappingMap["type"].(string)
+				interfaceIndex, ok3 := mappingMap["index"].(string)
+				if !ok1 || !ok2 || !ok3 {
+					return fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
+				}
+				interfaceMapping[interfaceName] = []string{interfaceType, interfaceIndex}
 			}
-
 			// Convert interfaceMapping to JSON byte slice
 			interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 			if err != nil {
@@ -1938,13 +1942,23 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set interface mapping
 		interfaceMapping := gw.InterfaceMapping
-		interfaceMappingList := make(map[string]interface{})
+		interfaceMappingList := make([]map[string]interface{}, 0)
 		for k, v := range interfaceMapping {
-			interfaceMappingList[k] = []interface{}{v[0], v[1]}
+			// Ensure the slice has at least 2 elements (type and index)
+			if len(v) >= 2 {
+				mapping := map[string]interface{}{
+					"name":  k,
+					"type":  v[0],
+					"index": v[1],
+				}
+				interfaceMappingList = append(interfaceMappingList, mapping)
+			} else {
+				return fmt.Errorf("invalid interface mapping for key %s: expected at least 2 elements, got %d", k, len(v))
+			}
 		}
-		// Set the interface_mapping value
-		err := d.Set("interface_mapping", interfaceMappingList)
-		if err != nil {
+
+		// Set the interface_mapping value as a list of maps
+		if err := d.Set("interface_mapping", interfaceMappingList); err != nil {
 			return fmt.Errorf("failed to set interface mapping: %v", err)
 		}
 		if gw.HaGw.GwSize == "" {
