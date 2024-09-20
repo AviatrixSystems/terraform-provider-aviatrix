@@ -756,7 +756,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"interface_mapping": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "List of interface names with types and indices.",
+				Description: "List of interface names mapped to interface types and indices.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -765,9 +765,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Description: "Interface name (e.g., 'eth0', 'eth1').",
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Interface type (e.g., 'wan', 'mgmt').",
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type (e.g., 'wan', 'mgmt').",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
 						},
 						"index": {
 							Type:        schema.TypeString,
@@ -1941,25 +1942,19 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 		}
 		// set interface mapping
-		interfaceMapping := gw.InterfaceMapping
-		interfaceMappingList := make([]map[string]interface{}, 0)
-		for k, v := range interfaceMapping {
-			// Ensure the slice has at least 2 elements (type and index)
-			if len(v) >= 2 {
-				mapping := map[string]interface{}{
-					"name":  k,
-					"type":  v[0],
-					"index": v[1],
-				}
-				interfaceMappingList = append(interfaceMappingList, mapping)
-			} else {
-				return fmt.Errorf("invalid interface mapping for key %s: expected at least 2 elements, got %d", k, len(v))
+		if len(gw.InterfaceMapping) != 0 {
+			var interfaceMapping []map[string]interface{}
+			sortedInterfaceMappings := sortInterfaceMappingByCustomOrder(gw.InterfaceMapping)
+			for _, intf := range sortedInterfaceMappings {
+				interfaceMap := make(map[string]interface{})
+				interfaceMap["name"] = intf.Name
+				interfaceMap["type"] = intf.Type
+				interfaceMap["index"] = intf.Index
+				interfaceMapping = append(interfaceMapping, interfaceMap)
 			}
-		}
-
-		// Set the interface_mapping value as a list of maps
-		if err := d.Set("interface_mapping", interfaceMappingList); err != nil {
-			return fmt.Errorf("failed to set interface mapping: %v", err)
+			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
+				return fmt.Errorf("could not set interface mapping into state: %v", err)
+			}
 		}
 		if gw.HaGw.GwSize == "" {
 			d.Set("ha_availability_domain", "")

@@ -375,6 +375,31 @@ resource "aviatrix_transit_gateway" "test-edge-transit-1-hagw" {
         ip_address   = "192.168.23.12/24"
         type         = "WAN"
     }
+    interface_mapping{
+      name  = "eth0"
+      type  = "wan"
+      index = "0"
+    }
+    interface_mapping{
+      name  = "eth1"
+      type  = "wan"
+      index = "1"
+    }
+    interface_mapping{
+      name  = "eth2"
+      type  = "wan"
+      index = "2"
+    }
+    interface_mapping{
+      name  = "eth3"
+      type  = "mgmt"
+      index = "0"
+    }
+    interface_mapping{
+      name  = "eth4"
+      type  = "wan"
+      index = "3"
+    }
 }
 ```
 
@@ -407,6 +432,10 @@ The following arguments are supported:
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
+* `interface_mapping` - (Optional) A list of interface names mapped to interface types and indices. Required and valid only for edge transit gateways (AEP). Each interface has the following attributes:
+  * `name` - (Required) Interface name e.g. eth0, eth1, eh2 etc.
+  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `index` - (Requied) Interface index e.g. '0', '1' etc.
 
 
 ### HA

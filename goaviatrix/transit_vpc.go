@@ -144,6 +144,12 @@ type EdgeTransitInterface struct {
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
 }
 
+type InterfaceMapping struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Index string `json:"index"`
+}
+
 type TransitGatewayBgpLanIpInfoResp struct {
 	Return  bool                                 `json:"return"`
 	Results TransitGatewayBgpLanIpInfoRespResult `json:"results"`
