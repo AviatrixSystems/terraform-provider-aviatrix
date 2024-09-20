@@ -121,8 +121,8 @@ func resourceAviatrixEdgeProxyProfileConfigUpdate(d *schema.ResourceData, meta i
 			AccountName: proxy.AccountName,
 			Name:        proxy.Name,
 			Address:     existingProxy.IPAddress,
-			Port:        int(existingProxy.Port),
-			CACert:      *existingProxy.CaCert,
+			Port:        existingProxy.Port,
+			CACert:      existingProxy.CaCert,
 		},
 		ProxyID: existingProxy.ProxyID,
 	}
@@ -161,9 +161,7 @@ func resourceAviatrixEdgeProxyProfileConfigRead(d *schema.ResourceData, meta int
 	d.Set("port", proxy.Port)
 	d.Set("proxy_profile_id", proxy.ProxyID)
 	d.Set("name", proxy.Name)
-	if proxy.CaCert != nil && *proxy.CaCert != "" {
-		d.Set("ca_certificate", proxy.CaCert)
-	}
+	d.Set("ca_certificate", proxy.CaCert)
 
 	d.SetId(proxy.ProxyID)
 	return nil

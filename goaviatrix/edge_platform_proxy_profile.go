@@ -21,15 +21,15 @@ type EdgePlatformProxyProfileUpdate struct {
 }
 
 type EdgePlatformProxyProfileResp struct {
-	ProxyID           string     `json:"proxyID"`
-	Name              string     `json:"name"`
-	IPAddress         string     `json:"address"`
-	Port              int64      `json:"port"`
-	ProxyProfileCount int64      `json:"deviceCount"`
-	CreatedAt         time.Time  `json:"createdAt"`
-	UpdatedAt         time.Time  `json:"updatedAt"`
-	CaCert            *string    `json:"caCert,omitempty"`
-	ExpiredAt         *time.Time `json:"expiredAt,omitempty"`
+	ProxyID           string    `json:"proxyID"`
+	Name              string    `json:"name"`
+	IPAddress         string    `json:"address"`
+	Port              int       `json:"port"`
+	ProxyProfileCount int64     `json:"deviceCount"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+	CaCert            string    `json:"caCert,omitempty"`
+	ExpiredAt         time.Time `json:"expiredAt,omitempty"`
 }
 
 type EdgePlatformProxyProfileCreateResponse struct {
