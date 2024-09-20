@@ -51,6 +51,18 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_namespace  = "testnamespace"
       k8s_pod        = "testpod"
     }
+
+    match_expressions {
+      s2c = "remote-site-name"
+    }
+
+    match_expressions {
+      external = "External_ID"
+      ext_args = {
+        external_ID_specific_field1 = "value1"
+        external_ID_specific_field2 = "value2"
+      } 
+    }
   }
 }
 ```
@@ -84,6 +96,9 @@ The following arguments are supported:
     * `k8s_pod` - (Optional) - Kubernetes pod name this expression matches. 
       This property can only be used when `type` is set to "k8s".
       This property must not be used when `k8s_service` is set.
+    * `s2c` - (Optional) - Name of the remote site. Represents the CIDRs associated with the remote site.
+    * `external` - (Optional) - Specifies an external feed, currently either "geo" or "threatiq".
+    * `ext_args` - (Optional) - Map of the arguments associated with the external feed such as "country_iso_code" for the "geo" feed.
     * `tags` - (Optional) - Map of tags this expression matches.
 
 ## Attribute Reference
