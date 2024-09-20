@@ -15,21 +15,33 @@ type EdgePlatformProxyProfile struct {
 	CACert      string `json:"ca_cert"`
 }
 
+type EdgePlatformProxyProfileUpdate struct {
+	EdgePlatformProxyProfile
+	ProxyID string `json:"proxy_id"`
+}
+
 type EdgePlatformProxyProfileResp struct {
-	ProxyID           string     `json:"proxyID"`
-	Name              string     `json:"name"`
-	IPAddress         string     `json:"address"`
-	Port              int64      `json:"port"`
-	ProxyProfileCount int64      `json:"deviceCount"`
-	CreatedAt         time.Time  `json:"createdAt"`
-	UpdatedAt         time.Time  `json:"updatedAt"`
-	CaCert            *string    `json:"caCert,omitempty"`
-	ExpiredAt         *time.Time `json:"expiredAt,omitempty"`
+	ProxyID           string    `json:"proxyID"`
+	Name              string    `json:"name"`
+	IPAddress         string    `json:"address"`
+	Port              int       `json:"port"`
+	ProxyProfileCount int       `json:"deviceCount"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+	CaCert            string    `json:"caCert,omitempty"`
+	ExpiredAt         time.Time `json:"expiredAt,omitempty"`
 }
 
 type EdgePlatformProxyProfileCreateResponse struct {
 	Return    bool `json:"return"`
 	Results   EdgePlatformProxyProfileResp
+	Reason    string `json:"reason"`
+	Errortype string `json:"errortype"`
+}
+
+type EdgePlatformProxyProfileUpdateResponse struct {
+	Return    bool   `json:"return"`
+	Results   string `json:"results"`
 	Reason    string `json:"reason"`
 	Errortype string `json:"errortype"`
 }
@@ -52,6 +64,18 @@ func (c *Client) CreateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) UpdateEdgeProxyProfile(ctx context.Context, edgeNEOProxyProfile *EdgePlatformProxyProfileUpdate) error {
+	edgeNEOProxyProfile.Action = "update_edge_csp_proxy_profile"
+	edgeNEOProxyProfile.CID = c.CID
+
+	var data EdgePlatformProxyProfileUpdateResponse
+	err := c.PostAPIContext2(ctx, &data, edgeNEOProxyProfile.Action, edgeNEOProxyProfile, BasicCheck)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Client) GetEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) (*EdgePlatformProxyProfileResp, error) {
