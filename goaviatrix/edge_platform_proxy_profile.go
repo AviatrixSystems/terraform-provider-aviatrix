@@ -25,7 +25,7 @@ type EdgePlatformProxyProfileResp struct {
 	Name              string    `json:"name"`
 	IPAddress         string    `json:"address"`
 	Port              int       `json:"port"`
-	ProxyProfileCount int64     `json:"deviceCount"`
+	ProxyProfileCount int     `json:"deviceCount"`
 	CreatedAt         time.Time `json:"createdAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`
 	CaCert            string    `json:"caCert,omitempty"`
