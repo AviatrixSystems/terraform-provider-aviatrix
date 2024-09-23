@@ -754,11 +754,30 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"enable_interface_mapping": {
-				Type:        schema.TypeBool,
+			"interface_mapping": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     false,
-				Description: "Enable interface mapping for ESXI.",
+				Description: "List of interface names mapped to interface types and indices.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name (e.g., 'eth0', 'eth1').",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type (e.g., 'wan', 'mgmt').",
+							ValidateFunc: validation.StringInSlice([]string{"wan", "mgmt"}, false),
+						},
+						"index": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface index (e.g., '0', '1').",
+						},
+					},
+				},
 			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
@@ -801,8 +820,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to get the interface count: %v", err)
 		}
-		// Initialize interface mapping for AEP
-		interfaceMapping := make(map[string][]string)
 		for _, iface := range interfaces {
 			ifaceInfo, ok := iface.(map[string]interface{})
 			if !ok {
@@ -898,17 +915,25 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 			/*
-				TODO: Add support for user provided interface mapping. Currently, the interface mapping is hardcoded for ESXI and Dell devices. This will be updated in a future release.
+				TODO: Add support for user provided interface mapping. Currently, the interface mapping is hardcoded for Dell devices. This will be updated in a future release.
 			*/
 			interfaceMapping := map[string][]string{}
-			enable_interface_mapping := d.Get("enable_interface_mapping").(bool)
-			if enable_interface_mapping {
+			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
+			if interfaceMappingInput != nil {
 				// Set the interface mapping for ESXI devices
-				interfaceMapping["eth0"] = []string{"wan", "0"}
-				interfaceMapping["eth1"] = []string{"wan", "1"}
-				interfaceMapping["eth2"] = []string{"wan", "2"}
-				interfaceMapping["eth3"] = []string{"mgmt", "0"}
-				interfaceMapping["eth4"] = []string{"wan", "3"}
+				for _, value := range interfaceMappingInput {
+					mappingMap, ok := value.(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("invalid type for interface mapping, expected a map")
+					}
+					interfaceName, ok1 := mappingMap["name"].(string)
+					interfaceType, ok2 := mappingMap["type"].(string)
+					interfaceIndex, ok3 := mappingMap["index"].(string)
+					if !ok1 || !ok2 || !ok3 {
+						return fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
+					}
+					interfaceMapping[interfaceName] = []string{interfaceType, interfaceIndex}
+				}
 			} else {
 				// Set the interface mapping for Dell devices
 				interfaceMapping["eth0"] = []string{"mgmt", "0"}
@@ -1918,7 +1943,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			sortedInterfaces := sortInterfacesByCustomOrder(gw.Interfaces)
 			for _, intf := range sortedInterfaces {
 				interfaceDict := make(map[string]interface{})
-				interfaceDict["name"] = intf.Name
 				interfaceDict["type"] = intf.Type
 				if intf.PublicIp != "" {
 					interfaceDict["public_ip"] = intf.PublicIp
@@ -1945,6 +1969,21 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
+			}
+		}
+		// set interface mapping
+		if len(gw.InterfaceMapping) != 0 {
+			var interfaceMapping []map[string]interface{}
+			sortedInterfaceMappings := sortInterfaceMappingByCustomOrder(gw.InterfaceMapping)
+			for _, intf := range sortedInterfaceMappings {
+				interfaceMap := make(map[string]interface{})
+				interfaceMap["name"] = intf.Name
+				interfaceMap["type"] = intf.Type
+				interfaceMap["index"] = intf.Index
+				interfaceMapping = append(interfaceMapping, interfaceMap)
+			}
+			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
+				return fmt.Errorf("could not set interface mapping into state: %v", err)
 			}
 		}
 		if gw.HaGw.GwSize == "" {

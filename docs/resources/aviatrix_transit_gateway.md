@@ -407,7 +407,10 @@ The following arguments are supported:
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
-* `enable_interface_mapping` - (Optional) Interface mapping is configured to support ESXI devices when set to 'TRUE'.
+* `interface_mapping` - (Optional) A list of interface names mapped to interface types and indices. Required and valid only for edge transit gateways (AEP). Each interface has the following attributes:
+  * `name` - (Required) Interface name e.g. eth0, eth1, eh2 etc.
+  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `index` - (Requied) Interface index e.g. 0, 1 etc.
 
 
 ### HA
