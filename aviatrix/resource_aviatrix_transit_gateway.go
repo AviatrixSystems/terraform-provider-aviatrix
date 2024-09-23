@@ -958,21 +958,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
 			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-				enable_interface_mapping := d.Get("enable_interface_mapping").(bool)
-				if enable_interface_mapping {
-					// Set the interface mapping for ESXI devices
-					interfaceMapping["eth0"] = []string{"wan", "0"}
-					interfaceMapping["eth1"] = []string{"wan", "1"}
-					interfaceMapping["eth2"] = []string{"wan", "2"}
-					interfaceMapping["eth3"] = []string{"mgmt", "0"}
-					interfaceMapping["eth4"] = []string{"wan", "3"}
-				} else {
-					// Set the interface mapping for Dell devices
-					interfaceMapping["eth0"] = []string{"mgmt", "0"}
-					interfaceMapping["eth5"] = []string{"wan", "0"}
-					interfaceMapping["eth2"] = []string{"wan", "1"}
-					interfaceMapping["eth3"] = []string{"wan", "2"}
-					interfaceMapping["eth4"] = []string{"wan", "3"}
+				// set the static interface mapping for AEP
+				interfaceMapping := map[string][]string{
+					"eth0": {"wan", "0"},
+					"eth1": {"wan", "1"},
+					"eth2": {"wan", "2"},
+					"eth3": {"mgmt", "0"},
+					"eth4": {"wan", "3"},
 				}
 				// Convert interfaceMapping to JSON byte slice
 				interfaceMappingJSON, err := json.Marshal(interfaceMapping)
