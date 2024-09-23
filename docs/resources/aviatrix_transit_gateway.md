@@ -401,7 +401,7 @@ The following arguments are supported:
 * `site_id` - (Optional) Site id for the EAT gateway. Required and valid only for edge transit gateways AEP and Equinix.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
-  * `index` - (Required) Interface 
+  * `index` - (Required) Interface index. Valid values are 0,1,2 etc.
   * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
