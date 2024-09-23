@@ -400,13 +400,14 @@ The following arguments are supported:
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `site_id` - (Optional) Site id for the EAT gateway. Required and valid only for edge transit gateways AEP and Equinix.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
-  * `name` - (Required) Interface name e.g. eth0, eth1, eh2 etc.
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `index` - (Required) Interface 
   * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
+* `enable_interface_mapping` - (Optional) Interface mapping is configured to support ESXI devices when set to 'TRUE'.
 
 
 ### HA

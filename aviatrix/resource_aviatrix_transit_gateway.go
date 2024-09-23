@@ -24,12 +24,6 @@ const (
 	defaultBgpHoldTime             = 180
 )
 
-var InterfaceTypeMapping = map[string]string{
-	"MANAGEMENT": "mgmt",
-	"WAN":        "wan",
-	"LAN":        "lan",
-}
-
 func resourceAviatrixTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitGatewayCreate,
@@ -760,6 +754,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
+			"enable_interface_mapping": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable interface mapping for ESXI.",
+			},
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -820,10 +820,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("interface type is not a string")
 				}
 			}
-			mappedIfaceType, ok := InterfaceTypeMapping[ifaceType]
-			if !ok {
-				return fmt.Errorf("invalid interface type: %s", ifaceType)
-			}
 			ifaceIndex = ifaceInfo["index"].(int)
 
 			// get the interface name using the interface type, index and count
@@ -831,9 +827,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to get the interface name: %v", err)
 			}
-
-			// Append values to interface mapping
-			interfaceMapping[ifaceName] = []string{mappedIfaceType, strconv.Itoa(ifaceIndex)}
 
 			// Check and set 'interface name'
 			if val, exists := ifaceInfo["name"]; exists && val != nil {
@@ -904,6 +897,26 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+			/*
+				TODO: Add support for user provided interface mapping. Currently, the interface mapping is hardcoded for ESXI and Dell devices. This will be updated in a future release.
+			*/
+			interfaceMapping := map[string][]string{}
+			enable_interface_mapping := d.Get("enable_interface_mapping").(bool)
+			if enable_interface_mapping {
+				// Set the interface mapping for ESXI devices
+				interfaceMapping["eth0"] = []string{"wan", "0"}
+				interfaceMapping["eth1"] = []string{"wan", "1"}
+				interfaceMapping["eth2"] = []string{"wan", "2"}
+				interfaceMapping["eth3"] = []string{"mgmt", "0"}
+				interfaceMapping["eth4"] = []string{"wan", "3"}
+			} else {
+				// Set the interface mapping for Dell devices
+				interfaceMapping["eth0"] = []string{"mgmt", "0"}
+				interfaceMapping["eth5"] = []string{"wan", "0"}
+				interfaceMapping["eth2"] = []string{"wan", "1"}
+				interfaceMapping["eth3"] = []string{"wan", "2"}
+				interfaceMapping["eth4"] = []string{"wan", "3"}
+			}
 			// Convert interfaceMapping to JSON byte slice
 			interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 			if err != nil {
@@ -948,6 +961,22 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
 			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+				enable_interface_mapping := d.Get("enable_interface_mapping").(bool)
+				if enable_interface_mapping {
+					// Set the interface mapping for ESXI devices
+					interfaceMapping["eth0"] = []string{"wan", "0"}
+					interfaceMapping["eth1"] = []string{"wan", "1"}
+					interfaceMapping["eth2"] = []string{"wan", "2"}
+					interfaceMapping["eth3"] = []string{"mgmt", "0"}
+					interfaceMapping["eth4"] = []string{"wan", "3"}
+				} else {
+					// Set the interface mapping for Dell devices
+					interfaceMapping["eth0"] = []string{"mgmt", "0"}
+					interfaceMapping["eth5"] = []string{"wan", "0"}
+					interfaceMapping["eth2"] = []string{"wan", "1"}
+					interfaceMapping["eth3"] = []string{"wan", "2"}
+					interfaceMapping["eth4"] = []string{"wan", "3"}
+				}
 				// Convert interfaceMapping to JSON byte slice
 				interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 				if err != nil {
