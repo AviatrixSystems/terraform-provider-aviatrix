@@ -797,7 +797,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("interfaces attribute is required for EAT gateway")
 		}
 		// get the count of WAN and MANAGEMENT interfaces
-		wanCount, mgmtCount, err := countInterfaceTypes(interfaces)
+		wanCount, err := countInterfaceTypes(interfaces)
 		if err != nil {
 			return fmt.Errorf("failed to get the interface count: %v", err)
 		}
@@ -827,11 +827,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			ifaceIndex = ifaceInfo["index"].(int)
 
 			// get the interface name using the interface type, index and count
-			// getInterfaceName(intfType string, intfIndex, wanCount, mgmtCount int) (string, error)
-			ifaceName, err := getInterfaceName(ifaceType, ifaceIndex, wanCount, mgmtCount)
+			ifaceName, err := getInterfaceName(ifaceType, ifaceIndex, wanCount)
 			if err != nil {
 				return fmt.Errorf("failed to get the interface name: %v", err)
 			}
+
 			// Append values to interface mapping
 			interfaceMapping[ifaceName] = []string{mappedIfaceType, strconv.Itoa(ifaceIndex)}
 
@@ -3787,35 +3787,29 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-// count the number of WAN and MANAGEMENT interfaces in the interface config
-func countInterfaceTypes(interfaceList []interface{}) (int, int, error) {
+// count the number of WAN interfaces in the interface config
+func countInterfaceTypes(interfaceList []interface{}) (int, error) {
 	wanCount := 0
-	mgmtCount := 0
 	// Iterate over each interface in the list
 	for _, item := range interfaceList {
 		interfaceMap, ok := item.(map[string]interface{})
 		if !ok {
-			return 0, 0, fmt.Errorf("invalid interface entry, expected a map")
+			return 0, fmt.Errorf("invalid interface entry, expected a map")
 		}
 		interfaceType, ok := interfaceMap["type"].(string)
 		if !ok {
-			return 0, 0, fmt.Errorf("interface type must be a string")
+			return 0, fmt.Errorf("interface type must be a string")
 		}
-		// Count WAN and MANAGEMENT interfaces
-		switch interfaceType {
-		case "WAN":
+		// Count WAN interfaces
+		if interfaceType == "WAN" {
 			wanCount++
-		case "MANAGEMENT":
-			mgmtCount++
-		default:
-			return 0, 0, fmt.Errorf("invalid interface type: %s", interfaceType)
 		}
 	}
-	return wanCount, mgmtCount, nil
+	return wanCount, nil
 }
 
 // get the interface name (ethX) from interface type, index, and counts
-func getInterfaceName(intfType string, intfIndex, wanCount, mgmtCount int) (string, error) {
+func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) {
 	// Check if the interface type is valid
 	if intfType != "WAN" && intfType != "MANAGEMENT" {
 		log.Printf("Invalid interface type %s", intfType)
@@ -3825,8 +3819,9 @@ func getInterfaceName(intfType string, intfIndex, wanCount, mgmtCount int) (stri
 	// Determine the interface name based on the type and index
 	switch intfType {
 	case "WAN":
+		// WAN interfaces start from eth0
 		if intfIndex == 0 {
-			num = 0 // First WAN interface is eth0
+			num = 0
 		} else {
 			// Transit case: wan, wan, mgmt, remaining wans, remaining mgmts if any
 			if intfIndex == 1 {
@@ -3836,7 +3831,12 @@ func getInterfaceName(intfType string, intfIndex, wanCount, mgmtCount int) (stri
 			}
 		}
 	case "MANAGEMENT":
-		num = wanCount + intfIndex
+		// Management interfaces start from eth2
+		if intfIndex == 0 {
+			num = 2
+		} else {
+			num = wanCount + intfIndex
+		}
 	default:
 		return "", errors.New("unexpected interface type")
 	}
