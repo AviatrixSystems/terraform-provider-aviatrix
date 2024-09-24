@@ -99,6 +99,7 @@ func resourceAviatrixEdgeProxyProfileConfigCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("could not config proxy: %v", err)
 	}
 
+	d.Set("proxy_profile_id", createdProxy.ProxyID)
 	d.SetId(createdProxy.ProxyID)
 	return nil
 }
