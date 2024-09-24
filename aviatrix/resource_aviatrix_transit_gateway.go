@@ -756,7 +756,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"interface_mapping": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "List of interface names mapped to interface types and indices.",
+				Description: "List of interface names mapped to interface types and indices. Only required for ESXI.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -771,7 +771,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"wan", "mgmt"}, false),
 						},
 						"index": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 							Description: "Interface index (e.g., '0', '1').",
 						},
@@ -913,7 +913,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 			/*
-				TODO: Add support for user provided interface mapping. Currently, the interface mapping is hardcoded for Dell devices. This will be updated in a future release.
+				TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
 			*/
 			interfaceMapping := map[string][]string{}
 			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
@@ -922,15 +922,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				for _, value := range interfaceMappingInput {
 					mappingMap, ok := value.(map[string]interface{})
 					if !ok {
-						return fmt.Errorf("invalid type for interface mapping, expected a map")
+						return fmt.Errorf("invalid type %T for interface mapping, expected a map", value)
 					}
 					interfaceName, ok1 := mappingMap["name"].(string)
 					interfaceType, ok2 := mappingMap["type"].(string)
-					interfaceIndex, ok3 := mappingMap["index"].(string)
+					interfaceIndex, ok3 := mappingMap["index"].(int)
 					if !ok1 || !ok2 || !ok3 {
 						return fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
 					}
-					interfaceMapping[interfaceName] = []string{interfaceType, interfaceIndex}
+					interfaceMapping[interfaceName] = []string{interfaceType, strconv.Itoa(interfaceIndex)}
 				}
 			} else {
 				// Set the interface mapping for Dell devices
@@ -1971,6 +1971,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		// set interface mapping
 		if len(gw.InterfaceMapping) != 0 {
 			var interfaceMapping []map[string]interface{}
+			// sort the interface mapping by interface name. This will maintain the order of the interface mappings in the state
 			sortedInterfaceMappings := sortInterfaceMappingByCustomOrder(gw.InterfaceMapping)
 			for _, intf := range sortedInterfaceMappings {
 				interfaceMap := make(map[string]interface{})

@@ -292,7 +292,7 @@ type GatewayDetail struct {
 type InterfaceMapping struct {
 	Name  string `json:"name"`
 	Type  string `json:"type"`
-	Index string `json:"index"`
+	Index int    `json:"index"`
 }
 
 type BundleVpcInfo struct {
