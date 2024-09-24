@@ -920,7 +920,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			*/
 			interfaceMapping := map[string][]string{}
 			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
-			if interfaceMappingInput != nil {
+			if len(interfaceMappingInput) > 0 {
 				// Set the interface mapping for ESXI devices
 				for _, value := range interfaceMappingInput {
 					mappingMap, ok := value.(map[string]interface{})
