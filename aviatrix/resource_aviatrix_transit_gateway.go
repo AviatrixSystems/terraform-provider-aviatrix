@@ -771,9 +771,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"wan", "mgmt"}, false),
 						},
 						"index": {
-							Type:        schema.TypeInt,
-							Required:    true,
-							Description: "Interface index (e.g., '0', '1').",
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index (e.g., 0, 1).",
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 					},
 				},
