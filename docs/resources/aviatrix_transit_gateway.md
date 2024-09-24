@@ -303,33 +303,33 @@ resource "aviatrix_transit_gateway" "test-edge-transit-1" {
     site_id = "site-3"
     interfaces {
         gateway_ip    = "192.168.20.1"
-        name          = "eth0"
         ip_address    = "192.168.20.11/24"
         type          = "WAN"
+        index         = 0
     }
     interfaces {
         gateway_ip                  = "192.168.21.1"
-        name                        = "eth1"
         ip_address                  = "192.168.21.11/24"
         type                        = "WAN"
+        index                       = 1
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
     interfaces {
         dhcp   = true
-        name = "eth2"
         type   = "MANAGEMENT"
+        index  = 0
     }
     interfaces {
         gateway_ip   = "192.168.22.1"
-        name         = "eth3"
         ip_address   = "192.168.22.11/24"
         type         = "WAN"
+        index        = 2
     }
     interfaces {
         gateway_ip   = "192.168.23.1"
-        name         = "eth4"
         ip_address   = "192.168.23.11/24"
         type         = "WAN"
+        index        = 3
     }
 }
 ```
@@ -400,13 +400,17 @@ The following arguments are supported:
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `site_id` - (Optional) Site id for the EAT gateway. Required and valid only for edge transit gateways AEP and Equinix.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
-  * `name` - (Required) Interface name e.g. eth0, eth1, eh2 etc.
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `index` - (Required) Interface index. Valid values are 0,1,2 etc.
   * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
+* `interface_mapping` - (Optional) A list of interface names mapped to interface types and indices. Required and valid only for edge transit gateways (AEP). Each interface has the following attributes:
+  * `name` - (Required) Interface name e.g. eth0, eth1, eth2 etc.
+  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
+  * `index` - (Requied) Interface index e.g. 0, 1 etc.
 
 
 ### HA

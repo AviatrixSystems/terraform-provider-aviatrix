@@ -223,6 +223,7 @@ type Gateway struct {
 	DeviceID                        string                              `json:"device_id,omitempty"`
 	SiteID                          string                              `json:"site_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
+	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
 }
 
 type HaGateway struct {
@@ -287,6 +288,12 @@ type GatewayDetail struct {
 	CustomizedTransitVpcRoutes   []string      `json:"customized_transit_vpc_cidrs"`
 	BundleVpcInfo                BundleVpcInfo `json:"bundle_vpc_info"`
 	BgpEnabled                   bool          `json:"bgp_enabled"`
+}
+
+type InterfaceMapping struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Index int    `json:"index"`
 }
 
 type BundleVpcInfo struct {
