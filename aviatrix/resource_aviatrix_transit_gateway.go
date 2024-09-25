@@ -711,16 +711,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "A list of WAN/Management interfaces, each represented as a map.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Interface name, e.g., 'eth0', 'eth1'.",
-						},
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
 							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
+						},
+						"index": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index. Must be unique for each interface type.",
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
@@ -749,6 +750,32 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+					},
+				},
+			},
+			"interface_mapping": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of interface names mapped to interface types and indices. Only required for ESXI.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name (e.g., 'eth0', 'eth1').",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type (e.g., 'wan', 'mgmt').",
+							ValidateFunc: validation.StringInSlice([]string{"wan", "mgmt"}, false),
+						},
+						"index": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index (e.g., 0, 1).",
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 					},
 				},
@@ -786,6 +813,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Transit:     true,
 		}
 		interfaces := d.Get("interfaces").([]interface{})
+		if (interfaces == nil) || (len(interfaces) == 0) {
+			return fmt.Errorf("interfaces attribute is required for EAT gateway")
+		}
+		// get the count of WAN and MANAGEMENT interfaces
+		wanCount, err := countInterfaceTypes(interfaces)
+		if err != nil {
+			return fmt.Errorf("failed to get the interface count: %v", err)
+		}
 		for _, iface := range interfaces {
 			ifaceInfo, ok := iface.(map[string]interface{})
 			if !ok {
@@ -793,20 +828,29 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			// Initialize the interface fields with default values
 			var ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
+			var ifaceIndex int
 			var ifaceDHCP bool
 			var secondaryCIDRs []string
-			// Check and set 'interface name'
-			if val, exists := ifaceInfo["name"]; exists && val != nil {
-				ifaceName, ok = val.(string)
-				if !ok {
-					return fmt.Errorf("interface name is not a string")
-				}
-			}
 			// Check and set 'type'
 			if val, exists := ifaceInfo["type"]; exists && val != nil {
 				ifaceType, ok = val.(string)
 				if !ok {
 					return fmt.Errorf("interface type is not a string")
+				}
+			}
+			ifaceIndex = ifaceInfo["index"].(int)
+
+			// get the interface name using the interface type, index and count
+			ifaceName, err := getInterfaceName(ifaceType, ifaceIndex, wanCount)
+			if err != nil {
+				return fmt.Errorf("failed to get the interface name: %v", err)
+			}
+
+			// Check and set 'interface name'
+			if val, exists := ifaceInfo["name"]; exists && val != nil {
+				ifaceName, ok = val.(string)
+				if !ok {
+					return fmt.Errorf("interface name is not a string")
 				}
 			}
 			// Check and set 'gateway_ip'
@@ -871,13 +915,33 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Interfaces = b64.StdEncoding.EncodeToString(interfaceList)
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			// set the static interface mapping for AEP
-			interfaceMapping := map[string][]string{
-				"eth0": {"wan", "0"},
-				"eth1": {"wan", "1"},
-				"eth2": {"wan", "2"},
-				"eth3": {"mgmt", "0"},
-				"eth4": {"wan", "3"},
+			/*
+				TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
+			*/
+			interfaceMapping := map[string][]string{}
+			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
+			if len(interfaceMappingInput) > 0 {
+				// Set the interface mapping for ESXI devices
+				for _, value := range interfaceMappingInput {
+					mappingMap, ok := value.(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("invalid type %T for interface mapping, expected a map", value)
+					}
+					interfaceName, ok1 := mappingMap["name"].(string)
+					interfaceType, ok2 := mappingMap["type"].(string)
+					interfaceIndex, ok3 := mappingMap["index"].(int)
+					if !ok1 || !ok2 || !ok3 {
+						return fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
+					}
+					interfaceMapping[interfaceName] = []string{interfaceType, strconv.Itoa(interfaceIndex)}
+				}
+			} else {
+				// Set the interface mapping for Dell devices
+				interfaceMapping["eth0"] = []string{"mgmt", "0"}
+				interfaceMapping["eth5"] = []string{"wan", "0"}
+				interfaceMapping["eth2"] = []string{"wan", "1"}
+				interfaceMapping["eth3"] = []string{"wan", "2"}
+				interfaceMapping["eth4"] = []string{"wan", "3"}
 			}
 			// Convert interfaceMapping to JSON byte slice
 			interfaceMappingJSON, err := json.Marshal(interfaceMapping)
@@ -1878,7 +1942,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			sortedInterfaces := sortInterfacesByCustomOrder(gw.Interfaces)
 			for _, intf := range sortedInterfaces {
 				interfaceDict := make(map[string]interface{})
-				interfaceDict["name"] = intf.Name
 				interfaceDict["type"] = intf.Type
 				if intf.PublicIp != "" {
 					interfaceDict["public_ip"] = intf.PublicIp
@@ -1905,6 +1968,22 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
+			}
+		}
+		// set interface mapping
+		if len(gw.InterfaceMapping) != 0 {
+			var interfaceMapping []map[string]interface{}
+			// sort the interface mapping by interface name. This will maintain the order of the interface mappings in the state
+			sortedInterfaceMappings := sortInterfaceMappingByCustomOrder(gw.InterfaceMapping)
+			for _, intf := range sortedInterfaceMappings {
+				interfaceMap := make(map[string]interface{})
+				interfaceMap["name"] = intf.Name
+				interfaceMap["type"] = intf.Type
+				interfaceMap["index"] = intf.Index
+				interfaceMapping = append(interfaceMapping, interfaceMap)
+			}
+			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
+				return fmt.Errorf("could not set interface mapping into state: %v", err)
 			}
 		}
 		if gw.HaGw.GwSize == "" {
@@ -3766,4 +3845,63 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+// count the number of WAN interfaces in the interface config
+func countInterfaceTypes(interfaceList []interface{}) (int, error) {
+	wanCount := 0
+	// Iterate over each interface in the list
+	for _, item := range interfaceList {
+		interfaceMap, ok := item.(map[string]interface{})
+		if !ok {
+			return 0, fmt.Errorf("invalid interface entry, expected a map")
+		}
+		interfaceType, ok := interfaceMap["type"].(string)
+		if !ok {
+			return 0, fmt.Errorf("interface type must be a string")
+		}
+		// Count WAN interfaces
+		if interfaceType == "WAN" {
+			wanCount++
+		}
+	}
+	return wanCount, nil
+}
+
+// get the interface name (ethX) from interface type, index, and counts
+func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) {
+	// Check if the interface type is valid
+	if intfType != "WAN" && intfType != "MANAGEMENT" {
+		log.Printf("Invalid interface type %s", intfType)
+		return "", errors.New("invalid interface type " + intfType)
+	}
+	var num int
+	// Determine the interface name based on the type and index
+	switch intfType {
+	case "WAN":
+		// WAN interfaces start from eth0
+		if intfIndex == 0 {
+			num = 0
+		} else {
+			// Transit case: wan, wan, mgmt, remaining wans, remaining mgmts if any
+			if intfIndex == 1 {
+				num = 1 // Second WAN is eth1
+			} else {
+				num = intfIndex + 1
+			}
+		}
+	case "MANAGEMENT":
+		// Management interfaces start from eth2
+		if intfIndex == 0 {
+			num = 2
+		} else {
+			num = wanCount + intfIndex
+		}
+	default:
+		return "", errors.New("unexpected interface type")
+	}
+
+	interfaceName := fmt.Sprintf("eth%d", num)
+	log.Printf("Mapping interface %s%d to port %s", intfType, intfIndex, interfaceName)
+	return interfaceName, nil
 }
