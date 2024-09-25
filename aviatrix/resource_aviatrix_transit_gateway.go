@@ -1167,7 +1167,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 		if enableTransitFireNet {
 			if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-				return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), Azure China (2048), AWS Top Secret (16384) and AWS Secret (32768)")
+				return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), Azure China (2048)")
 			}
 			if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 				gateway.EnableTransitFireNet = true
@@ -1191,7 +1191,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 		enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
 		if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), Azure China(2048),  AWS Top Secret (16384) and AWS Secret (32768)")
+			return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), Azure China(2048)")
 		}
 		if enableEgressTransitFireNet && !enableTransitFireNet {
 			return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
