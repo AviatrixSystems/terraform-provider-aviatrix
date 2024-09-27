@@ -332,27 +332,36 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	externalDeviceConn.EnableBfd = enableBFD
 	if enableBFD {
 		bgp_bfd := d.Get("bgp_bfd").([]interface{})
-		for _, bfd0 := range bgp_bfd {
-			bfd1 := bfd0.(map[string]interface{})
-			transmitInterval := defaultBfdTransmitInterval
-			receiveInterval := defaultBfdReceiveInterval
-			multiplier := defaultBfdMultiplier
-			if value, ok := bfd1["transmit_interval"].(int); ok {
-				transmitInterval = value
-			}
-			if value, ok := bfd1["receive_interval"].(int); ok {
-				receiveInterval = value
-			}
-			if value, ok := bfd1["multiplier"].(int); ok {
-				multiplier = value
-			}
+		if len(bgp_bfd) > 0 {
+			for _, bfd0 := range bgp_bfd {
+				bfd1 := bfd0.(map[string]interface{})
+				transmitInterval := defaultBfdTransmitInterval
+				receiveInterval := defaultBfdReceiveInterval
+				multiplier := defaultBfdMultiplier
+				if value, ok := bfd1["transmit_interval"].(int); ok {
+					transmitInterval = value
+				}
+				if value, ok := bfd1["receive_interval"].(int); ok {
+					receiveInterval = value
+				}
+				if value, ok := bfd1["multiplier"].(int); ok {
+					multiplier = value
+				}
 
-			bfd2 := &goaviatrix.BgpBfdConfig{
-				TransmitInterval: transmitInterval,
-				ReceiveInterval:  receiveInterval,
-				Multiplier:       multiplier,
+				bfd2 := &goaviatrix.BgpBfdConfig{
+					TransmitInterval: transmitInterval,
+					ReceiveInterval:  receiveInterval,
+					Multiplier:       multiplier,
+				}
+				externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
 			}
-			externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
+		} else {
+			bfd := &goaviatrix.BgpBfdConfig{
+				TransmitInterval: defaultBfdTransmitInterval,
+				ReceiveInterval:  defaultBfdReceiveInterval,
+				Multiplier:       defaultBfdMultiplier,
+			}
+			externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd)
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
@@ -548,7 +557,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 				Multiplier:       bfdConfig["multiplier"].(int),
 			})
 		}
-
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			GwName:         d.Get("gw_name").(string),
 			ConnectionName: d.Get("connection_name").(string),

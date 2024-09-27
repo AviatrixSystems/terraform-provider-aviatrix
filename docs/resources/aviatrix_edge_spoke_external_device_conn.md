@@ -59,6 +59,11 @@ The following arguments are supported:
 * `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required if HA enabled for 'bgp' connection.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection.
+* `enable_bfd` - (Optional) Required for BGP BFD over IPsec. Valid values: true, false. Default: false.
+* `bgp_bfd` - (Optional) BGP BFD configuration applied to a BGP session. If config is no provided then default values are applied for the connection.
+  * `transmit_interval` - (Optional) BFD transmit interval in ms. Valid values between 10 to 60000. Default: 300.
+  * `receive_interval` - (Optional) BFD receive interval in ms. Valid values between 10 to 60000. Default: 300.
+  * `multiplier` - (Optional) BFD detection multiplier. Valid values between 2 to 255. Default: 3.
 
 ## Import
 
