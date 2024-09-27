@@ -738,7 +738,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		break
 	}
 
-	enableBFD := d.Get("enable_bfd").(bool)
+	enableBFD, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
 	externalDeviceConn.EnableBfd = enableBFD
 	if enableBFD {
 		bgp_bfd := d.Get("bgp_bfd").([]interface{})
@@ -1342,21 +1345,29 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		// get the new BGP BFD config
 		bgpBfdConfig := d.Get("bgp_bfd").([]interface{})
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
-		for _, v := range bgpBfdConfig {
-			bfdConfig := v.(map[string]interface{})
-			if bfdConfig["transmit_interval"].(int) == 0 {
-				bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+		if len(bgpBfdConfig) > 0 {
+			for _, v := range bgpBfdConfig {
+				bfdConfig := v.(map[string]interface{})
+				if bfdConfig["transmit_interval"].(int) == 0 {
+					bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+				}
+				if bfdConfig["receive_interval"].(int) == 0 {
+					bfdConfig["receive_interval"] = defaultBfdReceiveInterval
+				}
+				if bfdConfig["multiplier"].(int) == 0 {
+					bfdConfig["multiplier"] = defaultBfdMultiplier
+				}
+				bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
+					TransmitInterval: bfdConfig["transmit_interval"].(int),
+					ReceiveInterval:  bfdConfig["receive_interval"].(int),
+					Multiplier:       bfdConfig["multiplier"].(int),
+				})
 			}
-			if bfdConfig["receive_interval"].(int) == 0 {
-				bfdConfig["receive_interval"] = defaultBfdReceiveInterval
-			}
-			if bfdConfig["multiplier"].(int) == 0 {
-				bfdConfig["multiplier"] = defaultBfdMultiplier
-			}
+		} else {
 			bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
-				TransmitInterval: bfdConfig["transmit_interval"].(int),
-				ReceiveInterval:  bfdConfig["receive_interval"].(int),
-				Multiplier:       bfdConfig["multiplier"].(int),
+				TransmitInterval: defaultBfdTransmitInterval,
+				ReceiveInterval:  defaultBfdReceiveInterval,
+				Multiplier:       defaultBfdMultiplier,
 			})
 		}
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{

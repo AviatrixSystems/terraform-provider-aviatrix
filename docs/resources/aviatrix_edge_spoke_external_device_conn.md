@@ -26,6 +26,24 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
   remote_lan_ip     = "10.0.60.1"
 }
 ```
+```hcl
+# Create a BGP BFD enabled Edge as a Spoke External Device Connection
+resource "aviatrix_edge_spoke_external_device_conn" "test" {
+  site_id           = "site-abcd1234"
+  connection_name   = "conn"
+  gw_name           = "eaas"
+  bgp_local_as_num  = "123"
+  bgp_remote_as_num = "345"
+  local_lan_ip      = "10.230.3.23"
+  remote_lan_ip     = "10.0.60.1"
+  enable_bfd = true
+  bgp_bfd {
+    transmit_interval = 400
+    receive_interval = 400
+    multiplier = 5
+  }
+}
+```
 
 ## Argument Reference
 

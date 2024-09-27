@@ -540,21 +540,29 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		// get the new BGP BFD config
 		bgpBfdConfig := d.Get("bgp_bfd").([]interface{})
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
-		for _, v := range bgpBfdConfig {
-			bfdConfig := v.(map[string]interface{})
-			if bfdConfig["transmit_interval"].(int) == 0 {
-				bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+		if len(bgpBfdConfig) > 0 {
+			for _, v := range bgpBfdConfig {
+				bfdConfig := v.(map[string]interface{})
+				if bfdConfig["transmit_interval"].(int) == 0 {
+					bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+				}
+				if bfdConfig["receive_interval"].(int) == 0 {
+					bfdConfig["receive_interval"] = defaultBfdReceiveInterval
+				}
+				if bfdConfig["multiplier"].(int) == 0 {
+					bfdConfig["multiplier"] = defaultBfdMultiplier
+				}
+				bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
+					TransmitInterval: bfdConfig["transmit_interval"].(int),
+					ReceiveInterval:  bfdConfig["receive_interval"].(int),
+					Multiplier:       bfdConfig["multiplier"].(int),
+				})
 			}
-			if bfdConfig["receive_interval"].(int) == 0 {
-				bfdConfig["receive_interval"] = defaultBfdReceiveInterval
-			}
-			if bfdConfig["multiplier"].(int) == 0 {
-				bfdConfig["multiplier"] = defaultBfdMultiplier
-			}
+		} else {
 			bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
-				TransmitInterval: bfdConfig["transmit_interval"].(int),
-				ReceiveInterval:  bfdConfig["receive_interval"].(int),
-				Multiplier:       bfdConfig["multiplier"].(int),
+				TransmitInterval: defaultBfdTransmitInterval,
+				ReceiveInterval:  defaultBfdReceiveInterval,
+				Multiplier:       defaultBfdMultiplier,
 			})
 		}
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
