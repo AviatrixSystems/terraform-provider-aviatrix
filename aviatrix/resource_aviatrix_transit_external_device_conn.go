@@ -747,13 +747,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			transmitInterval := defaultBfdTransmitInterval
 			receiveInterval := defaultBfdReceiveInterval
 			multiplier := defaultBfdMultiplier
-			if value, ok := bfd1["transmit_interval"].(int); ok {
+			if value, ok := bfd1["transmit_interval"].(int); ok && value != 0 {
 				transmitInterval = value
 			}
-			if value, ok := bfd1["receive_interval"].(int); ok {
+			if value, ok := bfd1["receive_interval"].(int); ok && value != 0 {
 				receiveInterval = value
 			}
-			if value, ok := bfd1["multiplier"].(int); ok {
+			if value, ok := bfd1["multiplier"].(int); ok && value != 0 {
 				multiplier = value
 			}
 
@@ -1358,6 +1358,8 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			EnableBfd:      d.Get("enable_bfd").(bool),
 			BgpBfdConfig:   bgpBfdConfigList,
 		}
+		// TODO: Remove this log after debugging
+		log.Printf("[INFO] BGP BFD configuration: %v", externalDeviceConn.BgpBfdConfig)
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
 			return fmt.Errorf("could not update BGP BFD config: %v", err)
