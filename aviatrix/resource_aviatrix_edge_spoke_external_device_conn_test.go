@@ -61,7 +61,7 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 			CheckDestroy: testAccCheckEdgeSpokeExternalDeviceConnDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccEdgeSpokeExternalDeviceConnConfigBgpBfd(rName),
+					Config: testAccEdgeSpokeExternalDeviceConnConfigBgpBfd(),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckEdgeSpokeExternalDeviceConnExists(resourceNameBfd),
 						resource.TestCheckResourceAttr(resourceNameBfd, "site_id", os.Getenv("EDGE_SPOKE_SITE_ID")),
@@ -113,7 +113,7 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
 	`, os.Getenv("EDGE_SPOKE_SITE_ID"), rName, os.Getenv("EDGE_SPOKE_NAME"))
 }
 
-func testAccEdgeSpokeExternalDeviceConnConfigBgpBfd(rName string) string {
+func testAccEdgeSpokeExternalDeviceConnConfigBgpBfd() string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_spoke_external_device_conn" "test-bfd" {
 	site_id           = "%s"
