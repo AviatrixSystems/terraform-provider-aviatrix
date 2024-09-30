@@ -363,8 +363,8 @@ func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
 	return false
 }
 
-// Define the interface order including eth0, eth1, eth2, eth3, eth4
-var interfaceOrder = []string{"eth0", "eth1", "eth2", "eth3", "eth4"}
+// Define the interface order including eth0, eth1, eth2, eth3, eth4...etc
+var interfaceOrder = []string{"eth0", "eth1", "eth2", "eth3", "eth4", "eth5", "eth6", "eth7", "eth8", "eth9"}
 
 // Create a mapping of each type to its index in the interface order
 func createOrderMap(order []string) map[string]int {
@@ -390,4 +390,21 @@ func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface) [
 		return iIndex < jIndex
 	})
 	return interfaces
+}
+
+// Sorting function that uses the interface mapping order
+func sortInterfaceMappingByCustomOrder(interfaceMapping []goaviatrix.InterfaceMapping) []goaviatrix.InterfaceMapping {
+	orderMap := createOrderMap(interfaceOrder)
+	sort.SliceStable(interfaceMapping, func(i, j int) bool {
+		iIndex, iExists := orderMap[interfaceMapping[i].Name]
+		jIndex, jExists := orderMap[interfaceMapping[j].Name]
+		if !iExists {
+			iIndex = len(orderMap)
+		}
+		if !jExists {
+			jIndex = len(orderMap)
+		}
+		return iIndex < jIndex
+	})
+	return interfaceMapping
 }

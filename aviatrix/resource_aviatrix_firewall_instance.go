@@ -254,7 +254,6 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Type:        schema.TypeMap,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				ForceNew:    true,
 				Description: "A map of tags to assign to the firewall instance.",
 			},
 		},
@@ -583,6 +582,24 @@ func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("can not change firewall_image_id")
 	}
 
+	client := meta.(*goaviatrix.Client)
+	if d.HasChange("tags") {
+		tags, err := extractTags(d, d.Get("cloud_type").(int))
+		if err != nil {
+			return fmt.Errorf("failed to extract tags: %v", err)
+		}
+		firewallInstance := &goaviatrix.FirewallInstance{
+			InstanceID: d.Get("instance_id").(string),
+			Tags:       tags,
+		}
+
+		log.Printf("[INFO] Updating firewall instance tags: %#v", firewallInstance)
+
+		err = client.UpdateFirewallInstanceTags(firewallInstance)
+		if err != nil {
+			return fmt.Errorf("failed to update tags for firewall: %v", err)
+		}
+	}
 	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
