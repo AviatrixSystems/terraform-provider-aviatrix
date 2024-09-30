@@ -60,7 +60,7 @@ type ExternalDeviceConn struct {
 	EnableEdgeUnderlay     bool            `form:"edge_underlay,omitempty"`
 	RemoteCloudType        string          `form:"remote_cloud_type,omitempty"`
 	BgpMd5KeyChanged       bool            `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig           []*BgpBfdConfig `json:"bgp_bfd,omitempty"`
+	BgpBfdConfig           []*BgpBfdConfig `form:"bgp_bfd,omitempty"`
 	EnableBfd              bool            `form:"enable_bfd,omitempty"`
 }
 
