@@ -50,6 +50,45 @@ func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
 			},
 		},
 	})
+
+	skipBgpBfd := os.Getenv("SKIP_BGP_BFD_DEVICE_CONN")
+	if skipBgpBfd != "yes" {
+		resourceNameBfd := "aviatrix_transit_external_device_conn.transit-1-transit-2"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, ". Set 'SKIP_BGP_BFD_DEVICE_CONN' to 'yes' to skip Site2Cloud transit external device connection tests")
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccTransitExternalDeviceConnConfigBgpBfd(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitExternalDeviceConnExists(resourceNameBfd, &externalDeviceConn),
+						resource.TestCheckResourceAttr(resourceNameBfd, "vpc_id", os.Getenv("AWS_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameBfd, "connection_name", "transit-1-transit-2"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "gw_name", fmt.Sprintf("%s-aws-transit-1", rName)),
+						resource.TestCheckResourceAttr(resourceNameBfd, "connection_type", "bgp"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "tunnel_protocol", "IPsec"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_local_as_num", "65075"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_remote_as_num", "65076"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "enable_bfd", "true"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.transmit_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.receive_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.multiplier", "5"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Skip("Skipping transit external device connection tests for bgp bfd config as 'SKIP_BGP_BFD_DEVICE_CONN' is set")
+	}
 }
 
 func testAccTransitExternalDeviceConnConfigBasic(rName string) string {
@@ -82,6 +121,72 @@ resource "aviatrix_transit_external_device_conn" "test" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccTransitExternalDeviceConnConfigBgpBfd(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_transit_gateway" "transit_gateway_1" {
+	single_az_ha = true
+	gw_name = "%s-transit_gateway_1"
+	vpc_id = "%s"
+	cloud_type   = 1
+	vpc_reg = "%s"
+    gw_size = "t3.medium"
+    account_name = "%s"
+    subnet = "%s"
+    connected_transit = true
+    bgp_manual_spoke_advertise_cidrs = "192.0.2.0/24"
+    bgp_polling_time = "10"
+    local_as_number = "65075"
+}
+resource "aviatrix_transit_gateway" "transit_gateway_2" {
+    single_az_ha = true
+    gw_name = "%s-aws-transit-2"
+    vpc_id = "%s"
+    cloud_type = 1
+    vpc_reg = "%s"
+    gw_size = "t3.medium"
+    account_name = "%s"
+    subnet = "%s"
+    connected_transit = true
+    bgp_manual_spoke_advertise_cidrs = "198.51.100.0/24"
+    bgp_polling_time = "10"
+    local_as_number = "65076"
+}
+resource "aviatrix_transit_external_device_conn" "transit-1-transit-2" {
+	vpc_id            = aviatrix_transit_gateway.transit_gateway_1.vpc_id
+	connection_name   = "transit-1-transit-2"
+	gw_name           = aviatrix_transit_gateway.transit_gateway_1.gw_name
+	connection_type   = "bgp"
+	tunnel_protocol    = "IPsec"
+	bgp_local_as_num  = aviatrix_transit_gateway.transit_gateway_1.local_as_number
+	bgp_remote_as_num = aviatrix_transit_gateway.transit_gateway_2.local_as_number
+	remote_gateway_ip = aviatrix_transit_gateway.transit_gateway_2.eip
+	local_tunnel_cidr  = "169.254.10.1/30"
+	remote_tunnel_cidr = "169.254.10.2/30"
+	pre_shared_key = "psk12"
+	enable_bfd = true
+	bgp_bfd {
+	  transmit_interval = 400
+	  receive_interval = 400
+	  multiplier = 5
+	}
+  }
+  resource "aviatrix_transit_external_device_conn" "transit-2-transit-1" {
+	vpc_id            = avaitrix_transit_gateway.transit_gateway_2.vpc_id
+	connection_name   = "transit-2-transit-1"
+	gw_name           = aviatrix_transit_gateway.transit_gateway_2.gw_name
+	connection_type   = "bgp"
+	tunnel_protocol    = "IPsec"
+	bgp_local_as_num  = aviatrix_transit_gateway.transit_gateway_2.local_as_number
+	bgp_remote_as_num = aviatrix_transit_gateway.transit_gateway_1.local_as_number
+	remote_gateway_ip = "3.140.172.87"
+	local_tunnel_cidr  = "169.254.10.2/30"
+	remote_tunnel_cidr = "169.254.10.1/30"
+	pre_shared_key = "psk12"
+  }
+	`, rName, os.Getenv("AWS_VPC_ID_1"), os.Getenv("AWS_REGION"), os.Getenv("AWS_ACCOUNT_NAME"), os.Getenv("AWS_SUBNET_1"),
+		rName, os.Getenv("AWS_VPC_ID_2"), os.Getenv("AWS_REGION"), os.Getenv("AWS_ACCOUNT_NAME"), os.Getenv("AWS_SUBNET_2"))
 }
 
 func testAccCheckTransitExternalDeviceConnExists(n string, externalDeviceConn *goaviatrix.ExternalDeviceConn) resource.TestCheckFunc {
