@@ -103,6 +103,25 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   backup_local_lan_ip      = "172.12.13.17"
 }
 ```
+# Create a BGP BFD over IPSEC tunnel Aviatrix Transit External Device Connection 
+resource "aviatrix_transit_external_device_conn" "ex-conn" {
+  vpc_id                   = aviatrix_transit_gateway.transit-gateway.vpc_id
+  connection_name          = "my_conn"
+  gw_name                  = aviatrix_transit_gateway.transit-gateway.gw_name
+  connection_type          = "bgp"
+  tunnel_protocol          = "IPsec"
+  bgp_local_as_num         = "123"
+  bgp_remote_as_num        = "345"
+  remote_gateway_ip        = "3.19.43.179"
+  pre_shared_key = "psk12"
+  enable_bfd = true
+  bgp_bfd {
+    transmit_interval = 400
+    receive_interval = 400
+    multiplier = 3
+  }
+}
+```
 
 ## Argument Reference
 
@@ -163,6 +182,17 @@ The following arguments are supported:
 
 * `bgp_md5_key` - (Optional) BGP MD5 Authentication Key. Example: 'avx01,avx02'. For BGP LAN ActiveMesh mode disabled, example: 'avx01'.
 * `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'. For BGP LAN ActiveMesh mode disabled, example: 'avx03'.
+
+### BGP BFD over IPsec 
+
+~> **NOTE:** BGP BFD over IPsec attributes are only valid with `tunnel_protocol` = 'IPsec'.
+
+* `enable_bfd` - (Optional) Required for BGP BFD over IPsec. Valid values: true, false. Default: false.
+* `bgp_bfd` - (Optional) BGP BFD configuration applied to a BGP session. If config is no provided then default values are applied for the connection.
+  * `transmit_interval` - (Optional) BFD transmit interval in ms. Valid values between 10 to 60000. Default: 300.
+  * `receive_interval` - (Optional) BFD receive interval in ms. Valid values between 10 to 60000. Default: 300.
+  * `multiplier` - (Optional) BFD detection multiplier. Valid values between 2 to 255. Default: 3.
+
 
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.

@@ -54,12 +54,14 @@ type ExternalDeviceConn struct {
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
-	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
-	AuthType               string `form:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool   `form:"edge_underlay,omitempty"`
-	RemoteCloudType        string `form:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool   `form:"bgp_md5_key_changed,omitempty"`
+	BgpMd5Key              string          `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string          `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string          `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool            `form:"edge_underlay,omitempty"`
+	RemoteCloudType        string          `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool            `form:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig           []*BgpBfdConfig `form:"bgp_bfd,omitempty"`
+	EnableBfd              bool            `form:"enable_bfd,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -101,6 +103,12 @@ type EditExternalDeviceConnDetail struct {
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
 	WanUnderlay            bool   `json:"wan_underlay,omitempty"`
 	RemoteCloudType        string `json:"remote_cloud_type,omitempty"`
+}
+
+type BgpBfdConfig struct {
+	TransmitInterval int `json:"transmit_interval"`
+	ReceiveInterval  int `json:"receive_interval"`
+	Multiplier       int `json:"multiplier"`
 }
 
 type EditBgpMd5Key struct {
@@ -373,6 +381,23 @@ func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *
 		ConnectionName: externalDeviceConn.ConnectionName,
 		PrependASPath:  strings.Join(prependASPath, ","),
 	}, BasicCheck)
+}
+
+func (c *Client) EditConnectionBgpBfd(externalDeviceConn *ExternalDeviceConn) error {
+	action := "edit_connection_bgp_bfd"
+	data := map[string]interface{}{
+		"CID":                c.CID,
+		"action":             action,
+		"gateway_name":       externalDeviceConn.GwName,
+		"connection_name":    externalDeviceConn.ConnectionName,
+		"connection_bgp_bfd": externalDeviceConn.EnableBfd,
+	}
+	if externalDeviceConn.EnableBfd {
+		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig[0].ReceiveInterval
+		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig[0].TransmitInterval
+		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig[0].Multiplier
+	}
+	return c.PostAPI(action, data, BasicCheck)
 }
 
 func (c *Client) EditBgpMd5Key(editBgpMd5Key *EditBgpMd5Key) error {

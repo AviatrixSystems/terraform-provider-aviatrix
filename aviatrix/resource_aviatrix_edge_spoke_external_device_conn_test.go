@@ -48,6 +48,45 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 			},
 		},
 	})
+
+	skipBgpBfd := os.Getenv("SKIP_BGP_BFD_EDGE_SPOKE_EXTERNAL_DEVICE_CONN")
+	if skipBgpBfd != "yes" {
+		resourceNameBfd := "aviatrix_edge_spoke_external_device_conn.test-bfd"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preEdgeSpokeExternalDeviceConnCheck(t)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckEdgeSpokeExternalDeviceConnDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccEdgeSpokeExternalDeviceConnConfigBgpBfd(),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckEdgeSpokeExternalDeviceConnExists(resourceNameBfd),
+						resource.TestCheckResourceAttr(resourceNameBfd, "site_id", os.Getenv("EDGE_SPOKE_SITE_ID")),
+						resource.TestCheckResourceAttr(resourceNameBfd, "connection_name", "cloudn-bgp-lan"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "gw_name", os.Getenv("EDGE_SPOKE_NAME")),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_local_as_num", "65182"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_remote_as_num", "65220"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "local_lan_ip", "10.220.86.182"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "remote_lan_ip", "10.220.86.100"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "enable_bfd", "true"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.transmit_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.receive_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.multiplier", "5"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Skip("Skipping BGP BFD Edge as a Spoke external device connection tests as 'SKIP_BGP_BFD_EDGE_SPOKE_EXTERNAL_DEVICE_CONN' is set")
+	}
 }
 
 func preEdgeSpokeExternalDeviceConnCheck(t *testing.T) {
@@ -72,6 +111,26 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
 	remote_lan_ip     = "5.6.7.8"
 }
 	`, os.Getenv("EDGE_SPOKE_SITE_ID"), rName, os.Getenv("EDGE_SPOKE_NAME"))
+}
+
+func testAccEdgeSpokeExternalDeviceConnConfigBgpBfd() string {
+	return fmt.Sprintf(`
+resource "aviatrix_edge_spoke_external_device_conn" "test-bfd" {
+	site_id           = "%s"
+	connection_name   = "cloudn-bgp-lan"
+	gw_name           = "%s"
+	bgp_local_as_num  = "65182"
+	bgp_remote_as_num = "65220"
+	local_lan_ip      = "10.220.86.182"
+	remote_lan_ip     = "10.220.86.100"
+	enable_bfd        = true
+	bgo_bfd {
+		transmit_interval = 400
+		receive_interval = 400
+		multiplier = 5
+	}
+}
+	`, os.Getenv("EDGE_SPOKE_SITE_ID"), os.Getenv("EDGE_SPOKE_NAME"))
 }
 
 func testAccCheckEdgeSpokeExternalDeviceConnExists(resourceName string) resource.TestCheckFunc {
