@@ -328,13 +328,22 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
-	enableBFD := d.Get("enable_bfd").(bool)
+	enableBFD, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
 	externalDeviceConn.EnableBfd = enableBFD
 	if enableBFD {
-		bgp_bfd := d.Get("bgp_bfd").([]interface{})
+		bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
+		if !ok {
+			return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+		}
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
-				bfd1 := bfd0.(map[string]interface{})
+				bfd1, ok := bfd0.(map[string]interface{})
+				if !ok {
+					return diag.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
+				}
 				transmitInterval := defaultBfdTransmitInterval
 				receiveInterval := defaultBfdReceiveInterval
 				multiplier := defaultBfdMultiplier
@@ -347,7 +356,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 				if value, ok := bfd1["multiplier"].(int); ok {
 					multiplier = value
 				}
-
 				bfd2 := &goaviatrix.BgpBfdConfig{
 					TransmitInterval: transmitInterval,
 					ReceiveInterval:  receiveInterval,
@@ -461,7 +469,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	}
 
-	enable_bfd := d.Get("enable_bfd").(bool)
+	enable_bfd, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
 	d.Set("enable_bfd", enable_bfd)
 	if conn.EnableBfd && len(conn.BgpBfdConfig) > 0 {
 		var bgpBfdConfig []map[string]interface{}
@@ -535,27 +546,36 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	}
 
 	// Update the BGP BFD config if bfd is enabled and config has changed
-	enableBfd := d.Get("enable_bfd").(bool)
+	enableBfd, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
 	if enableBfd && d.HasChange("bgp_bfd") {
 		// get the new BGP BFD config
-		bgpBfdConfig := d.Get("bgp_bfd").([]interface{})
+		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
+		if !ok {
+			return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+		}
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
 		if len(bgpBfdConfig) > 0 {
 			for _, v := range bgpBfdConfig {
 				bfdConfig := v.(map[string]interface{})
-				if bfdConfig["transmit_interval"].(int) == 0 {
-					bfdConfig["transmit_interval"] = defaultBfdTransmitInterval
+				transmitInterval, ok := bfdConfig["transmit_interval"].(int)
+				if !ok {
+					transmitInterval = defaultBfdTransmitInterval
 				}
-				if bfdConfig["receive_interval"].(int) == 0 {
-					bfdConfig["receive_interval"] = defaultBfdReceiveInterval
+				receiveInterval, ok := bfdConfig["receive_interval"].(int)
+				if !ok {
+					receiveInterval = defaultBfdReceiveInterval
 				}
-				if bfdConfig["multiplier"].(int) == 0 {
-					bfdConfig["multiplier"] = defaultBfdMultiplier
+				multiplier, ok := bfdConfig["multiplier"].(int)
+				if !ok {
+					multiplier = defaultBfdMultiplier
 				}
 				bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
-					TransmitInterval: bfdConfig["transmit_interval"].(int),
-					ReceiveInterval:  bfdConfig["receive_interval"].(int),
-					Multiplier:       bfdConfig["multiplier"].(int),
+					TransmitInterval: transmitInterval,
+					ReceiveInterval:  receiveInterval,
+					Multiplier:       multiplier,
 				})
 			}
 		} else {

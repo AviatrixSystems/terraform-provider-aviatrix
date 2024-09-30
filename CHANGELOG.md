@@ -23,6 +23,9 @@
     - **aviatrix_spoke_gateway**
     - **aviatrix_edge_spoke_gateway**
     - **aviatrix_transit_gateway**
+2. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources
+    - **aviatrix_transit_external_device_conn**
+    - **aviatrix_edge_spoke_external_device_conn**
 
 
 ### Deprecations:
