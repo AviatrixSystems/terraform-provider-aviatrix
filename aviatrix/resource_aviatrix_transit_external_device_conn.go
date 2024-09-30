@@ -743,11 +743,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
 	externalDeviceConn.EnableBfd = enableBFD
+	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
 		bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
 		if !ok {
 			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 		}
+		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
 				bfd1, ok := bfd0.(map[string]interface{})
@@ -774,6 +776,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 				externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
 			}
 		} else {
+			// set the bgp bfd config using the default values
 			bfd := &goaviatrix.BgpBfdConfig{
 				TransmitInterval: defaultBfdTransmitInterval,
 				ReceiveInterval:  defaultBfdReceiveInterval,
@@ -1348,7 +1351,6 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	// Update the BGP BFD config if bfd is enabled and config has changed
 	enableBfd, ok := d.Get("enable_bfd").(bool)
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
@@ -1360,6 +1362,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 		}
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
+		// Update the BGP BFD config if bfd is enabled and config has changed
 		if len(bgpBfdConfig) > 0 && d.HasChange("bgp_bfd") {
 			for _, v := range bgpBfdConfig {
 				bfdConfig := v.(map[string]interface{})
@@ -1382,6 +1385,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				})
 			}
 		} else {
+			// set the bgp bfd config using the default values
 			bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
 				TransmitInterval: defaultBfdTransmitInterval,
 				ReceiveInterval:  defaultBfdReceiveInterval,
