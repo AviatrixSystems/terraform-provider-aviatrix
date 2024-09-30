@@ -1353,14 +1353,14 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
-	if enableBfd && d.HasChange("bgp_bfd") {
+	if enableBfd {
 		// get the new BGP BFD config
 		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
 		if !ok {
 			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 		}
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
-		if len(bgpBfdConfig) > 0 {
+		if len(bgpBfdConfig) > 0 && d.HasChange("bgp_bfd") {
 			for _, v := range bgpBfdConfig {
 				bfdConfig := v.(map[string]interface{})
 				transmitInterval, ok := bfdConfig["transmit_interval"].(int)
