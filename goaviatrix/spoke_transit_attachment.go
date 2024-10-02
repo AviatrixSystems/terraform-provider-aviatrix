@@ -26,7 +26,6 @@ type SpokeTransitAttachment struct {
 	NoMaxPerformance         bool   `form:"no_max_performance,omitempty"`
 	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
 	EdgeWanInterfacesResp    []string
-	DstWanInterfaces         string `form:"dst_wan_interfaces,omitempty"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {

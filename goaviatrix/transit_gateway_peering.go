@@ -28,11 +28,6 @@ type TransitGatewayPeering struct {
 	Action                              string `form:"action,omitempty"`
 	SingleTunnel                        string `form:"single_tunnel,omitempty"`
 	NoMaxPerformance                    bool   `form:"no_max_performance,omitempty"`
-	EnableOverPrivateNetwork            bool   `form:"over_private_network,omitempty"`
-	EnableJumboFrame                    bool   `form:"jumbo_frame,omitempty"`
-	EnableInsaneMode                    bool   `form:"insane_mode,omitempty"`
-	SrcWanInterfaces                    string `form:"src_wan_interfaces,omitempty"`
-	DstWanInterfaces                    string `form:"dst_wan_interfaces,omitempty"`
 }
 
 type TransitGatewayPeeringEdit struct {
@@ -49,7 +44,6 @@ type TransitGatewayPeeringEdit struct {
 	CID                            string `form:"CID,omitempty"`
 	Action                         string `form:"action,omitempty"`
 	SingleTunnel                   string `form:"single_tunnel,omitempty"`
-	EnableJumboFrame               bool   `json:"jumbo_frame,omitempty"`
 	NoMaxPerformance               bool   `form:"no_max_performance,omitempty"`
 }
 
