@@ -219,10 +219,6 @@ type Gateway struct {
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
-	DeviceID                        string                              `json:"device_id,omitempty"`
-	SiteID                          string                              `json:"site_id,omitempty"`
-	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
-	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
 }
 
 type HaGateway struct {
@@ -243,8 +239,6 @@ type HaGateway struct {
 	ImageVersion        string             `json:"gw_image_name"`
 	SoftwareVersion     string             `json:"gw_software_version"`
 	HaBgpLanInterfaces  []BundleVpcLanInfo `json:"gce_ha_bgp_lan_info,omitempty"`
-	PeerBackupPort      string             `json:"peer_backup_port,omitempty"`
-	ConnectionType      string             `json:"connection_type,omitempty"`
 }
 
 type PolicyRule struct {
@@ -287,12 +281,6 @@ type GatewayDetail struct {
 	CustomizedTransitVpcRoutes   []string      `json:"customized_transit_vpc_cidrs"`
 	BundleVpcInfo                BundleVpcInfo `json:"bundle_vpc_info"`
 	BgpEnabled                   bool          `json:"bgp_enabled"`
-}
-
-type InterfaceMapping struct {
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	Index int    `json:"index"`
 }
 
 type BundleVpcInfo struct {
