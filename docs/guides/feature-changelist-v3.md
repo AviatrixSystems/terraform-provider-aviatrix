@@ -73,14 +73,14 @@ The following logging resources are removed:
 | sumologic_forwarder | **Yes**; please remove these resources from TF configuration |
 
 
-## R3.1.4 (UserConnect-7.1.3006)**
+## R3.1.4 (UserConnect-7.1.3006)
 ### Attribute Deprecations
 | Diff | Resource | Attribute | Action Required? |
 |:----:|:--------:|:---------:|:----------------:|
 |(deprecated) | firenet | keep_alive_via_lan_interface_enabled | **Yes**; as of 3.1.2, disabling keepalive will not be allowed. If this attribute is set to true for AWS or OCI FireNets, no action is required. If this attribute is set to false for non-GWLB AWS or OCI FireNets, please set value to true |
 
 
-## R3.1.5 (UserConnect-7.1.4105)**
+## R3.1.5 (UserConnect-7.1.4105)
 ### Attribute Deprecations
 | Diff | Resource | Attribute | Action Required? |
 |:----:|:--------:|:---------:|:----------------:|
@@ -92,8 +92,4 @@ The following logging resources are removed:
 | Diff | Resource | Attribute | Action Required? |
 |:----:|:--------:|:---------:|:----------------:|
 |(deprecated) | edge_equinix, edge_equinix_ha, edge_csp, edge_csp_ha, edge_neo, edge_neo_ha, edge_platform, edge_platform_ha, edge_zededa, edge_zededa_ha | bandwidth | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
-
-
-
-
-
+|(deprecated) | firenet | keep_alive_via_lan_interface_enabled | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
