@@ -86,7 +86,7 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 	ztp_file_type           = "iso"
 	ztp_file_download_path  = "%[3]s"
 	dns_server_ip           = "8.8.8.8"
-    secondary_dns_server_ip = "8.8.6.6"
+	secondary_dns_server_ip = "8.8.6.6"
 
 	interfaces {
 		name       = "eth0"
