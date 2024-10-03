@@ -17,11 +17,11 @@ The **aviatrix_edge_gateway_selfmanaged_ha** resource creates the Aviatrix Edge 
 ```hcl
 # Create an Edge Gateway Selfmanaged HA
 resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
-  primary_gw_name        = "primary-edge-vm-selfmanaged"
-  site_id                = "site-123"
-  ztp_file_type          = "iso"
-  ztp_file_download_path = "/ztp/download/path"
-  dns_server_ip = "8.8.8.8"
+  primary_gw_name         = "primary-edge-vm-selfmanaged"
+  site_id                 = "site-123"
+  ztp_file_type           = "iso"
+  ztp_file_download_path  = "/ztp/download/path"
+  dns_server_ip           = "8.8.8.8"
   secondary_dns_server_ip = "8.8.6.6"
 
   interfaces {
