@@ -3,20 +3,33 @@
 - Supported Controller version: **UserConnect-TBD**
 - Supported Terraform version: **v1.x**
 
-### Deprecations
-1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
-2. Deprecated ``bandwidth`` in WAN/LAN/MGMT interfaces in the following resources. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
-  - **aviatrix_edge_csp**
-  - **aviatrix_edge_csp_ha**
-  - **aviatrix_edge_equinix**
-  - **aviatrix_edge_equinix_ha**
-  - **aviatrix_edge_neo**
-  - **aviatrix_edge_neo_ha**
-  - **aviatrix_edge_platform**
-  - **aviatrix_edge_platform_ha**
-  - **aviatrix_edge_zededa**
-  - **aviatrix_edge_zededa_ha**
+### Bug Fixes:
 
+1. Fixed issue in **resource_aviatrix_firewall_instance_association** and **resource_aviatrix_gateway** for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
+2. Fixed issue in **aviatrix_edge_platform_device_onboarding** where importing was failing.
+### Features:
+#### Provider:
+1. Added support for the Terraform provider to properly set the user-agent when making requests.
+
+
+### Multi-Cloud Transit:
+1. Added new attribute ``bgp_bfd_polling_time`` to support the bgp bfd configuration in the following resources.
+    - **aviatrix_edge_csp**
+    - **aviatrix_edge_equinix**
+    - **aviatrix_edge_gateway_selfmanaged**
+    - **avaitrix_edge_platform**
+    - **aviatrix_edge_zededa**
+    - **aviatrix_spoke_gateway**
+    - **aviatrix_edge_spoke_gateway**
+    - **aviatrix_transit_gateway**
+2. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources
+    - **aviatrix_transit_external_device_conn**
+    - **aviatrix_edge_spoke_external_device_conn**
+
+
+### Deprecations:
+
+1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
 
 ## 3.1.4 (January 11, 2024)
 ### Notes:

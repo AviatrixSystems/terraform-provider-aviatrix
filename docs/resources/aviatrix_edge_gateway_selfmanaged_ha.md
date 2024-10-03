@@ -21,6 +21,16 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
   site_id                = "site-123"
   ztp_file_type          = "iso"
   ztp_file_download_path = "/ztp/download/path"
+  dns_server_ip = "8.8.8.8"
+  secondary_dns_server_ip = "8.8.6.6"
+
+  interfaces {
+    name          = "eth0"
+    type          = "WAN"
+    ip_address    = "10.230.6.32/24"
+    gateway_ip    = "10.230.6.100"
+    wan_public_ip = "64.71.25.221"
+  }
 
   interfaces {
     name       = "eth1"
@@ -56,6 +66,8 @@ The following arguments are supported:
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
+* `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
+* `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
 
 ## Import
 
