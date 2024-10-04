@@ -3,7 +3,19 @@
 - Supported Controller version: **UserConnect-TBD**
 - Supported Terraform version: **v1.x**
 
-### Deprecations
+### Bug Fixes:
+
+1. Fixed issue in **resource_aviatrix_firewall_instance_association** and **resource_aviatrix_gateway** for Azure where we no longer require special handling of ``fqdn_lan_interface``  and ``lan_interface``.
+2. Fixed issue in **aviatrix_edge_platform_device_onboarding** where importing was failing.
+### Features:
+1. Added new attribute ``dns_server_ip`` and ``secondary_dns_server_ip`` in **aviatrix_edge_gateway_selfmanaged_ha** resource.
+
+#### Provider:
+1. Added support for the Terraform provider to properly set the user-agent when making requests.
+
+
+### Deprecations:
+
 1. Deprecated ``http_access`` in **aviatrix_controller_config**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
 2. Deprecated ``bandwidth`` in WAN/LAN/MGMT interfaces in the following resources. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
   - **aviatrix_edge_csp**
@@ -16,7 +28,6 @@
   - **aviatrix_edge_platform_ha**
   - **aviatrix_edge_zededa**
   - **aviatrix_edge_zededa_ha**
-
 
 ## 3.1.4 (January 11, 2024)
 ### Notes:

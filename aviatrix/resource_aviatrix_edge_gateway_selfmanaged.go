@@ -340,9 +340,13 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.Edge
 			PublicIp:  if1["wan_public_ip"].(string),
 			IpAddr:    if1["ip_address"].(string),
 			GatewayIp: if1["gateway_ip"].(string),
-			VrrpState: if1["enable_vrrp"].(bool),
-			VirtualIp: if1["vrrp_virtual_ip"].(string),
 			Tag:       if1["tag"].(string),
+		}
+
+		// vrrp and vrrp_virtual_ip are only applicable for LAN interfaces
+		if if1["type"].(string) == "LAN" {
+			if2.VrrpState = if1["enable_vrrp"].(bool)
+			if2.VirtualIp = if1["vrrp_virtual_ip"].(string)
 		}
 
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
@@ -618,11 +622,12 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
-		if1["vrrp_virtual_ip"] = if0.VirtualIp
 		if1["tag"] = if0.Tag
 
+		// set vrrp and vrrp_virtual_ip only for LAN interfaces
 		if if0.Type == "LAN" {
 			if1["enable_vrrp"] = if0.VrrpState
+			if1["vrrp_virtual_ip"] = if0.VirtualIp
 		}
 
 		if if0.Type == "LAN" && if0.SubInterfaces != nil {

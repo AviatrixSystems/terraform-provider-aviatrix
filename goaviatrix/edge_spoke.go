@@ -59,25 +59,25 @@ type EdgeSpoke struct {
 type EdgeSpokeInterface struct {
 	IfName        string           `json:"ifname"`
 	Type          string           `json:"type"`
-	Dhcp          bool             `json:"dhcp"`
-	PublicIp      string           `json:"public_ip"`
-	IpAddr        string           `json:"ipaddr"`
-	GatewayIp     string           `json:"gateway_ip"`
-	SubInterfaces []*EdgeSpokeVlan `json:"subinterfaces"`
-	VrrpState     bool             `json:"vrrp_state"`
-	VirtualIp     string           `json:"virtual_ip"`
-	Tag           string           `json:"tag"`
+	Dhcp          bool             `json:"dhcp,omitempty"`
+	PublicIp      string           `json:"public_ip,omitempty"`
+	IpAddr        string           `json:"ipaddr,omitempty"`
+	GatewayIp     string           `json:"gateway_ip,omitempty"`
+	SubInterfaces []*EdgeSpokeVlan `json:"subinterfaces,omitempty"`
+	VrrpState     bool             `json:"vrrp_state,omitempty"`
+	VirtualIp     string           `json:"virtual_ip,omitempty"`
+	Tag           string           `json:"tag,omitempty"`
 }
 
 type EdgeSpokeVlan struct {
 	ParentInterface string `json:"parent_interface"`
-	VlanId          string `json:"vlan_id"`
-	IpAddr          string `json:"ipaddr"`
-	GatewayIp       string `json:"gateway_ip"`
-	PeerIpAddr      string `json:"peer_ipaddr"`
-	PeerGatewayIp   string `json:"peer_gateway_ip"`
-	VirtualIp       string `json:"virtual_ip"`
-	Tag             string `json:"tag"`
+	VlanId          string `json:"vlan_id,omitempty"`
+	IpAddr          string `json:"ipaddr,omitempty"`
+	GatewayIp       string `json:"gateway_ip,omitempty"`
+	PeerIpAddr      string `json:"peer_ipaddr,omitempty"`
+	PeerGatewayIp   string `json:"peer_gateway_ip,omitempty"`
+	VirtualIp       string `json:"virtual_ip,omitempty"`
+	Tag             string `json:"tag,omitempty"`
 }
 
 type EdgeSpokeResp struct {

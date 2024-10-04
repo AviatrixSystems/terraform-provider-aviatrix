@@ -36,6 +36,8 @@ func TestAccAviatrixEdgeGatewaySelfmanagedHa_basic(t *testing.T) {
 					testAccCheckEdgeGatewaySelfmanagedHaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.11.20/24"),
+					resource.TestCheckResourceAttr(resourceName, "dns_server_ip", "8.8.8.8"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_dns_server_ip", "8.8.6.6"),
 				),
 			},
 			{
@@ -79,10 +81,12 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	}
 }
 resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
-	primary_gw_name        = aviatrix_edge_gateway_selfmanaged.test.gw_name
-	site_id                = aviatrix_edge_gateway_selfmanaged.test.site_id
-	ztp_file_type          = "iso"
-	ztp_file_download_path = "%[3]s"
+	primary_gw_name         = aviatrix_edge_gateway_selfmanaged.test.gw_name
+	site_id                 = aviatrix_edge_gateway_selfmanaged.test.site_id
+	ztp_file_type           = "iso"
+	ztp_file_download_path  = "%[3]s"
+	dns_server_ip           = "8.8.8.8"
+	secondary_dns_server_ip = "8.8.6.6"
 
 	interfaces {
 		name       = "eth0"
