@@ -16,6 +16,8 @@ type EdgeVmSelfmanagedHa struct {
 	SiteId                   string
 	ZtpFileType              string
 	ZtpFileDownloadPath      string
+	DnsServerIp              string `json:"dns_server_ip,omitempty"`
+	SecondaryDnsServerIp     string `json:"dns_server_ip_secondary,omitempty"`
 	InterfaceList            []*EdgeSpokeInterface
 	Interfaces               string `json:"interfaces"`
 	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
@@ -30,6 +32,8 @@ type EdgeVmSelfmanagedHaResp struct {
 	ZtpFileType              string                `json:"ztp_file_type"`
 	InterfaceList            []*EdgeSpokeInterface `json:"interfaces"`
 	ManagementEgressIpPrefix string                `json:"mgmt_egress_ip"`
+	DnsServerIp              string                `json:"dns_server_ip,omitempty"`
+	SecondaryDnsServerIp     string                `json:"dns_server_ip_secondary,omitempty"`
 }
 
 type EdgeVmSelfmanagedHaListResp struct {

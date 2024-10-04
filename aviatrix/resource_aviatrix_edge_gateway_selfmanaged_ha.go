@@ -53,6 +53,20 @@ func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 				},
 				Description: "The location where the ZTP file will be stored.",
 			},
+			"dns_server_ip": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "DNS server IP.",
+				ValidateFunc: validation.IsIPAddress,
+			},
+			"secondary_dns_server_ip": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "Secondary DNS server IP.",
+				ValidateFunc: validation.IsIPAddress,
+			},
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -110,6 +124,8 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 		SiteId:                   d.Get("site_id").(string),
 		ZtpFileType:              d.Get("ztp_file_type").(string),
 		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
+		DnsServerIp:              d.Get("dns_server_ip").(string),
+		SecondaryDnsServerIp:     d.Get("secondary_dns_server_ip").(string),
 		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
@@ -168,6 +184,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 
 	d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
 	d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteId)
+	d.Set("dns_server_ip", edgeGatewaySelfmanagedHaResp.DnsServerIp)
+	d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDnsServerIp)
 
 	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "iso" || edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)

@@ -26,6 +26,7 @@
 2. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources
     - **aviatrix_transit_external_device_conn**
     - **aviatrix_edge_spoke_external_device_conn**
+3. Add new attribute ``dns_server_ip`` and ``secondary_dns_server_ip`` in **aviatrix_edge_gateway_selfmanaged_ha** resource.
 
 
 ### Deprecations:
