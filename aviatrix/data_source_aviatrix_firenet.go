@@ -32,11 +32,6 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 				Computed:    true,
 				Description: "Hashing algorithm to load balance traffic across the firewall.",
 			},
-			"keep_alive_via_lan_interface_enabled": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable Keep Alive via Firewall LAN Interface.",
-			},
 			"tgw_segmentation_for_egress_enabled": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -72,7 +67,6 @@ func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("vpc_id", fireNetDetail.VpcID)
 	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
-	d.Set("keep_alive_via_lan_interface_enabled", fireNetDetail.LanPing == "yes")
 	d.Set("tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
 	d.Set("egress_static_cidrs", fireNetDetail.EgressStaticCidrs)
 
