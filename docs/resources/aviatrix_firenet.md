@@ -20,7 +20,6 @@ resource "aviatrix_firenet" "test_firenet" {
   vpc_id                               = "vpc-032005cc371"
   inspection_enabled                   = true
   egress_enabled                       = false
-  keep_alive_via_lan_interface_enabled = false
 
   depends_on                           = [
     aviatrix_firewall_instance_association.association_1
@@ -34,7 +33,6 @@ resource "aviatrix_firenet" "gcp_firenet" {
   vpc_id                               = format("%s~-~%s", aviatrix_transit_gateway.test_transit_gateway.vpc_id, aviatrix_account.gcp.gcloud_project_id)
   inspection_enabled                   = true
   egress_enabled                       = true
-  keep_alive_via_lan_interface_enabled = false
 
   depends_on                           = [
     aviatrix_firewall_instance_association.association2
@@ -62,10 +60,6 @@ The following arguments are supported:
 * `tgw_segmentation_for_egress_enabled` - (Optional) Enable TGW segmentation for egress. Valid values: true or false. Default value: false. Available as of provider version R2.19+.
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
 
-* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Supported for AWS and OCI related clouds only. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
-
-~> **NOTE:** `keep_alive_via_lan_interface_enabled` - Option to enable/disable keep_alive_via_lan_interface will be removed in Aviatrix provider v3.2.0. As of provider v3.1.2, disabling keep_alive_via_lan_interface will NOT be allowed.
-
 The following arguments are deprecated:
 
 * `fail_close_enabled` - Enable Fail Close. Removed as of provider version R2.23+.
@@ -79,6 +73,7 @@ The following arguments are deprecated:
   * `management_interface` - (Optional) Management interface ID. **Required if it is a firewall instance.**
   * `egress_interface`- (Optional) Egress interface ID. **Required if it is a firewall instance.**
   * `attached`- (Optional) Switch to attach/detach firewall instance to/from FireNet. Valid values: true, false. Default value: false.
+* `keep_alive_via_lan_interface_enabled` - Option to enable/disable keep_alive_via_lan_interface is removed in Aviatrix provider v3.2.0.
 
 ## Import
 
