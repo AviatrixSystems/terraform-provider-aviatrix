@@ -49,4 +49,4 @@ The following arguments are deprecated:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
-  * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
+* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
