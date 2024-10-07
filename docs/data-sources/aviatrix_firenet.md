@@ -37,7 +37,6 @@ In addition to all arguments above, the following attributes are exported:
 * `egress_static_cidrs` - List of egress static CIDRs.  
 * `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.  
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall.
-* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
 
 The following arguments are deprecated:
 
@@ -50,3 +49,4 @@ The following arguments are deprecated:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
+* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
