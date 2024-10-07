@@ -55,12 +55,6 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Description:  "Hashing algorithm to load balance traffic across the firewall.",
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
 			},
-			"keep_alive_via_lan_interface_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Deprecated:  "Option to enable/disable keep_alive_via_lan_interface is removed in Aviatrix provider v3.2.0.",
-				Description: "Enable Keep Alive via Firewall LAN Interface. Supported for AWS and OCI related clouds only.",
-			},
 			"tgw_segmentation_for_egress_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
