@@ -224,6 +224,7 @@ type Gateway struct {
 	SiteID                          string                              `json:"site_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
+	EipMap                          []EIPMap                            `json:"eip_mapping,omitempty"`
 }
 
 type HaGateway struct {
@@ -294,6 +295,17 @@ type InterfaceMapping struct {
 	Name  string `json:"name"`
 	Type  string `json:"type"`
 	Index int    `json:"index"`
+}
+
+type IPMapping struct {
+	PrivateIP string `json:"private_ip"`
+	PublicIP  string `json:"public_ip"`
+}
+
+// Define the interface map struct
+type EIPMap struct {
+	InterfaceName string      `json:"interface"`
+	IPs           []IPMapping `json:"ips"`
 }
 
 type BundleVpcInfo struct {

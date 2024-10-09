@@ -48,24 +48,23 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
-	AvailabilityDomain           string                 `form:"availability_domain,omitempty"`
-	FaultDomain                  string                 `form:"fault_domain,omitempty"`
-	EnableSpotInstance           bool                   `form:"spot_instance,omitempty"`
-	SpotPrice                    string                 `form:"spot_price,omitempty"`
-	DeleteSpot                   bool                   `form:"delete_spot,omitempty"`
-	ApprovedLearnedCidrs         []string               `form:"approved_learned_cidrs"`
-	BgpLanVpcID                  string                 `form:"bgp_lan_vpc"`
-	BgpLanSpecifySubnet          string                 `form:"bgp_lan_subnet"`
-	Async                        bool                   `form:"async,omitempty"`
-	BgpLanInterfacesCount        int                    `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string                 `form:"lb_vpc_id,omitempty"`
-	Transit                      bool                   `form:"transit,omitempty"`
-	DeviceID                     string                 `form:"device_id,omitempty"`
-	SiteID                       string                 `form:"site_id,omitempty"`
-	Interfaces                   string                 `json:"interfaces,omitempty"`
-	InterfaceMapping             string                 `json:"interface_mapping,omitempty"`
-	InterfaceList                []EdgeTransitInterface `json:"interface_list,omitempty"`
-	EipMap                       string                 `json:"eip_map,omitempty"`
+	AvailabilityDomain           string   `form:"availability_domain,omitempty"`
+	FaultDomain                  string   `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
+	SpotPrice                    string   `form:"spot_price,omitempty"`
+	DeleteSpot                   bool     `form:"delete_spot,omitempty"`
+	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
+	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
+	BgpLanSpecifySubnet          string   `form:"bgp_lan_subnet"`
+	Async                        bool     `form:"async,omitempty"`
+	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
+	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
+	Transit                      bool     `form:"transit,omitempty"`
+	DeviceID                     string   `form:"device_id,omitempty"`
+	SiteID                       string   `form:"site_id,omitempty"`
+	Interfaces                   string   `json:"interfaces,omitempty"`
+	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
+	EipMap                       string   `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

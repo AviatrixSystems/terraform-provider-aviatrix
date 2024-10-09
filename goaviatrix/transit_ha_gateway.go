@@ -28,6 +28,7 @@ type TransitHaGateway struct {
 	BackupLinkConfig      string `json:"backup_link_config,omitempty"`
 	InterfaceMapping      string `json:"interface_mapping,omitempty"`
 	Interfaces            string `json:"interfaces,omitempty"`
+	EipMap                string `json:"eip_map,omitempty"`
 	DeviceID              string `json:"device_id,omitempty"`
 }
 
