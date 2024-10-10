@@ -357,6 +357,23 @@ func (c *Client) UpdateTransitPendingApprovedCidrs(gateway *TransitVpc) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
+func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_edge_gateway",
+		"gateway_name": gateway.GwName,
+	}
+
+	if gateway.Interfaces != "" {
+		form["interfaces"] = gateway.Interfaces
+	}
+
+	if gateway.EipMap != "" {
+		form["eip_map"] = gateway.EipMap
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
 func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
 	action := "change_bgp_polling_time"
 	return c.PostAPI(action, struct {
