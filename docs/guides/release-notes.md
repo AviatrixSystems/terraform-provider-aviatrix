@@ -20,7 +20,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4820**
 - Supported Terraform version **v1.x**
-- Release date: **(10 October 2024)**
+- Release date: **(15 October 2024)**
 
 ### Bug Fixes:
 1. Fixed issue in **aviatrix_edge_platform_device_onboarding** where performing subsequent a apply would continue to update the ``network`` configuration even when there were no changes made.
@@ -46,7 +46,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 3.1.6
 ### Notes:
-- Release date: **(10 October 2024)**
+- Release date: **(15 October 2024)**
 - Supported Controller version: **UserConnect-7.1.4183**
 - Supported Terraform version **v1.x**
 
