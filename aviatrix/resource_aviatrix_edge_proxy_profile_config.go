@@ -188,7 +188,7 @@ func resourceAviatrixEdgeProxyProfileConfigRead(ctx context.Context, d *schema.R
 func resourceAviatrixEdgeProxyProfileConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DeleteEdgePlatformProxyProfile(context.Background(), d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
+	err := client.DeleteEdgePlatformProxyProfile(ctx, d.Get("account_name").(string), d.Get("proxy_profile_name").(string))
 	if err != nil {
 		return diag.Errorf("failed to delete proxy profile: %s", err)
 	}
