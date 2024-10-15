@@ -1,5 +1,7 @@
+# # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
+version: 2
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
@@ -54,4 +56,4 @@ release:
     name: terraform-provider-aviatrix
   draft: true
 changelog:
-  skip: false
+  disable: false
