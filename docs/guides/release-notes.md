@@ -20,6 +20,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4820**
 - Supported Terraform version **v1.x**
+- Release date: **(10 October 2024)**
 
 ### Bug Fixes:
 1. Fixed issue in **aviatrix_edge_platform_device_onboarding** where performing subsequent a apply would continue to update the ``network`` configuration even when there were no changes made.
@@ -41,9 +42,11 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Deprecations:
 1. Removed the ``bandwidth`` attribute from the interface configuration for all Edge related resources.
 2. Removed the ``http_access`` in **aviatrix_controller_config** as it longer has any effect.
+3. Removed the ``keep_alive_via_lan_interface_enabled`` in **aviatrix_firenet** resource.
 
 ## 3.1.6
 ### Notes:
+- Release date: **(10 October 2024)**
 - Supported Controller version: **UserConnect-7.1.4183**
 - Supported Terraform version **v1.x**
 

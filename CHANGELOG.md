@@ -23,6 +23,7 @@
 ### Deprecations:
 1. Removed the ``bandwidth`` attribute from the interface configuration for all Edge related resources.
 2. Removed the ``http_access`` in **aviatrix_controller_config** as it longer has any effect.
+3. Removed the ``keep_alive_via_lan_interface_enabled`` in **aviatrix_firenet** resource.
 
 ## 3.1.6 (October 15, 2024)
 ### Notes:
