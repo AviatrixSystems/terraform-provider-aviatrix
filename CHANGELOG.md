@@ -1,4 +1,30 @@
-## 3.1.6 (Unreleased)
+## 3.2.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.2.4820**
+- Supported Terraform version **v1.x**
+
+### Bug Fixes:
+1. Fixed issue in **aviatrix_edge_platform_device_onboarding** where performing subsequent a apply would continue to update the ``network`` configuration even when there were no changes made.
+2. Fixed issue in **aviatrix_gateway_dnat** where configuring the interface in a policy-based Site-to-Cloud DNAT rule would trigger an error.
+3. Fixed issue in **aviatrix_edge_platform_device_onboarding** where ``dns_server_ips`` configuration order was not preserved.
+4. Fixed issue in **aviatrix_edge_platform_device_onboarding** where onboard resource failed to properly import.
+5. Fixed issue in **aviatrix_site2cloud** where ``remote_subnet_cidr`` was not properly applied.
+6. Fixed issue in **aviatrix_transit_gateway** that prevented the deployment Firenet Gateways in Azure China
+7. Optimized **aviatrix_account** to significantly reduce the time required for Terraform operations (e.g., update, add, delete) involving hundreds of accounts. Previously, these operations could take tens of minutes, but with this fix, they now complete in tens of seconds.
+
+### Enhancements:
+1. Added proxy profile support to **aviatrix_edge_platform_device_onboarding**, enabling the specification of a proxy for onboarding Aviatrix Edge devices.
+2. Updated documentation references by consolidating the legacy terms ``Cloudn`` and ``Multi-Cloud Transit`` under a single ``Edge`` subcategory.
+3. Added support for Kubernetes Smart Groups, updating the **aviatrix_smart_group** resource to allow Smart Groups to be created from artifacts within Kubernetes clusters.
+
+#### Provider:
+1. Added support for the Terraform provider to properly set the user-agent when making requests.
+
+### Deprecations:
+1. Removed the ``bandwidth`` attribute from the interface configuration for all Edge related resources.
+2. Removed the ``http_access`` in **aviatrix_controller_config** as it longer has any effect.
+
+## 3.1.6 (October 15, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-7.1.4183**
 - Supported Terraform version **v1.x**
