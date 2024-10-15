@@ -49,7 +49,7 @@ The following arguments are supported:
   * `ipv4_cidr` - (Optional) Interface IPV4 CIDR.
   * `gateway_ip` - (Optional) Gateway IP.
   * `dns_server_ips` - (Optional) Set of DNS server IPs.
-  * `proxy_server_ip` - (Optional) Proxy server IP.
+  * `proxy_profile_id` - (Optional) Proxy profile ID.
 * `download_config_file` - (Optional) Set to true to download the Edge Platform static config file. Valid values: true, false. Default value: false.
 * `config_file_download_path` - (Optional) The location where the config file will be stored.
 
