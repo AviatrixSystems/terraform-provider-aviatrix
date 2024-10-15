@@ -12,9 +12,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.1.5 (UserConnect-7.1.4105)``
+``Last updated: R3.1.6 (UserConnect-7.1.4183)``
 
 ---
+
+## 3.1.6 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.1.4183**
+- Supported Terraform version **v1.x**
+
+### Bug Fixes:
+1. Fixed issue in **aviatrix_edge_platform_device_onboarding** where performing subsequent a apply would continue to update the ``network`` configuration even when there were no changes made.
+2. Fixed issue in **aviatrix_gateway_dnat** where configuring the interface in a policy-based Site-to-Cloud DNAT rule would trigger an error.
+3. Fixed issue in **aviatrix_edge_platform_device_onboarding** where ``dns_server_ips`` configuration order was not preserved.
+4. Fixed issue in **aviatrix_site2cloud** where ``remote_subnet_cidr`` was not properly applied.
 
 ## 3.1.5
 ### Notes:
@@ -587,7 +598,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 1. Implemented support to ignore changes in selected tag keys across all resources on the provider-level:
   - New configuration block ``ignore_tags {}`` with the following options:
     - ``keys``
-    - ``key_prefixes`` 
+    - ``key_prefixes``
 
 #### Multi-Cloud Transit:
 1. Implemented support for Private Mode:
@@ -662,7 +673,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.22.4
 ### Notes:
-- Release date: **(20 Sep 2022)** 
+- Release date: **(20 Sep 2022)**
 - Supported Controller version: **UserConnect-6.7.1480**
 - Supported Terraform version: **v1.x**
 
@@ -1476,7 +1487,7 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
 1. Implemented further support for Custom Mapped and overlapping CIDR scenarios for **aviatrix_site2cloud** with attribute ``forward_traffic_to_transit``
 2. Implemented Connection-based BGP Prepending AS-PATH support with the following attributes for aviatrix_transit_gateway_peering:
   - ``prepend_as_path1``
-  - ``prepend_as_path2``   
+  - ``prepend_as_path2``
 
 ### Bug Fixes:
 1. Fixed [issue](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2#r2172-userconnect-621914) where the following parameters caused reordering issues for **aviatrix_transit_gateway_peering**:
@@ -1496,7 +1507,7 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
 1. Implemented support for monitoring gateway subnets in **aviatrix_gateway** through ``enable_monitor_gateway_subnets`` and ``monitor_exclude_list``
 2. Implemented support for managing Aviatrix VPN timeout configurations through ``idle_timeout`` and ``renegotiation_interval`` in **aviatrix_gateway**
 3. Implemented support for ``enable_active_standby`` in **aviatrix_transit_gateway**
-4. Implemented Active-Standby support for Transit Network workflows:   
+4. Implemented Active-Standby support for Transit Network workflows:
   - ``enable_active_standby`` in **aviatrix_transit_gateway**
   - ``switch_to_ha_standby_gateway`` in **aviatrix_transit_external_device_conn**
 5. Implemented new resource to decouple ``firewall_instance_association`` out of ``aviatrix_firenet``:
@@ -1510,7 +1521,7 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
 10. Implemented support for ``sign_authn_requests`` in **aviatrix_saml_endpoint**
 11. Implemented Bootstrap support for AWS and Azure FireNet solutions in aviatrix_firewall_instance:
   - ``bootstrap_storage_name``
-  - ``storage_access_key``  
+  - ``storage_access_key``
   - ``file_share_folder``
   - ``share_directory``
   - ``sic_key``

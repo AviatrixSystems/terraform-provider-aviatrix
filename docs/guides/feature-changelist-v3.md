@@ -14,7 +14,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 ---
 
-``Last updated: R3.1.5 (UserConnect-7.1.4105)``
+``Last updated: R3.1.6 (UserConnect-7.1.4183)``
 
 
 ---
