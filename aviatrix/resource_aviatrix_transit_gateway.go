@@ -809,12 +809,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"peer_backup_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Peer backup port for the edge transit gateway.",
+				Description: "Peer backup port for the HA edge transit gateway.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Connection type for the edge transit gateway.",
+				Description: "Connection type for the HA edge transit gateway.",
 			},
 			"ha_interfaces": {
 				Type:        schema.TypeList,
@@ -969,23 +969,41 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.DeviceID = d.Get("device_id").(string)
 			gateway.SiteID = d.Get("site_id").(string)
 			// TODO: eip map will be used after a transit gateway is created
-			eipMapRaw, ok := d.Get("eip_map").(map[string]interface{})
-			if !ok {
-				return fmt.Errorf("eip_map is not a map[string]interface{}")
-			}
-			eipMapList, err := getEipMapDetails(eipMapRaw)
-			if err != nil {
-				return fmt.Errorf("failed to get eip_map details: %s", err)
-			}
-			gateway.EipMap = eipMapList
+			// eipMapRaw, ok := d.Get("eip_map").(map[string]interface{})
+			// if !ok {
+			// 	return fmt.Errorf("eip_map is not a map[string]interface{}")
+			// }
+			// eipMapList, err := getEipMapDetails(eipMapRaw)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to get eip_map details: %s", err)
+			// }
+			// gateway.EipMap = eipMapList
 		}
 
 		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 		d.SetId(gateway.GwName)
 		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-		err = client.LaunchTransitVpc(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+		try, backoff := 0, 1000*time.Millisecond
+		maxWaitTime := 15 * time.Minute
+		totalWaitTime := time.Duration(0) // Tracks the total time spent waiting
+		for {
+			try++
+			err = client.LaunchTransitVpc(gateway)
+			if err != nil {
+				if strings.Contains(err.Error(), "Failed to launch Gateway") {
+					// If the total wait time exceeds maxWaitTime, throw an error
+					if totalWaitTime+backoff > maxWaitTime {
+						return fmt.Errorf("failed to create Aviatrix Edge Transit Gateway: %s", err)
+					}
+					time.Sleep(backoff)
+					totalWaitTime += backoff
+					// Double the backoff time after each failed try
+					backoff *= 2
+					continue
+				}
+				return fmt.Errorf("failed to create Aviatrix Edge Transit Gateway: %s", err)
+			}
+			break
 		}
 
 		// create ha gateway
@@ -1967,13 +1985,13 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interface mapping into state: %v", err)
 			}
 		}
-		// set eip map
-		if len(gw.EipMap) != 0 {
-			eipMap := setEipMapDetails(gw.EipMap)
-			if err := d.Set("eip_map", eipMap); err != nil {
-				return fmt.Errorf("could not set eip map into state: %v", err)
-			}
-		}
+		// TODO : need to update this. It throws an error while reading set eip map
+		// if len(gw.EipMap) != 0 {
+		// 	eipMap := setEipMapDetails(gw.EipMap)
+		// 	if err := d.Set("eip_map", eipMap); err != nil {
+		// 		return fmt.Errorf("could not set eip map into state: %v", err)
+		// 	}
+		// }
 		if gw.HaGw.GwSize == "" {
 			d.Set("ha_availability_domain", "")
 			d.Set("ha_azure_eip_name_resource_group", "")
@@ -2007,12 +2025,13 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set ha interfaces into state: %v", err)
 			}
 		}
-		if len(gw.HaGw.EipMap) != 0 {
-			haEipMap := setEipMapDetails(gw.HaGw.EipMap)
-			if err := d.Set("ha_eip_map", haEipMap); err != nil {
-				return fmt.Errorf("could not set ha eip map into state: %v", err)
-			}
-		}
+		// TODO : need to update this. It throws an error while reading set eip map
+		// if len(gw.HaGw.EipMap) != 0 {
+		// 	haEipMap := setEipMapDetails(gw.HaGw.EipMap)
+		// 	if err := d.Set("ha_eip_map", haEipMap); err != nil {
+		// 		return fmt.Errorf("could not set ha eip map into state: %v", err)
+		// 	}
+		// }
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
