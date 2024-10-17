@@ -72,8 +72,8 @@ const (
 	ZoneKey         = "zone"
 	K8sClusterIdKey = "k8s_cluster_id"
 	K8sNamespaceKey = "k8s_namespace"
-	K8sServiceKey   = "ka8s_service"
-	K8sPodNameKey   = "ka8s_pod"
+	K8sServiceKey   = "k8s_service"
+	K8sPodNameKey   = "k8s_pod"
 	S2CKey          = "s2c"
 	ExternalKey     = "external"
 
