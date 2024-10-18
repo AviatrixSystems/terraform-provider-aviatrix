@@ -242,3 +242,18 @@ func (c *Client) GetFirewallInstanceImages(vpcId string) (*[]FirewallInstanceIma
 
 	return &data.Results.Images, nil
 }
+
+func (c *Client) UpdateFirewallInstanceTags(firewallInstance *FirewallInstance) error {
+	tags := &Tags{
+		ResourceName: firewallInstance.InstanceID,
+		Tags:         firewallInstance.Tags,
+	}
+
+	tagList := make([]string, 0, len(firewallInstance.Tags))
+	for k, v := range firewallInstance.Tags {
+		tagList = append(tagList, k+":"+v)
+	}
+
+	tags.TagList = strings.Join(tagList, ",")
+	return c.UpdateTags(tags)
+}
