@@ -3947,9 +3947,23 @@ func getInterfaceDetails(interfaces []interface{}) (string, error) {
 func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface) []map[string]interface{} {
 	interfaceList := make([]map[string]interface{}, 0)
 	sortedInterfaces := sortInterfacesByCustomOrder(interfaces)
+	wanCounter := 0
+	mgmtCounter := 0
 	for _, intf := range sortedInterfaces {
 		interfaceDict := make(map[string]interface{})
 		interfaceDict["type"] = intf.Type
+		// set the interface index using wanCounter and mgmtCounter
+		switch intf.Type {
+		case "WAN":
+			interfaceDict["index"] = wanCounter
+			wanCounter++
+		case "MANAGEMENT":
+			interfaceDict["index"] = mgmtCounter
+			mgmtCounter++
+		default:
+			interfaceDict["index"] = intf.Index
+		}
+
 		if intf.PublicIp != "" {
 			interfaceDict["public_ip"] = intf.PublicIp
 		}
