@@ -59,18 +59,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				Description:      "VPC-ID/VNet-Name of cloud provider.",
+				Description:      "VPC-ID/VNet-Name/Site-ID of cloud provider.",
 				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
 			},
 			"device_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Device ID for the EAT gateway.",
-			},
-			"site_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Site id for the EAT gateway.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
@@ -137,6 +132,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
+			},
+			"ha_device_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Device ID for HA EAT gateway. Required for enabling HA for AEP edge.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -771,6 +771,55 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
+			"ha_interfaces": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of WAN/Management interfaces for HA EAT gateway, each represented as a map.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
+						},
+						"index": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index. Must be unique for each interface type.",
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The gateway IP address associated with this interface.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The static IP address assigned to this interface.",
+						},
+						"public_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The public IP address associated with this interface (if applicable).",
+						},
+						"dhcp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether DHCP is enabled on this interface.",
+						},
+						"secondary_private_cidr_list": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of secondary private CIDR blocks associated with this interface.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"interface_mapping": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -823,10 +872,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string),
 			VpcID:       d.Get("vpc_id").(string),
-			VpcRegion:   d.Get("vpc_reg").(string),
 			VpcSize:     d.Get("gw_size").(string),
 			DeviceID:    d.Get("device_id").(string),
-			SiteID:      d.Get("site_id").(string),
 			Transit:     true,
 		}
 		interfaces, ok := d.Get("interfaces").([]interface{})
@@ -1866,7 +1913,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		d.Set("site_id", gw.SiteID)
+		d.Set("vpc_id", gw.VpcID)
 		d.Set("bgp_lan_ip_list", nil)
 		d.Set("ha_bgp_lan_ip_list", nil)
 		// set interfaces
@@ -2826,6 +2873,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
+		// updating device id for edge transit gateway is not supported
+		if d.HasChange("device_id") {
+			return fmt.Errorf("updating device_id is not supported for edge transit gateway")
+		}
+
+		// updating gw_size for edge transit gateway is not supported
+		if d.HasChange("gw_size") {
+			return fmt.Errorf("updating gw_size is not supported for edge transit gateway")
+		}
+
 		// // update edge transit gateway HA interfaces
 		// enableEdgeHa, ok := d.Get("enable_edge_ha").(bool)
 		// if !ok {
@@ -3092,7 +3149,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if !d.Get("enable_transit_firenet").(bool) {
+	if !d.Get("enable_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		primaryGwSize := d.Get("gw_size").(string)
 		if d.HasChange("gw_size") {
 			old, _ := d.GetChange("gw_size")
