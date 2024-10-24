@@ -63,7 +63,8 @@ type TransitVpc struct {
 }
 
 type TransitGatewayAdvancedConfig struct {
-	BgpPollingTime                    string
+	BgpPollingTime                    int
+	BgpBfdPollingTime                 int
 	PrependASPath                     []string
 	LocalASNumber                     string
 	BgpEcmpEnabled                    bool
@@ -86,6 +87,7 @@ type StandbyConnection struct {
 
 type TransitGatewayAdvancedConfigRespResult struct {
 	BgpPollingTime                    int                       `json:"bgp_polling_time"`
+	BgpBfdPollingTime                 int                       `json:"bgp_bfd_polling_time"`
 	PrependASPath                     string                    `json:"bgp_prepend_as_path"`
 	LocalASNumber                     string                    `json:"local_asn_num"`
 	BgpEcmpEnabled                    string                    `json:"bgp_ecmp"`
@@ -356,6 +358,21 @@ func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime st
 	}, BasicCheck)
 }
 
+func (c *Client) SetBgpBfdPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
+	action := "change_bgp_bfd_polling_time"
+	return c.PostAPI(action, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"gateway_name"`
+		PollingTime string `form:"bgp_bfd_polling_time"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: transitGateway.GwName,
+		PollingTime: newPollingTime,
+	}, BasicCheck)
+}
+
 func (c *Client) SetPrependASPath(transitGateway *TransitVpc, prependASPath []string) error {
 	action, subaction := "edit_aviatrix_transit_advanced_config", "prepend_as_path"
 	return c.PostAPI(action+"/"+subaction, struct {
@@ -449,7 +466,8 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 	}
 
 	return &TransitGatewayAdvancedConfig{
-		BgpPollingTime:                    strconv.Itoa(data.Results.BgpPollingTime),
+		BgpPollingTime:                    data.Results.BgpPollingTime,
+		BgpBfdPollingTime:                 data.Results.BgpBfdPollingTime,
 		PrependASPath:                     filteredStrings,
 		LocalASNumber:                     data.Results.LocalASNumber,
 		BgpEcmpEnabled:                    data.Results.BgpEcmpEnabled == "yes",

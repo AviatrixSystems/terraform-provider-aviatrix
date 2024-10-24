@@ -381,7 +381,7 @@ func resourceAviatrixEdgeVmSelfmanagedCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if edgeSpoke.BgpPollingTime >= 10 && edgeSpoke.BgpPollingTime != defaultBgpPollingTime {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time after Edge VM Selfmanaged creation: %v", err)
 		}
@@ -659,7 +659,7 @@ func resourceAviatrixEdgeVmSelfmanagedUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, strconv.Itoa(edgeSpoke.BgpPollingTime))
+		err := client.SetBgpPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp polling time during Edge VM Selfmanaged update: %v", err)
 		}
