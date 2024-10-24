@@ -221,31 +221,32 @@ type Gateway struct {
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
 	DeviceID                        string                              `json:"device_id,omitempty"`
-	SiteID                          string                              `json:"site_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
 }
 
 type HaGateway struct {
-	GwName              string             `json:"vpc_name"`
-	CloudType           int                `json:"cloud_type"`
-	GwSize              string             `json:"vpc_size"`
-	VpcNet              string             `json:"public_subnet"`
-	PublicIP            string             `json:"public_ip"`
-	PrivateIP           string             `json:"private_ip"`
-	ReuseEip            string             `json:"reuse_eip,omitempty"`
-	CloudnGatewayInstID string             `json:"cloudn_gateway_inst_id"`
-	GatewayZone         string             `json:"gateway_zone"`
-	InsaneMode          string             `json:"high_perf"`
-	EnablePrivateOob    bool               `json:"private_oob"`
-	OobManagementSubnet string             `json:"oob_mgmt_subnet"`
-	GwSecurityGroupID   string             `json:"gw_security_group_id"`
-	FaultDomain         string             `json:"fault_domain"`
-	ImageVersion        string             `json:"gw_image_name"`
-	SoftwareVersion     string             `json:"gw_software_version"`
-	HaBgpLanInterfaces  []BundleVpcLanInfo `json:"gce_ha_bgp_lan_info,omitempty"`
-	PeerBackupPort      string             `json:"peer_backup_port,omitempty"`
-	ConnectionType      string             `json:"connection_type,omitempty"`
+	GwName              string                 `json:"vpc_name"`
+	CloudType           int                    `json:"cloud_type"`
+	GwSize              string                 `json:"vpc_size"`
+	VpcNet              string                 `json:"public_subnet"`
+	PublicIP            string                 `json:"public_ip"`
+	PrivateIP           string                 `json:"private_ip"`
+	ReuseEip            string                 `json:"reuse_eip,omitempty"`
+	CloudnGatewayInstID string                 `json:"cloudn_gateway_inst_id"`
+	GatewayZone         string                 `json:"gateway_zone"`
+	InsaneMode          string                 `json:"high_perf"`
+	EnablePrivateOob    bool                   `json:"private_oob"`
+	OobManagementSubnet string                 `json:"oob_mgmt_subnet"`
+	GwSecurityGroupID   string                 `json:"gw_security_group_id"`
+	FaultDomain         string                 `json:"fault_domain"`
+	ImageVersion        string                 `json:"gw_image_name"`
+	SoftwareVersion     string                 `json:"gw_software_version"`
+	HaBgpLanInterfaces  []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
+	DeviceID            string                 `json:"device_id,omitempty"`
+	PeerBackupPort      string                 `json:"peer_backup_port,omitempty"`
+	ConnectionType      string                 `json:"connection_type,omitempty"`
+	Interfaces          []EdgeTransitInterface `json:"interfaces,omitempty"`
 }
 
 type PolicyRule struct {
