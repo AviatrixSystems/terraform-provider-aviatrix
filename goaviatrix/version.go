@@ -164,7 +164,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 			time.Sleep(sleepDuration)
 			continue
 		}
-		return fmt.Errorf(data1.Results.PlatformUpgrade.Results.Reason)
+		return fmt.Errorf("%s", data1.Results.PlatformUpgrade.Results.Reason)
 	}
 	// Waited for too long and upgrade never finished
 	if i == maxPoll {

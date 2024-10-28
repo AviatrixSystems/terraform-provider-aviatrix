@@ -128,7 +128,7 @@ func (c *Client) UpdateDomains(fqdn *FQDN) error {
 		"action":   action,
 		"tag_name": fqdn.FQDNTag,
 	}
-	if fqdn.DomainList != nil && len(fqdn.DomainList) != 0 {
+	if len(fqdn.DomainList) != 0 {
 		args, err := json.Marshal(fqdn.DomainList)
 		if err != nil {
 			return err

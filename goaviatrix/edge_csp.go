@@ -148,7 +148,7 @@ func (c *Client) CreateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 
 	edgeCSP.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeCSP.VlanList == nil || len(edgeCSP.VlanList) == 0 {
+	if len(edgeCSP.VlanList) == 0 {
 		edgeCSP.VlanList = []*Vlan{}
 	}
 
@@ -219,7 +219,7 @@ func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 
 	edgeCSP.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeCSP.VlanList == nil || len(edgeCSP.VlanList) == 0 {
+	if len(edgeCSP.VlanList) == 0 {
 		edgeCSP.VlanList = []*Vlan{}
 	}
 

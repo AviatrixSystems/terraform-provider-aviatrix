@@ -104,7 +104,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	}
 	if ARTDetail != nil {
 		aTVA.DisableLocalRoutePropagation = ARTDetail.DisableLocalRoutePropagation
-		if ARTDetail.CustomizedRoutes != nil && len(ARTDetail.CustomizedRoutes) != 0 {
+		if len(ARTDetail.CustomizedRoutes) != 0 {
 			customizedRoutes := ""
 			length := len(ARTDetail.CustomizedRoutes)
 			for i := 0; i < length-1; i++ {
@@ -112,7 +112,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 			}
 			aTVA.CustomizedRoutes = customizedRoutes + ARTDetail.CustomizedRoutes[length-1]
 		}
-		if ARTDetail.Subnets != nil && len(ARTDetail.Subnets) != 0 {
+		if len(ARTDetail.Subnets) != 0 {
 			subnets := ""
 			length := len(ARTDetail.Subnets)
 			for i := 0; i < length-1; i++ {
@@ -121,7 +121,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 			aTVA.Subnets = subnets + strings.Split(ARTDetail.Subnets[length-1], "~~")[0]
 		}
 		aTVA.RouteTables = ARTDetail.RouteTables
-		if ARTDetail.CustomizedRouteAdvertisement != nil && len(ARTDetail.CustomizedRouteAdvertisement) != 0 {
+		if len(ARTDetail.CustomizedRouteAdvertisement) != 0 {
 			customizedRouteAdvertisement := ""
 			length := len(ARTDetail.CustomizedRouteAdvertisement)
 			for i := 0; i < length-1; i++ {

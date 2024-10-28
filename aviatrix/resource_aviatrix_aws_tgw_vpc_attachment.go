@@ -113,7 +113,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.SecurityDomainName)
+			return fmt.Errorf("could not find Security Domain: %s", awsTgwVpcAttachment.SecurityDomainName)
 		}
 		return fmt.Errorf("could not find Security Domain due to: %v", err)
 	}
@@ -283,7 +283,7 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 		isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 		if err != nil {
 			if err == goaviatrix.ErrNotFound {
-				return fmt.Errorf("could not find Network Domain: " + awsTgwVpcAttachment.SecurityDomainName)
+				return fmt.Errorf("could not find Network Domain: %s", awsTgwVpcAttachment.SecurityDomainName)
 			}
 			return fmt.Errorf("could not find Network Domain due to: %v", err)
 		}
@@ -339,20 +339,20 @@ func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta inte
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find Network Domain: " + awsTgwVpcAttachment.VpcID)
+			return fmt.Errorf("could not find Network Domain: %s", awsTgwVpcAttachment.VpcID)
 		}
-		return fmt.Errorf(("could not find Network Domain due to: ") + err.Error())
+		return fmt.Errorf("could not find Network Domain due to: %v", err)
 	}
 
 	if isFirewallSecurityDomain {
 		err := client.DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to detach FireNet VPC from TGW: %s", err)
+			return fmt.Errorf("failed to detach FireNet VPC from TGW: %v", err)
 		}
 	} else {
 		err := client.DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to detach VPC from TGW: %s", err)
+			return fmt.Errorf("failed to detach VPC from TGW: %v", err)
 		}
 	}
 

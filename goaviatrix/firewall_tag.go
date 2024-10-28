@@ -37,7 +37,7 @@ func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
 		"action":   action,
 		"tag_name": firewall_tag.Name,
 	}
-	if firewall_tag.CIDRList == nil || len(firewall_tag.CIDRList) == 0 {
+	if len(firewall_tag.CIDRList) == 0 {
 		firewall_tag.CIDRList = []CIDRMember{}
 	}
 

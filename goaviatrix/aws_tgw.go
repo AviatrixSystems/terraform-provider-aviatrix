@@ -236,7 +236,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 					DisableLocalRoutePropagation: data2.Results.DisableLocalRoutePropagation,
 					RouteTables:                  data2.Results.RouteTables,
 				}
-				if data2.Results.CustomizedRoutes != nil && len(data2.Results.CustomizedRoutes) != 0 {
+				if len(data2.Results.CustomizedRoutes) != 0 {
 					customizedRoutes := ""
 					length := len(data2.Results.CustomizedRoutes)
 					for i := 0; i < length-1; i++ {
@@ -244,7 +244,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 					}
 					vpcSolo.CustomizedRoutes = customizedRoutes + data2.Results.CustomizedRoutes[length-1]
 				}
-				if data2.Results.CustomizedRouteAdvertisement != nil && len(data2.Results.CustomizedRouteAdvertisement) != 0 {
+				if len(data2.Results.CustomizedRouteAdvertisement) != 0 {
 					customizedRouteAdvertisement := ""
 					length := len(data2.Results.CustomizedRouteAdvertisement)
 					for i := 0; i < length-1; i++ {
@@ -252,7 +252,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 					}
 					vpcSolo.CustomizedRouteAdvertisement = customizedRouteAdvertisement + data2.Results.CustomizedRouteAdvertisement[length-1]
 				}
-				if data2.Results.Subnets != nil && len(data2.Results.Subnets) != 0 {
+				if len(data2.Results.Subnets) != 0 {
 					subnets := ""
 					length := len(data2.Results.Subnets)
 					for i := 0; i < length-1; i++ {
