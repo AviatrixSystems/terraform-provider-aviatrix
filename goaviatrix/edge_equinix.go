@@ -144,7 +144,7 @@ func (c *Client) CreateEdgeEquinix(ctx context.Context, edgeEquinix *EdgeEquinix
 
 	edgeEquinix.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeEquinix.VlanList == nil || len(edgeEquinix.VlanList) == 0 {
+	if len(edgeEquinix.VlanList) == 0 {
 		edgeEquinix.VlanList = []*EdgeEquinixVlan{}
 	}
 
@@ -229,7 +229,7 @@ func (c *Client) UpdateEdgeEquinix(ctx context.Context, edgeEquinix *EdgeEquinix
 
 	edgeEquinix.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeEquinix.VlanList == nil || len(edgeEquinix.VlanList) == 0 {
+	if len(edgeEquinix.VlanList) == 0 {
 		edgeEquinix.VlanList = []*EdgeEquinixVlan{}
 	}
 

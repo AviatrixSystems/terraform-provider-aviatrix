@@ -130,7 +130,7 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 
 	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeSpoke.VlanList == nil || len(edgeSpoke.VlanList) == 0 {
+	if len(edgeSpoke.VlanList) == 0 {
 		edgeSpoke.VlanList = []*EdgeSpokeVlan{}
 	}
 
@@ -207,7 +207,7 @@ func (c *Client) UpdateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 
 	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if edgeSpoke.VlanList == nil || len(edgeSpoke.VlanList) == 0 {
+	if len(edgeSpoke.VlanList) == 0 {
 		edgeSpoke.VlanList = []*EdgeSpokeVlan{}
 	}
 

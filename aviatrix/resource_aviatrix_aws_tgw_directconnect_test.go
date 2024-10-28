@@ -159,7 +159,7 @@ func testAccCheckAwsTgwDirectConnectDestroy(s *terraform.State) error {
 
 		_, err := client.GetAwsTgwDirectConnect(foundAwsTgwDirectConnect)
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: " + err.Error())
+			return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %v", err)
 		}
 	}
 

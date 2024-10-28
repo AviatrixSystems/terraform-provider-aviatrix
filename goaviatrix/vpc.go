@@ -83,7 +83,7 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		form["aviatrix_transit_vpc"] = vpc.AviatrixTransitVpc
 		form["aviatrix_firenet_vpc"] = vpc.AviatrixFireNetVpc
 	} else {
-		if vpc.Subnets != nil && len(vpc.Subnets) != 0 {
+		if len(vpc.Subnets) != 0 {
 			args, err := json.Marshal(vpc.Subnets)
 			if err != nil {
 				return err
