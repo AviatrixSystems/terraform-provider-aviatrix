@@ -292,10 +292,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
 			},
 			"bgp_polling_time": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "50",
-				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpPollingTime,
+				ValidateFunc: validation.IntBetween(10, 50),
+				Description:  "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
 			},
 			"bgp_bfd_polling_time": {
 				Type:         schema.TypeInt,
