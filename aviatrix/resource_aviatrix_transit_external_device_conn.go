@@ -14,6 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	defaultBfdReceiveInterval  = 300
+	defaultBfdTransmitInterval = 300
+	defaultBfdMultiplier       = 3
+)
+
 func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitExternalDeviceConnCreate,
@@ -388,6 +394,43 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup Local LAN IP. Required for GCP BGP over LAN Connection with HA enabled.",
 			},
+			"enable_bfd": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable BGP BFD connection.",
+			},
+			"bgp_bfd": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "BGP BFD configuration details applied to a BGP session.",
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transmit_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD transmit interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdTransmitInterval,
+						},
+						"receive_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD receive interval in milliseconds.",
+							ValidateFunc: validation.IntBetween(10, 60000),
+							Default:      defaultBfdReceiveInterval,
+						},
+						"multiplier": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "BFD detection multiplier.",
+							ValidateFunc: validation.IntBetween(2, 255),
+							Default:      defaultBfdMultiplier,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -693,6 +736,58 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("failed to create Aviatrix transit external device connection: %s", err)
 		}
 		break
+	}
+
+	enableBFD, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
+	externalDeviceConn.EnableBfd = enableBFD
+	// set the bgp bfd config details only if the user has enabled BFD
+	if enableBFD {
+		bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
+		if !ok {
+			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+		}
+		// set bgp bfd using the config details provided by the user
+		if len(bgp_bfd) > 0 {
+			for _, bfd0 := range bgp_bfd {
+				bfd1, ok := bfd0.(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
+				}
+				transmitInterval := defaultBfdTransmitInterval
+				receiveInterval := defaultBfdReceiveInterval
+				multiplier := defaultBfdMultiplier
+				if value, ok := bfd1["transmit_interval"].(int); ok {
+					transmitInterval = value
+				}
+				if value, ok := bfd1["receive_interval"].(int); ok {
+					receiveInterval = value
+				}
+				if value, ok := bfd1["multiplier"].(int); ok {
+					multiplier = value
+				}
+				bfd2 := &goaviatrix.BgpBfdConfig{
+					TransmitInterval: transmitInterval,
+					ReceiveInterval:  receiveInterval,
+					Multiplier:       multiplier,
+				}
+				externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd2)
+			}
+		} else {
+			// set the bgp bfd config using the default values
+			bfd := &goaviatrix.BgpBfdConfig{
+				TransmitInterval: defaultBfdTransmitInterval,
+				ReceiveInterval:  defaultBfdReceiveInterval,
+				Multiplier:       defaultBfdMultiplier,
+			}
+			externalDeviceConn.BgpBfdConfig = append(externalDeviceConn.BgpBfdConfig, bfd)
+		}
+		err := client.EditConnectionBgpBfd(externalDeviceConn)
+		if err != nil {
+			return fmt.Errorf("could not enable BGP BFD connection: %v", err)
+		}
 	}
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
@@ -1005,6 +1100,32 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("phase1_remote_identifier", ph1RemoteId)
 		}
 
+		enable_bfd, ok := d.Get("enable_bfd").(bool)
+		if !ok {
+			return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+		}
+		d.Set("enable_bfd", enable_bfd)
+		if enable_bfd && len(conn.BgpBfdConfig) > 0 {
+			var bgpBfdConfig []map[string]interface{}
+			for _, bfd := range conn.BgpBfdConfig {
+				bfdMap := make(map[string]interface{})
+				bfdMap["transmit_interval"] = defaultBfdTransmitInterval
+				bfdMap["receive_interval"] = defaultBfdReceiveInterval
+				bfdMap["multiplier"] = defaultBfdMultiplier
+				if bfd.TransmitInterval != 0 {
+					bfdMap["transmit_interval"] = bfd.TransmitInterval
+				}
+				if bfd.ReceiveInterval != 0 {
+					bfdMap["receive_interval"] = bfd.ReceiveInterval
+				}
+				if bfd.Multiplier != 0 {
+					bfdMap["multiplier"] = bfd.Multiplier
+				}
+				bgpBfdConfig = append(bgpBfdConfig, bfdMap)
+			}
+			d.Set("bgp_bfd", bgpBfdConfig)
+		}
+
 		if conn.PrependAsPath != "" {
 			var prependAsPath []string
 			for _, str := range strings.Split(conn.PrependAsPath, " ") {
@@ -1226,6 +1347,71 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
 				return fmt.Errorf("failed to update BGP MD5 authentication key: %v", err)
+			}
+		}
+	}
+
+	enableBfd, ok := d.Get("enable_bfd").(bool)
+	if !ok {
+		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
+	if enableBfd {
+		// get the new BGP BFD config
+		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
+		if !ok {
+			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+		}
+		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
+		// Update the BGP BFD config if bfd is enabled and config has changed
+		if len(bgpBfdConfig) > 0 && d.HasChange("bgp_bfd") {
+			for _, v := range bgpBfdConfig {
+				bfdConfig := v.(map[string]interface{})
+				transmitInterval, ok := bfdConfig["transmit_interval"].(int)
+				if !ok {
+					transmitInterval = defaultBfdTransmitInterval
+				}
+				receiveInterval, ok := bfdConfig["receive_interval"].(int)
+				if !ok {
+					receiveInterval = defaultBfdReceiveInterval
+				}
+				multiplier, ok := bfdConfig["multiplier"].(int)
+				if !ok {
+					multiplier = defaultBfdMultiplier
+				}
+				bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
+					TransmitInterval: transmitInterval,
+					ReceiveInterval:  receiveInterval,
+					Multiplier:       multiplier,
+				})
+			}
+		} else {
+			// set the bgp bfd config using the default values
+			bgpBfdConfigList = append(bgpBfdConfigList, &goaviatrix.BgpBfdConfig{
+				TransmitInterval: defaultBfdTransmitInterval,
+				ReceiveInterval:  defaultBfdReceiveInterval,
+				Multiplier:       defaultBfdMultiplier,
+			})
+		}
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			GwName:         d.Get("gw_name").(string),
+			ConnectionName: d.Get("connection_name").(string),
+			EnableBfd:      d.Get("enable_bfd").(bool),
+			BgpBfdConfig:   bgpBfdConfigList,
+		}
+		err := client.EditConnectionBgpBfd(externalDeviceConn)
+		if err != nil {
+			return fmt.Errorf("could not update BGP BFD config: %v", err)
+		}
+	} else {
+		if d.HasChange("enable_bfd") {
+			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+				GwName:         d.Get("gw_name").(string),
+				ConnectionName: d.Get("connection_name").(string),
+				EnableBfd:      d.Get("enable_bfd").(bool),
+			}
+			err := client.EditConnectionBgpBfd(externalDeviceConn)
+			if err != nil {
+				return fmt.Errorf("could not disable BGP BFD config: %v", err)
 			}
 		}
 	}
