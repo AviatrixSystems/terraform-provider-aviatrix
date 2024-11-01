@@ -95,7 +95,7 @@ The following logging resources are removed:
 |(deprecated) | firenet | keep_alive_via_lan_interface_enabled | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
 
 
-## R3.2.1 (UserConnect-7.2)**
+## R3.2.1 (UserConnect-7.2)
 ### Attribute Change
 | Diff | Resource | Attribute | Action Required? |
 |:----:|:--------:|:---------:|:----------------:|
