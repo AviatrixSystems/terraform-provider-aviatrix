@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -292,10 +291,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
 			},
 			"bgp_polling_time": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "50",
-				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpPollingTime,
+				ValidateFunc: validation.IntBetween(10, 50),
+				Description:  "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+			},
+			"bgp_bfd_polling_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpBfdPollingTime,
+				ValidateFunc: validation.IntBetween(1, 10),
+				Description:  "BGP BFD route polling time for BGP Transit Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
 			"prepend_as_path": {
 				Type:         schema.TypeList,
@@ -1401,9 +1408,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		err := client.SetBgpPollingTime(gateway, val.(string))
+		err := client.SetBgpPollingTime(gateway, val.(int))
 		if err != nil {
 			return fmt.Errorf("could not set bgp polling time: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
+		err := client.SetBgpBfdPollingTime(gateway, val.(int))
+		if err != nil {
+			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
 		}
 	}
 
@@ -1634,7 +1648,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_hybrid_connection", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableHybridConnection)
 	d.Set("connected_transit", gw.ConnectedTransit == "yes")
 	d.Set("bgp_hold_time", gw.BgpHoldTime)
-	d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
+	d.Set("bgp_polling_time", gw.BgpPollingTime)
+	d.Set("bgp_bfd_polling_time", gw.BgpBfdPollingTime)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
 	d.Set("rx_queue_size", gw.RxQueueSize)
@@ -2966,11 +2981,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		bgpPollingTime := d.Get("bgp_polling_time").(string)
+		bgpPollingTime := d.Get("bgp_polling_time").(int)
 		gateway := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
 		err := client.SetBgpPollingTime(gateway, bgpPollingTime)
+		if err != nil {
+			return fmt.Errorf("could not update bgp polling time: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_bfd_polling_time") {
+		bgpBfdPollingTime := d.Get("bgp_bfd_polling_time").(int)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpBfdPollingTime(gateway, bgpBfdPollingTime)
 		if err != nil {
 			return fmt.Errorf("could not update bgp polling time: %v", err)
 		}
