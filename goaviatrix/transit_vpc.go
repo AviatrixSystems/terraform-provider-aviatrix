@@ -357,13 +357,13 @@ func (c *Client) UpdateTransitPendingApprovedCidrs(gateway *TransitVpc) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
+func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime int) error {
 	action := "change_bgp_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime string `form:"bgp_polling_time"`
+		PollingTime int    `form:"bgp_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,
@@ -372,13 +372,13 @@ func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime st
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpBfdPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
+func (c *Client) SetBgpBfdPollingTime(transitGateway *TransitVpc, newPollingTime int) error {
 	action := "change_bgp_bfd_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime string `form:"bgp_bfd_polling_time"`
+		PollingTime int    `form:"bgp_bfd_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,

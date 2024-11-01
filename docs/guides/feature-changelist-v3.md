@@ -93,3 +93,10 @@ The following logging resources are removed:
 |:----:|:--------:|:---------:|:----------------:|
 |(deprecated) | edge_equinix, edge_equinix_ha, edge_csp, edge_csp_ha, edge_neo, edge_neo_ha, edge_platform, edge_platform_ha, edge_zededa, edge_zededa_ha | bandwidth | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
 |(deprecated) | firenet | keep_alive_via_lan_interface_enabled | **Yes**; This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release |
+
+
+## R3.2.1 (UserConnect-7.2)
+### Attribute Change
+| Diff | Resource | Attribute | Action Required? |
+|:----:|:--------:|:---------:|:----------------:|
+|(changed) | edge_csp, edge_equinix, edge_gateway_selfmanaged, edge_platform, edge_zededa, spoke_gateway, transit_gateway, edge_spoke_gateway | bgp_polling_time | **Yes**; Accepted values are changed to **int** |
