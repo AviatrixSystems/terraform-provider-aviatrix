@@ -1407,19 +1407,19 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-		if val, ok := d.GetOk("bgp_polling_time"); ok {
-			err := client.SetBgpPollingTime(gateway, val.(int))
-			if err != nil {
-				return fmt.Errorf("could not set bgp polling time: %v", err)
-			}
+	if val, ok := d.GetOk("bgp_polling_time"); ok {
+		err := client.SetBgpPollingTime(gateway, val.(int))
+		if err != nil {
+			return fmt.Errorf("could not set bgp polling time: %v", err)
 		}
+	}
 
-		if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
-			err := client.SetBgpBfdPollingTime(gateway, val.(int))
-			if err != nil {
-				return fmt.Errorf("could not set bgp bfd polling time: %v", err)
-			}
+	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
+		err := client.SetBgpBfdPollingTime(gateway, val.(int))
+		if err != nil {
+			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
 		}
+	}
 
 	if val, ok := d.GetOk("local_as_number"); ok {
 		err := client.SetLocalASNumber(gateway, val.(string))
