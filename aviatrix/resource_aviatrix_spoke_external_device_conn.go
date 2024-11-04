@@ -709,21 +709,21 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 
 	enableBFD, ok := d.Get("enable_bfd").(bool)
 	if !ok {
-		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
 	externalDeviceConn.EnableBfd = enableBFD
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
 		bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
 		if !ok {
-			return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 		}
 		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
 				bfd1, ok := bfd0.(map[string]interface{})
 				if !ok {
-					return diag.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
+					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
 				}
 				transmitInterval := defaultBfdTransmitInterval
 				receiveInterval := defaultBfdReceiveInterval
@@ -755,7 +755,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
-			return diag.Errorf("could not update BGP BFD config: %v", err)
+			return fmt.Errorf("could not update BGP BFD config: %v", err)
 		}
 	}
 
@@ -1007,7 +1007,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 
 		enable_bfd, ok := d.Get("enable_bfd").(bool)
 		if !ok {
-			return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+			return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 		}
 		d.Set("enable_bfd", enable_bfd)
 		if conn.EnableBfd && len(conn.BgpBfdConfig) > 0 {
@@ -1230,13 +1230,13 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 
 	enableBfd, ok := d.Get("enable_bfd").(bool)
 	if !ok {
-		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
 	if enableBfd {
 		// get the new BGP BFD config
 		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
 		if !ok {
-			return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 		}
 		var bgpBfdConfigList []*goaviatrix.BgpBfdConfig
 		// Update the BGP BFD config if bfd is enabled and config has changed
@@ -1277,7 +1277,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
-			return diag.Errorf("could not update BGP BFD config: %v", err)
+			return fmt.Errorf("could not update BGP BFD config: %v", err)
 		}
 	} else {
 		if d.HasChange("enable_bfd") {
@@ -1288,7 +1288,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
-				return diag.Errorf("could not disable BGP BFD config: %v", err)
+				return fmt.Errorf("could not disable BGP BFD config: %v", err)
 			}
 		}
 	}
