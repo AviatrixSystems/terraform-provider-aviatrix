@@ -742,6 +742,11 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
+
+	if d.Get("connection_type").(string) != "bgp" && enableBFD {
+		enableBFD = false
+		return fmt.Errorf("BFD is only supported for BGP connection")
+	}
 	externalDeviceConn.EnableBfd = enableBFD
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
@@ -1104,6 +1109,9 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if !ok {
 			return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 		}
+		if conn.ConnectionType != "bgp" && enable_bfd {
+			enable_bfd = false
+		}
 		d.Set("enable_bfd", enable_bfd)
 		if enable_bfd && len(conn.BgpBfdConfig) > 0 {
 			var bgpBfdConfig []map[string]interface{}
@@ -1155,6 +1163,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 
 	gwName := d.Get("gw_name").(string)
 	connName := d.Get("connection_name").(string)
+	connType := d.Get("connection_type").(string)
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
 	if err != nil {
 		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
@@ -1354,6 +1363,10 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	enableBfd, ok := d.Get("enable_bfd").(bool)
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
+
+	if conn.ConnectionType != "bgp" && enableBfd {
+		return fmt.Errorf("cannot enable BFD for non-BGP connection")
 	}
 	if enableBfd {
 		// get the new BGP BFD config
