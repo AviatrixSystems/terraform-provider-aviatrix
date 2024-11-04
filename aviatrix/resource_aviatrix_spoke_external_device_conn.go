@@ -711,6 +711,9 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
+	if enableBFD && externalDeviceConn.ConnectionType != "bgp" {
+		return fmt.Errorf("BFD is only supported for BGP connection type")
+	}
 	externalDeviceConn.EnableBfd = enableBFD
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
@@ -1009,6 +1012,9 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		if !ok {
 			return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 		}
+		if enable_bfd && conn.ConnectionType != "bgp" {
+			return fmt.Errorf("BFD is only supported for BGP connection type")
+		}
 		d.Set("enable_bfd", enable_bfd)
 		if conn.EnableBfd && len(conn.BgpBfdConfig) > 0 {
 			var bgpBfdConfig []map[string]interface{}
@@ -1093,6 +1099,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 
 	gwName := d.Get("gw_name").(string)
 	connName := d.Get("connection_name").(string)
+	connType := d.Get("connection_type").(string)
 
 	if d.HasChange("enable_learned_cidrs_approval") {
 		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
@@ -1231,6 +1238,9 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	enableBfd, ok := d.Get("enable_bfd").(bool)
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
+	}
+	if enableBfd && connType != "bgp" {
+		return fmt.Errorf("BFD is only supported for BGP connection type")
 	}
 	if enableBfd {
 		// get the new BGP BFD config
