@@ -1500,12 +1500,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.EnableBgp {
 		d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
 		d.Set("bgp_polling_time", gw.BgpPollingTime)
-		d.Set("bgp_bdf_polling_time", gw.BgpBfdPollingTime)
+		d.Set("bgp_bfd_polling_time", gw.BgpBfdPollingTime)
 		d.Set("bgp_hold_time", gw.BgpHoldTime)
 	} else {
 		d.Set("learned_cidrs_approval_mode", "gateway")
 		d.Set("bgp_polling_time", 50)
-		d.Set("bgp_bdf_polling_time", defaultBgpBfdPollingTime)
+		d.Set("bgp_bfd_polling_time", defaultBgpBfdPollingTime)
 		d.Set("bgp_hold_time", 180)
 	}
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
