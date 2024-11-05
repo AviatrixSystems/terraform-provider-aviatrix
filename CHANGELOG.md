@@ -51,7 +51,7 @@
 
 
 ### Multi-Cloud Transit:
-1. Added new attribute ``bgp_bfd_polling_time`` to support the bgp bfd configuration in the following resources.
+1. Added new attribute ``bgp_neighbor_status_polling_time`` to support the bgp bfd configuration in the following resources.
     - **aviatrix_edge_csp**
     - **aviatrix_edge_equinix**
     - **aviatrix_edge_gateway_selfmanaged**

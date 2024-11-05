@@ -98,7 +98,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 						resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
-						resource.TestCheckResourceAttr(resourceName, "bgp_bfd_polling_time", "5"),
+						resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
 					),
 				},
 				{
@@ -233,16 +233,16 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
-	cloud_type           = 1
-	account_name         = aviatrix_account.test_acc_aws.account_name
-	gw_name              = "tfg-aws-%[1]s"
-	vpc_id               = "%[5]s"
-	vpc_reg              = "%[6]s"
-	gw_size              = "%[7]s"
-	subnet               = "%[8]s"
-	single_ip_snat       = false
-	bgp_polling_time     = 50
-	bgp_bfd_polling_time = 5
+	cloud_type                       = 1
+	account_name                     = aviatrix_account.test_acc_aws.account_name
+	gw_name                          = "tfg-aws-%[1]s"
+	vpc_id                           = "%[5]s"
+	vpc_reg                          = "%[6]s"
+	gw_size                          = "%[7]s"
+	subnet                           = "%[8]s"
+	single_ip_snat                   = false
+	bgp_polling_time                 = 50
+	bgp_neighbor_status_polling_time = 5
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"))
