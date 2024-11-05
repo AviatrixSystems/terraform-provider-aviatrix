@@ -41,6 +41,10 @@ func TestAccAviatrixSpokeExternalDeviceConn_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
 					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+					resource.TestCheckResourceAttr(resourceName, "enable_bfd", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_bfd.0.transmit_interval", "400"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_bfd.0.receive_interval", "400"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_bfd.0.multiplier", "5"),
 				),
 			},
 			{
@@ -80,6 +84,12 @@ resource "aviatrix_spoke_external_device_conn" "test" {
 	bgp_local_as_num  = "123"
 	bgp_remote_as_num = "345"
 	remote_gateway_ip = "172.12.13.14"
+	enable_bfd = true
+	bgp_bfd {
+		transmit_interval = 400
+		receive_interval = 400
+		multiplier = 5
+	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
