@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	defaultLearnedCidrApprovalMode = "gateway"
-	defaultBgpPollingTime          = 50
-	defaultBgpBfdPollingTime       = 5
-	defaultBgpHoldTime             = 180
+	defaultLearnedCidrApprovalMode      = "gateway"
+	defaultBgpPollingTime               = 50
+	defaultBgpNeighborStatusPollingTime = 5
+	defaultBgpHoldTime                  = 180
 )
 
 func resourceAviatrixTransitGateway() *schema.Resource {
@@ -297,12 +297,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 50),
 				Description:  "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
 			},
-			"bgp_bfd_polling_time": {
+			"bgp_neighbor_status_polling_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      defaultBgpBfdPollingTime,
+				Default:      defaultBgpNeighborStatusPollingTime,
 				ValidateFunc: validation.IntBetween(1, 10),
-				Description:  "BGP BFD route polling time for BGP Transit Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+				Description:  "BGP neighbor status polling time for BGP Transit Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
 			"prepend_as_path": {
 				Type:         schema.TypeList,
@@ -2991,14 +2991,14 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("bgp_bfd_polling_time") {
-		bgpBfdPollingTime := d.Get("bgp_bfd_polling_time").(int)
+	if d.HasChange("bgp_neighbor_status_polling_time") {
+		bgpBfdPollingTime := d.Get("bgp_neighbor_status_polling_time").(int)
 		gateway := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
 		err := client.SetBgpBfdPollingTime(gateway, bgpBfdPollingTime)
 		if err != nil {
-			return fmt.Errorf("could not update bgp polling time: %v", err)
+			return fmt.Errorf("could not update bgp neighbor status polling time: %v", err)
 		}
 	}
 

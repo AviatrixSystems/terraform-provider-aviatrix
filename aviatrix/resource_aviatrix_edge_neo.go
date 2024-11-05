@@ -552,10 +552,10 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if edgeNEO.BgpBfdPollingTime >= 1 && edgeNEO.BgpBfdPollingTime != defaultBgpBfdPollingTime {
+	if edgeNEO.BgpBfdPollingTime >= 1 && edgeNEO.BgpBfdPollingTime != defaultBgpNeighborStatusPollingTime {
 		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeNEO.BgpBfdPollingTime)
 		if err != nil {
-			return diag.Errorf("could not set bgp bfd polling time after Edge NEO creation: %v", err)
+			return diag.Errorf("could not set bgp neighbor status polling time after Edge NEO creation: %v", err)
 		}
 	}
 
