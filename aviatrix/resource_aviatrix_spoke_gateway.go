@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1525,8 +1524,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
-		d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) // AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
+		d.Set("vpc_reg", gw.VpcRegion)                    // AWS vpc_reg returns as vpc_region in rest api
 
 		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			d.Set("allocate_new_eip", true)
@@ -1536,7 +1535,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// gcp vpc_id returns as <vpc name>~-~<project name>
 		d.Set("vpc_id", gw.VpcID)
-		d.Set("vpc_reg", gw.GatewayZone) //gcp vpc_reg returns as gateway_zone in json
+		d.Set("vpc_reg", gw.GatewayZone) // gcp vpc_reg returns as gateway_zone in json
 
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
@@ -2056,7 +2055,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				"ha_subnet or ha_zone is set")
 		} else if deleteHaGw && haGwSize != "" {
 			return fmt.Errorf("ha_gw_size must be empty if spoke HA gateway is deleted")
-
 		}
 
 		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
@@ -2094,7 +2092,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		if newHaGwEnabled {
-			//New configuration to enable HA
+			// New configuration to enable HA
 			_, err := client.CreateSpokeHaGw(spokeHaGw)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
@@ -2113,13 +2111,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 			//}
 		} else if deleteHaGw {
-			//Ha configuration has been deleted
+			// Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)
 			}
 		} else if changeHaGw {
-			//HA subnet has been modified. Delete older HA GW,
+			// HA subnet has been modified. Delete older HA GW,
 			// and launch new HA GW in new subnet.
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
@@ -2486,95 +2484,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	primaryHasVersionChange := d.HasChanges("software_version", "image_version")
-	haHasVersionChange := haEnabled && d.HasChanges("ha_software_version", "ha_image_version") && manageHaGw
-	primaryHasImageVersionChange := d.HasChange("image_version")
-	haHasImageVersionChange := d.HasChange("ha_image_version") && manageHaGw
-	if primaryHasVersionChange || haHasVersionChange {
-		// To determine if this is an attempted software rollback, we check if
-		// old is a higher version than new. Or, the new version is the
-		// special string "previous".
-		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
-		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))
-		primaryRollbackSoftwareVersion := (err == nil && comparePrimary > 0) || newPrimarySoftwareVersion == "previous"
-
-		oldHaSoftwareVersion, newHaSoftwareVersion := d.GetChange("ha_software_version")
-		compareHa, err := goaviatrix.CompareSoftwareVersions(oldHaSoftwareVersion.(string), newHaSoftwareVersion.(string))
-		haRollbackSoftwareVersion := (err == nil && compareHa > 0) || newHaSoftwareVersion == "previous"
-
-		if primaryHasVersionChange && haHasVersionChange &&
-			!primaryHasImageVersionChange && !haHasImageVersionChange &&
-			!primaryRollbackSoftwareVersion && !haRollbackSoftwareVersion {
-			// Both Primary and HA have upgraded just their software_version
-			// so we can perform upgrade in parallel.
-			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha/primary pair in parallel", gateway.GwName)
-			swVersion := d.Get("software_version").(string)
-			imageVersion := d.Get("image_version").(string)
-			gw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName,
-				SoftwareVersion: swVersion,
-				ImageVersion:    imageVersion,
-			}
-			haSwVersion := d.Get("ha_software_version").(string)
-			haImageVersion := d.Get("ha_image_version").(string)
-			hagw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName + "-hagw",
-				SoftwareVersion: haSwVersion,
-				ImageVersion:    haImageVersion,
-			}
-			var wg sync.WaitGroup
-			wg.Add(2)
-			var primaryErr, haErr error
-			go func() {
-				primaryErr = client.UpgradeGateway(gw)
-				wg.Done()
-			}()
-			go func() {
-				haErr = client.UpgradeGateway(hagw)
-				wg.Done()
-			}()
-			wg.Wait()
-			if primaryErr != nil && haErr != nil {
-				return fmt.Errorf("could not upgrade primary and HA spoke gateway "+
-					"software_version=%s ha_software_version=%s image_version=%s ha_image_version=%s:"+
-					"\n primaryErr: %v\n haErr: %v",
-					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
-			} else if primaryErr != nil {
-				return fmt.Errorf("could not upgrade primary spoke gateway software_version=%s: %v", swVersion, primaryErr)
-			} else if haErr != nil {
-				return fmt.Errorf("could not upgrade HA spoke gateway ha_software_version=%s: %v", haSwVersion, haErr)
-			}
-		} else { // Only primary or only HA has changed, or image_version changed, or it is a software rollback
-			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha or primary in serial", gateway.GwName)
-			if primaryHasVersionChange {
-				swVersion := d.Get("software_version").(string)
-				imageVersion := d.Get("image_version").(string)
-				gw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName,
-					SoftwareVersion: swVersion,
-					ImageVersion:    imageVersion,
-				}
-				err := client.UpgradeGateway(gw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade spoke gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
-				}
-			}
-			if haHasVersionChange {
-				haSwVersion := d.Get("ha_software_version").(string)
-				haImageVersion := d.Get("ha_image_version").(string)
-				hagw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName + "-hagw",
-					SoftwareVersion: haSwVersion,
-					ImageVersion:    haImageVersion,
-				}
-				err := client.UpgradeGateway(hagw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange("spoke_bgp_manual_advertise_cidrs") {
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
@@ -2763,12 +2672,12 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Deleting Aviatrix Spoke Gateway: %#v", gateway)
 
-	//If HA is enabled, delete HA GW first.
+	// If HA is enabled, delete HA GW first.
 	if d.Get("manage_ha_gateway").(bool) {
 		haSubnet := d.Get("ha_subnet").(string)
 		haZone := d.Get("ha_zone").(string)
 		if haSubnet != "" || haZone != "" {
-			//Delete HA Gw too
+			// Delete HA Gw too
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
