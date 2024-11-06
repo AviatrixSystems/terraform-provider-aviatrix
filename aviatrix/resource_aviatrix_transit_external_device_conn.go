@@ -1364,8 +1364,8 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				bfdConfig := v.(map[string]interface{})
 				bgpBfdConfigList = *goaviatrix.CreateBgpBfdConfig(bfdConfig)
 			}
-		} else {
-			// set the bgp bfd config using the default values
+		} else if len(bgpBfdConfig) == 0 {
+			// set the bgp bfd config using the default values if bgd is enabled and no config is provided
 			bgpBfdConfigList = defaultBfdConfig
 		}
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
