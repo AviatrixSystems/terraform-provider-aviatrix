@@ -1347,39 +1347,33 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
-
 	if connType != "bgp" && enableBfd {
 		return fmt.Errorf("cannot enable BFD for non-BGP connection")
 	}
-	if enableBfd {
-		// get the new BGP BFD config
-		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
-		if !ok {
-			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-		}
-		var bgpBfdConfigList goaviatrix.BgpBfdConfig
-		// Update the BGP BFD config if bfd is enabled and config has changed
-		if len(bgpBfdConfig) > 0 && d.HasChange("bgp_bfd") {
-			for _, v := range bgpBfdConfig {
-				bfdConfig := v.(map[string]interface{})
-				bgpBfdConfigList = *goaviatrix.CreateBgpBfdConfig(bfdConfig)
+	// get the BGP BFD config
+	bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
+	if !ok {
+		return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+	}
+	if d.HasChange("enable_bfd") || d.HasChange("bgp_bfd") {
+		// bgp bfd is enabled
+		if enableBfd {
+			bgpBfd := goaviatrix.GetUpdatedBgpBfdConfig(bgpBfdConfig)
+			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+				GwName:         d.Get("gw_name").(string),
+				ConnectionName: d.Get("connection_name").(string),
+				EnableBfd:      d.Get("enable_bfd").(bool),
+				BgpBfdConfig:   &bgpBfd,
 			}
-		} else if len(bgpBfdConfig) == 0 {
-			// set the bgp bfd config using the default values if bgd is enabled and no config is provided
-			bgpBfdConfigList = defaultBfdConfig
-		}
-		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-			GwName:         d.Get("gw_name").(string),
-			ConnectionName: d.Get("connection_name").(string),
-			EnableBfd:      d.Get("enable_bfd").(bool),
-			BgpBfdConfig:   &bgpBfdConfigList,
-		}
-		err := client.EditConnectionBgpBfd(externalDeviceConn)
-		if err != nil {
-			return fmt.Errorf("could not update BGP BFD config: %v", err)
-		}
-	} else {
-		if d.HasChange("enable_bfd") {
+			err := client.EditConnectionBgpBfd(externalDeviceConn)
+			if err != nil {
+				return fmt.Errorf("could not update BGP BFD config: %v", err)
+			}
+		} else {
+			// bgp bfd is disabled
+			if len(bgpBfdConfig) > 0 {
+				return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
+			}
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),

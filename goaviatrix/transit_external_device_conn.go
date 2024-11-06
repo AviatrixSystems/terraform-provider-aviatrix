@@ -15,6 +15,12 @@ const (
 	defaultBfdMultiplier       = 3
 )
 
+var defaultBfdConfig = BgpBfdConfig{
+	TransmitInterval: defaultBfdTransmitInterval,
+	ReceiveInterval:  defaultBfdReceiveInterval,
+	Multiplier:       defaultBfdMultiplier,
+}
+
 type ExternalDeviceConn struct {
 	Action                 string `form:"action,omitempty"`
 	CID                    string `form:"CID,omitempty"`
@@ -395,6 +401,21 @@ func CreateBgpBfdConfig(bfd map[string]interface{}) *BgpBfdConfig {
 		Multiplier:       multiplier,
 	}
 	return bfd2
+}
+
+func GetUpdatedBgpBfdConfig(bgpBfdConfig []interface{}) BgpBfdConfig {
+	var bgpBfd BgpBfdConfig
+	if len(bgpBfdConfig) > 0 {
+		// get the user provided bgp bfd config
+		for _, v := range bgpBfdConfig {
+			bfdConfig := v.(map[string]interface{})
+			bgpBfd = *CreateBgpBfdConfig(bfdConfig)
+		}
+	} else if len(bgpBfdConfig) == 0 {
+		// use default bgp bfd config
+		bgpBfd = defaultBfdConfig
+	}
+	return bgpBfd
 }
 
 func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *ExternalDeviceConn, prependASPath []string) error {
