@@ -8,7 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//ExternalDeviceConn: a simple struct to hold external device connection details
+// ExternalDeviceConn: a simple struct to hold external device connection details
+const (
+	defaultBfdReceiveInterval  = 300
+	defaultBfdTransmitInterval = 300
+	defaultBfdMultiplier       = 3
+)
 
 type ExternalDeviceConn struct {
 	Action                 string `form:"action,omitempty"`
@@ -54,14 +59,14 @@ type ExternalDeviceConn struct {
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
-	BgpMd5Key              string          `form:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string          `form:"backup_bgp_md5_key,omitempty"`
-	AuthType               string          `form:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool            `form:"edge_underlay,omitempty"`
-	RemoteCloudType        string          `form:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool            `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig           []*BgpBfdConfig `form:"bgp_bfd,omitempty"`
-	EnableBfd              bool            `form:"enable_bfd,omitempty"`
+	BgpMd5Key              string        `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string        `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string        `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool          `form:"edge_underlay,omitempty"`
+	RemoteCloudType        string        `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool          `form:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig           *BgpBfdConfig `form:"bgp_bfd,omitempty"`
+	EnableBfd              bool          `form:"enable_bfd,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -366,6 +371,32 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 	return false
 }
 
+func CreateBgpBfdConfig(bfd map[string]interface{}) *BgpBfdConfig {
+	// Set default values
+	transmitInterval := defaultBfdTransmitInterval
+	receiveInterval := defaultBfdReceiveInterval
+	multiplier := defaultBfdMultiplier
+
+	// Override defaults if provided in bfd1
+	if value, ok := bfd["transmit_interval"].(int); ok {
+		transmitInterval = value
+	}
+	if value, ok := bfd["receive_interval"].(int); ok {
+		receiveInterval = value
+	}
+	if value, ok := bfd["multiplier"].(int); ok {
+		multiplier = value
+	}
+
+	// Create and return BgpBfdConfig instance
+	bfd2 := &BgpBfdConfig{
+		TransmitInterval: transmitInterval,
+		ReceiveInterval:  receiveInterval,
+		Multiplier:       multiplier,
+	}
+	return bfd2
+}
+
 func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *ExternalDeviceConn, prependASPath []string) error {
 	action := "edit_transit_connection_as_path_prepend"
 	return c.PostAPI(action, struct {
@@ -393,9 +424,9 @@ func (c *Client) EditConnectionBgpBfd(externalDeviceConn *ExternalDeviceConn) er
 		"connection_bgp_bfd": externalDeviceConn.EnableBfd,
 	}
 	if externalDeviceConn.EnableBfd {
-		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig[0].ReceiveInterval
-		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig[0].TransmitInterval
-		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig[0].Multiplier
+		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig.ReceiveInterval
+		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig.TransmitInterval
+		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig.Multiplier
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }
