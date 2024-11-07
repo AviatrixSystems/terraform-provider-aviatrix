@@ -1,0 +1,40 @@
+name: publish-latest-provider
+
+on:
+    pull_request:
+    push:
+        paths-ignore:
+        - 'docs/**'
+        - 'test-infra/**'
+        branches:
+        - main
+    workflow_dispatch:
+
+jobs:
+    build-and-publish-provider:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Set up Go 1.x
+          uses: actions/setup-go@v2
+          with:
+            go-version: ^1.23
+
+        - name: Get dependencies
+          run: go mod download
+
+        - name: Build
+          run: go build -ldflags "-X github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix.Version=99.0.0" -v .
+
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
+          with:
+            aws-region: us-west-1
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_CORP }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_CORP}}
+
+        - name: Upload provider to S3
+          run: |
+            aws s3 cp terraform-provider-aviatrix s3://aviatrix-terraform-provider/terraform-provider-aviatrix_v99.0.0
