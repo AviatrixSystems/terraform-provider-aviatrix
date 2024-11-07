@@ -33,7 +33,7 @@ type EdgeEquinix struct {
 	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
 	EnablePreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
 	BgpPollingTime                     int      `json:"bgp_polling_time,omitempty"`
-	BgpBfdPollingTime                  int      `json:"bgp_bfd_polling_time,omitempty"`
+	BgpBfdPollingTime                  int      `json:"bgp_neighbor_status_polling_time,omitempty"`
 	BgpHoldTime                        int      `json:"bgp_hold_time,omitempty"`
 	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing,omitempty"`
 	EnableJumboFrame                   bool     `json:"jumbo_frame,omitempty"`
@@ -103,7 +103,7 @@ type EdgeEquinixResp struct {
 	SpokeBgpManualAdvertisedCidrs      []string     `json:"bgp_manual_spoke_advertise_cidrs"`
 	EnablePreserveAsPath               bool         `json:"preserve_as_path"`
 	BgpPollingTime                     int          `json:"bgp_polling_time"`
-	BgpBfdPollingTime                  int          `json:"bgp_bfd_polling_time"`
+	BgpBfdPollingTime                  int          `json:"bgp_neighbor_status_polling_time"`
 	BgpHoldTime                        int          `json:"bgp_hold_time"`
 	EnableEdgeTransitiveRouting        bool         `json:"edge_transitive_routing"`
 	EnableJumboFrame                   bool         `json:"jumbo_frame"`

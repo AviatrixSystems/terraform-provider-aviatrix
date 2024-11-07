@@ -41,7 +41,7 @@ func TestAccAviatrixEdgeNEO_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
-					resource.TestCheckResourceAttr(resourceName, "bgp_bfd_polling_time", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
 				),
 			},
 			{
@@ -66,16 +66,16 @@ resource "aviatrix_edge_neo_device_onboarding" "test" {
 	hardware_model = "%s"
 }
 resource "aviatrix_edge_neo" "test" {
-	account_name               = aviatrix_account.test.account_name
-	gw_name                    = "%s"
-	site_id                    = "%s"
-	device_id                  = aviatrix_edge_neo_device_onboarding.test.device_id
-	gw_size                    = "small"
-	bgp_polling_time           = 50
-	bgp_bfd_polling_time       = 5
-	management_interface_names = ["eth2"]
-	lan_interface_names        = ["eth1"]
-	wan_interface_names        = ["eth0"]
+	account_name                     = aviatrix_account.test.account_name
+	gw_name                          = "%s"
+	site_id                          = "%s"
+	device_id                        = aviatrix_edge_neo_device_onboarding.test.device_id
+	gw_size                          = "small"
+	bgp_polling_time                 = 50
+	bgp_neighbor_status_polling_time = 5
+	management_interface_names       = ["eth2"]
+	lan_interface_names              = ["eth1"]
+	wan_interface_names              = ["eth0"]
 
 	interfaces {
 		name          = "eth0"
