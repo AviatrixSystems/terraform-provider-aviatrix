@@ -1414,10 +1414,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if val, ok := d.GetOk("bgp_bfd_polling_time"); ok {
+	if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
 		err := client.SetBgpBfdPollingTime(gateway, val.(int))
 		if err != nil {
-			return fmt.Errorf("could not set bgp bfd polling time: %v", err)
+			return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
 		}
 	}
 
@@ -1649,7 +1649,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("connected_transit", gw.ConnectedTransit == "yes")
 	d.Set("bgp_hold_time", gw.BgpHoldTime)
 	d.Set("bgp_polling_time", gw.BgpPollingTime)
-	d.Set("bgp_bfd_polling_time", gw.BgpBfdPollingTime)
+	d.Set("bgp_neighbor_status_polling_time", gw.BgpBfdPollingTime)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
 	d.Set("rx_queue_size", gw.RxQueueSize)
