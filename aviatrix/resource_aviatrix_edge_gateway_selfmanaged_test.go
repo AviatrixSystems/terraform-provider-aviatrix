@@ -40,7 +40,7 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
-					resource.TestCheckResourceAttr(resourceName, "bgp_bfd_polling_time", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
 				),
 			},
 			{
@@ -56,12 +56,12 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 func testAccEdgeGatewaySelfmanagedBasic(gwName, siteId, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_gateway_selfmanaged" "test" {
-	gw_name                = "%s"
-	site_id                = "%s"
-	ztp_file_type          = "iso"
-	ztp_file_download_path = "%s"
-	bgp_polling_time       = 50
-	bgp_bfd_polling_time   = 5
+	gw_name                            = "%s"
+	site_id                            = "%s"
+	ztp_file_type                      = "iso"
+	ztp_file_download_path             = "%s"
+	bgp_polling_time                   = 50
+	bgp_neighbor_status_polling_time   = 5
 
 	interfaces {
 		name          = "eth0"

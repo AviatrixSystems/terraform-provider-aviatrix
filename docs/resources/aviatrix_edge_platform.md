@@ -75,6 +75,30 @@ The following arguments are supported:
     * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
     * `tag` - (Optional) Tag.
 
+    If you are deploying Edge Spoke, interface mapping is required. Please use the following mapping:
+
+    Dell:
+    ```
+    WAN: eth3
+    LAN: eth2 
+    MGMT: eth0
+    ```
+
+    HPE:
+    ```
+    WAN: eth1
+    LAN: eth0
+    MGMT: eth5
+    ```
+
+    Advantech:
+    ```
+    WAN: eth2
+    MGMT: eth2
+    LAN: eth4
+    2WAN: eth2, eth3    
+    ```
+
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
 * `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
@@ -92,7 +116,7 @@ The following arguments are supported:
 * `spoke_bgp_manual_advertise_cidrs` - (Optional) Set of intended CIDRs to be advertised to external BGP router. Example: ["10.1.0.0/116", "10.2.0.0/16"].
 * `enable_preserve_as_path` - (Optional) Switch to enable preserve as_path when advertising manual summary CIDRs. Valid values: true, false. Default value: false.
 * `bgp_polling_time` - (Optional) BGP route polling time in seconds. Valid values are between 10 and 50. Default value: 50.
-* `bgp_bfd_polling_time` - (Optional) BGP BFD route polling time in seconds. Valid values are between 1 and 10. Default value: 5.
+* `bgp_neighbor_status_polling_time` - (Optional) BGP neighbor status polling time in seconds. Valid values are between 1 and 10. Default value: 5.
 * `bgp_hold_time` - (Optional) BGP hold time in seconds. Valid values are between 12 and 360. Default value: 180.
 * `enable_edge_transitive_routing` - (Optional) Switch to enable Edge transitive routing. Valid values: true, false. Default value: false.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.

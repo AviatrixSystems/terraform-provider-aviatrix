@@ -79,7 +79,7 @@ type SpokeGatewayAdvancedConfigResp struct {
 
 type SpokeGatewayAdvancedConfigRespResult struct {
 	BgpPollingTime                    int                       `json:"bgp_polling_time"`
-	BgpBfdPollingTime                 int                       `json:"bgp_bfd_polling_time,omitempty"`
+	BgpBfdPollingTime                 int                       `json:"bgp_neighbor_status_polling_time,omitempty"`
 	PrependASPath                     string                    `json:"bgp_prepend_as_path"`
 	LocalASNumber                     string                    `json:"local_asn_num"`
 	BgpEcmpEnabled                    string                    `json:"bgp_ecmp"`
@@ -364,12 +364,12 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime i
 }
 
 func (c *Client) SetBgpBfdPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime int) error {
-	action := "change_bgp_bfd_polling_time"
+	action := "change_bgp_neighbor_status_polling_time"
 	return c.PostAPI(action, struct {
 		CID         string `form:"CID"`
 		Action      string `form:"action"`
 		GatewayName string `form:"gateway_name"`
-		PollingTime int    `form:"bgp_bfd_polling_time"`
+		PollingTime int    `form:"bgp_neighbor_status_polling_time"`
 	}{
 		CID:         c.CID,
 		Action:      action,
