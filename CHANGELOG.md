@@ -16,6 +16,19 @@
 1. Added proxy profile support to **aviatrix_edge_platform_device_onboarding**, enabling the specification of a proxy for onboarding Aviatrix Edge devices.
 2. Updated documentation references by consolidating the legacy terms ``Cloudn`` and ``Multi-Cloud Transit`` under a single ``Edge`` subcategory.
 3. Added support for Kubernetes Smart Groups, updating the **aviatrix_smart_group** resource to allow Smart Groups to be created from artifacts within Kubernetes clusters.
+4. Added new attribute ``bgp_neighbor_status_polling_time`` to support the bgp bfd configuration in the following resources.
+    - **aviatrix_edge_csp**
+    - **aviatrix_edge_equinix**
+    - **aviatrix_edge_gateway_selfmanaged**
+    - **avaitrix_edge_platform**
+    - **aviatrix_edge_zededa**
+    - **aviatrix_spoke_gateway**
+    - **aviatrix_edge_spoke_gateway**
+    - **aviatrix_transit_gateway**
+5. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources
+    - **aviatrix_transit_external_device_conn**
+    - **aviatrix_edge_spoke_external_device_conn**
+    - **aviatrix_spoke_external_device_conn**
 
 #### Provider:
 1. Added support for the Terraform provider to properly set the user-agent when making requests.
@@ -51,19 +64,7 @@
 
 
 ### Multi-Cloud Transit:
-1. Added new attribute ``bgp_neighbor_status_polling_time`` to support the bgp bfd configuration in the following resources.
-    - **aviatrix_edge_csp**
-    - **aviatrix_edge_equinix**
-    - **aviatrix_edge_gateway_selfmanaged**
-    - **avaitrix_edge_platform**
-    - **aviatrix_edge_zededa**
-    - **aviatrix_spoke_gateway**
-    - **aviatrix_edge_spoke_gateway**
-    - **aviatrix_transit_gateway**
-2. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources
-    - **aviatrix_transit_external_device_conn**
-    - **aviatrix_edge_spoke_external_device_conn**
-3. Add new attribute ``dns_server_ip`` and ``secondary_dns_server_ip`` in **aviatrix_edge_gateway_selfmanaged_ha** resource.
+1. Add new attribute ``dns_server_ip`` and ``secondary_dns_server_ip`` in **aviatrix_edge_gateway_selfmanaged_ha** resource.
 
 
 ### Deprecations:
