@@ -9,12 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAviatrixEdgeMegaport() *schema.Resource {
@@ -1041,7 +1039,6 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
-
 	accountName := d.Get("account_name").(string)
 	gwName := d.Get("gw_name").(string)
 	siteId := d.Get("site_id").(string)
@@ -1053,7 +1050,6 @@ func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	fileName := ztpFileDownloadPath + "/" + gwName + "-" + siteId + "-cloud-init.txt"
-
 	err = os.Remove(fileName)
 	if err != nil {
 		log.Printf("[WARN] could not remove the ztp file: %v", err)
