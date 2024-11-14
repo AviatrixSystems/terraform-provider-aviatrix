@@ -53,7 +53,7 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return old != ""
 				},
-				Description: "The location where the ZTP file will be stored.",
+				Description: "The location where the ZTP file will be stored locally.",
 			},
 			"management_egress_ip_prefix_list": {
 				Type:        schema.TypeSet,
@@ -798,6 +798,19 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
+	// set interface mapping for megaport
+	var interfaceMapping []map[string]interface{}
+	for _, interfaceMap := range edgeMegaportResp.InterfaceMapping {
+		interfaceMapping1 := make(map[string]interface{})
+		interfaceMapping1["name"] = interfaceMap.Name
+		interfaceMapping1["type"] = interfaceMap.Type
+		interfaceMapping1["index"] = interfaceMap.Index
+		interfaceMapping = append(interfaceMapping, interfaceMapping1)
+	}
+	if err = d.Set("interface_mapping", interfaceMapping); err != nil {
+		return diag.Errorf("failed to set interface mapping: %s\n", err)
+	}
+
 	d.Set("dns_profile_name", edgeMegaportResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeMegaportResp.EnableNat == "yes" && edgeMegaportResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeMegaportResp.EnableAutoAdvertiseLanCidrs)
@@ -1000,6 +1013,11 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if d.HasChange("interface_mapping") {
+		// interface mapping is configured only during the creation of the gateway. Any updates to the interface mapping are not supported
+		return diag.Errorf("interface mapping cannot be updated after the Edge Megaport is created")
+	}
+
 	if d.HasChange("enable_single_ip_snat") {
 		gatewayForGatewayFunctions.GatewayName = edgeMegaport.GwName
 
@@ -1014,7 +1032,6 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 				return diag.Errorf("failed to disable single IP SNAT during Edge Megaport update: %s", err)
 			}
 		}
-
 	}
 
 	d.Partial(false)
