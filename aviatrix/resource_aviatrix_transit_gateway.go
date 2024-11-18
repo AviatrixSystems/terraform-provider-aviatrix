@@ -925,7 +925,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 		d.SetId(gateway.GwName)
-		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
+		// defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 		// err = client.LaunchTransitVpc(gateway)
 		// if err != nil {
 		// 	return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
@@ -976,6 +976,38 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			// if err != nil {
 			// 	return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			// }
+		}
+		if val, ok := d.GetOk("bgp_polling_time"); ok {
+			err := client.SetBgpPollingTime(gateway, val.(int))
+			if err != nil {
+				return fmt.Errorf("could not set bgp polling time: %v", err)
+			}
+		}
+
+		// if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
+		// 	err := client.SetBgpBfdPollingTime(gateway, val.(int))
+		// 	if err != nil {
+		// 		return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+		// 	}
+		// }
+
+		// if val, ok := d.GetOk("local_as_number"); ok {
+		// 	err := client.SetLocalASNumber(gateway, val.(string))
+		// 	if err != nil {
+		// 		return fmt.Errorf("could not set local_as_number: %v", err)
+		// 	}
+		// }
+
+		if val, ok := d.GetOk("prepend_as_path"); ok {
+			var prependASPath []string
+			slice := val.([]interface{})
+			for _, v := range slice {
+				prependASPath = append(prependASPath, v.(string))
+			}
+			err := client.SetPrependASPath(gateway, prependASPath)
+			if err != nil {
+				return fmt.Errorf("could not set prepend_as_path: %v", err)
+			}
 		}
 	} else {
 		gateway := &goaviatrix.TransitVpc{
@@ -1949,24 +1981,35 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
-			d.Set("ha_device_id", "")
 			d.Set("ha_peer_backup_port", "")
 			d.Set("ha_connection_type", "")
 			d.Set("ha_interfaces", nil)
 			return nil
 		}
-		d.Set("ha_peer_backup_port", gw.HaGw.PeerBackupPort)
-		d.Set("ha_connection_type", gw.HaGw.ConnectionType)
+		haGwName := gw.HaGw.GwName
+		backupLinkInfo := gw.BackupLinkInfo
+		// print the backup link info
+		log.Printf("[TRACE] reading backup link info for gateway %s: %#v", d.Get("gw_name").(string), backupLinkInfo)
+		if gw.HaGw.GwName == "" && backupLinkInfo != nil {
+			backupLink, ok := backupLinkInfo[haGwName]
+			if !ok {
+				return fmt.Errorf("BackupLinkInfo does not contain HA Gateway: %s", haGwName)
+			}
+			peerBackupPort := backupLink.PeerIntfName
+			d.Set("ha_peer_backup_port", peerBackupPort)
+			connectionTypePrivate := backupLink.ConnectionTypePublic
+			if connectionTypePrivate {
+				d.Set("ha_connection_type", "private")
+			} else {
+				d.Set("ha_connection_type", "public")
+			}
+		}
 		// set interfaces
 		if len(gw.HaGw.Interfaces) != 0 {
 			ha_interfaces := setInterfaceDetails(gw.HaGw.Interfaces)
 			if err = d.Set("ha_interfaces", ha_interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %v", err)
 			}
-		}
-		// set device id for AEP edge transit gateway
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EDGENEO) {
-			d.Set("ha_device_id", gw.HaGw.DeviceID)
 		}
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -2895,11 +2938,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating gw_size is not supported for edge transit gateway")
 		}
 
-		// // update edge transit gateway HA interfaces
-		// enableEdgeHa, ok := d.Get("enable_edge_ha").(bool)
-		// if !ok {
-		// 	return fmt.Errorf("expected enable_edge_ha to be a boolean")
-		// }
+		// TODO: update ha_interfaces for ha EAT gateway
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -3760,9 +3799,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	cloudType := d.Get("cloud_type").(int)
 
 	gateway := &goaviatrix.Gateway{
-		CloudType: d.Get("cloud_type").(int),
+		CloudType: cloudType,
 		GwName:    d.Get("gw_name").(string),
 	}
 
@@ -3810,44 +3850,78 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		}
 	}
 
-	//If HA is enabled, delete HA GW first.
-	haSubnet := d.Get("ha_subnet").(string)
-	haZone := d.Get("ha_zone").(string)
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		// delete the HA EAT GW first before deleting the primary GW
+		ha_interfaces, ok := d.Get("ha_interfaces").([]interface{})
+		if ok && len(ha_interfaces) > 0 {
+			gateway.GwName += "-hagw"
+			try, maxTries, backoff := 0, 2, 500*time.Millisecond
+			for {
+				try++
+				err := client.DeleteEdgeGateway(gateway)
+				if err != nil {
+					if strings.Contains(err.Error(), "not found") {
+						break
+					}
+					if !strings.Contains(err.Error(), "EOF") {
+						return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+					}
+				} else {
+					break
+				}
+				if try == maxTries {
+					return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+				}
+				time.Sleep(backoff)
+				// Double the backoff time after each failed try
+				backoff *= 2
+			}
+		}
+		// delete the primary EAT GW
+		gateway.GwName = d.Get("gw_name").(string)
+		err := client.DeleteEdgeGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
+		}
+	} else {
+		//If HA is enabled, delete HA GW first.
+		haSubnet := d.Get("ha_subnet").(string)
+		haZone := d.Get("ha_zone").(string)
 
-	if haSubnet != "" || haZone != "" {
-		gateway.GwName += "-hagw"
+		if haSubnet != "" || haZone != "" {
+			gateway.GwName += "-hagw"
 
-		try, maxTries, backoff := 0, 2, 500*time.Millisecond
+			try, maxTries, backoff := 0, 2, 500*time.Millisecond
 
-		for {
-			try++
-			err := client.DeleteGateway(gateway)
-			if err != nil {
-				if strings.Contains(err.Error(), "not found") {
+			for {
+				try++
+				err := client.DeleteGateway(gateway)
+				if err != nil {
+					if strings.Contains(err.Error(), "not found") {
+						break
+					}
+
+					if !strings.Contains(err.Error(), "EOF") {
+						return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %s", err)
+					}
+				} else {
 					break
 				}
 
-				if !strings.Contains(err.Error(), "EOF") {
-					return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+				if try == maxTries {
+					return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %s", err)
 				}
-			} else {
-				break
+				time.Sleep(backoff)
+				// Double the backoff time after each failed try
+				backoff *= 2
 			}
-
-			if try == maxTries {
-				return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
-			}
-			time.Sleep(backoff)
-			// Double the backoff time after each failed try
-			backoff *= 2
 		}
-	}
 
-	gateway.GwName = d.Get("gw_name").(string)
-
-	err := client.DeleteGateway(gateway)
-	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Transit Gateway: %s", err)
+		gateway.GwName = d.Get("gw_name").(string)
+		err := client.DeleteGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
+		}
 	}
 
 	return nil
