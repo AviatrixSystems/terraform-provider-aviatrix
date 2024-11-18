@@ -856,6 +856,30 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Description: "Connection type for the HA edge transit gateway.",
 			},
+			"eip_map": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"interface_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the network interface (e.g., eth1).",
+						},
+						"private_ip": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The private IP address associated with the interface.",
+						},
+						"public_ip": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The public IP address associated with the interface.",
+						},
+					},
+				},
+				Description: "A list of mappings between interface names and their associated private and public IPs.",
+			},
 		},
 	}
 }
@@ -977,6 +1001,25 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			// 	return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			// }
 		}
+
+		// eip map is updated after the inter
+		eipMap, ok := d.Get("eip_map").([]interface{})
+		if !ok {
+			return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
+		}
+		if len(eipMap) > 0 {
+			eipMapList, err := getEipMapDetails(eipMap)
+			if err != nil {
+				return fmt.Errorf("failed to get the eip map details: %v", err)
+			}
+			gateway.EipMap = eipMapList
+			// update EIP map
+			// err = client.UpdateEdgeGateway(gateway)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to update edge gateway: %s", err)
+			// }
+		}
+
 		if val, ok := d.GetOk("bgp_polling_time"); ok {
 			err := client.SetBgpPollingTime(gateway, val.(int))
 			if err != nil {
@@ -1960,6 +2003,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interface mapping into state: %v", err)
 			}
 		}
+		// TODO: set eip map
+		if gw.EipMap != nil {
+			log.Printf("[TRACE] eip map: %#v", gw.EipMap)
+			eipMap := setEipMapDetails(gw.EipMap)
+			if err = d.Set("eip_map", eipMap); err != nil {
+				return fmt.Errorf("could not set eip map into state: %v", err)
+			}
+		}
 		// set the ha_attributes to empty if ha_interfaces is not provided for edge
 		if len(gw.HaGw.Interfaces) == 0 {
 			d.Set("ha_availability_domain", "")
@@ -1986,10 +2037,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_interfaces", nil)
 			return nil
 		}
+		// set the backup link info details
 		haGwName := gw.HaGw.GwName
 		backupLinkInfo := gw.BackupLinkInfo
-		// print the backup link info
-		log.Printf("[TRACE] reading backup link info for gateway %s: %#v", d.Get("gw_name").(string), backupLinkInfo)
 		if gw.HaGw.GwName == "" && backupLinkInfo != nil {
 			backupLink, ok := backupLinkInfo[haGwName]
 			if !ok {
@@ -2004,7 +2054,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				d.Set("ha_connection_type", "public")
 			}
 		}
-		// set interfaces
+		// set ha interfaces
 		if len(gw.HaGw.Interfaces) != 0 {
 			ha_interfaces := setInterfaceDetails(gw.HaGw.Interfaces)
 			if err = d.Set("ha_interfaces", ha_interfaces); err != nil {
@@ -2938,7 +2988,30 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating gw_size is not supported for edge transit gateway")
 		}
 
+		// update eip mapping for edge transit gateway
+		if d.HasChange("eip_map") {
+			eipMap, ok := d.Get("eip_map").([]interface{})
+			if !ok {
+				return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
+			}
+			if len(eipMap) > 0 {
+				eipMapList, err := getEipMapDetails(eipMap)
+				if err != nil {
+					return fmt.Errorf("failed to get the eip map details: %v", err)
+				}
+				gateway := &goaviatrix.TransitVpc{
+					GwName: d.Get("gw_name").(string),
+					EipMap: eipMapList,
+				}
+				err = client.UpdateEdgeGateway(gateway)
+				if err != nil {
+					return fmt.Errorf("failed to update edge gateway: %s", err)
+				}
+			}
+		}
+
 		// TODO: update ha_interfaces for ha EAT gateway
+
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -3986,6 +4059,44 @@ func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) 
 	return interfaceName, nil
 }
 
+func getEipMapDetails(eipMap []interface{}) (string, error) {
+	// Create a map to structure the EIP data
+	eipMapStructured := make(map[string][]goaviatrix.EipMap)
+
+	// Populate the structured map
+	for _, item := range eipMap {
+		entry, ok := item.(map[string]interface{})
+		if !ok {
+			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", item)
+		}
+
+		// Extract required fields
+		interfaceName, ok1 := entry["interface_name"].(string)
+		privateIP, ok2 := entry["private_ip"].(string)
+		publicIP, ok3 := entry["public_ip"].(string)
+
+		if !ok1 || !ok2 || !ok3 {
+			return "", fmt.Errorf("missing required fields: interface_name, private_ip, or public_ip")
+		}
+
+		// Append the EIP entry to the corresponding interface
+		eipEntry := goaviatrix.EipMap{
+			PrivateIP: privateIP,
+			PublicIP:  publicIP,
+		}
+		eipMapStructured[interfaceName] = append(eipMapStructured[interfaceName], eipEntry)
+	}
+
+	// Marshal the structured map to JSON
+	eipMapJson, err := json.Marshal(eipMapStructured)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
+	}
+
+	// Convert to a string with additional quotes for Terraform compatibility
+	return string(eipMapJson), nil
+}
+
 // get the interface details from the interface config
 func getInterfaceDetails(interfaces []interface{}) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
@@ -4145,4 +4256,20 @@ func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) 
 		interfaceMappingList = append(interfaceMappingList, interfaceMap)
 	}
 	return interfaceMappingList
+}
+
+func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap) []map[string]interface{} {
+	eipMapList := make([]map[string]interface{}, 0)
+
+	for interfaceName, eipList := range eipMap {
+		for _, eip := range eipList {
+			eipMap := map[string]interface{}{
+				"interface_name": interfaceName,
+				"private_ip":     eip.PrivateIP,
+				"public_ip":      eip.PublicIP,
+			}
+			eipMapList = append(eipMapList, eipMap)
+		}
+	}
+	return eipMapList
 }
