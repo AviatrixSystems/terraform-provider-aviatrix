@@ -64,6 +64,7 @@ type TransitVpc struct {
 	SiteID                       string   `form:"site_id,omitempty"`
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
+	EipMap                       string   `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -142,6 +143,11 @@ type EdgeTransitInterface struct {
 	IpAddress      string   `json:"ipaddr,omitempty"`
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+}
+
+type EipMap struct {
+	PrivateIP string `json:"private_ip"`
+	PublicIP  string `json:"public_ip"`
 }
 
 type TransitGatewayBgpLanIpInfoResp struct {
@@ -238,9 +244,9 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 		form["interfaces"] = gateway.Interfaces
 	}
 
-	// if gateway.EipMap != "" {
-	// 	form["eip_map"] = gateway.EipMap
-	// }
+	if gateway.EipMap != "" {
+		form["eip_map"] = gateway.EipMap
+	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
