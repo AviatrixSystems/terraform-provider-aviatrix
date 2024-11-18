@@ -2003,7 +2003,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interface mapping into state: %v", err)
 			}
 		}
-		// TODO: set eip map
+		// set eip map
 		if gw.EipMap != nil {
 			log.Printf("[TRACE] eip map: %#v", gw.EipMap)
 			eipMap := setEipMapDetails(gw.EipMap)
@@ -3010,8 +3010,25 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		// TODO: update ha_interfaces for ha EAT gateway
-
+		// Update ha interfaces for EAT gateway
+		if d.HasChange("ha_interfaces") {
+			haInterfaceList, ok := d.Get("ha_interfaces").([]interface{})
+			if !ok {
+				return fmt.Errorf("invalid ha_interfaces for EAT HA gateway")
+			}
+			haInterfaces, err := getInterfaceDetails(haInterfaceList)
+			if err != nil {
+				return fmt.Errorf("failed to get interface details: %s", err)
+			}
+			gateway := &goaviatrix.TransitVpc{
+				GwName:     d.Get("gw_name").(string) + "-hagw",
+				Interfaces: haInterfaces,
+			}
+			err = client.UpdateEdgeGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update edge gateway: %s", err)
+			}
+		}
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
