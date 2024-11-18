@@ -244,6 +244,16 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
+func (c *Client) DeleteEdgeGateway(gateway *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "delete_multicloud_gateway",
+		"gateway_name": gateway.GwName,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
 func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
