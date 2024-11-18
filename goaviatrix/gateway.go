@@ -223,6 +223,7 @@ type Gateway struct {
 	DeviceID                        string                              `json:"device_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
+	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
 }
 
 type HaGateway struct {
@@ -244,9 +245,13 @@ type HaGateway struct {
 	SoftwareVersion     string                 `json:"gw_software_version"`
 	HaBgpLanInterfaces  []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
 	DeviceID            string                 `json:"device_id,omitempty"`
-	PeerBackupPort      string                 `json:"peer_backup_port,omitempty"`
-	ConnectionType      string                 `json:"connection_type,omitempty"`
 	Interfaces          []EdgeTransitInterface `json:"interfaces,omitempty"`
+}
+
+type BackupLinkInfo struct {
+	ConnectionTypePublic bool   `json:"connection_type_public,omitempty"`
+	PeerIntfName         string `json:"peer_intf_name,omitempty"`
+	SelfIntfName         string `json:"self_intf_name,omitempty"`
 }
 
 type PolicyRule struct {
