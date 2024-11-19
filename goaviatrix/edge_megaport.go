@@ -54,8 +54,8 @@ type EdgeMegaport struct {
 }
 
 type EdgeMegaportInterface struct {
-	IfName        string              `json:"ifname"`
 	Type          string              `json:"type"`
+	Index         int                 `json:"index"`
 	PublicIp      string              `json:"public_ip"`
 	Tag           string              `json:"tag"`
 	Dhcp          bool                `json:"dhcp"`
@@ -97,35 +97,50 @@ type EdgeMegaportResp struct {
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string              `json:"prepend_as_path"`
-	IncludeCidrList                    []string            `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool                `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string            `json:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string            `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool                `json:"preserve_as_path"`
-	BgpPollingTime                     int                 `json:"bgp_polling_time"`
-	BgpBfdPollingTime                  int                 `json:"bgp_neighbor_status_polling_time"`
-	BgpHoldTime                        int                 `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool                `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool                `json:"jumbo_frame"`
-	Latitude                           float64             `json:"latitude"`
-	Longitude                          float64             `json:"longitude"`
-	WanPublicIp                        string              `json:"public_ip"`
-	PrivateIP                          string              `json:"private_ip"`
-	RxQueueSize                        string              `json:"rx_queue_size"`
-	State                              string              `json:"vpc_state"`
-	InterfaceList                      []*Interface        `json:"interfaces"`
-	DnsProfileName                     string              `json:"dns_profile_name"`
-	EnableNat                          string              `json:"enable_nat"`
-	SnatMode                           string              `json:"snat_target"`
-	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`
-	InterfaceMapping                   []*InterfaceMapping `json:"interface_mapping"`
+	PrependAsPathReturn                string               `json:"prepend_as_path"`
+	IncludeCidrList                    []string             `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool                 `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string             `json:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string             `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool                 `json:"preserve_as_path"`
+	BgpPollingTime                     int                  `json:"bgp_polling_time"`
+	BgpBfdPollingTime                  int                  `json:"bgp_neighbor_status_polling_time"`
+	BgpHoldTime                        int                  `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool                 `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool                 `json:"jumbo_frame"`
+	Latitude                           float64              `json:"latitude"`
+	Longitude                          float64              `json:"longitude"`
+	WanPublicIp                        string               `json:"public_ip"`
+	PrivateIP                          string               `json:"private_ip"`
+	RxQueueSize                        string               `json:"rx_queue_size"`
+	State                              string               `json:"vpc_state"`
+	InterfaceList                      []*MegaportInterface `json:"interfaces"`
+	DnsProfileName                     string               `json:"dns_profile_name"`
+	EnableNat                          string               `json:"enable_nat"`
+	SnatMode                           string               `json:"snat_target"`
+	EnableAutoAdvertiseLanCidrs        bool                 `json:"auto_advertise_lan_cidrs"`
+	InterfaceMapping                   []*InterfaceMapping  `json:"interface_mapping"`
 }
 
 type EdgeMegaportListResp struct {
 	Return  bool               `json:"return"`
 	Results []EdgeMegaportResp `json:"results"`
 	Reason  string             `json:"reason"`
+}
+
+type MegaportInterface struct {
+	Index         int     `json:"index"`
+	Type          string  `json:"type"`
+	PublicIp      string  `json:"public_ip"`
+	Tag           string  `json:"tag"`
+	Dhcp          bool    `json:"dhcp"`
+	IpAddr        string  `json:"ipaddr"`
+	GatewayIp     string  `json:"gateway_ip"`
+	DnsPrimary    string  `json:"dns_primary"`
+	DnsSecondary  string  `json:"dns_secondary"`
+	SubInterfaces []*Vlan `json:"subinterfaces"`
+	VrrpState     bool    `json:"vrrp_state"`
+	VirtualIp     string  `json:"virtual_ip"`
 }
 
 type CreateEdgeMegaportResp struct {

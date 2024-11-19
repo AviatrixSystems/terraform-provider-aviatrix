@@ -206,10 +206,11 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 				Description: "WAN/LAN/MANAGEMENT interfaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Interface name.",
+						"index": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index. Must be unique for each interface type (e.g., 0, 1, 2).",
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"type": {
 							Type:         schema.TypeString,
@@ -402,7 +403,7 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 		interface1 := interface0.(map[string]interface{})
 
 		interface2 := &goaviatrix.EdgeMegaportInterface{
-			IfName:       interface1["name"].(string),
+			Index:        interface1["index"].(int),
 			Type:         interface1["type"].(string),
 			PublicIp:     interface1["wan_public_ip"].(string),
 			Tag:          interface1["tag"].(string),
@@ -752,7 +753,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	var vlan []map[string]interface{}
 	for _, interface0 := range edgeMegaportResp.InterfaceList {
 		interface1 := make(map[string]interface{})
-		interface1["name"] = interface0.IfName
+		interface1["index"] = interface0.Index
 		interface1["type"] = interface0.Type
 		interface1["wan_public_ip"] = interface0.PublicIp
 		interface1["tag"] = interface0.Tag
