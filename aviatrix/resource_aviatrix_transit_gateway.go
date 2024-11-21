@@ -843,10 +843,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"ha_peer_backup_port": {
+			"ha_peer_backup_port_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Peer backup port for the HA edge transit gateway.",
+				Default:     "wan",
+				Description: "Peer backup port type for the HA edge transit gateway (e.g., 'wan').",
+			},
+			"ha_peer_backup_port_index": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Peer backup port index for the HA edge transit gateway.",
 			},
 			"ha_connection_type": {
 				Type:        schema.TypeString,
@@ -858,10 +864,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"interface_name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The name of the network interface (e.g., eth1).",
+						"interface_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface name (e.g., 'WAN').",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
+						},
+						"interface_index": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Interface index (e.g., 0).",
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"private_ip": {
 							Type:        schema.TypeString,
@@ -906,6 +919,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to get the interface details: %v", err)
 		}
 		gateway.Interfaces = interfacesList
+		wanCount, err := countInterfaceTypes(interfaces)
+		if err != nil {
+			return fmt.Errorf("failed to get the interface count: %v", err)
+		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 			/*
 				TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
@@ -960,9 +977,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				DeviceID:      d.Get("ha_device_id").(string),
 				InsaneMode:    "yes",
 			}
-			peerBackupPort, ok := d.GetOk("ha_peer_backup_port")
+			peerBackupPortType, ok := d.GetOk("ha_peer_backup_port_type")
 			if !ok {
-				return fmt.Errorf("peer_backup_port is required for HA Edge Transit Gateway")
+				return fmt.Errorf("peer_backup_port_type is required for HA Edge Transit Gateway")
+			}
+			peerBackupPortIndex, ok := d.GetOk("ha_peer_backup_port_index")
+			if !ok {
+				return fmt.Errorf("peer_backup_port_index is required for HA Edge Transit Gateway")
+			}
+			// get peer backup port name using the type and index
+			peerBackupPort, err := getInterfaceName(peerBackupPortType.(string), peerBackupPortIndex.(int), wanCount)
+			if err != nil {
+				return fmt.Errorf("failed to get the peer backup port name using the type and index: %v", err)
 			}
 			connectionType, ok := d.GetOk("ha_connection_type")
 			if !ok {
@@ -971,8 +997,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			// Create the backup link configuration
 			backupLinkData := goaviatrix.BackupLinkInterface{
 				PeerGwName:     d.Get("gw_name").(string),
-				PeerBackupPort: peerBackupPort.(string),
-				SelfBackupPort: peerBackupPort.(string),
+				PeerBackupPort: peerBackupPort,
+				SelfBackupPort: peerBackupPort,
 				ConnectionType: connectionType.(string),
 			}
 			transitHaGw.BackupLinkList = append(transitHaGw.BackupLinkList, backupLinkData)
@@ -999,13 +1025,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			// }
 		}
 
-		// eip map is updated after the inter
+		// eip map is updated after the transit is created
 		eipMap, ok := d.Get("eip_map").([]interface{})
 		if !ok {
 			return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
 		}
 		if len(eipMap) > 0 {
-			eipMapList, err := getEipMapDetails(eipMap)
+			eipMapList, err := getEipMapDetails(eipMap, wanCount)
 			if err != nil {
 				return fmt.Errorf("failed to get the eip map details: %v", err)
 			}
@@ -2000,7 +2026,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		// set eip map
 		if gw.EipMap != nil {
 			log.Printf("[TRACE] eip map: %#v", gw.EipMap)
-			eipMap := setEipMapDetails(gw.EipMap)
+			eipMap, err := setEipMapDetails(gw.EipMap, gw.IfNamesTranslation)
+			if err != nil {
+				return fmt.Errorf("could not set eip map details: %v", err)
+			}
 			if err = d.Set("eip_map", eipMap); err != nil {
 				return fmt.Errorf("could not set eip map into state: %v", err)
 			}
@@ -2040,7 +2069,22 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("BackupLinkInfo does not contain HA Gateway: %s", haGwName)
 			}
 			peerBackupPort := backupLink.PeerIntfName
-			d.Set("ha_peer_backup_port", peerBackupPort)
+			peerBackupPortInterface, ok := gw.IfNamesTranslation[peerBackupPort]
+			if !ok {
+				return fmt.Errorf("could not set the peer backup port type and index using the peer interface name %s", peerBackupPort)
+			}
+			peerBackupPortDetails := strings.Split(peerBackupPortInterface, ".")
+			portType := strings.ToUpper(peerBackupPortDetails[0])
+			if err = d.Set("ha_peer_backup_port_type", portType); err != nil {
+				return fmt.Errorf("could not set ha_peer_backup_port_type into state: %v", err)
+			}
+			portIndex, err := strconv.Atoi(peerBackupPortDetails[1])
+			if err != nil {
+				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %v", err)
+			}
+			if err = d.Set("ha_peer_backup_port_index", portIndex); err != nil {
+				return fmt.Errorf("could not set ha_peer_backup_port_index into state: %v", err)
+			}
 			connectionTypePrivate := backupLink.ConnectionTypePublic
 			if connectionTypePrivate {
 				d.Set("ha_connection_type", "private")
@@ -2989,7 +3033,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
 			}
 			if len(eipMap) > 0 {
-				eipMapList, err := getEipMapDetails(eipMap)
+				// get wan count from interfaces
+				interfaceList, ok := d.Get("interfaces").([]interface{})
+				if !ok {
+					return fmt.Errorf("invalid interfaces for EAT gateway")
+				}
+				wanCount, err := countInterfaceTypes(interfaceList)
+				if err != nil {
+					return fmt.Errorf("failed to get wan interface count: %v", err)
+				}
+				eipMapList, err := getEipMapDetails(eipMap, wanCount)
 				if err != nil {
 					return fmt.Errorf("failed to get the eip map details: %v", err)
 				}
@@ -4070,25 +4123,24 @@ func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) 
 	return interfaceName, nil
 }
 
-func getEipMapDetails(eipMap []interface{}) (string, error) {
+func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 	// Create a map to structure the EIP data
 	eipMapStructured := make(map[string][]goaviatrix.EipMap)
 
 	// Populate the structured map
-	for _, item := range eipMap {
-		entry, ok := item.(map[string]interface{})
+	for _, eipDetails := range eipMap {
+		eip, ok := eipDetails.(map[string]interface{})
 		if !ok {
-			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", item)
+			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
 		}
-
-		// Extract required fields
-		interfaceName, ok1 := entry["interface_name"].(string)
-		privateIP, ok2 := entry["private_ip"].(string)
-		publicIP, ok3 := entry["public_ip"].(string)
-
-		if !ok1 || !ok2 || !ok3 {
-			return "", fmt.Errorf("missing required fields: interface_name, private_ip, or public_ip")
+		interfaceType := eip["interface_type"].(string)
+		interfaceIndex := eip["interface_index"].(int)
+		interfaceName, err := getInterfaceName(interfaceType, interfaceIndex, wanCount)
+		if err != nil {
+			return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %v", err)
 		}
+		privateIP := eip["private_ip"].(string)
+		publicIP := eip["public_ip"].(string)
 
 		// Append the EIP entry to the corresponding interface
 		eipEntry := goaviatrix.EipMap{
@@ -4113,7 +4165,7 @@ func getInterfaceDetails(interfaces []interface{}) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)
 	if err != nil {
-		return "", fmt.Errorf("failed to get the interface count: %v", err)
+		return "", fmt.Errorf("failed to get the wan interface count: %v", err)
 	}
 	interfaceList := []goaviatrix.EdgeTransitInterface{}
 	for _, iface := range interfaces {
@@ -4269,18 +4321,27 @@ func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) 
 	return interfaceMappingList
 }
 
-func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap) []map[string]interface{} {
+func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation map[string]string) ([]map[string]interface{}, error) {
 	eipMapList := make([]map[string]interface{}, 0)
-
 	for interfaceName, eipList := range eipMap {
+		// get the interface type and index from the interface name
+		interfaces := ifNameTranslation[interfaceName]
+		interfaceDetails := strings.Split(interfaces, ".")
+		interfaceType := strings.ToUpper(interfaceDetails[0])
+		interfaceIndex, error := strconv.Atoi(interfaceDetails[1])
+		if error != nil {
+			return nil, fmt.Errorf("failed to convert interface index to integer: %v", error)
+		}
+
 		for _, eip := range eipList {
 			eipMap := map[string]interface{}{
-				"interface_name": interfaceName,
-				"private_ip":     eip.PrivateIP,
-				"public_ip":      eip.PublicIP,
+				"interface_type":  interfaceType,
+				"interface_index": interfaceIndex,
+				"private_ip":      eip.PrivateIP,
+				"public_ip":       eip.PublicIP,
 			}
 			eipMapList = append(eipMapList, eipMap)
 		}
 	}
-	return eipMapList
+	return eipMapList, nil
 }
