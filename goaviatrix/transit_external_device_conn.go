@@ -71,8 +71,8 @@ type ExternalDeviceConn struct {
 	EnableEdgeUnderlay     bool          `form:"edge_underlay,omitempty"`
 	RemoteCloudType        string        `form:"remote_cloud_type,omitempty"`
 	BgpMd5KeyChanged       bool          `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig           *BgpBfdConfig `form:"bgp_bfd,omitempty"`
-	EnableBfd              bool          `form:"enable_bfd,omitempty"`
+	BgpBfdConfig           *BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
+	EnableBfd              bool          `form:"bgp_bfd_enabled,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -117,8 +117,8 @@ type EditExternalDeviceConnDetail struct {
 }
 
 type BgpBfdConfig struct {
-	TransmitInterval int `json:"transmit_interval"`
-	ReceiveInterval  int `json:"receive_interval"`
+	TransmitInterval int `json:"tx_interval"`
+	ReceiveInterval  int `json:"rx_interval"`
 	Multiplier       int `json:"multiplier"`
 }
 
