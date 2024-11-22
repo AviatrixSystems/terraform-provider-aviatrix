@@ -986,15 +986,8 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("approved_cidrs", nil)
 		}
 
-		enable_bfd, ok := d.Get("enable_bfd").(bool)
-		if !ok {
-			return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
-		}
-		if enable_bfd && conn.ConnectionType != "bgp" {
-			return fmt.Errorf("BFD is only supported for BGP connection type")
-		}
-		d.Set("enable_bfd", enable_bfd)
-		if conn.EnableBfd && conn.BgpBfdConfig != nil {
+		d.Set("enable_bfd", conn.EnableBfd)
+		if conn.EnableBfd {
 			var bgpBfdConfig []map[string]interface{}
 			bfd := conn.BgpBfdConfig
 			bfdMap := make(map[string]interface{})
