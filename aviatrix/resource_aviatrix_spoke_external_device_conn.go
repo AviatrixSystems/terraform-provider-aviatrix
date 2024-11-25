@@ -732,7 +732,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 			}
 		} else {
 			// set the bgp bfd config using the default values
-			externalDeviceConn.BgpBfdConfig = &defaultBfdConfig
+			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
@@ -886,7 +886,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
-	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
+	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), conn)
 
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -1209,6 +1209,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
+	log.Printf("[TRACE] enable_bfd: %v", enableBfd)
 	if connType != "bgp" && enableBfd {
 		return fmt.Errorf("cannot enable BFD for non-BGP connection")
 	}
@@ -1217,15 +1218,15 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	if !ok {
 		return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
 	}
-	if d.HasChange("enable_bfd") || d.HasChange("bgp_bfd") {
+	if d.HasChanges("enable_bfd", "bgp_bfd") {
 		// bgp bfd is enabled
 		if enableBfd {
 			bgpBfd := goaviatrix.GetUpdatedBgpBfdConfig(bgpBfdConfig)
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
-				EnableBfd:      d.Get("enable_bfd").(bool),
-				BgpBfdConfig:   &bgpBfd,
+				EnableBfd:      enableBfd,
+				BgpBfdConfig:   bgpBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
@@ -1233,13 +1234,10 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			}
 		} else {
 			// bgp bfd is disabled
-			if len(bgpBfdConfig) > 0 {
-				return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
-			}
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
-				EnableBfd:      d.Get("enable_bfd").(bool),
+				EnableBfd:      enableBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
