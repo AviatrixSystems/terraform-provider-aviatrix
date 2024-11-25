@@ -350,7 +350,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 			}
 		} else {
 			// set the bgp bfd config using the default values
-			externalDeviceConn.BgpBfdConfig = &defaultBfdConfig
+			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
@@ -454,7 +454,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
 	d.Set("enable_bfd", enable_bfd)
-	if conn.EnableBfd && conn.BgpBfdConfig != nil {
+	if conn.EnableBfd {
 		var bgpBfdConfig []map[string]interface{}
 		bfd := conn.BgpBfdConfig
 		bfdMap := make(map[string]interface{})
@@ -541,7 +541,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
 				EnableBfd:      d.Get("enable_bfd").(bool),
-				BgpBfdConfig:   &bgpBfd,
+				BgpBfdConfig:   bgpBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {

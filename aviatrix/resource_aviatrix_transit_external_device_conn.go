@@ -770,7 +770,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			}
 		} else {
 			// set the bgp bfd config using the default values
-			externalDeviceConn.BgpBfdConfig = &defaultBfdConfig
+			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
@@ -1096,7 +1096,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			return fmt.Errorf("BFD is only supported for BGP connection")
 		}
 		d.Set("enable_bfd", enable_bfd)
-		if enable_bfd && conn.BgpBfdConfig != nil {
+		if enable_bfd {
 			var bgpBfdConfig []map[string]interface{}
 			bfd := conn.BgpBfdConfig
 			bfdMap := make(map[string]interface{})
@@ -1362,8 +1362,8 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
-				EnableBfd:      d.Get("enable_bfd").(bool),
-				BgpBfdConfig:   &bgpBfd,
+				EnableBfd:      enableBfd,
+				BgpBfdConfig:   bgpBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
@@ -1377,7 +1377,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
-				EnableBfd:      d.Get("enable_bfd").(bool),
+				EnableBfd:      enableBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
