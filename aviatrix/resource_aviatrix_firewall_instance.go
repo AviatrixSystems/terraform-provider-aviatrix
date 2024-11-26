@@ -399,9 +399,6 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("advanced option 'iam_role' is only supported for AWS provider, please set to empty")
 		}
 	}
-	if firewallInstance.UserData != "" && strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
-		return fmt.Errorf("advanced option of 'user_data' is only supported for Check Point Series and Fortinet FortiGate Series, not for %s", firewallInstance.FirewallImage)
-	}
 	if firewallInstance.StorageAccessKey != "" || firewallInstance.FileShareFolder != "" || firewallInstance.ShareDirectory != "" {
 		if !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") || !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("advanced options of 'storage_access_key', 'file_share_folder' and 'share_directory' are only supported for Azure and Palo Alto Networks VM-Series")

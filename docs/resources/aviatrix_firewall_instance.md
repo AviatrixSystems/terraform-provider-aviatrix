@@ -432,7 +432,7 @@ Valid `firewall_image` values:
 * `container_folder` - (Optional) Advanced option. Container folder. Applicable to Azure or AzureGov and Fortinet Series deployment only.
 * `sas_url_config` - (Optional) Advanced option. SAS URL Config. Applicable to Azure or AzureGov and Fortinet Series deployment only.
 * `sas_url_license` - (Optional) Advanced option. SAS URL License. Applicable to Azure or AzureGov and Fortinet Series deployment only.
-* `user_data` - (Optional) Advanced option. User Data. Applicable to Check Point Series and Fortinet Series deployment only. Type: String.
+* `user_data` - (Optional) Advanced option. User Data. Type: String.
 
 ### Misc.
 * `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov, GCP and Azure firewall instances. For AWS, AWSGov and Azure allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. For GCP allowed characters are: lowercase letters, numbers, "-" and "_". Example: {"key1" = "value1", "key2" = "value2"}.
