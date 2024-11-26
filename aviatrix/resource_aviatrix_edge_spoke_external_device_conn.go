@@ -449,13 +449,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	}
 	d.Set("enable_bfd", conn.EnableBfd)
-	if conn.EnableBfd {
+	// set the bgp_bfd config details only if the user has enabled BFD and provided the config details. For default values, the config is not set
+	bgpBfdConfig := d.Get("bgp_bfd").([]interface{})
+	if conn.EnableBfd && len(bgpBfdConfig) != 0 {
 		var bgpBfdConfig []map[string]interface{}
 		bfd := conn.BgpBfdConfig
 		bfdMap := make(map[string]interface{})
-		bfdMap["transmit_interval"] = defaultBfdTransmitInterval
-		bfdMap["receive_interval"] = defaultBfdReceiveInterval
-		bfdMap["multiplier"] = defaultBfdMultiplier
 		if bfd.TransmitInterval != 0 {
 			bfdMap["transmit_interval"] = bfd.TransmitInterval
 		}
@@ -544,6 +543,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 			}
 		} else {
 			// bgp bfd is disabled
+			if len(bgpBfdConfig) > 0 {
+				return diag.Errorf("bgp_bfd config can't be set when BFD is disabled")
+			}
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 				GwName:         d.Get("gw_name").(string),
 				ConnectionName: d.Get("connection_name").(string),
