@@ -54,7 +54,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceNameAws, "bgp_polling_time", "50"),
-						resource.TestCheckResourceAttr(resourceNameAws, "bgp_bfd_polling_time", "5"),
+						resource.TestCheckResourceAttr(resourceNameAws, "bgp_neighbor_status_polling_time", "5"),
 					),
 				},
 				{
@@ -196,15 +196,15 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
-	cloud_type           = 1
-	account_name         = aviatrix_account.test_acc_aws.account_name
-	gw_name              = "tfg-aws-%[1]s"
-	vpc_id               = "%[5]s"
-	vpc_reg              = "%[6]s"
-	gw_size              = "t2.micro"
-	subnet               = "%[7]s"
-	bgp_polling_time     = 50
-	bgp_bfd_polling_time = 5
+	cloud_type                       = 1
+	account_name                     = aviatrix_account.test_acc_aws.account_name
+	gw_name                          = "tfg-aws-%[1]s"
+	vpc_id                           = "%[5]s"
+	vpc_reg                          = "%[6]s"
+	gw_size                          = "t2.micro"
+	subnet                           = "%[7]s"
+	bgp_polling_time                 = 50
+	bgp_neighbor_status_polling_time = 5
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))

@@ -148,12 +148,12 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 50),
 				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
-			"bgp_bfd_polling_time": {
+			"bgp_neighbor_status_polling_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      defaultBgpBfdPollingTime,
+				Default:      defaultBgpNeighborStatusPollingTime,
 				ValidateFunc: validation.IntBetween(1, 10),
-				Description:  "BGP BFD route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+				Description:  "BGP neighbor status polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
@@ -328,7 +328,7 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.Edge
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
 		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
 		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_bfd_polling_time").(int),
+		BgpBfdPollingTime:                  d.Get("bgp_neighbor_status_polling_time").(int),
 		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
 		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
 		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
@@ -483,10 +483,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 		}
 	}
 
-	if edgeSpoke.BgpBfdPollingTime >= 1 && edgeSpoke.BgpBfdPollingTime != defaultBgpBfdPollingTime {
+	if edgeSpoke.BgpBfdPollingTime >= 1 && edgeSpoke.BgpBfdPollingTime != defaultBgpNeighborStatusPollingTime {
 		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
 		if err != nil {
-			return diag.Errorf("could not set bgp bfd polling time after Edge Gateway Selfmanaged creation: %v", err)
+			return diag.Errorf("could not set bgp neighbor status polling time after Edge Gateway Selfmanaged creation: %v", err)
 		}
 	}
 
@@ -613,7 +613,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 
 	d.Set("enable_preserve_as_path", edgeSpoke.EnablePreserveAsPath)
 	d.Set("bgp_polling_time", edgeSpoke.BgpPollingTime)
-	d.Set("bgp_bfd_polling_time", edgeSpoke.BgpBfdPollingTime)
+	d.Set("bgp_neighbor_status_polling_time", edgeSpoke.BgpBfdPollingTime)
 	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
@@ -798,10 +798,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		}
 	}
 
-	if d.HasChange("bgp_bfd_polling_time") {
+	if d.HasChange("bgp_neighbor_status_polling_time") {
 		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeSpoke.BgpBfdPollingTime)
 		if err != nil {
-			return diag.Errorf("could not set bgp bfd polling time during Edge Gateway Selfmanaged update: %v", err)
+			return diag.Errorf("could not set bgp neighbor status polling time during Edge Gateway Selfmanaged update: %v", err)
 		}
 	}
 
