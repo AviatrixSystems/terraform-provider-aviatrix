@@ -886,7 +886,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
-	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), conn)
+	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
 
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -1209,7 +1209,6 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	if !ok {
 		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
 	}
-	log.Printf("[TRACE] enable_bfd: %v", enableBfd)
 	if connType != "bgp" && enableBfd {
 		return fmt.Errorf("cannot enable BFD for non-BGP connection")
 	}
