@@ -56,13 +56,43 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       s2c = "remote-site-name"
     }
 
+    // Below are external group types examples
+
     match_expressions {
-      external = "External_ID"
+      external = "geo"
       ext_args = {
-        external_ID_specific_field1 = "value1"
-        external_ID_specific_field2 = "value2"
-      } 
+        country_iso_code = "US"
+        is_in_eu = "1"
+        continent_code = "NA"
+      }
     }
+
+    match_expressions {
+      external = "threatiq"
+      ext_args = {
+        protocol = "tcp"
+        type = "ciarmy"
+        severity = "major"
+      }
+    }
+
+    match_expressions {
+      external = "azureips"
+      ext_args = {
+        service_name = "AzureCloud"
+        region = "eastus"
+      }
+    }
+
+    match_expressions {
+      external = "githubips"
+      ext_args = {
+        service_name = "web"
+      }
+    }
+
+    // End of external group type examples
+
   }
 }
 ```
