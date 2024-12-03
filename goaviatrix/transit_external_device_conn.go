@@ -65,14 +65,14 @@ type ExternalDeviceConn struct {
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
-	BgpMd5Key              string        `form:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string        `form:"backup_bgp_md5_key,omitempty"`
-	AuthType               string        `form:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool          `form:"edge_underlay,omitempty"`
-	RemoteCloudType        string        `form:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool          `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig           *BgpBfdConfig `form:"bgp_bfd,omitempty"`
-	EnableBfd              bool          `form:"enable_bfd,omitempty"`
+	BgpMd5Key              string       `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string       `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string       `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool         `form:"edge_underlay,omitempty"`
+	RemoteCloudType        string       `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged       bool         `form:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig           BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
+	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -101,24 +101,26 @@ type EditExternalDeviceConnDetail struct {
 	BackupRemoteGatewayIP  string
 	PreSharedKey           string
 	BackupPreSharedKey     string
-	IkeVer                 string `json:"ike_ver,omitempty"`
-	PeerVnetId             string `json:"peer_vnet_id,omitempty"`
-	RemoteLanIP            string `json:"remote_lan_ip,omitempty"`
-	LocalLanIP             string `json:"local_lan_ip,omitempty"`
-	BackupRemoteLanIP      string `json:"backup_remote_lan_ip,omitempty"`
-	BackupLocalLanIP       string `json:"backup_local_lan_ip,omitempty"`
-	EventTriggeredHA       string `json:"event_triggered_ha,omitempty"`
-	Phase1LocalIdentifier  string `json:"ph1_identifier,omitempty"`
-	Phase1RemoteIdentifier string `json:"phase1_remote_id,omitempty"`
-	PrependAsPath          string `json:"conn_bgp_prepend_as_path,omitempty"`
-	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
-	WanUnderlay            bool   `json:"wan_underlay,omitempty"`
-	RemoteCloudType        string `json:"remote_cloud_type,omitempty"`
+	IkeVer                 string         `json:"ike_ver,omitempty"`
+	PeerVnetId             string         `json:"peer_vnet_id,omitempty"`
+	RemoteLanIP            string         `json:"remote_lan_ip,omitempty"`
+	LocalLanIP             string         `json:"local_lan_ip,omitempty"`
+	BackupRemoteLanIP      string         `json:"backup_remote_lan_ip,omitempty"`
+	BackupLocalLanIP       string         `json:"backup_local_lan_ip,omitempty"`
+	EventTriggeredHA       string         `json:"event_triggered_ha,omitempty"`
+	Phase1LocalIdentifier  string         `json:"ph1_identifier,omitempty"`
+	Phase1RemoteIdentifier string         `json:"phase1_remote_id,omitempty"`
+	PrependAsPath          string         `json:"conn_bgp_prepend_as_path,omitempty"`
+	EnableJumboFrame       bool           `json:"jumbo_frame,omitempty"`
+	WanUnderlay            bool           `json:"wan_underlay,omitempty"`
+	RemoteCloudType        string         `json:"remote_cloud_type,omitempty"`
+	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
+	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
 }
 
 type BgpBfdConfig struct {
-	TransmitInterval int `json:"transmit_interval"`
-	ReceiveInterval  int `json:"receive_interval"`
+	TransmitInterval int `json:"tx_interval"`
+	ReceiveInterval  int `json:"rx_interval"`
 	Multiplier       int `json:"multiplier"`
 }
 
@@ -322,7 +324,12 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
 		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
 		externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
-
+		externalDeviceConn.EnableBfd = externalDeviceConnDetail.EnableBfd
+		if externalDeviceConn.EnableBfd {
+			externalDeviceConn.BgpBfdConfig.TransmitInterval = externalDeviceConnDetail.BgpBfdConfig["tx_interval"]
+			externalDeviceConn.BgpBfdConfig.ReceiveInterval = externalDeviceConnDetail.BgpBfdConfig["rx_interval"]
+			externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
+		}
 		return externalDeviceConn, nil
 	}
 
@@ -377,7 +384,7 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 	return false
 }
 
-func CreateBgpBfdConfig(bfd map[string]interface{}) *BgpBfdConfig {
+func CreateBgpBfdConfig(bfd map[string]interface{}) BgpBfdConfig {
 	// Set default values
 	transmitInterval := defaultBfdTransmitInterval
 	receiveInterval := defaultBfdReceiveInterval
@@ -395,7 +402,7 @@ func CreateBgpBfdConfig(bfd map[string]interface{}) *BgpBfdConfig {
 	}
 
 	// Create and return BgpBfdConfig instance
-	bfd2 := &BgpBfdConfig{
+	bfd2 := BgpBfdConfig{
 		TransmitInterval: transmitInterval,
 		ReceiveInterval:  receiveInterval,
 		Multiplier:       multiplier,
@@ -409,7 +416,7 @@ func GetUpdatedBgpBfdConfig(bgpBfdConfig []interface{}) BgpBfdConfig {
 		// get the user provided bgp bfd config
 		for _, v := range bgpBfdConfig {
 			bfdConfig := v.(map[string]interface{})
-			bgpBfd = *CreateBgpBfdConfig(bfdConfig)
+			bgpBfd = CreateBgpBfdConfig(bfdConfig)
 		}
 	} else if len(bgpBfdConfig) == 0 {
 		// use default bgp bfd config
