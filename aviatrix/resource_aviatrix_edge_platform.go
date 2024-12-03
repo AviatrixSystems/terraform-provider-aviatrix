@@ -153,7 +153,7 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 			"bgp_neighbor_status_polling_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      defaultBgpPollingTime,
+				Default:      defaultBgpNeighborStatusPollingTime,
 				ValidateFunc: validation.IntBetween(1, 10),
 				Description:  "BGP neighbor status polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
@@ -487,6 +487,13 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(edgeNEO.GwName)
 	flag := false
 	defer resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
+
+	// print the edgeNeo
+	log.Printf("[INFO] Creating Edge Platform: %v", edgeNEO)
+	// print edgeNeo interfaces
+	for _, interface0 := range edgeNEO.InterfaceList {
+		log.Printf("[INFO] Interface: %v", interface0)
+	}
 
 	if err := client.CreateEdgeNEO(ctx, edgeNEO); err != nil {
 		return diag.Errorf("could not create Edge Platform: %v", err)
