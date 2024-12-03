@@ -56,7 +56,7 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       s2c = "remote-site-name"
     }
 
-    // Below are external group types examples
+    // Below are external group type examples
 
     match_expressions {
       external = "geo"
