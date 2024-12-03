@@ -488,13 +488,6 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 	flag := false
 	defer resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
 
-	// print the edgeNeo
-	log.Printf("[INFO] Creating Edge Platform: %v", edgeNEO)
-	// print edgeNeo interfaces
-	for _, interface0 := range edgeNEO.InterfaceList {
-		log.Printf("[INFO] Interface: %v", interface0)
-	}
-
 	if err := client.CreateEdgeNEO(ctx, edgeNEO); err != nil {
 		return diag.Errorf("could not create Edge Platform: %v", err)
 	}
