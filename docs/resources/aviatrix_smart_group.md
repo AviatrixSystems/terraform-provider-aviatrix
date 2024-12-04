@@ -58,6 +58,15 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
 
     // Below are external group type examples
 
+    // generic format
+    match_expressions {
+      external = "External_group_ID"
+      ext_args = {
+        external_group_ID_specific_field_1 = "value1"
+        external_group_ID_specific_field_2 = "value2"
+      }
+    }
+
     match_expressions {
       external = "geo"
       ext_args = {
