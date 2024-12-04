@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -524,9 +525,9 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	flag := false
 	defer resourceAviatrixEdgeMegaportReadIfRequired(ctx, d, meta, &flag)
 
-	if err := client.CreateEdgeMegaport(ctx, edgeMegaport); err != nil {
-		return diag.Errorf("could not create Edge Megaport %s: %v", edgeMegaport.GwName, err)
-	}
+	// if err := client.CreateEdgeMegaport(ctx, edgeMegaport); err != nil {
+	// 	return diag.Errorf("could not create Edge Megaport %s: %v", edgeMegaport.GwName, err)
+	// }
 
 	// advanced configs
 	// use following variables to reuse functions for transit, spoke, gateway and EaaS
@@ -544,17 +545,17 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if edgeMegaport.LocalAsNumber != "" {
-		err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeMegaport.LocalAsNumber)
-		if err != nil {
-			return diag.Errorf("could not set 'local_as_number' after Edge Megaport creation: %v", err)
-		}
+		// err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeMegaport.LocalAsNumber)
+		// if err != nil {
+		// 	return diag.Errorf("could not set 'local_as_number' after Edge Megaport creation: %v", err)
+		// }
 	}
 
 	if len(edgeMegaport.PrependAsPath) != 0 {
-		err := client.SetPrependASPath(gatewayForTransitFunctions, edgeMegaport.PrependAsPath)
-		if err != nil {
-			return diag.Errorf("could not set 'prepend_as_path' after Edge Megaport creation: %v", err)
-		}
+		// err := client.SetPrependASPath(gatewayForTransitFunctions, edgeMegaport.PrependAsPath)
+		// if err != nil {
+		// 	return diag.Errorf("could not set 'prepend_as_path' after Edge Megaport creation: %v", err)
+		// }
 	}
 
 	if edgeMegaport.EnableLearnedCidrsApproval {
@@ -751,7 +752,8 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	for _, interface0 := range edgeMegaportResp.InterfaceList {
+	interfaceList := sortInterfaces(edgeMegaportResp.InterfaceList)
+	for _, interface0 := range interfaceList {
 		interface1 := make(map[string]interface{})
 		interface1["index"] = interface0.Index
 		interface1["type"] = interface0.Type
@@ -1057,4 +1059,19 @@ func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return nil
+}
+
+// function to sort the interfaces by index and type
+func sortInterfaces(interfaces []goaviatrix.MegaportInterface) []goaviatrix.MegaportInterface {
+	sort.Slice(interfaces, func(i, j int) bool {
+		index1 := interfaces[i].Index
+		index2 := interfaces[j].Index
+		type1 := interfaces[i].Type
+		type2 := interfaces[j].Type
+		if index1 == index2 {
+			return type1 < type2
+		}
+		return index1 < index2
+	})
+	return interfaces
 }
