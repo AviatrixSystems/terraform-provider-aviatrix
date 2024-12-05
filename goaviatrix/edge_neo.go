@@ -58,27 +58,27 @@ type EdgeNEO struct {
 type EdgeNEOInterface struct {
 	IfName        string         `json:"ifname"`
 	Type          string         `json:"type"`
-	PublicIp      string         `json:"public_ip"`
-	Tag           string         `json:"tag"`
-	Dhcp          bool           `json:"dhcp"`
-	IpAddr        string         `json:"ipaddr"`
-	GatewayIp     string         `json:"gateway_ip"`
-	DnsPrimary    string         `json:"dns_primary"`
-	DnsSecondary  string         `json:"dns_secondary"`
-	SubInterfaces []*EdgeNEOVlan `json:"subinterfaces"`
-	VrrpState     bool           `json:"vrrp_state"`
-	VirtualIp     string         `json:"virtual_ip"`
+	PublicIp      string         `json:"public_ip,omitempty"`
+	Tag           string         `json:"tag,omitempty"`
+	Dhcp          bool           `json:"dhcp,omitempty"`
+	IpAddr        string         `json:"ipaddr,omitempty"`
+	GatewayIp     string         `json:"gateway_ip,omitempty"`
+	DnsPrimary    string         `json:"dns_primary,omitempty"`
+	DnsSecondary  string         `json:"dns_secondary,omitempty"`
+	SubInterfaces []*EdgeNEOVlan `json:"subinterfaces,omitempty"`
+	VrrpState     bool           `json:"vrrp_state,omitempty"`
+	VirtualIp     string         `json:"virtual_ip,omitempty"`
 }
 
 type EdgeNEOVlan struct {
 	ParentInterface string `json:"parent_interface"`
 	VlanId          string `json:"vlan_id"`
 	IpAddr          string `json:"ipaddr"`
-	GatewayIp       string `json:"gateway_ip"`
-	PeerIpAddr      string `json:"peer_ipaddr"`
-	PeerGatewayIp   string `json:"peer_gateway_ip"`
-	VirtualIp       string `json:"virtual_ip"`
-	Tag             string `json:"tag"`
+	GatewayIp       string `json:"gateway_ip,omitempty"`
+	PeerIpAddr      string `json:"peer_ipaddr,omitempty"`
+	PeerGatewayIp   string `json:"peer_gateway_ip,omitempty"`
+	VirtualIp       string `json:"virtual_ip,omitempty"`
+	Tag             string `json:"tag,omitempty"`
 }
 
 type EdgeNEOResp struct {

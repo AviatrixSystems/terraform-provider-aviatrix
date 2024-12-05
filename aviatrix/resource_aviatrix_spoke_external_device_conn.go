@@ -715,12 +715,12 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("BFD is only supported for BGP connection type")
 	}
 	externalDeviceConn.EnableBfd = enableBFD
+	bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
+	if !ok {
+		return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
+	}
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
-		bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
-		if !ok {
-			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-		}
 		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
@@ -737,6 +737,11 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
 			return fmt.Errorf("could not update BGP BFD config: %v", err)
+		}
+	} else {
+		// if BFD is disabled and BGP BFD config is provided then throw an error
+		if len(bgp_bfd) > 0 {
+			return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
 		}
 	}
 
@@ -987,12 +992,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		}
 
 		d.Set("enable_bfd", conn.EnableBfd)
-		// set the bgp_bfd config details only if the user has enabled BFD and provided the config details. For default values, the config is not set
-		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
-		if !ok {
-			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-		}
-		if conn.EnableBfd && len(bgpBfdConfig) != 0 {
+		if conn.EnableBfd {
 			var bgpBfdConfig []map[string]interface{}
 			bfd := conn.BgpBfdConfig
 			bfdMap := make(map[string]interface{})
