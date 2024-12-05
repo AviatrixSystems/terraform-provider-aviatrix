@@ -1094,12 +1094,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		}
 
 		d.Set("enable_bfd", conn.EnableBfd)
-		// set the bgp_bfd config details only if the user has enabled BFD and provided the config details. For default values, the config is not set
-		bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
-		if !ok {
-			return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-		}
-		if conn.EnableBfd && len(bgpBfdConfig) != 0 {
+		if conn.EnableBfd {
 			var bgpBfdConfig []map[string]interface{}
 			bfd := conn.BgpBfdConfig
 			bfdMap := make(map[string]interface{})
