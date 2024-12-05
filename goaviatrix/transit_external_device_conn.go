@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -341,6 +342,43 @@ func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 	externalDeviceConn.Action = "disconnect_transit_gw"
 
 	return c.PostAPI(externalDeviceConn.Action, externalDeviceConn, BasicCheck)
+}
+
+func ExternalDeviceConnBgpBfdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	// Parse the JSON strings to handle nested structures
+	var oldConfig, newConfig []map[string]interface{}
+	if err := json.Unmarshal([]byte(old), &oldConfig); err != nil {
+		return false
+	}
+	if err := json.Unmarshal([]byte(new), &newConfig); err != nil {
+		return false
+	}
+	// Ensure the list structure and length match
+	if len(oldConfig) != len(newConfig) || len(newConfig) == 0 {
+		return false
+	}
+	// Retrieve the first (and only) BFD configuration
+	oldBfd := oldConfig[0]
+	newBfd := newConfig[0]
+	// Suppress differences if attributes are unset but match defaults
+	defaults := map[string]interface{}{
+		"transmit_interval": defaultBfdTransmitInterval,
+		"receive_interval":  defaultBfdReceiveInterval,
+		"multiplier":        defaultBfdMultiplier,
+	}
+	for key, defaultValue := range defaults {
+		oldValue, oldExists := oldBfd[key]
+		newValue, newExists := newBfd[key]
+
+		// If the attribute is unset or matches the default, suppress the diff
+		if !newExists && oldExists && oldValue == defaultValue {
+			continue
+		}
+		if oldValue != newValue {
+			return false // if there's a real difference, don't suppress
+		}
+	}
+	return true
 }
 
 func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
