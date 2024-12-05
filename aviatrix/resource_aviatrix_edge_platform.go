@@ -153,7 +153,7 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 			"bgp_neighbor_status_polling_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      defaultBgpPollingTime,
+				Default:      defaultBgpNeighborStatusPollingTime,
 				ValidateFunc: validation.IntBetween(1, 10),
 				Description:  "BGP neighbor status polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
 			},
