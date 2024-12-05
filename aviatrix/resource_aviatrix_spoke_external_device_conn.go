@@ -389,10 +389,11 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Description: "Enable BGP BFD connection.",
 			},
 			"bgp_bfd": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "BGP BFD configuration details applied to a BGP session.",
-				MaxItems:    1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Description:      "BGP BFD configuration details applied to a BGP session.",
+				MaxItems:         1,
+				DiffSuppressFunc: goaviatrix.ExternalDeviceConnBgpBfdDiffSuppressFunc,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transmit_interval": {
