@@ -1,7 +1,6 @@
 package goaviatrix
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -345,40 +344,59 @@ func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 }
 
 func ExternalDeviceConnBgpBfdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	// Parse the JSON strings to handle nested structures
-	var oldConfig, newConfig []map[string]interface{}
-	if err := json.Unmarshal([]byte(old), &oldConfig); err != nil {
+	// if enable_bfd is changed, then the BFD configuration needs to be updated
+	if d.HasChange("enable_bfd") {
 		return false
 	}
-	if err := json.Unmarshal([]byte(new), &newConfig); err != nil {
-		return false
-	}
-	// Ensure the list structure and length match
-	if len(oldConfig) != len(newConfig) || len(newConfig) == 0 {
-		return false
-	}
-	// Retrieve the first (and only) BFD configuration
-	oldBfd := oldConfig[0]
-	newBfd := newConfig[0]
-	// Suppress differences if attributes are unset but match defaults
-	defaults := map[string]interface{}{
+	defaultBfd := map[string]interface{}{
 		"transmit_interval": defaultBfdTransmitInterval,
 		"receive_interval":  defaultBfdReceiveInterval,
 		"multiplier":        defaultBfdMultiplier,
 	}
-	for key, defaultValue := range defaults {
-		oldValue, oldExists := oldBfd[key]
-		newValue, newExists := newBfd[key]
-
-		// If the attribute is unset or matches the default, suppress the diff
-		if !newExists && oldExists && oldValue == defaultValue {
-			continue
+	// Retrieve necessary attributes from the schema
+	o, n := d.GetChange("bgp_bfd")
+	bfdEnabled := d.Get("enable_bfd").(bool)
+	// Expand old and new BGP BFD configurations
+	var oldConfig []map[string]interface{}
+	var newConfig []map[string]interface{}
+	if o != nil {
+		oldConfig = ExpandBfdConfig(o.([]interface{}))
+	}
+	if n != nil {
+		newConfig = ExpandBfdConfig(n.([]interface{}))
+	}
+	if bfdEnabled {
+		// If BFD is enabled, then compare the old and new BFD configurations
+		if len(oldConfig) != len(newConfig) {
+			return false
 		}
-		if oldValue != newValue {
-			return false // if there's a real difference, don't suppress
+		for i := range oldConfig {
+			// If the BFD configuration is different, then update the BFD configuration
+			if oldConfig[i]["transmit_interval"] != newConfig[i]["transmit_interval"] ||
+				oldConfig[i]["receive_interval"] != newConfig[i]["receive_interval"] ||
+				oldConfig[i]["multiplier"] != newConfig[i]["multiplier"] {
+				return false
+			}
+			// If the BFD configuration is the same as the default, then donot update the BFD configuration
+			if newConfig[i]["transmit_interval"] == defaultBfd["transmit_interval"] ||
+				oldConfig[i]["receive_interval"] == defaultBfd["receive_interval"] ||
+				oldConfig[i]["multiplier"] == defaultBfd["multiplier"] {
+				return true
+			}
 		}
 	}
-	return true
+	return false
+}
+
+// ExpandBfdConfig expands a BGP BFD configuration from an interface slice
+func ExpandBfdConfig(config []interface{}) []map[string]interface{} {
+	expanded := make([]map[string]interface{}, 0, len(config))
+	for _, item := range config {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			expanded = append(expanded, itemMap)
+		}
+	}
+	return expanded
 }
 
 func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
