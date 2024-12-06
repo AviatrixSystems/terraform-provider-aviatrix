@@ -149,14 +149,14 @@ The following arguments are supported:
     * `region` - (Optional) - Region this expression matches.
     * `zone` - (Optional) - Zone this expression matches.
     * `k8s_cluster_id` - (Optional) - Resource ID of the Kubernetes cluster this expression matches. The resource ID can be found in the `cluster_id` attribute of the `aviatrix_kubernetes_cluster` resource.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
     * `k8s_namespace` - (Optional) - Kubernetes namespace this expression matches.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
     * `k8s_service` - (Optional) - Kubernetes service name this expression matches.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
       This property must not be used when `k8s_pod` is set.
     * `k8s_pod` - (Optional) - Kubernetes pod name this expression matches. 
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"` and `k8s_cluster_id` and `k8s_namespace` are also set.
       This property must not be used when `k8s_service` is set.
     * `s2c` - (Optional) - Name of the remote site. Represents the CIDRs associated with the remote site.
     * `external` - (Optional) - Specifies an external feed, currently either "geo" or "threatiq".
