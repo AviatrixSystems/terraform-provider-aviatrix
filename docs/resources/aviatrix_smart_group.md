@@ -37,7 +37,33 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
     match_expressions {
       site = "site-test-0"
     }
+
+    match_expressions {
+      s2c = "remote-site-name"
+    }
+
+    # Below are Kubernetes type examples 
     
+    # Match all pods and services in a cluster
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+    }
+    
+    # Match all pods and services in a namespace across all clusters
+    match_expressions {
+      type           = "k8s"
+      k8s_namespace  = "testnamespace"
+    }
+
+    # Match all pods and services in a cluster and namespace
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+      k8s_namespace  = "testnamespace"
+    }
+    
+    # Match a service by name in a namespace of a cluster
     match_expressions {
       type           = "k8s"
       k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
@@ -45,15 +71,12 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_service    = "testservice"
     }
     
+    # Match a pod by name in a namespace of a cluster
     match_expressions {
       type           = "k8s"
       k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
       k8s_namespace  = "testnamespace"
       k8s_pod        = "testpod"
-    }
-
-    match_expressions {
-      s2c = "remote-site-name"
     }
 
     // Below are external group type examples
