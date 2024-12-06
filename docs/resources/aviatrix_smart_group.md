@@ -37,7 +37,33 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
     match_expressions {
       site = "site-test-0"
     }
+
+    match_expressions {
+      s2c = "remote-site-name"
+    }
+
+    # Below are Kubernetes type examples 
     
+    # Match all pods and services in a cluster
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+    }
+    
+    # Match all pods and services in a namespace across all clusters
+    match_expressions {
+      type           = "k8s"
+      k8s_namespace  = "testnamespace"
+    }
+
+    # Match all pods and services in a cluster and namespace
+    match_expressions {
+      type           = "k8s"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+      k8s_namespace  = "testnamespace"
+    }
+    
+    # Match a service by name in a namespace of a cluster
     match_expressions {
       type           = "k8s"
       k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
@@ -45,15 +71,12 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_service    = "testservice"
     }
     
+    # Match a pod by name in a namespace of a cluster
     match_expressions {
       type           = "k8s"
       k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
       k8s_namespace  = "testnamespace"
       k8s_pod        = "testpod"
-    }
-
-    match_expressions {
-      s2c = "remote-site-name"
     }
 
     // Below are external group type examples
@@ -126,14 +149,14 @@ The following arguments are supported:
     * `region` - (Optional) - Region this expression matches.
     * `zone` - (Optional) - Zone this expression matches.
     * `k8s_cluster_id` - (Optional) - Resource ID of the Kubernetes cluster this expression matches. The resource ID can be found in the `cluster_id` attribute of the `aviatrix_kubernetes_cluster` resource.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
     * `k8s_namespace` - (Optional) - Kubernetes namespace this expression matches.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
     * `k8s_service` - (Optional) - Kubernetes service name this expression matches.
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"`.
       This property must not be used when `k8s_pod` is set.
     * `k8s_pod` - (Optional) - Kubernetes pod name this expression matches. 
-      This property can only be used when `type` is set to "k8s".
+      This property can only be used when `type` is set to `"k8s"` and `k8s_cluster_id` and `k8s_namespace` are also set.
       This property must not be used when `k8s_service` is set.
     * `s2c` - (Optional) - Name of the remote site. Represents the CIDRs associated with the remote site.
     * `external` - (Optional) - Specifies an external feed, currently either "geo" or "threatiq".
