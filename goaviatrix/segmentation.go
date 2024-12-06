@@ -28,7 +28,7 @@ func (c *Client) CreateSegmentationSecurityDomain(domain *SegmentationSecurityDo
 }
 
 func (c *Client) DeleteSegmentationSecurityDomain(domain *SegmentationSecurityDomain) error {
-	action := "delete_multi_cloud_security_domain"
+	action := "_cloud_security_domain"
 	data := map[string]interface{}{
 		"action":      action,
 		"CID":         c.CID,
