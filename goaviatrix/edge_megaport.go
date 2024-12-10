@@ -131,6 +131,7 @@ type EdgeMegaportListResp struct {
 type MegaportInterface struct {
 	Index         int     `json:"index"`
 	Type          string  `json:"type"`
+	Name          string  `json:"ifname,omitempty"`
 	PublicIp      string  `json:"public_ip,omitempty"`
 	Tag           string  `json:"tag,omitempty"`
 	Dhcp          bool    `json:"dhcp,omitempty"`
