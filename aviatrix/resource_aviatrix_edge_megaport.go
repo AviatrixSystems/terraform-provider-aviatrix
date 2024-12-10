@@ -518,9 +518,9 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	flag := false
 	defer resourceAviatrixEdgeMegaportReadIfRequired(ctx, d, meta, &flag)
 
-	// if err := client.CreateEdgeMegaport(ctx, edgeMegaport); err != nil {
-	// 	return diag.Errorf("could not create Edge Megaport %s: %v", edgeMegaport.GwName, err)
-	// }
+	if err := client.CreateEdgeMegaport(ctx, edgeMegaport); err != nil {
+		return diag.Errorf("could not create Edge Megaport %s: %v", edgeMegaport.GwName, err)
+	}
 
 	// advanced configs
 	// use following variables to reuse functions for transit, spoke, gateway and EaaS
@@ -538,17 +538,17 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if edgeMegaport.LocalAsNumber != "" {
-		// err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeMegaport.LocalAsNumber)
-		// if err != nil {
-		// 	return diag.Errorf("could not set 'local_as_number' after Edge Megaport creation: %v", err)
-		// }
+		err := client.SetLocalASNumber(gatewayForTransitFunctions, edgeMegaport.LocalAsNumber)
+		if err != nil {
+			return diag.Errorf("could not set 'local_as_number' after Edge Megaport creation: %v", err)
+		}
 	}
 
 	if len(edgeMegaport.PrependAsPath) != 0 {
-		// err := client.SetPrependASPath(gatewayForTransitFunctions, edgeMegaport.PrependAsPath)
-		// if err != nil {
-		// 	return diag.Errorf("could not set 'prepend_as_path' after Edge Megaport creation: %v", err)
-		// }
+		err := client.SetPrependASPath(gatewayForTransitFunctions, edgeMegaport.PrependAsPath)
+		if err != nil {
+			return diag.Errorf("could not set 'prepend_as_path' after Edge Megaport creation: %v", err)
+		}
 	}
 
 	if edgeMegaport.EnableLearnedCidrsApproval {
