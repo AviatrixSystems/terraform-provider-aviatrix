@@ -14,7 +14,7 @@ type EdgeMegaport struct {
 	AccountName                        string `json:"account_name,omitempty"`
 	GwName                             string `json:"name,omitempty"`
 	SiteId                             string `json:"site_id,omitempty"`
-	ZtpFileDownloadPath                string
+	ZtpFileDownloadPath                string `json:"-"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip,omitempty"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network,omitempty"`
 	DnsServerIp                        string `json:"dns_server_ip,omitempty"`

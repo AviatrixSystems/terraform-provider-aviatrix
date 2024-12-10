@@ -19,28 +19,44 @@ resource "aviatrix_edge_megaport" "test" {
   gw_name                = "megaport-test"
   site_id                = "site-123"
   ztp_file_download_path = "/ztp/file/download/path"
+  tag                    = "edge-megaport-test"
 
   interfaces {
-    name          = "eth0"
-    type          = "WAN"
-    ip_address    = "10.230.5.32/24"
-    gateway_ip    = "10.230.5.100"
-    wan_public_ip = "64.71.24.221"
-  }
+        gateway_ip = "10.220.14.1"
+        ip_address = "10.220.14.10/24"
+        type       = "LAN"
+        index      = 0
+    }
 
-  interfaces {
-    name       = "eth1"
-    type       = "LAN"
-    ip_address = "10.230.3.32/24"
-  }
+    interfaces {
+        enable_dhcp   = true
+        type   = "MANAGEMENT"
+        index  = 0
+    }
 
-  interfaces {
-    name        = "eth2"
-    type        = "MANAGEMENT"
-    enable_dhcp = false
-    ip_address  = "172.16.15.162/20"
-    gateway_ip  = "172.16.0.1"
-  }
+    interfaces {
+        gateway_ip    = "192.168.99.1"
+        ip_address    = "192.168.99.14/24"
+        type          = "WAN"
+        index         = 0
+        wan_public_ip     = "67.207.104.19"
+    }
+
+    interfaces {
+        gateway_ip    = "192.168.88.1"
+        ip_address    = "192.168.88.14/24"
+        type          = "WAN"
+        index         = 1
+        wan_public_ip     = "67.71.12.148"
+    }
+
+    interfaces {
+        gateway_ip  = "192.168.77.1"
+        ip_address  = "192.168.77.14/24"
+        type        = "WAN"
+        index       = 2
+        wan_public_ip   = "67.72.12.149"
+    }
 }
 ```
 
@@ -50,7 +66,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Edge Megaport account name.
-* `gw_name` - (Required) Edge Megaport name.
+* `gw_name` - (Required) Edge Megaport gateway name.
 * `site_id` - (Required) Site ID.
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
@@ -88,7 +104,7 @@ The following arguments are supported:
 * `latitude` - (Optional) Latitude of Edge Megaport. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge Megaport. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
-* `vlan` - (Required) VLAN configuration.
+* `vlan` - (Optional) VLAN configuration.
   * `parent_interface_name` - (Required) Parent interface name.
   * `vlan_id` - (Required) VLAN ID.
   * `ip_address` - (Optional) LAN sub-interface IP address.

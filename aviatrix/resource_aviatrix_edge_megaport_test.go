@@ -21,6 +21,7 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 	resourceName := "aviatrix_edge_Megaport.test"
 	accountName := "acc-" + acctest.RandString(5)
 	edgeMegaportUsername := "megaport-user-" + acctest.RandString(5)
+	edgeMegaportPassword := "megaport-password-" + acctest.RandString(5)
 	gwName := "gw-" + acctest.RandString(5)
 	siteId := "site-" + acctest.RandString(5)
 	path, _ := os.Getwd()
@@ -33,16 +34,14 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEdgeMegaportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeMegaportBasic(accountName, edgeMegaportUsername, gwName, siteId, path),
+				Config: testAccEdgeMegaportBasic(accountName, edgeMegaportUsername, edgeMegaportPassword, gwName, siteId, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeMegaportExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
-					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
-					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "192.168.99.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.3.ip_address", "192.168.88.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.4.ip_address", "192.168.77.14/24"),
 				),
 			},
 			{
@@ -55,44 +54,58 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 	})
 }
 
-func testAccEdgeMegaportBasic(edgeMegaportUsername, accountName, gwName, siteId, path string) string {
+func testAccEdgeMegaportBasic(accountName, edgeMegaportUsername, edgeMegaportPassword, gwName, siteId, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name          = "%s"
-	cloud_type            = 524288
-	edge_Megaport_username = "%s"
+	cloud_type            = 1048576
+	edge_csp_username     = "%s"
+	edge_csp_password     = "%s"
 }
-resource "aviatrix_edge_Megaport" "test" {
-	account_name                       = aviatrix_account.test_account.account_name
+resource "aviatrix_edge_megaport" "test" {
+	account_name                       = aviatrix_account.test.account_name
 	gw_name                            = "%s"
 	site_id                            = "%s"
 	ztp_file_download_path             = "%s"
-	bgp_polling_time                   = 50
-	bgp_neighbor_status_polling_time   = 5
 	
 	interfaces {
-		name          = "eth0"
-		type          = "WAN"
-		ip_address    = "10.230.5.32/24"
-		gateway_ip    = "10.230.5.100"
-		wan_public_ip = "64.71.24.221"
-	}
-	
-	interfaces {
-		name       = "eth1"
-		type       = "LAN"
-		ip_address = "10.230.3.32/24"
-	}
-	
-	interfaces {
-		name        = "eth2"
-		type        = "MANAGEMENT"
-		enable_dhcp = false
-		ip_address  = "172.16.15.162/20"
-		gateway_ip  = "172.16.0.1"
-	}
+        gateway_ip = "10.220.14.1"
+        ip_address = "10.220.14.10/24"
+        type       = "LAN"
+        index      = 0
+    }
+
+    interfaces {
+        enable_dhcp   = true
+        type   = "MANAGEMENT"
+        index  = 0
+    }
+
+    interfaces {
+        gateway_ip    = "192.168.99.1"
+        ip_address    = "192.168.99.14/24"
+        type          = "WAN"
+        index         = 0
+        wan_public_ip     = "67.207.104.19"
+    }
+
+    interfaces {
+        gateway_ip    = "192.168.88.1"
+        ip_address    = "192.168.88.14/24"
+        type          = "WAN"
+        index         = 1
+        wan_public_ip     = "67.71.12.148"
+    }
+
+    interfaces {
+        gateway_ip  = "192.168.77.1"
+        ip_address  = "192.168.77.14/24"
+        type        = "WAN"
+        index       = 2
+        wan_public_ip   = "67.72.12.149"
+    }
 }
- `, accountName, edgeMegaportUsername, gwName, siteId, path)
+ `, accountName, edgeMegaportUsername, edgeMegaportPassword, gwName, siteId, path)
 }
 
 func testAccCheckEdgeMegaportExists(resourceName string) resource.TestCheckFunc {

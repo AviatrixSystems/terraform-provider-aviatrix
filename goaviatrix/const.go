@@ -59,6 +59,7 @@ func GetSupportedClouds() []int {
 		EDGECSP,
 		EDGEEQUINIX,
 		EDGENEO,
+		EDGEMEGAPORT,
 	}
 }
 
