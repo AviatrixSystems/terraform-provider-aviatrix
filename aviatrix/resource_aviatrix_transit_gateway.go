@@ -1725,9 +1725,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
-			err := client.SetBgpBfdPollingTime(gateway, val.(int))
-			if err != nil {
-				return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+			bgp_neighbor_status_polling_time := val.(int)
+			if bgp_neighbor_status_polling_time >= 1 && bgp_neighbor_status_polling_time != defaultBgpNeighborStatusPollingTime {
+				err := client.SetBgpBfdPollingTime(gateway, bgp_neighbor_status_polling_time)
+				if err != nil {
+					return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+				}
 			}
 		}
 
