@@ -5,18 +5,19 @@ package goaviatrix
 
 // Cloud provider ids
 const (
-	AWS         = 1
-	GCP         = 4
-	Azure       = 8
-	OCI         = 16
-	AzureGov    = 32
-	AWSGov      = 256
-	AWSChina    = 1024
-	AzureChina  = 2048
-	AliCloud    = 8192
-	EDGECSP     = 65536  // Zededa
-	EDGEEQUINIX = 524288 // Equinix
-	EDGENEO     = 262144 // AEP
+	AWS          = 1
+	GCP          = 4
+	Azure        = 8
+	OCI          = 16
+	AzureGov     = 32
+	AWSGov       = 256
+	AWSChina     = 1024
+	AzureChina   = 2048
+	AliCloud     = 8192
+	EDGECSP      = 65536   // Zededa
+	EDGEEQUINIX  = 524288  // Equinix
+	EDGENEO      = 262144  // AEP
+	EDGEMEGAPORT = 1048576 // Megaport
 )
 
 // Cloud vendor names
@@ -58,6 +59,7 @@ func GetSupportedClouds() []int {
 		EDGECSP,
 		EDGEEQUINIX,
 		EDGENEO,
+		EDGEMEGAPORT,
 	}
 }
 

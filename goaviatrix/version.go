@@ -279,7 +279,12 @@ func ParseVersion(version string) (string, *AviatrixVersion, error) {
 		return "", aver, errors.New("unable to get latest version when parsing version information")
 	}
 	if len(parts) >= 3 {
-		aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
+		if strings.Contains(parts[2], "-") {
+			buildParts := strings.Split(parts[2], "-")
+			aver.Build, err3 = strconv.ParseInt(buildParts[0], 10, 0)
+		} else {
+			aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
+		}
 		aver.HasBuild = true
 	}
 	if err1 != nil || err2 != nil || err3 != nil {
