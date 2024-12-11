@@ -173,8 +173,7 @@ type TransitGatewayBgpLanIpInfo struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
-	gateway.Async = true
-	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
@@ -190,7 +189,6 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		"action":  "create_multicloud_ha_gateway",
 		"gw_name": gateway.GwName,
 		"eip":     gateway.Eip,
-		"async":   "true",
 	}
 
 	if gateway.CloudType == GCP {
@@ -210,7 +208,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		return nil
 	}
 
-	return c.PostAsyncAPI(form["action"], form, checkFunc)
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {

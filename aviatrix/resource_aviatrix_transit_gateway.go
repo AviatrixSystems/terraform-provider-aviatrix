@@ -843,21 +843,21 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"ha_peer_backup_port_type": {
+			"peer_backup_port_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "wan",
-				Description: "Peer backup port type for the HA edge transit gateway (e.g., 'wan').",
+				Description: "Peer backup port type for the edge transit gateway (e.g., 'wan').",
 			},
-			"ha_peer_backup_port_index": {
+			"peer_backup_port_index": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "Peer backup port index for the HA edge transit gateway.",
+				Description: "Peer backup port index for the edge transit gateway.",
 			},
-			"ha_connection_type": {
+			"peer_connection_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Connection type for the HA edge transit gateway.",
+				Description: "Connection type for the edge transit gateway.",
 			},
 			"eip_map": {
 				Type:     schema.TypeList,
@@ -977,11 +977,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				DeviceID:      d.Get("ha_device_id").(string),
 				InsaneMode:    "yes",
 			}
-			peerBackupPortType, ok := d.GetOk("ha_peer_backup_port_type")
+			peerBackupPortType, ok := d.GetOk("peer_backup_port_type")
 			if !ok {
 				return fmt.Errorf("peer_backup_port_type is required for HA Edge Transit Gateway")
 			}
-			peerBackupPortIndex, ok := d.GetOk("ha_peer_backup_port_index")
+			peerBackupPortIndex, ok := d.GetOk("peer_backup_port_index")
 			if !ok {
 				return fmt.Errorf("peer_backup_port_index is required for HA Edge Transit Gateway")
 			}
@@ -990,9 +990,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to get the peer backup port name using the type and index: %v", err)
 			}
-			connectionType, ok := d.GetOk("ha_connection_type")
+			connectionType, ok := d.GetOk("peer_connection_type")
 			if !ok {
-				return fmt.Errorf("connection_type is required for HA Edge Transit Gateway")
+				return fmt.Errorf("peer_connection_type is required for HA Edge Transit Gateway")
 			}
 			// Create the backup link configuration
 			backupLinkData := goaviatrix.BackupLinkInterface{
@@ -1019,10 +1019,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				transitHaGw.InterfaceMapping = gateway.InterfaceMapping
 			}
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
-			// _, err = client.CreateTransitHaGw(transitHaGw)
-			// if err != nil {
-			// 	return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-			// }
+			_, err = client.CreateTransitHaGw(transitHaGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+			}
 		}
 
 		// eip map is updated after the transit is created
@@ -1037,18 +1037,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			gateway.EipMap = eipMapList
 			// update EIP map
-			// err = client.UpdateEdgeGateway(gateway)
-			// if err != nil {
-			// 	return fmt.Errorf("failed to update edge gateway: %s", err)
-			// }
-		}
-
-		if val, ok := d.GetOk("bgp_polling_time"); ok {
-			err := client.SetBgpPollingTime(gateway, val.(int))
+			err = client.UpdateEdgeGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("could not set bgp polling time: %v", err)
+				return fmt.Errorf("failed to update edge gateway: %s", err)
 			}
 		}
+
+		// if val, ok := d.GetOk("bgp_polling_time"); ok {
+		// 	err := client.SetBgpPollingTime(gateway, val.(int))
+		// 	if err != nil {
+		// 		return fmt.Errorf("could not set bgp polling time: %v", err)
+		// 	}
+		// }
 
 		// if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
 		// 	err := client.SetBgpBfdPollingTime(gateway, val.(int))
@@ -1064,17 +1064,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// 	}
 		// }
 
-		if val, ok := d.GetOk("prepend_as_path"); ok {
-			var prependASPath []string
-			slice := val.([]interface{})
-			for _, v := range slice {
-				prependASPath = append(prependASPath, v.(string))
-			}
-			err := client.SetPrependASPath(gateway, prependASPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path: %v", err)
-			}
-		}
+		// if val, ok := d.GetOk("prepend_as_path"); ok {
+		// 	var prependASPath []string
+		// 	slice := val.([]interface{})
+		// 	for _, v := range slice {
+		// 		prependASPath = append(prependASPath, v.(string))
+		// 	}
+		// 	err := client.SetPrependASPath(gateway, prependASPath)
+		// 	if err != nil {
+		// 		return fmt.Errorf("could not set prepend_as_path: %v", err)
+		// 	}
+		// }
 	} else {
 		gateway := &goaviatrix.TransitVpc{
 			CloudType:                d.Get("cloud_type").(int),
@@ -2055,8 +2055,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
-			d.Set("ha_peer_backup_port", "")
-			d.Set("ha_connection_type", "")
 			d.Set("ha_interfaces", nil)
 			return nil
 		}
@@ -2075,21 +2073,21 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 			peerBackupPortDetails := strings.Split(peerBackupPortInterface, ".")
 			portType := strings.ToUpper(peerBackupPortDetails[0])
-			if err = d.Set("ha_peer_backup_port_type", portType); err != nil {
-				return fmt.Errorf("could not set ha_peer_backup_port_type into state: %v", err)
+			if err = d.Set("peer_backup_port_type", portType); err != nil {
+				return fmt.Errorf("could not set peer_backup_port_type into state: %v", err)
 			}
 			portIndex, err := strconv.Atoi(peerBackupPortDetails[1])
 			if err != nil {
 				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %v", err)
 			}
-			if err = d.Set("ha_peer_backup_port_index", portIndex); err != nil {
-				return fmt.Errorf("could not set ha_peer_backup_port_index into state: %v", err)
+			if err = d.Set("peer_backup_port_index", portIndex); err != nil {
+				return fmt.Errorf("could not set peer_backup_port_index into state: %v", err)
 			}
 			connectionTypePrivate := backupLink.ConnectionTypePublic
 			if connectionTypePrivate {
-				d.Set("ha_connection_type", "private")
+				d.Set("peer_connection_type", "private")
 			} else {
-				d.Set("ha_connection_type", "public")
+				d.Set("peer_connection_type", "public")
 			}
 		}
 		// set ha interfaces
