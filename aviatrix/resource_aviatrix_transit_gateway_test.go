@@ -218,7 +218,11 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAEP, "gw_name", fmt.Sprintf("tfg-aep-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAEP, "gw_size", "SMALL"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "vpc_id", os.Getenv("AEP_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceNameAEP, "site_id", os.Getenv("AEP_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameAEP, "device_id", os.Getenv("AEP_DEVICE_ID")),
+						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.gateway_ip", "192.168.20.1"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.ip_address", "192.168.20.11/24"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.index", "0"),
 					),
 				},
 				{
@@ -362,39 +366,42 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
 	account_name = aviatrix_account.test_acc_edge_aep.account_name
 	gw_name      = "tfg-edge-aep-%[1]s"
 	vpc_id       = "%[2]s"
-	site_id 	= "%[2]s"
 	device_id = "%[3]s"
 	gw_size      = "SMALL"
 	interfaces {
-        gateway_ip = "192.168.24.1"
-        ifname     = "eth0"
-        ipaddr    = "192.168.24.13/24"
-        type       = "WAN"
+        gateway_ip    = "192.168.20.1"
+        ip_address    = "192.168.20.11/24"
+        type          = "WAN"
+        index         = 0
+        secondary_private_cidr_list = ["192.168.19.16/29"]
     }
+
     interfaces {
-        gateway_ip = "192.168.13.1"
-        ifname     = "eth1"
-        ipaddr    = "192.168.13.33/24"
-        type       = "WAN"
+        gateway_ip    = "192.168.21.1"
+        ip_address    = "192.168.21.11/24"
+        type          = "WAN"
+        index         = 1
+        secondary_private_cidr_list = ["192.168.21.16/29"]
     }
+
     interfaces {
         dhcp   = true
-        ifname = "eth2"
         type   = "MANAGEMENT"
+        index  = 0
     }
+
     interfaces {
-        gateway_ip                  = "192.168.19.1"
-        ifname                      = "eth3"
-        ipaddr                     = "192.168.19.13/24"
-        type                        = "WAN"
-        secondary_private_cidr_list = ["192.168.19.112/29"]
+        gateway_ip  = "192.168.22.1"
+        ip_address  = "192.168.22.11/24"
+        type        = "WAN"
+        index       = 2
     }
+
     interfaces {
-        gateway_ip                  = "192.168.18.1"
-        ifname                      = "eth4"
-        ipaddr                     = "192.168.18.13/24"
-        type                        = "WAN"
-        secondary_private_cidr_list = ["192.168.18.112/29"]
+        gateway_ip = "192.168.23.1"
+        ip_address = "192.168.23.11/24"
+        type       = "WAN"
+        index      = 3
     }
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
