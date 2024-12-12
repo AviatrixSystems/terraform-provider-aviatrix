@@ -220,7 +220,7 @@ type Gateway struct {
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
-	DeviceID                        string                              `json:"device_id,omitempty"`
+	DeviceID                        string                              `json:"edge_csp_device_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
 	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
@@ -246,7 +246,7 @@ type HaGateway struct {
 	ImageVersion        string                 `json:"gw_image_name"`
 	SoftwareVersion     string                 `json:"gw_software_version"`
 	HaBgpLanInterfaces  []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
-	DeviceID            string                 `json:"device_id,omitempty"`
+	DeviceID            string                 `json:"edge_csp_device_id,omitempty"`
 	Interfaces          []EdgeTransitInterface `json:"interfaces,omitempty"`
 }
 
