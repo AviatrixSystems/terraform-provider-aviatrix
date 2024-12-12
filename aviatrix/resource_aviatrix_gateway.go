@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -1123,7 +1122,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			}
 			peeringHaGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
-				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in
+				GwName:    d.Get("gw_name").(string) + "-hagw", // CHECK THE NAME of peering ha gateway in
 				// controller, test out first. just assuming it has that suffix
 			}
 			peeringHaGateway.VpcSize = peeringHaGwSize
@@ -2013,7 +2012,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			log.Printf("[INFO] can't update vpn cidr because vpn_access is disabled for gateway: %#v", gateway.GwName)
 		}
-
 	}
 	if d.HasChange("max_vpn_conn") {
 		if vpnAccess {
@@ -2041,7 +2039,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			log.Printf("[INFO] can't update max vpn connections because vpn is disabled for gateway: %#v", gateway.GwName)
 		}
-
 	}
 
 	newHaGwEnabled := false
@@ -2555,95 +2552,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	primaryHasVersionChange := d.HasChanges("software_version", "image_version")
-	haHasVersionChange := haEnabled && d.HasChanges("peering_ha_software_version", "peering_ha_image_version")
-	primaryHasImageVersionChange := d.HasChange("image_version")
-	haHasImageVersionChange := d.HasChange("peering_ha_image_version")
-	if primaryHasVersionChange || haHasVersionChange {
-		// To determine if this is an attempted software rollback, we check if
-		// old is a higher version than new. Or, the new version is the
-		// special string "previous".
-		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
-		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))
-		primaryRollbackSoftwareVersion := (err == nil && comparePrimary > 0) || newPrimarySoftwareVersion == "previous"
-
-		oldHaSoftwareVersion, newHaSoftwareVersion := d.GetChange("peering_ha_software_version")
-		compareHa, err := goaviatrix.CompareSoftwareVersions(oldHaSoftwareVersion.(string), newHaSoftwareVersion.(string))
-		haRollbackSoftwareVersion := (err == nil && compareHa > 0) || newHaSoftwareVersion == "previous"
-
-		if primaryHasVersionChange && haHasVersionChange &&
-			!primaryHasImageVersionChange && !haHasImageVersionChange &&
-			!primaryRollbackSoftwareVersion && !haRollbackSoftwareVersion {
-			// Both Primary and HA have upgraded just their software_version
-			// so we can perform upgrade in parallel.
-			log.Printf("[INFO] Upgrading gateway gw_name=%s ha/primary pair in parallel", gateway.GwName)
-			swVersion := d.Get("software_version").(string)
-			imageVersion := d.Get("image_version").(string)
-			gw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName,
-				SoftwareVersion: swVersion,
-				ImageVersion:    imageVersion,
-			}
-			haSwVersion := d.Get("peering_ha_software_version").(string)
-			haImageVersion := d.Get("peering_ha_image_version").(string)
-			hagw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName + "-hagw",
-				SoftwareVersion: haSwVersion,
-				ImageVersion:    haImageVersion,
-			}
-			var wg sync.WaitGroup
-			wg.Add(2)
-			var primaryErr, haErr error
-			go func() {
-				primaryErr = client.UpgradeGateway(gw)
-				wg.Done()
-			}()
-			go func() {
-				haErr = client.UpgradeGateway(hagw)
-				wg.Done()
-			}()
-			wg.Wait()
-			if primaryErr != nil && haErr != nil {
-				return fmt.Errorf("could not upgrade primary and HA gateway "+
-					"software_version=%s peering_ha_software_version=%s image_version=%s peering_ha_image_version=%s:"+
-					"\n primaryErr: %v\n haErr: %v",
-					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
-			} else if primaryErr != nil {
-				return fmt.Errorf("could not upgrade primary gateway software_version=%s: %v", swVersion, primaryErr)
-			} else if haErr != nil {
-				return fmt.Errorf("could not upgrade HA gateway peering_ha_software_version=%s: %v", haSwVersion, haErr)
-			}
-		} else { // Only primary or only HA has changed, or image_version changed, or it is a software rollback
-			log.Printf("[INFO] Upgrading gateway gw_name=%s ha or primary in serial", gateway.GwName)
-			if primaryHasVersionChange {
-				swVersion := d.Get("software_version").(string)
-				imageVersion := d.Get("image_version").(string)
-				gw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName,
-					SoftwareVersion: swVersion,
-					ImageVersion:    imageVersion,
-				}
-				err := client.UpgradeGateway(gw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
-				}
-			}
-			if haHasVersionChange {
-				haSwVersion := d.Get("peering_ha_software_version").(string)
-				haImageVersion := d.Get("peering_ha_image_version").(string)
-				hagw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName + "-hagw",
-					SoftwareVersion: haSwVersion,
-					ImageVersion:    haImageVersion,
-				}
-				err := client.UpgradeGateway(hagw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade HA gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange("rx_queue_size") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			return fmt.Errorf("could not update rx_queue_size since it only supports AWS related cloud types")
@@ -2685,7 +2593,7 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
 	if peeringHaSubnet != "" || peeringHaZone != "" {
-		//Delete backup gateway first
+		// Delete backup gateway first
 		gateway.GwName += "-hagw"
 		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)
 
