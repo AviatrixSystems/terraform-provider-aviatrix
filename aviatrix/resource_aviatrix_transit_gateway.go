@@ -298,11 +298,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
 			},
 			"bgp_neighbor_status_polling_time": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      defaultBgpNeighborStatusPollingTime,
-				ValidateFunc: validation.IntBetween(1, 10),
-				Description:  "BGP neighbor status polling time for BGP Transit Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          defaultBgpNeighborStatusPollingTime,
+				ValidateFunc:     validation.IntBetween(1, 10),
+				Description:      "BGP neighbor status polling time for BGP Transit Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncBgpNeighborStatusPollingTime,
 			},
 			"prepend_as_path": {
 				Type:         schema.TypeList,
