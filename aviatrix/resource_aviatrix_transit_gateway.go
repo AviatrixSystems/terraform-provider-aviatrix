@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -713,6 +714,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address of the HA Transit Gateway.",
 			},
+			"ztp_file_download_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old != ""
+				},
+				Description: "The location where the ZTP file will be stored locally.",
+			},
 			"interfaces": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -927,6 +936,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to get the interface mapping details: %v", err)
 			}
 			gateway.InterfaceMapping = interfaceMapping
+		}
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX) {
+			gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
+			if !ok {
+				return fmt.Errorf("ztp_file_download_path is required for Edge Transit Gateway")
+			}
 		}
 
 		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -3979,14 +3994,37 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
-
-		gateway.GwName = d.Get("gw_name").(string)
-		err := client.DeleteGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
+		if cloudType == goaviatrix.EDGEEQUINIX {
+			err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
+			if err != nil {
+				return fmt.Errorf("failed to delete ZTP file: %s", err)
+			}
 		}
 	}
 
+	gateway.GwName = d.Get("gw_name").(string)
+	err := client.DeleteGateway(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
+	}
+
+	if cloudType == goaviatrix.EDGEEQUINIX {
+		err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
+		if err != nil {
+			return fmt.Errorf("failed to delete ZTP file: %s", err)
+		}
+	}
+
+	return nil
+}
+
+// func to delete the ztp file
+func deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath string) error {
+	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcId + "-cloud-init.txt"
+	err := os.Remove(fileName)
+	if err != nil {
+		return fmt.Errorf("could not remove the ztp file: %v", err)
+	}
 	return nil
 }
 
