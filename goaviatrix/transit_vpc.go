@@ -48,23 +48,23 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
-	AvailabilityDomain           string                 `form:"availability_domain,omitempty"`
-	FaultDomain                  string                 `form:"fault_domain,omitempty"`
-	EnableSpotInstance           bool                   `form:"spot_instance,omitempty"`
-	SpotPrice                    string                 `form:"spot_price,omitempty"`
-	DeleteSpot                   bool                   `form:"delete_spot,omitempty"`
-	ApprovedLearnedCidrs         []string               `form:"approved_learned_cidrs"`
-	BgpLanVpcID                  string                 `form:"bgp_lan_vpc"`
-	BgpLanSpecifySubnet          string                 `form:"bgp_lan_subnet"`
-	Async                        bool                   `form:"async,omitempty"`
-	BgpLanInterfacesCount        int                    `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string                 `form:"lb_vpc_id,omitempty"`
-	Transit                      bool                   `form:"transit,omitempty"`
-	DeviceID                     string                 `form:"device_id,omitempty"`
-	SiteID                       string                 `form:"site_id,omitempty"`
-	Interfaces                   string                 `json:"interfaces,omitempty"`
-	InterfaceMapping             string                 `json:"interface_mapping,omitempty"`
-	InterfaceList                []EdgeTransitInterface `json:"interface_list,omitempty"`
+	AvailabilityDomain           string   `form:"availability_domain,omitempty"`
+	FaultDomain                  string   `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
+	SpotPrice                    string   `form:"spot_price,omitempty"`
+	DeleteSpot                   bool     `form:"delete_spot,omitempty"`
+	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
+	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
+	BgpLanSpecifySubnet          string   `form:"bgp_lan_subnet"`
+	Async                        bool     `form:"async,omitempty"`
+	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
+	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
+	Transit                      bool     `form:"transit,omitempty"`
+	DeviceID                     string   `form:"device_id,omitempty"`
+	SiteID                       string   `form:"site_id,omitempty"`
+	Interfaces                   string   `json:"interfaces,omitempty"`
+	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
+	EipMap                       string   `json:"eip_map,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -137,11 +137,17 @@ type TransitGwFireNetInterfacesResp struct {
 type EdgeTransitInterface struct {
 	Name           string   `json:"ifname"`
 	Type           string   `json:"type"`
+	Index          int      `json:"index,omitempty"`
 	PublicIp       string   `json:"public_ip,omitempty"`
 	Dhcp           bool     `json:"dhcp,omitempty"`
 	IpAddress      string   `json:"ipaddr,omitempty"`
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+}
+
+type EipMap struct {
+	PrivateIP string `json:"private_ip"`
+	PublicIP  string `json:"public_ip"`
 }
 
 type TransitGatewayBgpLanIpInfoResp struct {
@@ -167,8 +173,7 @@ type TransitGatewayBgpLanIpInfo struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
-	gateway.Async = true
-	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
@@ -184,7 +189,6 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		"action":  "create_multicloud_ha_gateway",
 		"gw_name": gateway.GwName,
 		"eip":     gateway.Eip,
-		"async":   "true",
 	}
 
 	if gateway.CloudType == GCP {
@@ -204,7 +208,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		return nil
 	}
 
-	return c.PostAsyncAPI(form["action"], form, checkFunc)
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
@@ -225,6 +229,33 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 	}
 
 	return c.PostAPI(form["action"], form, checkFunc)
+}
+
+func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_edge_gateway",
+		"gateway_name": gateway.GwName,
+	}
+
+	if gateway.Interfaces != "" {
+		form["interfaces"] = gateway.Interfaces
+	}
+
+	if gateway.EipMap != "" {
+		form["eip_map"] = gateway.EipMap
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DeleteEdgeGateway(gateway *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "delete_multicloud_gateway",
+		"gateway_name": gateway.GwName,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
