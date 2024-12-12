@@ -713,12 +713,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address of the HA Transit Gateway.",
 			},
-			"enable_edge_ha": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Enable HA for Edge as a Transit gateway.",
-			},
 			"interfaces": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -846,7 +840,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"peer_backup_port_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "wan",
+				Default:     "WAN",
 				Description: "Peer backup port type for the edge transit gateway (e.g., 'wan').",
 			},
 			"peer_backup_port_index": {
@@ -867,7 +861,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 						"interface_type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Description:  "Interface name (e.g., 'WAN').",
+							Description:  "Interface type (e.g., 'WAN').",
 							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
 						},
 						"interface_index": {
