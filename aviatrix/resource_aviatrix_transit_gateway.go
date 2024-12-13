@@ -3985,12 +3985,11 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
-
-		gateway.GwName = d.Get("gw_name").(string)
-		err := client.DeleteGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
-		}
+	}
+	gateway.GwName = d.Get("gw_name").(string)
+	err := client.DeleteGateway(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
 
 	return nil
@@ -4065,14 +4064,26 @@ func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 		if !ok {
 			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
 		}
-		interfaceType := eip["interface_type"].(string)
-		interfaceIndex := eip["interface_index"].(int)
+		interfaceType, ok := eip["interface_type"].(string)
+		if !ok {
+			return "", fmt.Errorf("interface_type must be a string")
+		}
+		interfaceIndex, ok := eip["interface_index"].(int)
+		if !ok {
+			return "", fmt.Errorf("interface_index must be an integer")
+		}
 		interfaceName, err := getInterfaceName(interfaceType, interfaceIndex, wanCount)
 		if err != nil {
 			return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %v", err)
 		}
-		privateIP := eip["private_ip"].(string)
-		publicIP := eip["public_ip"].(string)
+		privateIP, ok := eip["private_ip"].(string)
+		if !ok {
+			return "", fmt.Errorf("private_ip must be a string")
+		}
+		publicIP, ok := eip["public_ip"].(string)
+		if !ok {
+			return "", fmt.Errorf("public_ip must be a string")
+		}
 
 		// Append the EIP entry to the corresponding interface
 		eipEntry := goaviatrix.EipMap{

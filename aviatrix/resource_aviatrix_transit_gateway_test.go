@@ -1,6 +1,9 @@
 package aviatrix
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -10,6 +13,74 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+var interfaces = []interface{}{
+	map[string]interface{}{
+		"gateway_ip":                  "192.168.20.1",
+		"ip_address":                  "192.168.20.11/24",
+		"type":                        "WAN",
+		"index":                       0,
+		"secondary_private_cidr_list": []interface{}{"192.168.19.16/29"},
+	},
+	map[string]interface{}{
+		"gateway_ip":                  "192.168.21.1",
+		"ip_address":                  "192.168.21.11/24",
+		"type":                        "WAN",
+		"index":                       1,
+		"secondary_private_cidr_list": []interface{}{"192.168.21.16/29"},
+	},
+	map[string]interface{}{
+		"dhcp":  true,
+		"type":  "MANAGEMENT",
+		"index": 0,
+	},
+	map[string]interface{}{
+		"gateway_ip": "192.168.22.1",
+		"ip_address": "192.168.22.11/24",
+		"type":       "WAN",
+		"index":      2,
+	},
+	map[string]interface{}{
+		"gateway_ip": "192.168.23.1",
+		"ip_address": "192.168.23.11/24",
+		"type":       "WAN",
+		"index":      3,
+	},
+}
+
+var expectedInterfaceDetails = []goaviatrix.EdgeTransitInterface{
+	{
+		GatewayIp:      "192.168.20.1",
+		IpAddress:      "192.168.20.11/24",
+		Name:           "eth0",
+		Type:           "WAN",
+		SecondaryCIDRs: []string{"192.168.19.16/29"},
+	},
+	{
+		GatewayIp:      "192.168.21.1",
+		IpAddress:      "192.168.21.11/24",
+		Name:           "eth1",
+		Type:           "WAN",
+		SecondaryCIDRs: []string{"192.168.21.16/29"},
+	},
+	{
+		Dhcp: true,
+		Name: "eth2",
+		Type: "MANAGEMENT",
+	},
+	{
+		GatewayIp: "192.168.22.1",
+		IpAddress: "192.168.22.11/24",
+		Name:      "eth3",
+		Type:      "WAN",
+	},
+	{
+		GatewayIp: "192.168.23.1",
+		IpAddress: "192.168.23.11/24",
+		Name:      "eth4",
+		Type:      "WAN",
+	},
+}
 
 func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
@@ -456,4 +527,266 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestGetInterfaceMappingDetails(t *testing.T) {
+	tests := []struct {
+		name                  string
+		interfaceMappingInput []interface{}
+		expectedOutput        string
+		expectedError         error
+	}{
+		{
+			name: "Valid input for ESXI devices",
+			interfaceMappingInput: []interface{}{
+				map[string]interface{}{
+					"name":  "eth0",
+					"type":  "mgmt",
+					"index": 0,
+				},
+				map[string]interface{}{
+					"name":  "eth1",
+					"type":  "wan",
+					"index": 1,
+				},
+			},
+			expectedOutput: `{"eth0":["mgmt","0"],"eth1":["wan","1"]}`,
+			expectedError:  nil,
+		},
+		{
+			name:                  "Empty input (default Dell device mapping)",
+			interfaceMappingInput: []interface{}{},
+			expectedOutput:        `{"eth0":["mgmt","0"],"eth2":["wan","1"],"eth3":["wan","2"],"eth4":["wan","3"],"eth5":["wan","0"]}`,
+			expectedError:         nil,
+		},
+		{
+			name: "Invalid input type (non-map element)",
+			interfaceMappingInput: []interface{}{
+				"invalid_type", // This is not a map
+			},
+			expectedOutput: "",
+			expectedError:  fmt.Errorf("invalid type string for interface mapping, expected a map"),
+		},
+		{
+			name: "Invalid map fields (missing required keys)",
+			interfaceMappingInput: []interface{}{
+				map[string]interface{}{
+					"name": "eth0", // Missing 'type' and 'index'
+				},
+			},
+			expectedOutput: "",
+			expectedError:  fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getInterfaceMappingDetails(tt.interfaceMappingInput)
+			if err != nil && err.Error() != tt.expectedError.Error() {
+				t.Errorf("expected error: %v, got: %v", tt.expectedError, err)
+			}
+			if result != tt.expectedOutput {
+				t.Errorf("expected output: %s, got: %s", tt.expectedOutput, result)
+			}
+		})
+	}
+}
+
+func TestGetInterfaceName(t *testing.T) {
+	tests := []struct {
+		name        string
+		intfType    string
+		intfIndex   int
+		wanCount    int
+		expected    string
+		expectedErr error
+	}{
+		{
+			name:        "Valid WAN interface with index 0",
+			intfType:    "WAN",
+			intfIndex:   0,
+			wanCount:    3,
+			expected:    "eth0",
+			expectedErr: nil,
+		},
+		{
+			name:        "Valid WAN interface with index 1",
+			intfType:    "WAN",
+			intfIndex:   1,
+			wanCount:    3,
+			expected:    "eth1",
+			expectedErr: nil,
+		},
+		{
+			name:        "Valid WAN interface with index 2",
+			intfType:    "WAN",
+			intfIndex:   2,
+			wanCount:    3,
+			expected:    "eth3",
+			expectedErr: nil,
+		},
+		{
+			name:        "Valid MANAGEMENT interface with index 0",
+			intfType:    "MANAGEMENT",
+			intfIndex:   0,
+			wanCount:    3,
+			expected:    "eth2",
+			expectedErr: nil,
+		},
+		{
+			name:        "Valid MANAGEMENT interface with index 1",
+			intfType:    "MANAGEMENT",
+			intfIndex:   1,
+			wanCount:    3,
+			expected:    "eth4",
+			expectedErr: nil,
+		},
+		{
+			name:        "Invalid interface type",
+			intfType:    "INVALID",
+			intfIndex:   0,
+			wanCount:    3,
+			expected:    "",
+			expectedErr: errors.New("invalid interface type INVALID"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getInterfaceName(tt.intfType, tt.intfIndex, tt.wanCount)
+
+			// Check error
+			if err != nil && tt.expectedErr != nil {
+				if err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error: %v, got: %v", tt.expectedErr, err)
+				}
+			} else if (err != nil && tt.expectedErr == nil) || (err == nil && tt.expectedErr != nil) {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			// Check result
+			if result != tt.expected {
+				t.Errorf("expected result: %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetEipMapDetails(t *testing.T) {
+	tests := []struct {
+		name        string
+		eipMap      []interface{}
+		wanCount    int
+		expected    string
+		expectedErr error
+	}{
+		{
+			name: "Valid EIP map with WAN and MANAGEMENT interfaces",
+			eipMap: []interface{}{
+				map[string]interface{}{
+					"interface_type":  "WAN",
+					"interface_index": 0,
+					"private_ip":      "192.168.0.10",
+					"public_ip":       "203.0.113.10",
+				},
+				map[string]interface{}{
+					"interface_type":  "MANAGEMENT",
+					"interface_index": 0,
+					"private_ip":      "192.168.1.10",
+					"public_ip":       "203.0.113.11",
+				},
+			},
+			wanCount:    3,
+			expected:    `{"eth0":[{"private_ip":"192.168.0.10","public_ip":"203.0.113.10"}],"eth2":[{"private_ip":"192.168.1.10","public_ip":"203.0.113.11"}]}`,
+			expectedErr: nil,
+		},
+		{
+			name: "Invalid EIP map: missing interface type",
+			eipMap: []interface{}{
+				map[string]interface{}{
+					"interface_index": 0,
+					"private_ip":      "192.168.0.10",
+					"public_ip":       "203.0.113.10",
+				},
+			},
+			wanCount:    3,
+			expected:    "",
+			expectedErr: errors.New("interface_type must be a string"),
+		},
+		{
+			name: "Invalid EIP map: invalid interface type",
+			eipMap: []interface{}{
+				map[string]interface{}{
+					"interface_type":  "INVALID",
+					"interface_index": 0,
+					"private_ip":      "192.168.0.10",
+					"public_ip":       "203.0.113.10",
+				},
+			},
+			wanCount:    3,
+			expected:    "",
+			expectedErr: errors.New("failed to get the interface name using type and index for eip_map: invalid interface type INVALID"),
+		},
+		{
+			name:        "Empty EIP map",
+			eipMap:      []interface{}{},
+			wanCount:    3,
+			expected:    `{}`,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getEipMapDetails(tt.eipMap, tt.wanCount)
+
+			// Check for errors
+			if err != nil && tt.expectedErr != nil {
+				if err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error: %v, got: %v", tt.expectedErr, err)
+				}
+			} else if (err != nil && tt.expectedErr == nil) || (err == nil && tt.expectedErr != nil) {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			// Check result
+			if result != tt.expected {
+				t.Errorf("expected result: %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+// test to count the interface types in the gateway
+func TestCountInterfaceTypes(t *testing.T) {
+	// count the WAN interfaces
+	wanCount, err := countInterfaceTypes(interfaces)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	// Check that the WAN count matches the expected value
+	expectedWANCount := 4
+	if wanCount != expectedWANCount {
+		t.Errorf("Expected %d WAN interfaces, got %d", expectedWANCount, wanCount)
+	}
+}
+
+// test to get the interface details from the resource
+func TestGetInterfaceDetails(t *testing.T) {
+	// get the interface details
+	interfaceDetails, err := getInterfaceDetails(interfaces)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	// base64 encode the expected string
+	expectedInterfaceDetailsJson, err := json.Marshal(expectedInterfaceDetails)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	// base64 encode the expected string
+	expectedInterfaceDetailsEncoded := base64.StdEncoding.EncodeToString(expectedInterfaceDetailsJson)
+	// Check that the interface details are as expected
+	if interfaceDetails != expectedInterfaceDetailsEncoded {
+		t.Errorf("Expected %s, got %s", expectedInterfaceDetailsEncoded, interfaceDetails)
+	}
 }
