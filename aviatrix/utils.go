@@ -408,3 +408,14 @@ func sortInterfaceMappingByCustomOrder(interfaceMapping []goaviatrix.InterfaceMa
 	})
 	return interfaceMapping
 }
+
+// Sorting interfaces by type and index
+func sortInterfacesByTypeIndex(interfaces []goaviatrix.MegaportInterface) []goaviatrix.MegaportInterface {
+	sort.SliceStable(interfaces, func(i, j int) bool {
+		// Create composite keys for comparison
+		iKey := fmt.Sprintf("%s%d", interfaces[i].Type, interfaces[i].Index)
+		jKey := fmt.Sprintf("%s%d", interfaces[j].Type, interfaces[j].Index)
+		return iKey < jKey
+	})
+	return interfaces
+}
