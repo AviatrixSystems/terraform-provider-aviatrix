@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 var interfaces = []interface{}{
@@ -788,5 +789,132 @@ func TestGetInterfaceDetails(t *testing.T) {
 	// Check that the interface details are as expected
 	if interfaceDetails != expectedInterfaceDetailsEncoded {
 		t.Errorf("Expected %s, got %s", expectedInterfaceDetailsEncoded, interfaceDetails)
+	}
+}
+
+func TestSetEipMapDetails(t *testing.T) {
+	tests := []struct {
+		name              string
+		eipMap            map[string][]goaviatrix.EipMap
+		ifNameTranslation map[string]string
+		expectedResult    []map[string]interface{}
+		expectedErr       string
+	}{
+		{
+			name: "Valid input",
+			eipMap: map[string][]goaviatrix.EipMap{
+				"eth0": {
+					{PrivateIP: "192.168.1.10", PublicIP: "34.123.45.67"},
+				},
+				"eth1": {
+					{PrivateIP: "192.168.1.11", PublicIP: "34.123.45.68"},
+					{PrivateIP: "192.168.1.12", PublicIP: "34.123.45.69"},
+				},
+			},
+			ifNameTranslation: map[string]string{
+				"eth0": "WAN.0",
+				"eth1": "WAN.1",
+			},
+			expectedResult: []map[string]interface{}{
+				{
+					"interface_type":  "WAN",
+					"interface_index": 0,
+					"private_ip":      "192.168.1.10",
+					"public_ip":       "34.123.45.67",
+				},
+				{
+					"interface_type":  "WAN",
+					"interface_index": 1,
+					"private_ip":      "192.168.1.11",
+					"public_ip":       "34.123.45.68",
+				},
+				{
+					"interface_type":  "WAN",
+					"interface_index": 1,
+					"private_ip":      "192.168.1.12",
+					"public_ip":       "34.123.45.69",
+				},
+			},
+			expectedErr: "",
+		},
+		{
+			name: "Error converting interface index",
+			eipMap: map[string][]goaviatrix.EipMap{
+				"eth0": {
+					{PrivateIP: "192.168.1.10", PublicIP: "34.123.45.67"},
+				},
+			},
+			ifNameTranslation: map[string]string{
+				"eth0": "WAN.invalid_index",
+			},
+			expectedResult: nil,
+			expectedErr:    "failed to convert interface index to integer",
+		},
+		{
+			name:              "Empty EIP map",
+			eipMap:            map[string][]goaviatrix.EipMap{},
+			ifNameTranslation: map[string]string{},
+			expectedResult:    []map[string]interface{}{},
+			expectedErr:       "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := setEipMapDetails(tt.eipMap, tt.ifNameTranslation)
+
+			if tt.expectedErr != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedResult, result)
+			}
+		})
+	}
+}
+
+func TestSetInterfaceMappingDetails(t *testing.T) {
+	tests := []struct {
+		name              string
+		interfaceMapping  []goaviatrix.InterfaceMapping
+		expectedResult    []map[string]interface{}
+		expectedOrderFunc func([]map[string]interface{}) bool
+	}{
+		{
+			name: "Valid interface mapping with multiple interfaces",
+			interfaceMapping: []goaviatrix.InterfaceMapping{
+				{Name: "eth0", Type: "WAN", Index: 0},
+				{Name: "eth1", Type: "MANAGEMENT", Index: 1},
+				{Name: "eth2", Type: "WAN", Index: 2},
+			},
+			expectedResult: []map[string]interface{}{
+				{"name": "eth0", "type": "WAN", "index": 0},
+				{"name": "eth1", "type": "MANAGEMENT", "index": 1},
+				{"name": "eth2", "type": "WAN", "index": 2},
+			},
+			expectedOrderFunc: func(result []map[string]interface{}) bool {
+				// Check the order based on "name" for sorting
+				return result[0]["name"] == "eth0" && result[1]["name"] == "eth1" && result[2]["name"] == "eth2"
+			},
+		},
+		{
+			name:             "Empty interface mapping",
+			interfaceMapping: []goaviatrix.InterfaceMapping{},
+			expectedResult:   []map[string]interface{}{},
+			expectedOrderFunc: func(result []map[string]interface{}) bool {
+				return len(result) == 0
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := setInterfaceMappingDetails(tt.interfaceMapping)
+			assert.Equal(t, tt.expectedResult, result)
+			if tt.expectedOrderFunc != nil {
+				assert.True(t, tt.expectedOrderFunc(result))
+			}
+		})
 	}
 }
