@@ -55,13 +55,27 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceNameAws, "bgp_polling_time", "50"),
-						resource.TestCheckResourceAttr(resourceNameAws, "bgp_neighbor_status_polling_time", "5"),
+						resource.TestCheckResourceAttr(resourceNameAws, "bgp_neighbor_status_polling_time", "0"),
 					),
 				},
 				{
 					ResourceName:      resourceNameAws,
 					ImportState:       true,
 					ImportStateVerify: true,
+				},
+				{
+					Config: testAccTransitGatewayConfigAWSBasicBgpBfd(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitGatewayExists(resourceNameAws, &gateway),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", "t2.micro"),
+						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
+						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceNameAws, "bgp_polling_time", "50"),
+						resource.TestCheckResourceAttr(resourceNameAws, "bgp_neighbor_status_polling_time", "7"),
+					),
 				},
 			},
 		})
@@ -242,6 +256,22 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
+}
+
+func testAccTransitGatewayConfigAWSBasicBgpBfd(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
+	cloud_type                       = 1
+	account_name                     = aviatrix_account.test_acc_aws.account_name
+	gw_name                          = "tfg-aws-%s"
+	vpc_id                           = "%s"
+	vpc_reg                          = "%s"
+	gw_size                          = "t2.micro"
+	subnet                           = "%s"
+	bgp_polling_time                 = 50
+	bgp_neighbor_status_polling_time = 7
+}
+	`, rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccTransitGatewayConfigBasicAZURE(rName string) string {

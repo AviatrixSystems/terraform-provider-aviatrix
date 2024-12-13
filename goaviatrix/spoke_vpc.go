@@ -3,8 +3,6 @@ package goaviatrix
 import (
 	"fmt"
 	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Spoke gateway simple struct to hold spoke details
@@ -514,9 +512,4 @@ func (c *Client) DisableGlobalVpc(gateway *Gateway) error {
 		"gateway_name": gateway.GwName,
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-// diff suppress function for bgp_neighbor_status_polling_time. Suppress the diff if old value is 0
-func DiffSuppressFuncBgpNeighborStatusPollingTime(k, old, new string, d *schema.ResourceData) bool {
-	return old == "0"
 }
