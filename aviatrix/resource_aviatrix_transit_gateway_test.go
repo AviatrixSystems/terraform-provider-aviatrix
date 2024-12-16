@@ -295,6 +295,13 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.ip_address", "192.168.20.11/24"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.type", "WAN"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.gateway_ip", "192.168.20.1"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.ip_address", "192.168.20.12/24"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_port_type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_port_index", "1"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "peer_connection_type", "private"),
 					),
 				},
 				{
@@ -474,6 +481,45 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
         ip_address = "192.168.23.11/24"
         type       = "WAN"
         index      = 3
+    }
+
+	ha_device_id = "a20c75c0-06c2-4102-9df1-b00b85e89eac"
+    peer_backup_port_type = "WAN"
+    peer_backup_port_index = 1
+    peer_connection_type = "private"
+    ha_interfaces {
+        gateway_ip    = "192.168.20.1"
+        index         = 0
+        ip_address    = "192.168.20.12/24"
+        type          = "WAN"
+    }
+
+    ha_interfaces {
+        gateway_ip   = "192.168.21.1"
+        index        = 1
+        ip_address   = "192.168.21.12/24"
+        type         = "WAN"
+        secondary_private_cidr_list = ["192.168.21.32/29"]
+    }
+
+    ha_interfaces {
+        dhcp   = true
+        index  = 0
+        type   = "MANAGEMENT"
+    }
+
+    ha_interfaces {
+        gateway_ip   = "192.168.22.1"
+        index        = 2
+        ip_address   = "192.168.22.12/24"
+        type         = "WAN"
+    }
+
+    ha_interfaces {
+        gateway_ip     = "192.168.23.1"
+        index          = 3
+        ip_address     = "192.168.23.12/24"
+        type           = "WAN"
     }
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
@@ -915,6 +961,92 @@ func TestSetInterfaceMappingDetails(t *testing.T) {
 			if tt.expectedOrderFunc != nil {
 				assert.True(t, tt.expectedOrderFunc(result))
 			}
+		})
+	}
+}
+
+func TestSetInterfaceDetails(t *testing.T) {
+	// Define test cases
+	tests := []struct {
+		name       string
+		interfaces []goaviatrix.EdgeTransitInterface
+		expected   []map[string]interface{}
+	}{
+		{
+			name: "Single WAN interface",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{Type: "WAN", PublicIp: "1.1.1.1", Dhcp: true, IpAddress: "10.0.0.1", GatewayIp: "10.0.0.254"},
+			},
+			expected: []map[string]interface{}{
+				{
+					"type":       "WAN",
+					"index":      0,
+					"public_ip":  "1.1.1.1",
+					"dhcp":       true,
+					"ip_address": "10.0.0.1",
+					"gateway_ip": "10.0.0.254",
+				},
+			},
+		},
+		{
+			name: "Multiple WAN and MANAGEMENT interfaces",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{Type: "WAN", IpAddress: "10.0.0.2"},
+				{Type: "WAN", IpAddress: "10.0.0.3"},
+				{Type: "MANAGEMENT", GatewayIp: "192.168.1.1"},
+				{Type: "MANAGEMENT", Dhcp: true},
+			},
+			expected: []map[string]interface{}{
+				{"type": "WAN", "index": 0, "ip_address": "10.0.0.2"},
+				{"type": "WAN", "index": 1, "ip_address": "10.0.0.3"},
+				{"type": "MANAGEMENT", "index": 0, "gateway_ip": "192.168.1.1"},
+				{"type": "MANAGEMENT", "index": 1, "dhcp": true},
+			},
+		},
+		{
+			name: "Custom interface with Secondary CIDRs",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{
+					Type:           "CUSTOM",
+					Index:          5,
+					SecondaryCIDRs: []string{"10.0.1.0/24", "10.0.2.0/24"},
+				},
+			},
+			expected: []map[string]interface{}{
+				{
+					"type":                        "CUSTOM",
+					"index":                       5,
+					"secondary_private_cidr_list": []string{"10.0.1.0/24", "10.0.2.0/24"},
+				},
+			},
+		},
+		{
+			name:       "Empty interface list",
+			interfaces: []goaviatrix.EdgeTransitInterface{},
+			expected:   []map[string]interface{}{},
+		},
+		{
+			name: "Ignore empty SecondaryCIDRs",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{
+					Type:           "WAN",
+					SecondaryCIDRs: []string{"", "10.0.3.0/24", ""},
+				},
+			},
+			expected: []map[string]interface{}{
+				{
+					"type":                        "WAN",
+					"index":                       0,
+					"secondary_private_cidr_list": []string{"10.0.3.0/24"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := setInterfaceDetails(tt.interfaces)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
