@@ -896,114 +896,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	cloudType := d.Get("cloud_type").(int)
 	flag := false
-	// create edge transit gateway
+	// create edge transit gateway for AEP & Equinix
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		gateway := &goaviatrix.TransitVpc{
-			CloudType:   d.Get("cloud_type").(int),
-			AccountName: d.Get("account_name").(string),
-			GwName:      d.Get("gw_name").(string),
-			VpcID:       d.Get("vpc_id").(string),
-			VpcSize:     d.Get("gw_size").(string),
-			DeviceID:    d.Get("device_id").(string),
-			Transit:     true,
-		}
-		interfaces, ok := d.Get("interfaces").([]interface{})
-		if !ok || len(interfaces) == 0 {
-			return fmt.Errorf("interfaces attribute is required for Edge Transit Gateway")
-		}
-		interfacesList, err := getInterfaceDetails(interfaces)
+		err := createEdgeTransitGateway(d, client, cloudType)
 		if err != nil {
-			return fmt.Errorf("failed to get the interface details: %v", err)
+			return err
 		}
-		gateway.Interfaces = interfacesList
-		wanCount, err := countInterfaceTypes(interfaces)
-		if err != nil {
-			return fmt.Errorf("failed to get the interface count: %v", err)
-		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			/*
-				TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
-			*/
-			interfaceMappingInput := d.Get("interface_mapping").([]interface{})
-			interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
-			if err != nil {
-				return fmt.Errorf("failed to get the interface mapping details: %v", err)
-			}
-			gateway.InterfaceMapping = interfaceMapping
-		}
-
-		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
-		d.SetId(gateway.GwName)
 		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-		err = client.LaunchTransitVpc(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
-		}
-		// create ha gateway if ha_interfaces is provided
-		ha_device_id, ok := d.Get("ha_device_id").(string)
-		if ok && ha_device_id != "" {
-			transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
-			if err != nil {
-				return fmt.Errorf("failed to get the HA gateway details: %v", err)
-			}
-			// log transit ha gateway details
-			log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
-			_, err = client.CreateTransitHaGw(transitHaGw)
-			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-			}
-		}
-
-		// eip map is updated after the transit is created
-		eipMap, ok := d.Get("eip_map").([]interface{})
-		if !ok {
-			return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
-		}
-		if len(eipMap) > 0 {
-			eipMapList, err := getEipMapDetails(eipMap, wanCount)
-			if err != nil {
-				return fmt.Errorf("failed to get the eip map details: %v", err)
-			}
-			gateway.EipMap = eipMapList
-			// update EIP map
-			err = client.UpdateEdgeGateway(gateway)
-			if err != nil {
-				return fmt.Errorf("failed to update edge gateway: %s", err)
-			}
-		}
-
-		if val, ok := d.GetOk("bgp_polling_time"); ok {
-			err := client.SetBgpPollingTime(gateway, val.(int))
-			if err != nil {
-				return fmt.Errorf("could not set bgp polling time: %v", err)
-			}
-		}
-
-		if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
-			err := client.SetBgpBfdPollingTime(gateway, val.(int))
-			if err != nil {
-				return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
-			}
-		}
-
-		if val, ok := d.GetOk("local_as_number"); ok {
-			err := client.SetLocalASNumber(gateway, val.(string))
-			if err != nil {
-				return fmt.Errorf("could not set local_as_number: %v", err)
-			}
-		}
-
-		if val, ok := d.GetOk("prepend_as_path"); ok {
-			var prependASPath []string
-			slice := val.([]interface{})
-			for _, v := range slice {
-				prependASPath = append(prependASPath, v.(string))
-			}
-			err := client.SetPrependASPath(gateway, prependASPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path: %v", err)
-			}
-		}
 	} else {
 		gateway := &goaviatrix.TransitVpc{
 			CloudType:                d.Get("cloud_type").(int),
@@ -3992,6 +3891,118 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
 
+	return nil
+}
+
+func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client, cloudType int) error {
+	gateway := &goaviatrix.TransitVpc{
+		CloudType:   d.Get("cloud_type").(int),
+		AccountName: d.Get("account_name").(string),
+		GwName:      d.Get("gw_name").(string),
+		VpcID:       d.Get("vpc_id").(string),
+		VpcSize:     d.Get("gw_size").(string),
+		DeviceID:    d.Get("device_id").(string),
+		Transit:     true,
+	}
+	// get the interface config details
+	interfaces, ok := d.Get("interfaces").([]interface{})
+	if !ok || len(interfaces) == 0 {
+		return fmt.Errorf("interfaces attribute is required for Edge Transit Gateway")
+	}
+	interfacesList, err := getInterfaceDetails(interfaces)
+	if err != nil {
+		return fmt.Errorf("failed to get the interface details: %v", err)
+	}
+	gateway.Interfaces = interfacesList
+	// get the count of WAN inetrfaces to map interface type and index to interface name
+	wanCount, err := countInterfaceTypes(interfaces)
+	if err != nil {
+		return fmt.Errorf("failed to get the interface count: %v", err)
+	}
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+		/*
+			TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
+		*/
+		interfaceMappingInput := d.Get("interface_mapping").([]interface{})
+		interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
+		if err != nil {
+			return fmt.Errorf("failed to get the interface mapping details: %v", err)
+		}
+		gateway.InterfaceMapping = interfaceMapping
+	}
+
+	// create the transit gateway
+	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
+	d.SetId(gateway.GwName)
+	err = client.LaunchTransitVpc(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+	}
+	// create ha transit gateway if ha_device_id is provided
+	ha_device_id, ok := d.Get("ha_device_id").(string)
+	if ok && ha_device_id != "" {
+		transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
+		if err != nil {
+			return fmt.Errorf("failed to get the HA gateway details: %v", err)
+		}
+		// log transit ha gateway details
+		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
+		_, err = client.CreateTransitHaGw(transitHaGw)
+		if err != nil {
+			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+		}
+	}
+
+	// eip map is updated after the transit is created
+	eipMap, ok := d.Get("eip_map").([]interface{})
+	if !ok {
+		return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
+	}
+	if len(eipMap) > 0 {
+		eipMapList, err := getEipMapDetails(eipMap, wanCount)
+		if err != nil {
+			return fmt.Errorf("failed to get the eip map details: %v", err)
+		}
+		gateway.EipMap = eipMapList
+		// update EIP map
+		err = client.UpdateEdgeGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update edge gateway: %s", err)
+		}
+	}
+
+	if val, ok := d.GetOk("bgp_polling_time"); ok {
+		err := client.SetBgpPollingTime(gateway, val.(int))
+		if err != nil {
+			return fmt.Errorf("could not set bgp polling time: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
+		err := client.SetBgpBfdPollingTime(gateway, val.(int))
+		if err != nil {
+			return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("local_as_number"); ok {
+		err := client.SetLocalASNumber(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		slice := val.([]interface{})
+		for _, v := range slice {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		err := client.SetPrependASPath(gateway, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
 	return nil
 }
 
