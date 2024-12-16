@@ -154,6 +154,9 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 				Default:      defaultBgpNeighborStatusPollingTime,
 				ValidateFunc: validation.IntBetween(1, 10),
 				Description:  "BGP neighbor status polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 1 and 10.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "0"
+				},
 			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
