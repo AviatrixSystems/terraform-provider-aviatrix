@@ -149,7 +149,7 @@ In order to deploy the Edge gateway on Equinix Fabric, you need to use the [`equ
 ### equinix_network_file
 | Key                | Value               |
 |--------------------|---------------------|
-| device_type_code   | "AVIATRIX_EDGE_10"  |
+| device_type_code   | "AVIATRIX_EDGE"     |
 | process_type       | "CLOUD_INIT"        |
 | self_managed       | true                |
 | byol               | true                |
