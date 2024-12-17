@@ -588,12 +588,12 @@ func TestGetInterfaceMappingDetails(t *testing.T) {
 			interfaceMappingInput: []interface{}{
 				map[string]interface{}{
 					"name":  "eth0",
-					"type":  "mgmt",
+					"type":  "MANAGEMENT",
 					"index": 0,
 				},
 				map[string]interface{}{
 					"name":  "eth1",
-					"type":  "wan",
+					"type":  "WAN",
 					"index": 1,
 				},
 			},

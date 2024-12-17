@@ -336,27 +336,27 @@ resource "aviatrix_transit_gateway" "edge-transit-test" {
     }
     interface_mapping{
       name  = "eth0"
-      type  = "wan"
+      type  = "WAN"
       index = 0
     }
     interface_mapping{
       name  = "eth1"
-      type  = "wan"
+      type  = "WAN"
       index = 1
     }
     interface_mapping{
       name  = "eth2"
-      type  = "wan"
+      type  = "WAN"
       index = 2
     }
     interface_mapping{
       name  = "eth3"
-      type  = "mgmt"
+      type  = "MANAGEMENT"
       index = 0
     }
     interface_mapping{
       name  = "eth4"
-      type  = "wan"
+      type  = "WAN"
       index = 3
     }
     ha_device_id = "a20c75c0-06c2-4102-9df1-b00b85e89eac"

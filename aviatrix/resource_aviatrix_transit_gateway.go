@@ -24,6 +24,11 @@ const (
 	defaultBgpHoldTime                  = 180
 )
 
+var typeMapping = map[string]string{
+	"MANAGEMENT": "mgmt",
+	"WAN":        "wan",
+}
+
 func resourceAviatrixTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitGatewayCreate,
@@ -828,8 +833,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Description:  "Interface type (e.g., 'wan', 'mgmt').",
-							ValidateFunc: validation.StringInSlice([]string{"wan", "mgmt"}, false),
+							Description:  "Interface type (e.g., 'WAN', 'MANAGEMENT').",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
 						},
 						"index": {
 							Type:         schema.TypeInt,
@@ -4190,7 +4195,11 @@ func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, er
 			if !ok1 || !ok2 || !ok3 {
 				return "", fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
 			}
-			interfaceMapping[interfaceName] = []string{interfaceType, strconv.Itoa(interfaceIndex)}
+			updatedInterfaceType, ok := typeMapping[interfaceType]
+			if !ok {
+				return "", fmt.Errorf("invalid interface type %s", interfaceType)
+			}
+			interfaceMapping[interfaceName] = []string{updatedInterfaceType, strconv.Itoa(interfaceIndex)}
 		}
 	} else {
 		// Set the interface mapping for Dell devices
@@ -4362,7 +4371,11 @@ func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) 
 	for _, intf := range sortedInterfaceMappings {
 		interfaceMap := make(map[string]interface{})
 		interfaceMap["name"] = intf.Name
-		interfaceMap["type"] = intf.Type
+		if intf.Type == "mgmt" {
+			interfaceMap["type"] = "MANAGEMENT"
+		} else {
+			interfaceMap["type"] = strings.ToUpper(intf.Type)
+		}
 		interfaceMap["index"] = intf.Index
 		interfaceMappingList = append(interfaceMappingList, interfaceMap)
 	}
