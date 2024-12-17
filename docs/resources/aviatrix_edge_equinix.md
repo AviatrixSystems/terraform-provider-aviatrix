@@ -10,7 +10,7 @@ description: |-
 
 The **aviatrix_edge_equinix** resource creates the Aviatrix Edge Equinix.
 
-## Example Usage
+## Example Usage - Static management port
 
 ```hcl
 # Create an Edge Equinix
@@ -44,6 +44,32 @@ resource "aviatrix_edge_equinix" "test" {
 }
 ```
 
+## Example Usage - DHCP management port
+
+```hcl
+# Create an Edge Equinix
+resource "aviatrix_edge_equinix" "test" {
+  account_name           = "edge_equinix-account"
+  gw_name                = "equinix-test"
+  site_id                = "site-123"
+  ztp_file_download_path = "/ztp/file/download/path"
+
+  interfaces {
+    name          = "eth0"
+    type          = "WAN"
+    ip_address    = "10.230.5.32/24"
+    gateway_ip    = "10.230.5.100"
+    wan_public_ip = "64.71.24.221"
+  }
+
+  interfaces {
+    name       = "eth1"
+    type       = "LAN"
+    ip_address = "10.230.3.32/24"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -68,7 +94,7 @@ The following arguments are supported:
   * `tag` - (Optional) Tag.
 
 ### Optional
-* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
+* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"]. This is required to open the security group of the controller, in order to allow communication with the Edge gateway. Should contain the public IP address of the Edge gateway management interface(s).
 * `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby` - (Optional) Switch to enable Edge Active-Standby mode. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
@@ -106,6 +132,30 @@ The following arguments are supported:
 In addition to all arguments above, the following attribute is exported:
 
 * `state` - State of Edge Equinix.
+
+## Deployment on Equinix Fabric
+In order to deploy the Edge gateway on Equinix Fabric, you need to use the [`equinix_network_device`](https://registry.terraform.io/providers/equinix/equinix/latest/docs/resources/network_device)  and [`equinix_network_file`](https://registry.terraform.io/providers/equinix/equinix/latest/docs/resources/network_file) resources. Critical argument values for these resource for deployment of the Edge gateway in Equinix Fabric are displayed in the tables below.
+
+### equinix_network_device
+| Key                | Value                                                                            |
+|--------------------|----------------------------------------------------------------------------------|
+| type_code          | "AVIATRIX_EDGE_10"                                                               |
+| self_managed       | true                                                                             |
+| byol               | true                                                                             |
+| package_code       | "STD"                                                                            |
+| version            | "7.1", "7.1.b", "7.1.c", "7.1.d" or "7.2", depending on your controller version. |
+| cloud_init_file_id | Reference the `equinix_network_file` resource.                                   |
+
+### equinix_network_file
+| Key                | Value               |
+|--------------------|---------------------|
+| device_type_code   | "AVIATRIX_EDGE_10"  |
+| process_type       | "CLOUD_INIT"        |
+| self_managed       | true                |
+| byol               | true                |
+
+Make sure to use the generated cloud-init file (ztp file) for creation of the `equinix_network_file` resource and provide this to the `equinix_network_device` resource.
+For a more extensive example of how to deploy Aviatrix Edge on Equinix, refer to this [Terraform module](https://github.com/terraform-aviatrix-modules/terraform-aviatrix-equinix-edge-spoke).
 
 ## Import
 
