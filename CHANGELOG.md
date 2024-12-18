@@ -4,7 +4,7 @@
 - Supported Terraform version **v1.x**
 
 ### Bug Fixes:
-1. Fixed a typo in the constants for the Kubernetews related properties for the smart group resource.
+1. Fixed a typo in the constants for the Kubernetes related properties for the smart group resource.
 
 ### Enhancements:
 1. Added new attribute ``bgp_neighbor_status_polling_time`` to support the bgp bfd configuration in the following resources.
@@ -21,10 +21,10 @@
     - **aviatrix_edge_spoke_external_device_conn**
     - **aviatrix_spoke_external_device_conn**
 3. Added/Updated Edge Terraform documentation to include interface mapping.
-4. Updated documentation for ``aviatrix_firewall_install`` where `user_data` was not applicable to Palo Alto firewalls. There is no longer
-   a restriction on using `user_data` on Palo Alto Firewalls.
-5. Updated documentation for ``aviatrix_spoke_gateway. Clarified use of the `included_advertised_spoke_routes` attribute.
-6. Updated documentation for ``aviatrix_smart_group`` with examples of external groups useage.
+4. Updated documentation for **aviatrix_firewall_instance** where ``user_data`` was not applicable to Palo Alto firewalls. There is no longer
+   a restriction on using ``user_data`` on Palo Alto Firewalls.
+5. Updated documentation for **aviatrix_spoke_gateway**. Clarified use of the ``included_advertised_spoke_routes`` attribute.
+6. Updated documentation for **aviatrix_smart_group** with examples of external groups usage.
 
 ### Deprecations:
 Customers can no longer re-bootstrap their PKI with a custom root CA using Terraform. However, this functionality remains available through the Controller UI for added flexibility.
