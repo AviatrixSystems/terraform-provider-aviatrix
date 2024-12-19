@@ -56,7 +56,7 @@ func testAccDataSourceAviatrixCallerIdentity(name string) resource.TestCheckFunc
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 		client.CID = rs.Primary.Attributes["cid"]
 
-		version, _, err := client.GetCurrentVersion()
+		version, err := client.GetCurrentVersion()
 		if err != nil {
 			return fmt.Errorf("valid CID was not returned. Get version API gave the following Error: %v", err)
 		}

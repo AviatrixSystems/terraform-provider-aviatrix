@@ -213,19 +213,6 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("failed to configure controller exception rule: %s", err)
 	}
 
-	version := &goaviatrix.Version{
-		Version: d.Get("target_version").(string),
-	}
-	if version.Version != "" {
-		manageGatewayUpgrades := d.Get("manage_gateway_upgrades").(bool)
-		err = client.AsyncUpgrade(version, manageGatewayUpgrades)
-		if err != nil {
-			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
-		}
-		newCurrent, _, _ := client.GetCurrentVersion()
-		log.Printf("Upgrade complete (now %s)", newCurrent)
-	}
-
 	backupConfiguration := d.Get("backup_configuration").(bool)
 	backupCloudType := d.Get("backup_cloud_type").(int)
 	backupAccountName := d.Get("backup_account_name").(string)
@@ -343,19 +330,8 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		break
 	}
 
-	current := versionInfo.Current.String(true)
-	currentWithoutBuild := versionInfo.Current.String(false)
-	previous := versionInfo.Previous.String(true)
-	targetVersion := d.Get("target_version")
-	if targetVersion == "latest" {
-		d.Set("target_version", currentWithoutBuild)
-	} else {
-		d.Set("target_version", targetVersion)
-	}
-
-	d.Set("version", currentWithoutBuild)
-	d.Set("previous_version", previous)
-	d.Set("current_version", current)
+	d.Set("version", versionInfo.Current)
+	d.Set("previous_version", versionInfo.Previous)
 
 	cloudnBackupConfig, err := client.GetCloudnBackupConfig()
 	if err != nil {
@@ -429,47 +405,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			if err != nil {
 				log.Printf("[ERROR] Failed to disable exception rule on controller %s", d.Id())
 				return err
-			}
-		}
-	}
-
-	if d.HasChange("target_version") {
-		curVersion := d.Get("current_version").(string)
-		cur := strings.Split(curVersion, ".")
-		latestVersion, _ := client.GetLatestVersion()
-		latest := strings.Split(latestVersion, ".")
-		version := &goaviatrix.Version{
-			Version: d.Get("target_version").(string),
-		}
-		if version.Version != "" {
-			manageGatewayUpgrades := d.Get("manage_gateway_upgrades").(bool)
-			targetVersion := d.Get("target_version").(string)
-			if targetVersion == "latest" {
-				if latestVersion != "" {
-					if len(cur) != len(latest) {
-						err := client.AsyncUpgrade(version, manageGatewayUpgrades)
-						if err != nil {
-							return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
-						}
-					} else {
-						for i := range cur {
-							if cur[i] != latest[i] {
-								err := client.AsyncUpgrade(version, manageGatewayUpgrades)
-								if err != nil {
-									return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
-								}
-								break
-							}
-						}
-					}
-				} else {
-					log.Printf("[INFO] Controller is already on latest version")
-				}
-			} else {
-				err := client.AsyncUpgrade(version, manageGatewayUpgrades)
-				if err != nil {
-					return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
-				}
 			}
 		}
 	}
@@ -680,7 +615,6 @@ func validateBackupConfig(d *schema.ResourceData) error {
 		}
 		if backupBucketName != "" {
 			return fmt.Errorf("'backup_bucket_name' should be empty for Azure")
-
 		}
 	case goaviatrix.OCI:
 		if backupBucketName == "" || backupRegion == "" {

@@ -9,7 +9,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -1368,7 +1367,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if haSubnet != "" || haZone != "" {
-			//Enable HA
+			// Enable HA
 			transitHaGw := &goaviatrix.TransitHaGateway{
 				PrimaryGwName: d.Get("gw_name").(string),
 				GwName:        d.Get("gw_name").(string) + "-hagw",
@@ -1443,7 +1442,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
 
-			//Resize HA Gateway
+			// Resize HA Gateway
 			log.Printf("[INFO]Resizing Transit HA Gateway: %#v", haGwSize)
 
 			if haGwSize != gateway.VpcSize {
@@ -2340,7 +2339,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	return nil
-
 }
 
 func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -2491,7 +2489,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		if d.Get("enable_bgp_over_lan").(bool) {
-			//transitGw.BgpOverLan = "on"
+			// transitGw.BgpOverLan = "on"
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				transitHaGw.BgpLanVpcId = strings.Join(haBgpLanVpcID, ",")
 				transitHaGw.BgpLanSubnet = strings.Join(haBgpLanSpecifySubnet, ",")
@@ -3646,95 +3644,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	primaryHasVersionChange := d.HasChanges("software_version", "image_version")
-	haHasVersionChange := haEnabled && d.HasChanges("ha_software_version", "ha_image_version")
-	primaryHasImageVersionChange := d.HasChange("image_version")
-	haHasImageVersionChange := d.HasChange("ha_image_version")
-	if primaryHasVersionChange || haHasVersionChange {
-		// To determine if this is an attempted software rollback, we check if
-		// old is a higher version than new. Or, the new version is the
-		// special string "previous".
-		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
-		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))
-		primaryRollbackSoftwareVersion := (err == nil && comparePrimary > 0) || newPrimarySoftwareVersion == "previous"
-
-		oldHaSoftwareVersion, newHaSoftwareVersion := d.GetChange("ha_software_version")
-		compareHa, err := goaviatrix.CompareSoftwareVersions(oldHaSoftwareVersion.(string), newHaSoftwareVersion.(string))
-		haRollbackSoftwareVersion := (err == nil && compareHa > 0) || newHaSoftwareVersion == "previous"
-
-		if primaryHasVersionChange && haHasVersionChange &&
-			!primaryHasImageVersionChange && !haHasImageVersionChange &&
-			!primaryRollbackSoftwareVersion && !haRollbackSoftwareVersion {
-			// Both Primary and HA have upgraded just their software_version
-			// so we can perform upgrade in parallel.
-			log.Printf("[INFO] Upgrading transit gateway gw_name=%s ha/primary pair in parallel", gateway.GwName)
-			swVersion := d.Get("software_version").(string)
-			imageVersion := d.Get("image_version").(string)
-			gw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName,
-				SoftwareVersion: swVersion,
-				ImageVersion:    imageVersion,
-			}
-			haSwVersion := d.Get("ha_software_version").(string)
-			haImageVersion := d.Get("ha_image_version").(string)
-			hagw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName + "-hagw",
-				SoftwareVersion: haSwVersion,
-				ImageVersion:    haImageVersion,
-			}
-			var wg sync.WaitGroup
-			wg.Add(2)
-			var primaryErr, haErr error
-			go func() {
-				primaryErr = client.UpgradeGateway(gw)
-				wg.Done()
-			}()
-			go func() {
-				haErr = client.UpgradeGateway(hagw)
-				wg.Done()
-			}()
-			wg.Wait()
-			if primaryErr != nil && haErr != nil {
-				return fmt.Errorf("could not upgrade primary and HA transit gateway "+
-					"software_version=%s ha_software_version=%s image_version=%s ha_image_version=%s:"+
-					"\n primaryErr: %v\n haErr: %v",
-					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
-			} else if primaryErr != nil {
-				return fmt.Errorf("could not upgrade primary transit gateway software_version=%s: %v", swVersion, primaryErr)
-			} else if haErr != nil {
-				return fmt.Errorf("could not upgrade HA transit gateway ha_software_version=%s: %v", haSwVersion, haErr)
-			}
-		} else { // Only primary or only HA has changed, or image_version changed, or it is a software rollback
-			log.Printf("[INFO] Upgrading transit gateway gw_name=%s ha or primary in serial", gateway.GwName)
-			if primaryHasVersionChange {
-				swVersion := d.Get("software_version").(string)
-				imageVersion := d.Get("image_version").(string)
-				gw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName,
-					SoftwareVersion: swVersion,
-					ImageVersion:    imageVersion,
-				}
-				err := client.UpgradeGateway(gw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade transit gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
-				}
-			}
-			if haHasVersionChange {
-				haSwVersion := d.Get("ha_software_version").(string)
-				haImageVersion := d.Get("ha_image_version").(string)
-				hagw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName + "-hagw",
-					SoftwareVersion: haSwVersion,
-					ImageVersion:    haImageVersion,
-				}
-				err := client.UpgradeGateway(hagw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade HA transit gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange("rx_queue_size") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			return fmt.Errorf("could not update rx_queue_size since it only supports AWS related cloud types")
@@ -3857,7 +3766,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		}
 	}
 
-	//If HA is enabled, delete HA GW first.
+	// If HA is enabled, delete HA GW first.
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
 	ha_interfaces, _ := d.Get("ha_interfaces").([]interface{})
