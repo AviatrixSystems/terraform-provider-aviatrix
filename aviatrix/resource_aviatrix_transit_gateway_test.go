@@ -98,6 +98,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	skipGwGCP := os.Getenv("SKIP_TRANSIT_GATEWAY_GCP")
 	skipGwOCI := os.Getenv("SKIP_TRANSIT_GATEWAY_OCI")
 	skipGwAEP := os.Getenv("SKIP_TRANSIT_GATEWAY_AEP")
+	skipGwEQUINIX := os.Getenv("SKIP_TRANSIT_GATEWAY_EQUINIX")
 
 	if skipGwAWS == "yes" && skipGwAZURE == "yes" && skipGwGCP == "yes" && skipGwOCI == "yes" && skipGwAEP == "yes" {
 		t.Skip("Skipping Transit gateway test as SKIP_TRANSIT_GATEWAY_AWS, SKIP_TRANSIT_GATEWAY_AZURE, " +
@@ -314,6 +315,50 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	} else {
 		t.Log("Skipping Transit gateway test in edge AEP as SKIP_TRANSIT_GATEWAY_AEP is set")
 	}
+
+	if skipGwEQUINIX != "yes" {
+		resourceNameEquinix := "aviatrix_transit_gateway.test_transit_gateway_equinix"
+		msgCommonEquinix := ". Set SKIP_TRANSIT_GATEWAY_AEP to yes to skip Transit Gateway tests in edge AEP"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckEdge(t, msgCommonEquinix)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckTransitGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccTransitGatewayConfigBasicEquinix(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitGatewayExists(resourceNameEquinix, &gateway),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "gw_name", fmt.Sprintf("tfg-aep-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "gw_size", "SMALL"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "vpc_id", os.Getenv("AEP_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ztp_file_download_path", "/tmp"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.gateway_ip", "192.168.20.1"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.ip_address", "192.168.20.11/24"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.gateway_ip", "192.168.20.1"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.ip_address", "192.168.20.12/24"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_port_type", "WAN"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_port_index", "1"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_connection_type", "private"),
+					),
+				},
+				{
+					ResourceName:      resourceNameEquinix,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping Transit gateway test in edge Equinix as SKIP_TRANSIT_GATEWAY_EQUINIX is set")
+	}
 }
 
 func testAccTransitGatewayConfigBasicAWS(rName string) string {
@@ -523,6 +568,96 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
     }
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
+}
+
+func testAccTransitGatewayConfigBasicEquinix(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_edge_equinix" {
+	account_name       = "edge-%s"
+	cloud_type         = 524288
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_equinix" {
+	cloud_type   = 524288
+	account_name = aviatrix_account.test_acc_edge_equinix.account_name
+	gw_name      = "tfg-edge-equinix-%[1]s"
+	vpc_id       = "%[2]s"
+	gw_size      = "SMALL"
+	ztp_file_download_path = "/tmp"
+	interfaces {
+        gateway_ip    = "192.168.20.1"
+        ip_address    = "192.168.20.11/24"
+        type          = "WAN"
+        index         = 0
+        secondary_private_cidr_list = ["192.168.19.16/29"]
+    }
+
+    interfaces {
+        gateway_ip    = "192.168.21.1"
+        ip_address    = "192.168.21.11/24"
+        type          = "WAN"
+        index         = 1
+        secondary_private_cidr_list = ["192.168.21.16/29"]
+    }
+
+    interfaces {
+        dhcp   = true
+        type   = "MANAGEMENT"
+        index  = 0
+    }
+
+    interfaces {
+        gateway_ip  = "192.168.22.1"
+        ip_address  = "192.168.22.11/24"
+        type        = "WAN"
+        index       = 2
+    }
+
+    interfaces {
+        gateway_ip = "192.168.23.1"
+        ip_address = "192.168.23.11/24"
+        type       = "WAN"
+        index      = 3
+    }
+
+    peer_backup_port_type = "WAN"
+    peer_backup_port_index = 1
+    peer_connection_type = "private"
+    ha_interfaces {
+        gateway_ip    = "192.168.20.1"
+        index         = 0
+        ip_address    = "192.168.20.12/24"
+        type          = "WAN"
+    }
+
+    ha_interfaces {
+        gateway_ip   = "192.168.21.1"
+        index        = 1
+        ip_address   = "192.168.21.12/24"
+        type         = "WAN"
+        secondary_private_cidr_list = ["192.168.21.32/29"]
+    }
+
+    ha_interfaces {
+        dhcp   = true
+        index  = 0
+        type   = "MANAGEMENT"
+    }
+
+    ha_interfaces {
+        gateway_ip   = "192.168.22.1"
+        index        = 2
+        ip_address   = "192.168.22.12/24"
+        type         = "WAN"
+    }
+
+    ha_interfaces {
+        gateway_ip     = "192.168.23.1"
+        index          = 3
+        ip_address     = "192.168.23.12/24"
+        type           = "WAN"
+    }
+}
+	`, rName, os.Getenv("EQUINIX_VPC_ID"))
 }
 
 func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

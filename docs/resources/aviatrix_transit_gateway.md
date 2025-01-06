@@ -422,7 +422,8 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
-* `site_id` - (Optional) Site id for the EAT gateway. Required and valid only for edge transit gateways AEP and Equinix.
+* `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix EAT gateway.
+* `device_id` - (Optional) Device ID for AEP EAT gateway. Required only for AEP gateway.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
   * `index` - (Required) Interface index. Valid values are 0,1,2 etc.
@@ -452,6 +453,7 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 * `ha_availability_domain` - (Optional) HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `ha_device_id` - (Optional) Device ID for HA AEP EAT gateway. Required only for AEP HA gateway.
 * `peer_backup_port_type` - (Optional) Peer backup port type for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
 * `peer_backup_port_index` - (Optional) Peer backup port index for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
 * `peer_connection_type` - (Optional) Connection type for edge transit gateway e.g., "private", "public". Required and valid only for edge gateways AEP and Equinix.
