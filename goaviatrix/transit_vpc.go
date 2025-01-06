@@ -1,7 +1,9 @@
 package goaviatrix
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -65,6 +67,7 @@ type TransitVpc struct {
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	EipMap                       string   `json:"eip_map,omitempty"`
+	ZtpFileDownloadPath          string   `json:"-"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -173,7 +176,26 @@ type TransitGatewayBgpLanIpInfo struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	var data CreateEdgeEquinixResp
+	err := c.PostAPIContext2(context.Background(), &data, gateway.Action, gateway, BasicCheck)
+	if err != nil {
+		return err
+	}
+	// create the ZTP file for Equinix edge transit gateway
+	if gateway.CloudType == EDGEEQUINIX {
+		fileName := gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + "-cloud-init.txt"
+
+		outFile, err := os.Create(fileName)
+		if err != nil {
+			return err
+		}
+
+		_, err = outFile.WriteString(data.Result)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
