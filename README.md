@@ -30,6 +30,21 @@ cd %GOPATH%\src\github.com\AviatrixSystems
 git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 ```
 
+#### Optional: Install `pre-commit`.
+See [here](https://pre-commit.com/#installation). TL;DR:
+```
+$> pip install pre-commit
+
+OR
+
+$> nix profile install nixpkgs#pre-commit
+```
+
+Then run:
+```
+pre-commit install
+```
+
 ### 2. Enter the provider directory and build the provider
 **MacOS / Linux**
 ```sh
