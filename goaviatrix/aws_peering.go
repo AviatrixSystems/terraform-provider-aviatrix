@@ -97,7 +97,7 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 
 	var data AwsPeerGetAPIResp
 	buf := new(bytes.Buffer)
-	err = buf.ReadFrom(resp.Body)
+	_, err = buf.ReadFrom(resp.Body)
 	if err != nil {
 		return nil, errors.New("ReadFrom list_aws_peerings failed: " + err.Error())
 	}
