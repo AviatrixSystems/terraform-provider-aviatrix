@@ -17,8 +17,6 @@ repos:
     hooks:
       - id: tf-fmt
         exclude: ^vendor/
-      - id: tf-validate
-        exclude: ^vendor/
   - repo: https://github.com/google/yamlfmt
     rev: v0.10.0
     hooks:
@@ -38,4 +36,9 @@ repos:
     rev: v2.2.4
     hooks:
       - id: codespell
+        exclude: ^vendor/
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.10.0-2
+    hooks:
+      - id: shfmt # prebuilt upstream executable
         exclude: ^vendor/
