@@ -242,7 +242,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		PrivateModeSubnets:     d.Get("private_mode_subnets").(bool),
 	}
 	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		return fmt.Errorf("please specifiy 'region'")
+		return fmt.Errorf("please specify 'region'")
 	} else if vpc.Region != "" && vpc.CloudType == goaviatrix.GCP {
 		return fmt.Errorf("please specify 'region' in 'subnets' for GCP provider")
 	}

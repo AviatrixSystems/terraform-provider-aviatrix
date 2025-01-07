@@ -8,16 +8,16 @@ if ! which errcheck >/dev/null; then
 	go get -u github.com/kisielk/errcheck
 fi
 
-err_files=$(errcheck -ignoretests \
+err_files="$(errcheck -ignoretests \
 	-ignore 'github.com/hashicorp/terraform/helper/schema:Set' \
 	-ignore 'bytes:.*' \
 	-ignore 'io:Close|Write' \
-	$(go list ./... | grep -v /vendor/))
+	"$(go list ./... | grep -v /vendor/)")"
 
 if [[ -n ${err_files} ]]; then
 	echo 'Unchecked errors found in the following places:'
 	echo "${err_files}"
-	echo 'Please handle returned errors. You can check directly with `make errcheck`'
+	echo 'Please handle returned errors. You can check directly with "make errcheck"'
 	exit 1
 fi
 

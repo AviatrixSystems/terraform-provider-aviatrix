@@ -2895,7 +2895,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		if d.HasChanges("peer_backup_port_type", "peer_backup_port_index", "peer_connection_type") {
-			// if transitHaGateway already exists then cannot update teh backup link info
+			// if transitHaGateway already exists then cannot update the backup link info
 			haGateway := &goaviatrix.Gateway{
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -3486,7 +3486,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_active_standby").(bool) {
 			if d.Get("enable_active_standby_preemptive").(bool) {
 				if err := client.EnableActiveStandbyPreemptive(gateway); err != nil {
-					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Transit Gatway update: %v", err)
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Transit Gateway update: %v", err)
 				}
 			} else {
 				if err := client.EnableActiveStandby(gateway); err != nil {

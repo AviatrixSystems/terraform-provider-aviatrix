@@ -411,7 +411,7 @@ The following arguments are supported:
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 
-!> When creating a Transit Gateway with an Azure VNet created in Controller version 6.4 or earlier or with an Azure VNet created out of band, referencing `vpc_id` in anothe resource on the same apply that creates this Transit Gateway will cause Terraform to throw an error. Please use the Transit Gateway data source to reference the `vpc_id` of this Transit Gateway in other resources.
+!> When creating a Transit Gateway with an Azure VNet created in Controller version 6.4 or earlier or with an Azure VNet created out of band, referencing `vpc_id` in another resource on the same apply that creates this Transit Gateway will cause Terraform to throw an error. Please use the Transit Gateway data source to reference the `vpc_id` of this Transit Gateway in other resources.
 
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 
@@ -434,7 +434,7 @@ The following arguments are supported:
 * `interface_mapping` - (Optional) A list of interface names mapped to interface types and indices. Required and valid only for edge transit gateways (AEP). Each interface has the following attributes:
   * `name` - (Required) Interface name e.g. eth0, eth1, eth2 etc.
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
-  * `index` - (Requied) Interface index e.g. 0, 1 etc.
+  * `index` - (Required) Interface index e.g. 0, 1 etc.
 * `eip_map` - (Optional) A list of mappings between interface names and their associated private and public IPs.
   * `interface_type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
   * `interface_index` - (Required) Interface index. Valid values are 0,1,2 etc.

@@ -1357,8 +1357,8 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
   - ``remote_tunnel_cidr``
   - ``backup_local_tunnel_cidr``
   - ``backup_remote_tunnel_cidr``
-2. Added support fo DH-group 19, 20 and 21 when IKEv2 enabled in **aviatrix_transit_external_device_conn**
-3. Added support fo DH-group 20 and 21 when IKEv2 enabled in **aviatrix_site2cloud**
+2. Added support for DH-group 19, 20 and 21 when IKEv2 enabled in **aviatrix_transit_external_device_conn**
+3. Added support for DH-group 20 and 21 when IKEv2 enabled in **aviatrix_site2cloud**
 4. Updated following attributes to ForceNew in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
   - ``gw_name``
   - ``vpc_id``
