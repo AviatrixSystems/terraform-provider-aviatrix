@@ -34,8 +34,8 @@ type Account struct {
 	AwsgovAccessKey                       string   `form:"awsgov_access_key,omitempty" json:"awsgovcloud_access_key,omitempty"`
 	AwsgovSecretKey                       string   `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
 	AwsgovCloudtrailBucket                string   `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
-	ProjectCredentialsFilename            string   `form:"filename,omitempty"` //Applies for both GCP and OCI
-	ProjectCredentialsContents            string   `form:"contents,omitempty"` //Applies for both GCP and OCI
+	ProjectCredentialsFilename            string   `form:"filename,omitempty"` // Applies for both GCP and OCI
+	ProjectCredentialsContents            string   `form:"contents,omitempty"` // Applies for both GCP and OCI
 	GcloudProjectCredentialsFilepathLocal string   `form:"gcloud_project_credentials_local,omitempty"`
 	GcloudProjectName                     string   `form:"gcloud_project_name,omitempty" json:"project,omitempty"`
 	OciTenancyID                          string   `form:"oci_tenancy_id" json:"oci_tenancy_id,omitempty"`

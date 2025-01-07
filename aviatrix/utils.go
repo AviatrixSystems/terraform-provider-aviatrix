@@ -45,7 +45,8 @@ func DiffSuppressFuncString(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func captureErr(fn func(*schema.ResourceData, interface{}) error,
-	d *schema.ResourceData, meta interface{}, err *error) {
+	d *schema.ResourceData, meta interface{}, err *error,
+) {
 	*err = fn(d, meta)
 }
 

@@ -20,6 +20,7 @@ func prePrivateModeCheck(t *testing.T, msgEnd string) {
 		}
 	}
 }
+
 func TestAccAviatrixPrivateModeLb_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 

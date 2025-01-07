@@ -18,7 +18,7 @@ func preVPNCertDownloadCheck(t *testing.T, msgCommon string) {
 
 func TestAccAviatrixVPNCertDownload_basic(t *testing.T) {
 	resourceName := "aviatrix_vpn_cert_download.test_vpn_cert_download"
-	rName := acctest.RandString(5) //Name for dependant resources
+	rName := acctest.RandString(5) // Name for dependant resources
 
 	skipAcc := os.Getenv("SKIP_VPN_CERT_DOWNLOAD")
 	if skipAcc == "yes" {

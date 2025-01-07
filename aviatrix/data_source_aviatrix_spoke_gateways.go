@@ -489,5 +489,4 @@ func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.Resource
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
-
 }

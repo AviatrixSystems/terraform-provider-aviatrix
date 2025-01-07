@@ -65,7 +65,8 @@ func TestAccAviatrixTransPeer_basic(t *testing.T) {
 }
 
 func testAccTransPeerConfigBasic(rName string, source string, nextHop string, region1 string, region2 string,
-	subnet1 string, subnet2 string, reachableCIDR string) string {
+	subnet1 string, subnet2 string, reachableCIDR string,
+) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"

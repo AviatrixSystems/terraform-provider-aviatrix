@@ -34,7 +34,6 @@ func TestAccDataSourceAviatrixSpokeGatewayInspectionSubnets_basic(t *testing.T) 
 			},
 		},
 	})
-
 }
 
 func testAccDataSourceAviatrixSpokeGatewayInspectionSubnetsConfigBasic() string {

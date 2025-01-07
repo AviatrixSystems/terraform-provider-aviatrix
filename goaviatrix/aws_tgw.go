@@ -308,7 +308,6 @@ func (c *Client) DeleteAWSTgw(awsTgw *AWSTgw) error {
 
 func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]string, attachedVPCAll [][]string,
 ) ([]string, [][]string, [][]string, error) {
-
 	sort.Strings(domainsAll)
 
 	numOfDomains := len(domainsAll)
