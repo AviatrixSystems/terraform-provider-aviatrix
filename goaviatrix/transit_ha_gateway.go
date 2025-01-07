@@ -51,7 +51,7 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 	}
 	// create the ZTP file for Equinix Edge transit gateway
 	if transitHaGateway.CloudType == EDGEEQUINIX {
-		fileName := transitHaGateway.ZtpFileDownloadPath + "/" + transitHaGateway.GwName + "-" + transitHaGateway.VpcID + "-cloud-init.txt"
+		fileName := getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
 		err := createOrReplaceFile(fileName, data.Result)
 		if err != nil {
 			return "", err

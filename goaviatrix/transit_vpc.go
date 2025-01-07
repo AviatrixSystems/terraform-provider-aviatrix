@@ -183,7 +183,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	}
 	// create the ZTP file for Equinix edge transit gateway
 	if gateway.CloudType == EDGEEQUINIX {
-		fileName := gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + "-cloud-init.txt"
+		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
 		err := createOrReplaceFile(fileName, data.Result)
 		if err != nil {
 			return err
@@ -755,4 +755,8 @@ func createOrReplaceFile(filePath, content string) error {
 		return fmt.Errorf("failed to write to the file: %v", err)
 	}
 	return nil
+}
+
+func getFileName(ztpFileDownloadPath, gwName, vpcID string) string {
+	return ztpFileDownloadPath + "/" + gwName + "-" + vpcID + "-cloud-init.txt"
 }
