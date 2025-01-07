@@ -1,0 +1,31 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/AleksaC/terraform-py
+    rev: v1.10.3
+    hooks:
+      - id: tf-fmt
+      - id: tf-validate
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.10.0
+    hooks:
+      - id: yamlfmt
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.6
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell

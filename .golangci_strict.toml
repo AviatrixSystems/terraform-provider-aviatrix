@@ -10,19 +10,21 @@
   ]
   skip-files = [ ".*goaviatrix/client_mock\\.go" ]
 
-
 [issues]
-  fix = true
+  fix = false
 
 [linters]
-  disable-all = true
+  disable-all = false
   enable = [
+    "asasalint",
     "bodyclose",
+    "cyclop",
     "errcheck",
+    "depguard",
     "errname",
     "errorlint",
-    "depguard",
     "forcetypeassert",
+    "funlen",
     "gofumpt",
     "goimports",
     "gosec",
@@ -30,8 +32,8 @@
     "govet",
     "importas",
     "ineffassign",
+    "nolintlint",
     "revive",
-    "staticcheck",
     "testifylint",
     "typecheck",
     "unconvert",
@@ -41,17 +43,11 @@
 [linters-settings.goimports]
   local-prefixes = "aviatrix.com"
 
-[linters-settings.testifylint]
-  enable-all = true
-  disable-all = false
-  disable = [ "require-error" ]
-
 [linters-settings.gosec]
-  excludes = [
-    "G306",
-    "G115",
-    "G601",  # Not relevant for go1.22+
-  ]
+excludes = [
+  "G306",
+  "G601",  # Not relevant for go1.22+
+]
 
 [linters-settings.govet]
   enable-all = true
@@ -86,35 +82,19 @@
     # non-default checks, so we have to enable those explicitly to
     # be consistent with the Bazel nogo analyzer.
     "ST1016", # Use consistent method receiver names
-    "SA9003", # Empty body in an if or else branch
+    "SA9003", # Empty body in an if or else branch non-default
 
     "-ST1023", # Unnecessary variable types, could be inferred.
     "-ST1000", # Incorrect or missing package comment
     "-ST1003", # Poorly chosen identifier
 ]
 
-[linters-settings.revive]
-  [[linters-settings.revive.rules]]
-  name = "atomic"
-  [[linters-settings.revive.rules]]
-  name = "blank-imports"
-  [[linters-settings.revive.rules]]
-  name = "context-keys-type"
-  [[linters-settings.revive.rules]]
-  name = "range"
-  [[linters-settings.revive.rules]]
-  name = "receiver-naming"
-  [[linters-settings.revive.rules]]
-  name = "unreachable-code"
-
 # Disable funlen for tests. Many table driven tests are naturally quite long
 [[issues.exclude-rules]]
 linters = [ "funlen" ]
 source = "^func Test"
 
-# Disable testifylint's "require-error" check. This check has marginal
-# value, and there are a lot of instances in the codebase.
-#
+# Disable testifylint's "require-error" check.
 # See also https://github.com/golangci/golangci-lint/issues/4187
 [[issues.exclude-rules]]
 linters = [ "testifylint" ]
