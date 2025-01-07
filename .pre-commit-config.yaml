@@ -5,27 +5,37 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^vendor/
       - id: end-of-file-fixer
+        exclude: ^vendor/
       - id: check-yaml
+        exclude: ^vendor/
       - id: check-added-large-files
+        exclude: ^vendor/
   - repo: https://github.com/AleksaC/terraform-py
     rev: v1.10.3
     hooks:
       - id: tf-fmt
+        exclude: ^vendor/
       - id: tf-validate
+        exclude: ^vendor/
   - repo: https://github.com/google/yamlfmt
     rev: v0.10.0
     hooks:
       - id: yamlfmt
+        exclude: ^vendor/
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.6
     hooks:
       - id: actionlint
+        exclude: ^vendor/
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
+        exclude: ^vendor/
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.4
     hooks:
       - id: codespell
+        exclude: ^vendor/

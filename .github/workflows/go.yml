@@ -62,7 +62,7 @@ jobs:
           version: ${{env.Lint_Version}}
           only-new-issues: true
   golangci-strict:
-    name: lint
+    name: lint-strict
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
