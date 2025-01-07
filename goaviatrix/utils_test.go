@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,4 +62,56 @@ func TestMapContains(t *testing.T) {
 	}
 	assert.True(t, MapContains(testMap, "one"))
 	assert.False(t, MapContains(testMap, "Random"))
+}
+
+func TestCreateZtpFile(t *testing.T) {
+	tests := []struct {
+		name        string
+		filePath    string
+		content     string
+		expectedErr string
+	}{
+		{
+			name:        "Successful file creation and writing",
+			filePath:    "test-file.txt",
+			content:     "This is a test file.",
+			expectedErr: "",
+		},
+		{
+			name:        "Error creating file (invalid path)",
+			filePath:    "/invalid/path/test-file.txt",
+			content:     "This content should not be written.",
+			expectedErr: "failed to create the file",
+		},
+		{
+			name:        "Error writing to file (empty content)",
+			filePath:    "test-file.txt",
+			content:     "",
+			expectedErr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Run the createZtpFile function
+			err := createZtpFile(tt.filePath, tt.content)
+
+			if tt.expectedErr != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+
+				// Check if the file is created and the content is written (if no error occurred)
+				if _, err := os.Stat(tt.filePath); err == nil {
+					// File exists, check the content
+					data, err := os.ReadFile(tt.filePath)
+					assert.NoError(t, err)
+					assert.Equal(t, tt.content, string(data))
+					// Clean up the file after test
+					os.Remove(tt.filePath)
+				}
+			}
+		})
+	}
 }

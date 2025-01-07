@@ -184,7 +184,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	// create the ZTP file for Equinix edge transit gateway
 	if gateway.CloudType == EDGEEQUINIX {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
-		err := createOrReplaceFile(fileName, data.Result)
+		err := createZtpFile(fileName, data.Result)
 		if err != nil {
 			return err
 		}
@@ -729,20 +729,8 @@ func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error 
 	return c.PostAPI(action, data, BasicCheck)
 }
 
-// createOrReplaceFile deletes a file if it exists, then creates a new one and writes the given content.
-func createOrReplaceFile(filePath, content string) error {
-	// Check if the file exists
-	if _, err := os.Stat(filePath); err == nil {
-		// File exists; delete it
-		if err := os.Remove(filePath); err != nil {
-			return fmt.Errorf("failed to delete the existing file: %v", err)
-		}
-	} else if !os.IsNotExist(err) {
-		// Some other error occurred while checking for the file
-		return fmt.Errorf("failed to check file existence: %v", err)
-	}
-
-	// Create a new file
+// createZtpFile creates a new ztp file and writes the given content.
+func createZtpFile(filePath, content string) error {
 	outFile, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create the file: %v", err)

@@ -3836,6 +3836,10 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 func deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath string) error {
 	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcId + "-cloud-init.txt"
+	// check if the file exists
+	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+		return nil
+	}
 	err := os.Remove(fileName)
 	if err != nil {
 		return fmt.Errorf("could not remove the ztp file: %v", err)
@@ -3898,7 +3902,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 	// create ha transit gateway if ha_interfaces are provided
 	ha_interfaces, ok := d.Get("ha_interfaces").([]interface{})
-	if ok && ha_interfaces != nil {
+	if ok && len(ha_interfaces) > 0 {
 		transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
 		if err != nil {
 			return fmt.Errorf("failed to get the HA gateway details: %w", err)
