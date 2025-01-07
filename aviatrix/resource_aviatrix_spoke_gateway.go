@@ -1447,11 +1447,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("could not get BGP LAN IP info for Azure spoke gateway %s: %v", gateway.GwName, err)
 		}
 		if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
-			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %w", err)
+			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %s", err)
 		}
 		if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
 			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
-				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %w", err)
+				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %s", err)
 			}
 		} else {
 			d.Set("ha_bgp_lan_ip_list", nil)
