@@ -52,6 +52,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
+      - uses: HatsuneMiku3939/direnv-action@v1
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@300721fe01bc8c4cf4677859b80e55154023c7d3
         with:
