@@ -13,7 +13,7 @@ The **aviatrix_copilot_simple_deployment** resource allows deployment of simple 
 ## Example Usage
 
 ```hcl
-# Deploy a Simple CoPilot 
+# Deploy a Simple CoPilot
 resource "aviatrix_copilot_simple_deployment" "test" {
     cloud_type                          = 1
     account_name                        = "test-aws"

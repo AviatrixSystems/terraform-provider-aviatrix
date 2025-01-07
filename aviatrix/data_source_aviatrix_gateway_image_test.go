@@ -38,7 +38,7 @@ func testAccDataSourceAviatrixGatewayImageConfigBasic() string {
 	return `
 data "aviatrix_gateway_image" "foo" {
 	cloud_type       = 1
-	software_version = "6.5" 
+	software_version = "6.5"
 }
 	`
 }

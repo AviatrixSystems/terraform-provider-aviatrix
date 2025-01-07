@@ -80,7 +80,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
 		dst_smart_groups = [
 		  aviatrix_smart_group.ad2.uuid
 		]
-	
+
 		port_ranges {
 		  hi = 10
 		  lo = 1

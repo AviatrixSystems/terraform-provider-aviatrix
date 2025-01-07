@@ -69,7 +69,7 @@ resource "aviatrix_edge_equinix" "test" {
 	ztp_file_download_path             = "%s"
 	bgp_polling_time                   = 50
 	bgp_neighbor_status_polling_time   = 5
-	
+
 	interfaces {
 		name          = "eth0"
 		type          = "WAN"
@@ -77,13 +77,13 @@ resource "aviatrix_edge_equinix" "test" {
 		gateway_ip    = "10.230.5.100"
 		wan_public_ip = "64.71.24.221"
 	}
-	
+
 	interfaces {
 		name       = "eth1"
 		type       = "LAN"
 		ip_address = "10.230.3.32/24"
 	}
-	
+
 	interfaces {
 		name        = "eth2"
 		type        = "MANAGEMENT"

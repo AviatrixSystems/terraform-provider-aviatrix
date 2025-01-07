@@ -66,7 +66,7 @@ The following arguments are supported:
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
 * `firewall_image_id` - (Optional) Firewall image ID. Only applicable to AWS. Please use AMI ID. Available as of provider version R2.19+.
-* `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
+* `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series and OCI Check Point firewalls. Otherwise, it must be empty.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
@@ -211,10 +211,10 @@ Valid `firewall_image` values:
   - 10.0.9
   - 10.0.7
 7. Check Point CloudGuard IaaS Single Gateway R80.30 - Bring Your Own License
-  - 8030.900273.0978 
-  - 8030.900273.0950 
-  - 8030.900273.0907 
-  - 8030.900273.0819 
+  - 8030.900273.0978
+  - 8030.900273.0950
+  - 8030.900273.0907
+  - 8030.900273.0819
   - 8030.900273.0801
 8. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTP)
   - 8030.900273.0590
@@ -249,7 +249,7 @@ Valid `firewall_image` values:
   - 7.0.3
   - 7.0.2
   - 7.0.1
-  - 7.0.0 
+  - 7.0.0
 15. Fortinet FortiGate (PAYG) Next-Generation Firewall
   - 6.0.4
   - 6.0.3

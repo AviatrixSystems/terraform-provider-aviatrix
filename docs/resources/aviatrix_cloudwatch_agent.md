@@ -18,7 +18,7 @@ resource "aviatrix_cloudwatch_agent" "test_cloudwatch_agent" {
   cloudwatch_role_arn = "arn:aws:iam::469550033836:role/aviatrix-role-cloudwatch"
   region              = "us-east-1"
   excluded_gateways   = [
-    "a", 
+    "a",
     "b"
   ]
 }

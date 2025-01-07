@@ -174,7 +174,7 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-resource "aviatrix_transit_gateway" "test" {				
+resource "aviatrix_transit_gateway" "test" {
 	cloud_type   = 4
 	account_name = aviatrix_account.test_acc_gcp.account_name
 	gw_name      = "tfg-gcp-%[1]s"

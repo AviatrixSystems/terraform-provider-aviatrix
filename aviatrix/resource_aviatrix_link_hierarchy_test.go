@@ -50,7 +50,7 @@ func testAccLinkHierarchyBasic(linkHierarchyName, linkName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_link_hierarchy" "test" {
 	name = "%s"
-	
+
 	links {
 		name = "%s"
 		wan_link {

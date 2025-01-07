@@ -61,7 +61,7 @@ resource "aviatrix_vpn_cert_download" "test_vpn_cert_download" {
     download_enabled = true
     saml_endpoints = [aviatrix_saml_endpoint.foo.endpoint_name]
 	depends_on = [
-    aviatrix_vpn_user.test_vpn_user, 
+    aviatrix_vpn_user.test_vpn_user,
     aviatrix_saml_endpoint.foo
   ]
 }

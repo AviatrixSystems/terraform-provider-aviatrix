@@ -103,7 +103,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   backup_local_lan_ip      = "172.12.13.17"
 }
 ```
-# Create a BGP BFD over IPSEC tunnel Aviatrix Transit External Device Connection 
+# Create a BGP BFD over IPSEC tunnel Aviatrix Transit External Device Connection
 resource "aviatrix_transit_external_device_conn" "ex-conn" {
   vpc_id                   = aviatrix_transit_gateway.transit-gateway.vpc_id
   connection_name          = "my_conn"
@@ -183,7 +183,7 @@ The following arguments are supported:
 * `bgp_md5_key` - (Optional) BGP MD5 Authentication Key. Example: 'avx01,avx02'. For BGP LAN ActiveMesh mode disabled, example: 'avx01'.
 * `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'. For BGP LAN ActiveMesh mode disabled, example: 'avx03'.
 
-### BGP BFD over IPsec 
+### BGP BFD over IPsec
 
 ~> **NOTE:** BGP BFD over IPsec attributes are only valid with `tunnel_protocol` = 'IPsec'.
 

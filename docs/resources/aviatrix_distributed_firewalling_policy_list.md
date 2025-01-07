@@ -29,7 +29,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
       "82e50c85-82bf-4b3b-b9da-aaed34a3aa53"
     ]
   }
-  
+
   policies {
     name             = "df-policy"
     action           = "PERMIT"
@@ -41,7 +41,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     dst_smart_groups = [
       "f05b0ad7-d2d7-4d16-b2f6-48492319414c"
     ]
-    
+
     port_ranges {
       hi = 50000
       lo = 49000
@@ -52,7 +52,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
 ```hcl
 # Create an Aviatrix Distributed Firewalling Policy List
 resource "aviatrix_distributed_firewalling_policy_list" "test" {
-  
+
   policies {
     name             = "df-policy"
     action           = "PERMIT"
@@ -64,7 +64,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     dst_smart_groups = [
       "f05b0ad7-d2d7-4d16-b2f6-48492319414c"
     ]
-    
+
     port_ranges {
       hi = 50000
       lo = 49000

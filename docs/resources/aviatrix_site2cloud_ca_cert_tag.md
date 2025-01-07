@@ -16,7 +16,7 @@ The **aviatrix_site2cloud_ca_cert_tag** resource creates and manages Aviatrix-cr
 # Create an Aviatrix Site2cloud CA Cert Tag Containing One Cert
 resource "aviatrix_site2cloud_ca_cert_tag" "test" {
   tag_name = "test"
-  
+
   ca_certificates {
     cert_content = file("/home/ubuntu/avx_gw_ca_cert_in_ui_root_only.crt")
   }
@@ -24,7 +24,7 @@ resource "aviatrix_site2cloud_ca_cert_tag" "test" {
 ```
 ```hcl
 # Create an Aviatrix Site2cloud CA Cert Tag Containing Multiple Certs
-resource "aviatrix_site2cloud_ca_cert_tag" "test" { 
+resource "aviatrix_site2cloud_ca_cert_tag" "test" {
   tag_name = "test"
 
   ca_certificates {
