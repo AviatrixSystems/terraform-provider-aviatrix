@@ -4128,7 +4128,10 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		}
 		transitHaGw.InterfaceMapping = interfaceMapping
 		// set device_id for AEP ha gateway
-		transitHaGw.DeviceID = d.Get("ha_device_id").(string)
+		transitHaGw.DeviceID, ok = d.Get("ha_device_id").(string)
+		if !ok {
+			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
+		}
 	}
 	return transitHaGw, nil
 }

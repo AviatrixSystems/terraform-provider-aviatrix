@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -1183,5 +1184,35 @@ func TestSetInterfaceDetails(t *testing.T) {
 			result := setInterfaceDetails(tt.interfaces)
 			assert.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+func TestDeleteZtpFile(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "ztp_test")
+	if err != nil {
+		t.Fatalf("Failed to create temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir) // Cleanup the temp directory after test
+	gatewayName := "test-gateway"
+	vpcId := "vpc-123456"
+	ztpFileDownloadPath := tempDir
+	fileName := filepath.Join(ztpFileDownloadPath, fmt.Sprintf("%s-%s-cloud-init.txt", gatewayName, vpcId))
+	// Create a temporary file to simulate the ztp file
+	if err := os.WriteFile(fileName, []byte("test content"), 0644); err != nil {
+		t.Fatalf("Failed to create temporary file: %v", err)
+	}
+
+	// Ensure the file exists before calling the function
+	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+		t.Fatalf("File does not exist before deletion: %v", fileName)
+	}
+	err = deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath)
+	if err != nil {
+		t.Errorf("deleteZtpFile returned an error: %v", err)
+	}
+
+	// Verify the file is deleted
+	if _, err := os.Stat(fileName); err == nil || !os.IsNotExist(err) {
+		t.Errorf("File was not deleted: %v", fileName)
 	}
 }

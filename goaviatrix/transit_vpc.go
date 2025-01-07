@@ -184,13 +184,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	// create the ZTP file for Equinix edge transit gateway
 	if gateway.CloudType == EDGEEQUINIX {
 		fileName := gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + "-cloud-init.txt"
-
-		outFile, err := os.Create(fileName)
-		if err != nil {
-			return err
-		}
-
-		_, err = outFile.WriteString(data.Result)
+		err := createOrReplaceFile(fileName, data.Result)
 		if err != nil {
 			return err
 		}
@@ -733,4 +727,32 @@ func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error 
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+// createOrReplaceFile deletes a file if it exists, then creates a new one and writes the given content.
+func createOrReplaceFile(filePath, content string) error {
+	// Check if the file exists
+	if _, err := os.Stat(filePath); err == nil {
+		// File exists; delete it
+		if err := os.Remove(filePath); err != nil {
+			return fmt.Errorf("failed to delete the existing file: %v", err)
+		}
+	} else if !os.IsNotExist(err) {
+		// Some other error occurred while checking for the file
+		return fmt.Errorf("failed to check file existence: %v", err)
+	}
+
+	// Create a new file
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create the file: %v", err)
+	}
+	defer outFile.Close()
+
+	// Write the content to the file
+	_, err = outFile.WriteString(content)
+	if err != nil {
+		return fmt.Errorf("failed to write to the file: %v", err)
+	}
+	return nil
 }

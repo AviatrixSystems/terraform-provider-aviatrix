@@ -1,8 +1,6 @@
 package goaviatrix
 
 import (
-	"os"
-
 	"golang.org/x/net/context"
 )
 
@@ -54,12 +52,7 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 	// create the ZTP file for Equinix Edge transit gateway
 	if transitHaGateway.CloudType == EDGEEQUINIX {
 		fileName := transitHaGateway.ZtpFileDownloadPath + "/" + transitHaGateway.GwName + "-" + transitHaGateway.VpcID + "-cloud-init.txt"
-		outFile, err := os.Create(fileName)
-		if err != nil {
-			return "", err
-		}
-
-		_, err = outFile.WriteString(data.Result)
+		err := createOrReplaceFile(fileName, data.Result)
 		if err != nil {
 			return "", err
 		}
