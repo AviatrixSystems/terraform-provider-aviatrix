@@ -135,42 +135,42 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
 
-	d.Set("account_name", acc.AccountName)
-	d.Set("cloud_type", acc.CloudType)
+	_ = d.Set("account_name", acc.AccountName)
+	_ = d.Set("cloud_type", acc.CloudType)
 	if acc.CloudType == goaviatrix.AWS {
-		d.Set("aws_account_number", acc.AwsAccountNumber)
+		_ = d.Set("aws_account_number", acc.AwsAccountNumber)
 	}
-	d.Set("aws_role_arn", acc.AwsRoleApp)
-	d.Set("aws_role_ec2", acc.AwsRoleEc2)
-	d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-	d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
-	d.Set("gcloud_project_id", acc.GcloudProjectName)
-	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
-	d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
+	_ = d.Set("aws_role_arn", acc.AwsRoleApp)
+	_ = d.Set("aws_role_ec2", acc.AwsRoleEc2)
+	_ = d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+	_ = d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+	_ = d.Set("gcloud_project_id", acc.GcloudProjectName)
+	_ = d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+	_ = d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSGov) {
-		d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+		_ = d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 		if acc.AwsgovRoleEc2 != "" {
-			d.Set("awsgov_iam", true)
-			d.Set("awsgov_role_app", acc.AwsgovRoleApp)
-			d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
+			_ = d.Set("awsgov_iam", true)
+			_ = d.Set("awsgov_role_app", acc.AwsgovRoleApp)
+			_ = d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
 		} else {
-			d.Set("awsgov_iam", false)
+			_ = d.Set("awsgov_iam", false)
 		}
 	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
-		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
-		d.Set("awschina_role_app", acc.AwsChinaRoleApp)
-		d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
+		_ = d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
+		_ = d.Set("awschina_role_app", acc.AwsChinaRoleApp)
+		_ = d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
 		if acc.AwsChinaRoleEc2 == "" {
-			d.Set("awschina_iam", true)
+			_ = d.Set("awschina_iam", true)
 		} else {
-			d.Set("awschina_iam", false)
+			_ = d.Set("awschina_iam", false)
 		}
 	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
-		d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
+		_ = d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
 	}
 
 	if acc.CloudType == goaviatrix.AliCloud {
-		d.Set("alicloud_account_id", acc.AwsAccountNumber)
+		_ = d.Set("alicloud_account_id", acc.AwsAccountNumber)
 	}
 
 	d.SetId(acc.AccountName)
