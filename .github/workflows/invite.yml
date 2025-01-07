@@ -29,11 +29,11 @@ jobs:
           GITHUB_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
         run: |
           ORG="AviatrixSystems"
-          EMAIL=${{ github.event.inputs.email }}
+          EMAIL="${{ github.event.inputs.email }}"
 
-          OUTPUT=$(.github/include/invitation.sh ${ORG} ${EMAIL})
+          OUTPUT="$(.github/include/invitation.sh "${ORG}" "${EMAIL}")"
           if [ "${EMAIL}" != "" ]; then
             echo "::notice title=Sending invitation::${OUTPUT}"
           fi
-          cat sent-invitations.md >> $GITHUB_STEP_SUMMARY
+          cat sent-invitations.md >> "$GITHUB_STEP_SUMMARY"
           rm -fr sent-invitations.md

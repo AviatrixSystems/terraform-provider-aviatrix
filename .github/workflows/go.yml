@@ -3,10 +3,14 @@ env:
   Lint_Version: v1.61.0
 on:
   push:
+    # Only trigger push workflow on main branch (prevent duplicate when running in PR)
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
       - 'test-infra/**'
   pull_request:
+    # Trigger every time a PR is opened or updated
     paths-ignore:
       - 'docs/**'
       - 'test-infra/**'

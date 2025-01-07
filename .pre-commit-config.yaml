@@ -42,3 +42,11 @@ repos:
     hooks:
       - id: shfmt # prebuilt upstream executable
         exclude: ^vendor/
+  - repo: local
+    hooks:
+      - id: gofumpt
+        name: gofumpt
+        language: golang
+        entry: gofumpt -w aviatrix/ goaviatrix/
+        files: "\\.go$"
+        exclude: ^vendor/

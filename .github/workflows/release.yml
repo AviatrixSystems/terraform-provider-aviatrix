@@ -22,8 +22,8 @@ jobs:
         run: |
           version="v$(cat version)"
           echo "Version: $version"
-          git tag $version
-          git push origin $version
+          git tag "$version"
+          git push origin "$version"
       - name: Create release notes
         run: |
           lastLine=$(grep -n -m2 "^## " CHANGELOG.md | tail -1 | cut -d ":" -f 1)
