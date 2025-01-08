@@ -89,10 +89,24 @@ func TestCreateZtpFile(t *testing.T) {
 			content:     "",
 			expectedErr: "",
 		},
+		{
+			name:        "File truncation (overwriting with new content)",
+			filePath:    "test-file.txt",
+			content:     "This is new content.",
+			expectedErr: "",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "File truncation (overwriting with new content)" {
+				// Create a file with initial content
+				initialContent := "This is old content."
+				err := os.WriteFile(tt.filePath, []byte(initialContent), 0o644)
+				if err != nil {
+					t.Fatalf("Failed to create initial file: %v", err)
+				}
+			}
 			// Run the createZtpFile function
 			err := createZtpFile(tt.filePath, tt.content)
 
