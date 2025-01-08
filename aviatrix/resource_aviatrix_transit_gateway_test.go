@@ -1201,7 +1201,7 @@ func TestDeleteZtpFile(t *testing.T) {
 	if err := os.WriteFile(fileName, []byte("test content"), 0o644); err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
-
+	// Test Case 1: File exists and is successfully deleted
 	// Ensure the file exists before calling the function
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		t.Fatalf("File does not exist before deletion: %v", fileName)
@@ -1214,5 +1214,12 @@ func TestDeleteZtpFile(t *testing.T) {
 	// Verify the file is deleted
 	if _, err := os.Stat(fileName); err == nil || !os.IsNotExist(err) {
 		t.Errorf("File was not deleted: %v", fileName)
+	}
+
+	// Test Case 2: File does not exist and no error should be returned
+	// Try to delete the file again (it doesn't exist now)
+	err = deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath)
+	if err != nil {
+		t.Errorf("deleteZtpFile returned an error when file does not exist: %v", err)
 	}
 }

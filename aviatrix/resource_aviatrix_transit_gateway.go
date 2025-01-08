@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"sort"
@@ -3852,12 +3853,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + "-cloud-init.txt"
-	// check if the file exists
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		return nil
-	}
-	err := os.Remove(fileName)
-	if err != nil {
+	if err := os.Remove(fileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("could not remove the ztp file: %w", err)
 	}
 	return nil
