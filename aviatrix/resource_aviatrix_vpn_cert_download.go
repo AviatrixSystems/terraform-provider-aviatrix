@@ -56,7 +56,6 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 		err := client.EnableVPNCertDownload(&vpnCertDownload)
 		if err != nil {
 			return fmt.Errorf("enabling VPN Certificate Download failed due to : %v", err)
-
 		}
 	} else {
 		if len(endpoints) != 0 {
@@ -65,7 +64,6 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 		err := client.DisableVPNCertDownload()
 		if err != nil {
 			return fmt.Errorf("Disabling VPN Certificate Download failed due to : %v", err)
-
 		}
 	}
 	d.SetId("vpn_cert_download")
@@ -90,7 +88,6 @@ func resourceAviatrixVPNCertDownloadDelete(d *schema.ResourceData, meta interfac
 	err := client.DisableVPNCertDownload()
 	if err != nil {
 		return fmt.Errorf("disabling VPN Certificate Download failed due to : %v", err)
-
 	}
 	return nil
 }

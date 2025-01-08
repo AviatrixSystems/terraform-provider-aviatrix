@@ -46,7 +46,7 @@ output "ARM_APPLICATION_ID" {
   value = var.azure_client_id
 }
 
-output "ARM_APPLICATION_KEY"{
+output "ARM_APPLICATION_KEY" {
   value = var.azure_client_secret
 }
 
@@ -54,7 +54,7 @@ output "GCP_ID" {
   value = var.gcp_project_id1
 }
 
-output "GCP_CREDENTIALS_FILEPATH"{
+output "GCP_CREDENTIALS_FILEPATH" {
   value = var.gcp_credentials_file_path
 }
 

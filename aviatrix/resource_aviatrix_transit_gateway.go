@@ -1246,11 +1246,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			tagsMap, err := extractTags(d, gateway.CloudType)
 			if err != nil {
-				return fmt.Errorf("error creating tags for transit gateway: %v", err)
+				return fmt.Errorf("error creating tags for transit gateway: %w", err)
 			}
 			tagJson, err := TagsMapToJson(tagsMap)
 			if err != nil {
-				return fmt.Errorf("failed to add tags when creating transit gateway: %v", err)
+				return fmt.Errorf("failed to add tags when creating transit gateway: %w", err)
 			}
 			gateway.TagJson = tagJson
 		}
@@ -1596,7 +1596,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if enableGatewayLoadBalancer {
 				err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer enabled: %v", err)
+					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer enabled: %w", err)
 				}
 			} else {
 				err := client.EnableTransitFireNet(gwTransitFireNet)
@@ -1609,7 +1609,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if val, ok := d.GetOk("bgp_polling_time"); ok {
 			err := client.SetBgpPollingTime(gateway, val.(int))
 			if err != nil {
-				return fmt.Errorf("could not set bgp polling time: %v", err)
+				return fmt.Errorf("could not set bgp polling time: %w", err)
 			}
 		}
 
@@ -1618,7 +1618,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if bgp_neighbor_status_polling_time >= 1 && bgp_neighbor_status_polling_time != defaultBgpNeighborStatusPollingTime {
 				err := client.SetBgpBfdPollingTime(gateway, bgp_neighbor_status_polling_time)
 				if err != nil {
-					return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+					return fmt.Errorf("could not set bgp neighbor status polling time: %w", err)
 				}
 			}
 		}
@@ -1626,7 +1626,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if val, ok := d.GetOk("local_as_number"); ok {
 			err := client.SetLocalASNumber(gateway, val.(string))
 			if err != nil {
-				return fmt.Errorf("could not set local_as_number: %v", err)
+				return fmt.Errorf("could not set local_as_number: %w", err)
 			}
 		}
 
@@ -1638,45 +1638,45 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			err := client.SetPrependASPath(gateway, prependASPath)
 			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path: %v", err)
+				return fmt.Errorf("could not set prepend_as_path: %w", err)
 			}
 		}
 
 		if val, ok := d.GetOk("bgp_ecmp"); ok {
 			err := client.SetBgpEcmp(gateway, val.(bool))
 			if err != nil {
-				return fmt.Errorf("could not set bgp_ecmp: %v", err)
+				return fmt.Errorf("could not set bgp_ecmp: %w", err)
 			}
 		}
 
 		if d.Get("enable_segmentation").(bool) {
 			if err := client.EnableSegmentation(gateway); err != nil {
-				return fmt.Errorf("could not enable segmentation: %v", err)
+				return fmt.Errorf("could not enable segmentation: %w", err)
 			}
 		}
 
 		if enableEgressTransitFireNet {
 			err := client.EnableEgressTransitFirenet(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable egress transit firenet: %v", err)
+				return fmt.Errorf("could not enable egress transit firenet: %w", err)
 			}
 		}
 
 		if enableTransitPreserveAsPath {
 			err := client.EnableTransitPreserveAsPath(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable transit preserve as path: %v", err)
+				return fmt.Errorf("could not enable transit preserve as path: %w", err)
 			}
 		}
 
 		if enableActiveStandby {
 			if enableActiveStandbyPreemptive {
 				if err := client.EnableActiveStandbyPreemptive(gateway); err != nil {
-					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby: %v", err)
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby: %w", err)
 				}
 			} else {
 				if err := client.EnableActiveStandby(gateway); err != nil {
-					return fmt.Errorf("could not enable Active-Standby: %v", err)
+					return fmt.Errorf("could not enable Active-Standby: %w", err)
 				}
 			}
 		}
@@ -1692,7 +1692,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if learnedCidrsApproval && len(gateway.ApprovedLearnedCidrs) != 0 {
 			err = client.UpdateTransitPendingApprovedCidrs(gateway)
 			if err != nil {
-				return fmt.Errorf("could not update approved CIDRs: %v", err)
+				return fmt.Errorf("could not update approved CIDRs: %w", err)
 			}
 		}
 
@@ -1710,7 +1710,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if enableMonitorSubnets {
 			err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 			if err != nil {
-				return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 			}
 		}
 
@@ -1721,7 +1721,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			err := client.DisableJumboFrame(gw)
 			if err != nil {
-				return fmt.Errorf("could not disable jumbo frame for transit gateway: %v", err)
+				return fmt.Errorf("could not disable jumbo frame for transit gateway: %w", err)
 			}
 		}
 
@@ -1738,21 +1738,21 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
 			err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
 			if err != nil {
-				return fmt.Errorf("could not change BGP Hold Time after Transit Gateway creation: %v", err)
+				return fmt.Errorf("could not change BGP Hold Time after Transit Gateway creation: %w", err)
 			}
 		}
 
 		if gateway.EnableSummarizeCidrToTgw {
 			err = client.EnableSummarizeCidrToTgw(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable summarize cidr to tgw: %v", err)
+				return fmt.Errorf("could not enable summarize cidr to tgw: %w", err)
 			}
 		}
 
 		if enableMultitierTransit {
 			err = client.EnableMultitierTransit(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable multi tier transit: %v", err)
+				return fmt.Errorf("could not enable multi tier transit: %w", err)
 			}
 		}
 
@@ -1767,7 +1767,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
 			err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime.(int))
 			if err != nil {
-				return fmt.Errorf("could not set tunnel detection time during Transit Gateway creation: %v", err)
+				return fmt.Errorf("could not set tunnel detection time during Transit Gateway creation: %w", err)
 			}
 		}
 
@@ -1849,14 +1849,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if len(gw.Interfaces) != 0 {
 			interfaces := setInterfaceDetails(gw.Interfaces)
 			if err = d.Set("interfaces", interfaces); err != nil {
-				return fmt.Errorf("could not set interfaces into state: %v", err)
+				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
 		}
 		// set interface mapping
 		if len(gw.InterfaceMapping) != 0 {
 			interfaceMapping := setInterfaceMappingDetails(gw.InterfaceMapping)
 			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
-				return fmt.Errorf("could not set interface mapping into state: %v", err)
+				return fmt.Errorf("could not set interface mapping into state: %w", err)
 			}
 		}
 		// set eip map
@@ -1864,10 +1864,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			log.Printf("[TRACE] eip map: %#v", gw.EipMap)
 			eipMap, err := setEipMapDetails(gw.EipMap, gw.IfNamesTranslation)
 			if err != nil {
-				return fmt.Errorf("could not set eip map details: %v", err)
+				return fmt.Errorf("could not set eip map details: %w", err)
 			}
 			if err = d.Set("eip_map", eipMap); err != nil {
-				return fmt.Errorf("could not set eip map into state: %v", err)
+				return fmt.Errorf("could not set eip map into state: %w", err)
 			}
 		}
 		// set the ha_attributes to empty if ha_interfaces is not provided for edge
@@ -1912,14 +1912,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			peerBackupPortDetails := strings.Split(peerBackupPortInterface, ".")
 			portType := strings.ToUpper(peerBackupPortDetails[0])
 			if err = d.Set("peer_backup_port_type", portType); err != nil {
-				return fmt.Errorf("could not set peer_backup_port_type into state: %v", err)
+				return fmt.Errorf("could not set peer_backup_port_type into state: %w", err)
 			}
 			portIndex, err := strconv.Atoi(peerBackupPortDetails[1])
 			if err != nil {
-				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %v", err)
+				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %w", err)
 			}
 			if err = d.Set("peer_backup_port_index", portIndex); err != nil {
-				return fmt.Errorf("could not set peer_backup_port_index into state: %v", err)
+				return fmt.Errorf("could not set peer_backup_port_index into state: %w", err)
 			}
 			connectionTypePrivate := backupLink.ConnectionTypePublic
 			if connectionTypePrivate {
@@ -1932,7 +1932,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if len(gw.HaGw.Interfaces) != 0 {
 			ha_interfaces := setInterfaceDetails(gw.HaGw.Interfaces)
 			if err = d.Set("ha_interfaces", ha_interfaces); err != nil {
-				return fmt.Errorf("could not set interfaces into state: %v", err)
+				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
 			d.Set("ha_device_id", gw.HaGw.DeviceID)
 		}
@@ -1963,7 +1963,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		err = d.Set("prepend_as_path", prependAsPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
 		d.Set("local_as_number", gw.LocalASNumber)
 		d.Set("bgp_ecmp", gw.BgpEcmp)
@@ -1987,7 +1987,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 					interfaces = append(interfaces, interfaceDict)
 				}
 				if err = d.Set("bgp_lan_interfaces", interfaces); err != nil {
-					return fmt.Errorf("could not set bgp_lan_interfaces into state: %v", err)
+					return fmt.Errorf("could not set bgp_lan_interfaces into state: %w", err)
 				}
 			}
 
@@ -2000,7 +2000,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 					haInterfaces = append(haInterfaces, interfaceDict)
 				}
 				if err = d.Set("ha_bgp_lan_interfaces", haInterfaces); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %w", err)
 				}
 			}
 
@@ -2009,11 +2009,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.BgpLanIpList); err != nil {
-				return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
 			}
 			if len(bgpLanIpInfo.HaBgpLanIpList) != 0 {
 				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.HaBgpLanIpList); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %w", err)
 				}
 			} else {
 				d.Set("ha_bgp_lan_ip_list", nil)
@@ -2024,11 +2024,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %v", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
-				return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
 			}
 			if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
 				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %w", err)
 				}
 			} else {
 				d.Set("ha_bgp_lan_ip_list", nil)
@@ -2067,18 +2067,18 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if gw.EnableLearnedCidrsApproval {
 			transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gw.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+				return fmt.Errorf("could not get advanced config for transit gateway: %w", err)
 			}
 
 			if err = d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs); err != nil {
-				return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
+				return fmt.Errorf("could not set approved_learned_cidrs into state: %w", err)
 			}
 		} else {
 			d.Set("approved_learned_cidrs", nil)
 		}
 		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
 		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %w", err)
 		}
 		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
@@ -2731,17 +2731,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.HasChange("tags") {
 			tagsMap, err := extractTags(d, gateway.CloudType)
 			if err != nil {
-				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
+				return fmt.Errorf("failed to update tags for transit gateway: %w", err)
 			}
 			tags.Tags = tagsMap
 			tagJson, err := TagsMapToJson(tagsMap)
 			if err != nil {
-				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
+				return fmt.Errorf("failed to update tags for transit gateway: %w", err)
 			}
 			tags.TagJson = tagJson
 			err = client.UpdateTags(tags)
 			if err != nil {
-				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
+				return fmt.Errorf("failed to update tags for transit gateway: %w", err)
 			}
 		}
 	}
@@ -2839,7 +2839,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		wanCount, err := countInterfaceTypes(interfaceList)
 		if err != nil {
-			return fmt.Errorf("failed to get wan interface count: %v", err)
+			return fmt.Errorf("failed to get wan interface count: %w", err)
 		}
 
 		// update the edge transit gateway interfaces
@@ -2881,7 +2881,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if len(eipMap) > 0 {
 				eipMapList, err := getEipMapDetails(eipMap, wanCount)
 				if err != nil {
-					return fmt.Errorf("failed to get the eip map details: %v", err)
+					return fmt.Errorf("failed to get the eip map details: %w", err)
 				}
 				gateway := &goaviatrix.TransitVpc{
 					GwName: d.Get("gw_name").(string),
@@ -2895,7 +2895,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		if d.HasChanges("peer_backup_port_type", "peer_backup_port_index", "peer_connection_type") {
-			// if transitHaGateway already exists then cannot update teh backup link info
+			// if transitHaGateway already exists then cannot update the backup link info
 			haGateway := &goaviatrix.Gateway{
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -2908,7 +2908,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			// create transit ha gw with backup link info
 			transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
 			if err != nil {
-				return fmt.Errorf("failed to get transit ha gateway details: %v", err)
+				return fmt.Errorf("failed to get transit ha gateway details: %w", err)
 			}
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
 			_, err = client.CreateTransitHaGw(transitHaGw)
@@ -3051,7 +3051,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		err := client.UpdateTransitPendingApprovedCidrs(gw)
 		if err != nil {
-			return fmt.Errorf("could not update approved CIDRs: %v", err)
+			return fmt.Errorf("could not update approved CIDRs: %w", err)
 		}
 	}
 
@@ -3073,7 +3073,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if !enableEgressTransitFirenet {
 			err := client.DisableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not disable egress transit firenet: %v", err)
+				return fmt.Errorf("could not disable egress transit firenet: %w", err)
 			}
 		}
 	}
@@ -3083,12 +3083,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if !enableTransitPreserveAsPath {
 			err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not disable Preserve AS Path during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not disable Preserve AS Path during Transit Gateway update: %w", err)
 			}
 		} else {
 			err := client.EnableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not enable Preserve AS Path during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not enable Preserve AS Path during Transit Gateway update: %w", err)
 			}
 		}
 	}
@@ -3252,7 +3252,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if enableEgressTransitFirenet {
 			err := client.EnableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not enable egress transit firenet: %v", err)
+				return fmt.Errorf("could not enable egress transit firenet: %w", err)
 			}
 		}
 	}
@@ -3403,7 +3403,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		err := client.SetBgpPollingTime(gateway, bgpPollingTime)
 		if err != nil {
-			return fmt.Errorf("could not update bgp polling time: %v", err)
+			return fmt.Errorf("could not update bgp polling time: %w", err)
 		}
 	}
 
@@ -3414,7 +3414,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		err := client.SetBgpBfdPollingTime(gateway, bgpBfdPollingTime)
 		if err != nil {
-			return fmt.Errorf("could not update bgp neighbor status polling time: %v", err)
+			return fmt.Errorf("could not update bgp neighbor status polling time: %w", err)
 		}
 	}
 
@@ -3432,7 +3432,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPath(gateway, nil)
 			if err != nil {
-				return fmt.Errorf("could not delete prepend_as_path during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not delete prepend_as_path during Transit Gateway update: %w", err)
 			}
 		}
 
@@ -3440,14 +3440,14 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			localAsNumber := d.Get("local_as_number").(string)
 			err := client.SetLocalASNumber(gateway, localAsNumber)
 			if err != nil {
-				return fmt.Errorf("could not set local_as_number during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not set local_as_number during Transit Gateway update: %w", err)
 			}
 		}
 
 		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
 			err := client.SetPrependASPath(gateway, prependASPath)
 			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not set prepend_as_path during Transit Gateway update: %w", err)
 			}
 		}
 	}
@@ -3459,7 +3459,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		err := client.SetBgpEcmp(gateway, enabled)
 		if err != nil {
-			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+			return fmt.Errorf("could not set bgp_ecmp: %w", err)
 		}
 	}
 
@@ -3470,11 +3470,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		if enabled {
 			if err := client.EnableSegmentation(gateway); err != nil {
-				return fmt.Errorf("could not enable segmentation: %v", err)
+				return fmt.Errorf("could not enable segmentation: %w", err)
 			}
 		} else {
 			if err := client.DisableSegmentation(gateway); err != nil {
-				return fmt.Errorf("could not disable segmentation: %v", err)
+				return fmt.Errorf("could not disable segmentation: %w", err)
 			}
 		}
 	}
@@ -3486,11 +3486,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_active_standby").(bool) {
 			if d.Get("enable_active_standby_preemptive").(bool) {
 				if err := client.EnableActiveStandbyPreemptive(gateway); err != nil {
-					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Transit Gatway update: %v", err)
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Transit Gateway update: %w", err)
 				}
 			} else {
 				if err := client.EnableActiveStandby(gateway); err != nil {
-					return fmt.Errorf("could not enable Active-Standby during Transit Gateway update: %v", err)
+					return fmt.Errorf("could not enable Active-Standby during Transit Gateway update: %w", err)
 				}
 			}
 		} else {
@@ -3498,7 +3498,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
 			}
 			if err := client.DisableActiveStandby(gateway); err != nil {
-				return fmt.Errorf("could not disable Active-Standby during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not disable Active-Standby during Transit Gateway update: %w", err)
 			}
 		}
 	}
@@ -3527,22 +3527,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if monitorGatewaySubnets {
 			err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 			if err != nil {
-				return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 			}
 		} else {
 			err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not disable monitor gateway subnets: %w", err)
 			}
 		}
 	} else if d.HasChange("monitor_exclude_list") {
 		err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 		if err != nil {
-			return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not disable monitor gateway subnets: %w", err)
 		}
 		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
-			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 		}
 	}
 
@@ -3550,12 +3550,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_jumbo_frame").(bool) {
 			err := client.EnableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable jumbo frame for transit gateway when updating: %v", err)
+				return fmt.Errorf("could not enable jumbo frame for transit gateway when updating: %w", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable jumbo frame for transit gateway when updating: %v", err)
+				return fmt.Errorf("could not disable jumbo frame for transit gateway when updating: %w", err)
 			}
 		}
 	}
@@ -3577,7 +3577,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("bgp_hold_time") {
 		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
 		if err != nil {
-			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %v", err)
+			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %w", err)
 		}
 	}
 
@@ -3585,12 +3585,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_transit_summarize_cidr_to_tgw").(bool) {
 			err := client.EnableSummarizeCidrToTgw(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable summarize cidr to tgw when updating: %v", err)
+				return fmt.Errorf("could not enable summarize cidr to tgw when updating: %w", err)
 			}
 		} else {
 			err := client.DisableSummarizeCidrToTgw(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not disable summarize cidr to tgw when updating: %v", err)
+				return fmt.Errorf("could not disable summarize cidr to tgw when updating: %w", err)
 			}
 		}
 	}
@@ -3602,12 +3602,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.EnableMultitierTransit(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable multi tier transit when updating: %v", err)
+				return fmt.Errorf("could not enable multi tier transit when updating: %w", err)
 			}
 		} else {
 			err := client.DisableMultitierTransit(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not disable multi tier transit when updating: %v", err)
+				return fmt.Errorf("could not disable multi tier transit when updating: %w", err)
 			}
 		}
 	}
@@ -3616,12 +3616,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_s2c_rx_balancing").(bool) {
 			err := client.EnableS2CRxBalancing(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable S2C receive packet CPU re-balancing during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not enable S2C receive packet CPU re-balancing during Transit Gateway update: %w", err)
 			}
 		} else {
 			err := client.DisableS2CRxBalancing(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not disable S2C receive packet CPU re-balancing during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not disable S2C receive packet CPU re-balancing during Transit Gateway update: %w", err)
 			}
 		}
 	}
@@ -3635,12 +3635,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			var err error
 			detectionTime, err = client.GetTunnelDetectionTime("Controller")
 			if err != nil {
-				return fmt.Errorf("could not get default tunnel detection time during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not get default tunnel detection time during Transit Gateway update: %w", err)
 			}
 		}
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
 		if err != nil {
-			return fmt.Errorf("could not modify tunnel detection time during Transit Gateway update: %v", err)
+			return fmt.Errorf("could not modify tunnel detection time during Transit Gateway update: %w", err)
 		}
 	}
 
@@ -3728,7 +3728,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if enableEgressTransitFirenet {
 		err := client.DisableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
-			return fmt.Errorf("could not disable egress transit firenet: %v", err)
+			return fmt.Errorf("could not disable egress transit firenet: %w", err)
 		}
 	}
 
@@ -3736,7 +3736,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if enableTransitPreserveAsPath {
 		err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
-			return fmt.Errorf("could not disable transit preserve as path: %v", err)
+			return fmt.Errorf("could not disable transit preserve as path: %w", err)
 		}
 	}
 
@@ -3825,13 +3825,13 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 	interfacesList, err := getInterfaceDetails(interfaces)
 	if err != nil {
-		return fmt.Errorf("failed to get the interface details: %v", err)
+		return fmt.Errorf("failed to get the interface details: %w", err)
 	}
 	gateway.Interfaces = interfacesList
 	// get the count of WAN inetrfaces to map interface type and index to interface name
 	wanCount, err := countInterfaceTypes(interfaces)
 	if err != nil {
-		return fmt.Errorf("failed to get the interface count: %v", err)
+		return fmt.Errorf("failed to get the interface count: %w", err)
 	}
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		/*
@@ -3840,7 +3840,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		interfaceMappingInput := d.Get("interface_mapping").([]interface{})
 		interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
 		if err != nil {
-			return fmt.Errorf("failed to get the interface mapping details: %v", err)
+			return fmt.Errorf("failed to get the interface mapping details: %w", err)
 		}
 		gateway.InterfaceMapping = interfaceMapping
 	}
@@ -3857,7 +3857,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if ok && ha_device_id != "" {
 		transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
 		if err != nil {
-			return fmt.Errorf("failed to get the HA gateway details: %v", err)
+			return fmt.Errorf("failed to get the HA gateway details: %w", err)
 		}
 		// log transit ha gateway details
 		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
@@ -3875,7 +3875,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if len(eipMap) > 0 {
 		eipMapList, err := getEipMapDetails(eipMap, wanCount)
 		if err != nil {
-			return fmt.Errorf("failed to get the eip map details: %v", err)
+			return fmt.Errorf("failed to get the eip map details: %w", err)
 		}
 		gateway.EipMap = eipMapList
 		// update EIP map
@@ -3888,21 +3888,21 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
 		err := client.SetBgpPollingTime(gateway, val.(int))
 		if err != nil {
-			return fmt.Errorf("could not set bgp polling time: %v", err)
+			return fmt.Errorf("could not set bgp polling time: %w", err)
 		}
 	}
 
 	if val, ok := d.GetOk("bgp_neighbor_status_polling_time"); ok {
 		err := client.SetBgpBfdPollingTime(gateway, val.(int))
 		if err != nil {
-			return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+			return fmt.Errorf("could not set bgp neighbor status polling time: %w", err)
 		}
 	}
 
 	if val, ok := d.GetOk("local_as_number"); ok {
 		err := client.SetLocalASNumber(gateway, val.(string))
 		if err != nil {
-			return fmt.Errorf("could not set local_as_number: %v", err)
+			return fmt.Errorf("could not set local_as_number: %w", err)
 		}
 	}
 
@@ -3914,7 +3914,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 		err := client.SetPrependASPath(gateway, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
 	}
 	return nil
@@ -3999,7 +3999,7 @@ func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 		}
 		interfaceName, err := getInterfaceName(interfaceType, interfaceIndex, wanCount)
 		if err != nil {
-			return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %v", err)
+			return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %w", err)
 		}
 		privateIP, ok := eip["private_ip"].(string)
 		if !ok {
@@ -4046,7 +4046,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	// get peer backup port name using the type and index
 	peerBackupPort, err := getInterfaceName(peerBackupPortType.(string), peerBackupPortIndex.(int), wanCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the peer backup port name using the type and index: %v", err)
+		return nil, fmt.Errorf("failed to get the peer backup port name using the type and index: %w", err)
 	}
 	connectionType, ok := d.GetOk("peer_connection_type")
 	if !ok {
@@ -4072,7 +4072,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	}
 	interfacesList, err := getInterfaceDetails(ha_interfaces)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the interface details for HA Edge Transit Gateway: %v", err)
+		return nil, fmt.Errorf("failed to get the interface details for HA Edge Transit Gateway: %w", err)
 	}
 	transitHaGw.Interfaces = interfacesList
 	// interface mapping is only required for AEP ha gateway
@@ -4081,7 +4081,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		interfaceMappingInput := d.Get("interface_mapping").([]interface{})
 		interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get the interface mapping details: %v", err)
+			return nil, fmt.Errorf("failed to get the interface mapping details: %w", err)
 		}
 		transitHaGw.InterfaceMapping = interfaceMapping
 	}
@@ -4121,7 +4121,7 @@ func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, er
 	// Convert interfaceMapping to JSON byte slice
 	interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal interface mapping to json: %v", err)
+		return "", fmt.Errorf("failed to marshal interface mapping to json: %w", err)
 	}
 	return string(interfaceMappingJSON), nil
 }
@@ -4131,7 +4131,7 @@ func getInterfaceDetails(interfaces []interface{}) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)
 	if err != nil {
-		return "", fmt.Errorf("failed to get the wan interface count: %v", err)
+		return "", fmt.Errorf("failed to get the wan interface count: %w", err)
 	}
 	interfaceList := []goaviatrix.EdgeTransitInterface{}
 	for _, iface := range interfaces {
@@ -4155,7 +4155,7 @@ func getInterfaceDetails(interfaces []interface{}) (string, error) {
 		// get the interface name using the interface type, index and count
 		ifaceName, err := getInterfaceName(ifaceType, ifaceIndex, wanCount)
 		if err != nil {
-			return "", fmt.Errorf("failed to get the interface name: %v", err)
+			return "", fmt.Errorf("failed to get the interface name: %w", err)
 		}
 		// Check and set 'interface name'
 		if val, exists := ifaceInfo["name"]; exists && val != nil {
@@ -4300,7 +4300,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		interfaceType := strings.ToUpper(interfaceDetails[0])
 		interfaceIndex, error := strconv.Atoi(interfaceDetails[1])
 		if error != nil {
-			return nil, fmt.Errorf("failed to convert interface index to integer: %v", error)
+			return nil, fmt.Errorf("failed to convert interface index to integer: %w", error)
 		}
 
 		for _, eip := range eipList {

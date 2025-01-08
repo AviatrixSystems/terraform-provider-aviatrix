@@ -18,7 +18,7 @@ func preVPNCertDownloadCheck(t *testing.T, msgCommon string) {
 
 func TestAccAviatrixVPNCertDownload_basic(t *testing.T) {
 	resourceName := "aviatrix_vpn_cert_download.test_vpn_cert_download"
-	rName := acctest.RandString(5) //Name for dependant resources
+	rName := acctest.RandString(5) // Name for dependent resources
 
 	skipAcc := os.Getenv("SKIP_VPN_CERT_DOWNLOAD")
 	if skipAcc == "yes" {
@@ -61,7 +61,7 @@ resource "aviatrix_vpn_cert_download" "test_vpn_cert_download" {
     download_enabled = true
     saml_endpoints = [aviatrix_saml_endpoint.foo.endpoint_name]
 	depends_on = [
-    aviatrix_vpn_user.test_vpn_user, 
+    aviatrix_vpn_user.test_vpn_user,
     aviatrix_saml_endpoint.foo
   ]
 }
@@ -85,7 +85,7 @@ func tesAccCheckVPNCertDownloadExists(n string) resource.TestCheckFunc {
 			return err
 		}
 		if !vpnCertDownloadStatus.Results.Status {
-			return fmt.Errorf("VPN Cert Download doesnt seem to be enabled")
+			return fmt.Errorf("VPN Cert Download doesn't seem to be enabled")
 		}
 		return nil
 	}
@@ -104,7 +104,7 @@ func testAccCheckVPNCertDownloadDestroy(s *terraform.State) error {
 			return err
 		}
 		if vpnCertDownloadStatus.Results.Status {
-			return fmt.Errorf("VPN Cert Download doesnt seem to be disabled")
+			return fmt.Errorf("VPN Cert Download doesn't seem to be disabled")
 		}
 	}
 	return nil

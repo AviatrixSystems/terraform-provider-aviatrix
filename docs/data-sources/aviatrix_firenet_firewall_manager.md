@@ -35,7 +35,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID.
 * `gateway_name` - (Required) The FireNet gateway name.
 * `vendor_type` - (Required) Vendor type. Valid values: "Generic" and "Palo Alto Networks Panorama".
-* `public_ip` - (Optional) The public IP address of the Panorama instance. Required for vendor type "Palo Alto Networks Panorama". 
+* `public_ip` - (Optional) The public IP address of the Panorama instance. Required for vendor type "Palo Alto Networks Panorama".
 * `username` - (Optional) Panorama login name for API calls from the Controller. Required for vendor type "Palo Alto Networks Panorama".
 * `password` - (Optional) Panorama login password for API calls. Required for vendor type "Palo Alto Networks Panorama".
 * `template` - (Optional) Panorama template for each FireNet gateway. Required for vendor type "Palo Alto Networks Panorama".

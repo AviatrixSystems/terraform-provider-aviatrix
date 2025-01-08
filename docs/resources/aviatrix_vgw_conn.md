@@ -19,7 +19,7 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
   gw_name          = "my-transit-gw"
   vpc_id           = "vpc-abcd1234"
   bgp_vgw_id       = "vgw-abcd1234"
-  bgp_vgw_account  = "dev-account-1"  
+  bgp_vgw_account  = "dev-account-1"
   bgp_vgw_region   = "us-east-1"
   bgp_local_as_num = "65001"
   prepend_as_path  = [

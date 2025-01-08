@@ -175,7 +175,7 @@ In addition to all arguments above, the following attributes are exported:
 * `public_subnets` - List of public subnet of the VPC(AWS, Azure) to be created.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
-  * `subnet_id` - ID of this subnet.  
+  * `subnet_id` - ID of this subnet.
 * `availability_domains` - List of OCI availability domains.
 * `fault_domains` - List of OCI fault domains.
 

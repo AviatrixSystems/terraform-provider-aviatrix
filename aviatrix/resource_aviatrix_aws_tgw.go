@@ -127,7 +127,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(awsTgw.Name)
 	flag := false
-	defer resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag) }()
 
 	err1 := client.CreateAWSTgw(awsTgw)
 	if err1 != nil {

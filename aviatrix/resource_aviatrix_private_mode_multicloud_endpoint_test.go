@@ -130,7 +130,6 @@ func testAccAviatrixPrivateModeMulticloudEndpointDestroy(s *terraform.State) err
 		} else if rs.Type == "aviatrix_private_mode_multicloud_load_balancer" {
 			vpcId := rs.Primary.ID
 			_, err := client.GetPrivateModeMulticloudEndpoint(context.Background(), vpcId)
-
 			if err != nil {
 				if err == goaviatrix.ErrNotFound {
 					continue

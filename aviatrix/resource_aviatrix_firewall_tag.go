@@ -67,7 +67,7 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("failed to create firewall tag: %s", err)
 	}
 
-	//If cidr list is present, update cidr list
+	// If cidr list is present, update cidr list
 	if _, ok := d.GetOk("cidr_list"); ok {
 		cidrList := d.Get("cidr_list").([]interface{})
 		for _, currCIDR := range cidrList {
@@ -156,7 +156,7 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewallTag)
 
-	//Update cidr list
+	// Update cidr list
 	cidrList := d.Get("cidr_list").([]interface{})
 	for _, currCIDR := range cidrList {
 		cm := currCIDR.(map[string]interface{})

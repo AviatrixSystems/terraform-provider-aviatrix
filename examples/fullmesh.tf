@@ -19,8 +19,8 @@ variable "number" {
 # Enter VPCs where you want to launch gateways.
 variable "vpcs" {
   description = "Launch gateways in different VPCs."
-  type        = "list"
-  default     = [
+  type        = list(string)
+  default = [
     "vpc-7a6b2513",
     "vpc-2ee4a147",
     "vpc-0d7b3664",
@@ -30,8 +30,8 @@ variable "vpcs" {
 # Enter Subnets within VPCs added above.
 variable "vpc_nets" {
   description = "Launch gateways in different VPC Subnets."
-  type        = "list"
-  default     = [
+  type        = list(string)
+  default = [
     "10.1.0.0/24",
     "10.2.0.0/24",
     "10.3.0.0/24",
@@ -55,16 +55,16 @@ resource "aviatrix_gateway" "test_gw" {
   vpc_reg      = "ap-south-1"
   gw_size      = "t2.micro"
   subnet       = "element(var.vpc_nets, ${count.index})"
-  depends_on   = [
+  depends_on = [
     "aviatrix_account.test_acc"
   ]
 }
 
 # Create tunnels between above created gateways
 resource "aviatrix_tunnel" "test_tunnel" {
-  count      = var.number * (var.number - 1)/2
-  gw_name1   = "avtxgw-${count.index}"
-  gw_name2   = "avtxgw-${(count.index+1)%3}"
+  count    = var.number * (var.number - 1) / 2
+  gw_name1 = "avtxgw-${count.index}"
+  gw_name2 = "avtxgw-${(count.index + 1) % 3}"
   depends_on = [
     "aviatrix_gateway.test_gw"
   ]

@@ -11,11 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var (
-	// dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
-	// K8s resource names must adhere to this.
-	dns1123FmtRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
-)
+// dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
+// K8s resource names must adhere to this.
+var dns1123FmtRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
 func resourceAviatrixSmartGroup() *schema.Resource {
 	return &schema.Resource{

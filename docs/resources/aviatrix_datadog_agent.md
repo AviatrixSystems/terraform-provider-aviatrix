@@ -18,7 +18,7 @@ resource "aviatrix_datadog_agent" "test_datadog_agent" {
   api_key           = "your_api_key"
   site              = "datadoghq.com"
   excluded_gateways = [
-    "a", 
+    "a",
     "b"
   ]
 }

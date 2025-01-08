@@ -18,7 +18,7 @@ As of Controller version 6.7+ and provider version 2.22.0+, security domain will
     - Please set attribute `manage_security_domain` to false, and use the standalone resource **aviatrix_aws_tgw_network_domain** instead.
   - If `manage_security_domain` is already set to false, and the resource **aviatrix_aws_tgw_security_domain** is being used:
     - Please refer to the instructions for **aviatrix_aws_tgw_security_domain** below.
-     
+
 
 - For resources **aviatrix_aws_tgw_security_domain**, **aviatrix_segmentation_security_domain**, **aviatrix_segmentation_security_domain_association** and **aviatrix_segmentation_security_domain_connection_policy**:
   1. Remove the states of the resources.
@@ -33,4 +33,3 @@ As of Controller version 6.7+ and provider version 2.22.0+, security domain will
   2. In the configuration file, rename the attribute `security_domain_name` to `network_domain_name`.
   3. Import the existing infrastructures to the resources.
      - Please refer to this [link](https://www.terraform.io/cli/import) for instructions on importing the resource.
-  

@@ -155,7 +155,7 @@ func TestAccAviatrixSmartGroup_reject_bad_k8s_combinations(t *testing.T) {
 				Config: `
 				resource "aviatrix_smart_group" "bad-k8s" {
 					name = "bad-k8s-test-smart-group"
-				
+
 					selector {
 						match_expressions {
 							type = "k8s"
@@ -186,7 +186,7 @@ func TestAccAviatrixSmartGroup_reject_bad_k8s_names(t *testing.T) {
 				Config: `
 				resource "aviatrix_smart_group" "bad-k8s" {
 					name = "bad-k8s-test-smart-group"
-				
+
 					selector {
 						match_expressions {
 							type = "k8s"

@@ -36,7 +36,7 @@ The following arguments are supported:
 ### Required
 ~> **NOTE:** Either `server` and `port` combination or `custom_output_config_file` is required. If `custom_output_config_file` is provided, `server` and `port` will be ignored.
 
-* `server` (Optional) Server IP. 
+* `server` (Optional) Server IP.
 * `port` (Optional) Port number.
 * `custom_output_config_file` (Optional) Configuration file. Use the `filebase64` function to read from a file.
 

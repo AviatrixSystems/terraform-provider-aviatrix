@@ -83,7 +83,7 @@ func resourceAviatrixProxyConfigDelete(d *schema.ResourceData, meta interface{})
 
 	err := client.DeleteProxyConfig()
 	if err != nil {
-		return fmt.Errorf("failed to delete proxy configration: %s", err)
+		return fmt.Errorf("failed to delete proxy configuration: %w", err)
 	}
 
 	return nil

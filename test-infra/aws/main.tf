@@ -33,14 +33,12 @@ resource "aws_route_table" "vpc-route" {
   }
 }
 resource "aws_route_table_association" "vpc-ra" {
-  subnet_id          = aws_subnet.vpc-public.id
-  route_table_id     = aws_route_table.vpc-route.id
-  depends_on         = [
+  subnet_id      = aws_subnet.vpc-public.id
+  route_table_id = aws_route_table.vpc-route.id
+  depends_on = [
     aws_subnet.vpc-public,
     aws_route_table.vpc-route,
     aws_internet_gateway.vpc-gw,
     aws_vpc.vpc,
   ]
 }
-
-

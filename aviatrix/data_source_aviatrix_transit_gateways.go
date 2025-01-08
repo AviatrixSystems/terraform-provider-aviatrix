@@ -114,7 +114,8 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 							Computed: true,
 							Description: "A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, " +
 								"it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. " +
-								"It applies to this spoke gateway only."},
+								"It applies to this spoke gateway only.",
+						},
 						"filtered_spoke_vpc_routes": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -556,5 +557,4 @@ func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.Resour
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
-
 }

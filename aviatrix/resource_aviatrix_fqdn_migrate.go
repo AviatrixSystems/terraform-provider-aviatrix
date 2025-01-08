@@ -12,7 +12,8 @@ import (
 )
 
 func resourceAviatrixFQDNMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, meta interface{},
+) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AVIATRIX FQDN State v0; migrating to v1")

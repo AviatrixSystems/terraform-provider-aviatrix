@@ -79,7 +79,8 @@ func TestAccAviatrixTunnel_basic(t *testing.T) {
 }
 
 func testAccTunnelConfigBasic(rName string, vpcID1 string, vpcID2 string, region1 string, region2 string,
-	subnet1 string, subnet2 string) string {
+	subnet1 string, subnet2 string,
+) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"

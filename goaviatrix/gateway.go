@@ -138,7 +138,7 @@ type Gateway struct {
 	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string            `form:"gw_size,omitempty" ` //Only use for gateway create
+	VpcSize                         string            `form:"gw_size,omitempty" ` // Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
@@ -647,8 +647,11 @@ func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(args)
-	w.Close()
+	defer w.Close()
+	_, err = w.Write(args)
+	if err != nil {
+		return err
+	}
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
@@ -673,8 +676,11 @@ func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(args)
-	w.Close()
+	defer w.Close()
+	_, err = w.Write(args)
+	if err != nil {
+		return err
+	}
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true

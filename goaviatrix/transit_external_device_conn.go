@@ -377,7 +377,7 @@ func ExternalDeviceConnBgpBfdDiffSuppressFunc(k, old, new string, d *schema.Reso
 				oldConfig[i]["multiplier"] != newConfig[i]["multiplier"] {
 				return false
 			}
-			// If the BFD configuration is the same as the default, then donot update the BFD configuration
+			// If the BFD configuration is the same as the default, then do not update the BFD configuration
 			if newConfig[i]["transmit_interval"] == defaultBfd["transmit_interval"] ||
 				oldConfig[i]["receive_interval"] == defaultBfd["receive_interval"] ||
 				oldConfig[i]["multiplier"] == defaultBfd["multiplier"] {

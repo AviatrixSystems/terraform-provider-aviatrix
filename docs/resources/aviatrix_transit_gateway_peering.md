@@ -72,7 +72,7 @@ The following arguments are supported:
 * `src_wan_interfaces` - (Optional) Source WAN interface for edge gateways where the peering originates. Required only for edge transit attachments.
 * `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where the peering terminates. Required only for edge transit attachments.
 
-  
+
 ~> **NOTE:** `enable_single_tunnel_mode` is only valid when `enable_peering_over_private_network` is set to `true`. Private Transit Gateway Peering with Single-Tunnel Mode expands the existing Insane Mode Transit Gateway Peering Over Private Network to apply it to single IPSec tunnel. One use case is for low speed encryption between cloud networks.
 
 ## Import

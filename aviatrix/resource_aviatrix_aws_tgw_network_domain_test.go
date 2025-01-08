@@ -102,7 +102,7 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
 		awsSideAsNumber, tgwName, ndName)
 }
 
-func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, ndName string) resource.TestCheckFunc {
+func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, netDomainName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,14 +111,14 @@ func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, 
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		nd := &goaviatrix.SecurityDomain{
-			Name:       ndName,
+		netDomain := &goaviatrix.SecurityDomain{
+			Name:       netDomainName,
 			AwsTgwName: tgwName,
 		}
 
-		_, err := client.GetSecurityDomain(nd)
+		_, err := client.GetSecurityDomain(netDomain)
 		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("network domain %s not found", ndName)
+			return fmt.Errorf("network domain %s not found", netDomainName)
 		}
 
 		return nil
@@ -145,12 +145,12 @@ func testAccCheckAwsTgwNetworkDomainDestroy(s *terraform.State) error {
 		_, err := client.ListTgwDetails(awsTgw)
 
 		if err != goaviatrix.ErrNotFound {
-			nd := &goaviatrix.SecurityDomain{
+			networkDomain := &goaviatrix.SecurityDomain{
 				Name:       rs.Primary.Attributes["name"],
 				AwsTgwName: rs.Primary.Attributes["tgw_name"],
 			}
 
-			_, err := client.GetSecurityDomain(nd)
+			_, err := client.GetSecurityDomain(networkDomain)
 			if err != goaviatrix.ErrNotFound {
 				return fmt.Errorf("network domain still exists: %v", err)
 			}

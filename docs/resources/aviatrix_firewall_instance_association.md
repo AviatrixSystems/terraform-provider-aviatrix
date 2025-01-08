@@ -54,7 +54,7 @@ The following arguments are supported:
 
 -> **NOTE:** If associating FQDN gateway to FireNet, it is FQDN gateway's `gw_name`. For Azure FireNet, it is the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance.
 
-* `vendor_type` - (Optional) Type of firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic". Value "fqdn_gateway" is required for FQDN gateway.  
+* `vendor_type` - (Optional) Type of firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic". Value "fqdn_gateway" is required for FQDN gateway.
 * `firewall_name` - (Optional) Firewall instance name. **Required for non-GCP firewall instance. For GCP, this field should not be set.**
 * `lan_interface`- (Optional) Lan interface ID. **Required if it is a firewall instance.**
 * `management_interface` - (Optional) Management interface ID. **Required if it is a firewall instance.**

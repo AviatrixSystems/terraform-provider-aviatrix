@@ -80,7 +80,7 @@ The following arguments are supported:
     Dell:
     ```
     WAN: eth3
-    LAN: eth2 
+    LAN: eth2
     MGMT: eth0
     ```
 
@@ -96,7 +96,7 @@ The following arguments are supported:
     WAN: eth2
     MGMT: eth2
     LAN: eth4
-    2WAN: eth2, eth3    
+    2WAN: eth2, eth3
     ```
 
 ### Optional

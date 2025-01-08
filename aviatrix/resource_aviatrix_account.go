@@ -770,7 +770,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 	if acc.CloudType == goaviatrix.AWS {
 		d.Set("aws_account_number", acc.AwsAccountNumber)
 		if acc.AwsRoleEc2 != "" {
-			//force default setting and save to .tfstate file
+			// force default setting and save to .tfstate file
 			d.Set("aws_access_key", "")
 			d.Set("aws_secret_key", "")
 			d.Set("aws_iam", true)
@@ -828,7 +828,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("edge_csp_username", acc.EdgeCSPUsername)
 			d.Set("edge_zededa_username", acc.EdgeCSPUsername)
 		}
-
 	}
 
 	d.Set("rbac_groups", acc.GroupNamesRead)

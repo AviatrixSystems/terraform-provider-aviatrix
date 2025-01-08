@@ -416,7 +416,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 					ValidateFunc: goaviatrix.StringCanBeEmptyButCannotBeWhiteSpace,
 				},
 				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
-				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
+				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string.",
 			},
 		},
 	}
@@ -593,7 +593,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	hasSetAllCustomRemoteCIDRs := s2c.RemoteSourceRealCIDRs != "" && s2c.RemoteSourceVirtualCIDRs != "" && s2c.RemoteDestinationRealCIDRs != "" && s2c.RemoteDestinationVirtualCIDRs != ""
 	hasSetAllCustomLocalCIDRs := s2c.LocalSourceRealCIDRs != "" && s2c.LocalSourceVirtualCIDRs != "" && s2c.LocalDestinationRealCIDRs != "" && s2c.LocalDestinationVirtualCIDRs != ""
 	if s2c.CustomMap && !hasSetAllCustomLocalCIDRs && !hasSetAllCustomRemoteCIDRs {
-		return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initated CIDRs be provided")
+		return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initiated CIDRs be provided")
 	}
 
 	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
@@ -1199,7 +1199,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		hasSetAllCustomRemoteCIDRs := s2c.RemoteSourceRealCIDRs != "" && s2c.RemoteSourceVirtualCIDRs != "" && s2c.RemoteDestinationRealCIDRs != "" && s2c.RemoteDestinationVirtualCIDRs != ""
 		hasSetAllCustomLocalCIDRs := s2c.LocalSourceRealCIDRs != "" && s2c.LocalSourceVirtualCIDRs != "" && s2c.LocalDestinationRealCIDRs != "" && s2c.LocalDestinationVirtualCIDRs != ""
 		if !hasSetAllCustomLocalCIDRs && !hasSetAllCustomRemoteCIDRs {
-			return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initated CIDRs be provided")
+			return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initiated CIDRs be provided")
 		}
 		err := client.UpdateSite2Cloud(s2c)
 		if err != nil {

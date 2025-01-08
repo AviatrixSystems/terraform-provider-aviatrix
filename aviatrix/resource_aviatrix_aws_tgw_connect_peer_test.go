@@ -58,7 +58,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 	aws_side_as_number = "64512"
 	region             = "%[3]s"
 	tgw_name           = "aws-tgw-%[2]s"
-	
+
 	cidrs = ["10.0.0.0/24", "10.1.0.0/24", "8.0.0.0/24", "5.0.0.0/24"]
 }
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {

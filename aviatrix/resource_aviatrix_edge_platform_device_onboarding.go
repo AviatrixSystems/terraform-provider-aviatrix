@@ -165,7 +165,6 @@ func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *
 
 	for i := 0; ; i++ {
 		edgeNEODeviceResp, err := client.GetEdgeNEODevice(ctx, edgeNEODevice.AccountName, edgeNEODevice.DeviceName)
-
 		if err != nil {
 			if err == goaviatrix.ErrNotFound {
 				return diag.Errorf("could not find onboarded Edge Platform device")

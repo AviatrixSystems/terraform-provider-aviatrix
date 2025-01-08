@@ -214,13 +214,13 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 						account_id = "test-account-id"
 						name = "test-name"
 						region = "test-region"
-						vpc_id = "test-vpc"	
+						vpc_id = "test-vpc"
 						platform = "test-platform"
 						version = "test-version"
 						network_mode = "OVERLAY"
 						is_publicly_accessible = true
 						tags = {
-							"key1" = "value1"	
+							"key1" = "value1"
 						}
 					}
 				}`,
