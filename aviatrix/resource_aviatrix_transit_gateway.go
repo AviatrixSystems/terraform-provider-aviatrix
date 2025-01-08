@@ -4078,9 +4078,12 @@ func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 
 func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType int) (*goaviatrix.TransitHaGateway, error) {
 	transitHaGw := &goaviatrix.TransitHaGateway{
-		PrimaryGwName: d.Get("gw_name").(string),
-		GwName:        d.Get("gw_name").(string) + "-hagw",
-		InsaneMode:    "yes",
+		PrimaryGwName:       d.Get("gw_name").(string),
+		GwName:              d.Get("gw_name").(string) + "-hagw",
+		VpcID:               d.Get("vpc_id").(string),
+		ZtpFileDownloadPath: d.Get("ztp_file_download_path").(string),
+		CloudType:           d.Get("cloud_type").(int),
+		InsaneMode:          "yes",
 	}
 	peerBackupPortType, ok := d.GetOk("peer_backup_port_type")
 	if !ok {

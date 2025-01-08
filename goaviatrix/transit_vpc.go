@@ -1,7 +1,7 @@
 package goaviatrix
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -177,14 +177,18 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
 	var data CreateEdgeEquinixResp
-	err := c.PostAPIContext2(context.Background(), &data, gateway.Action, gateway, BasicCheck)
+	err := c.PostAPIWithResponse(&data, gateway.Action, gateway, BasicCheck)
 	if err != nil {
 		return err
 	}
 	// create the ZTP file for Equinix edge transit gateway
 	if gateway.CloudType == EDGEEQUINIX {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
-		err := createZtpFile(fileName, data.Result)
+		fileContent, err := processZtpFileContent(data.Result)
+		if err != nil {
+			return err
+		}
+		err = createZtpFile(fileName, fileContent)
 		if err != nil {
 			return err
 		}
@@ -727,6 +731,21 @@ func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error 
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func processZtpFileContent(cloudInitTransit string) (string, error) {
+	var jsonCloudInit map[string]interface{}
+	err := json.Unmarshal([]byte(cloudInitTransit), &jsonCloudInit)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse cloud_init_transit as JSON: %v", err)
+	}
+
+	// Extract the 'text' field from the cloudinit data
+	text, ok := jsonCloudInit["text"].(string)
+	if !ok {
+		return "", fmt.Errorf("'text' field not found or is not a string in cloud_init_transit")
+	}
+	return text, nil
 }
 
 // createZtpFile creates a new ztp file and writes the given content.

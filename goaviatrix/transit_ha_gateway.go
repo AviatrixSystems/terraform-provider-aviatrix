@@ -45,14 +45,14 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 	transitHaGateway.CID = c.CID
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
 	var data CreateEdgeEquinixResp
-	resp, err := c.PostAPIContext2HaGw(context.Background(), nil, transitHaGateway.Action, transitHaGateway, BasicCheck)
+	resp, err := c.PostAPIContext2HaGw(context.Background(), &data, transitHaGateway.Action, transitHaGateway, BasicCheck)
 	if err != nil {
 		return "", err
 	}
 	// create the ZTP file for Equinix Edge transit gateway
 	if transitHaGateway.CloudType == EDGEEQUINIX {
 		fileName := getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
-		err := createZtpFile(fileName, data.Result)
+		err = createZtpFile(fileName, data.Result)
 		if err != nil {
 			return "", err
 		}
