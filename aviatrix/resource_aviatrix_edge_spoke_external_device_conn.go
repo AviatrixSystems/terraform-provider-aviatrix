@@ -117,13 +117,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Description:  "Remote cloud type.",
 			},
 			"ha_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("enable_edge_underlay").(bool)
-				},
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_bgp_remote_as_num": {
@@ -288,10 +284,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 {
 			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
 		}
-	}
-
-	if externalDeviceConn.EnableEdgeUnderlay && externalDeviceConn.HAEnabled == "true" {
-		return diag.Errorf("please use a separate edge_spoke_external_device_conn to create WAN underlay connection for Edge HA")
 	}
 
 	flag := false
