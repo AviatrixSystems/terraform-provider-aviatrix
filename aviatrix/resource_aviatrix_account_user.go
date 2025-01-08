@@ -64,7 +64,7 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(user.UserName)
 	flag := false
-	defer resourceAviatrixAccountUserReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAccountUserReadIfRequired(d, meta, &flag) }()
 
 	err := client.CreateAccountUser(user)
 	if err != nil {

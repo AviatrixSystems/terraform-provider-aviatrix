@@ -5,3 +5,5 @@ terraform.tfstate.backup
 .terraform.lock.hcl
 .terraform.tfstate.lock.info
 RELEASE_NOTES.md
+.devenv
+.direnv

@@ -43,7 +43,7 @@ The following arguments are supported:
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When not specified, this field is not used.
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
   * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
-  
+
   !> `interface` must not be set when using a route-based connection in a policy.
   * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must not be set when `connection` is set. If `connection` is not specified or “None”, interface must be “eth0” by default.
   * `connection` - (Optional) This is a qualifier condition that specifies output connection where the rule applies. Default value: "None".

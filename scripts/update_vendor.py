@@ -84,7 +84,7 @@ def update_terraform_plugin(gopath):
 
 
 def remove_git_and_add_files(terraform_path):
-    """ Remove git dependancy"""
+    """ Remove git dependency"""
     print("Removing git links")
     vendor_folder = os.path.join(*[terraform_path, "vendor"])
     for dir_ in find(".git", vendor_folder):
@@ -109,7 +109,7 @@ def main():
                              exception_name="AviatrixSystems")
 
     os.chdir(terraform_path)
-    print("Obtaining latest dependancies using go get")
+    print("Obtaining latest dependencies using go get")
     os.system("go get")
     # update_terraform_plugin(gopath)
     move_everything_except(os.path.join(*[gopath, "src"]), exception_name=["github.com"],

@@ -13,12 +13,12 @@ The **aviatrix_aws_guard_duty** resource allows the enabling of [AWS GuardDuty](
 ## Example Usage
 
 ```hcl
-# Configure AWS GuardDuty 
+# Configure AWS GuardDuty
 resource "aviatrix_aws_guard_duty" "test_aws_guard_duty" {
   account_name = aviatrix_account.account_1.account_name
   region       = "us-west-1"
   excluded_ips = [
-    "127.0.0.1", 
+    "127.0.0.1",
     "10.0.0.1"
   ]
 }

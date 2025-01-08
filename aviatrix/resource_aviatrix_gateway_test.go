@@ -155,7 +155,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 			",SKIP_GATEWAY_OCI, and SKIP_GATEWAY_AWSGOV are all set, even though SKIP_GATEWAY isn't set")
 	}
 
-	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
+	// Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
 	ociGwSize := os.Getenv("OCI_GW_SIZE")
@@ -185,7 +185,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheck(t, msgCommonAws)
 			},
@@ -224,7 +224,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheckGCP(t, msgCommonGcp)
 			},
@@ -264,7 +264,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheckAZURE(t, msgCommonAzure)
 			},
@@ -303,8 +303,8 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
-				//preAccountCheck(t, msgCommon)
+				// Checking resources have needed environment variables set
+				// preAccountCheck(t, msgCommon)
 				preGatewayCheckOCI(t, msgCommonOci)
 			},
 			Providers:    testAccProviders,
@@ -342,7 +342,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheckAWSGOV(t, msgCommonAwsgov)
 			},

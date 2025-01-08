@@ -2,7 +2,13 @@ package goaviatrix
 
 import (
 	"errors"
-	"strings"
+	"fmt"
+
+	"golang.org/x/mod/semver"
+)
+
+const (
+	helpURL = "https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-compatibility"
 )
 
 func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
@@ -10,25 +16,29 @@ func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
 		return errors.New("supportedVersions is not provided")
 	}
 
-	currentVersion, _, err := c.GetCurrentVersion()
+	currentVersion, err := c.GetCurrentVersion()
 	if err != nil {
 		return err
 	}
-	currVersion := strings.Split(currentVersion, ".")
-	if len(currVersion) < 2 {
-		return errors.New("couldn't get current version correctly")
+	if err := isVersionSupported(currentVersion, supportedVersions); err != nil {
+		return fmt.Errorf(
+			"current Terraform version does not support controller version: %s, Please see %s for a list of compatible controller versions.",
+			currentVersion, helpURL,
+		)
 	}
 
-	for i := 0; i < len(supportedVersions); i++ {
-		suppVersion := strings.Split(supportedVersions[i], ".")
-		if len(suppVersion) < 2 {
-			return errors.New("" + supportedVersions[i] + " is not set correctly, correct example: '5.1'")
-		}
-		if suppVersion[0] == currVersion[0] && suppVersion[1] == currVersion[1] {
+	return nil
+}
+
+// isVersionSupported compares the current version against a list of supported versions.
+// It returns nil if the current version is supported, otherwise an error.
+func isVersionSupported(currentVersion string, supportedVersions []string) error {
+	version := "v" + currentVersion
+	for _, supported := range supportedVersions {
+		supported = "v" + supported
+		if semver.Compare(semver.MajorMinor(version), semver.MajorMinor(supported)) == 0 {
 			return nil
 		}
 	}
-
-	return errors.New("current Terraform branch does not support controller version: UserConnect-" + currentVersion +
-		". Please go to 'https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-compatibility' for version construct instructions")
+	return fmt.Errorf("version %s is not supported", currentVersion)
 }

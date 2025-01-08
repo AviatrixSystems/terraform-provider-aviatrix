@@ -629,7 +629,6 @@ func (c *Client) GetFQDNExactMatchStatus(ctx context.Context) (*string, error) {
 	}
 	result := data["results"].(string)
 	return &result, nil
-
 }
 
 func (c *Client) GetFQDNExceptionRuleStatus(ctx context.Context) (*string, error) {

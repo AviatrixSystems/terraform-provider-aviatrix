@@ -230,7 +230,7 @@ func (c *Client) ValidateProfileRule(profileRule *ProfileRule) error {
 		return fmt.Errorf("proto can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
 	}
 	if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
-		return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
+		return fmt.Errorf("port should be '0:65535' for protocol 'all' or 'icmp'")
 	}
 	return nil
 }

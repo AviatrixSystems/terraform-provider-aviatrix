@@ -10,7 +10,7 @@ description: |-
 
 Use this data source to get the list of firewall instance images for use in other resources.
 
-**NOTE:** A firenet enabled gateway in a security VPC is required for this data source. 
+**NOTE:** A firenet enabled gateway in a security VPC is required for this data source.
 
 ## Example Usage
 

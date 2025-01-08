@@ -60,7 +60,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 			"SKIP_SPOKE_GATEWAY_AZURE, and SKIP_SPOKE_GATEWAY_OCI are all set, even though SKIP_SPOKE_GATEWAY isn't set")
 	}
 
-	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
+	// Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
 	ociGwSize := os.Getenv("OCI_GW_SIZE")
@@ -185,7 +185,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	if skipOCI == "yes" {
 		t.Log("Skipping OCI Spoke Gateway test as SKIP_SPOKE_GATEWAY_OCI is set")
 	} else {
-		//importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
+		// importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)

@@ -1,19 +1,14 @@
 name: Release # Workflow name displayed on GitHub
-
 on: workflow_dispatch # Trigger manually
-
 permissions:
   contents: write
-
 jobs:
   new-release:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Validate CHANGELOG
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate CHANGELOG
         run: |
           expectedLine="## $(cat version) (Unreleased)"
           firstLine=$(head -n 1 "CHANGELOG.md")
@@ -23,34 +18,28 @@ jobs:
             echo "Actual: $firstLine"
             exit 1
           fi
-
-      -
-        name: Push git tag
+      - name: Push git tag
         run: |
           version="v$(cat version)"
           echo "Version: $version"
-          git tag $version
-          git push origin $version
-      -
-        name: Create release notes
+          git tag "$version"
+          git push origin "$version"
+      - name: Create release notes
         run: |
           lastLine=$(grep -n -m2 "^## " CHANGELOG.md | tail -1 | cut -d ":" -f 1)
           lastLine=$((lastLine - 1))
           echo "## $(cat version) ($(TZ='PST8PDT' date +"%B %d, %Y"))" >RELEASE_NOTES.md
           sed -n '2,'$lastLine'p' CHANGELOG.md >>RELEASE_NOTES.md
-      -
-        name: Set up Go
-        uses: actions/setup-go@v3
-      -
-        name: Import GPG key
+      - name: Set up Go
+        uses: actions/setup-go@v5
+      - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest

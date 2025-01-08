@@ -108,7 +108,7 @@ resource "aviatrix_transit_gateway" "test_transit_aws" {
 	vpc_reg                = "%s"
 	gw_size                = "c5.xlarge"
 	subnet                 = "%s"
-	connected_transit      = true 
+	connected_transit      = true
 	enable_transit_firenet = true
 }
 resource "aviatrix_spoke_gateway" "test_spoke_aws" {
@@ -148,7 +148,7 @@ resource "aviatrix_transit_gateway" "test_transit_azure" {
 	vpc_reg                = "%s"
 	gw_size                = "%s"
 	subnet                 = "%s"
-	connected_transit      = true 
+	connected_transit      = true
 	enable_transit_firenet = true
 }
 resource "aviatrix_spoke_gateway" "test_spoke_azure" {

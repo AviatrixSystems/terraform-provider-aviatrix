@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -898,11 +897,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 		tagsMap, err := extractTags(d, gateway.CloudType)
 		if err != nil {
-			return fmt.Errorf("error creating tags for spoke gateway: %v", err)
+			return fmt.Errorf("error creating tags for spoke gateway: %w", err)
 		}
 		tagJson, err := TagsMapToJson(tagsMap)
 		if err != nil {
-			return fmt.Errorf("failed to add tags whenc creating spoke gateway: %v", err)
+			return fmt.Errorf("failed to add tags whenc creating spoke gateway: %w", err)
 		}
 		gateway.TagJson = tagJson
 	}
@@ -1189,7 +1188,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if enableMonitorSubnets {
 		err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
-			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 		}
 	}
 
@@ -1200,7 +1199,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 		err := client.DisableJumboFrame(gw)
 		if err != nil {
-			return fmt.Errorf("could not disable jumbo frame for spoke gateway: %v", err)
+			return fmt.Errorf("could not disable jumbo frame for spoke gateway: %w", err)
 		}
 	}
 
@@ -1220,7 +1219,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.EnablePrivateVpcDefaultRoute(gw)
 		if err != nil {
-			return fmt.Errorf("could not enable private vpc default route after spoke gateway creation: %v", err)
+			return fmt.Errorf("could not enable private vpc default route after spoke gateway creation: %w", err)
 		}
 	}
 
@@ -1230,7 +1229,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.EnableSkipPublicRouteUpdate(gw)
 		if err != nil {
-			return fmt.Errorf("could not enable skip public route update after spoke gateway creation: %v", err)
+			return fmt.Errorf("could not enable skip public route update after spoke gateway creation: %w", err)
 		}
 	}
 
@@ -1240,14 +1239,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.EnableAutoAdvertiseS2CCidrs(gw)
 		if err != nil {
-			return fmt.Errorf("could not enable auto advertise s2c cidrs after spoke gateaway creation: %v", err)
+			return fmt.Errorf("could not enable auto advertise s2c cidrs after spoke gateaway creation: %w", err)
 		}
 	}
 
 	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
 		err := client.ModifyTunnelDetectionTime(d.Get("gw_name").(string), detectionTime.(int))
 		if err != nil {
-			return fmt.Errorf("could not set tunnel detection time during Spoke Gateway creation: %v", err)
+			return fmt.Errorf("could not set tunnel detection time during Spoke Gateway creation: %w", err)
 		}
 	}
 
@@ -1261,7 +1260,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if len(gateway.ApprovedLearnedCidrs) != 0 {
 		err := client.UpdateSpokePendingApprovedCidrs(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to update approved CIDRs: %v", err)
+			return fmt.Errorf("failed to update approved CIDRs: %w", err)
 		}
 	}
 
@@ -1281,18 +1280,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if val, ok := d.GetOk("bgp_ecmp"); ok {
 		err := client.SetBgpEcmpSpoke(gateway, val.(bool))
 		if err != nil {
-			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+			return fmt.Errorf("could not set bgp_ecmp: %w", err)
 		}
 	}
 
 	if enableActiveStandby {
 		if enableActiveStandbyPreemptive {
 			if err := client.EnableActiveStandbyPreemptiveSpoke(gateway); err != nil {
-				return fmt.Errorf("could not enable Preemptive Mode for Active-Standby: %v", err)
+				return fmt.Errorf("could not enable Preemptive Mode for Active-Standby: %w", err)
 			}
 		} else {
 			if err := client.EnableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not enable Active-Standby: %v", err)
+				return fmt.Errorf("could not enable Active-Standby: %w", err)
 			}
 		}
 	}
@@ -1306,7 +1305,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if val, ok := d.GetOk("local_as_number"); ok {
 		err := client.SetLocalASNumberSpoke(gateway, val.(string))
 		if err != nil {
-			return fmt.Errorf("could not set local_as_number: %v", err)
+			return fmt.Errorf("could not set local_as_number: %w", err)
 		}
 	}
 
@@ -1318,7 +1317,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetPrependASPathSpoke(gateway, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
 	}
 
@@ -1327,7 +1326,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if bgp_polling_time >= 10 && bgp_polling_time != defaultBgpPollingTime {
 			err := client.SetBgpPollingTimeSpoke(gateway, bgp_polling_time)
 			if err != nil {
-				return fmt.Errorf("could not set bgp polling time: %v", err)
+				return fmt.Errorf("could not set bgp polling time: %w", err)
 			}
 		}
 	}
@@ -1337,7 +1336,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if bgp_neighbor_status_polling_time >= 1 && bgp_neighbor_status_polling_time != defaultBgpNeighborStatusPollingTime {
 			err := client.SetBgpBfdPollingTimeSpoke(gateway, val.(int))
 			if err != nil {
-				return fmt.Errorf("could not set bgp neighbor status polling time: %v", err)
+				return fmt.Errorf("could not set bgp neighbor status polling time: %w", err)
 			}
 		}
 	}
@@ -1345,7 +1344,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
 		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
 		if err != nil {
-			return fmt.Errorf("could not change BGP Hold Time after Spoke Gateway creation: %v", err)
+			return fmt.Errorf("could not change BGP Hold Time after Spoke Gateway creation: %w", err)
 		}
 	}
 
@@ -1354,7 +1353,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if enableBgp {
 			err := client.EnableSpokePreserveAsPath(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable spoke preserve as path: %v", err)
+				return fmt.Errorf("could not enable spoke preserve as path: %w", err)
 			}
 		} else {
 			return fmt.Errorf("enable_preserve_as_path is not supported for Non-BGP Spoke Gateways")
@@ -1448,11 +1447,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("could not get BGP LAN IP info for Azure spoke gateway %s: %v", gateway.GwName, err)
 		}
 		if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
-			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %v", err)
+			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %s", err)
 		}
 		if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
 			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
-				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %v", err)
+				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %s", err)
 			}
 		} else {
 			d.Set("ha_bgp_lan_ip_list", nil)
@@ -1476,11 +1475,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
 		if err != nil {
-			return fmt.Errorf("could not get advanced config for spoke gateway: %v", err)
+			return fmt.Errorf("could not get advanced config for spoke gateway: %w", err)
 		}
 
 		if err = d.Set("approved_learned_cidrs", spokeAdvancedConfig.ApprovedLearnedCidrs); err != nil {
-			return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
+			return fmt.Errorf("could not set approved_learned_cidrs into state: %w", err)
 		}
 	} else {
 		d.Set("approved_learned_cidrs", nil)
@@ -1498,7 +1497,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 	err = d.Set("prepend_as_path", prependAsPath)
 	if err != nil {
-		return fmt.Errorf("could not set prepend_as_path: %v", err)
+		return fmt.Errorf("could not set prepend_as_path: %w", err)
 	}
 	if gw.EnableBgp {
 		d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
@@ -1525,8 +1524,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
-		d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) // AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
+		d.Set("vpc_reg", gw.VpcRegion)                    // AWS vpc_reg returns as vpc_region in rest api
 
 		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			d.Set("allocate_new_eip", true)
@@ -1536,7 +1535,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// gcp vpc_id returns as <vpc name>~-~<project name>
 		d.Set("vpc_id", gw.VpcID)
-		d.Set("vpc_reg", gw.GatewayZone) //gcp vpc_reg returns as gateway_zone in json
+		d.Set("vpc_reg", gw.GatewayZone) // gcp vpc_reg returns as gateway_zone in json
 
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
@@ -1615,7 +1614,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
 	if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+		return fmt.Errorf("setting 'monitor_exclude_list' to state: %w", err)
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -1900,12 +1899,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if !enableSpokePreserveAsPath {
 			err := client.DisableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not disable Preserve AS Path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not disable Preserve AS Path during Spoke Gateway update: %w", err)
 			}
 		} else {
 			err := client.EnableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not enable Preserve AS Path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not enable Preserve AS Path during Spoke Gateway update: %w", err)
 			}
 		}
 	}
@@ -1922,17 +1921,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		tagsMap, err := extractTags(d, gateway.CloudType)
 		if err != nil {
-			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+			return fmt.Errorf("failed to update tags for spoke gateway: %w", err)
 		}
 		tags.Tags = tagsMap
 		tagJson, err := TagsMapToJson(tagsMap)
 		if err != nil {
-			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+			return fmt.Errorf("failed to update tags for spoke gateway: %w", err)
 		}
 		tags.TagJson = tagJson
 		err = client.UpdateTags(tags)
 		if err != nil {
-			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+			return fmt.Errorf("failed to update tags for spoke gateway: %w", err)
 		}
 	}
 
@@ -2056,7 +2055,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				"ha_subnet or ha_zone is set")
 		} else if deleteHaGw && haGwSize != "" {
 			return fmt.Errorf("ha_gw_size must be empty if spoke HA gateway is deleted")
-
 		}
 
 		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
@@ -2094,7 +2092,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		if newHaGwEnabled {
-			//New configuration to enable HA
+			// New configuration to enable HA
 			_, err := client.CreateSpokeHaGw(spokeHaGw)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
@@ -2113,13 +2111,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 			//}
 		} else if deleteHaGw {
-			//Ha configuration has been deleted
+			// Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)
 			}
 		} else if changeHaGw {
-			//HA subnet has been modified. Delete older HA GW,
+			// HA subnet has been modified. Delete older HA GW,
 			// and launch new HA GW in new subnet.
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
@@ -2278,7 +2276,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		err := client.UpdateSpokePendingApprovedCidrs(gw)
 		if err != nil {
-			return fmt.Errorf("could not update approved CIDRs: %v", err)
+			return fmt.Errorf("could not update approved CIDRs: %w", err)
 		}
 	}
 
@@ -2379,22 +2377,22 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if monitorGatewaySubnets {
 			err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 			if err != nil {
-				return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 			}
 		} else {
 			err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not disable monitor gateway subnets: %w", err)
 			}
 		}
 	} else if d.HasChange("monitor_exclude_list") {
 		err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 		if err != nil {
-			return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not disable monitor gateway subnets: %w", err)
 		}
 		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
-			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not enable monitor gateway subnets: %w", err)
 		}
 	}
 
@@ -2402,12 +2400,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_jumbo_frame").(bool) {
 			err := client.EnableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable jumbo frame for spoke gateway when updating: %v", err)
+				return fmt.Errorf("could not enable jumbo frame for spoke gateway when updating: %w", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable jumbo frame for spoke gateway when updating: %v", err)
+				return fmt.Errorf("could not disable jumbo frame for spoke gateway when updating: %w", err)
 			}
 		}
 	}
@@ -2430,12 +2428,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_private_vpc_default_route").(bool) {
 			err := client.EnablePrivateVpcDefaultRoute(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable private vpc default route during spoke gateway update: %v", err)
+				return fmt.Errorf("could not enable private vpc default route during spoke gateway update: %w", err)
 			}
 		} else {
 			err := client.DisablePrivateVpcDefaultRoute(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable private vpc default route during spoke gateway update: %v", err)
+				return fmt.Errorf("could not disable private vpc default route during spoke gateway update: %w", err)
 			}
 		}
 	}
@@ -2444,12 +2442,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_skip_public_route_table_update").(bool) {
 			err := client.EnableSkipPublicRouteUpdate(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable skip public route update during spoke gateway update: %v", err)
+				return fmt.Errorf("could not enable skip public route update during spoke gateway update: %w", err)
 			}
 		} else {
 			err := client.DisableSkipPublicRouteUpdate(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable skip public route update during spoke gateway update: %v", err)
+				return fmt.Errorf("could not disable skip public route update during spoke gateway update: %w", err)
 			}
 		}
 	}
@@ -2458,12 +2456,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_auto_advertise_s2c_cidrs").(bool) {
 			err := client.EnableAutoAdvertiseS2CCidrs(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable auto advertise s2c cidrs during spoke gateway update: %v", err)
+				return fmt.Errorf("could not enable auto advertise s2c cidrs during spoke gateway update: %w", err)
 			}
 		} else {
 			err := client.DisableAutoAdvertiseS2CCidrs(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update: %v", err)
+				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update: %w", err)
 			}
 		}
 	}
@@ -2477,101 +2475,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			var err error
 			detectionTime, err = client.GetTunnelDetectionTime("Controller")
 			if err != nil {
-				return fmt.Errorf("could not get default tunnel detection time during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not get default tunnel detection time during Spoke Gateway update: %w", err)
 			}
 		}
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
 		if err != nil {
-			return fmt.Errorf("could not modify tunnel detection time during Spoke Gateway update: %v", err)
-		}
-	}
-
-	primaryHasVersionChange := d.HasChanges("software_version", "image_version")
-	haHasVersionChange := haEnabled && d.HasChanges("ha_software_version", "ha_image_version") && manageHaGw
-	primaryHasImageVersionChange := d.HasChange("image_version")
-	haHasImageVersionChange := d.HasChange("ha_image_version") && manageHaGw
-	if primaryHasVersionChange || haHasVersionChange {
-		// To determine if this is an attempted software rollback, we check if
-		// old is a higher version than new. Or, the new version is the
-		// special string "previous".
-		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
-		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))
-		primaryRollbackSoftwareVersion := (err == nil && comparePrimary > 0) || newPrimarySoftwareVersion == "previous"
-
-		oldHaSoftwareVersion, newHaSoftwareVersion := d.GetChange("ha_software_version")
-		compareHa, err := goaviatrix.CompareSoftwareVersions(oldHaSoftwareVersion.(string), newHaSoftwareVersion.(string))
-		haRollbackSoftwareVersion := (err == nil && compareHa > 0) || newHaSoftwareVersion == "previous"
-
-		if primaryHasVersionChange && haHasVersionChange &&
-			!primaryHasImageVersionChange && !haHasImageVersionChange &&
-			!primaryRollbackSoftwareVersion && !haRollbackSoftwareVersion {
-			// Both Primary and HA have upgraded just their software_version
-			// so we can perform upgrade in parallel.
-			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha/primary pair in parallel", gateway.GwName)
-			swVersion := d.Get("software_version").(string)
-			imageVersion := d.Get("image_version").(string)
-			gw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName,
-				SoftwareVersion: swVersion,
-				ImageVersion:    imageVersion,
-			}
-			haSwVersion := d.Get("ha_software_version").(string)
-			haImageVersion := d.Get("ha_image_version").(string)
-			hagw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName + "-hagw",
-				SoftwareVersion: haSwVersion,
-				ImageVersion:    haImageVersion,
-			}
-			var wg sync.WaitGroup
-			wg.Add(2)
-			var primaryErr, haErr error
-			go func() {
-				primaryErr = client.UpgradeGateway(gw)
-				wg.Done()
-			}()
-			go func() {
-				haErr = client.UpgradeGateway(hagw)
-				wg.Done()
-			}()
-			wg.Wait()
-			if primaryErr != nil && haErr != nil {
-				return fmt.Errorf("could not upgrade primary and HA spoke gateway "+
-					"software_version=%s ha_software_version=%s image_version=%s ha_image_version=%s:"+
-					"\n primaryErr: %v\n haErr: %v",
-					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
-			} else if primaryErr != nil {
-				return fmt.Errorf("could not upgrade primary spoke gateway software_version=%s: %v", swVersion, primaryErr)
-			} else if haErr != nil {
-				return fmt.Errorf("could not upgrade HA spoke gateway ha_software_version=%s: %v", haSwVersion, haErr)
-			}
-		} else { // Only primary or only HA has changed, or image_version changed, or it is a software rollback
-			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha or primary in serial", gateway.GwName)
-			if primaryHasVersionChange {
-				swVersion := d.Get("software_version").(string)
-				imageVersion := d.Get("image_version").(string)
-				gw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName,
-					SoftwareVersion: swVersion,
-					ImageVersion:    imageVersion,
-				}
-				err := client.UpgradeGateway(gw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade spoke gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
-				}
-			}
-			if haHasVersionChange {
-				haSwVersion := d.Get("ha_software_version").(string)
-				haImageVersion := d.Get("ha_image_version").(string)
-				hagw := &goaviatrix.Gateway{
-					GwName:          gateway.GwName + "-hagw",
-					SoftwareVersion: haSwVersion,
-					ImageVersion:    haImageVersion,
-				}
-				err := client.UpgradeGateway(hagw)
-				if err != nil {
-					return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
-				}
-			}
+			return fmt.Errorf("could not modify tunnel detection time during Spoke Gateway update: %w", err)
 		}
 	}
 
@@ -2597,7 +2506,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetBgpEcmpSpoke(gateway, enabled)
 		if err != nil {
-			return fmt.Errorf("could not set bgp_ecmp during Spoke Gateway update: %v", err)
+			return fmt.Errorf("could not set bgp_ecmp during Spoke Gateway update: %w", err)
 		}
 	}
 
@@ -2608,11 +2517,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_active_standby").(bool) {
 			if d.Get("enable_active_standby_preemptive").(bool) {
 				if err := client.EnableActiveStandbyPreemptiveSpoke(gateway); err != nil {
-					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Spoke Gatway update: %v", err)
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Spoke Gateway update: %w", err)
 				}
 			} else {
 				if err := client.EnableActiveStandbySpoke(gateway); err != nil {
-					return fmt.Errorf("could not enable Active-Standby during Spoke Gateway update: %v", err)
+					return fmt.Errorf("could not enable Active-Standby during Spoke Gateway update: %w", err)
 				}
 			}
 		} else {
@@ -2620,7 +2529,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
 			}
 			if err := client.DisableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not disable Active-Standby during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not disable Active-Standby during Spoke Gateway update: %w", err)
 			}
 		}
 	}
@@ -2639,7 +2548,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPathSpoke(gateway, nil)
 			if err != nil {
-				return fmt.Errorf("could not delete prepend_as_path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not delete prepend_as_path during Spoke Gateway update: %w", err)
 			}
 		}
 
@@ -2647,14 +2556,14 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			localAsNumber := d.Get("local_as_number").(string)
 			err := client.SetLocalASNumberSpoke(gateway, localAsNumber)
 			if err != nil {
-				return fmt.Errorf("could not set local_as_number: %v", err)
+				return fmt.Errorf("could not set local_as_number: %w", err)
 			}
 		}
 
 		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
 			err := client.SetPrependASPathSpoke(gateway, prependASPath)
 			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not set prepend_as_path during Spoke Gateway update: %w", err)
 			}
 		}
 	}
@@ -2666,7 +2575,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetBgpPollingTimeSpoke(gateway, bgpPollingTime.(int))
 		if err != nil {
-			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %v", err)
+			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %w", err)
 		}
 	}
 
@@ -2677,14 +2586,14 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetBgpBfdPollingTimeSpoke(gateway, bgpBfdPollingTime.(int))
 		if err != nil {
-			return fmt.Errorf("could not update bgp neighbor status polling time during Spoke Gateway update: %v", err)
+			return fmt.Errorf("could not update bgp neighbor status polling time during Spoke Gateway update: %w", err)
 		}
 	}
 
 	if d.HasChange("bgp_hold_time") {
 		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
 		if err != nil {
-			return fmt.Errorf("could not change BGP Hold Time during Spoke Gateway update: %v", err)
+			return fmt.Errorf("could not change BGP Hold Time during Spoke Gateway update: %w", err)
 		}
 	}
 
@@ -2738,12 +2647,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_global_vpc").(bool) {
 			err := client.EnableGlobalVpc(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable global vpc during spoke gateway update: %v", err)
+				return fmt.Errorf("could not enable global vpc during spoke gateway update: %w", err)
 			}
 		} else {
 			err := client.DisableGlobalVpc(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable global vpc during spoke gateway update: %v", err)
+				return fmt.Errorf("could not disable global vpc during spoke gateway update: %w", err)
 			}
 		}
 	}
@@ -2763,12 +2672,12 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Deleting Aviatrix Spoke Gateway: %#v", gateway)
 
-	//If HA is enabled, delete HA GW first.
+	// If HA is enabled, delete HA GW first.
 	if d.Get("manage_ha_gateway").(bool) {
 		haSubnet := d.Get("ha_subnet").(string)
 		haZone := d.Get("ha_zone").(string)
 		if haSubnet != "" || haZone != "" {
-			//Delete HA Gw too
+			// Delete HA Gw too
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {

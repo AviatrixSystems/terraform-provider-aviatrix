@@ -593,7 +593,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *s
 	if externalDeviceConn.EnableEdgeUnderlay {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
-
 		if err != nil {
 			return diag.Errorf("failed to delete Edge as a Spoke external device connection: %s", err)
 		}

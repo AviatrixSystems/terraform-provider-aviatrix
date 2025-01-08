@@ -320,7 +320,10 @@ func resourceAviatrixFQDNGlobalConfigUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixFQDNGlobalConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client) //default enabled
+	client, ok := meta.(*goaviatrix.Client) // default enabled
+	if !ok {
+		return diag.Errorf("meta is not a valid Client pointer")
+	}
 
 	err := client.EnableFQDNExceptionRule(ctx)
 	if err != nil {

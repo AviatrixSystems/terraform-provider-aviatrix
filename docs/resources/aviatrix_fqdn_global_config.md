@@ -27,7 +27,7 @@ resource "aviatrix_fqdn_global_config" "test" {
   enable_exception_rule           = false
   enable_custom_network_filtering = true
   configured_ips                  = [
-    "172.16.0.0/12~~RFC-1918", 
+    "172.16.0.0/12~~RFC-1918",
     "10.0.0.0/8~~RFC-1918",
     "168.16.0.0/32"
   ]

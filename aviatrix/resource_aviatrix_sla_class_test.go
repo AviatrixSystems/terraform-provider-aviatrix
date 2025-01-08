@@ -51,7 +51,7 @@ func testAccSLAClassBasic(slaClassName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_sla_class" "test" {
 	name             = "%s"
-	latency          = 43	
+	latency          = 43
 	jitter           = 1
 	packet_drop_rate = 3
 }

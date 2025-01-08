@@ -138,7 +138,7 @@ type Gateway struct {
 	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string            `form:"gw_size,omitempty" ` //Only use for gateway create
+	VpcSize                         string            `form:"gw_size,omitempty" ` // Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
@@ -220,32 +220,40 @@ type Gateway struct {
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
-	DeviceID                        string                              `json:"device_id,omitempty"`
-	SiteID                          string                              `json:"site_id,omitempty"`
+	DeviceID                        string                              `json:"edge_csp_device_id,omitempty"`
 	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
+	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
+	EipMap                          map[string][]EipMap                 `json:"eip_map,omitempty"`
+	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 }
 
 type HaGateway struct {
-	GwName              string             `json:"vpc_name"`
-	CloudType           int                `json:"cloud_type"`
-	GwSize              string             `json:"vpc_size"`
-	VpcNet              string             `json:"public_subnet"`
-	PublicIP            string             `json:"public_ip"`
-	PrivateIP           string             `json:"private_ip"`
-	ReuseEip            string             `json:"reuse_eip,omitempty"`
-	CloudnGatewayInstID string             `json:"cloudn_gateway_inst_id"`
-	GatewayZone         string             `json:"gateway_zone"`
-	InsaneMode          string             `json:"high_perf"`
-	EnablePrivateOob    bool               `json:"private_oob"`
-	OobManagementSubnet string             `json:"oob_mgmt_subnet"`
-	GwSecurityGroupID   string             `json:"gw_security_group_id"`
-	FaultDomain         string             `json:"fault_domain"`
-	ImageVersion        string             `json:"gw_image_name"`
-	SoftwareVersion     string             `json:"gw_software_version"`
-	HaBgpLanInterfaces  []BundleVpcLanInfo `json:"gce_ha_bgp_lan_info,omitempty"`
-	PeerBackupPort      string             `json:"peer_backup_port,omitempty"`
-	ConnectionType      string             `json:"connection_type,omitempty"`
+	GwName              string                 `json:"vpc_name"`
+	CloudType           int                    `json:"cloud_type"`
+	GwSize              string                 `json:"vpc_size"`
+	VpcNet              string                 `json:"public_subnet"`
+	PublicIP            string                 `json:"public_ip"`
+	PrivateIP           string                 `json:"private_ip"`
+	ReuseEip            string                 `json:"reuse_eip,omitempty"`
+	CloudnGatewayInstID string                 `json:"cloudn_gateway_inst_id"`
+	GatewayZone         string                 `json:"gateway_zone"`
+	InsaneMode          string                 `json:"high_perf"`
+	EnablePrivateOob    bool                   `json:"private_oob"`
+	OobManagementSubnet string                 `json:"oob_mgmt_subnet"`
+	GwSecurityGroupID   string                 `json:"gw_security_group_id"`
+	FaultDomain         string                 `json:"fault_domain"`
+	ImageVersion        string                 `json:"gw_image_name"`
+	SoftwareVersion     string                 `json:"gw_software_version"`
+	HaBgpLanInterfaces  []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
+	DeviceID            string                 `json:"edge_csp_device_id,omitempty"`
+	Interfaces          []EdgeTransitInterface `json:"interfaces,omitempty"`
+}
+
+type BackupLinkInfo struct {
+	ConnectionTypePublic bool   `json:"connection_type_public,omitempty"`
+	PeerIntfName         string `json:"peer_intf_name,omitempty"`
+	SelfIntfName         string `json:"self_intf_name,omitempty"`
 }
 
 type PolicyRule struct {
@@ -639,8 +647,11 @@ func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(args)
-	w.Close()
+	defer w.Close()
+	_, err = w.Write(args)
+	if err != nil {
+		return err
+	}
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
@@ -665,8 +676,11 @@ func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(args)
-	w.Close()
+	defer w.Close()
+	_, err = w.Write(args)
+	if err != nil {
+		return err
+	}
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true

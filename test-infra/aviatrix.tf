@@ -19,11 +19,11 @@ module "aviatrix_controller_vpc" {
   aws_region     = var.aws_region2
 }
 module "aviatrix-controller-build" {
-  source                 = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.12"
-  vpc                    = module.aviatrix_controller_vpc.vpc
-  subnet                 = module.aviatrix_controller_vpc.subnet_id
-  keypair                = var.keypair
-  #ec2role                = module.aviatrix-iam-roles.aviatrix-role-ec2-name  # This can be used from the module aviatrix-iam-roles above, but since it cannot be deleted, it is harcoded
+  source  = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.12"
+  vpc     = module.aviatrix_controller_vpc.vpc
+  subnet  = module.aviatrix_controller_vpc.subnet_id
+  keypair = var.keypair
+  #ec2role                = module.aviatrix-iam-roles.aviatrix-role-ec2-name  # This can be used from the module aviatrix-iam-roles above, but since it cannot be deleted, it is hardcoded
   ec2role                = "aviatrix-role-ec2"
   termination_protection = false
   type                   = var.type
@@ -95,7 +95,7 @@ module "aviatrix_aws_vpc4" {
   aws_region     = var.aws_region4
 }
 module "aviatrix_awsgov_vpc" {
-  providers      = {
+  providers = {
     aws = aws.gov
   }
   source         = "./aws"
@@ -110,7 +110,7 @@ module "aviatrix_oci_vpc1" {
 }
 resource "aws_vpn_gateway" "vgw" {
   vpc_id = module.aviatrix_aws_vpc2.vpc
-  tags   = {
+  tags = {
     Name = "aviatrix-vgw"
   }
 }
@@ -130,13 +130,13 @@ resource "aviatrix_transit_gateway" "cwan-transitgw" {
 }
 
 resource "aviatrix_aws_tgw" "cwan-awstgw" {
-  account_name                      = var.access_account_name
-  aws_side_as_number                = "65011"
-  region                            = data.aws_region.current.name
-  tgw_name                          = "cwan-awstgw"
+  account_name       = var.access_account_name
+  aws_side_as_number = "65011"
+  region             = data.aws_region.current.name
+  tgw_name           = "cwan-awstgw"
 
   security_domains {
-    connected_domains    = [
+    connected_domains = [
       "Default_Domain",
       "Shared_Service_Domain",
     ]
@@ -144,7 +144,7 @@ resource "aviatrix_aws_tgw" "cwan-awstgw" {
   }
 
   security_domains {
-    connected_domains    = [
+    connected_domains = [
       "Aviatrix_Edge_Domain",
       "Shared_Service_Domain"
     ]
@@ -152,7 +152,7 @@ resource "aviatrix_aws_tgw" "cwan-awstgw" {
   }
 
   security_domains {
-    connected_domains    = [
+    connected_domains = [
       "Aviatrix_Edge_Domain",
       "Default_Domain"
     ]

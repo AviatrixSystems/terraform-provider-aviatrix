@@ -16,7 +16,7 @@ The **aviatrix_traffic_classifier** resource creates the Aviatrix Traffic Classi
 
 ```hcl
 # Create a Traffic Classifier
-resource "aviatrix_traffic_classifier" "test" { 
+resource "aviatrix_traffic_classifier" "test" {
   policies {
     name                          = "traffic_classifier_policy"
     source_smart_group_uuids      = ["<<source smart group uuid>>"]
@@ -46,7 +46,7 @@ The following arguments are supported:
   * `protocol` - (Optional) Protocol.
   * `link_hierarchy_uuid` - (Optional) Link hierarchy UUID.
   * `sla_class_uuid` - (Optional) SLA class UUID.
-  * `enable_logging` - (Optional) Enable logging. 
+  * `enable_logging` - (Optional) Enable logging.
   * `route_type` - (Optional) Route type.
 
 ## Attribute Reference

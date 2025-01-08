@@ -131,7 +131,7 @@ resource "aviatrix_account" "temp_acc_alibaba" {
   alicloud_secret_key = "ABCDEFGHIJKLabcdefghijkl"
 }
  ```
-  
+
 ```hcl
 # Create an Aviatrix AWS Account with IAM roles and RBAC group: group-c
 resource "aviatrix_account" "temp_acc_aws" {
@@ -244,7 +244,7 @@ The following arguments are supported:
 * `edge_zededa_password` - (Optional) Edge Zededa password. Required when creating an Edge Zededa account.
 
 ### Misc.
-~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`. 
+~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`.
 * `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Changing `audit_account` to "false" will not prevent the Controller from performing account audits. It will only prevent Terraform from displaying a warning. Valid values: true, false. Default: false. Available as of provider version 2.19+. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
 * `rbac_groups` - (Optional) A list of existing RBAC group names. This attribute should only be used when creating an account. Updating this attribute will have no effect. Available as of provider version R2.23.0+.
 

@@ -34,8 +34,8 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_id` - ID of the Security VPC.
 * `inspection_enabled` - Enable/Disable traffic inspection.
 * `egress_enabled` - Enable/Disable egress through firewall.
-* `egress_static_cidrs` - List of egress static CIDRs.  
-* `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.  
+* `egress_static_cidrs` - List of egress static CIDRs.
+* `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall.
 
 The following arguments are deprecated:

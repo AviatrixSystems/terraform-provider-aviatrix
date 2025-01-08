@@ -223,8 +223,8 @@ func (c *Client) GetEmailExceptionNotificationStatus(ctx context.Context) (bool,
 		return true, err
 	}
 
-	if ans, ok := data.Results["enabled"]; ok {
-		return ans, nil
+	if result, ok := data.Results["enabled"]; ok {
+		return result, nil
 	} else {
 		return true, fmt.Errorf("response doesn't contain the key \"enabled\"")
 	}

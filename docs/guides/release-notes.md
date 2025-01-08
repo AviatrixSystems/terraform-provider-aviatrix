@@ -12,9 +12,40 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.0 (UserConnect-7.2.4820)``
+``Last updated: R3.2.1 (UserConnect-7.2.4996)``
 
 ---
+
+## 3.2.1
+### Notes:
+- Supported Controller version: **UserConnect-7.2.4996**
+- Supported Terraform version **v1.x**
+
+### Bug Fixes:
+1. Fixed a typo in the constants for the Kubernetes related properties for the smart group resource.
+
+### Enhancements:
+1. Added new attribute ``bgp_neighbor_status_polling_time`` to support the bgp bfd configuration in the following resources.
+    - **aviatrix_edge_csp**
+    - **aviatrix_edge_equinix**
+    - **aviatrix_edge_gateway_selfmanaged**
+    - **avaitrix_edge_platform**
+    - **aviatrix_edge_zededa**
+    - **aviatrix_spoke_gateway**
+    - **aviatrix_edge_spoke_gateway**
+    - **aviatrix_transit_gateway**
+2. Added new attribute ``bgp_bfd`` and ``enable_bfd`` to support bgp_bfd configuration in the following resources.
+    - **aviatrix_transit_external_device_conn**
+    - **aviatrix_edge_spoke_external_device_conn**
+    - **aviatrix_spoke_external_device_conn**
+3. Added/Updated Edge Terraform documentation to include interface mapping.
+4. Updated documentation for **aviatrix_firewall_instance** where ``user_data`` was not applicable to Palo Alto firewalls. There is no longer
+   a restriction on using ``user_data`` on Palo Alto Firewalls.
+5. Updated documentation for **aviatrix_spoke_gateway**. Clarified use of the ``included_advertised_spoke_routes`` attribute.
+6. Updated documentation for **aviatrix_smart_group** with examples of external groups usage.
+
+### Deprecations:
+Customers can no longer re-bootstrap their PKI with a custom root CA using Terraform. However, this functionality remains available through the Controller UI for added flexibility.
 
 ## 3.2.0
 ### Notes:
@@ -1391,8 +1422,8 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
   - ``remote_tunnel_cidr``
   - ``backup_local_tunnel_cidr``
   - ``backup_remote_tunnel_cidr``
-2. Added support fo DH-group 19, 20 and 21 when IKEv2 enabled in **aviatrix_transit_external_device_conn**
-3. Added support fo DH-group 20 and 21 when IKEv2 enabled in **aviatrix_site2cloud**
+2. Added support for DH-group 19, 20 and 21 when IKEv2 enabled in **aviatrix_transit_external_device_conn**
+3. Added support for DH-group 20 and 21 when IKEv2 enabled in **aviatrix_site2cloud**
 4. Updated following attributes to ForceNew in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
   - ``gw_name``
   - ``vpc_id``

@@ -1,6 +1,4 @@
----
 name: Invite
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,19 +6,17 @@ on:
         required: true
         type: string
         description: The email address of the user to invite
-      # org:
-      #   required: false
-      #   default: "AviatrixSystems"
-      #   type: string
-      #   description: The GitHub organization where to invite this user
-
+        # org:
+        #   required: false
+        #   default: "AviatrixSystems"
+        #   type: string
+        #   description: The GitHub organization where to invite this user
 jobs:
   invite-user:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Get Token
         id: get_workflow_token
         uses: peter-murray/workflow-application-token-action@8e1ba3bf1619726336414f1014e37f17fbadf1db
@@ -28,18 +24,16 @@ jobs:
           organization: AviatrixSystems
           application_id: ${{ secrets.MEMBERS_AUTOMATION_TOKEN_ID }}
           application_private_key: ${{ secrets.MEMBERS_AUTOMATION_PRIVATE_KEY }}
-
       - name: Invite user
         env:
           GITHUB_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
         run: |
-          # ORG=${{ github.event.inputs.org }}
           ORG="AviatrixSystems"
-          EMAIL=${{ github.event.inputs.email }}
+          EMAIL="${{ github.event.inputs.email }}"
 
-          OUTPUT=$(.github/include/invitation.sh ${ORG} ${EMAIL})
+          OUTPUT="$(.github/include/invitation.sh "${ORG}" "${EMAIL}")"
           if [ "${EMAIL}" != "" ]; then
             echo "::notice title=Sending invitation::${OUTPUT}"
           fi
-          cat sent-invitations.md >> $GITHUB_STEP_SUMMARY
+          cat sent-invitations.md >> "$GITHUB_STEP_SUMMARY"
           rm -fr sent-invitations.md

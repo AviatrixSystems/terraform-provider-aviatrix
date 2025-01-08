@@ -51,7 +51,7 @@ The following arguments are supported:
 * `public_ip` - (Optional) The IP address of the firewall management interface for API calls from the Aviatrix Controller. If not set, the public IP of the firewall instance will be used. If the private IP is provided, please make sure that the controller can access the firewall.
 * `username` - (Optional) Firewall login name for API calls from the Controller. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
 * `password` - (Optional) Firewall login password for API calls. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
-* `api_token` - (Optional) API token for API calls. Required and valid only for vendor type "Fortinet FortiGate".  
+* `api_token` - (Optional) API token for API calls. Required and valid only for vendor type "Fortinet FortiGate".
 * `private_key_file` - (Optional) Private key file. Valid only for vendor type "Check Point Cloud Guard". Use the `file` function to read from a file.
 * `firewall_name` - (Optional) Name of firewall instance.
 * `route_table` - (Optional) Specify the firewall virtual Router name you wish the Controller to program. If left unspecified, the Controller programs the firewall’s default router.

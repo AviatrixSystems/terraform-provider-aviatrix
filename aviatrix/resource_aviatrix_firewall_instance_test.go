@@ -65,7 +65,7 @@ resource "aviatrix_vpc" "test_vpc" {
 	account_name         = aviatrix_account.test_account.account_name
 	region               = "%s"
 	name                 = "vpc-for-firenet"
-	cidr                 = "10.10.0.0/24"	
+	cidr                 = "10.10.0.0/24"
 	aviatrix_firenet_vpc = true
 }
 resource "aviatrix_transit_gateway" "test_transit_gateway" {

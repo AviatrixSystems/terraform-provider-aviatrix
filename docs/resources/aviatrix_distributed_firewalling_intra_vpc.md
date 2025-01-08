@@ -20,7 +20,7 @@ resource "aviatrix_distributed_firewalling_intra_vpc" "test" {
     vpc_id       = "azure-vpc-0:rg-av-azure-vpc-0-808200:8168668b-a646-45b9-b88b-d756e60cf130"
     region       = "Central US"
   }
-  
+
   vpcs {
     account_name = "azure-account"
     vpc_id       = "azure-vpc-1:rg-av-azure-vpc-1-562104:622a2277-5c57-4149-bcb9-c00d9284ee18"

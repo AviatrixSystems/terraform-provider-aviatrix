@@ -107,6 +107,7 @@ func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}
 	d.SetId("netflow_agent")
 	return nil
 }
+
 func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 

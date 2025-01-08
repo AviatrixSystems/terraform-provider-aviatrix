@@ -75,6 +75,7 @@ func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("the support for sumologic forwarder is deprecated")
 	}
 }
+
 func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 

@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
   * `enable_active_standby` - Enables Active-Standby Mode, available only with HA enabled.
   * `enable_active_standby_preemptive` - Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.
   * `enable_bgp_over_lan` - Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 4 (GCP) and 8 (Azure). Available as of provider version R2.18+
-  * `enable_gateway_load_balancer` - Enable firenet interfaces with AWS Gateway Load Balancer. 
+  * `enable_gateway_load_balancer` - Enable firenet interfaces with AWS Gateway Load Balancer.
   * `enable_jumbo_frame` - Enable jumbo frame support for transit gateway.
   * `enable_monitor_gateway_subnets` - Enable [monitor gateway subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet). Only valid for cloud_type = 1 (AWS) or 256 (AWSGov).
   * `enable_segmentation` - Enable segmentation to allow association of transit gateway to security domains.
