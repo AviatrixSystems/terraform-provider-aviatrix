@@ -737,7 +737,7 @@ func processZtpFileContent(cloudInitTransit string) (string, error) {
 	var jsonCloudInit map[string]interface{}
 	err := json.Unmarshal([]byte(cloudInitTransit), &jsonCloudInit)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse cloud_init_transit as JSON: %v", err)
+		return "", fmt.Errorf("failed to parse cloud_init_transit as JSON: %w", err)
 	}
 
 	// Extract the 'text' field from the cloudinit data
@@ -752,14 +752,14 @@ func processZtpFileContent(cloudInitTransit string) (string, error) {
 func createZtpFile(filePath, content string) error {
 	outFile, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to create the file: %v", err)
+		return fmt.Errorf("failed to create the file: %w", err)
 	}
 	defer outFile.Close()
 
 	// Write the content to the file
 	_, err = outFile.WriteString(content)
 	if err != nil {
-		return fmt.Errorf("failed to write to the file: %v", err)
+		return fmt.Errorf("failed to write to the file: %w", err)
 	}
 	return nil
 }

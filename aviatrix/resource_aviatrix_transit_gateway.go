@@ -107,7 +107,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ztp_file_download_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
 					return old != ""
 				},
 				Description: "The location where the ZTP file will be stored locally.",
@@ -1855,7 +1855,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("bgp_lan_ip_list", nil)
 		d.Set("ha_bgp_lan_ip_list", nil)
 		if gw.DeviceID != "" {
-			d.Set("device_id", gw.DeviceID)
+			_ = d.Set("device_id", gw.DeviceID)
 		}
 		// set interfaces
 		if len(gw.Interfaces) != 0 {
@@ -3813,9 +3813,17 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			backoff *= 2
 		}
 		if cloudType == goaviatrix.EDGEEQUINIX {
-			err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
+			vpcID, ok := d.Get("vpc_id").(string)
+			if !ok {
+				return fmt.Errorf("vpc_id is not a string")
+			}
+			ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
+			if !ok {
+				return fmt.Errorf("ztp_file_download_path is not a string")
+			}
+			err := deleteZtpFile(gateway.GwName, vpcID, ztpFileDownloadPath)
 			if err != nil {
-				return fmt.Errorf("failed to delete ZTP file: %s", err)
+				return fmt.Errorf("failed to delete ZTP file: %w", err)
 			}
 		}
 	}
@@ -3825,24 +3833,32 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
 	if cloudType == goaviatrix.EDGEEQUINIX {
-		err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
+		vpcID, ok := d.Get("vpc_id").(string)
+		if !ok {
+			return fmt.Errorf("vpc_id is not a string")
+		}
+		ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
+		if !ok {
+			return fmt.Errorf("ztp_file_download_path is not a string")
+		}
+		err := deleteZtpFile(gateway.GwName, vpcID, ztpFileDownloadPath)
 		if err != nil {
-			return fmt.Errorf("failed to delete ZTP file: %s", err)
+			return fmt.Errorf("failed to delete ZTP file: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath string) error {
-	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcId + "-cloud-init.txt"
+func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
+	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + "-cloud-init.txt"
 	// check if the file exists
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		return nil
 	}
 	err := os.Remove(fileName)
 	if err != nil {
-		return fmt.Errorf("could not remove the ztp file: %v", err)
+		return fmt.Errorf("could not remove the ztp file: %w", err)
 	}
 	return nil
 }
@@ -3883,7 +3899,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 		gateway.InterfaceMapping = interfaceMapping
 		// set the device_id for AEP gateway
-		gateway.DeviceID = d.Get("device_id").(string)
+		gateway.DeviceID, ok = d.Get("device_id").(string)
+		if !ok {
+			return fmt.Errorf("device_id attribute is required for Edge Transit Gateway")
+		}
 	}
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX) {
@@ -3901,8 +3920,8 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 	}
 	// create ha transit gateway if ha_interfaces are provided
-	ha_interfaces, ok := d.Get("ha_interfaces").([]interface{})
-	if ok && len(ha_interfaces) > 0 {
+	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
+	if ok && len(haInterfaces) > 0 {
 		transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
 		if err != nil {
 			return fmt.Errorf("failed to get the HA gateway details: %w", err)
@@ -4366,7 +4385,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		interfaceType := strings.ToUpper(interfaceDetails[0])
 		interfaceIndex, err := strconv.Atoi(interfaceDetails[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %v", interfaceName, err)
+			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %w", interfaceName, err)
 		}
 
 		for _, eip := range eipList {

@@ -1194,11 +1194,11 @@ func TestDeleteZtpFile(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir) // Cleanup the temp directory after test
 	gatewayName := "test-gateway"
-	vpcId := "vpc-123456"
+	vpcID := "vpc-123456"
 	ztpFileDownloadPath := tempDir
-	fileName := filepath.Join(ztpFileDownloadPath, fmt.Sprintf("%s-%s-cloud-init.txt", gatewayName, vpcId))
+	fileName := filepath.Join(ztpFileDownloadPath, fmt.Sprintf("%s-%s-cloud-init.txt", gatewayName, vpcID))
 	// Create a temporary file to simulate the ztp file
-	if err := os.WriteFile(fileName, []byte("test content"), 0644); err != nil {
+	if err := os.WriteFile(fileName, []byte("test content"), 0o644); err != nil {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 
@@ -1206,7 +1206,7 @@ func TestDeleteZtpFile(t *testing.T) {
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		t.Fatalf("File does not exist before deletion: %v", fileName)
 	}
-	err = deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath)
+	err = deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath)
 	if err != nil {
 		t.Errorf("deleteZtpFile returned an error: %v", err)
 	}
