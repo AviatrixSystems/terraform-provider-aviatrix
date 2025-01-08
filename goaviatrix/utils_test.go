@@ -97,7 +97,7 @@ func TestCreateZtpFile(t *testing.T) {
 			err := createZtpFile(tt.filePath, tt.content)
 
 			if tt.expectedErr != "" {
-				assert.Error(t, err)
+				assert.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
@@ -159,7 +159,7 @@ func TestProcessZtpFileContent(t *testing.T) {
 			text, err := processZtpFileContent(tt.cloudInitTransit)
 
 			if tt.expectedErr != "" {
-				assert.Error(t, err)
+				assert.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
