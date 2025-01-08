@@ -22,7 +22,7 @@ func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
 		t.Skip("Skipping Spoke HA Gateway test as SKIP_SPOKE_HA_GATEWAY is set")
 	}
 
-	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
+	// Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	if awsGwSize == "" {
 		awsGwSize = "t2.micro"

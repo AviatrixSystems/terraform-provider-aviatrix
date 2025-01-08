@@ -56,17 +56,17 @@ resource "aviatrix_copilot_fault_tolerant_deployment" "test" {
 	main_copilot_subnet                 = "%s"
 	controller_service_account_username = "%s"
 	controller_service_account_password = "%s"
-	
+
 	cluster_data_nodes {
 		vpc_id = "%[6]s"
 		subnet = "%[7]s"
 	}
-	
+
 	cluster_data_nodes {
 		vpc_id = "%[6]s"
 		subnet = "%[7]s"
 	}
-	
+
 	cluster_data_nodes {
 		vpc_id = "%[6]s"
 		subnet = "%[7]s"

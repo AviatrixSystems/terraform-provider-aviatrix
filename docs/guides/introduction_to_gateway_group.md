@@ -32,4 +32,3 @@ In order to be able to use this new resource, the attribute `manage_ha_gateway` 
     - Please set attribute `manage_ha_gateway` to false and remove all the attributes with prefix "ha_", then do a "terraform apply" to set `manage_ha_gateway = false` to the state file and remove Spoke HA gateway status from the state file as well
     - Please create a new resource **aviatrix_spoke_ha_gateway** and map the settings of the above Spoke HA Gateway into the new resource
     - Please run "terraform import aviatrix_spoke_ha_gateway.local_name primary_spoke_gateway + '-hagw''" to import Spoke HA Gateway status into state file
-  

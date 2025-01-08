@@ -57,7 +57,7 @@ The following arguments are supported:
   * `tag` - (Optional) Tag.
 
 ### Optional
-* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].    
+* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
 
 ## Attribute Reference
 

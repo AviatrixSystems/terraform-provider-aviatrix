@@ -295,7 +295,6 @@ func (c *Client) ListOciVpcAvailabilityDomains(vpc *Vpc) ([]string, error) {
 	var data Resp
 
 	err := c.GetAPI(&data, params["action"], params, BasicCheck)
-
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +319,6 @@ func (c *Client) ListOciVpcFaultDomains(vpc *Vpc) ([]string, error) {
 	var data Resp
 
 	err := c.GetAPI(&data, params["action"], params, BasicCheck)
-
 	if err != nil {
 		return nil, err
 	}

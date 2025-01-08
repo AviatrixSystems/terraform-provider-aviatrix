@@ -8,7 +8,8 @@ import (
 )
 
 func resourceAviatrixSite2CloudMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, _ interface{},
+) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AVIATRIX Site2cloud State v0; migrating to v1")

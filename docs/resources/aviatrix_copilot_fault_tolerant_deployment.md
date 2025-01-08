@@ -13,7 +13,7 @@ The **aviatrix_copilot_fault_tolerant_deployment** resource allows deployment of
 ## Example Usage
 
 ```hcl
-# Deploy a Fault Tolerant CoPilot 
+# Deploy a Fault Tolerant CoPilot
 resource "aviatrix_copilot_fault_tolerant_deployment" "test" {
     cloud_type                          = 1
     account_name                        = "test-aws"
@@ -22,17 +22,17 @@ resource "aviatrix_copilot_fault_tolerant_deployment" "test" {
     main_copilot_subnet                 = "10.0.1.0/24"
     controller_service_account_username = "admin"
     controller_service_account_password = "password"
-    
+
     cluster_data_nodes {
         vpc_id = "vpc-012345"
         subnet = "10.0.1.0/24"
     }
-    
+
     cluster_data_nodes {
         vpc_id = "vpc-012345"
         subnet = "10.0.1.0/24"
     }
-    
+
     cluster_data_nodes {
         vpc_id = "vpc-012345"
         subnet = "10.0.1.0/24"
@@ -56,7 +56,7 @@ The following arguments are supported:
   * `subnet` - (Required) Subnet CIDR.
   * `instance_size` - (Optional) Instance size. Default value: "t3.2xlarge".
   * `data_volume_size` - (Optional) Copilot data volume size, requires an integer value. Default value: 100.
-  
+
 ### Optional
 * `main_copilot_instance_size` - (Optional) Main copilot instance size. Default value: "t3.2xlarge".
 

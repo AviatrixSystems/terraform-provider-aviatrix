@@ -75,7 +75,7 @@ data "aviatrix_spoke_gateway_inspection_subnets" "test" {
 }
 resource "aviatrix_spoke_gateway_subnet_group" "test_group" {
 	name    = "test-group"
-	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name 
+	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name
 	subnets = [
 		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[0],
 		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[1]

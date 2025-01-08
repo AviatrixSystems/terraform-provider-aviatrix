@@ -64,7 +64,10 @@ func (c *Client) CreateAWSPeer(awsPeer *AWSPeer) (string, error) {
 	}
 	var data AwsPeerAPIResp
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	_, err = buf.ReadFrom(resp.Body)
+	if err != nil {
+		return "", errors.New("ReadFrom create_aws_peering failed: " + err.Error())
+	}
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
@@ -94,7 +97,10 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 
 	var data AwsPeerGetAPIResp
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	_, err = buf.ReadFrom(resp.Body)
+	if err != nil {
+		return nil, errors.New("ReadFrom list_aws_peerings failed: " + err.Error())
+	}
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {

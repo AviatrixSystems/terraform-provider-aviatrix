@@ -38,7 +38,7 @@ func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheck(t, msgCommonAws)
 			},
@@ -73,7 +73,7 @@ func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				//Checking resources have needed environment variables set
+				// Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
 				preGatewayCheckAZURE(t, msgCommonAZURE)
 			},

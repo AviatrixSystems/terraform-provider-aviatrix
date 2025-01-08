@@ -124,10 +124,10 @@ func tesAccCheckAwsTgwTransitGatewayAttachmentExists(n string, awsTgwTransitGwAt
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("AWS tgw transit gatway attachment Not found: %s", n)
+			return fmt.Errorf("AWS tgw transit gateway attachment Not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no AWS tgw transit gatway attachment ID is set")
+			return fmt.Errorf("no AWS tgw transit gateway attachment ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)

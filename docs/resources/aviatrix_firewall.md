@@ -60,7 +60,7 @@ resource "aviatrix_firewall" "stateful_firewall_1" {
     port        = "325"
     description = "third_policy"
   }
-  
+
   policy {
     protocol    = "tcp"
     src_ip      = aviatrix_firewall_tag.test.firewall_tag

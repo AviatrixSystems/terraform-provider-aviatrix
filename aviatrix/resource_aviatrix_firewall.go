@@ -137,7 +137,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 	flag := false
 	defer resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
 
-	//If base_policy or base_log enable is present, set base policy
+	// If base_policy or base_log enable is present, set base policy
 	if firewall.BasePolicy == "allow-all" {
 		firewall.BaseLogEnabled = "off"
 		err := client.SetBasePolicy(firewall)
@@ -344,8 +344,8 @@ func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func getAndValidatePolicy(d *schema.ResourceData) ([]*goaviatrix.Policy, error) {
-	var mapPolicyKey = make(map[string]bool)
-	var previousActionIsForceDrop = true
+	mapPolicyKey := make(map[string]bool)
+	previousActionIsForceDrop := true
 	var policyList []*goaviatrix.Policy
 
 	policies := d.Get("policy").([]interface{})

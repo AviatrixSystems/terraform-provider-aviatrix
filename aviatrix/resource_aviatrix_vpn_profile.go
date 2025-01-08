@@ -174,7 +174,6 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)
-
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -285,7 +284,7 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			newString := newU.([]interface{})
 			oldUserList := goaviatrix.ExpandStringList(oldString)
 			newUserList := goaviatrix.ExpandStringList(newString)
-			//Attach all the newly added Users
+			// Attach all the newly added Users
 			toAddUsers := goaviatrix.Difference(newUserList, oldUserList)
 			log.Printf("[INFO] Users to be attached : %#v", toAddUsers)
 			profile.UserList = toAddUsers
@@ -293,7 +292,7 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to attach User : %s", err)
 			}
-			//Detach all the removed Users
+			// Detach all the removed Users
 			toDelGws := goaviatrix.Difference(oldUserList, newUserList)
 			log.Printf("[INFO] Users to be detached : %#v", toDelGws)
 			profile.UserList = toDelGws

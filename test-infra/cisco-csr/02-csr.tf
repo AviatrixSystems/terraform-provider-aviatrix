@@ -1,12 +1,12 @@
-data aws_ami csr_ami {
+data "aws_ami" "csr_ami" {
   most_recent = true
-  owners      = [
-    "aws-marketplace"]
+  owners = [
+  "aws-marketplace"]
   # Canonical
   filter {
-    name   = "product-code"
+    name = "product-code"
     values = [
-      "5tiyrfb5tasxk9gmnab39b843"]
+    "5tiyrfb5tasxk9gmnab39b843"]
     # aws ec2 describe-images --region us-east-2 --filters "Name=product-code,Values=5tiyrfb5tasxk9gmnab39b843"
   }
 }
@@ -17,7 +17,7 @@ resource "tls_private_key" "key_pair_material" {
 }
 
 resource "aws_key_pair" "csr_key_pair" {
-  key_name = "csr-kp-${random_integer.csr_vpc_int[0].result}"
+  key_name   = "csr-kp-${random_integer.csr_vpc_int[0].result}"
   public_key = tls_private_key.key_pair_material.public_key_openssh
 }
 
@@ -31,7 +31,7 @@ resource "null_resource" "key_pair_file" {
   }
 }
 
-resource aws_instance csr_instance_1 {
+resource "aws_instance" "csr_instance_1" {
   ami                     = data.aws_ami.csr_ami.id
   disable_api_termination = false
   instance_type           = "t2.medium"

@@ -1,68 +1,87 @@
 name: go
-
-on: 
+env:
+  Lint_Version: v1.61.0
+on:
   push:
+    # Only trigger push workflow on main branch (prevent duplicate when running in PR)
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
       - 'test-infra/**'
   pull_request:
+    # Trigger every time a PR is opened or updated
     paths-ignore:
       - 'docs/**'
       - 'test-infra/**'
-
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
     steps:
-
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v3
-      with:
-        go-version: ^1.23
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
-
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-
-    - name: Build
-      run: go build -v .
-
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.23
+        id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+      - name: Build
+        run: go build -v .
   test:
     name: test
     runs-on: ubuntu-latest
     steps:
-
       - name: Set up Go 1.x
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ^1.23
         id: go
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
-
       - name: Build
         run: go build -v .
-
       - name: Test
         run: go test -v ./...
-
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@300721fe01bc8c4cf4677859b80e55154023c7d3
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+      - uses: HatsuneMiku3939/direnv-action@v1
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@300721fe01bc8c4cf4677859b80e55154023c7d3
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+      - uses: HatsuneMiku3939/direnv-action@v1
+      - uses: actions/setup-python@v5
+      - uses: pre-commit/action@v3.0.1
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.61
+          version: ${{env.Lint_Version}}
           only-new-issues: true
+  golangci-strict:
+    name: lint-strict
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: ${{env.Lint_Version}}
+          only-new-issues: true
+          args: --config=.golangci_strict.toml

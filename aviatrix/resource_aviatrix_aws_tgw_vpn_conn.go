@@ -192,11 +192,11 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	if connectionType == "dynamic" && remoteAsn == "" {
 		return fmt.Errorf("please specify 'remote_as_number' to create a BGP VPN connection")
 	} else if connectionType == "dynamic" && remoteCIDR != "" {
-		return fmt.Errorf("please set 'remote_cidr' as empty since it is only requried for a static VPN connection")
+		return fmt.Errorf("please set 'remote_cidr' as empty since it is only required for a static VPN connection")
 	} else if connectionType == "static" && remoteCIDR == "" {
 		return fmt.Errorf("please specify 'remote_cidr' to create a static VPN connection")
 	} else if connectionType == "static" && remoteAsn != "" {
-		return fmt.Errorf("please set 'remote_as_number' as empty since it is only requried for a BGP VPN connection")
+		return fmt.Errorf("please set 'remote_as_number' as empty since it is only required for a BGP VPN connection")
 	}
 
 	if remoteAsn != "" {

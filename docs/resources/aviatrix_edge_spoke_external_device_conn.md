@@ -62,7 +62,7 @@ The following arguments are supported:
 
 ### Optional
 
--> **NOTE:** When `enable_edge_underlay` is false, `connection_name` is required. When `enable_edge_underlay` is true, `connection_name` must be empty. 
+-> **NOTE:** When `enable_edge_underlay` is false, `connection_name` is required. When `enable_edge_underlay` is true, `connection_name` must be empty.
 
 * `connection_name` - (Optional) Connection name.
 * `connection_type` - (Optional) Connection type. Valid value: 'bgp'. Default value: 'bgp'.

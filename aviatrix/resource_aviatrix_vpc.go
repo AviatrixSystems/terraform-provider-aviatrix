@@ -242,7 +242,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		PrivateModeSubnets:     d.Get("private_mode_subnets").(bool),
 	}
 	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		return fmt.Errorf("please specifiy 'region'")
+		return fmt.Errorf("please specify 'region'")
 	} else if vpc.Region != "" && vpc.CloudType == goaviatrix.GCP {
 		return fmt.Errorf("please specify 'region' in 'subnets' for GCP provider")
 	}
@@ -409,7 +409,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		//d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
+		// d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 		d.Set("vpc_id", vC.VpcID)
 	} else {
 		d.Set("vpc_id", vC.VpcID)
@@ -540,7 +540,6 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		var rtbs []string
 		rtbs, err = getAllRouteTables(vpc, client)
-
 		if err != nil {
 			return fmt.Errorf("could not get vpc route table ids: %v", err)
 		}

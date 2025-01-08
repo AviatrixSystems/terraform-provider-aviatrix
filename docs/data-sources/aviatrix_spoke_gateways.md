@@ -75,4 +75,3 @@ The following attributes are exported:
     * `spot_price` - Price for spot instance. NOT supported for production deployment.
     * `azure_eip_name_resource_group` - The name of the public IP address and its resource group in Azure to assign to this Spoke Gateway.
     * `eip` - The EIP address of the Spoke Gateway.
-    

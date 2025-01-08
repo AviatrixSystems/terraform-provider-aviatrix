@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime"
-
 	"os"
+	"runtime"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 )

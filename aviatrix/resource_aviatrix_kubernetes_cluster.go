@@ -13,9 +13,7 @@ import (
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 )
 
-var (
-	clusterTagValueRegex = regexp.MustCompile(`^[\w\s_.:/=+@-]{0,128}$`)
-)
+var clusterTagValueRegex = regexp.MustCompile(`^[\w\s_.:/=+@-]{0,128}$`)
 
 func resourceAviatrixKubernetesCluster() *schema.Resource {
 	return &schema.Resource{
@@ -131,7 +129,6 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 									}
 								}
 								return nil
-
 							},
 							Description: "Map of tags.",
 						},

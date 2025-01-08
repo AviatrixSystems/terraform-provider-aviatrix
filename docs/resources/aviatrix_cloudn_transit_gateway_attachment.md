@@ -17,7 +17,7 @@ The **aviatrix_cloudn_transit_gateway_attachment** resource allows the creation 
 resource "aviatrix_cloudn_transit_gateway_attachment" "test" {
   device_name                           = aviatrix_device_registration.test_device.name
   transit_gateway_name                  = aviatrix_transit_gateway.aws_transit.gw_name
-  connection_name                       = "cloudn-transit-attachment-test" 
+  connection_name                       = "cloudn-transit-attachment-test"
   transit_gateway_bgp_asn               = "65000"
   cloudn_bgp_asn                        = "65046"
   cloudn_lan_interface_neighbor_ip      = "10.210.38.100"

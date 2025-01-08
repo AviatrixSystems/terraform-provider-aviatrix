@@ -3,7 +3,7 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_global_vpc_excluded_instance"
 description: |-
-  Manages the instance to be excluded for Aviatrix global VPC tagging 
+  Manages the instance to be excluded for Aviatrix global VPC tagging
 ---
 
 # aviatrix_global_vpc_excluded_instance

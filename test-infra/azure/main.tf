@@ -3,10 +3,10 @@ resource "azurerm_resource_group" "aviatrix" {
   location = var.azure_region
 }
 resource "azurerm_virtual_network" "aviatrix" {
-  name                 = "${var.name}-vnet"
-  resource_group_name  = azurerm_resource_group.aviatrix.name
-  location             = azurerm_resource_group.aviatrix.location
-  address_space        = [var.azure_vpc_cidr]
+  name                = "${var.name}-vnet"
+  resource_group_name = azurerm_resource_group.aviatrix.name
+  location            = azurerm_resource_group.aviatrix.location
+  address_space       = [var.azure_vpc_cidr]
 }
 
 resource "azurerm_subnet" "aviatrix" {
@@ -17,9 +17,9 @@ resource "azurerm_subnet" "aviatrix" {
 }
 
 resource "azurerm_route_table" "aviatrix" {
-  name                          = "acceptanceTestSecurityGroup1"
-  location                      = azurerm_resource_group.aviatrix.location
-  resource_group_name           = azurerm_resource_group.aviatrix.name
+  name                = "acceptanceTestSecurityGroup1"
+  location            = azurerm_resource_group.aviatrix.location
+  resource_group_name = azurerm_resource_group.aviatrix.name
 }
 
 resource "azurerm_subnet" "aviatrix-private" {

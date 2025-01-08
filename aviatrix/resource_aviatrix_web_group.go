@@ -46,7 +46,7 @@ func resourceAviatrixWebGroup() *schema.Resource {
 									"urlfilter": {
 										Type:     schema.TypeString,
 										Optional: true,
-										//ConflictsWith: []string{"snifilter"},
+										// ConflictsWith: []string{"snifilter"},
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 										Description:  "URL address this expression matches.",
 									},

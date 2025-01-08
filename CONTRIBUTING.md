@@ -23,7 +23,7 @@ code change.
 		- Required
 		- Optional
 		- Optional and Computed
-		- Computed 
+		- Computed
 	- In the Read function, if the resource does not exist do not return error, instead do the following (documented here https://learn.hashicorp.com/tutorials/terraform/provider-setup):
 	```
 	if err == goaviatrix.ErrNotFound {

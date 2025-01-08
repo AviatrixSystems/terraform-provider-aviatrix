@@ -89,7 +89,6 @@ func resourceAviatrixFirewallPolicy() *schema.Resource {
 func getFirewallPolicyID(fw *goaviatrix.Firewall) string {
 	return fmt.Sprintf("%s~%s~%s~%s~%s~%s",
 		fw.GwName, fw.PolicyList[0].SrcIP, fw.PolicyList[0].DstIP, fw.PolicyList[0].Protocol, fw.PolicyList[0].Port, fw.PolicyList[0].Action)
-
 }
 
 func marshalFirewallPolicyInput(d *schema.ResourceData) *goaviatrix.Firewall {

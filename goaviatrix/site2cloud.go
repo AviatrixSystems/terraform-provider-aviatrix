@@ -10,13 +10,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const Phase1AuthDefault = "SHA-256"
-const Phase1DhGroupDefault = "14"
-const Phase1EncryptionDefault = "AES-256-CBC"
-const Phase2AuthDefault = "HMAC-SHA-256"
-const Phase2DhGroupDefault = "14"
-const Phase2EncryptionDefault = "AES-256-CBC"
-const SslServerPoolDefault = "192.168.44.0/24"
+const (
+	Phase1AuthDefault       = "SHA-256"
+	Phase1DhGroupDefault    = "14"
+	Phase1EncryptionDefault = "AES-256-CBC"
+	Phase2AuthDefault       = "HMAC-SHA-256"
+	Phase2DhGroupDefault    = "14"
+	Phase2EncryptionDefault = "AES-256-CBC"
+	SslServerPoolDefault    = "192.168.44.0/24"
+)
 
 // Site2Cloud simple struct to hold site2cloud details
 type Site2Cloud struct {

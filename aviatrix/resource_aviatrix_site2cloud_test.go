@@ -26,7 +26,6 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preGatewayCheck(t, ". Set SKIP_S2C to yes to skip Site2Cloud tests")
-
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckS2CDestroy,

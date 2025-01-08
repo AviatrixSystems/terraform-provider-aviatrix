@@ -94,7 +94,6 @@ resource "aviatrix_azure_peer" "test_azure_peer" {
 	`, rInt, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
 		vNet1, vNet2, region1, region2)
-
 }
 
 func tesAccCheckAzurePeerExists(n string, azurePeer *goaviatrix.AzurePeer) resource.TestCheckFunc {
