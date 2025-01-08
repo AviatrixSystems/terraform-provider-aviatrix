@@ -11,7 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.17.0
-	golang.org/x/net v0.30.0
+	golang.org/x/net v0.33.0
 )
 
 require (
