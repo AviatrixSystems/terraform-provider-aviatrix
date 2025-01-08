@@ -115,3 +115,56 @@ func TestCreateZtpFile(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessZtpFileContent(t *testing.T) {
+	tests := []struct {
+		name             string
+		cloudInitTransit string
+		expectedText     string
+		expectedErr      string
+	}{
+		{
+			name: "Valid JSON with text field",
+			cloudInitTransit: `{
+				"text": "sample cloud-init content"
+			}`,
+			expectedText: "sample cloud-init content",
+			expectedErr:  "",
+		},
+		{
+			name: "Valid JSON without text field",
+			cloudInitTransit: `{
+				"other_field": "some value"
+			}`,
+			expectedText: "",
+			expectedErr:  "'text' field not found or is not a string in cloud_init_transit",
+		},
+		{
+			name: "Invalid JSON format",
+			cloudInitTransit: `{
+				"text": "sample cloud-init content"`,
+			expectedText: "",
+			expectedErr:  "failed to parse cloud_init_transit as JSON",
+		},
+		{
+			name:             "Empty JSON input",
+			cloudInitTransit: `{}`,
+			expectedText:     "",
+			expectedErr:      "'text' field not found or is not a string in cloud_init_transit",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			text, err := processZtpFileContent(tt.cloudInitTransit)
+
+			if tt.expectedErr != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedText, text)
+			}
+		})
+	}
+}
