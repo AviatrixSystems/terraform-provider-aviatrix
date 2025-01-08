@@ -11,7 +11,7 @@ import (
 )
 
 func resourceAviatrixAWSTgwMigrateState(
-	v int, is *terraform.InstanceState, meta interface{},
+	v int, is *terraform.InstanceState, _ interface{},
 ) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
