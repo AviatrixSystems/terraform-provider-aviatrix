@@ -337,7 +337,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 					ValidateFunc: goaviatrix.StringCanBeEmptyButCannotBeWhiteSpace,
 				},
 				DiffSuppressFunc: goaviatrix.TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc,
-				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
+				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string.",
 			},
 			"prepend_as_path": {
 				Type:        schema.TypeList,
@@ -612,7 +612,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	}
 	greOrLan := externalDeviceConn.TunnelProtocol == "GRE" || externalDeviceConn.TunnelProtocol == "LAN"
 	if greOrLan && customAlgorithms {
-		return fmt.Errorf("custom algorithm paramters are not valid with 'tunnel_protocol' = GRE or LAN")
+		return fmt.Errorf("custom algorithm parameters are not valid with 'tunnel_protocol' = GRE or LAN")
 	}
 	if greOrLan && enableIkev2 {
 		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = GRE or LAN")
