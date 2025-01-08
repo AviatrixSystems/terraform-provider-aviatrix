@@ -24,7 +24,7 @@
     "errname",
     "errorlint",
     "forcetypeassert",
-    # "funlen", # Disable temporarily
+    "funlen",
     "gofumpt",
     "goimports",
     "gosec",
