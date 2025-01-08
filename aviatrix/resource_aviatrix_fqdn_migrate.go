@@ -12,7 +12,7 @@ import (
 )
 
 func resourceAviatrixFQDNMigrateState(
-	v int, is *terraform.InstanceState, meta interface{},
+	v int, is *terraform.InstanceState, _ interface{},
 ) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -57,7 +57,7 @@ func resourceAviatrixFQDNResourceV1() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFQDNStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixFQDNStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_domain_names"]; !ok {
 		rawState["manage_domain_names"] = true
 	}
