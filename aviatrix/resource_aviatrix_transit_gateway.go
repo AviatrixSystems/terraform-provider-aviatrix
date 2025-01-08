@@ -1359,7 +1359,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 		err := client.LaunchTransitVpc(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
 		}
 
 		if !singleAZ {
@@ -1372,7 +1372,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+				return fmt.Errorf("failed to disable single AZ GW HA: %w", err)
 			}
 		}
 
@@ -1449,7 +1449,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			_, err := client.CreateTransitHaGw(transitHaGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 			}
 
 			// Resize HA Gateway
@@ -1471,7 +1471,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 				err = client.UpdateGateway(haGateway)
 				if err != nil {
-					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %w", err)
 				}
 			}
 		}
@@ -1484,14 +1484,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			err := client.AttachTransitGWForHybrid(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
+				return fmt.Errorf("failed to enable transit GW for Hybrid: %w", err)
 			}
 		}
 
 		if connectedTransit {
 			err := client.EnableConnectedTransit(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable connected transit: %s", err)
+				return fmt.Errorf("failed to enable connected transit: %w", err)
 			}
 		}
 
@@ -1499,12 +1499,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			if enableGatewayLoadBalancer {
 				err := client.EnableGatewayFireNetInterfacesWithGWLB(gateway)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %w", err)
 				}
 			} else {
 				err := client.EnableGatewayFireNetInterfaces(gateway)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %w", err)
 				}
 			}
 		}
@@ -1519,7 +1519,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			err := client.EnableVpcDnsServer(gwVpcDnsServer)
 			if err != nil {
-				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+				return fmt.Errorf("failed to enable VPC DNS Server: %w", err)
 			}
 		} else if enableVpcDnsServer {
 			return fmt.Errorf("'enable_vpc_dns_server' only supported by AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
@@ -1529,7 +1529,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if enableAdvertiseTransitCidr {
 			err := client.EnableAdvertiseTransitCidr(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+				return fmt.Errorf("failed to enable advertise transit CIDR: %w", err)
 			}
 		}
 
@@ -1538,7 +1538,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
 			err := client.SetBgpManualSpokeAdvertisedNetworks(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %s", err)
+				return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %w", err)
 			}
 		}
 
@@ -1556,7 +1556,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 					time.Sleep(10 * time.Second)
 				} else {
-					return fmt.Errorf("failed to customize spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+					return fmt.Errorf("failed to customize spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 				}
 			}
 		}
@@ -1575,7 +1575,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 					time.Sleep(10 * time.Second)
 				} else {
-					return fmt.Errorf("failed to edit filtered spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+					return fmt.Errorf("failed to edit filtered spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 				}
 			}
 		}
@@ -1594,7 +1594,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 					time.Sleep(10 * time.Second)
 				} else {
-					return fmt.Errorf("failed to edit advertised spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+					return fmt.Errorf("failed to edit advertised spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 				}
 			}
 		}
@@ -1611,7 +1611,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			} else {
 				err := client.EnableTransitFireNet(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+					return fmt.Errorf("failed to enable transit firenet for %s due to %w", gwTransitFireNet.GwName, err)
 				}
 			}
 		}
@@ -1695,7 +1695,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if approvalMode != defaultLearnedCidrApprovalMode {
 			err := client.SetTransitLearnedCIDRsApprovalMode(gateway, approvalMode)
 			if err != nil {
-				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", approvalMode, err)
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %w", approvalMode, err)
 			}
 		}
 
@@ -1713,7 +1713,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if len(customizedTransitVpcRoutes) != 0 {
 			err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizedTransitVpcRoutes)
 			if err != nil {
-				return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
+				return fmt.Errorf("couldn't update transit gateway customized vpc route: %w", err)
 			}
 		}
 
@@ -1741,7 +1741,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			err := client.DisableGroGso(gw)
 			if err != nil {
-				return fmt.Errorf("couldn't disable GRO/GSO on transit gateway: %s", err)
+				return fmt.Errorf("couldn't disable GRO/GSO on transit gateway: %w", err)
 			}
 		}
 
@@ -1770,7 +1770,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if enableS2CRxBalancing {
 			err = client.EnableS2CRxBalancing(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("could not enable S2C receive packet CPU re-balancing on transit %s: %v", gateway.GwName, err)
+				return fmt.Errorf("could not enable S2C receive packet CPU re-balancing on transit %s: %w", gateway.GwName, err)
 			}
 		}
 
@@ -1788,7 +1788,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			err := client.SetRxQueueSize(gwRxQueueSize)
 			if err != nil {
-				return fmt.Errorf("failed to set rx queue size for transit %s: %s", gateway.GwName, err)
+				return fmt.Errorf("failed to set rx queue size for transit %s: %w", gateway.GwName, err)
 			}
 			if haSubnet != "" || haZone != "" {
 				haGwRxQueueSize := &goaviatrix.Gateway{
@@ -1797,7 +1797,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				}
 				err := client.SetRxQueueSize(haGwRxQueueSize)
 				if err != nil {
-					return fmt.Errorf("failed to set rx queue size for transit ha %s : %s", haGwRxQueueSize.GwName, err)
+					return fmt.Errorf("failed to set rx queue size for transit ha %s : %w", haGwRxQueueSize.GwName, err)
 				}
 			}
 		}
@@ -1839,7 +1839,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %w", err)
 	}
 
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
@@ -2020,7 +2020,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gateway.GwName, err)
+				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %w", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.BgpLanIpList); err != nil {
 				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
@@ -2035,7 +2035,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %v", gateway.GwName, err)
+				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %w", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
 				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
@@ -2255,7 +2255,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		enableGroGso, err := client.GetGroGsoStatus(gw)
 		if err != nil {
-			return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %v", gw.GwName, err)
+			return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %w", gw.GwName, err)
 		}
 		d.Set("enable_gro_gso", enableGroGso)
 		if gw.HaGw.GwSize == "" {
@@ -2648,7 +2648,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if newHaGwEnabled {
 			_, err := client.CreateTransitHaGw(transitHaGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 			}
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				if d.Get("rx_queue_size").(string) != "" && !d.HasChange("rx_queue_size") {
@@ -2658,25 +2658,25 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					}
 					err := client.SetRxQueueSize(haGwRxQueueSize)
 					if err != nil {
-						return fmt.Errorf("could not set rx queue size for transit ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+						return fmt.Errorf("could not set rx queue size for transit ha: %s during gateway update: %w", haGwRxQueueSize.GwName, err)
 					}
 				}
 			}
 		} else if deleteHaGw {
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %w", err)
 			}
 		} else if changeHaGw {
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %w", err)
 			}
 
 			transitHaGw.Eip = ""
 			_, err = client.CreateTransitHaGw(transitHaGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 			}
 			newHaGwEnabled = true
 		}
@@ -2701,7 +2701,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+				return fmt.Errorf("failed to enable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
 			}
 
 			if haEnabled {
@@ -2710,14 +2710,14 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 				err := client.EnableSingleAZGateway(singleAZGatewayHA)
 				if err != nil {
-					return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+					return fmt.Errorf("failed to enable single AZ GW HA for %s: %w", singleAZGatewayHA.GwName, err)
 				}
 			}
 		} else {
 			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+				return fmt.Errorf("failed to disable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
 			}
 
 			if haEnabled {
@@ -2726,7 +2726,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 				err := client.DisableSingleAZGateway(singleAZGatewayHA)
 				if err != nil {
-					return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+					return fmt.Errorf("failed to disable single AZ GW HA for %s: %w", singleAZGatewayHA.GwName, err)
 				}
 			}
 		}
@@ -2772,12 +2772,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if connectedTransit {
 			err := client.EnableConnectedTransit(transitGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable connected transit: %s", err)
+				return fmt.Errorf("failed to enable connected transit: %w", err)
 			}
 		} else {
 			err := client.DisableConnectedTransit(transitGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable connected transit: %s", err)
+				return fmt.Errorf("failed to disable connected transit: %w", err)
 			}
 		}
 	}
@@ -2790,7 +2790,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			gateway.VpcSize = d.Get("gw_size").(string)
 			err := client.UpdateGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %w", err)
 			}
 		}
 
@@ -2807,7 +2807,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					// If HA gateway does not exist, don't try to change HA gateway size and continue with the rest of the updates
 					// to the gateway
 					if err != goaviatrix.ErrNotFound {
-						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
+						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %w", err)
 					}
 				} else {
 					if haGateway.VpcSize == "" {
@@ -2817,7 +2817,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					err = client.UpdateGateway(haGateway)
 					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.VpcSize)
 					if err != nil {
-						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %w", err)
 					}
 				}
 			}
@@ -2834,12 +2834,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if enableNat {
 			err := client.EnableSNat(gw)
 			if err != nil {
-				return fmt.Errorf("failed to enable 'single_ip' mode SNAT feature: %s", err)
+				return fmt.Errorf("failed to enable 'single_ip' mode SNAT feature: %w", err)
 			}
 		} else {
 			err := client.DisableSNat(gw)
 			if err != nil {
-				return fmt.Errorf("failed to disable 'single_ip' mode SNAT: %s", err)
+				return fmt.Errorf("failed to disable 'single_ip' mode SNAT: %w", err)
 			}
 		}
 
@@ -2864,7 +2864,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			interfaces, err := getInterfaceDetails(interfaceList)
 			if err != nil {
-				return fmt.Errorf("failed to get interface details: %s", err)
+				return fmt.Errorf("failed to get interface details: %w", err)
 			}
 			gateway := &goaviatrix.TransitVpc{
 				GwName:     d.Get("gw_name").(string),
@@ -2872,7 +2872,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err = client.UpdateEdgeGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to update edge gateway: %s", err)
+				return fmt.Errorf("failed to update edge gateway: %w", err)
 			}
 		}
 
@@ -2903,7 +2903,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
-					return fmt.Errorf("failed to update edge gateway: %s", err)
+					return fmt.Errorf("failed to update edge gateway: %w", err)
 				}
 			}
 		}
@@ -2927,7 +2927,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			log.Printf("[INFO] Enabling HA on Transit Gateway")
 			_, err = client.CreateTransitHaGw(transitHaGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 			}
 		}
 
@@ -2940,7 +2940,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if len(haInterfaceList) > 0 {
 				haInterfaces, err := getInterfaceDetails(haInterfaceList)
 				if err != nil {
-					return fmt.Errorf("failed to get interface details: %s", err)
+					return fmt.Errorf("failed to get interface details: %w", err)
 				}
 				gateway := &goaviatrix.TransitVpc{
 					GwName:     d.Get("gw_name").(string) + "-hagw",
@@ -2948,13 +2948,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
-					return fmt.Errorf("failed to update edge gateway: %s", err)
+					return fmt.Errorf("failed to update edge gateway: %w", err)
 				}
 			} else {
 				// delete the HA gateway if ha_interfaces is empty
 				err := client.DeleteGateway(haGateway)
 				if err != nil {
-					return fmt.Errorf("failed to delete HA gateway: %s", err)
+					return fmt.Errorf("failed to delete HA gateway: %w", err)
 				}
 			}
 		}
@@ -2973,12 +2973,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if enableHybridConnection {
 				err := client.AttachTransitGWForHybrid(transitGateway)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
+					return fmt.Errorf("failed to enable transit GW for Hybrid: %w", err)
 				}
 			} else {
 				err := client.DetachTransitGWForHybrid(transitGateway)
 				if err != nil {
-					return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
+					return fmt.Errorf("failed to disable transit GW for Hybrid: %w", err)
 				}
 			}
 		}
@@ -2998,34 +2998,34 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if learnedCidrsApproval {
 				err := client.EnableTransitLearnedCidrsApproval(gw)
 				if err != nil {
-					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+					return fmt.Errorf("failed to enable learned cidrs approval: %w", err)
 				}
 			} else {
 				err := client.DisableTransitLearnedCidrsApproval(gw)
 				if err != nil {
-					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+					return fmt.Errorf("failed to disable learned cidrs approval: %w", err)
 				}
 			}
 			mode := d.Get("learned_cidrs_approval_mode").(string)
 			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
 			if err != nil {
-				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %w", mode, err)
 			}
 		} else {
 			mode := d.Get("learned_cidrs_approval_mode").(string)
 			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
 			if err != nil {
-				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %w", mode, err)
 			}
 			if learnedCidrsApproval {
 				err = client.EnableTransitLearnedCidrsApproval(gw)
 				if err != nil {
-					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+					return fmt.Errorf("failed to enable learned cidrs approval: %w", err)
 				}
 			} else {
 				err = client.DisableTransitLearnedCidrsApproval(gw)
 				if err != nil {
-					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+					return fmt.Errorf("failed to disable learned cidrs approval: %w", err)
 				}
 			}
 		}
@@ -3036,7 +3036,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		mode := d.Get("learned_cidrs_approval_mode").(string)
 		err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
 		if err != nil {
-			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %w", mode, err)
 		}
 	} else if d.HasChange("enable_learned_cidrs_approval") {
 		gw := &goaviatrix.TransitVpc{
@@ -3046,13 +3046,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			gw.LearnedCidrsApproval = "yes"
 			err := client.EnableTransitLearnedCidrsApproval(gw)
 			if err != nil {
-				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to enable learned cidrs approval: %w", err)
 			}
 		} else {
 			gw.LearnedCidrsApproval = "no"
 			err := client.DisableTransitLearnedCidrsApproval(gw)
 			if err != nil {
-				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to disable learned cidrs approval: %w", err)
 			}
 		}
 	}
@@ -3115,7 +3115,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if !enableFireNet {
 			err := client.DisableGatewayFireNetInterfaces(transitGW)
 			if err != nil {
-				return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %s", err)
+				return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %w", err)
 			}
 		}
 		if !enableTransitFireNet {
@@ -3124,19 +3124,19 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.DisableTransitFireNet(gwTransitFireNet)
 			if err != nil {
-				return fmt.Errorf("failed to disable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+				return fmt.Errorf("failed to disable transit firenet for %s due to %w", gwTransitFireNet.GwName, err)
 			}
 		}
 		if enableFireNet {
 			if enableGatewayLoadBalancer {
 				err := client.EnableGatewayFireNetInterfacesWithGWLB(transitGW)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %w", err)
 				}
 			} else {
 				err := client.EnableGatewayFireNetInterfaces(transitGW)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %w", err)
 				}
 			}
 		}
@@ -3147,12 +3147,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if enableGatewayLoadBalancer {
 				err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %s", gwTransitFireNet.GwName, err)
+					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %w", gwTransitFireNet.GwName, err)
 				}
 			} else {
 				err := client.EnableTransitFireNet(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+					return fmt.Errorf("failed to enable transit firenet for %s due to %w", gwTransitFireNet.GwName, err)
 				}
 			}
 		}
@@ -3165,18 +3165,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if enableGatewayLoadBalancer {
 				err := client.EnableGatewayFireNetInterfacesWithGWLB(transitGW)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %w", err)
 				}
 			} else {
 				err := client.EnableGatewayFireNetInterfaces(transitGW)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %w", err)
 				}
 			}
 		} else {
 			err := client.DisableGatewayFireNetInterfaces(transitGW)
 			if err != nil {
-				return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %s", err)
+				return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %w", err)
 			}
 		}
 	} else if d.HasChange("enable_transit_firenet") {
@@ -3187,12 +3187,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if enableGatewayLoadBalancer {
 				err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %s", gwTransitFireNet.GwName, err)
+					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %w", gwTransitFireNet.GwName, err)
 				}
 			} else {
 				err := client.EnableTransitFireNet(gwTransitFireNet)
 				if err != nil {
-					return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+					return fmt.Errorf("failed to enable transit firenet for %s due to %w", gwTransitFireNet.GwName, err)
 				}
 			}
 		} else {
@@ -3201,7 +3201,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.DisableTransitFireNet(gwTransitFireNet)
 			if err != nil {
-				return fmt.Errorf("failed to disable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+				return fmt.Errorf("failed to disable transit firenet for %s due to %w", gwTransitFireNet.GwName, err)
 			}
 		}
 	} else if d.HasChange("enable_gateway_load_balancer") {
@@ -3227,7 +3227,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			gateway.VpcSize = d.Get("gw_size").(string)
 			err := client.UpdateGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
+				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %w", err)
 			}
 		}
 
@@ -3244,7 +3244,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					// If HA gateway does not exist, don't try to change gateway size and continue with the rest of the updates
 					// to the gateway
 					if err != goaviatrix.ErrNotFound {
-						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
+						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %w", err)
 					}
 				} else {
 					if haGateway.VpcSize == "" {
@@ -3254,7 +3254,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					err = client.UpdateGateway(haGateway)
 					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.VpcSize)
 					if err != nil {
-						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %w", err)
 					}
 				}
 			}
@@ -3281,12 +3281,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if enableVpcDnsServer {
 			err := client.EnableVpcDnsServer(gw)
 			if err != nil {
-				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+				return fmt.Errorf("failed to enable VPC DNS Server: %w", err)
 			}
 		} else {
 			err := client.DisableVpcDnsServer(gw)
 			if err != nil {
-				return fmt.Errorf("failed to disable VPC DNS Server: %s", err)
+				return fmt.Errorf("failed to disable VPC DNS Server: %w", err)
 			}
 		}
 	} else if d.HasChange("enable_vpc_dns_server") {
@@ -3302,13 +3302,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitGw.EnableAdvertiseTransitCidr = true
 			err := client.EnableAdvertiseTransitCidr(transitGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+				return fmt.Errorf("failed to enable advertise transit CIDR: %w", err)
 			}
 		} else {
 			transitGw.EnableAdvertiseTransitCidr = false
 			err := client.DisableAdvertiseTransitCidr(transitGw)
 			if err != nil {
-				return fmt.Errorf("failed to disable advertise transit CIDR: %s", err)
+				return fmt.Errorf("failed to disable advertise transit CIDR: %w", err)
 			}
 		}
 	}
@@ -3321,7 +3321,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		transitGw.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
 		err := client.SetBgpManualSpokeAdvertisedNetworks(transitGw)
 		if err != nil {
-			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
+			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %w", err)
 		}
 	}
 
@@ -3336,7 +3336,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.EnableEncryptVolume(gwEncVolume)
 			if err != nil {
-				return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
+				return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %w", gwEncVolume.GwName, err)
 			}
 
 			haSubnet := d.Get("ha_subnet").(string)
@@ -3349,7 +3349,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 				err := client.EnableEncryptVolume(gwHAEncVolume)
 				if err != nil {
-					return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwHAEncVolume.GwName, err)
+					return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %w", gwHAEncVolume.GwName, err)
 				}
 			}
 		} else {
@@ -3371,7 +3371,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.EditGatewayCustomRoutes(transitGateway)
 			log.Printf("[INFO] Customizeing routes of transit gateway: %s ", transitGateway.GwName)
 			if err != nil {
-				return fmt.Errorf("failed to customize spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+				return fmt.Errorf("failed to customize spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 			}
 		}
 	}
@@ -3388,7 +3388,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.EditGatewayFilterRoutes(transitGateway)
 			log.Printf("[INFO] Editing filtered spoke vpc routes of transit gateway: %s ", transitGateway.GwName)
 			if err != nil {
-				return fmt.Errorf("failed to edit filtered spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+				return fmt.Errorf("failed to edit filtered spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 			}
 		}
 	}
@@ -3405,7 +3405,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.EditGatewayAdvertisedCidr(transitGateway)
 			log.Printf("[INFO] Editing excluded advertised spoke vpc routes of transit gateway: %s ", transitGateway.GwName)
 			if err != nil {
-				return fmt.Errorf("failed to edit excluded advertised spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+				return fmt.Errorf("failed to edit excluded advertised spoke vpc routes of transit gateway: %s due to: %w", transitGateway.GwName, err)
 			}
 		}
 	}
@@ -3525,7 +3525,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizedTransitVpcRoutes)
 		if err != nil {
-			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
+			return fmt.Errorf("couldn't update transit gateway customized vpc route: %w", err)
 		}
 	}
 
@@ -3578,12 +3578,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_gro_gso").(bool) {
 			err := client.EnableGroGso(gateway)
 			if err != nil {
-				return fmt.Errorf("couldn't enable GRO/GSO on transit gateway when updating: %s", err)
+				return fmt.Errorf("couldn't enable GRO/GSO on transit gateway when updating: %w", err)
 			}
 		} else {
 			err := client.DisableGroGso(gateway)
 			if err != nil {
-				return fmt.Errorf("couldn't disable GRO/GSO on transit gateway when updating: %s", err)
+				return fmt.Errorf("couldn't disable GRO/GSO on transit gateway when updating: %w", err)
 			}
 		}
 	}
@@ -3668,7 +3668,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		err := client.SetRxQueueSize(gw)
 		if err != nil {
-			return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %v", gw.GatewayName, err)
+			return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %w", gw.GatewayName, err)
 		}
 		if haSubnet != "" || haZone != "" {
 			haGwRxQueueSize := &goaviatrix.Gateway{
@@ -3677,7 +3677,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.SetRxQueueSize(haGwRxQueueSize)
 			if err != nil {
-				return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+				return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %w", haGwRxQueueSize.GwName, err)
 			}
 		}
 	}
@@ -3709,7 +3709,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		err := client.ChangeBgpOverLanIntfCnt(gw)
 		if err != nil {
-			return fmt.Errorf("could not modify BGP over LAN interface count for transit: %s during gateway update: %v", gw.GatewayName, err)
+			return fmt.Errorf("could not modify BGP over LAN interface count for transit: %s during gateway update: %w", gw.GatewayName, err)
 		}
 		if haSubnet != "" {
 			haGw := &goaviatrix.Gateway{
@@ -3718,7 +3718,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 			err := client.ChangeBgpOverLanIntfCnt(haGw)
 			if err != nil {
-				return fmt.Errorf("could not modify BGP over LAN interface count for transit ha: %s during gateway update: %v", haGw.GwName, err)
+				return fmt.Errorf("could not modify BGP over LAN interface count for transit ha: %s during gateway update: %w", haGw.GwName, err)
 			}
 		}
 	}
@@ -3763,7 +3763,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 		err := client.DisableGatewayFireNetInterfaces(gw)
 		if err != nil {
-			return fmt.Errorf("failed to disable Aviatrix Transit Gateway for FireNet Interfaces: %s", err)
+			return fmt.Errorf("failed to disable Aviatrix Transit Gateway for FireNet Interfaces: %w", err)
 		}
 	}
 
@@ -3771,12 +3771,12 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if enableTransitFireNet && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 		err := client.DisableTransitFireNet(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)
+			return fmt.Errorf("failed to disable transit firenet for %s due to %w", gateway.GwName, err)
 		}
 	} else if enableTransitFireNet && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		err := client.IsTransitFireNetReadyToBeDisabled(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)
+			return fmt.Errorf("failed to disable transit firenet for %s due to %w", gateway.GwName, err)
 		}
 	}
 
@@ -3799,14 +3799,14 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 				}
 
 				if !strings.Contains(err.Error(), "EOF") {
-					return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %s", err)
+					return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %w", err)
 				}
 			} else {
 				break
 			}
 
 			if try == maxTries {
-				return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway HA gateway: %w", err)
 			}
 			time.Sleep(backoff)
 			// Double the backoff time after each failed try
@@ -3815,19 +3815,19 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		if cloudType == goaviatrix.EDGEEQUINIX {
 			err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
 			if err != nil {
-				return fmt.Errorf("failed to delete ZTP file: %s", err)
+				return fmt.Errorf("failed to delete ZTP file: %w", err)
 			}
 		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %w", err)
 	}
 	if cloudType == goaviatrix.EDGEEQUINIX {
 		err := deleteZtpFile(gateway.GwName, d.Get("vpc_id").(string), d.Get("ztp_file_download_path").(string))
 		if err != nil {
-			return fmt.Errorf("failed to delete ZTP file: %s", err)
+			return fmt.Errorf("failed to delete ZTP file: %w", err)
 		}
 	}
 
@@ -3842,7 +3842,7 @@ func deleteZtpFile(gatewayName, vpcId, ztpFileDownloadPath string) error {
 	}
 	err := os.Remove(fileName)
 	if err != nil {
-		return fmt.Errorf("could not remove the ztp file: %v", err)
+		return fmt.Errorf("could not remove the ztp file: %w", err)
 	}
 	return nil
 }
@@ -3898,7 +3898,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	d.SetId(gateway.GwName)
 	err = client.LaunchTransitVpc(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
 	}
 	// create ha transit gateway if ha_interfaces are provided
 	ha_interfaces, ok := d.Get("ha_interfaces").([]interface{})
@@ -3911,7 +3911,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
 		_, err = client.CreateTransitHaGw(transitHaGw)
 		if err != nil {
-			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 		}
 	}
 
@@ -3929,7 +3929,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		// update EIP map
 		err = client.UpdateEdgeGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to update edge gateway: %s", err)
+			return fmt.Errorf("failed to update edge gateway: %w", err)
 		}
 	}
 
@@ -4112,7 +4112,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	transitHaGw.BackupLinkList = append(transitHaGw.BackupLinkList, backupLinkData)
 	backupLinkConfig, err := json.Marshal(transitHaGw.BackupLinkList)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create backup link configuration: %s", err)
+		return nil, fmt.Errorf("failed to create backup link configuration: %w", err)
 	}
 	transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
 	// get the HA interfaces
@@ -4366,7 +4366,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		interfaceType := strings.ToUpper(interfaceDetails[0])
 		interfaceIndex, err := strconv.Atoi(interfaceDetails[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %v", interfaceName, err)
+			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %w", interfaceName, err)
 		}
 
 		for _, eip := range eipList {

@@ -1046,7 +1046,7 @@ func TestSetEipMapDetails(t *testing.T) {
 			result, err := setEipMapDetails(tt.eipMap, tt.ifNameTranslation)
 
 			if tt.expectedErr != "" {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
