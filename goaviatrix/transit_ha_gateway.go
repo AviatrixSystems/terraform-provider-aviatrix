@@ -1,6 +1,8 @@
 package goaviatrix
 
-import "golang.org/x/net/context"
+import (
+	"golang.org/x/net/context"
+)
 
 type TransitHaGateway struct {
 	Action                string `json:"action"`
@@ -29,6 +31,7 @@ type TransitHaGateway struct {
 	InterfaceMapping      string `json:"interface_mapping,omitempty"`
 	Interfaces            string `json:"interfaces,omitempty"`
 	DeviceID              string `json:"device_id,omitempty"`
+	ZtpFileDownloadPath   string `json:"-"`
 }
 
 type BackupLinkInterface struct {
@@ -41,6 +44,18 @@ type BackupLinkInterface struct {
 func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {
 	transitHaGateway.CID = c.CID
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
-
-	return c.PostAPIContext2HaGw(context.Background(), nil, transitHaGateway.Action, transitHaGateway, BasicCheck)
+	var data CreateEdgeEquinixResp
+	resp, err := c.PostAPIContext2HaGw(context.Background(), &data, transitHaGateway.Action, transitHaGateway, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+	// create the ZTP file for Equinix Edge transit gateway
+	if transitHaGateway.CloudType == EDGEEQUINIX {
+		fileName := getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
+		err = createZtpFile(fileName, data.Result)
+		if err != nil {
+			return "", err
+		}
+	}
+	return resp, nil
 }

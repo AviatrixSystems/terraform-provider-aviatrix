@@ -1,7 +1,9 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -65,6 +67,7 @@ type TransitVpc struct {
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	EipMap                       string   `json:"eip_map,omitempty"`
+	ZtpFileDownloadPath          string   `json:"-"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -173,7 +176,24 @@ type TransitGatewayBgpLanIpInfo struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_multicloud_primary_gateway"
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	var data CreateEdgeEquinixResp
+	err := c.PostAPIWithResponse(&data, gateway.Action, gateway, BasicCheck)
+	if err != nil {
+		return err
+	}
+	// create the ZTP file for Equinix edge transit gateway
+	if gateway.CloudType == EDGEEQUINIX {
+		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
+		fileContent, err := processZtpFileContent(data.Result)
+		if err != nil {
+			return err
+		}
+		err = createZtpFile(fileName, fileContent)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
@@ -711,4 +731,39 @@ func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error 
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func processZtpFileContent(cloudInitTransit string) (string, error) {
+	var jsonCloudInit map[string]interface{}
+	err := json.Unmarshal([]byte(cloudInitTransit), &jsonCloudInit)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse cloud_init_transit as JSON: %w", err)
+	}
+
+	// Extract the 'text' field from the cloudinit data
+	text, ok := jsonCloudInit["text"].(string)
+	if !ok {
+		return "", fmt.Errorf("'text' field not found or is not a string in cloud_init_transit")
+	}
+	return text, nil
+}
+
+// createZtpFile creates a new ztp file and writes the given content.
+func createZtpFile(filePath, content string) error {
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create the file: %w", err)
+	}
+	defer outFile.Close()
+
+	// Write the content to the file
+	_, err = outFile.WriteString(content)
+	if err != nil {
+		return fmt.Errorf("failed to write to the file: %w", err)
+	}
+	return nil
+}
+
+func getFileName(ztpFileDownloadPath, gwName, vpcID string) string {
+	return ztpFileDownloadPath + "/" + gwName + "-" + vpcID + "-cloud-init.txt"
 }

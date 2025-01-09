@@ -26,7 +26,7 @@ type EdgeExternalDeviceConn struct {
 	Phase2Encryption       string `json:"phase2_encryption,omitempty"`
 	HAEnabled              string `json:"enable_ha,omitempty"`
 	BackupRemoteGatewayIP  string `json:"backup_external_device_ip_address,omitempty"`
-	BackupBgpRemoteAsNum   int    `json:"backup_external_device_as_number,omitempty"`
+	BackupBgpRemoteAsNum   int    `json:"external_device_backup_asn,omitempty"`
 	BackupPreSharedKey     string `json:"backup_pre_shared_key,omitempty"`
 	BackupLocalTunnelCidr  string `json:"backup_local_tunnel_ip,omitempty"`
 	BackupRemoteTunnelCidr string `json:"backup_remote_tunnel_ip,omitempty"`

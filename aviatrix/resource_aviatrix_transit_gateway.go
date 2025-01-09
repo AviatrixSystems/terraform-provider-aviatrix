@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
+	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -69,7 +72,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"device_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Device ID for the EAT gateway.",
+				Description: "Device ID for AEP EAT gateway.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
@@ -101,6 +104,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled.",
+			},
+			"ztp_file_download_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
+					return old != ""
+				},
+				Description: "The location where the ZTP file will be stored locally.",
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
@@ -140,7 +151,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_device_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Device ID for HA EAT gateway. Required for enabling HA for AEP edge.",
+				Description: "Device ID for HA AEP EAT gateway.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -772,7 +783,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_interfaces": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of WAN/Management interfaces for HA EAT gateway, each represented as a map.",
+				Description: "A list of WAN/Management interfaces for HA EAT gateway, each represented as a map. Required for enabling HA for edge gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -1844,7 +1855,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("bgp_lan_ip_list", nil)
 		d.Set("ha_bgp_lan_ip_list", nil)
-		d.Set("device_id", gw.DeviceID)
+		if gw.DeviceID != "" {
+			_ = d.Set("device_id", gw.DeviceID)
+		}
 		// set interfaces
 		if len(gw.Interfaces) != 0 {
 			interfaces := setInterfaceDetails(gw.Interfaces)
@@ -1934,6 +1947,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if err = d.Set("ha_interfaces", ha_interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
+		}
+		if gw.HaGw.DeviceID != "" {
 			d.Set("ha_device_id", gw.HaGw.DeviceID)
 		}
 	} else {
@@ -3798,13 +3813,49 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
+		if cloudType == goaviatrix.EDGEEQUINIX {
+			vpcID, ok := d.Get("vpc_id").(string)
+			if !ok {
+				return fmt.Errorf("vpc_id is not a string")
+			}
+			ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
+			if !ok {
+				return fmt.Errorf("ztp_file_download_path is not a string")
+			}
+			err := deleteZtpFile(gateway.GwName, vpcID, ztpFileDownloadPath)
+			if err != nil {
+				return fmt.Errorf("failed to delete ZTP file: %w", err)
+			}
+		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
+	if cloudType == goaviatrix.EDGEEQUINIX {
+		vpcID, ok := d.Get("vpc_id").(string)
+		if !ok {
+			return fmt.Errorf("vpc_id is not a string")
+		}
+		ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
+		if !ok {
+			return fmt.Errorf("ztp_file_download_path is not a string")
+		}
+		err := deleteZtpFile(gateway.GwName, vpcID, ztpFileDownloadPath)
+		if err != nil {
+			return fmt.Errorf("failed to delete ZTP file: %w", err)
+		}
+	}
 
+	return nil
+}
+
+func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
+	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + "-cloud-init.txt"
+	if err := os.Remove(fileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("could not remove the ztp file: %w", err)
+	}
 	return nil
 }
 
@@ -3815,7 +3866,6 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		GwName:      d.Get("gw_name").(string),
 		VpcID:       d.Get("vpc_id").(string),
 		VpcSize:     d.Get("gw_size").(string),
-		DeviceID:    d.Get("device_id").(string),
 		Transit:     true,
 	}
 	// get the interface config details
@@ -3833,6 +3883,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if err != nil {
 		return fmt.Errorf("failed to get the interface count: %w", err)
 	}
+	// interface mapping and device_id are required only for AEP edge gateway
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		/*
 			TODO: Use the device_id to determine the interface mapping. This change will provide support for other device models interface mapping. For now, we will use the user provided interface mapping for ESXI devices and default values for Dell devices.
@@ -3843,6 +3894,18 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 			return fmt.Errorf("failed to get the interface mapping details: %w", err)
 		}
 		gateway.InterfaceMapping = interfaceMapping
+		// set the device_id for AEP gateway
+		gateway.DeviceID, ok = d.Get("device_id").(string)
+		if !ok {
+			return fmt.Errorf("device_id attribute is required for Edge Transit Gateway")
+		}
+	}
+
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX) {
+		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
+		if !ok {
+			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
+		}
 	}
 
 	// create the transit gateway
@@ -3852,9 +3915,9 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 	}
-	// create ha transit gateway if ha_device_id is provided
-	ha_device_id, ok := d.Get("ha_device_id").(string)
-	if ok && ha_device_id != "" {
+	// create ha transit gateway if ha_interfaces are provided
+	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
+	if ok && len(haInterfaces) > 0 {
 		transitHaGw, err := getTransitHaGatewayDetails(d, wanCount, cloudType)
 		if err != nil {
 			return fmt.Errorf("failed to get the HA gateway details: %w", err)
@@ -4030,10 +4093,12 @@ func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 
 func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType int) (*goaviatrix.TransitHaGateway, error) {
 	transitHaGw := &goaviatrix.TransitHaGateway{
-		PrimaryGwName: d.Get("gw_name").(string),
-		GwName:        d.Get("gw_name").(string) + "-hagw",
-		DeviceID:      d.Get("ha_device_id").(string),
-		InsaneMode:    "yes",
+		PrimaryGwName:       d.Get("gw_name").(string),
+		GwName:              d.Get("gw_name").(string) + "-hagw",
+		VpcID:               d.Get("vpc_id").(string),
+		ZtpFileDownloadPath: d.Get("ztp_file_download_path").(string),
+		CloudType:           d.Get("cloud_type").(int),
+		InsaneMode:          "yes",
 	}
 	peerBackupPortType, ok := d.GetOk("peer_backup_port_type")
 	if !ok {
@@ -4075,7 +4140,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		return nil, fmt.Errorf("failed to get the interface details for HA Edge Transit Gateway: %w", err)
 	}
 	transitHaGw.Interfaces = interfacesList
-	// interface mapping is only required for AEP ha gateway
+	// interface mapping and device id is only required for AEP ha gateway
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		// interface mapping is same as the primary gateway
 		interfaceMappingInput := d.Get("interface_mapping").([]interface{})
@@ -4084,6 +4149,11 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 			return nil, fmt.Errorf("failed to get the interface mapping details: %w", err)
 		}
 		transitHaGw.InterfaceMapping = interfaceMapping
+		// set device_id for AEP ha gateway
+		transitHaGw.DeviceID, ok = d.Get("ha_device_id").(string)
+		if !ok {
+			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
+		}
 	}
 	return transitHaGw, nil
 }
@@ -4293,14 +4363,25 @@ func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) 
 
 func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation map[string]string) ([]map[string]interface{}, error) {
 	eipMapList := make([]map[string]interface{}, 0)
-	for interfaceName, eipList := range eipMap {
-		// get the interface type and index from the interface name
+	keys := make([]string, 0, len(eipMap))
+	for key := range eipMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	// Process the eipMap in sorted key order
+	for _, interfaceName := range keys {
+		eipList := eipMap[interfaceName]
+		// Get the interface type and index from the interface name
 		interfaces := ifNameTranslation[interfaceName]
 		interfaceDetails := strings.Split(interfaces, ".")
+		if len(interfaceDetails) != 2 {
+			return nil, fmt.Errorf("invalid interface format for %s: %s", interfaceName, interfaces)
+		}
 		interfaceType := strings.ToUpper(interfaceDetails[0])
-		interfaceIndex, error := strconv.Atoi(interfaceDetails[1])
-		if error != nil {
-			return nil, fmt.Errorf("failed to convert interface index to integer: %w", error)
+		interfaceIndex, err := strconv.Atoi(interfaceDetails[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %w", interfaceName, err)
 		}
 
 		for _, eip := range eipList {

@@ -246,9 +246,9 @@ func (c *Client) DoAPIContext2WithResult(ctx context.Context, verb string, v int
 
 func checkAndReturnAPIResp2WithResult(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) (string, error) {
 	type apiresp struct {
-		Return  bool   `json:"return"`
-		Results string `json:"results"`
-		Reason  string `json:"reason"`
+		Return  bool              `json:"return"`
+		Results map[string]string `json:"results"`
+		Reason  string            `json:"reason"`
 	}
 
 	var data apiresp
@@ -272,5 +272,5 @@ func checkAndReturnAPIResp2WithResult(resp *http.Response, v interface{}, method
 		}
 	}
 
-	return data.Results, nil
+	return data.Results["status"], nil
 }
