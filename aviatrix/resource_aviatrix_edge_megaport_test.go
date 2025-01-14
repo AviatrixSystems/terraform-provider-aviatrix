@@ -13,8 +13,8 @@ import (
 )
 
 func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
-	if os.Getenv("SKIP_EDGE_Megaport") == "yes" {
-		t.Skip("Skipping Edge Megaport test as SKIP_EDGE_Megaport is set")
+	if os.Getenv("SKIP_EDGE_MEGAPORT") == "yes" {
+		t.Skip("Skipping Edge Megaport test as SKIP_EDGE_MEGAPORT is set")
 	}
 
 	resourceName := "aviatrix_edge_megaport.test_spoke"
