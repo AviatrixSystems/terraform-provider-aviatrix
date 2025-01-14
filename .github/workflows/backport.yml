@@ -31,4 +31,4 @@ jobs:
          head_template: "backport-<%= number %>-to-<%= base %>"
          label_pattern: "^backport-to (?<base>([^ ]+))$"
          title_template: "<%= title %> [Backport <%= base %>]"
-         github_token: ${{ env.GITHUB_TOKEN }}
+         github_token: ${{ secrets.GITHUB_TOKEN }}
