@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -206,17 +207,14 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 				Description: "A list of WAN/LAN/MANAGEMENT interfaces, each represented as a map.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"index": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "Interface index. Must be unique for each interface type (e.g., 0, 1, 2).",
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Interface type.",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, lan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|lan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', 'lan', or 'mgmt' followed by a number (e.g., 'wan0', 'lan1', 'mgmt2').",
+							),
 						},
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
@@ -397,15 +395,14 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 		interface1 := interface0.(map[string]interface{})
 
 		interface2 := &goaviatrix.EdgeMegaportInterface{
-			Index:        interface1["index"].(int),
-			Type:         interface1["type"].(string),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			LogicalInterfaceName: interface1["logical_ifname"].(string),
+			PublicIp:             interface1["wan_public_ip"].(string),
+			Tag:                  interface1["tag"].(string),
+			Dhcp:                 interface1["enable_dhcp"].(bool),
+			IpAddr:               interface1["ip_address"].(string),
+			GatewayIp:            interface1["gateway_ip"].(string),
+			DnsPrimary:           interface1["dns_server_ip"].(string),
+			DnsSecondary:         interface1["secondary_dns_server_ip"].(string),
 		}
 
 		// vrrp_state and virtual_ip are only applicable for LAN interfaces
@@ -749,8 +746,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] interfaceList: %v", interfaceList)
 	for _, interface0 := range interfaceList {
 		interface1 := make(map[string]interface{})
-		interface1["index"] = interface0.Index
-		interface1["type"] = interface0.Type
+		interface1["logical_ifname"] = interface0.LogicalInterfaceName
 		if interface0.PublicIp != "" {
 			interface1["wan_public_ip"] = interface0.PublicIp
 		}
@@ -770,12 +766,12 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 			interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
 		}
 
-		if interface0.Type == "LAN" {
+		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") {
 			interface1["enable_vrrp"] = interface0.VrrpState
 			interface1["vrrp_virtual_ip"] = interface0.VirtualIp
 		}
 
-		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
+		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
 				vlan1 := make(map[string]interface{})
 				vlan1["parent_interface_name"] = vlan0.ParentInterface

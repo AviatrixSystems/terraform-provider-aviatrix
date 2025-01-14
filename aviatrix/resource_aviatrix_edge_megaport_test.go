@@ -36,9 +36,15 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 					testAccCheckEdgeMegaportExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.14.10/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.logical_ifname", "lan0"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "192.168.99.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.logical_ifname", "wan0"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "192.168.88.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.logical_ifname", "wan1"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.3.ip_address", "192.168.77.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.3.logical_ifname", "wan2"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.4.logical_ifname", "mgmt0"),
 				),
 			},
 			{
@@ -64,40 +70,35 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 		ztp_file_download_path             = "%s"
 
 		interfaces {
-			gateway_ip = "10.220.14.1"
-			ip_address = "10.220.14.10/24"
-			type       = "LAN"
-			index      = 0
+			gateway_ip     = "10.220.14.1"
+			ip_address     = "10.220.14.10/24"
+			logical_ifname = "lan0"
 		}
 
 		interfaces {
-			gateway_ip    = "192.168.99.1"
-			ip_address    = "192.168.99.14/24"
-			type          = "WAN"
-			index         = 0
-			wan_public_ip     = "67.207.104.19"
+			gateway_ip     = "192.168.99.1"
+			ip_address     = "192.168.99.14/24"
+			logical_ifname = "wan0"
+			wan_public_ip  = "67.207.104.19"
 		}
 
 		interfaces {
-			gateway_ip    = "192.168.88.1"
-			ip_address    = "192.168.88.14/24"
-			type          = "WAN"
-			index         = 1
-			wan_public_ip     = "67.71.12.148"
+			gateway_ip     = "192.168.88.1"
+			ip_address     = "192.168.88.14/24"
+			logical_ifname = "wan1"
+			wan_public_ip  = "67.71.12.148"
 		}
 
 		interfaces {
-			gateway_ip  = "192.168.77.1"
-			ip_address  = "192.168.77.14/24"
-			type        = "WAN"
-			index       = 2
-			wan_public_ip   = "67.72.12.149"
+			gateway_ip     = "192.168.77.1"
+			ip_address     = "192.168.77.14/24"
+			logical_ifname = "wan2"
+			wan_public_ip  = "67.72.12.149"
 		}
 
 		interfaces {
 			enable_dhcp   = true
-			type   = "MANAGEMENT"
-			index  = 0
+			logical_ifname = "mgmt0"
 		}
 	}
  `, accountName, gwName, siteId, path)
