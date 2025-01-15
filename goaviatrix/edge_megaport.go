@@ -50,6 +50,7 @@ type EdgeMegaport struct {
 	EnableAutoAdvertiseLanCidrs        string                   `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string                   `json:"-"`
 	InterfaceMapping                   string                   `json:"interface_mapping,omitempty"`
+	CloudType                          int                      `json:"cloud_type,omitempty"`
 }
 
 type EdgeMegaportInterface struct {
@@ -235,6 +236,7 @@ func (c *Client) DeleteEdgeMegaport(ctx context.Context, accountName, name strin
 func (c *Client) UpdateEdgeMegaport(ctx context.Context, edgeMegaport *EdgeMegaport) error {
 	edgeMegaport.Action = "update_edge_gateway"
 	edgeMegaport.CID = c.CID
+	edgeMegaport.CloudType = EDGEMEGAPORT
 
 	interfaces, err := json.Marshal(edgeMegaport.InterfaceList)
 	if err != nil {

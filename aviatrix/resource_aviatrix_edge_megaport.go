@@ -406,7 +406,7 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 		}
 
 		// vrrp_state and virtual_ip are only applicable for LAN interfaces
-		if interface1["type"].(string) == "LAN" && interface1["enable_vrrp"].(bool) {
+		if strings.HasPrefix(interface1["logical_ifname"].(string), "lan") && interface1["enable_vrrp"].(bool) {
 			interface2.VrrpState = interface1["enable_vrrp"].(bool)
 			interface2.VirtualIp = interface1["vrrp_virtual_ip"].(string)
 		}
@@ -743,7 +743,6 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
 	interfaceList := sortInterfacesByTypeIndex(edgeMegaportResp.InterfaceList)
-	log.Printf("[DEBUG] interfaceList: %v", interfaceList)
 	for _, interface0 := range interfaceList {
 		interface1 := make(map[string]interface{})
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
