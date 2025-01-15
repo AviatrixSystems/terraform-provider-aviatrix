@@ -4,6 +4,7 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -96,6 +97,7 @@ func (c *Client) UpdateEdgeMegaportHa(ctx context.Context, edgeMegaport *EdgeMeg
 		"CID":            c.CID,
 		"name":           edgeMegaport.GwName,
 		"mgmt_egress_ip": edgeMegaport.ManagementEgressIpPrefix,
+		"cloud_type":     fmt.Sprintf("%v", EDGEMEGAPORT),
 	}
 
 	interfaces, err := json.Marshal(edgeMegaport.InterfaceList)
