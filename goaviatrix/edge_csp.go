@@ -50,7 +50,6 @@ type EdgeCSP struct {
 	Interfaces                         string `json:"interfaces,omitempty"`
 	VlanList                           []*Vlan
 	Vlan                               string `json:"vlan,omitempty"`
-	DnsProfileName                     string `json:"dns_profile_name,omitempty"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
@@ -124,7 +123,6 @@ type EdgeCSPResp struct {
 	LanInterface                       []string     `json:"edge_csp_lan_ifname"`
 	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
 	InterfaceList                      []*Interface `json:"interfaces"`
-	DnsProfileName                     string       `json:"dns_profile_name"`
 	EnableNat                          string       `json:"enable_nat"`
 	SnatMode                           string       `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`

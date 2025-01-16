@@ -347,6 +347,7 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "DNS profile to be associated with gateway, select an existing template.",
+				Deprecated:  "DNS profile support has been removed.",
 			},
 			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
@@ -395,7 +396,6 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
 		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
-		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 	}
 
@@ -759,7 +759,6 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeNEOResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeNEOResp.EnableNat == "yes" && edgeNEOResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeNEOResp.EnableAutoAdvertiseLanCidrs)
 
@@ -941,7 +940,7 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan",
 		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeNEO(ctx, edgeNEO)
 		if err != nil {

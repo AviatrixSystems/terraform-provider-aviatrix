@@ -319,6 +319,7 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "DNS profile to be associated with gateway, select an existing template.",
+				Deprecated:  "DNS profile support has been removed.",
 			},
 			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
@@ -388,7 +389,6 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 	}
 
@@ -817,7 +817,6 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed to set interface mapping: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeMegaportResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeMegaportResp.EnableNat == "yes" && edgeMegaportResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeMegaportResp.EnableAutoAdvertiseLanCidrs)
 
@@ -1009,7 +1008,7 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan",
 		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeMegaport(ctx, edgeMegaport)
 		if err != nil {
