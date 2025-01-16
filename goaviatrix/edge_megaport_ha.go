@@ -16,7 +16,7 @@ type EdgeMegaportHa struct {
 	InterfaceList            []*EdgeMegaportInterface
 	Interfaces               string `json:"interfaces"`
 	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
-	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
+	ManagementEgressIPPrefix string `json:"mgmt_egress_ip,omitempty"`
 }
 
 type EdgeMegaportHaResp struct {
@@ -24,7 +24,7 @@ type EdgeMegaportHaResp struct {
 	PrimaryGwName            string                   `json:"primary_gw_name"`
 	GwName                   string                   `json:"gw_name"`
 	InterfaceList            []*EdgeMegaportInterface `json:"interfaces"`
-	ManagementEgressIpPrefix string                   `json:"mgmt_egress_ip"`
+	ManagementEgressIPPrefix string                   `json:"mgmt_egress_ip"`
 }
 
 type EdgeMegaportHaListResp struct {
@@ -96,7 +96,7 @@ func (c *Client) UpdateEdgeMegaportHa(ctx context.Context, edgeMegaport *EdgeMeg
 		"action":         "update_edge_gateway",
 		"CID":            c.CID,
 		"name":           edgeMegaport.GwName,
-		"mgmt_egress_ip": edgeMegaport.ManagementEgressIpPrefix,
+		"mgmt_egress_ip": edgeMegaport.ManagementEgressIPPrefix,
 		"cloud_type":     fmt.Sprintf("%v", EDGEMEGAPORT),
 	}
 

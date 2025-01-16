@@ -365,12 +365,12 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 	edgeMegaport := &goaviatrix.EdgeMegaport{
 		AccountName:                        d.Get("account_name").(string),
 		GwName:                             d.Get("gw_name").(string),
-		SiteId:                             d.Get("site_id").(string),
+		SiteID:                             d.Get("site_id").(string),
 		ZtpFileDownloadPath:                d.Get("ztp_file_download_path").(string),
-		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+		ManagementEgressIPPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DnsServerIp:                        d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
+		DNSServerIP:                        d.Get("dns_server_ip").(string),
+		SecondaryDNSServerIP:               d.Get("secondary_dns_server_ip").(string),
 		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
 		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
 		LocalAsNumber:                      d.Get("local_as_number").(string),
@@ -396,19 +396,30 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 
 		interface2 := &goaviatrix.EdgeMegaportInterface{
 			LogicalInterfaceName: interface1["logical_ifname"].(string),
-			PublicIp:             interface1["wan_public_ip"].(string),
+			PublicIP:             interface1["wan_public_ip"].(string),
 			Tag:                  interface1["tag"].(string),
 			Dhcp:                 interface1["enable_dhcp"].(bool),
-			IpAddr:               interface1["ip_address"].(string),
-			GatewayIp:            interface1["gateway_ip"].(string),
-			DnsPrimary:           interface1["dns_server_ip"].(string),
-			DnsSecondary:         interface1["secondary_dns_server_ip"].(string),
+			IPAddr:               interface1["ip_address"].(string),
+			GatewayIP:            interface1["gateway_ip"].(string),
+			DNSPrimary:           interface1["dns_server_ip"].(string),
+			DNSSecondary:         interface1["secondary_dns_server_ip"].(string),
 		}
 
 		// vrrp_state and virtual_ip are only applicable for LAN interfaces
-		if strings.HasPrefix(interface1["logical_ifname"].(string), "lan") && interface1["enable_vrrp"].(bool) {
-			interface2.VrrpState = interface1["enable_vrrp"].(bool)
-			interface2.VirtualIp = interface1["vrrp_virtual_ip"].(string)
+		logicalIfname, ok := interface1["logical_ifname"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid or missing value for 'logical_ifname'")
+		}
+		enableVrrp, ok := interface1["enable_vrrp"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("invalid or missing value for 'enable_vrrp'")
+		}
+		if strings.HasPrefix(logicalIfname, "lan") && enableVrrp {
+			interface2.VrrpState = enableVrrp
+			interface2.VirtualIP, ok = interface1["vrrp_virtual_ip"].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid or missing value for 'vrrp_virtual_ip'")
+			}
 		}
 
 		edgeMegaport.InterfaceList = append(edgeMegaport.InterfaceList, interface2)
@@ -420,11 +431,11 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 
 		vlan2 := &goaviatrix.EdgeMegaportVlan{
 			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
+			IPAddr:          vlan1["ip_address"].(string),
+			GatewayIP:       vlan1["gateway_ip"].(string),
+			PeerIPAddr:      vlan1["peer_ip_address"].(string),
+			PeerGatewayIP:   vlan1["peer_gateway_ip"].(string),
+			VirtualIP:       vlan1["vrrp_virtual_ip"].(string),
 			Tag:             vlan1["tag"].(string),
 		}
 
@@ -687,18 +698,18 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("gw_name", edgeMegaportResp.GwName)
 	d.Set("site_id", edgeMegaportResp.SiteId)
 	d.Set("enable_management_over_private_network", edgeMegaportResp.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeMegaportResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeMegaportResp.SecondaryDnsServerIp)
+	_ = d.Set("dns_server_ip", edgeMegaportResp.DNSServerIP)
+	_ = d.Set("secondary_dns_server_ip", edgeMegaportResp.SecondaryDNSServerIP)
 	d.Set("local_as_number", edgeMegaportResp.LocalAsNumber)
 	d.Set("prepend_as_path", edgeMegaportResp.PrependAsPath)
 	d.Set("enable_edge_active_standby", edgeMegaportResp.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeMegaportResp.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeMegaportResp.EnableLearnedCidrsApproval)
 
-	if edgeMegaportResp.ManagementEgressIpPrefix == "" {
+	if edgeMegaportResp.ManagementEgressIPPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportResp.ManagementEgressIpPrefix, ","))
+		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportResp.ManagementEgressIPPrefix, ","))
 	}
 
 	if edgeMegaportResp.EnableLearnedCidrsApproval {
@@ -746,28 +757,28 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	for _, interface0 := range interfaceList {
 		interface1 := make(map[string]interface{})
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
-		if interface0.PublicIp != "" {
-			interface1["wan_public_ip"] = interface0.PublicIp
+		if interface0.PublicIP != "" {
+			interface1["wan_public_ip"] = interface0.PublicIP
 		}
 		if interface0.Dhcp {
 			interface1["enable_dhcp"] = interface0.Dhcp
 		}
-		if interface0.IpAddr != "" {
-			interface1["ip_address"] = interface0.IpAddr
+		if interface0.IPAddr != "" {
+			interface1["ip_address"] = interface0.IPAddr
 		}
-		if interface0.GatewayIp != "" {
-			interface1["gateway_ip"] = interface0.GatewayIp
+		if interface0.GatewayIP != "" {
+			interface1["gateway_ip"] = interface0.GatewayIP
 		}
-		if interface0.DnsPrimary != "" {
-			interface1["dns_server_ip"] = interface0.DnsPrimary
+		if interface0.DNSPrimary != "" {
+			interface1["dns_server_ip"] = interface0.DNSPrimary
 		}
-		if interface0.DnsSecondary != "" {
-			interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
+		if interface0.DNSSecondary != "" {
+			interface1["secondary_dns_server_ip"] = interface0.DNSSecondary
 		}
 
 		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") {
 			interface1["enable_vrrp"] = interface0.VrrpState
-			interface1["vrrp_virtual_ip"] = interface0.VirtualIp
+			interface1["vrrp_virtual_ip"] = interface0.VirtualIP
 		}
 
 		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") && interface0.SubInterfaces != nil {

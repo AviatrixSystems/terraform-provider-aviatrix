@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -22,7 +23,7 @@ func TestAccAviatrixEdgeMegaportHa_basic(t *testing.T) {
 	accountName := "acc-" + acctest.RandString(5)
 	edgeMegaportUsername := "megaport-user-" + acctest.RandString(5)
 	gwName := "gw-" + acctest.RandString(5)
-	siteId := "site-" + acctest.RandString(5)
+	siteID := "site-" + acctest.RandString(5)
 	path, _ := os.Getwd()
 
 	resource.Test(t, resource.TestCase{
@@ -33,7 +34,7 @@ func TestAccAviatrixEdgeMegaportHa_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEdgeMegaportHaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeMegaportHaBasic(accountName, edgeMegaportUsername, gwName, siteId, path),
+				Config: testAccEdgeMegaportHaBasic(accountName, edgeMegaportUsername, gwName, siteID, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeMegaportHaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName),
@@ -50,7 +51,7 @@ func TestAccAviatrixEdgeMegaportHa_basic(t *testing.T) {
 	})
 }
 
-func testAccEdgeMegaportHaBasic(edgeMegaportUsername, accountName, gwName, siteId, path string) string {
+func testAccEdgeMegaportHaBasic(edgeMegaportUsername, accountName, gwName, siteID, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name           = "%s"
@@ -103,7 +104,7 @@ resource "aviatrix_edge_megaport_ha" "test" {
 		enable_dhcp    = true
 	}
 }
- `, accountName, edgeMegaportUsername, gwName, siteId, path)
+ `, accountName, edgeMegaportUsername, gwName, siteID, path)
 }
 
 func testAccCheckEdgeMegaportHaExists(resourceName string) resource.TestCheckFunc {
@@ -116,7 +117,10 @@ func testAccCheckEdgeMegaportHaExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("no edge megaport ha id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client, ok := testAccProvider.Meta().(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("client not found")
+		}
 
 		edgeMegaportHa, err := client.GetEdgeMegaportHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != nil {
@@ -130,7 +134,10 @@ func testAccCheckEdgeMegaportHaExists(resourceName string) resource.TestCheckFun
 }
 
 func testAccCheckEdgeMegaportHaDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client, ok := testAccProvider.Meta().(*goaviatrix.Client)
+	if !ok {
+		return fmt.Errorf("client not found")
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_megaport_ha" {
@@ -138,7 +145,7 @@ func testAccCheckEdgeMegaportHaDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeMegaportHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
-		if err != goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge megaport ha still exists")
 		}
 	}

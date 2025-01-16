@@ -13,12 +13,12 @@ type EdgeMegaport struct {
 	CID                                string                   `json:"CID,omitempty"`
 	AccountName                        string                   `json:"account_name,omitempty"`
 	GwName                             string                   `json:"name,omitempty"`
-	SiteId                             string                   `json:"site_id,omitempty"`
+	SiteID                             string                   `json:"site_id,omitempty"`
 	ZtpFileDownloadPath                string                   `json:"-"`
-	ManagementEgressIpPrefix           string                   `json:"mgmt_egress_ip,omitempty"`
+	ManagementEgressIPPrefix           string                   `json:"mgmt_egress_ip,omitempty"`
 	EnableManagementOverPrivateNetwork bool                     `json:"mgmt_over_private_network,omitempty"`
-	DnsServerIp                        string                   `json:"dns_server_ip,omitempty"`
-	SecondaryDnsServerIp               string                   `json:"dns_server_ip_secondary,omitempty"`
+	DNSServerIP                        string                   `json:"dns_server_ip,omitempty"`
+	SecondaryDNSServerIP               string                   `json:"dns_server_ip_secondary,omitempty"`
 	Dhcp                               bool                     `json:"dhcp,omitempty"`
 	EnableEdgeActiveStandby            bool                     `json:"enable_active_standby,omitempty"`
 	DisableEdgeActiveStandby           bool                     `json:"disable_active_standby,omitempty"`
@@ -55,26 +55,26 @@ type EdgeMegaport struct {
 
 type EdgeMegaportInterface struct {
 	LogicalInterfaceName string              `json:"logical_ifname"`
-	PublicIp             string              `json:"public_ip,omitempty"`
+	PublicIP             string              `json:"public_ip,omitempty"`
 	Tag                  string              `json:"tag,omitempty"`
 	Dhcp                 bool                `json:"dhcp,omitempty"`
-	IpAddr               string              `json:"ipaddr,omitempty"`
-	GatewayIp            string              `json:"gateway_ip,omitempty"`
-	DnsPrimary           string              `json:"dns_primary,omitempty"`
-	DnsSecondary         string              `json:"dns_secondary,omitempty"`
+	IPAddr               string              `json:"ipaddr,omitempty"`
+	GatewayIP            string              `json:"gateway_ip,omitempty"`
+	DNSPrimary           string              `json:"dns_primary,omitempty"`
+	DNSSecondary         string              `json:"dns_secondary,omitempty"`
 	SubInterfaces        []*EdgeMegaportVlan `json:"subinterfaces,omitempty"`
 	VrrpState            bool                `json:"vrrp_state,omitempty"`
-	VirtualIp            string              `json:"virtual_ip,omitempty"`
+	VirtualIP            string              `json:"virtual_ip,omitempty"`
 }
 
 type EdgeMegaportVlan struct {
 	ParentInterface string `json:"parent_interface"`
 	VlanId          string `json:"vlan_id"`
-	IpAddr          string `json:"ipaddr"`
-	GatewayIp       string `json:"gateway_ip,omitempty"`
-	PeerIpAddr      string `json:"peer_ipaddr,omitempty"`
-	PeerGatewayIp   string `json:"peer_gateway_ip,omitempty"`
-	VirtualIp       string `json:"virtual_ip,omitempty"`
+	IPAddr          string `json:"ipaddr"`
+	GatewayIP       string `json:"gateway_ip,omitempty"`
+	PeerIPAddr      string `json:"peer_ipaddr,omitempty"`
+	PeerGatewayIP   string `json:"peer_gateway_ip,omitempty"`
+	VirtualIP       string `json:"virtual_ip,omitempty"`
 	Tag             string `json:"tag,omitempty"`
 }
 
@@ -83,13 +83,13 @@ type EdgeMegaportResp struct {
 	GwName                             string              `json:"gw_name"`
 	SiteId                             string              `json:"vpc_id"`
 	ManagementInterfaceConfig          string              `json:"-"`
-	ManagementEgressIpPrefix           string              `json:"mgmt_egress_ip"`
+	ManagementEgressIPPrefix           string              `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool                `json:"mgmt_over_private_network"`
 	LanInterfaceIpPrefix               string              `json:"lan_ip"`
-	ManagementInterfaceIpPrefix        string              `json:"mgmt_ip"`
-	ManagementDefaultGatewayIp         string              `json:"mgmt_default_gateway"`
-	DnsServerIp                        string              `json:"dns_server_ip"`
-	SecondaryDnsServerIp               string              `json:"dns_server_ip_secondary"`
+	ManagementInterfaceIPPrefix        string              `json:"mgmt_ip"`
+	ManagementDefaultGatewayIP         string              `json:"mgmt_default_gateway"`
+	DNSServerIP                        string              `json:"dns_server_ip"`
+	SecondaryDNSServerIP               string              `json:"dns_server_ip_secondary"`
 	Dhcp                               bool                `json:"dhcp"`
 	ActiveStandby                      string              `json:"active_standby"`
 	EnableEdgeActiveStandby            bool                `json:"edge_active_standby"`
@@ -109,7 +109,7 @@ type EdgeMegaportResp struct {
 	EnableJumboFrame                   bool                `json:"jumbo_frame"`
 	Latitude                           float64             `json:"latitude"`
 	Longitude                          float64             `json:"longitude"`
-	WanPublicIp                        string              `json:"public_ip"`
+	WanPublicIP                        string              `json:"public_ip"`
 	PrivateIP                          string              `json:"private_ip"`
 	RxQueueSize                        string              `json:"rx_queue_size"`
 	State                              string              `json:"vpc_state"`
@@ -129,16 +129,16 @@ type EdgeMegaportListResp struct {
 type MegaportInterface struct {
 	LogicalInterfaceName string  `json:"logical_ifname"`
 	Name                 string  `json:"ifname,omitempty"`
-	PublicIp             string  `json:"public_ip,omitempty"`
+	PublicIP             string  `json:"public_ip,omitempty"`
 	Tag                  string  `json:"tag,omitempty"`
 	Dhcp                 bool    `json:"dhcp,omitempty"`
-	IpAddr               string  `json:"ipaddr,omitempty"`
-	GatewayIp            string  `json:"gateway_ip,omitempty"`
-	DnsPrimary           string  `json:"dns_primary,omitempty"`
-	DnsSecondary         string  `json:"dns_secondary,omitempty"`
+	IPAddr               string  `json:"ipaddr,omitempty"`
+	GatewayIP            string  `json:"gateway_ip,omitempty"`
+	DNSPrimary           string  `json:"dns_primary,omitempty"`
+	DNSSecondary         string  `json:"dns_secondary,omitempty"`
 	SubInterfaces        []*Vlan `json:"subinterfaces,omitempty"`
 	VrrpState            bool    `json:"vrrp_state,omitempty"`
-	VirtualIp            string  `json:"virtual_ip,omitempty"`
+	VirtualIP            string  `json:"virtual_ip,omitempty"`
 }
 
 type CreateEdgeMegaportResp struct {
@@ -177,7 +177,7 @@ func (c *Client) CreateEdgeMegaport(ctx context.Context, edgeMegaport *EdgeMegap
 		return err
 	}
 
-	fileName := edgeMegaport.ZtpFileDownloadPath + "/" + edgeMegaport.GwName + "-" + edgeMegaport.SiteId + "-cloud-init.txt"
+	fileName := edgeMegaport.ZtpFileDownloadPath + "/" + edgeMegaport.GwName + "-" + edgeMegaport.SiteID + "-cloud-init.txt"
 
 	outFile, err := os.Create(fileName)
 	if err != nil {
