@@ -363,6 +363,7 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "DNS profile to be associated with gateway, select an existing template.",
+				Deprecated:  "DNS profile support has been removed.",
 			},
 			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
@@ -411,7 +412,6 @@ func marshalEdgeZededaInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
 		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
-		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 	}
 
@@ -777,7 +777,6 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
@@ -966,7 +965,7 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan",
 		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
