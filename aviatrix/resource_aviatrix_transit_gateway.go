@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -737,17 +738,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "A list of WAN/Management interfaces for EAT gateway, each represented as a map.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
-						},
-						"index": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "Interface index. Must be unique for each interface type.",
-							ValidateFunc: validation.IntAtLeast(0),
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+							),
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
@@ -2856,6 +2854,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to get wan interface count: %w", err)
 		}
+		// get the cloud type
+		cloudType, ok := d.Get("cloud_type").(int)
+		if !ok {
+			return fmt.Errorf("failed to get cloud type for EAT gateway")
+		}
 
 		// update the edge transit gateway interfaces
 		if d.HasChange("interfaces") {
@@ -2863,7 +2866,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if !ok {
 				return fmt.Errorf("invalid interfaces for EAT gateway")
 			}
-			interfaces, err := getInterfaceDetails(interfaceList)
+			interfaces, err := getInterfaceDetails(interfaceList, cloudType)
 			if err != nil {
 				return fmt.Errorf("failed to get interface details: %s", err)
 			}
@@ -2939,7 +2942,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("invalid ha_interfaces for EAT HA gateway")
 			}
 			if len(haInterfaceList) > 0 {
-				haInterfaces, err := getInterfaceDetails(haInterfaceList)
+				haInterfaces, err := getInterfaceDetails(haInterfaceList, cloudType)
 				if err != nil {
 					return fmt.Errorf("failed to get interface details: %s", err)
 				}
@@ -3873,7 +3876,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if !ok || len(interfaces) == 0 {
 		return fmt.Errorf("interfaces attribute is required for Edge Transit Gateway")
 	}
-	interfacesList, err := getInterfaceDetails(interfaces)
+	interfacesList, err := getInterfaceDetails(interfaces, cloudType)
 	if err != nil {
 		return fmt.Errorf("failed to get the interface details: %w", err)
 	}
@@ -4131,11 +4134,11 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	}
 	transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
 	// get the HA interfaces
-	ha_interfaces, ok := d.Get("ha_interfaces").([]interface{})
+	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("ha_interfaces is not a list")
 	}
-	interfacesList, err := getInterfaceDetails(ha_interfaces)
+	interfacesList, err := getInterfaceDetails(haInterfaces, cloudType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the interface details for HA Edge Transit Gateway: %w", err)
 	}
@@ -4197,7 +4200,7 @@ func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, er
 }
 
 // get the interface details from the interface config
-func getInterfaceDetails(interfaces []interface{}) (string, error) {
+func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)
 	if err != nil {
