@@ -328,6 +328,7 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "DNS profile to be associated with gateway, select an existing template.",
+				Deprecated:  "DNS profile support has been removed.",
 			},
 			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
@@ -371,7 +372,6 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 	}
 
@@ -735,7 +735,6 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
-	d.Set("dns_profile_name", edgeEquinixResp.DnsProfileName)
 	d.Set("enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
 	d.Set("enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
 
@@ -924,7 +923,7 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan", "dns_profile_name",
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces", "vlan",
 		"enable_auto_advertise_lan_cidrs", "enable_edge_active_standby", "enable_edge_active_standby_preemptive") {
 		err := client.UpdateEdgeEquinix(ctx, edgeEquinix)
 		if err != nil {

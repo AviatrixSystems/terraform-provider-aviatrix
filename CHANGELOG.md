@@ -29,6 +29,8 @@
 ### Deprecations:
 Customers can no longer re-bootstrap their PKI with a custom root CA using Terraform. However, this functionality remains available through the Controller UI for added flexibility.
 
+The **aviatrix_dns_profile** resource has been removed.
+
 ## 3.2.0 (October 15, 2024)
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4820**
