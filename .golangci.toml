@@ -21,7 +21,6 @@
     "errcheck",
     "errname",
     "errorlint",
-    "depguard",
     "forcetypeassert",
     "gofumpt",
     "goimports",
