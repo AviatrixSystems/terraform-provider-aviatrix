@@ -2,6 +2,8 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -35,64 +37,12 @@ func resourceAviatrixEdgeMegaportHa() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
 					return old != ""
 				},
 				Description: "The location where the ZTP file will be stored.",
 			},
-			"interfaces": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "WAN/LAN/MANAGEMENT interfaces.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"logical_ifname": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Logical interface name e.g., wan0, lan0, mgmt0.",
-							ValidateFunc: validation.StringMatch(
-								regexp.MustCompile(`^(wan|lan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', 'lan', or 'mgmt' followed by a number (e.g., 'wan0', 'lan1', 'mgmt2').",
-							),
-						},
-						"enable_dhcp": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "Enable DHCP.",
-						},
-						"wan_public_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "WAN interface public IP.",
-						},
-						"ip_address": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Interface static IP address.",
-						},
-						"gateway_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Gateway IP.",
-						},
-						"dns_server_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Primary DNS server IP.",
-						},
-						"secondary_dns_server_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Secondary DNS server IP.",
-						},
-						"tag": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Tag.",
-						},
-					},
-				},
-			},
+			"interfaces": interfaceSchema(),
 			"management_egress_ip_prefix_list": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -110,38 +60,152 @@ func resourceAviatrixEdgeMegaportHa() *schema.Resource {
 	}
 }
 
-func marshalEdgeMegaportHaInput(d *schema.ResourceData) *goaviatrix.EdgeMegaportHa {
-	edgeMegaportHa := &goaviatrix.EdgeMegaportHa{
-		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
-		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+func interfaceSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "WAN/LAN/MANAGEMENT interfaces.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"logical_ifname":          logicalIfnameSchema(),
+				"enable_dhcp":             enableDhcpSchema(),
+				"wan_public_ip":           optionalStringSchema("WAN interface public IP."),
+				"ip_address":              optionalStringSchema("Interface static IP address."),
+				"gateway_ip":              optionalStringSchema("Gateway IP."),
+				"dns_server_ip":           optionalStringSchema("Primary DNS server IP."),
+				"secondary_dns_server_ip": optionalStringSchema("Secondary DNS server IP."),
+				"tag":                     optionalStringSchema("Tag."),
+			},
+		},
+	}
+}
+
+func logicalIfnameSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Logical interface name e.g., wan0, lan0, mgmt0.",
+		ValidateFunc: validation.StringMatch(
+			regexp.MustCompile(`^(wan|lan|mgmt)[0-9]+$`),
+			"Logical interface name must start with 'wan', 'lan', or 'mgmt' followed by a number (e.g., 'wan0', 'lan1', 'mgmt2').",
+		),
+	}
+}
+
+func enableDhcpSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable DHCP.",
+	}
+}
+
+func optionalStringSchema(description string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: description,
+	}
+}
+
+func marshalEdgeMegaportHaInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaportHa, error) {
+	primaryGwName, ztpFileDownloadPath, managementEgressIPPrefixList, err := parseRequiredFields(d)
+	if err != nil {
+		return nil, err
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+	edgeMegaportHa := &goaviatrix.EdgeMegaportHa{
+		PrimaryGwName:            primaryGwName,
+		ZtpFileDownloadPath:      ztpFileDownloadPath,
+		ManagementEgressIPPrefix: strings.Join(managementEgressIPPrefixList, ","),
+	}
 
-		interface2 := &goaviatrix.EdgeMegaportInterface{
-			LogicalInterfaceName: interface1["logical_ifname"].(string),
-			PublicIp:             interface1["wan_public_ip"].(string),
-			Tag:                  interface1["tag"].(string),
-			Dhcp:                 interface1["enable_dhcp"].(bool),
-			IpAddr:               interface1["ip_address"].(string),
-			GatewayIp:            interface1["gateway_ip"].(string),
-			DnsPrimary:           interface1["dns_server_ip"].(string),
-			DnsSecondary:         interface1["secondary_dns_server_ip"].(string),
+	interfaces, err := parseInterfaces(d)
+	if err != nil {
+		return nil, err
+	}
+	edgeMegaportHa.InterfaceList = interfaces
+
+	return edgeMegaportHa, nil
+}
+
+func parseRequiredFields(d *schema.ResourceData) (string, string, []string, error) {
+	primaryGwName, ok := d.Get("primary_gw_name").(string)
+	if !ok || primaryGwName == "" {
+		return "", "", nil, fmt.Errorf("invalid or missing value for 'primary_gw_name'")
+	}
+
+	ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
+	if !ok || ztpFileDownloadPath == "" {
+		return "", "", nil, fmt.Errorf("invalid or missing value for 'ztp_file_download_path'")
+	}
+
+	managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+	if len(managementEgressIPPrefixList) == 0 {
+		return "", "", nil, fmt.Errorf("invalid or empty value for 'management_egress_ip_prefix_list'")
+	}
+
+	return primaryGwName, ztpFileDownloadPath, managementEgressIPPrefixList, nil
+}
+
+func parseInterfaces(d *schema.ResourceData) ([]*goaviatrix.EdgeMegaportInterface, error) {
+	rawInterfaces, ok := d.Get("interfaces").(*schema.Set)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse interfaces")
+	}
+
+	var interfaces []*goaviatrix.EdgeMegaportInterface
+	for _, interface0 := range rawInterfaces.List() {
+		interface1, ok := interface0.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("failed to parse interface")
 		}
 
-		edgeMegaportHa.InterfaceList = append(edgeMegaportHa.InterfaceList, interface2)
+		interface2 := &goaviatrix.EdgeMegaportInterface{}
+		assignInterfaceFields(interface1, interface2)
+		interfaces = append(interfaces, interface2)
 	}
 
-	return edgeMegaportHa
+	return interfaces, nil
+}
+
+func assignInterfaceFields(interface1 map[string]interface{}, interface2 *goaviatrix.EdgeMegaportInterface) {
+	if logicalIfname, ok := interface1["logical_ifname"].(string); ok {
+		interface2.LogicalInterfaceName = logicalIfname
+	}
+	if publicIP, ok := interface1["wan_public_ip"].(string); ok {
+		interface2.PublicIP = publicIP
+	}
+	if tag, ok := interface1["tag"].(string); ok {
+		interface2.Tag = tag
+	}
+	if dhcp, ok := interface1["enable_dhcp"].(bool); ok {
+		interface2.Dhcp = dhcp
+	}
+	if ipAddr, ok := interface1["ip_address"].(string); ok {
+		interface2.IPAddr = ipAddr
+	}
+	if gatewayIP, ok := interface1["gateway_ip"].(string); ok {
+		interface2.GatewayIP = gatewayIP
+	}
+	if dnsPrimary, ok := interface1["dns_server_ip"].(string); ok {
+		interface2.DNSPrimary = dnsPrimary
+	}
+	if dnsSecondary, ok := interface1["secondary_dns_server_ip"].(string); ok {
+		interface2.DNSSecondary = dnsSecondary
+	}
 }
 
 func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok || client == nil {
+		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
+	}
 
-	edgeMegaportHa := marshalEdgeMegaportHaInput(d)
+	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
+	if err != nil {
+		return diag.Errorf("failed to marshal Edge Megaport HA input: %s", err)
+	}
 
 	edgeMegaportHaName, err := client.CreateEdgeMegaportHa(ctx, edgeMegaportHa)
 	if err != nil {
@@ -153,45 +217,48 @@ func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok || client == nil {
+		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
+	}
 
-	if d.Get("primary_gw_name").(string) == "" {
+	if primaryGwName, ok := d.Get("primary_gw_name").(string); ok && primaryGwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
-		d.Set("primary_gw_name", parts[0])
+		_ = d.Set("primary_gw_name", parts[0])
 		d.SetId(id)
 	}
 
 	edgeMegaportHaResp, err := client.GetEdgeMegaportHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Megaport HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeMegaportHaResp.PrimaryGwName)
-	d.Set("account_name", edgeMegaportHaResp.AccountName)
+	_ = d.Set("primary_gw_name", edgeMegaportHaResp.PrimaryGwName)
+	_ = d.Set("account_name", edgeMegaportHaResp.AccountName)
 
-	if edgeMegaportHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+	if edgeMegaportHaResp.ManagementEgressIPPrefix == "" {
+		_ = d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportHaResp.ManagementEgressIpPrefix, ","))
+		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportHaResp.ManagementEgressIPPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
 	for _, interface0 := range edgeMegaportHaResp.InterfaceList {
 		interface1 := make(map[string]interface{})
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
-		interface1["wan_public_ip"] = interface0.PublicIp
+		interface1["wan_public_ip"] = interface0.PublicIP
 		interface1["tag"] = interface0.Tag
 		interface1["enable_dhcp"] = interface0.Dhcp
-		interface1["ip_address"] = interface0.IpAddr
-		interface1["gateway_ip"] = interface0.GatewayIp
-		interface1["dns_server_ip"] = interface0.DnsPrimary
-		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
+		interface1["ip_address"] = interface0.IPAddr
+		interface1["gateway_ip"] = interface0.GatewayIP
+		interface1["dns_server_ip"] = interface0.DNSPrimary
+		interface1["secondary_dns_server_ip"] = interface0.DNSSecondary
 
 		interfaces = append(interfaces, interface1)
 	}
@@ -205,9 +272,15 @@ func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok || client == nil {
+		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
+	}
 
-	edgeMegaportHa := marshalEdgeMegaportHaInput(d)
+	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
+	if err != nil {
+		return diag.Errorf("failed to marshal Edge Megaport HA input: %s", err)
+	}
 
 	d.Partial(true)
 
@@ -217,7 +290,7 @@ func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeMegaportFunctions.InterfaceList = edgeMegaportHa.InterfaceList
-		gatewayForEdgeMegaportFunctions.ManagementEgressIpPrefix = edgeMegaportHa.ManagementEgressIpPrefix
+		gatewayForEdgeMegaportFunctions.ManagementEgressIPPrefix = edgeMegaportHa.ManagementEgressIPPrefix
 
 		err := client.UpdateEdgeMegaportHa(ctx, gatewayForEdgeMegaportFunctions)
 		if err != nil {
@@ -230,12 +303,21 @@ func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixEdgeMegaportHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok || client == nil {
+		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
+	}
 
-	edgeMegaportHa := marshalEdgeMegaportHaInput(d)
-	accountName := d.Get("account_name").(string)
+	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
+	if err != nil {
+		return diag.Errorf("failed to marshal Edge Megaport HA input: %s", err)
+	}
+	accountName, ok := d.Get("account_name").(string)
+	if !ok {
+		return diag.Errorf("failed to get account name")
+	}
 
-	err := client.DeleteEdgeMegaport(ctx, accountName, d.Id())
+	err = client.DeleteEdgeMegaport(ctx, accountName, d.Id())
 	if err != nil {
 		return diag.Errorf("could not delete Edge Megaport HA: %v", err)
 	}
