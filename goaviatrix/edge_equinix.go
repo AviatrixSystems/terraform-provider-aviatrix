@@ -46,7 +46,6 @@ type EdgeEquinix struct {
 	Interfaces                         string `json:"interfaces,omitempty"`
 	VlanList                           []*EdgeEquinixVlan
 	Vlan                               string `json:"vlan,omitempty"`
-	DnsProfileName                     string `json:"dns_profile_name,omitempty"`
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
@@ -114,7 +113,6 @@ type EdgeEquinixResp struct {
 	RxQueueSize                        string       `json:"rx_queue_size"`
 	State                              string       `json:"vpc_state"`
 	InterfaceList                      []*Interface `json:"interfaces"`
-	DnsProfileName                     string       `json:"dns_profile_name"`
 	EnableNat                          string       `json:"enable_nat"`
 	SnatMode                           string       `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
