@@ -784,17 +784,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "A list of WAN/Management interfaces for HA EAT gateway, each represented as a map. Required for enabling HA for edge gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Interface type. Valid values are 'WAN' or 'MANAGEMENT'.",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
-						},
-						"index": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "Interface index. Must be unique for each interface type.",
-							ValidateFunc: validation.IntAtLeast(0),
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+							),
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
@@ -853,16 +850,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
-			"peer_backup_port_type": {
+			"peer_backup_logical_ifname": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "WAN",
-				Description: "Peer backup port type for the edge transit gateway (e.g., 'wan').",
-			},
-			"peer_backup_port_index": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Peer backup port index for the edge transit gateway.",
+				Description: "Peer backup logical interface name for the edge transit gateway (e.g., 'wan0', 'wan1').",
 			},
 			"peer_connection_type": {
 				Type:        schema.TypeString,
@@ -874,17 +865,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"interface_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Interface type (e.g., 'WAN').",
-							ValidateFunc: validation.StringInSlice([]string{"WAN", "MANAGEMENT"}, false),
-						},
-						"interface_index": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "Interface index (e.g., 0).",
-							ValidateFunc: validation.IntAtLeast(0),
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+							),
 						},
 						"private_ip": {
 							Type:        schema.TypeString,
@@ -1903,7 +1891,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
 			d.Set("ha_interfaces", nil)
-			d.Set("peer_backup_port_type", "")
+			d.Set("peer_backup_logical_ifname", "")
 			d.Set("ha_device_id", "")
 			return nil
 		}
@@ -1918,19 +1906,17 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			peerBackupPort := backupLink.PeerIntfName
 			peerBackupPortInterface, ok := gw.IfNamesTranslation[peerBackupPort]
 			if !ok {
-				return fmt.Errorf("could not set the peer backup port type and index using the peer interface name %s", peerBackupPort)
+				return fmt.Errorf("could not set the peer backup port logical interface name using the peer interface name %s", peerBackupPort)
 			}
 			peerBackupPortDetails := strings.Split(peerBackupPortInterface, ".")
-			portType := strings.ToUpper(peerBackupPortDetails[0])
-			if err = d.Set("peer_backup_port_type", portType); err != nil {
-				return fmt.Errorf("could not set peer_backup_port_type into state: %w", err)
-			}
+			portType := strings.ToLower(peerBackupPortDetails[0])
 			portIndex, err := strconv.Atoi(peerBackupPortDetails[1])
 			if err != nil {
 				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %w", err)
 			}
-			if err = d.Set("peer_backup_port_index", portIndex); err != nil {
-				return fmt.Errorf("could not set peer_backup_port_index into state: %w", err)
+			peerBackupLogicalName := fmt.Sprintf("%s%d", portType, portIndex)
+			if err = d.Set("peer_backup_logical_name", peerBackupLogicalName); err != nil {
+				return fmt.Errorf("could not set peer backup logical interface name into state: %w", err)
 			}
 			connectionTypePrivate := backupLink.ConnectionTypePublic
 			if connectionTypePrivate {
@@ -2897,13 +2883,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
 			}
 			if len(eipMap) > 0 {
-				eipMapList, err := getEipMapDetails(eipMap, wanCount)
+				eipMapList, err := getEipMapDetails(eipMap, wanCount, cloudType)
 				if err != nil {
 					return fmt.Errorf("failed to get the eip map details: %w", err)
 				}
 				gateway := &goaviatrix.TransitVpc{
 					GwName: d.Get("gw_name").(string),
-					EipMap: eipMapList,
+				}
+				if cloudType == goaviatrix.EDGEMEGAPORT {
+					gateway.LogicalEipMap = eipMapList
+				} else {
+					gateway.EipMap = eipMapList
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
@@ -2918,9 +2908,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
-			_, err := client.GetGateway(haGateway)
-			if err == nil {
-				return fmt.Errorf("cannot update backup link info for existing HA gateway")
+			resultHaGw, err := client.GetGateway(haGateway)
+			if err == nil && resultHaGw != nil {
+				return fmt.Errorf("cannot update the backup link info for edge transit gateway when HA gateway already exists")
 			}
 			cloudType := d.Get("cloud_type").(int)
 			// create transit ha gw with backup link info
@@ -3939,7 +3929,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		return fmt.Errorf("failed to get eip_map detail for Edge Transit Gateway")
 	}
 	if len(eipMap) > 0 {
-		eipMapList, err := getEipMapDetails(eipMap, wanCount)
+		eipMapList, err := getEipMapDetails(eipMap, wanCount, cloudType)
 		if err != nil {
 			return fmt.Errorf("failed to get the eip map details: %w", err)
 		}
@@ -3995,25 +3985,60 @@ func countInterfaceTypes(interfaceList []interface{}) (int, error) {
 		if !ok {
 			return 0, fmt.Errorf("invalid interface entry, expected a map")
 		}
-		interfaceType, ok := interfaceMap["type"].(string)
+		logicalIfName, ok := interfaceMap["logical_ifname"].(string)
 		if !ok {
-			return 0, fmt.Errorf("interface type must be a string")
+			return 0, fmt.Errorf("logical interface name must be a string")
 		}
-		// Count WAN interfaces
-		if interfaceType == "WAN" {
+		// Count WAN interfaces; check if logicalIfName starts with "wan"
+		if logicalIfName != "" && strings.HasPrefix(logicalIfName, "wan") {
 			wanCount++
 		}
 	}
 	return wanCount, nil
 }
 
-// get the interface name (ethX) from interface type, index, and counts
-func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) {
-	// Check if the interface type is valid
-	if intfType != "WAN" && intfType != "MANAGEMENT" {
-		log.Printf("Invalid interface type %s", intfType)
-		return "", errors.New("invalid interface type " + intfType)
+// Extract the interface type and index from the logical interface name
+func extractInterfaceTypeAndIndex(logicalIfName string) (string, int, error) {
+	// Regular expression to match "wan0", "mgmt1", etc.
+	re := regexp.MustCompile(`^(wan|mgmt)(\d+)$`)
+	matches := re.FindStringSubmatch(logicalIfName)
+
+	if matches == nil {
+		return "", 0, fmt.Errorf("invalid logical interface name: %s", logicalIfName)
 	}
+
+	// Map the interface type to its corresponding full form
+	typeMap := map[string]string{
+		"wan":  "WAN",
+		"mgmt": "MANAGEMENT",
+	}
+
+	// Extract type and index from regex match
+	intfType, ok := typeMap[matches[1]]
+	if !ok {
+		return "", 0, fmt.Errorf("unsupported interface type: %s", matches[1])
+	}
+	var intfIndex int
+	_, err := fmt.Sscanf(matches[2], "%d", &intfIndex)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to parse index from: %s", logicalIfName)
+	}
+
+	return intfType, intfIndex, nil
+}
+
+// get the interface name (ethX) from logical interface name and counts
+func getInterfaceName(logicalIfName string, wanCount int) (string, error) {
+	// check if the logical interface name is valid
+	if (logicalIfName == "" || !strings.HasPrefix(logicalIfName, "wan")) && !strings.HasPrefix(logicalIfName, "mgmt") {
+		return "", fmt.Errorf("invalid logical interface name: %s", logicalIfName)
+	}
+
+	intfType, intfIndex, err := extractInterfaceTypeAndIndex(logicalIfName)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract interface type and index: %w", err)
+	}
+
 	var num int
 	// Determine the interface name based on the type and index
 	switch intfType {
@@ -4045,7 +4070,7 @@ func getInterfaceName(intfType string, intfIndex, wanCount int) (string, error) 
 	return interfaceName, nil
 }
 
-func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
+func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string, error) {
 	// Create a map to structure the EIP data
 	eipMapStructured := make(map[string][]goaviatrix.EipMap)
 
@@ -4055,18 +4080,22 @@ func getEipMapDetails(eipMap []interface{}, wanCount int) (string, error) {
 		if !ok {
 			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
 		}
-		interfaceType, ok := eip["interface_type"].(string)
+		logicalIfName, ok := eip["logical_ifname"].(string)
 		if !ok {
-			return "", fmt.Errorf("interface_type must be a string")
+			return "", fmt.Errorf("logical interface name must be a string")
 		}
-		interfaceIndex, ok := eip["interface_index"].(int)
-		if !ok {
-			return "", fmt.Errorf("interface_index must be an integer")
+
+		var interfaceName string
+		if cloudType == goaviatrix.EDGEMEGAPORT {
+			interfaceName = logicalIfName
+		} else {
+			var err error
+			interfaceName, err = getInterfaceName(logicalIfName, wanCount)
+			if err != nil {
+				return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %w", err)
+			}
 		}
-		interfaceName, err := getInterfaceName(interfaceType, interfaceIndex, wanCount)
-		if err != nil {
-			return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %w", err)
-		}
+
 		privateIP, ok := eip["private_ip"].(string)
 		if !ok {
 			return "", fmt.Errorf("private_ip must be a string")
@@ -4103,18 +4132,14 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		CloudType:           d.Get("cloud_type").(int),
 		InsaneMode:          "yes",
 	}
-	peerBackupPortType, ok := d.GetOk("peer_backup_port_type")
+	peerBackupLogicalName, ok := d.Get("peer_backup_logical_ifname").(string)
 	if !ok {
-		return nil, fmt.Errorf("peer_backup_port_type is required for HA Edge Transit Gateway")
+		return nil, fmt.Errorf("peer backup logical interface name is required for HA Edge Transit Gateway")
 	}
-	peerBackupPortIndex, ok := d.GetOk("peer_backup_port_index")
-	if !ok {
-		return nil, fmt.Errorf("peer_backup_port_index is required for HA Edge Transit Gateway")
-	}
-	// get peer backup port name using the type and index
-	peerBackupPort, err := getInterfaceName(peerBackupPortType.(string), peerBackupPortIndex.(int), wanCount)
+	// get peer backup port name using the peer logical interface name and wan count
+	peerBackupPort, err := getInterfaceName(peerBackupLogicalName, wanCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the peer backup port name using the type and index: %w", err)
+		return nil, fmt.Errorf("failed to get the peer backup port name using the peer backup logical name: %w", err)
 	}
 	connectionType, ok := d.GetOk("peer_connection_type")
 	if !ok {
@@ -4213,22 +4238,25 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 			return "", fmt.Errorf("interface is not a map[string]interface{}")
 		}
 		// Initialize the interface fields with default values
-		var ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
-		var ifaceIndex int
+		var ifaceName, ifaceType, logicalIfName, ifaceGatewayIP, ifaceIP, ifacePublicIP string
 		var ifaceDHCP bool
 		var secondaryCIDRs []string
 		// Check and set 'type'
-		if val, exists := ifaceInfo["type"]; exists && val != nil {
-			ifaceType, ok = val.(string)
+		if val, exists := ifaceInfo["logical_ifname"]; exists && val != nil {
+			logicalIfName, ok = val.(string)
 			if !ok {
 				return "", fmt.Errorf("interface type is not a string")
 			}
 		}
-		ifaceIndex = ifaceInfo["index"].(int)
-		// get the interface name using the interface type, index and count
-		ifaceName, err := getInterfaceName(ifaceType, ifaceIndex, wanCount)
+		// get the interface name using the logical interface name wan0 -> eth0, wan1 -> eth1, etc.
+		ifaceName, err := getInterfaceName(logicalIfName, wanCount)
 		if err != nil {
 			return "", fmt.Errorf("failed to get the interface name: %w", err)
+		}
+		// get the interface type from the logical interface name
+		ifaceType, _, err = extractInterfaceTypeAndIndex(logicalIfName)
+		if err != nil {
+			return "", fmt.Errorf("failed to extract interface type and index: %w", err)
 		}
 		// Check and set 'interface name'
 		if val, exists := ifaceInfo["name"]; exists && val != nil {
@@ -4303,22 +4331,9 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface) []map[string]interface{} {
 	interfaceList := make([]map[string]interface{}, 0)
 	sortedInterfaces := sortInterfacesByCustomOrder(interfaces)
-	wanCounter := 0
-	mgmtCounter := 0
 	for _, intf := range sortedInterfaces {
 		interfaceDict := make(map[string]interface{})
-		interfaceDict["type"] = intf.Type
-		// set the interface index using wanCounter and mgmtCounter
-		switch intf.Type {
-		case "WAN":
-			interfaceDict["index"] = wanCounter
-			wanCounter++
-		case "MANAGEMENT":
-			interfaceDict["index"] = mgmtCounter
-			mgmtCounter++
-		default:
-			interfaceDict["index"] = intf.Index
-		}
+		interfaceDict["logical_ifname"] = intf.LogicalIfName
 
 		if intf.PublicIp != "" {
 			interfaceDict["public_ip"] = intf.PublicIp
@@ -4381,18 +4396,19 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		if len(interfaceDetails) != 2 {
 			return nil, fmt.Errorf("invalid interface format for %s: %s", interfaceName, interfaces)
 		}
-		interfaceType := strings.ToUpper(interfaceDetails[0])
+		interfaceType := strings.ToLower(interfaceDetails[0])
 		interfaceIndex, err := strconv.Atoi(interfaceDetails[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert interface index to integer for %s: %w", interfaceName, err)
+			return nil, fmt.Errorf("failed to convert interface index to integer for %d: %w", interfaceIndex, err)
 		}
+		// Create the logical interface name using the type and index
+		logicalIfName := fmt.Sprintf("%s%d", interfaceType, interfaceIndex)
 
 		for _, eip := range eipList {
 			eipMap := map[string]interface{}{
-				"interface_type":  interfaceType,
-				"interface_index": interfaceIndex,
-				"private_ip":      eip.PrivateIP,
-				"public_ip":       eip.PublicIP,
+				"logical_ifname": logicalIfName,
+				"private_ip":     eip.PrivateIP,
+				"public_ip":      eip.PublicIP,
 			}
 			eipMapList = append(eipMapList, eipMap)
 		}
