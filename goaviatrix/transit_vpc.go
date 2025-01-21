@@ -67,6 +67,7 @@ type TransitVpc struct {
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	EipMap                       string   `json:"eip_map,omitempty"`
+	LogicalEipMap                string   `json:"logical_intf_eip_map,omitempty"`
 	ZtpFileDownloadPath          string   `json:"-"`
 }
 
@@ -146,6 +147,7 @@ type EdgeTransitInterface struct {
 	IpAddress      string   `json:"ipaddr,omitempty"`
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+	LogicalIfName  string   `json:"logical_ifname,omitempty"`
 }
 
 type EipMap struct {
@@ -264,6 +266,10 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 
 	if gateway.EipMap != "" {
 		form["eip_map"] = gateway.EipMap
+	}
+
+	if gateway.LogicalEipMap != "" {
+		form["logical_intf_eip_map"] = gateway.LogicalEipMap
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }

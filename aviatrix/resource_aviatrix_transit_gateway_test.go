@@ -786,40 +786,35 @@ func TestGetInterfaceName(t *testing.T) {
 	}{
 		{
 			name:        "Valid WAN interface with index 0",
-			intfType:    "WAN",
-			intfIndex:   0,
+			intfType:    "wan0",
 			wanCount:    3,
 			expected:    "eth0",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid WAN interface with index 1",
-			intfType:    "WAN",
-			intfIndex:   1,
+			intfType:    "wan1",
 			wanCount:    3,
 			expected:    "eth1",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid WAN interface with index 2",
-			intfType:    "WAN",
-			intfIndex:   2,
+			intfType:    "wan2",
 			wanCount:    3,
 			expected:    "eth3",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid MANAGEMENT interface with index 0",
-			intfType:    "MANAGEMENT",
-			intfIndex:   0,
+			intfType:    "mgmt0",
 			wanCount:    3,
 			expected:    "eth2",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid MANAGEMENT interface with index 1",
-			intfType:    "MANAGEMENT",
-			intfIndex:   1,
+			intfType:    "mgmt1",
 			wanCount:    3,
 			expected:    "eth4",
 			expectedErr: nil,
@@ -827,7 +822,6 @@ func TestGetInterfaceName(t *testing.T) {
 		{
 			name:        "Invalid interface type",
 			intfType:    "INVALID",
-			intfIndex:   0,
 			wanCount:    3,
 			expected:    "",
 			expectedErr: errors.New("invalid interface type INVALID"),
@@ -836,7 +830,7 @@ func TestGetInterfaceName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := getInterfaceName(tt.intfType, tt.intfIndex, tt.wanCount)
+			result, err := getInterfaceName(tt.intfType, tt.wanCount)
 
 			// Check error
 			if err != nil && tt.expectedErr != nil {
@@ -860,6 +854,7 @@ func TestGetEipMapDetails(t *testing.T) {
 		name        string
 		eipMap      []interface{}
 		wanCount    int
+		cloudType   int
 		expected    string
 		expectedErr error
 	}{
@@ -880,6 +875,7 @@ func TestGetEipMapDetails(t *testing.T) {
 				},
 			},
 			wanCount:    3,
+			cloudType:   1048576,
 			expected:    `{"eth0":[{"private_ip":"192.168.0.10","public_ip":"203.0.113.10"}],"eth2":[{"private_ip":"192.168.1.10","public_ip":"203.0.113.11"}]}`,
 			expectedErr: nil,
 		},
@@ -893,6 +889,7 @@ func TestGetEipMapDetails(t *testing.T) {
 				},
 			},
 			wanCount:    3,
+			cloudType:   1048576,
 			expected:    "",
 			expectedErr: errors.New("interface_type must be a string"),
 		},
@@ -907,6 +904,7 @@ func TestGetEipMapDetails(t *testing.T) {
 				},
 			},
 			wanCount:    3,
+			cloudType:   1048576,
 			expected:    "",
 			expectedErr: errors.New("failed to get the interface name using type and index for eip_map: invalid interface type INVALID"),
 		},
@@ -921,7 +919,7 @@ func TestGetEipMapDetails(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := getEipMapDetails(tt.eipMap, tt.wanCount)
+			result, err := getEipMapDetails(tt.eipMap, tt.wanCount, tt.cloudType)
 
 			// Check for errors
 			if err != nil && tt.expectedErr != nil {
@@ -957,7 +955,8 @@ func TestCountInterfaceTypes(t *testing.T) {
 // test to get the interface details from the resource
 func TestGetInterfaceDetails(t *testing.T) {
 	// get the interface details
-	interfaceDetails, err := getInterfaceDetails(interfaces)
+	cloudType := 1048576
+	interfaceDetails, err := getInterfaceDetails(interfaces, cloudType)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
