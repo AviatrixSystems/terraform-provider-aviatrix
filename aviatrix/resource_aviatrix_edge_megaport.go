@@ -681,7 +681,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	if d.Get("gw_name").(string) == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		_ = d.Set("gw_name", id)
 		d.SetId(id)
 	}
 
@@ -694,20 +694,39 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("could not read Edge Megaport: %v", err)
 	}
 
-	d.Set("account_name", edgeMegaportResp.AccountName)
-	d.Set("gw_name", edgeMegaportResp.GwName)
-	d.Set("site_id", edgeMegaportResp.SiteId)
-	d.Set("enable_management_over_private_network", edgeMegaportResp.EnableManagementOverPrivateNetwork)
-	_ = d.Set("dns_server_ip", edgeMegaportResp.DNSServerIP)
-	_ = d.Set("secondary_dns_server_ip", edgeMegaportResp.SecondaryDNSServerIP)
-	d.Set("local_as_number", edgeMegaportResp.LocalAsNumber)
-	d.Set("prepend_as_path", edgeMegaportResp.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeMegaportResp.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeMegaportResp.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeMegaportResp.EnableLearnedCidrsApproval)
+	edgeMegaportFields := map[string]interface{}{
+		"account_name":                           edgeMegaportResp.AccountName,
+		"gw_name":                                edgeMegaportResp.GwName,
+		"site_id":                                edgeMegaportResp.SiteId,
+		"enable_management_over_private_network": edgeMegaportResp.EnableManagementOverPrivateNetwork,
+		"dns_server_ip":                          edgeMegaportResp.DNSServerIP,
+		"secondary_dns_server_ip":                edgeMegaportResp.SecondaryDNSServerIP,
+		"local_as_number":                        edgeMegaportResp.LocalAsNumber,
+		"prepend_as_path":                        edgeMegaportResp.PrependAsPath,
+		"enable_edge_active_standby":             edgeMegaportResp.EnableEdgeActiveStandby,
+		"enable_edge_active_standby_preemptive":  edgeMegaportResp.EnableEdgeActiveStandbyPreemptive,
+		"enable_learned_cidrs_approval":          edgeMegaportResp.EnableLearnedCidrsApproval,
+		"enable_preserve_as_path":                edgeMegaportResp.EnablePreserveAsPath,
+		"bgp_polling_time":                       edgeMegaportResp.BgpPollingTime,
+		"bgp_neighbor_status_polling_time":       edgeMegaportResp.BgpBfdPollingTime,
+		"bgp_hold_time":                          edgeMegaportResp.BgpHoldTime,
+		"enable_edge_transitive_routing":         edgeMegaportResp.EnableEdgeTransitiveRouting,
+		"enable_jumbo_frame":                     edgeMegaportResp.EnableJumboFrame,
+		"rx_queue_size":                          edgeMegaportResp.RxQueueSize,
+		"state":                                  edgeMegaportResp.State,
+		"dns_profile_name":                       edgeMegaportResp.DnsProfileName,
+		"enable_single_ip_snat":                  edgeMegaportResp.EnableNat == "yes" && edgeMegaportResp.SnatMode == "primary",
+		"enable_auto_advertise_lan_cidrs":        edgeMegaportResp.EnableAutoAdvertiseLanCidrs,
+	}
+
+	for key, value := range edgeMegaportFields {
+		if err := d.Set(key, value); err != nil {
+			log.Printf("[WARN] Failed to set %s: %v", key, err)
+		}
+	}
 
 	if edgeMegaportResp.ManagementEgressIPPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		_ = d.Set("management_egress_ip_prefix_list", nil)
 	} else {
 		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportResp.ManagementEgressIPPrefix, ","))
 	}
@@ -723,33 +742,24 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 			return diag.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
-		d.Set("approved_learned_cidrs", nil)
+		_ = d.Set("approved_learned_cidrs", nil)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeMegaportResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
 		len(goaviatrix.Difference(edgeMegaportResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeMegaportResp.SpokeBgpManualAdvertisedCidrs)
+		_ = d.Set("spoke_bgp_manual_advertise_cidrs", edgeMegaportResp.SpokeBgpManualAdvertisedCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
+		_ = d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
 
-	d.Set("enable_preserve_as_path", edgeMegaportResp.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeMegaportResp.BgpPollingTime)
-	d.Set("bgp_neighbor_status_polling_time", edgeMegaportResp.BgpBfdPollingTime)
-	d.Set("bgp_hold_time", edgeMegaportResp.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeMegaportResp.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeMegaportResp.EnableJumboFrame)
 	if edgeMegaportResp.Latitude != 0 || edgeMegaportResp.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeMegaportResp.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeMegaportResp.Longitude))
+		_ = d.Set("latitude", fmt.Sprintf("%.6f", edgeMegaportResp.Latitude))
+		_ = d.Set("longitude", fmt.Sprintf("%.6f", edgeMegaportResp.Longitude))
 	} else {
-		d.Set("latitude", "")
-		d.Set("longitude", "")
+		_ = d.Set("latitude", "")
+		_ = d.Set("longitude", "")
 	}
-
-	d.Set("rx_queue_size", edgeMegaportResp.RxQueueSize)
-	d.Set("state", edgeMegaportResp.State)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
@@ -822,9 +832,6 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	if err = d.Set("interface_mapping", interfaceMapping); err != nil {
 		return diag.Errorf("failed to set interface mapping: %s\n", err)
 	}
-
-	d.Set("enable_single_ip_snat", edgeMegaportResp.EnableNat == "yes" && edgeMegaportResp.SnatMode == "primary")
-	d.Set("enable_auto_advertise_lan_cidrs", edgeMegaportResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeMegaportResp.GwName)
 	return nil
