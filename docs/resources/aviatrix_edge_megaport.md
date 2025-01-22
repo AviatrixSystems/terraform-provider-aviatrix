@@ -13,50 +13,49 @@ The **aviatrix_edge_megaport** resource creates the Aviatrix Edge Megaport.
 ## Example Usage
 
 ```hcl
-# Create an Edge megaport
+# Create an Edge Megaport
 resource "aviatrix_edge_megaport" "test" {
   account_name           = "edge_megaport-account"
   gw_name                = "megaport-test"
   site_id                = "site-123"
   ztp_file_download_path = "/ztp/file/download/path"
   tag                    = "edge-megaport-test"
+  interfaces {
+    gateway_ip     = "10.220.14.1"
+    ip_address     = "10.220.14.10/24"
+    logical_ifname = "lan0"
+    dns_server_ip  = "10.220.14.1"
+  }
 
   interfaces {
-        gateway_ip = "10.220.14.1"
-        ip_address = "10.220.14.10/24"
-        type       = "LAN"
-        index      = 0
-    }
+    enable_dhcp    = true
+    logical_ifname = "mgmt0"
+  }
 
-    interfaces {
-        enable_dhcp   = true
-        type   = "MANAGEMENT"
-        index  = 0
-    }
+  interfaces {
+    gateway_ip     = "192.168.99.1"
+    ip_address     = "192.168.99.14/24"
+    logical_ifname = "wan0"
+    wan_public_ip  = "67.207.104.19"
+    dns_server_ip  = "192.168.99.1"
+  }
 
-    interfaces {
-        gateway_ip    = "192.168.99.1"
-        ip_address    = "192.168.99.14/24"
-        type          = "WAN"
-        index         = 0
-        wan_public_ip     = "67.207.104.19"
-    }
+  interfaces {
+    gateway_ip     = "192.168.88.1"
+    ip_address     = "192.168.88.14/24"
+    logical_ifname = "wan1"
+    wan_public_ip  = "67.71.12.148"
+    dns_server_ip  = "192.168.88.1"
+  }
 
-    interfaces {
-        gateway_ip    = "192.168.88.1"
-        ip_address    = "192.168.88.14/24"
-        type          = "WAN"
-        index         = 1
-        wan_public_ip     = "67.71.12.148"
-    }
-
-    interfaces {
-        gateway_ip  = "192.168.77.1"
-        ip_address  = "192.168.77.14/24"
-        type        = "WAN"
-        index       = 2
-        wan_public_ip   = "67.72.12.149"
-    }
+  interfaces {
+    gateway_ip     = "192.168.77.1"
+    ip_address     = "192.168.77.14/24"
+    logical_ifname = "wan2"
+    wan_public_ip  = "67.72.12.149"
+    dns_server_ip  = "192.168.77.1"
+  }
+  management_egress_ip_prefix_list = ["162.43.147.137/31"]
 }
 ```
 
@@ -70,9 +69,7 @@ The following arguments are supported:
 * `site_id` - (Required) Site ID.
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
 * `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
-  * `name` - (Required) Interface name.
-  * `type` - (Required) Type. Valid values: WAN, LAN, or MANAGEMENT.
-  * `bandwidth` - (Optional) The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.
+  * `logical_ifname` - (Required) Logical interface name e.g., wan0, lan0, mgmt0.
   * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
@@ -129,6 +126,3 @@ In addition to all arguments above, the following attribute is exported:
 ```
 $ terraform import aviatrix_edge_megaport.test gw_name
 ```
-
-## Deprecations
-* Deprecated ``bandwidth`` in **WAN/LAN/MGMT interfaces**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.

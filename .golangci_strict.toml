@@ -20,7 +20,6 @@
     "bodyclose",
     "cyclop",
     "errcheck",
-    "depguard",
     "errname",
     "errorlint",
     "forcetypeassert",
