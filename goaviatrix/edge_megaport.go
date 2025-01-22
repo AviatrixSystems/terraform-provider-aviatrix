@@ -114,7 +114,7 @@ type EdgeMegaportResp struct {
 	RxQueueSize                        string              `json:"rx_queue_size"`
 	State                              string              `json:"vpc_state"`
 	InterfaceList                      []MegaportInterface `json:"interfaces"`
-	DnsProfileName                     string              `json:"dns_profile_name"`
+	DNSProfileName                     string              `json:"dns_profile_name"`
 	EnableNat                          string              `json:"enable_nat"`
 	SnatMode                           string              `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`

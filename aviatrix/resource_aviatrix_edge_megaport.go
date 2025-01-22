@@ -714,7 +714,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		"enable_jumbo_frame":                     edgeMegaportResp.EnableJumboFrame,
 		"rx_queue_size":                          edgeMegaportResp.RxQueueSize,
 		"state":                                  edgeMegaportResp.State,
-		"dns_profile_name":                       edgeMegaportResp.DnsProfileName,
+		"dns_profile_name":                       edgeMegaportResp.DNSProfileName,
 		"enable_single_ip_snat":                  edgeMegaportResp.EnableNat == "yes" && edgeMegaportResp.SnatMode == "primary",
 		"enable_auto_advertise_lan_cidrs":        edgeMegaportResp.EnableAutoAdvertiseLanCidrs,
 	}
