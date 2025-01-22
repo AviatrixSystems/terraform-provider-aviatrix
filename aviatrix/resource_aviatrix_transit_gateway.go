@@ -851,14 +851,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 			},
 			"peer_backup_logical_ifname": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Peer backup logical interface name for the edge transit gateway (e.g., 'wan0', 'wan1').",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"peer_connection_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Connection type for the edge transit gateway.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Connection type for the edge transit gateway (e.g., 'public', 'private').",
+				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"eip_map": {
 				Type:     schema.TypeList,
@@ -4125,40 +4129,33 @@ func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string
 }
 
 func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType int) (*goaviatrix.TransitHaGateway, error) {
+	gwName, ok := d.Get("gw_name").(string)
+	if !ok {
+		return nil, fmt.Errorf("gw_name is required for HA Edge Transit Gateway")
+	}
+	haGwName := gwName + "-hagw"
 	transitHaGw := &goaviatrix.TransitHaGateway{
-		PrimaryGwName:       d.Get("gw_name").(string),
-		GwName:              d.Get("gw_name").(string) + "-hagw",
+		PrimaryGwName:       gwName,
+		GwName:              haGwName,
 		VpcID:               d.Get("vpc_id").(string),
 		ZtpFileDownloadPath: d.Get("ztp_file_download_path").(string),
 		CloudType:           d.Get("cloud_type").(int),
 		InsaneMode:          "yes",
 	}
-	peerBackupLogicalName, ok := d.Get("peer_backup_logical_ifname").(string)
+	peerBackupLogicalName, ok := d.Get("peer_backup_logical_ifname").([]string)
 	if !ok {
 		return nil, fmt.Errorf("peer backup logical interface name is required for HA Edge Transit Gateway")
 	}
-	// get peer backup port name using the peer logical interface name and wan count
-	peerBackupPort, err := getInterfaceName(peerBackupLogicalName, wanCount)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get the peer backup port name using the peer backup logical name: %w", err)
-	}
-	connectionType, ok := d.GetOk("peer_connection_type")
+	connectionType, ok := d.Get("peer_connection_type").(string)
 	if !ok {
 		return nil, fmt.Errorf("peer_connection_type is required for HA Edge Transit Gateway")
 	}
-	// Create the backup link configuration
-	backupLinkData := goaviatrix.BackupLinkInterface{
-		PeerGwName:     d.Get("gw_name").(string),
-		PeerBackupPort: peerBackupPort,
-		SelfBackupPort: peerBackupPort,
-		ConnectionType: connectionType.(string),
-	}
-	transitHaGw.BackupLinkList = append(transitHaGw.BackupLinkList, backupLinkData)
-	backupLinkConfig, err := json.Marshal(transitHaGw.BackupLinkList)
+	// get the backup link configuration
+	backupLinkConfig, err := createBackupLinkConfig(gwName, peerBackupLogicalName, connectionType, wanCount, cloudType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backup link configuration: %s", err)
 	}
-	transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString(backupLinkConfig)
+	transitHaGw.BackupLinkConfig = backupLinkConfig
 	// get the HA interfaces
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if !ok {
@@ -4185,6 +4182,38 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		}
 	}
 	return transitHaGw, nil
+}
+
+func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, connectionType string, wanCount int, cloudType int) (string, error) {
+	var peerBackupPorts []string
+	for _, logicalName := range peerBackupLogicalNames {
+		portName, err := getInterfaceName(logicalName, wanCount)
+		if err != nil {
+			return "", fmt.Errorf("failed to get the peer backup port name for logical name %s: %w", logicalName, err)
+		}
+		peerBackupPorts = append(peerBackupPorts, portName)
+	}
+	peerBackupPort := strings.Join(peerBackupPorts, ",")
+
+	backupLinkData := goaviatrix.BackupLinkInterface{
+		PeerGwName:     gwName,
+		PeerBackupPort: peerBackupPort,
+		SelfBackupPort: peerBackupPort,
+		ConnectionType: connectionType,
+	}
+
+	if cloudType == goaviatrix.EDGEMEGAPORT {
+		backupLinkData.PeerBackupLogicalIfNames = peerBackupLogicalNames
+		backupLinkData.SelfBackupLogicalIfNames = peerBackupLogicalNames
+	}
+
+	backupLinkList := []goaviatrix.BackupLinkInterface{backupLinkData}
+	backupLinkConfig, err := json.Marshal(backupLinkList)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal backup link configuration: %w", err)
+	}
+
+	return b64.StdEncoding.EncodeToString(backupLinkConfig), nil
 }
 
 // set the interface mapping details for the gateway
