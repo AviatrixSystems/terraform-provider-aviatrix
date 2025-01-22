@@ -226,6 +226,7 @@ type Gateway struct {
 	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
 	EipMap                          map[string][]EipMap                 `json:"eip_map,omitempty"`
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
+	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 }
 
 type HaGateway struct {
