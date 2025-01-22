@@ -69,6 +69,7 @@ type TransitVpc struct {
 	EipMap                       string   `json:"eip_map,omitempty"`
 	LogicalEipMap                string   `json:"logical_intf_eip_map,omitempty"`
 	ZtpFileDownloadPath          string   `json:"-"`
+	ManagementEgressIpPrefix     string   `json:"mgmt_egress_ip,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

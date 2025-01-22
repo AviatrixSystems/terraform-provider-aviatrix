@@ -892,6 +892,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 				Description: "A list of mappings between interface names and their associated private and public IPs.",
 			},
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -1873,6 +1881,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set eip map into state: %w", err)
 			}
 		}
+
+		// set management egress ip prefix list
+		if gw.ManagementEgressIPPrefix == "" {
+			d.Set("management_egress_ip_prefix_list", nil)
+		} else {
+			d.Set("management_egress_ip_prefix_list", strings.Split(gw.ManagementEgressIPPrefix, ","))
+		}
+
 		// set the ha_attributes to empty if ha_interfaces is not provided for edge
 		if len(gw.HaGw.Interfaces) == 0 {
 			d.Set("ha_availability_domain", "")
@@ -2851,7 +2867,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		// update the edge transit gateway interfaces
-		if d.HasChange("interfaces") {
+		if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 			interfaceList, ok := d.Get("interfaces").([]interface{})
 			if !ok {
 				return fmt.Errorf("invalid interfaces for EAT gateway")
@@ -2860,9 +2876,15 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to get interface details: %s", err)
 			}
+
 			gateway := &goaviatrix.TransitVpc{
 				GwName:     d.Get("gw_name").(string),
 				Interfaces: interfaces,
+			}
+
+			managementEgressIpPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+			if len(managementEgressIpPrefixList) > 0 {
+				gateway.ManagementEgressIpPrefix = strings.Join(managementEgressIpPrefixList, ",")
 			}
 			err = client.UpdateEdgeGateway(gateway)
 			if err != nil {
@@ -3904,6 +3926,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
 		}
+		managementEgressIpPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+		if len(managementEgressIpPrefixList) > 0 {
+			gateway.ManagementEgressIpPrefix = strings.Join(managementEgressIpPrefixList, ",")
+		}
 	}
 
 	// create the transit gateway
@@ -4155,7 +4181,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backup link configuration: %s", err)
 	}
-	transitHaGw.BackupLinkConfig = backupLinkConfig
+	transitHaGw.BackupLinkConfig = b64.StdEncoding.EncodeToString([]byte(backupLinkConfig))
 	// get the HA interfaces
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if !ok {
@@ -4187,13 +4213,16 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, connectionType string, wanCount int, cloudType int) (string, error) {
 	var peerBackupPorts []string
 	for _, logicalName := range peerBackupLogicalNames {
-		portName, err := getInterfaceName(logicalName, wanCount)
+		portName, err := getInterfaceName(logicalName, wanCount) // returns eth0, eth1, etc.
 		if err != nil {
 			return "", fmt.Errorf("failed to get the peer backup port name for logical name %s: %w", logicalName, err)
 		}
 		peerBackupPorts = append(peerBackupPorts, portName)
 	}
 	peerBackupPort := strings.Join(peerBackupPorts, ",")
+
+	fmt.Printf("peerBackupPorts: %s\n", peerBackupPorts)
+	fmt.Printf("peerBackupPort: %s\n", peerBackupPort)
 
 	backupLinkData := goaviatrix.BackupLinkInterface{
 		PeerGwName:     gwName,
@@ -4202,18 +4231,23 @@ func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, conn
 		ConnectionType: connectionType,
 	}
 
+	fmt.Println("backupLinkData:", backupLinkData)
+
 	if cloudType == goaviatrix.EDGEMEGAPORT {
 		backupLinkData.PeerBackupLogicalIfNames = peerBackupLogicalNames
 		backupLinkData.SelfBackupLogicalIfNames = peerBackupLogicalNames
 	}
 
 	backupLinkList := []goaviatrix.BackupLinkInterface{backupLinkData}
+
+	fmt.Println("backupLinkList:", backupLinkList)
+
 	backupLinkConfig, err := json.Marshal(backupLinkList)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal backup link configuration: %w", err)
 	}
 
-	return b64.StdEncoding.EncodeToString(backupLinkConfig), nil
+	return string(backupLinkConfig), nil
 }
 
 // set the interface mapping details for the gateway
@@ -4254,7 +4288,7 @@ func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, er
 	return string(interfaceMappingJSON), nil
 }
 
-// get the interface details from the interface config
+// get the interface details from the interface config and cloud type
 func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)
@@ -4347,6 +4381,9 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 			Dhcp:           ifaceDHCP,
 			IpAddress:      ifaceIP,
 			SecondaryCIDRs: secondaryCIDRs,
+		}
+		if cloudType == goaviatrix.EDGEMEGAPORT {
+			ifaceData.LogicalIfName = logicalIfName
 		}
 		interfaceList = append(interfaceList, ifaceData)
 	}
