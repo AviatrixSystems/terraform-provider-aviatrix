@@ -35,10 +35,12 @@ type TransitHaGateway struct {
 }
 
 type BackupLinkInterface struct {
-	PeerGwName     string `json:"peer_gw_name"`
-	PeerBackupPort string `json:"peer_backup_port"`
-	SelfBackupPort string `json:"self_backup_port"`
-	ConnectionType string `json:"connection_type"`
+	PeerGwName               string   `json:"peer_gw_name"`
+	PeerBackupPort           string   `json:"peer_backup_port"`
+	SelfBackupPort           string   `json:"self_backup_port"`
+	ConnectionType           string   `json:"connection_type"`
+	PeerBackupLogicalIfNames []string `json:"peer_backup_logical_ifnames,omitempty"`
+	SelfBackupLogicalIfNames []string `json:"self_backup_logical_ifnames,omitempty"`
 }
 
 func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {
