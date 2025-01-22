@@ -1,0 +1,24 @@
+name: Backport
+on:
+  pull_request_target:
+    types:
+      - closed
+      - labeled
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  backport:
+    name: Backport
+    runs-on: ubuntu-latest
+    # Only react to merged PRs for security reasons.
+    # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target.
+    if: github.event.pull_request.merged && (github.event.action == 'closed' || (github.event.action == 'labeled' && contains(github.event.label.name, 'backport-to')))
+    steps:
+      - uses: tibdex/backport@v2
+        with:
+          body_template: "Backport <%= mergeCommitSha %> from #<%= number %>. </br> <%= body %>"
+          head_template: "backport-<%= number %>-to-<%= base %>"
+          label_pattern: "^backport-to (?<base>([^ ]+))$"
+          title_template: "<%= title %> [Backport <%= base %>]"
+          github_token: ${{ secrets.GITHUB_TOKEN }}

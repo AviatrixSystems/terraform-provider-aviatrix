@@ -117,6 +117,7 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_equinix":                                           resourceAviatrixEdgeEquinix(),
 			"aviatrix_edge_equinix_ha":                                        resourceAviatrixEdgeEquinixHa(),
 			"aviatrix_edge_megaport":                                          resourceAviatrixEdgeMegaport(),
+			"aviatrix_edge_megaport_ha":                                       resourceAviatrixEdgeMegaportHa(),
 			"aviatrix_edge_gateway_selfmanaged":                               resourceAviatrixEdgeGatewaySelfmanaged(),
 			"aviatrix_edge_gateway_selfmanaged_ha":                            resourceAviatrixEdgeGatewaySelfmanagedHa(),
 			"aviatrix_edge_neo":                                               resourceAviatrixEdgeNEO(),
