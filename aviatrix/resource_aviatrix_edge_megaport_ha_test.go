@@ -72,12 +72,12 @@ resource "aviatrix_edge_megaport" "test" {
 	}
 
 	interfaces {
-		logical_ifname = "lan1"
+		logical_ifname = "lan0"
 		ip_address     = "10.230.3.32/24"
 	}
 
 	interfaces {
-		logical_ifname = "mgmt2"
+		logical_ifname = "mgmt0"
 		enable_dhcp    = false
 		ip_address     = "172.16.15.162/20"
 		gateway_ip     = "172.16.0.1"
@@ -94,13 +94,13 @@ resource "aviatrix_edge_megaport_ha" "test" {
 	}
 
 	interfaces {
-		logical_ifname = "lan1"
+		logical_ifname = "lan0"
 		ip_address     = "10.220.12.20/24"
 		gateway_ip     = "10.220.12.2"
 	}
 
 	interfaces {
-		logical_ifname = "mgmt2"
+		logical_ifname = "mgmt0"
 		enable_dhcp    = true
 	}
 }
