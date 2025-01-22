@@ -744,7 +744,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Description: "Logical interface name e.g., wan0, mgmt0.",
 							ValidateFunc: validation.StringMatch(
 								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
 							),
 						},
 						"gateway_ip": {
@@ -790,7 +790,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Description: "Logical interface name e.g., wan0, mgmt0.",
 							ValidateFunc: validation.StringMatch(
 								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
 							),
 						},
 						"gateway_ip": {
@@ -871,7 +871,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Description: "Logical interface name e.g., wan0, mgmt0.",
 							ValidateFunc: validation.StringMatch(
 								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt2').",
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
 							),
 						},
 						"private_ip": {
@@ -3894,7 +3894,8 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX) {
+	// ztp file download path is required for Equinix and Megaport edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")

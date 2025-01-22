@@ -33,7 +33,7 @@ const (
 	AzureArmRelatedCloudTypes = Azure | AzureGov | AzureChina
 	OCIRelatedCloudTypes      = OCI
 	AliCloudRelatedCloudTypes = AliCloud
-	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO
+	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
