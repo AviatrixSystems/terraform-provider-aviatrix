@@ -49,37 +49,27 @@ var expectedInterfaceDetails = []goaviatrix.EdgeTransitInterface{
 	{
 		GatewayIp:      "192.168.20.1",
 		IpAddress:      "192.168.20.11/24",
-		Name:           "eth0",
-		Type:           "WAN",
 		LogicalIfName:  "wan0",
 		SecondaryCIDRs: []string{"192.168.19.16/29"},
 	},
 	{
 		GatewayIp:      "192.168.21.1",
 		IpAddress:      "192.168.21.11/24",
-		Name:           "eth1",
-		Type:           "WAN",
 		LogicalIfName:  "wan1",
 		SecondaryCIDRs: []string{"192.168.21.16/29"},
 	},
 	{
 		Dhcp:          true,
-		Name:          "eth2",
 		LogicalIfName: "mgmt0",
-		Type:          "MANAGEMENT",
 	},
 	{
 		GatewayIp:     "192.168.22.1",
 		IpAddress:     "192.168.22.11/24",
-		Name:          "eth3",
-		Type:          "WAN",
 		LogicalIfName: "wan2",
 	},
 	{
 		GatewayIp:     "192.168.23.1",
 		IpAddress:     "192.168.23.11/24",
-		Name:          "eth4",
-		Type:          "WAN",
 		LogicalIfName: "wan3",
 	},
 }
