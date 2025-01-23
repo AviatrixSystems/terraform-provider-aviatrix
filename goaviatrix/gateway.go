@@ -252,9 +252,11 @@ type HaGateway struct {
 }
 
 type BackupLinkInfo struct {
-	ConnectionTypePublic bool   `json:"connection_type_public,omitempty"`
-	PeerIntfName         string `json:"peer_intf_name,omitempty"`
-	SelfIntfName         string `json:"self_intf_name,omitempty"`
+	ConnectionTypePublic bool     `json:"connection_type_public,omitempty"`
+	PeerIntfName         string   `json:"peer_intf_name,omitempty"`
+	SelfIntfName         string   `json:"self_intf_name,omitempty"`
+	PeerLogicalIntfName  []string `json:"peer_backup_logical_ifnames,omitempty"`
+	SelfLogicalIntfName  []string `json:"self_backup_logical_ifnames,omitempty"`
 }
 
 type PolicyRule struct {
