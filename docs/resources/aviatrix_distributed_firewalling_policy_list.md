@@ -28,6 +28,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     dst_smart_groups = [
       "82e50c85-82bf-4b3b-b9da-aaed34a3aa53"
     ]
+    tls_profile = "def000ad-6000-0000-0000-000000000001"
   }
 
   policies {
