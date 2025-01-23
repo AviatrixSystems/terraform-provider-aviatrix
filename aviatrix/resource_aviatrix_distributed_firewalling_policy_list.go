@@ -136,7 +136,7 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 						"tls_profile": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "TLS profile for the policy.",
+							Description: "TLS profile UUID for the policy.",
 						},
 					},
 				},

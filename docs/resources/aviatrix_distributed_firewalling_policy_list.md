@@ -122,7 +122,7 @@ The following arguments are supported:
     * `watch` - (Optional) Whether to enforce the policy or only watch packets. If "true" packets are only watched. This allows you to observe if the traffic impacted by this rule causes any inadvertent issues (such as traffic being dropped). Type: Boolean.
     * `logging` - (Optional) Whether to enable logging for packets that match the policy. Type: Boolean.
     * `uuid` - (Computed) UUID for the Policy.
-    * `tls_profile` - (Optional) TLS profile for policy.
+    * `tls_profile` - (Optional) TLS profile UUID for the policy.
 
 ## Import
 
