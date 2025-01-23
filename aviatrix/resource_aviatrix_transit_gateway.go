@@ -1911,7 +1911,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
 			d.Set("ha_interfaces", nil)
-			d.Set("peer_backup_logical_ifname", "")
 			d.Set("ha_device_id", "")
 			return nil
 		}
@@ -1923,19 +1922,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if !ok {
 				return fmt.Errorf("BackupLinkInfo does not contain HA Gateway: %s", haGwName)
 			}
-			peerBackupPort := backupLink.PeerIntfName
-			peerBackupPortInterface, ok := gw.IfNamesTranslation[peerBackupPort]
-			if !ok {
-				return fmt.Errorf("could not set the peer backup port logical interface name using the peer interface name %s", peerBackupPort)
-			}
-			peerBackupPortDetails := strings.Split(peerBackupPortInterface, ".")
-			portType := strings.ToLower(peerBackupPortDetails[0])
-			portIndex, err := strconv.Atoi(peerBackupPortDetails[1])
-			if err != nil {
-				return fmt.Errorf("failed to convert peerBackupPortDetails[1] to int: %w", err)
-			}
-			peerBackupLogicalName := fmt.Sprintf("%s%d", portType, portIndex)
-			if err = d.Set("peer_backup_logical_name", peerBackupLogicalName); err != nil {
+			peerBackupLogicalName := backupLink.PeerLogicalIntfName
+			if err = d.Set("peer_backup_logical_ifname", peerBackupLogicalName); err != nil {
 				return fmt.Errorf("could not set peer backup logical interface name into state: %w", err)
 			}
 			connectionTypePrivate := backupLink.ConnectionTypePublic
@@ -3832,7 +3820,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
-		if cloudType == goaviatrix.EDGEEQUINIX {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
 			vpcID, ok := d.Get("vpc_id").(string)
 			if !ok {
 				return fmt.Errorf("vpc_id is not a string")
@@ -3852,7 +3840,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
-	if cloudType == goaviatrix.EDGEEQUINIX {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
 		vpcID, ok := d.Get("vpc_id").(string)
 		if !ok {
 			return fmt.Errorf("vpc_id is not a string")
@@ -4220,10 +4208,6 @@ func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, conn
 		peerBackupPorts = append(peerBackupPorts, portName)
 	}
 	peerBackupPort := strings.Join(peerBackupPorts, ",")
-
-	fmt.Printf("peerBackupPorts: %s\n", peerBackupPorts)
-	fmt.Printf("peerBackupPort: %s\n", peerBackupPort)
-
 	backupLinkData := goaviatrix.BackupLinkInterface{
 		PeerGwName:     gwName,
 		PeerBackupPort: peerBackupPort,
@@ -4231,17 +4215,12 @@ func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, conn
 		ConnectionType: connectionType,
 	}
 
-	fmt.Println("backupLinkData:", backupLinkData)
-
 	if cloudType == goaviatrix.EDGEMEGAPORT {
 		backupLinkData.PeerBackupLogicalIfNames = peerBackupLogicalNames
 		backupLinkData.SelfBackupLogicalIfNames = peerBackupLogicalNames
 	}
 
 	backupLinkList := []goaviatrix.BackupLinkInterface{backupLinkData}
-
-	fmt.Println("backupLinkList:", backupLinkList)
-
 	backupLinkConfig, err := json.Marshal(backupLinkList)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal backup link configuration: %w", err)
@@ -4374,8 +4353,6 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 		}
 
 		ifaceData := goaviatrix.EdgeTransitInterface{
-			Name:           ifaceName,
-			Type:           ifaceType,
 			GatewayIp:      ifaceGatewayIP,
 			PublicIp:       ifacePublicIP,
 			Dhcp:           ifaceDHCP,
@@ -4384,6 +4361,9 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 		}
 		if cloudType == goaviatrix.EDGEMEGAPORT {
 			ifaceData.LogicalIfName = logicalIfName
+		} else {
+			ifaceData.Name = ifaceName
+			ifaceData.Type = ifaceType
 		}
 		interfaceList = append(interfaceList, ifaceData)
 	}

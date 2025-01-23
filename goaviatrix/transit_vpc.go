@@ -184,8 +184,8 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	if err != nil {
 		return err
 	}
-	// create the ZTP file for Equinix edge transit gateway
-	if gateway.CloudType == EDGEEQUINIX {
+	// create the ZTP file for Equinix and Megaport edge transit gateway
+	if gateway.CloudType == EDGEEQUINIX || gateway.CloudType == EDGEMEGAPORT {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
 		fileContent, err := processZtpFileContent(data.Result)
 		if err != nil {
