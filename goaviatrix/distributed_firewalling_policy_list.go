@@ -23,7 +23,7 @@ type DistributedFirewallingPolicy struct {
 	ExcludeSgOrchestration bool                              `json:"exclude_sg_orchestration,omitempty"`
 	UUID                   string                            `json:"uuid,omitempty"`
 	SystemResource         bool                              `json:"system_resource,omitempty"`
-	TlsProfile             string                            `json:"tls_profile,omitempty"`
+	TLSProfile             string                            `json:"tls_profile,omitempty"`
 }
 
 type DistributedFirewallingPolicyList struct {

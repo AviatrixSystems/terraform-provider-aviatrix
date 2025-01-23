@@ -210,8 +210,8 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.UUID = uuid.(string)
 		}
 
-		if uuid, uuidOk := policy["tls_profile"]; uuidOk {
-			distributedFirewallingPolicy.TlsProfile = uuid.(string)
+		if tlsProfileUuid, ok := policy["tls_profile"]; ok {
+			distributedFirewallingPolicy.TLSProfile = tlsProfileUuid.(string)
 		}
 
 		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
@@ -295,7 +295,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 			}
 			p["port_ranges"] = portRanges
 		}
-		p["tls_profile"] = policy.TlsProfile
+		p["tls_profile"] = policy.TLSProfile
 
 		policies = append(policies, p)
 	}
