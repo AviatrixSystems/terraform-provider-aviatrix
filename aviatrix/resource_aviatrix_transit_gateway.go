@@ -4156,7 +4156,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		CloudType:           d.Get("cloud_type").(int),
 		InsaneMode:          "yes",
 	}
-	peerBackupLogicalName, ok := d.Get("peer_backup_logical_ifname").([]string)
+	peerBackupLogicalName, ok := d.Get("peer_backup_logical_ifname").([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("peer backup logical interface name is required for HA Edge Transit Gateway")
 	}
@@ -4198,26 +4198,43 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	return transitHaGw, nil
 }
 
-func createBackupLinkConfig(gwName string, peerBackupLogicalNames []string, connectionType string, wanCount int, cloudType int) (string, error) {
+func createBackupLinkConfig(gwName string, peerBackupLogicalNames []interface{}, connectionType string, wanCount int, cloudType int) (string, error) {
 	var peerBackupPorts []string
 	for _, logicalName := range peerBackupLogicalNames {
+		// convert the logical interface name to string
+		logicalName, ok := logicalName.(string)
+		if !ok {
+			return "", fmt.Errorf("peer backup logical interface name is not a string")
+		}
 		portName, err := getInterfaceName(logicalName, wanCount) // returns eth0, eth1, etc.
 		if err != nil {
 			return "", fmt.Errorf("failed to get the peer backup port name for logical name %s: %w", logicalName, err)
 		}
 		peerBackupPorts = append(peerBackupPorts, portName)
 	}
-	peerBackupPort := strings.Join(peerBackupPorts, ",")
 	backupLinkData := goaviatrix.BackupLinkInterface{
 		PeerGwName:     gwName,
-		PeerBackupPort: peerBackupPort,
-		SelfBackupPort: peerBackupPort,
 		ConnectionType: connectionType,
 	}
 
 	if cloudType == goaviatrix.EDGEMEGAPORT {
-		backupLinkData.PeerBackupLogicalIfNames = peerBackupLogicalNames
-		backupLinkData.SelfBackupLogicalIfNames = peerBackupLogicalNames
+		// convert the peer backup logical interface name []interface{} to []string
+		var peerBackupLogicalPort []string
+		if len(peerBackupLogicalNames) != 0 {
+			for _, peerPort := range peerBackupLogicalNames {
+				peerPortStr, ok := peerPort.(string)
+				if !ok {
+					return "", fmt.Errorf("secondary_private_cidr_list contains non-string elements")
+				}
+				peerBackupLogicalPort = append(peerBackupLogicalPort, peerPortStr)
+			}
+		}
+		backupLinkData.PeerBackupLogicalIfNames = peerBackupLogicalPort
+		backupLinkData.SelfBackupLogicalIfNames = peerBackupLogicalPort
+	} else {
+		peerBackupPort := strings.Join(peerBackupPorts, ",")
+		backupLinkData.PeerBackupPort = peerBackupPort
+		backupLinkData.SelfBackupPort = peerBackupPort
 	}
 
 	backupLinkList := []goaviatrix.BackupLinkInterface{backupLinkData}
