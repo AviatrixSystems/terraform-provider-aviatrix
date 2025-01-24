@@ -1198,7 +1198,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 	tests := []struct {
 		name                   string
 		gwName                 string
-		peerBackupLogicalNames []string
+		peerBackupLogicalNames []interface{}
 		connectionType         string
 		wanCount               int
 		cloudType              int
@@ -1208,7 +1208,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Valid backup link config for AEP",
 			gwName:                 "gw1",
-			peerBackupLogicalNames: []string{"wan0", "wan1"},
+			peerBackupLogicalNames: []interface{}{"wan0", "wan1"},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
@@ -1218,17 +1218,17 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Valid backup link config for Megaport",
 			gwName:                 "gw2",
-			peerBackupLogicalNames: []string{"wan2", "wan3"},
+			peerBackupLogicalNames: []interface{}{"wan2", "wan3"},
 			connectionType:         "public",
 			wanCount:               4,
 			cloudType:              goaviatrix.EDGEMEGAPORT,
-			expected:               `[{"peer_gw_name":"gw2","peer_backup_port":"eth3,eth4","self_backup_port":"eth3,eth4","connection_type":"public","peer_backup_logical_ifnames":["wan2","wan3"],"self_backup_logical_ifnames":["wan2","wan3"]}]`,
+			expected:               `[{"peer_gw_name":"gw2","connection_type":"public","peer_backup_logical_ifnames":["wan2","wan3"],"self_backup_logical_ifnames":["wan2","wan3"]}]`,
 			expectedErr:            nil,
 		},
 		{
 			name:                   "Invalid logical name in backup link config",
 			gwName:                 "gw3",
-			peerBackupLogicalNames: []string{"wan0", "invalid_eth"},
+			peerBackupLogicalNames: []interface{}{"wan0", "invalid_eth"},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
@@ -1238,11 +1238,11 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Empty logical names in backup link config",
 			gwName:                 "gw4",
-			peerBackupLogicalNames: []string{},
+			peerBackupLogicalNames: []interface{}{},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
-			expected:               `[{"peer_gw_name":"gw4","peer_backup_port":"","self_backup_port":"","connection_type":"private"}]`,
+			expected:               `[{"peer_gw_name":"gw4","connection_type":"private"}]`,
 			expectedErr:            nil,
 		},
 	}

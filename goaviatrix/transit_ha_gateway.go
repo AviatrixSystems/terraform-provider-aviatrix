@@ -36,8 +36,8 @@ type TransitHaGateway struct {
 
 type BackupLinkInterface struct {
 	PeerGwName               string   `json:"peer_gw_name"`
-	PeerBackupPort           string   `json:"peer_backup_port"`
-	SelfBackupPort           string   `json:"self_backup_port"`
+	PeerBackupPort           string   `json:"peer_backup_port,omitempty"`
+	SelfBackupPort           string   `json:"self_backup_port,omitempty"`
 	ConnectionType           string   `json:"connection_type"`
 	PeerBackupLogicalIfNames []string `json:"peer_backup_logical_ifnames,omitempty"`
 	SelfBackupLogicalIfNames []string `json:"self_backup_logical_ifnames,omitempty"`
@@ -52,7 +52,7 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 		return "", err
 	}
 	// create the ZTP file for Equinix Edge transit gateway
-	if transitHaGateway.CloudType == EDGEEQUINIX {
+	if transitHaGateway.CloudType == EDGEEQUINIX || transitHaGateway.CloudType == EDGEMEGAPORT {
 		fileName := getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
 		err = createZtpFile(fileName, data.Result)
 		if err != nil {
