@@ -1263,3 +1263,143 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateInterfaceName(t *testing.T) {
+	tests := []struct {
+		name      string
+		intfType  string
+		intfIndex int
+		wanCount  int
+		expected  string
+		expectErr bool
+	}{
+		{
+			name:      "First WAN interface",
+			intfType:  "WAN",
+			intfIndex: 0,
+			wanCount:  2,
+			expected:  "eth0",
+			expectErr: false,
+		},
+		{
+			name:      "Second WAN interface",
+			intfType:  "WAN",
+			intfIndex: 1,
+			wanCount:  2,
+			expected:  "eth1",
+			expectErr: false,
+		},
+		{
+			name:      "Third WAN interface",
+			intfType:  "WAN",
+			intfIndex: 2,
+			wanCount:  2,
+			expected:  "eth3",
+			expectErr: false,
+		},
+		{
+			name:      "First MANAGEMENT interface",
+			intfType:  "MANAGEMENT",
+			intfIndex: 0,
+			wanCount:  2,
+			expected:  "eth2",
+			expectErr: false,
+		},
+		{
+			name:      "Invalid interface type",
+			intfType:  "INVALID",
+			intfIndex: 0,
+			wanCount:  2,
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := calculateInterfaceName(tt.intfType, tt.intfIndex, tt.wanCount)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("Expected %s, got %s", tt.expected, result)
+				}
+			}
+		})
+	}
+}
+
+func TestParseInterface(t *testing.T) {
+	tests := []struct {
+		name      string
+		ifaceInfo map[string]interface{}
+		wanCount  int
+		cloudType int
+		expected  goaviatrix.EdgeTransitInterface
+		expectErr bool
+	}{
+		{
+			name: "Valid WAN interface",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname":              "wan0",
+				"gateway_ip":                  "192.168.1.1",
+				"ip_address":                  "192.168.1.2",
+				"public_ip":                   "203.0.113.1",
+				"dhcp":                        true,
+				"secondary_private_cidr_list": []interface{}{"10.0.0.0/16", "10.1.0.0/16"},
+			},
+			wanCount:  1,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected: goaviatrix.EdgeTransitInterface{
+				GatewayIp:      "192.168.1.1",
+				PublicIp:       "203.0.113.1",
+				Dhcp:           true,
+				IpAddress:      "192.168.1.2",
+				SecondaryCIDRs: []string{"10.0.0.0/16", "10.1.0.0/16"},
+				LogicalIfName:  "wan0",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Valid MANAGEMENT interface",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": "mgmt0",
+				"dhcp":           true,
+			},
+			wanCount:  1,
+			cloudType: 0,
+			expected: goaviatrix.EdgeTransitInterface{
+				Dhcp: true,
+				Name: "eth2",
+				Type: "MANAGEMENT",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Invalid logical_ifname",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": 12345, // Invalid type
+			},
+			wanCount:  1,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := parseInterface(tt.ifaceInfo, tt.wanCount, tt.cloudType)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}

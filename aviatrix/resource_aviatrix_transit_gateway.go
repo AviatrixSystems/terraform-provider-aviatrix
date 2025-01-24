@@ -1884,9 +1884,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		// set management egress ip prefix list
 		if gw.ManagementEgressIPPrefix == "" {
-			d.Set("management_egress_ip_prefix_list", nil)
+			_ = d.Set("management_egress_ip_prefix_list", nil)
 		} else {
-			d.Set("management_egress_ip_prefix_list", strings.Split(gw.ManagementEgressIPPrefix, ","))
+			_ = d.Set("management_egress_ip_prefix_list", strings.Split(gw.ManagementEgressIPPrefix, ","))
 		}
 
 		// set the ha_attributes to empty if ha_interfaces is not provided for edge
@@ -2870,9 +2870,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				Interfaces: interfaces,
 			}
 
-			managementEgressIpPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
-			if len(managementEgressIpPrefixList) > 0 {
-				gateway.ManagementEgressIpPrefix = strings.Join(managementEgressIpPrefixList, ",")
+			managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+			if len(managementEgressIPPrefixList) > 0 {
+				gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
 			}
 			err = client.UpdateEdgeGateway(gateway)
 			if err != nil {
@@ -3914,9 +3914,9 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
 		}
-		managementEgressIpPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
-		if len(managementEgressIpPrefixList) > 0 {
-			gateway.ManagementEgressIpPrefix = strings.Join(managementEgressIpPrefixList, ",")
+		managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+		if len(managementEgressIPPrefixList) > 0 {
+			gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
 		}
 	}
 
@@ -4046,10 +4046,48 @@ func extractInterfaceTypeAndIndex(logicalIfName string) (string, int, error) {
 	return intfType, intfIndex, nil
 }
 
+func isValidInterfaceName(name string) bool {
+	return name != "" && (strings.HasPrefix(name, "wan") || strings.HasPrefix(name, "mgmt"))
+}
+
+func calculateInterfaceName(intfType string, intfIndex, wanCount int) (string, error) {
+	var num int
+
+	switch intfType {
+	case "WAN":
+		num = calculateWANInterfaceNumber(intfIndex)
+	case "MANAGEMENT":
+		num = calculateMgmtInterfaceNumber(intfIndex, wanCount)
+	default:
+		return "", errors.New("unexpected interface type")
+	}
+
+	interfaceName := fmt.Sprintf("eth%d", num)
+	log.Printf("Mapping interface %s%d to port %s", intfType, intfIndex, interfaceName)
+	return interfaceName, nil
+}
+
+func calculateWANInterfaceNumber(intfIndex int) int {
+	if intfIndex == 0 {
+		return 0
+	}
+	if intfIndex == 1 {
+		return 1
+	}
+	return intfIndex + 1
+}
+
+func calculateMgmtInterfaceNumber(intfIndex, wanCount int) int {
+	if intfIndex == 0 {
+		return 2
+	}
+	return wanCount + intfIndex
+}
+
 // get the interface name (ethX) from logical interface name and counts
 func getInterfaceName(logicalIfName string, wanCount int) (string, error) {
 	// check if the logical interface name is valid
-	if (logicalIfName == "" || !strings.HasPrefix(logicalIfName, "wan")) && !strings.HasPrefix(logicalIfName, "mgmt") {
+	if !isValidInterfaceName(logicalIfName) {
 		return "", fmt.Errorf("invalid logical interface name: %s", logicalIfName)
 	}
 
@@ -4058,34 +4096,10 @@ func getInterfaceName(logicalIfName string, wanCount int) (string, error) {
 		return "", fmt.Errorf("failed to extract interface type and index: %w", err)
 	}
 
-	var num int
-	// Determine the interface name based on the type and index
-	switch intfType {
-	case "WAN":
-		// WAN interfaces start from eth0
-		if intfIndex == 0 {
-			num = 0
-		} else {
-			// Transit case: wan, wan, mgmt, remaining wans, remaining mgmts if any
-			if intfIndex == 1 {
-				num = 1 // Second WAN is eth1
-			} else {
-				num = intfIndex + 1
-			}
-		}
-	case "MANAGEMENT":
-		// Management interfaces start from eth2
-		if intfIndex == 0 {
-			num = 2
-		} else {
-			num = wanCount + intfIndex
-		}
-	default:
-		return "", errors.New("unexpected interface type")
+	interfaceName, err := calculateInterfaceName(intfType, intfIndex, wanCount)
+	if err != nil {
+		return "", err
 	}
-
-	interfaceName := fmt.Sprintf("eth%d", num)
-	log.Printf("Mapping interface %s%d to port %s", intfType, intfIndex, interfaceName)
 	return interfaceName, nil
 }
 
@@ -4297,91 +4311,12 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 		if !ok {
 			return "", fmt.Errorf("interface is not a map[string]interface{}")
 		}
-		// Initialize the interface fields with default values
-		var ifaceName, ifaceType, logicalIfName, ifaceGatewayIP, ifaceIP, ifacePublicIP string
-		var ifaceDHCP bool
-		var secondaryCIDRs []string
-		// Check and set 'type'
-		if val, exists := ifaceInfo["logical_ifname"]; exists && val != nil {
-			logicalIfName, ok = val.(string)
-			if !ok {
-				return "", fmt.Errorf("interface type is not a string")
-			}
-		}
-		// get the interface name using the logical interface name wan0 -> eth0, wan1 -> eth1, etc.
-		ifaceName, err := getInterfaceName(logicalIfName, wanCount)
+
+		ifaceData, err := parseInterface(ifaceInfo, wanCount, cloudType)
 		if err != nil {
-			return "", fmt.Errorf("failed to get the interface name: %w", err)
-		}
-		// get the interface type from the logical interface name
-		ifaceType, _, err = extractInterfaceTypeAndIndex(logicalIfName)
-		if err != nil {
-			return "", fmt.Errorf("failed to extract interface type and index: %w", err)
-		}
-		// Check and set 'interface name'
-		if val, exists := ifaceInfo["name"]; exists && val != nil {
-			ifaceName, ok = val.(string)
-			if !ok {
-				return "", fmt.Errorf("interface name is not a string")
-			}
-		}
-		// Check and set 'gateway_ip'
-		if val, exists := ifaceInfo["gateway_ip"]; exists && val != nil {
-			ifaceGatewayIP, ok = val.(string)
-			if !ok {
-				return "", fmt.Errorf("gateway_ip is not a string")
-			}
-		}
-		// Check and set 'ip_address'
-		if val, exists := ifaceInfo["ip_address"]; exists && val != nil {
-			ifaceIP, ok = val.(string)
-			if !ok {
-				return "", fmt.Errorf("ip address is not a string")
-			}
-		}
-		// Check and set 'public_ip'
-		if val, exists := ifaceInfo["public_ip"]; exists && val != nil {
-			ifacePublicIP, ok = val.(string)
-			if !ok {
-				return "", fmt.Errorf("public_ip is not a string")
-			}
-		}
-		// Check and set 'dhcp'
-		if val, exists := ifaceInfo["dhcp"]; exists && val != nil {
-			ifaceDHCP, ok = val.(bool)
-			if !ok {
-				return "", fmt.Errorf("dhcp is not a bool")
-			}
-		}
-		// Check and set 'secondary_private_cidr_list'
-		if val, exists := ifaceInfo["secondary_private_cidr_list"]; exists && val != nil {
-			ifaceSecondaryCIDRs, ok := val.([]interface{})
-			if !ok {
-				return "", fmt.Errorf("secondary_private_cidr_list is not a valid list")
-			}
-			// Convert each element to a string and append to secondaryCIDRs
-			for _, cidr := range ifaceSecondaryCIDRs {
-				cidrStr, ok := cidr.(string)
-				if !ok {
-					return "", fmt.Errorf("secondary_private_cidr_list contains non-string elements")
-				}
-				secondaryCIDRs = append(secondaryCIDRs, cidrStr)
-			}
+			return "", fmt.Errorf("failed to parse interface: %w", err)
 		}
 
-		ifaceData := goaviatrix.EdgeTransitInterface{
-			GatewayIp:      ifaceGatewayIP,
-			PublicIp:       ifacePublicIP,
-			Dhcp:           ifaceDHCP,
-			IpAddress:      ifaceIP,
-			SecondaryCIDRs: secondaryCIDRs,
-		}
-		if cloudType == goaviatrix.EDGEMEGAPORT {
-			ifaceData.LogicalIfName = logicalIfName
-		} else {
-			ifaceData.Name = ifaceName
-			ifaceData.Type = ifaceType
-		}
 		interfaceList = append(interfaceList, ifaceData)
 	}
 	interfaceListJson, err := json.Marshal(interfaceList)
@@ -4390,6 +4325,98 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 	}
 	interfacesEncoded := b64.StdEncoding.EncodeToString(interfaceListJson)
 	return interfacesEncoded, nil
+}
+
+func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (goaviatrix.EdgeTransitInterface, error) {
+	var (
+		logicalIfName, ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
+		ifaceDHCP                                                                   bool
+		secondaryCIDRs                                                              []string
+	)
+
+	logicalIfName, err := getStringAttribute(ifaceInfo, "logical_ifname")
+	if err != nil {
+		return goaviatrix.EdgeTransitInterface{}, fmt.Errorf("logical_ifname: %w", err)
+	}
+
+	ifaceName, err = getInterfaceName(logicalIfName, wanCount)
+	if err != nil {
+		return goaviatrix.EdgeTransitInterface{}, fmt.Errorf("failed to get the interface name: %w", err)
+	}
+
+	ifaceType, _, err = extractInterfaceTypeAndIndex(logicalIfName)
+	if err != nil {
+		return goaviatrix.EdgeTransitInterface{}, fmt.Errorf("failed to extract interface type and index: %w", err)
+	}
+
+	ifaceGatewayIP, _ = getStringAttribute(ifaceInfo, "gateway_ip")
+	ifaceIP, _ = getStringAttribute(ifaceInfo, "ip_address")
+	ifacePublicIP, _ = getStringAttribute(ifaceInfo, "public_ip")
+	ifaceDHCP, _ = getBoolAttribute(ifaceInfo, "dhcp")
+	secondaryCIDRs, _ = getStringListAttribute(ifaceInfo, "secondary_private_cidr_list")
+
+	ifaceData := goaviatrix.EdgeTransitInterface{
+		GatewayIp:      ifaceGatewayIP,
+		PublicIp:       ifacePublicIP,
+		Dhcp:           ifaceDHCP,
+		IpAddress:      ifaceIP,
+		SecondaryCIDRs: secondaryCIDRs,
+	}
+
+	if cloudType == goaviatrix.EDGEMEGAPORT {
+		ifaceData.LogicalIfName = logicalIfName
+	} else {
+		ifaceData.Name = ifaceName
+		ifaceData.Type = ifaceType
+	}
+
+	return ifaceData, nil
+}
+
+func getStringAttribute(data map[string]interface{}, key string) (string, error) {
+	val, exists := data[key]
+	if !exists || val == nil {
+		return "", nil
+	}
+	str, ok := val.(string)
+	if !ok {
+		return "", fmt.Errorf("%s is not a string", key)
+	}
+	return str, nil
+}
+
+func getBoolAttribute(data map[string]interface{}, key string) (bool, error) {
+	val, exists := data[key]
+	if !exists || val == nil {
+		return false, nil
+	}
+	boolean, ok := val.(bool)
+	if !ok {
+		return false, fmt.Errorf("%s is not a bool", key)
+	}
+	return boolean, nil
+}
+
+func getStringListAttribute(data map[string]interface{}, key string) ([]string, error) {
+	val, exists := data[key]
+	if !exists || val == nil {
+		return nil, nil
+	}
+	list, ok := val.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("%s is not a valid list", key)
+	}
+
+	result := make([]string, len(list))
+	for i, item := range list {
+		str, ok := item.(string)
+		if !ok {
+			return nil, fmt.Errorf("%s contains non-string elements", key)
+		}
+		result[i] = str
+	}
+
+	return result, nil
 }
 
 func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface) []map[string]interface{} {
