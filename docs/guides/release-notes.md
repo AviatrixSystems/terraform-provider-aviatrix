@@ -16,6 +16,14 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
+## 8.0
+### Notes:
+- Supported Controller version: **UserConnect-8.0.0**
+
+### Enhancements:
+1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile is a DCF policy.
+
+
 ## 3.2.1
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4996**
