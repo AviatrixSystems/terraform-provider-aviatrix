@@ -230,25 +230,26 @@ type Gateway struct {
 }
 
 type HaGateway struct {
-	GwName              string                 `json:"vpc_name"`
-	CloudType           int                    `json:"cloud_type"`
-	GwSize              string                 `json:"vpc_size"`
-	VpcNet              string                 `json:"public_subnet"`
-	PublicIP            string                 `json:"public_ip"`
-	PrivateIP           string                 `json:"private_ip"`
-	ReuseEip            string                 `json:"reuse_eip,omitempty"`
-	CloudnGatewayInstID string                 `json:"cloudn_gateway_inst_id"`
-	GatewayZone         string                 `json:"gateway_zone"`
-	InsaneMode          string                 `json:"high_perf"`
-	EnablePrivateOob    bool                   `json:"private_oob"`
-	OobManagementSubnet string                 `json:"oob_mgmt_subnet"`
-	GwSecurityGroupID   string                 `json:"gw_security_group_id"`
-	FaultDomain         string                 `json:"fault_domain"`
-	ImageVersion        string                 `json:"gw_image_name"`
-	SoftwareVersion     string                 `json:"gw_software_version"`
-	HaBgpLanInterfaces  []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
-	DeviceID            string                 `json:"edge_csp_device_id,omitempty"`
-	Interfaces          []EdgeTransitInterface `json:"interfaces,omitempty"`
+	GwName                   string                 `json:"vpc_name"`
+	CloudType                int                    `json:"cloud_type"`
+	GwSize                   string                 `json:"vpc_size"`
+	VpcNet                   string                 `json:"public_subnet"`
+	PublicIP                 string                 `json:"public_ip"`
+	PrivateIP                string                 `json:"private_ip"`
+	ReuseEip                 string                 `json:"reuse_eip,omitempty"`
+	CloudnGatewayInstID      string                 `json:"cloudn_gateway_inst_id"`
+	GatewayZone              string                 `json:"gateway_zone"`
+	InsaneMode               string                 `json:"high_perf"`
+	EnablePrivateOob         bool                   `json:"private_oob"`
+	OobManagementSubnet      string                 `json:"oob_mgmt_subnet"`
+	GwSecurityGroupID        string                 `json:"gw_security_group_id"`
+	FaultDomain              string                 `json:"fault_domain"`
+	ImageVersion             string                 `json:"gw_image_name"`
+	SoftwareVersion          string                 `json:"gw_software_version"`
+	HaBgpLanInterfaces       []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`
+	DeviceID                 string                 `json:"edge_csp_device_id,omitempty"`
+	Interfaces               []EdgeTransitInterface `json:"interfaces,omitempty"`
+	ManagementEgressIPPrefix string                 `json:"mgmt_egress_ip,omitempty"`
 }
 
 type BackupLinkInfo struct {
