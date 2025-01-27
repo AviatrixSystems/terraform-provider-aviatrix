@@ -133,6 +133,11 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Computed:    true,
 							Description: "UUID of the policy.",
 						},
+						"tls_profile": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "TLS profile UUID for the policy.",
+						},
 					},
 				},
 			},
@@ -203,6 +208,14 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 
 		if uuid, uuidOk := policy["uuid"]; uuidOk {
 			distributedFirewallingPolicy.UUID = uuid.(string)
+		}
+
+		if tlsProfileUUID, ok := policy["tls_profile"]; ok {
+			uuidStr, ok := tlsProfileUUID.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid type for tls_profile, should be a string")
+			}
+			distributedFirewallingPolicy.TLSProfile = uuidStr
 		}
 
 		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
@@ -286,6 +299,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 			}
 			p["port_ranges"] = portRanges
 		}
+		p["tls_profile"] = policy.TLSProfile
 
 		policies = append(policies, p)
 	}
