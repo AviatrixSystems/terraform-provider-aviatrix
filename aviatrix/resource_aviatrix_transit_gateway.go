@@ -900,6 +900,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ha_management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix for HA EAT.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -1940,8 +1948,15 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
 		}
+		// set device id
 		if gw.HaGw.DeviceID != "" {
 			d.Set("ha_device_id", gw.HaGw.DeviceID)
+		}
+		// set ha management egress ip prefix list
+		if gw.HaGw.ManagementEgressIPPrefix == "" {
+			_ = d.Set("management_egress_ip_prefix_list", nil)
+		} else {
+			_ = d.Set("management_egress_ip_prefix_list", strings.Split(gw.HaGw.ManagementEgressIPPrefix, ","))
 		}
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -2940,7 +2955,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		// Update ha interfaces for EAT gateway
-		if d.HasChange("ha_interfaces") {
+		if d.HasChanges("ha_interfaces", "ha_management_egress_ip_prefix_list") {
 			haInterfaceList, ok := d.Get("ha_interfaces").([]interface{})
 			if !ok {
 				return fmt.Errorf("invalid ha_interfaces for EAT HA gateway")
@@ -2953,6 +2968,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				gateway := &goaviatrix.TransitVpc{
 					GwName:     d.Get("gw_name").(string) + "-hagw",
 					Interfaces: haInterfaces,
+				}
+				managementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
+				if len(managementEgressIPPrefixList) > 0 {
+					gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
