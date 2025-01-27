@@ -28,6 +28,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     dst_smart_groups = [
       "82e50c85-82bf-4b3b-b9da-aaed34a3aa53"
     ]
+    tls_profile = "def000ad-6000-0000-0000-000000000001"
   }
 
   policies {
@@ -121,6 +122,7 @@ The following arguments are supported:
     * `watch` - (Optional) Whether to enforce the policy or only watch packets. If "true" packets are only watched. This allows you to observe if the traffic impacted by this rule causes any inadvertent issues (such as traffic being dropped). Type: Boolean.
     * `logging` - (Optional) Whether to enable logging for packets that match the policy. Type: Boolean.
     * `uuid` - (Computed) UUID for the Policy.
+    * `tls_profile` - (Optional) TLS profile UUID for the policy.
 
 ## Import
 
