@@ -39,6 +39,9 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "192.168.99.14/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "192.168.88.14/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.3.ip_address", "192.168.77.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "vlan.0.parent_logical_interface_name", "lan0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan.0.vlan_id", "21"),
+					resource.TestCheckResourceAttr(resourceName, "vlan.0.ip_address", "10.220.21.11/24"),
 				),
 			},
 			{
@@ -96,8 +99,19 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 
 		interfaces {
 			enable_dhcp   = true
-			type   = "MANAGEMENT"
-			index  = 0
+			logical_ifname = "mgmt0"
+		}
+
+		vlan {
+			parent_logical_interface_name = "lan0"
+			vlan_id                        = 21
+			ip_address                     = "10.220.21.11/24"
+		}
+
+		vlan {
+			parent_logical_interface_name = "lan0"
+			vlan_id                        = 21
+			ip_address                     = "10.220.21.11/24"
 		}
 	}
  `, accountName, gwName, siteId, path)

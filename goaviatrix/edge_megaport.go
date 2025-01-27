@@ -68,14 +68,14 @@ type EdgeMegaportInterface struct {
 }
 
 type EdgeMegaportVlan struct {
-	ParentInterface string `json:"parent_interface"`
-	VlanId          string `json:"vlan_id"`
-	IpAddr          string `json:"ipaddr"`
-	GatewayIp       string `json:"gateway_ip,omitempty"`
-	PeerIpAddr      string `json:"peer_ipaddr,omitempty"`
-	PeerGatewayIp   string `json:"peer_gateway_ip,omitempty"`
-	VirtualIp       string `json:"virtual_ip,omitempty"`
-	Tag             string `json:"tag,omitempty"`
+	ParentLogicalInterface string `json:"parent_logical_interface"`
+	VlanID                 string `json:"vlan_id"`
+	IPAddr                 string `json:"ipaddr"`
+	GatewayIP              string `json:"gateway_ip,omitempty"`
+	PeerIPAddr             string `json:"peer_ipaddr,omitempty"`
+	PeerGatewayIP          string `json:"peer_gateway_ip,omitempty"`
+	VirtualIP              string `json:"virtual_ip,omitempty"`
+	Tag                    string `json:"tag,omitempty"`
 }
 
 type EdgeMegaportResp struct {
@@ -86,8 +86,8 @@ type EdgeMegaportResp struct {
 	ManagementEgressIpPrefix           string              `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool                `json:"mgmt_over_private_network"`
 	LanInterfaceIpPrefix               string              `json:"lan_ip"`
-	ManagementInterfaceIpPrefix        string              `json:"mgmt_ip"`
-	ManagementDefaultGatewayIp         string              `json:"mgmt_default_gateway"`
+	ManagementInterfaceIPPrefix        string              `json:"mgmt_ip"`
+	ManagementDefaultGatewayIP         string              `json:"mgmt_default_gateway"`
 	DnsServerIp                        string              `json:"dns_server_ip"`
 	SecondaryDnsServerIp               string              `json:"dns_server_ip_secondary"`
 	Dhcp                               bool                `json:"dhcp"`

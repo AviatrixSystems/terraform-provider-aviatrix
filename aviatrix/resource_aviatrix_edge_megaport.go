@@ -272,10 +272,10 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 				Description: "VLAN configuration.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"parent_interface_name": {
+						"parent_logical_interface_name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Parent interface name.",
+							Description: "Parent logical interface name e.g. lan0",
 						},
 						"vlan_id": {
 							Type:        schema.TypeInt,
@@ -422,16 +422,20 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 		vlan1 := vlan0.(map[string]interface{})
 
 		vlan2 := &goaviatrix.EdgeMegaportVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
+			ParentLogicalInterface: vlan1["parent_logical_interface_name"].(string),
+			IPAddr:                 vlan1["ip_address"].(string),
+			GatewayIP:              vlan1["gateway_ip"].(string),
+			PeerIPAddr:             vlan1["peer_ip_address"].(string),
+			PeerGatewayIP:          vlan1["peer_gateway_ip"].(string),
+			VirtualIP:              vlan1["vrrp_virtual_ip"].(string),
+			Tag:                    vlan1["tag"].(string),
 		}
 
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+		vlandID, ok := vlan1["vlan_id"].(int)
+		if !ok {
+			return nil, fmt.Errorf("invalid or missing value for 'vlan_id'")
+		}
+		vlan2.VlanID = strconv.Itoa(vlandID)
 
 		edgeMegaport.VlanList = append(edgeMegaport.VlanList, vlan2)
 	}
@@ -778,7 +782,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
 				vlan1 := make(map[string]interface{})
-				vlan1["parent_interface_name"] = vlan0.ParentInterface
+				vlan1["parent_logical_interface_name"] = vlan0.ParentInterface
 				vlan1["ip_address"] = vlan0.IpAddr
 				vlan1["gateway_ip"] = vlan0.GatewayIp
 				vlan1["peer_ip_address"] = vlan0.PeerIpAddr
