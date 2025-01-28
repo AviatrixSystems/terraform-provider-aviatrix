@@ -85,6 +85,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Size of the gateway instance.",
+				DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
+					// Suppress the diff if the old value is "UNKNOWN"
+					return old == "UNKNOWN"
+				},
 			},
 			"subnet": {
 				Type:         schema.TypeString,
@@ -1392,7 +1396,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				Zone:          haZone,
 				Eip:           d.Get("ha_eip").(string),
 				InsaneMode:    "no",
-				BgpLanVpcId:   strings.Join(haBgpLanVpcID, ","),
+				BgpLanVpcID:   strings.Join(haBgpLanVpcID, ","),
 				BgpLanSubnet:  strings.Join(haBgpLanSpecifySubnet, ","),
 			}
 
@@ -1448,7 +1452,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 
 			if bgpOverLan && goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
-				transitHaGw.BgpLanVpcId = strings.Join(haBgpLanVpcID, ",")
+				transitHaGw.BgpLanVpcID = strings.Join(haBgpLanVpcID, ",")
 				transitHaGw.BgpLanSubnet = strings.Join(haBgpLanSpecifySubnet, ",")
 			}
 
@@ -2513,7 +2517,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_bgp_over_lan").(bool) {
 			// transitGw.BgpOverLan = "on"
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-				transitHaGw.BgpLanVpcId = strings.Join(haBgpLanVpcID, ",")
+				transitHaGw.BgpLanVpcID = strings.Join(haBgpLanVpcID, ",")
 				transitHaGw.BgpLanSubnet = strings.Join(haBgpLanSpecifySubnet, ",")
 			}
 		}
@@ -3971,7 +3975,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if err != nil {
 			return fmt.Errorf("failed to get the eip map details: %w", err)
 		}
-		gateway.EipMap = eipMapList
+		if cloudType == goaviatrix.EDGEMEGAPORT {
+			gateway.LogicalEipMap = eipMapList
+		} else {
+			gateway.EipMap = eipMapList
+		}
 		// update EIP map
 		err = client.UpdateEdgeGateway(gateway)
 		if err != nil {
@@ -4227,6 +4235,10 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		if !ok {
 			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
 		}
+	}
+	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
+	if len(haManagementEgressIPPrefixList) > 0 {
+		transitHaGw.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
 	}
 	return transitHaGw, nil
 }

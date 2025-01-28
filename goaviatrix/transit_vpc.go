@@ -272,6 +272,10 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 	if gateway.LogicalEipMap != "" {
 		form["logical_intf_eip_map"] = gateway.LogicalEipMap
 	}
+
+	if gateway.ManagementEgressIPPrefix != "" {
+		form["mgmt_egress_ip"] = gateway.ManagementEgressIPPrefix
+	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
