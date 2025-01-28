@@ -68,14 +68,14 @@ type EdgeMegaportInterface struct {
 }
 
 type EdgeMegaportVlan struct {
-	ParentInterface string `json:"parent_interface"`
-	VlanId          string `json:"vlan_id"`
-	IPAddr          string `json:"ipaddr"`
-	GatewayIP       string `json:"gateway_ip,omitempty"`
-	PeerIPAddr      string `json:"peer_ipaddr,omitempty"`
-	PeerGatewayIP   string `json:"peer_gateway_ip,omitempty"`
-	VirtualIP       string `json:"virtual_ip,omitempty"`
-	Tag             string `json:"tag,omitempty"`
+	ParentLogicalInterface string `json:"parent_logical_interface"`
+	VlanID                 string `json:"vlan_id"`
+	IPAddr                 string `json:"ipaddr"`
+	GatewayIP              string `json:"gateway_ip,omitempty"`
+	PeerIPAddr             string `json:"peer_ipaddr,omitempty"`
+	PeerGatewayIP          string `json:"peer_gateway_ip,omitempty"`
+	VirtualIP              string `json:"virtual_ip,omitempty"`
+	Tag                    string `json:"tag,omitempty"`
 }
 
 type EdgeMegaportResp struct {

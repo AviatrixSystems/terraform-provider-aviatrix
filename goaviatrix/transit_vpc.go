@@ -67,7 +67,9 @@ type TransitVpc struct {
 	Interfaces                   string   `json:"interfaces,omitempty"`
 	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
 	EipMap                       string   `json:"eip_map,omitempty"`
+	LogicalEipMap                string   `json:"logical_intf_eip_map,omitempty"`
 	ZtpFileDownloadPath          string   `json:"-"`
+	ManagementEgressIPPrefix     string   `json:"mgmt_egress_ip,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -146,6 +148,7 @@ type EdgeTransitInterface struct {
 	IpAddress      string   `json:"ipaddr,omitempty"`
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
+	LogicalIfName  string   `json:"logical_ifname,omitempty"`
 }
 
 type EipMap struct {
@@ -181,8 +184,8 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	if err != nil {
 		return err
 	}
-	// create the ZTP file for Equinix edge transit gateway
-	if gateway.CloudType == EDGEEQUINIX {
+	// create the ZTP file for Equinix and Megaport edge transit gateway
+	if gateway.CloudType == EDGEEQUINIX || gateway.CloudType == EDGEMEGAPORT {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
 		fileContent, err := processZtpFileContent(data.Result)
 		if err != nil {
@@ -264,6 +267,14 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 
 	if gateway.EipMap != "" {
 		form["eip_map"] = gateway.EipMap
+	}
+
+	if gateway.LogicalEipMap != "" {
+		form["logical_intf_eip_map"] = gateway.LogicalEipMap
+	}
+
+	if gateway.ManagementEgressIPPrefix != "" {
+		form["mgmt_egress_ip"] = gateway.ManagementEgressIPPrefix
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
