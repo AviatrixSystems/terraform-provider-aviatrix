@@ -1958,9 +1958,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		// set ha management egress ip prefix list
 		if gw.HaGw.ManagementEgressIPPrefix == "" {
-			_ = d.Set("management_egress_ip_prefix_list", nil)
+			_ = d.Set("ha_management_egress_ip_prefix_list", nil)
 		} else {
-			_ = d.Set("management_egress_ip_prefix_list", strings.Split(gw.HaGw.ManagementEgressIPPrefix, ","))
+			_ = d.Set("ha_management_egress_ip_prefix_list", strings.Split(gw.HaGw.ManagementEgressIPPrefix, ","))
 		}
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -2973,9 +2973,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					GwName:     d.Get("gw_name").(string) + "-hagw",
 					Interfaces: haInterfaces,
 				}
-				managementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
-				if len(managementEgressIPPrefixList) > 0 {
-					gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
+				haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
+				if len(haManagementEgressIPPrefixList) > 0 {
+					gateway.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
