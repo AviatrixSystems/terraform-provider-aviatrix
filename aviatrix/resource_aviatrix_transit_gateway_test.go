@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -20,33 +21,28 @@ var interfaces = []interface{}{
 	map[string]interface{}{
 		"gateway_ip":                  "192.168.20.1",
 		"ip_address":                  "192.168.20.11/24",
-		"type":                        "WAN",
-		"index":                       0,
+		"logical_ifname":              "wan0",
 		"secondary_private_cidr_list": []interface{}{"192.168.19.16/29"},
 	},
 	map[string]interface{}{
 		"gateway_ip":                  "192.168.21.1",
 		"ip_address":                  "192.168.21.11/24",
-		"type":                        "WAN",
-		"index":                       1,
+		"logical_ifname":              "wan1",
 		"secondary_private_cidr_list": []interface{}{"192.168.21.16/29"},
 	},
 	map[string]interface{}{
-		"dhcp":  true,
-		"type":  "MANAGEMENT",
-		"index": 0,
+		"dhcp":           true,
+		"logical_ifname": "mgmt0",
 	},
 	map[string]interface{}{
-		"gateway_ip": "192.168.22.1",
-		"ip_address": "192.168.22.11/24",
-		"type":       "WAN",
-		"index":      2,
+		"gateway_ip":     "192.168.22.1",
+		"ip_address":     "192.168.22.11/24",
+		"logical_ifname": "wan2",
 	},
 	map[string]interface{}{
-		"gateway_ip": "192.168.23.1",
-		"ip_address": "192.168.23.11/24",
-		"type":       "WAN",
-		"index":      3,
+		"gateway_ip":     "192.168.23.1",
+		"ip_address":     "192.168.23.11/24",
+		"logical_ifname": "wan3",
 	},
 }
 
@@ -54,33 +50,28 @@ var expectedInterfaceDetails = []goaviatrix.EdgeTransitInterface{
 	{
 		GatewayIp:      "192.168.20.1",
 		IpAddress:      "192.168.20.11/24",
-		Name:           "eth0",
-		Type:           "WAN",
+		LogicalIfName:  "wan0",
 		SecondaryCIDRs: []string{"192.168.19.16/29"},
 	},
 	{
 		GatewayIp:      "192.168.21.1",
 		IpAddress:      "192.168.21.11/24",
-		Name:           "eth1",
-		Type:           "WAN",
+		LogicalIfName:  "wan1",
 		SecondaryCIDRs: []string{"192.168.21.16/29"},
 	},
 	{
-		Dhcp: true,
-		Name: "eth2",
-		Type: "MANAGEMENT",
+		Dhcp:          true,
+		LogicalIfName: "mgmt0",
 	},
 	{
-		GatewayIp: "192.168.22.1",
-		IpAddress: "192.168.22.11/24",
-		Name:      "eth3",
-		Type:      "WAN",
+		GatewayIp:     "192.168.22.1",
+		IpAddress:     "192.168.22.11/24",
+		LogicalIfName: "wan2",
 	},
 	{
-		GatewayIp: "192.168.23.1",
-		IpAddress: "192.168.23.11/24",
-		Name:      "eth4",
-		Type:      "WAN",
+		GatewayIp:     "192.168.23.1",
+		IpAddress:     "192.168.23.11/24",
+		LogicalIfName: "wan3",
 	},
 }
 
@@ -295,14 +286,11 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAEP, "device_id", os.Getenv("AEP_DEVICE_ID")),
 						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.ip_address", "192.168.20.11/24"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "interfaces.0.logical_ifname", "wan0"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.ip_address", "192.168.20.12/24"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.index", "0"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_port_type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_port_index", "1"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.logical_ifname", "wan0"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_logical_ifname", "wan1"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "peer_connection_type", "private"),
 					),
 				},
@@ -339,14 +327,11 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameEquinix, "ztp_file_download_path", "/tmp"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.ip_address", "192.168.20.11/24"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.index", "0"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "interfaces.0.logical_ifname", "wan0"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.ip_address", "192.168.20.12/24"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.index", "0"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_port_type", "WAN"),
-						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_port_index", "1"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.logical_ifname", "wan0"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_logical_ifname", "wan1"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_connection_type", "private"),
 					),
 				},
@@ -494,78 +479,67 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
 	device_id = "%[3]s"
 	gw_size      = "SMALL"
 	interfaces {
-        gateway_ip    = "192.168.20.1"
-        ip_address    = "192.168.20.11/24"
-        type          = "WAN"
-        index         = 0
+        gateway_ip     = "192.168.20.1"
+        ip_address     = "192.168.20.11/24"
+        logical_ifname = "wan0"
         secondary_private_cidr_list = ["192.168.19.16/29"]
     }
 
     interfaces {
-        gateway_ip    = "192.168.21.1"
-        ip_address    = "192.168.21.11/24"
-        type          = "WAN"
-        index         = 1
+        gateway_ip     = "192.168.21.1"
+        ip_address     = "192.168.21.11/24"
+        logical_ifname = "wan1"
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
 
     interfaces {
         dhcp   = true
-        type   = "MANAGEMENT"
-        index  = 0
+        logical_ifname = "mgmt0"
     }
 
     interfaces {
-        gateway_ip  = "192.168.22.1"
-        ip_address  = "192.168.22.11/24"
-        type        = "WAN"
-        index       = 2
+        gateway_ip     = "192.168.22.1"
+        ip_address     = "192.168.22.11/24"
+        logical_ifname = "wan2"
     }
 
     interfaces {
-        gateway_ip = "192.168.23.1"
-        ip_address = "192.168.23.11/24"
-        type       = "WAN"
-        index      = 3
+        gateway_ip     = "192.168.23.1"
+        ip_address     = "192.168.23.11/24"
+        logical_ifname = "wan3"
     }
 
 	ha_device_id = "a20c75c0-06c2-4102-9df1-b00b85e89eac"
-    peer_backup_port_type = "WAN"
-    peer_backup_port_index = 1
+    peer_backup_logical_ifname = "wan1"
     peer_connection_type = "private"
     ha_interfaces {
         gateway_ip    = "192.168.20.1"
-        index         = 0
         ip_address    = "192.168.20.12/24"
-        type          = "WAN"
+		logical_ifname = "wan0"
     }
 
     ha_interfaces {
-        gateway_ip   = "192.168.21.1"
-        index        = 1
-        ip_address   = "192.168.21.12/24"
-        type         = "WAN"
+        gateway_ip     = "192.168.21.1"
+        ip_address     = "192.168.21.12/24"
+        logical_ifname = "wan1"
         secondary_private_cidr_list = ["192.168.21.32/29"]
     }
 
     ha_interfaces {
-        dhcp   = true
-        index  = 0
-        type   = "MANAGEMENT"
+        dhcp           = true
+        logical_ifname = "mgmt0"
     }
 
     ha_interfaces {
-        gateway_ip   = "192.168.22.1"
-        index        = 2
-        ip_address   = "192.168.22.12/24"
-        type         = "WAN"
+        gateway_ip     = "192.168.22.1"
+        ip_address     = "192.168.22.12/24"
+        logical_ifname = "wan2"
     }
 
     ha_interfaces {
         gateway_ip     = "192.168.23.1"
-        index          = 3
         ip_address     = "192.168.23.12/24"
-        type           = "WAN"
+        logical_ifname = "wan3"
     }
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
@@ -585,77 +559,66 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_equinix" {
 	gw_size      = "SMALL"
 	ztp_file_download_path = "/tmp"
 	interfaces {
-        gateway_ip    = "192.168.20.1"
-        ip_address    = "192.168.20.11/24"
-        type          = "WAN"
-        index         = 0
+        gateway_ip     = "192.168.20.1"
+        ip_address     = "192.168.20.11/24"
+        logical_ifname = "wan0"
         secondary_private_cidr_list = ["192.168.19.16/29"]
     }
 
     interfaces {
-        gateway_ip    = "192.168.21.1"
-        ip_address    = "192.168.21.11/24"
-        type          = "WAN"
-        index         = 1
+        gateway_ip     = "192.168.21.1"
+        ip_address     = "192.168.21.11/24"
+        logical_ifname = "wan1"
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
 
     interfaces {
-        dhcp   = true
-        type   = "MANAGEMENT"
-        index  = 0
+        dhcp           = true
+        logical_ifname = "mgmt0"
     }
 
     interfaces {
-        gateway_ip  = "192.168.22.1"
-        ip_address  = "192.168.22.11/24"
-        type        = "WAN"
-        index       = 2
+        gateway_ip     = "192.168.22.1"
+        ip_address     = "192.168.22.11/24"
+        logical_ifname = "wan2"
     }
 
     interfaces {
-        gateway_ip = "192.168.23.1"
-        ip_address = "192.168.23.11/24"
-        type       = "WAN"
-        index      = 3
+        gateway_ip     = "192.168.23.1"
+        ip_address     = "192.168.23.11/24"
+        logical_ifname = "wan3"
     }
 
-    peer_backup_port_type = "WAN"
-    peer_backup_port_index = 1
+    peer_backup_logical_ifname = "wan1"
     peer_connection_type = "private"
     ha_interfaces {
         gateway_ip    = "192.168.20.1"
-        index         = 0
         ip_address    = "192.168.20.12/24"
-        type          = "WAN"
+		logical_ifname = "wan0"
     }
 
     ha_interfaces {
         gateway_ip   = "192.168.21.1"
-        index        = 1
         ip_address   = "192.168.21.12/24"
-        type         = "WAN"
+		logical_ifname = "wan1"
         secondary_private_cidr_list = ["192.168.21.32/29"]
     }
 
     ha_interfaces {
         dhcp   = true
-        index  = 0
-        type   = "MANAGEMENT"
+		logical_ifname = "mgmt0"
     }
 
     ha_interfaces {
         gateway_ip   = "192.168.22.1"
-        index        = 2
         ip_address   = "192.168.22.12/24"
-        type         = "WAN"
+		logical_ifname = "wan2"
     }
 
     ha_interfaces {
         gateway_ip     = "192.168.23.1"
-        index          = 3
         ip_address     = "192.168.23.12/24"
-        type           = "WAN"
+		logical_ifname = "wan3"
     }
 }
 	`, rName, os.Getenv("EQUINIX_VPC_ID"))
@@ -786,40 +749,35 @@ func TestGetInterfaceName(t *testing.T) {
 	}{
 		{
 			name:        "Valid WAN interface with index 0",
-			intfType:    "WAN",
-			intfIndex:   0,
+			intfType:    "wan0",
 			wanCount:    3,
 			expected:    "eth0",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid WAN interface with index 1",
-			intfType:    "WAN",
-			intfIndex:   1,
+			intfType:    "wan1",
 			wanCount:    3,
 			expected:    "eth1",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid WAN interface with index 2",
-			intfType:    "WAN",
-			intfIndex:   2,
+			intfType:    "wan2",
 			wanCount:    3,
 			expected:    "eth3",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid MANAGEMENT interface with index 0",
-			intfType:    "MANAGEMENT",
-			intfIndex:   0,
+			intfType:    "mgmt0",
 			wanCount:    3,
 			expected:    "eth2",
 			expectedErr: nil,
 		},
 		{
 			name:        "Valid MANAGEMENT interface with index 1",
-			intfType:    "MANAGEMENT",
-			intfIndex:   1,
+			intfType:    "mgmt1",
 			wanCount:    3,
 			expected:    "eth4",
 			expectedErr: nil,
@@ -827,16 +785,15 @@ func TestGetInterfaceName(t *testing.T) {
 		{
 			name:        "Invalid interface type",
 			intfType:    "INVALID",
-			intfIndex:   0,
 			wanCount:    3,
 			expected:    "",
-			expectedErr: errors.New("invalid interface type INVALID"),
+			expectedErr: errors.New("invalid logical interface name: INVALID"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := getInterfaceName(tt.intfType, tt.intfIndex, tt.wanCount)
+			result, err := getInterfaceName(tt.intfType, tt.wanCount)
 
 			// Check error
 			if err != nil && tt.expectedErr != nil {
@@ -860,68 +817,102 @@ func TestGetEipMapDetails(t *testing.T) {
 		name        string
 		eipMap      []interface{}
 		wanCount    int
-		expected    string
+		cloudType   int
+		expected    map[string][]goaviatrix.EipMap
 		expectedErr error
 	}{
 		{
-			name: "Valid EIP map with WAN and MANAGEMENT interfaces",
+			name: "Valid EIP map with WAN and MANAGEMENT interfaces for AEP",
 			eipMap: []interface{}{
 				map[string]interface{}{
-					"interface_type":  "WAN",
-					"interface_index": 0,
-					"private_ip":      "192.168.0.10",
-					"public_ip":       "203.0.113.10",
+					"logical_ifname": "wan0",
+					"private_ip":     "192.168.0.10",
+					"public_ip":      "203.0.113.10",
 				},
 				map[string]interface{}{
-					"interface_type":  "MANAGEMENT",
-					"interface_index": 0,
-					"private_ip":      "192.168.1.10",
-					"public_ip":       "203.0.113.11",
+					"logical_ifname": "mgmt0",
+					"private_ip":     "192.168.1.10",
+					"public_ip":      "203.0.113.11",
 				},
 			},
-			wanCount:    3,
-			expected:    `{"eth0":[{"private_ip":"192.168.0.10","public_ip":"203.0.113.10"}],"eth2":[{"private_ip":"192.168.1.10","public_ip":"203.0.113.11"}]}`,
+			wanCount:  3,
+			cloudType: 262144,
+			expected: map[string][]goaviatrix.EipMap{
+				"eth0": {
+					{PrivateIP: "192.168.0.10", PublicIP: "203.0.113.10"},
+				},
+				"eth2": {
+					{PrivateIP: "192.168.1.10", PublicIP: "203.0.113.11"},
+				},
+			},
 			expectedErr: nil,
 		},
 		{
-			name: "Invalid EIP map: missing interface type",
+			name: "Valid EIP map with WAN and MANAGEMENT interfaces for Megaport",
 			eipMap: []interface{}{
 				map[string]interface{}{
-					"interface_index": 0,
-					"private_ip":      "192.168.0.10",
-					"public_ip":       "203.0.113.10",
+					"logical_ifname": "wan0",
+					"private_ip":     "192.168.0.10",
+					"public_ip":      "203.0.113.10",
+				},
+				map[string]interface{}{
+					"logical_ifname": "mgmt0",
+					"private_ip":     "192.168.1.10",
+					"public_ip":      "203.0.113.11",
 				},
 			},
-			wanCount:    3,
-			expected:    "",
-			expectedErr: errors.New("interface_type must be a string"),
+			wanCount:  3,
+			cloudType: 1048576,
+			expected: map[string][]goaviatrix.EipMap{
+				"wan0": {
+					{PrivateIP: "192.168.0.10", PublicIP: "203.0.113.10"},
+				},
+				"mgmt0": {
+					{PrivateIP: "192.168.1.10", PublicIP: "203.0.113.11"},
+				},
+			},
+			expectedErr: nil,
 		},
 		{
-			name: "Invalid EIP map: invalid interface type",
+			name: "Invalid EIP map: missing logical interface name",
 			eipMap: []interface{}{
 				map[string]interface{}{
-					"interface_type":  "INVALID",
-					"interface_index": 0,
-					"private_ip":      "192.168.0.10",
-					"public_ip":       "203.0.113.10",
+					"private_ip": "192.168.0.10",
+					"public_ip":  "203.0.113.10",
 				},
 			},
 			wanCount:    3,
-			expected:    "",
-			expectedErr: errors.New("failed to get the interface name using type and index for eip_map: invalid interface type INVALID"),
+			cloudType:   1048576,
+			expected:    nil,
+			expectedErr: errors.New("logical interface name must be a string"),
+		},
+		{
+			name: "Invalid EIP map: invalid logical interface name",
+			eipMap: []interface{}{
+				map[string]interface{}{
+					"logical_ifname": 123,
+					"private_ip":     "192.168.0.10",
+					"public_ip":      "203.0.113.10",
+				},
+			},
+			wanCount:    3,
+			cloudType:   1048576,
+			expected:    nil,
+			expectedErr: errors.New("logical interface name must be a string"),
 		},
 		{
 			name:        "Empty EIP map",
 			eipMap:      []interface{}{},
 			wanCount:    3,
-			expected:    `{}`,
+			cloudType:   1048576,
+			expected:    map[string][]goaviatrix.EipMap{},
 			expectedErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := getEipMapDetails(tt.eipMap, tt.wanCount)
+			result, err := getEipMapDetails(tt.eipMap, tt.wanCount, tt.cloudType)
 
 			// Check for errors
 			if err != nil && tt.expectedErr != nil {
@@ -933,8 +924,8 @@ func TestGetEipMapDetails(t *testing.T) {
 			}
 
 			// Check result
-			if result != tt.expected {
-				t.Errorf("expected result: %s, got: %s", tt.expected, result)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("expected result: %v, got: %v", tt.expected, result)
 			}
 		})
 	}
@@ -957,7 +948,8 @@ func TestCountInterfaceTypes(t *testing.T) {
 // test to get the interface details from the resource
 func TestGetInterfaceDetails(t *testing.T) {
 	// get the interface details
-	interfaceDetails, err := getInterfaceDetails(interfaces)
+	cloudType := 1048576
+	interfaceDetails, err := getInterfaceDetails(interfaces, cloudType)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -999,22 +991,19 @@ func TestSetEipMapDetails(t *testing.T) {
 			},
 			expectedResult: []map[string]interface{}{
 				{
-					"interface_type":  "WAN",
-					"interface_index": 0,
-					"private_ip":      "192.168.1.10",
-					"public_ip":       "34.123.45.67",
+					"logical_ifname": "wan0",
+					"private_ip":     "192.168.1.10",
+					"public_ip":      "34.123.45.67",
 				},
 				{
-					"interface_type":  "WAN",
-					"interface_index": 1,
-					"private_ip":      "192.168.1.11",
-					"public_ip":       "34.123.45.68",
+					"logical_ifname": "wan1",
+					"private_ip":     "192.168.1.11",
+					"public_ip":      "34.123.45.68",
 				},
 				{
-					"interface_type":  "WAN",
-					"interface_index": 1,
-					"private_ip":      "192.168.1.12",
-					"public_ip":       "34.123.45.69",
+					"logical_ifname": "wan1",
+					"private_ip":     "192.168.1.12",
+					"public_ip":      "34.123.45.69",
 				},
 			},
 			expectedErr: "",
@@ -1111,47 +1100,44 @@ func TestSetInterfaceDetails(t *testing.T) {
 		{
 			name: "Single WAN interface",
 			interfaces: []goaviatrix.EdgeTransitInterface{
-				{Type: "WAN", PublicIp: "1.1.1.1", Dhcp: true, IpAddress: "10.0.0.1", GatewayIp: "10.0.0.254"},
+				{LogicalIfName: "wan0", PublicIp: "1.1.1.1", Dhcp: true, IpAddress: "10.0.0.1", GatewayIp: "10.0.0.254"},
 			},
 			expected: []map[string]interface{}{
 				{
-					"type":       "WAN",
-					"index":      0,
-					"public_ip":  "1.1.1.1",
-					"dhcp":       true,
-					"ip_address": "10.0.0.1",
-					"gateway_ip": "10.0.0.254",
+					"logical_ifname": "wan0",
+					"public_ip":      "1.1.1.1",
+					"dhcp":           true,
+					"ip_address":     "10.0.0.1",
+					"gateway_ip":     "10.0.0.254",
 				},
 			},
 		},
 		{
 			name: "Multiple WAN and MANAGEMENT interfaces",
 			interfaces: []goaviatrix.EdgeTransitInterface{
-				{Type: "WAN", IpAddress: "10.0.0.2"},
-				{Type: "WAN", IpAddress: "10.0.0.3"},
-				{Type: "MANAGEMENT", GatewayIp: "192.168.1.1"},
-				{Type: "MANAGEMENT", Dhcp: true},
+				{LogicalIfName: "wan0", IpAddress: "10.0.0.2"},
+				{LogicalIfName: "wan1", IpAddress: "10.0.0.3"},
+				{LogicalIfName: "wan2", GatewayIp: "192.168.1.1"},
+				{LogicalIfName: "mgmt0", Dhcp: true},
 			},
 			expected: []map[string]interface{}{
-				{"type": "WAN", "index": 0, "ip_address": "10.0.0.2"},
-				{"type": "WAN", "index": 1, "ip_address": "10.0.0.3"},
-				{"type": "MANAGEMENT", "index": 0, "gateway_ip": "192.168.1.1"},
-				{"type": "MANAGEMENT", "index": 1, "dhcp": true},
+				{"logical_ifname": "wan0", "ip_address": "10.0.0.2"},
+				{"logical_ifname": "wan1", "ip_address": "10.0.0.3"},
+				{"logical_ifname": "wan2", "gateway_ip": "192.168.1.1"},
+				{"logical_ifname": "mgmt0", "dhcp": true},
 			},
 		},
 		{
 			name: "Custom interface with Secondary CIDRs",
 			interfaces: []goaviatrix.EdgeTransitInterface{
 				{
-					Type:           "CUSTOM",
-					Index:          5,
+					LogicalIfName:  "mgmt0",
 					SecondaryCIDRs: []string{"10.0.1.0/24", "10.0.2.0/24"},
 				},
 			},
 			expected: []map[string]interface{}{
 				{
-					"type":                        "CUSTOM",
-					"index":                       5,
+					"logical_ifname":              "mgmt0",
 					"secondary_private_cidr_list": []string{"10.0.1.0/24", "10.0.2.0/24"},
 				},
 			},
@@ -1165,14 +1151,13 @@ func TestSetInterfaceDetails(t *testing.T) {
 			name: "Ignore empty SecondaryCIDRs",
 			interfaces: []goaviatrix.EdgeTransitInterface{
 				{
-					Type:           "WAN",
+					LogicalIfName:  "wan0",
 					SecondaryCIDRs: []string{"", "10.0.3.0/24", ""},
 				},
 			},
 			expected: []map[string]interface{}{
 				{
-					"type":                        "WAN",
-					"index":                       0,
+					"logical_ifname":              "wan0",
 					"secondary_private_cidr_list": []string{"10.0.3.0/24"},
 				},
 			},
@@ -1221,5 +1206,215 @@ func TestDeleteZtpFile(t *testing.T) {
 	err = deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath)
 	if err != nil {
 		t.Errorf("deleteZtpFile returned an error when file does not exist: %v", err)
+	}
+}
+
+func TestCreateBackupLinkConfig(t *testing.T) {
+	tests := []struct {
+		name                   string
+		gwName                 string
+		peerBackupLogicalNames []interface{}
+		connectionType         string
+		wanCount               int
+		cloudType              int
+		expected               string
+		expectedErr            error
+	}{
+		{
+			name:                   "Valid backup link config for AEP",
+			gwName:                 "gw1",
+			peerBackupLogicalNames: []interface{}{"wan0", "wan1"},
+			connectionType:         "private",
+			wanCount:               3,
+			cloudType:              goaviatrix.EDGENEO,
+			expected:               `[{"peer_gw_name":"gw1","peer_backup_port":"eth0,eth1","self_backup_port":"eth0,eth1","connection_type":"private"}]`,
+			expectedErr:            nil,
+		},
+		{
+			name:                   "Valid backup link config for Megaport",
+			gwName:                 "gw2",
+			peerBackupLogicalNames: []interface{}{"wan2", "wan3"},
+			connectionType:         "public",
+			wanCount:               4,
+			cloudType:              goaviatrix.EDGEMEGAPORT,
+			expected:               `[{"peer_gw_name":"gw2","connection_type":"public","peer_backup_logical_ifnames":["wan2","wan3"],"self_backup_logical_ifnames":["wan2","wan3"]}]`,
+			expectedErr:            nil,
+		},
+		{
+			name:                   "Invalid logical name in backup link config",
+			gwName:                 "gw3",
+			peerBackupLogicalNames: []interface{}{"wan0", "invalid_eth"},
+			connectionType:         "private",
+			wanCount:               3,
+			cloudType:              goaviatrix.EDGENEO,
+			expected:               "",
+			expectedErr:            fmt.Errorf("failed to get the peer backup port name for logical name invalid_eth: invalid logical interface name: invalid_eth"),
+		},
+		{
+			name:                   "Empty logical names in backup link config",
+			gwName:                 "gw4",
+			peerBackupLogicalNames: []interface{}{},
+			connectionType:         "private",
+			wanCount:               3,
+			cloudType:              goaviatrix.EDGENEO,
+			expected:               `[{"peer_gw_name":"gw4","connection_type":"private"}]`,
+			expectedErr:            nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := createBackupLinkConfig(tt.gwName, tt.peerBackupLogicalNames, tt.connectionType, tt.wanCount, tt.cloudType)
+
+			// Check for expected error
+			if (err != nil || tt.expectedErr != nil) && (err == nil || err.Error() != tt.expectedErr.Error()) {
+				t.Errorf("expected error: %v, got: %v", tt.expectedErr, err)
+			}
+
+			// Check the result
+			if result != tt.expected {
+				t.Errorf("expected result: %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestCalculateInterfaceName(t *testing.T) {
+	tests := []struct {
+		name      string
+		intfType  string
+		intfIndex int
+		wanCount  int
+		expected  string
+		expectErr bool
+	}{
+		{
+			name:      "First WAN interface",
+			intfType:  "WAN",
+			intfIndex: 0,
+			wanCount:  2,
+			expected:  "eth0",
+			expectErr: false,
+		},
+		{
+			name:      "Second WAN interface",
+			intfType:  "WAN",
+			intfIndex: 1,
+			wanCount:  2,
+			expected:  "eth1",
+			expectErr: false,
+		},
+		{
+			name:      "Third WAN interface",
+			intfType:  "WAN",
+			intfIndex: 2,
+			wanCount:  2,
+			expected:  "eth3",
+			expectErr: false,
+		},
+		{
+			name:      "First MANAGEMENT interface",
+			intfType:  "MANAGEMENT",
+			intfIndex: 0,
+			wanCount:  2,
+			expected:  "eth2",
+			expectErr: false,
+		},
+		{
+			name:      "Invalid interface type",
+			intfType:  "INVALID",
+			intfIndex: 0,
+			wanCount:  2,
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := calculateInterfaceName(tt.intfType, tt.intfIndex, tt.wanCount)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("Expected %s, got %s", tt.expected, result)
+				}
+			}
+		})
+	}
+}
+
+func TestParseInterface(t *testing.T) {
+	tests := []struct {
+		name      string
+		ifaceInfo map[string]interface{}
+		wanCount  int
+		cloudType int
+		expected  goaviatrix.EdgeTransitInterface
+		expectErr bool
+	}{
+		{
+			name: "Valid WAN interface",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname":              "wan0",
+				"gateway_ip":                  "192.168.1.1",
+				"ip_address":                  "192.168.1.2",
+				"public_ip":                   "203.0.113.1",
+				"dhcp":                        true,
+				"secondary_private_cidr_list": []interface{}{"10.0.0.0/16", "10.1.0.0/16"},
+			},
+			wanCount:  1,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected: goaviatrix.EdgeTransitInterface{
+				GatewayIp:      "192.168.1.1",
+				PublicIp:       "203.0.113.1",
+				Dhcp:           true,
+				IpAddress:      "192.168.1.2",
+				SecondaryCIDRs: []string{"10.0.0.0/16", "10.1.0.0/16"},
+				LogicalIfName:  "wan0",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Valid MANAGEMENT interface",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": "mgmt0",
+				"dhcp":           true,
+			},
+			wanCount:  1,
+			cloudType: 0,
+			expected: goaviatrix.EdgeTransitInterface{
+				Dhcp: true,
+				Name: "eth2",
+				Type: "MANAGEMENT",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Invalid logical_ifname",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": 12345, // Invalid type
+			},
+			wanCount:  1,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := parseInterface(tt.ifaceInfo, tt.wanCount, tt.cloudType)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
 	}
 }

@@ -102,7 +102,7 @@ The following arguments are supported:
 * `longitude` - (Optional) Longitude of Edge Megaport. Valid values are between -180 and 180. Example: "120.7401".
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 * `vlan` - (Optional) VLAN configuration.
-  * `parent_interface_name` - (Required) Parent interface name.
+  * `parent_logical_interface_name` - (Required) Parent logical interface name e.g. lan0.
   * `vlan_id` - (Required) VLAN ID.
   * `ip_address` - (Optional) LAN sub-interface IP address.
   * `gateway_ip` - (Optional) LAN sub-interface gateway IP.
