@@ -12,9 +12,19 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.1 (UserConnect-7.2.4996)``
+``Last updated: R3.2.2 (UserConnect-7.2.xxxx)``
 
 ---
+
+## 3.2.2
+- Supported Controller version: **UserConnect-7.2.xxxx**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinic resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
 
 ## 3.2.1
 ### Notes:
