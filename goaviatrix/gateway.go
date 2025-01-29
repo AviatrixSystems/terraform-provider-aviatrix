@@ -225,6 +225,7 @@ type Gateway struct {
 	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
 	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
 	EipMap                          map[string][]EipMap                 `json:"eip_map,omitempty"`
+	LogicalEipMap                   map[string][]EipMap                 `json:"logical_intf_eip_map,omitempty"`
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 }
