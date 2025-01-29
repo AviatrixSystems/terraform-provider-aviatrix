@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -817,7 +818,7 @@ func TestGetEipMapDetails(t *testing.T) {
 		eipMap      []interface{}
 		wanCount    int
 		cloudType   int
-		expected    string
+		expected    map[string][]goaviatrix.EipMap
 		expectedErr error
 	}{
 		{
@@ -834,9 +835,16 @@ func TestGetEipMapDetails(t *testing.T) {
 					"public_ip":      "203.0.113.11",
 				},
 			},
-			wanCount:    3,
-			cloudType:   262144,
-			expected:    `{"eth0":[{"private_ip":"192.168.0.10","public_ip":"203.0.113.10"}],"eth2":[{"private_ip":"192.168.1.10","public_ip":"203.0.113.11"}]}`,
+			wanCount:  3,
+			cloudType: 262144,
+			expected: map[string][]goaviatrix.EipMap{
+				"eth0": {
+					{PrivateIP: "192.168.0.10", PublicIP: "203.0.113.10"},
+				},
+				"eth2": {
+					{PrivateIP: "192.168.1.10", PublicIP: "203.0.113.11"},
+				},
+			},
 			expectedErr: nil,
 		},
 		{
@@ -853,9 +861,16 @@ func TestGetEipMapDetails(t *testing.T) {
 					"public_ip":      "203.0.113.11",
 				},
 			},
-			wanCount:    3,
-			cloudType:   1048576,
-			expected:    `{"mgmt0":[{"private_ip":"192.168.1.10","public_ip":"203.0.113.11"}],"wan0":[{"private_ip":"192.168.0.10","public_ip":"203.0.113.10"}]}`,
+			wanCount:  3,
+			cloudType: 1048576,
+			expected: map[string][]goaviatrix.EipMap{
+				"wan0": {
+					{PrivateIP: "192.168.0.10", PublicIP: "203.0.113.10"},
+				},
+				"mgmt0": {
+					{PrivateIP: "192.168.1.10", PublicIP: "203.0.113.11"},
+				},
+			},
 			expectedErr: nil,
 		},
 		{
@@ -868,7 +883,7 @@ func TestGetEipMapDetails(t *testing.T) {
 			},
 			wanCount:    3,
 			cloudType:   1048576,
-			expected:    "",
+			expected:    nil,
 			expectedErr: errors.New("logical interface name must be a string"),
 		},
 		{
@@ -882,7 +897,7 @@ func TestGetEipMapDetails(t *testing.T) {
 			},
 			wanCount:    3,
 			cloudType:   1048576,
-			expected:    "",
+			expected:    nil,
 			expectedErr: errors.New("logical interface name must be a string"),
 		},
 		{
@@ -890,7 +905,7 @@ func TestGetEipMapDetails(t *testing.T) {
 			eipMap:      []interface{}{},
 			wanCount:    3,
 			cloudType:   1048576,
-			expected:    `{}`,
+			expected:    map[string][]goaviatrix.EipMap{},
 			expectedErr: nil,
 		},
 	}
@@ -909,8 +924,8 @@ func TestGetEipMapDetails(t *testing.T) {
 			}
 
 			// Check result
-			if result != tt.expected {
-				t.Errorf("expected result: %s, got: %s", tt.expected, result)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("expected result: %v, got: %v", tt.expected, result)
 			}
 		})
 	}

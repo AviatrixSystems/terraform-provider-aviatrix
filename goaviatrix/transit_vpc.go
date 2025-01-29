@@ -1,8 +1,10 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -50,26 +52,26 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
-	AvailabilityDomain           string   `form:"availability_domain,omitempty"`
-	FaultDomain                  string   `form:"fault_domain,omitempty"`
-	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
-	SpotPrice                    string   `form:"spot_price,omitempty"`
-	DeleteSpot                   bool     `form:"delete_spot,omitempty"`
-	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
-	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
-	BgpLanSpecifySubnet          string   `form:"bgp_lan_subnet"`
-	Async                        bool     `form:"async,omitempty"`
-	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
-	Transit                      bool     `form:"transit,omitempty"`
-	DeviceID                     string   `form:"device_id,omitempty"`
-	SiteID                       string   `form:"site_id,omitempty"`
-	Interfaces                   string   `json:"interfaces,omitempty"`
-	InterfaceMapping             string   `json:"interface_mapping,omitempty"`
-	EipMap                       string   `json:"eip_map,omitempty"`
-	LogicalEipMap                string   `json:"logical_intf_eip_map,omitempty"`
-	ZtpFileDownloadPath          string   `json:"-"`
-	ManagementEgressIPPrefix     string   `json:"mgmt_egress_ip,omitempty"`
+	AvailabilityDomain           string              `form:"availability_domain,omitempty"`
+	FaultDomain                  string              `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool                `form:"spot_instance,omitempty"`
+	SpotPrice                    string              `form:"spot_price,omitempty"`
+	DeleteSpot                   bool                `form:"delete_spot,omitempty"`
+	ApprovedLearnedCidrs         []string            `form:"approved_learned_cidrs"`
+	BgpLanVpcID                  string              `form:"bgp_lan_vpc"`
+	BgpLanSpecifySubnet          string              `form:"bgp_lan_subnet"`
+	Async                        bool                `form:"async,omitempty"`
+	BgpLanInterfacesCount        int                 `form:"bgp_lan_intf_count,omitempty"`
+	LbVpcID                      string              `form:"lb_vpc_id,omitempty"`
+	Transit                      bool                `form:"transit,omitempty"`
+	DeviceID                     string              `form:"device_id,omitempty"`
+	SiteID                       string              `form:"site_id,omitempty"`
+	Interfaces                   string              `json:"interfaces,omitempty"`
+	InterfaceMapping             string              `json:"interface_mapping,omitempty"`
+	EipMap                       string              `json:"eip_map,omitempty"`
+	LogicalEipMap                map[string][]EipMap `json:"logical_intf_eip_map,omitempty"`
+	ZtpFileDownloadPath          string              `json:"-"`
+	ManagementEgressIPPrefix     string              `json:"mgmt_egress_ip,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -255,7 +257,7 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 }
 
 func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
-	form := map[string]string{
+	form := map[string]interface{}{
 		"CID":          c.CID,
 		"action":       "update_edge_gateway",
 		"gateway_name": gateway.GwName,
@@ -269,14 +271,25 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 		form["eip_map"] = gateway.EipMap
 	}
 
-	if gateway.LogicalEipMap != "" {
-		form["logical_intf_eip_map"] = gateway.LogicalEipMap
+	if len(gateway.LogicalEipMap) > 0 {
+		eipMapJSON, err := json.Marshal(gateway.LogicalEipMap)
+		if err != nil {
+			return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
+		}
+		eipMapJSONObj := bytes.NewBuffer(eipMapJSON)
+		form["logical_intf_eip_map"] = eipMapJSONObj
 	}
 
 	if gateway.ManagementEgressIPPrefix != "" {
 		form["mgmt_egress_ip"] = gateway.ManagementEgressIPPrefix
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+
+	action, ok := form["action"].(string)
+	if !ok {
+		return fmt.Errorf("form[action] is not a string, got type %T", form["action"])
+	}
+	log.Printf("Formm details: %v", form)
+	return c.PostAPI(action, form, BasicCheck)
 }
 
 func (c *Client) DeleteEdgeGateway(gateway *Gateway) error {
