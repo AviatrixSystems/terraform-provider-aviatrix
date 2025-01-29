@@ -17,6 +17,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ---
 
 ## 3.2.2
+### Notes:
 - Supported Controller version: **UserConnect-7.2.xxxx**
 - Supported Terraform version **v1.x**
 
