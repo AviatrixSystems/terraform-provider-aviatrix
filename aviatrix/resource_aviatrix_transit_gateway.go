@@ -1353,7 +1353,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "private_mode_lb_vpc_id")
 				}
 
-				gateway.LbVpcId = d.Get("private_mode_lb_vpc_id").(string)
+				gateway.LbVpcID, ok = d.Get("private_mode_lb_vpc_id").(string)
+				if !ok {
+					return fmt.Errorf("%q must be set when creating a Transit Gateway in AWS or Azure with Private Mode enabled on the Controller", "private_mode_lb_vpc_id")
+				}
 			}
 		} else {
 			if _, ok := d.GetOk("private_mode_subnet_zone"); ok {
@@ -2923,10 +2926,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				gateway := &goaviatrix.TransitVpc{
 					GwName: d.Get("gw_name").(string),
 				}
+
 				if cloudType == goaviatrix.EDGEMEGAPORT {
+					// print eip map for edge mega port
+					log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 					gateway.LogicalEipMap = eipMapList
 				} else {
-					gateway.EipMap = eipMapList
+					eipMapJSON, err := json.Marshal(eipMapList)
+					if err != nil {
+						return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
+					}
+					gateway.EipMap = string(eipMapJSON)
 				}
 				err = client.UpdateEdgeGateway(gateway)
 				if err != nil {
@@ -3946,10 +3956,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	// create the transit gateway
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
-	err = client.LaunchTransitVpc(gateway)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
-	}
+	// err = client.LaunchTransitVpc(gateway)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+	// }
 	// create ha transit gateway if ha_interfaces are provided
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if ok && len(haInterfaces) > 0 {
@@ -3959,10 +3969,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 		// log transit ha gateway details
 		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
-		_, err = client.CreateTransitHaGw(transitHaGw)
-		if err != nil {
-			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-		}
+		// _, err = client.CreateTransitHaGw(transitHaGw)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+		// }
 	}
 
 	// eip map is updated after the transit is created
@@ -3975,10 +3985,17 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if err != nil {
 			return fmt.Errorf("failed to get the eip map details: %w", err)
 		}
+
 		if cloudType == goaviatrix.EDGEMEGAPORT {
+			// print eip map for edge mega port
+			log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 			gateway.LogicalEipMap = eipMapList
 		} else {
-			gateway.EipMap = eipMapList
+			eipMapJSON, err := json.Marshal(eipMapList)
+			if err != nil {
+				return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
+			}
+			gateway.EipMap = string(eipMapJSON)
 		}
 		// update EIP map
 		err = client.UpdateEdgeGateway(gateway)
@@ -4130,7 +4147,7 @@ func getInterfaceName(logicalIfName string, wanCount int) (string, error) {
 	return interfaceName, nil
 }
 
-func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string, error) {
+func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (map[string][]goaviatrix.EipMap, error) {
 	// Create a map to structure the EIP data
 	eipMapStructured := make(map[string][]goaviatrix.EipMap)
 
@@ -4138,11 +4155,11 @@ func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string
 	for _, eipDetails := range eipMap {
 		eip, ok := eipDetails.(map[string]interface{})
 		if !ok {
-			return "", fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
+			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
 		}
 		logicalIfName, ok := eip["logical_ifname"].(string)
 		if !ok {
-			return "", fmt.Errorf("logical interface name must be a string")
+			return nil, fmt.Errorf("logical interface name must be a string")
 		}
 
 		var interfaceName string
@@ -4152,17 +4169,17 @@ func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string
 			var err error
 			interfaceName, err = getInterfaceName(logicalIfName, wanCount)
 			if err != nil {
-				return "", fmt.Errorf("failed to get the interface name using type and index for eip_map: %w", err)
+				return nil, fmt.Errorf("failed to get the interface name using type and index for eip_map: %w", err)
 			}
 		}
 
 		privateIP, ok := eip["private_ip"].(string)
 		if !ok {
-			return "", fmt.Errorf("private_ip must be a string")
+			return nil, fmt.Errorf("private_ip must be a string")
 		}
 		publicIP, ok := eip["public_ip"].(string)
 		if !ok {
-			return "", fmt.Errorf("public_ip must be a string")
+			return nil, fmt.Errorf("public_ip must be a string")
 		}
 
 		// Append the EIP entry to the corresponding interface
@@ -4173,14 +4190,7 @@ func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (string
 		eipMapStructured[interfaceName] = append(eipMapStructured[interfaceName], eipEntry)
 	}
 
-	// Marshal the structured map to JSON
-	eipMapJson, err := json.Marshal(eipMapStructured)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
-	}
-
-	// Convert to a string with additional quotes for Terraform compatibility
-	return string(eipMapJson), nil
+	return eipMapStructured, nil
 }
 
 func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType int) (*goaviatrix.TransitHaGateway, error) {
