@@ -1,8 +1,10 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -163,7 +165,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				},
 			},
 			"gateway2_logical_ifnames": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Gateway 2 logical interface names for edge gateways where the peering terminates",
 				Elem: &schema.Schema{
@@ -181,31 +183,34 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	if !ok {
 		return fmt.Errorf("transit_gateway_name1 is required")
 	}
+	log.Printf("[INFO] Transit Gateway Name1: %s", transit_gateway_name1)
 	transit_gateway_name2, ok := d.Get("transit_gateway_name2").(string)
 	if !ok {
 		return fmt.Errorf("transit_gateway_name2 is required")
 	}
+	log.Printf("[INFO] Transit Gateway Name2: %s", transit_gateway_name2)
 
 	gateway1 := &goaviatrix.Gateway{
-		AccountName: d.Get("account_name").(string),
-		GwName:      transit_gateway_name1,
+		GwName: transit_gateway_name1,
 	}
 	gateway1Details, err := client.GetGateway(gateway1)
 	if err != nil {
 		return fmt.Errorf("failed to get gateway: %s", err)
 	}
-	gateway1CloudType := gateway1Details.CloudType
-	gateway2CloudType := gateway1Details.CloudType
 	log.Printf("[INFO] Gateway1 details: %#v", gateway1Details)
+	gateway1CloudType := gateway1Details.CloudType
+	log.Printf("[INFO] Gateway1 Cloud Type: %s", strconv.Itoa(gateway1CloudType))
+
 	gateway2 := &goaviatrix.Gateway{
-		AccountName: d.Get("account_name").(string),
-		GwName:      transit_gateway_name2,
+		GwName: transit_gateway_name2,
 	}
 	gateway2Details, err := client.GetGateway(gateway2)
 	if err != nil {
 		return fmt.Errorf("failed to get gateway: %s", err)
 	}
+	gateway2CloudType := gateway2Details.CloudType
 	log.Printf("[INFO] Gateway2 details: %#v", gateway2Details)
+	log.Printf("[INFO] Gateway2 Cloud Type: %s", strconv.Itoa(gateway1CloudType))
 
 	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) || goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		edgeTransitGatewayPeering := &goaviatrix.TransitGatewayPeering{
@@ -244,6 +249,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 			} else if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EDGEMEGAPORT) {
 				if d.Get("gateway1_logical_ifnames").([]interface{}) != nil {
 					edgeTransitGatewayPeering.Gateway1LogicalIfNames = getStringList(d, "gateway1_logical_ifnames")
+					log.Printf("[INFO] Gateway1 Logical Interface Names: %#v", edgeTransitGatewayPeering.Gateway1LogicalIfNames)
 				}
 			}
 		}
@@ -265,13 +271,14 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 			} else if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EDGEMEGAPORT) {
 				if d.Get("gateway2_logical_ifnames").([]interface{}) != nil {
 					edgeTransitGatewayPeering.Gateway2LogicalIfNames = getStringList(d, "gateway2_logical_ifnames")
+					log.Printf("[INFO] Gateway2 Logical Interface Names: %#v", edgeTransitGatewayPeering.Gateway2LogicalIfNames)
 				}
 			}
 		}
 		d.SetId(edgeTransitGatewayPeering.TransitGatewayName1 + "~" + edgeTransitGatewayPeering.TransitGatewayName2)
 		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
-
-		err := client.CreateTransitGatewayPeering(edgeTransitGatewayPeering)
+		log.Printf("[INFO] Creating Aviatrix Edge Transit Gateway peering: %#v", edgeTransitGatewayPeering)
+		err := client.CreateTransitGatewayPeering(context.Background(), edgeTransitGatewayPeering)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
 		}
@@ -341,7 +348,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		flag := false
 		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
 
-		err := client.CreateTransitGatewayPeering(transitGatewayPeering)
+		err := client.CreateTransitGatewayPeering(context.Background(), transitGatewayPeering)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
 		}
