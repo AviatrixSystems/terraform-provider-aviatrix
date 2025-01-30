@@ -154,15 +154,21 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Default:     false,
 				Description: "Enable HPE mode for peering with Edge Transit",
 			},
-			"src_wan_interfaces": {
-				Type:        schema.TypeString,
+			"gateway1_logical_ifnames": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Source WAN interface for edge gateways where the peering originates",
+				Description: "Gateway 1 logical interface names for edge gateways where the peering originates",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
-			"dst_wan_interfaces": {
+			"gateway2_logical_ifnames": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Destination WAN interface for edge gateways where the peering terminates",
+				Description: "Gateway 2 logical interface names for edge gateways where the peering terminates",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -179,9 +185,10 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 			EnableOverPrivateNetwork: d.Get("over_private_network").(bool),
 			EnableJumboFrame:         d.Get("jumbo_frame").(bool),
 			EnableInsaneMode:         d.Get("insane_mode").(bool),
-			SrcWanInterfaces:         d.Get("src_wan_interfaces").(string),
-			DstWanInterfaces:         d.Get("dst_wan_interfaces").(string),
+			SrcWanInterfaces:         d.Get("gateway1_logical_ifnames").(string),
+			DstWanInterfaces:         d.Get("gateway2_logical_ifnames").(string),
 		}
+		// get logical interfcae names
 		d.SetId(edgeTransitGatewayPeering.TransitGatewayName1 + "~" + edgeTransitGatewayPeering.TransitGatewayName2)
 		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
 
