@@ -349,7 +349,8 @@ func ExternalDeviceConnBgpBfdDiffSuppressFunc(k, old, new string, d *schema.Reso
 	// diffs to "bgp_bfd", otherwise BFD config can be left in the state.
 	// That can break things, as BFD config is not allowed when BFD is
 	// disabled.
-	if !d.Get("enable_bfd").(bool) {
+	enabled, ok := d.Get("enable_bfd").(bool)
+	if !enabled || !ok {
 		return false
 	}
 
