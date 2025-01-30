@@ -3958,7 +3958,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	d.SetId(gateway.GwName)
 	err = client.LaunchTransitVpc(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
 	}
 	// create ha transit gateway if ha_interfaces are provided
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
@@ -3971,7 +3971,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
 		_, err = client.CreateTransitHaGw(transitHaGw)
 		if err != nil {
-			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %w", err)
 		}
 	}
 
