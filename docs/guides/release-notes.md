@@ -12,17 +12,46 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.1 (UserConnect-7.2.4996)``
+``Last updated: R8.0.0``
 
 ---
+## 8.0.0
+### Versioning Scheme Update
+Starting with this release, the Terraform provider will synchronize its version with the Aviatrix Controller version. This means the provider version has jumped from v3.2.2 to v8.0.0 to align with the Controller’s latest major version. This change makes it easier to determine which provider version is compatible with which Controller version.
+Moving forward, the provider will follow semantic versioning (major.minor.patch).
 
-## 8.0
 ### Notes:
 - Supported Controller version: **UserConnect-8.0.0**
 
 ### Enhancements:
 1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile in a DCF policy.
+2. Added support for importing the **aviatrix_edge_proxy_profile** resource.
+3. Allow special characters in Azure tags on gateway instances, to align with UI behavior.
+4. Extended k8s examples for the **aviatrix_smart_group** resource.
+5. Implemented new resources **aviatrix_edge_megaport** and **aviatrix_edge_megaport_ha** for deployment of spoke gateway in Megaport.
+6. The **aviatrix_transit_gateway** resource now supports deploying in Equinix.
+6. The **aviatrix_transit_gateway** resource now supports deploying in Megaport.
+7. The **edge_spoke_external_device_conn** resource now supports underlay configuration for the backup gateway.
 
+### Deprecations
+1. The argument **aviatrix_dns_profile** has been removed from the following resources, as it was never used.
+  - **aviatrix_edge_csp**
+  - **aviatrix_edge_equinix**
+  - **aviatrix_edge_neo**
+  - **aviatrix_edge_platform**
+  - **aviatrix_edge_zededa**
+2. The CloudN related resources **aviatrix_cloudn_registration** and **aviatrix_cloudn_transit_gateway_attachment** have been removed, as they are no longer supported.
+
+## 3.2.2
+### Notes:
+- Supported Controller version: **UserConnect-7.2.xxxx**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinic resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
 
 ## 3.2.1
 ### Notes:
