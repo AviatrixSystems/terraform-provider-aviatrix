@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,33 +9,33 @@ import (
 )
 
 type TransitGatewayPeering struct {
-	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
-	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
-	Gateway1ExcludedCIDRs               string `form:"src_filter_list,omitempty"`
-	Gateway2ExcludedCIDRs               string `form:"dst_filter_list,omitempty"`
-	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
-	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
-	PrivateIPPeering                    string `form:"private_ip_peering,omitempty"`
-	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty"`
+	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway1,omitempty"`
+	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway2,omitempty"`
+	Gateway1ExcludedCIDRs               string `form:"src_filter_list,omitempty" json:"src_filter_list,omitempty"`
+	Gateway2ExcludedCIDRs               string `form:"dst_filter_list,omitempty" json:"dst_filter_list,omitempty"`
+	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty" json:"source_exclude_connections,omitempty"`
+	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty" json:"destination_exclude_connections,omitempty"`
+	PrivateIPPeering                    string `form:"private_ip_peering,omitempty" json:"private_ip_peering,omitempty"`
+	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty" json:"insane_mode_over_internet,omitempty"`
 	InsaneModeTunnelCount               int    `json:"insane_mode_tunnel_count"`
-	TunnelCount                         int    `form:"tunnel_count,omitempty"`
+	TunnelCount                         int    `form:"tunnel_count,omitempty" json:"tunnel_count,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
 	Gateway2ExcludedTGWConnectionsSlice []string
 	PrependAsPath1                      string
 	PrependAsPath2                      string
-	CID                                 string   `form:"CID,omitempty"`
-	Action                              string   `form:"action,omitempty"`
-	SingleTunnel                        string   `form:"single_tunnel,omitempty"`
-	NoMaxPerformance                    bool     `form:"no_max_performance,omitempty"`
-	EnableOverPrivateNetwork            bool     `form:"over_private_network,omitempty"`
-	EnableJumboFrame                    bool     `form:"jumbo_frame,omitempty"`
-	EnableInsaneMode                    bool     `form:"insane_mode,omitempty"`
-	SrcWanInterfaces                    string   `form:"src_wan_interfaces,omitempty"`
-	DstWanInterfaces                    string   `form:"dst_wan_interfaces,omitempty"`
-	Gateway1LogicalIfNames              []string `form:"gateway1_logical_ifnames,omitempty"`
-	Gateway2LogicalIfNames              []string `form:"gateway2_logical_ifnames,omitempty"`
+	CID                                 string   `form:"CID,omitempty" json:"CID,omitempty"`
+	Action                              string   `form:"action,omitempty" json:"action,omitempty"`
+	SingleTunnel                        string   `form:"single_tunnel,omitempty" json:"single_tunnel,omitempty"`
+	NoMaxPerformance                    bool     `form:"no_max_performance,omitempty" json:"no_max_performance,omitempty"`
+	EnableOverPrivateNetwork            bool     `form:"over_private_network,omitempty" json:"over_private_network,omitempty"`
+	EnableJumboFrame                    bool     `form:"jumbo_frame,omitempty" json:"jumbo_frame,omitempty"`
+	EnableInsaneMode                    bool     `form:"insane_mode,omitempty" json:"insane_mode,omitempty"`
+	SrcWanInterfaces                    string   `form:"src_wan_interfaces,omitempty" json:"src_wan_interfaces,omitempty"`
+	DstWanInterfaces                    string   `form:"dst_wan_interfaces,omitempty" json:"dst_wan_interfaces,omitempty"`
+	Gateway1LogicalIfNames              []string `form:"gateway1_logical_ifnames,omitempty" json:"gateway1_logical_ifnames,omitempty"`
+	Gateway2LogicalIfNames              []string `form:"gateway2_logical_ifnames,omitempty" json:"gateway2_logical_ifnames,omitempty"`
 }
 
 type TransitGatewayPeeringEdit struct {
@@ -89,10 +90,11 @@ type TunnelsDetail struct {
 	SubTunnelCount int        `json:"sub_tunnel_count"`
 }
 
-func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
+func (c *Client) CreateTransitGatewayPeering(ctx context.Context, transitGatewayPeering *TransitGatewayPeering) error {
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "create_inter_transit_gateway_peering"
-	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
+	// return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
 }
 
 func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
