@@ -107,7 +107,6 @@ func (c *Client) RequestContext2(ctx context.Context, verb string, path string, 
 			}
 			log.Tracef("%s %s Body: %s", verb, path, body)
 			reader := bytes.NewReader(body)
-
 			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 			if err == nil {
 				req.Header.Set("Content-Type", "application/json")

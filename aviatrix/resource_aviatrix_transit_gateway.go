@@ -2857,7 +2857,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to disable 'single_ip' mode SNAT: %s", err)
 			}
 		}
-
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
@@ -2931,17 +2930,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					// print eip map for edge mega port
 					log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 					gateway.LogicalEipMap = eipMapList
+					err = client.UpdateEdgeGatewayDetails(context.Background(), gateway)
+					if err != nil {
+						return fmt.Errorf("failed to update edge gateway: %s", err)
+					}
 				} else {
 					eipMapJSON, err := json.Marshal(eipMapList)
 					if err != nil {
 						return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
 					}
 					gateway.EipMap = string(eipMapJSON)
+					err = client.UpdateEdgeGateway(gateway)
+					if err != nil {
+						return fmt.Errorf("failed to update edge gateway: %s", err)
+					}
 				}
-				err = client.UpdateEdgeGateway(gateway)
-				if err != nil {
-					return fmt.Errorf("failed to update edge gateway: %s", err)
-				}
+
 			}
 		}
 
@@ -3990,17 +3994,20 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 			// print eip map for edge mega port
 			log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 			gateway.LogicalEipMap = eipMapList
+			err = client.UpdateEdgeGatewayDetails(context.Background(), gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update edge gateway: %s", err)
+			}
 		} else {
 			eipMapJSON, err := json.Marshal(eipMapList)
 			if err != nil {
 				return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
 			}
 			gateway.EipMap = string(eipMapJSON)
-		}
-		// update EIP map
-		err = client.UpdateEdgeGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to update edge gateway: %s", err)
+			err = client.UpdateEdgeGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update edge gateway: %s", err)
+			}
 		}
 	}
 
