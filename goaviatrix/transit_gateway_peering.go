@@ -24,15 +24,17 @@ type TransitGatewayPeering struct {
 	Gateway2ExcludedTGWConnectionsSlice []string
 	PrependAsPath1                      string
 	PrependAsPath2                      string
-	CID                                 string `form:"CID,omitempty"`
-	Action                              string `form:"action,omitempty"`
-	SingleTunnel                        string `form:"single_tunnel,omitempty"`
-	NoMaxPerformance                    bool   `form:"no_max_performance,omitempty"`
-	EnableOverPrivateNetwork            bool   `form:"over_private_network,omitempty"`
-	EnableJumboFrame                    bool   `form:"jumbo_frame,omitempty"`
-	EnableInsaneMode                    bool   `form:"insane_mode,omitempty"`
-	SrcWanInterfaces                    string `form:"src_wan_interfaces,omitempty"`
-	DstWanInterfaces                    string `form:"dst_wan_interfaces,omitempty"`
+	CID                                 string   `form:"CID,omitempty"`
+	Action                              string   `form:"action,omitempty"`
+	SingleTunnel                        string   `form:"single_tunnel,omitempty"`
+	NoMaxPerformance                    bool     `form:"no_max_performance,omitempty"`
+	EnableOverPrivateNetwork            bool     `form:"over_private_network,omitempty"`
+	EnableJumboFrame                    bool     `form:"jumbo_frame,omitempty"`
+	EnableInsaneMode                    bool     `form:"insane_mode,omitempty"`
+	SrcWanInterfaces                    string   `form:"src_wan_interfaces,omitempty"`
+	DstWanInterfaces                    string   `form:"dst_wan_interfaces,omitempty"`
+	Gateway1LogicalIfNames              []string `form:"gateway1_logical_ifnames,omitempty"`
+	Gateway2LogicalIfNames              []string `form:"gateway2_logical_ifnames,omitempty"`
 }
 
 type TransitGatewayPeeringEdit struct {

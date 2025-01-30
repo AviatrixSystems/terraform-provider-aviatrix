@@ -177,18 +177,97 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	flag := false
+	transit_gateway_name1, ok := d.Get("transit_gateway_name1").(string)
+	if !ok {
+		return fmt.Errorf("transit_gateway_name1 is required")
+	}
+	transit_gateway_name2, ok := d.Get("transit_gateway_name2").(string)
+	if !ok {
+		return fmt.Errorf("transit_gateway_name2 is required")
+	}
 
-	if (d.Get("dst_wan_interfaces").(string) != "") && (d.Get("src_wan_interfaces").(string) != "") {
+	gateway1 := &goaviatrix.Gateway{
+		AccountName: d.Get("account_name").(string),
+		GwName:      transit_gateway_name1,
+	}
+	gateway1Details, err := client.GetGateway(gateway1)
+	if err != nil {
+		return fmt.Errorf("failed to get gateway: %s", err)
+	}
+	gateway1CloudType := gateway1Details.CloudType
+	gateway2CloudType := gateway1Details.CloudType
+	log.Printf("[INFO] Gateway1 details: %#v", gateway1Details)
+	gateway2 := &goaviatrix.Gateway{
+		AccountName: d.Get("account_name").(string),
+		GwName:      transit_gateway_name2,
+	}
+	gateway2Details, err := client.GetGateway(gateway2)
+	if err != nil {
+		return fmt.Errorf("failed to get gateway: %s", err)
+	}
+	log.Printf("[INFO] Gateway2 details: %#v", gateway2Details)
+
+	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) || goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		edgeTransitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1:      d.Get("transit_gateway_name1").(string),
-			TransitGatewayName2:      d.Get("transit_gateway_name2").(string),
-			EnableOverPrivateNetwork: d.Get("over_private_network").(bool),
-			EnableJumboFrame:         d.Get("jumbo_frame").(bool),
-			EnableInsaneMode:         d.Get("insane_mode").(bool),
-			SrcWanInterfaces:         d.Get("gateway1_logical_ifnames").(string),
-			DstWanInterfaces:         d.Get("gateway2_logical_ifnames").(string),
+			TransitGatewayName1: transit_gateway_name1,
+			TransitGatewayName2: transit_gateway_name2,
 		}
-		// get logical interfcae names
+
+		edgeTransitGatewayPeering.EnableOverPrivateNetwork, ok = d.Get("over_private_network").(bool)
+		if !ok {
+			return fmt.Errorf("over_private_network is required for edge gateway peering")
+		}
+		edgeTransitGatewayPeering.EnableJumboFrame, ok = d.Get("jumbo_frame").(bool)
+		if !ok {
+			return fmt.Errorf("jumbo_frame is required for edge gateway peering")
+		}
+		edgeTransitGatewayPeering.EnableInsaneMode, ok = d.Get("insane_mode").(bool)
+		if !ok {
+			return fmt.Errorf("insane_mode is required for edge gateway peering")
+		}
+
+		// get the src wan interface names from gateway1 logical interface names
+		if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+			// process the gateway logical interface names based on the cloud type
+			logicalIfNames, ok := d.Get("gateway1_logical_ifnames").([]interface{})
+			if !ok {
+				return fmt.Errorf("gateway1_logical_ifnames is required for edge gateway peering")
+			}
+			reversedInterfaceNames := ReverseIfnameTranslation(gateway1Details.IfNamesTranslation)
+			if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGENEO) {
+				srcWanInterfacesStr, err := SetWanInterfaces(logicalIfNames, reversedInterfaceNames)
+				if err != nil {
+					return fmt.Errorf("failed to set src wan interfaces to create edge peering: %s", err)
+				}
+				edgeTransitGatewayPeering.SrcWanInterfaces = srcWanInterfacesStr
+
+			} else if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EDGEMEGAPORT) {
+				if d.Get("gateway1_logical_ifnames").([]interface{}) != nil {
+					edgeTransitGatewayPeering.Gateway1LogicalIfNames = getStringList(d, "gateway1_logical_ifnames")
+				}
+			}
+		}
+		// get the dst wan interface names from gateway2 logical interface names
+		if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+			// process the gateway logical interface names based on the cloud type
+			logicalIfNames, ok := d.Get("gateway2_logical_ifnames").([]interface{})
+			if !ok {
+				return fmt.Errorf("gateway2_logical_ifnames is required for edge gateway peering")
+			}
+			reversedInterfaceNames := ReverseIfnameTranslation(gateway2Details.IfNamesTranslation)
+			if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGENEO) {
+				dstWanInterfacesStr, err := SetWanInterfaces(logicalIfNames, reversedInterfaceNames)
+				if err != nil {
+					return fmt.Errorf("failed to set dst wan interfaces to create edge peering: %s", err)
+				}
+				edgeTransitGatewayPeering.DstWanInterfaces = dstWanInterfacesStr
+
+			} else if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EDGEMEGAPORT) {
+				if d.Get("gateway2_logical_ifnames").([]interface{}) != nil {
+					edgeTransitGatewayPeering.Gateway2LogicalIfNames = getStringList(d, "gateway2_logical_ifnames")
+				}
+			}
+		}
 		d.SetId(edgeTransitGatewayPeering.TransitGatewayName1 + "~" + edgeTransitGatewayPeering.TransitGatewayName2)
 		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
 
@@ -216,8 +295,8 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		}
 
 		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1:            d.Get("transit_gateway_name1").(string),
-			TransitGatewayName2:            d.Get("transit_gateway_name2").(string),
+			TransitGatewayName1:            transit_gateway_name1,
+			TransitGatewayName2:            transit_gateway_name2,
 			Gateway1ExcludedCIDRs:          strings.Join(gw1Cidrs, ","),
 			Gateway2ExcludedCIDRs:          strings.Join(gw2Cidrs, ","),
 			Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
@@ -343,14 +422,12 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("could not get transit peering details: %v", err)
 	}
 
-	dstWanInterfaces := d.Get("dst_wan_interfaces").(string)
-	srcWanInterfaces := d.Get("src_wan_interfaces").(string)
-	if dstWanInterfaces != "" && srcWanInterfaces != "" {
+	if len(transitGatewayPeering.Gateway1LogicalIfNames) > 0 || len(transitGatewayPeering.Gateway2LogicalIfNames) > 0 {
 		d.Set("over_private_network", transitGatewayPeering.EnableOverPrivateNetwork)
 		d.Set("jumbo_frame", transitGatewayPeering.EnableJumboFrame)
 		d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode)
-		d.Set("src_wan_interfaces", transitGatewayPeering.SrcWanInterfaces)
-		d.Set("dst_wan_interfaces", transitGatewayPeering.DstWanInterfaces)
+		d.Set("gateway1_logical_ifnames", transitGatewayPeering.Gateway1LogicalIfNames)
+		d.Set("gateway2_logical_ifnames", transitGatewayPeering.Gateway2LogicalIfNames)
 	} else {
 		gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
 		err = setConfigValueIfEquivalent(d, "gateway1_excluded_network_cidrs", gw1CidrsFromConfig, transitGatewayPeering.Gateway1ExcludedCIDRsSlice)
@@ -482,6 +559,10 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 
 	}
 
+	if d.HasChanges("gateway1_logical_ifnames") || d.HasChange("gateway2_logical_ifnames") {
+		return fmt.Errorf("cannot update logical interface names for edge transit peerings")
+	}
+
 	d.Partial(false)
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return resourceAviatrixTransitGatewayPeeringRead(d, meta)
@@ -503,4 +584,33 @@ func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+// reverse interface name translations from this "eth0": "wan.0" => "wan0": "eth0"
+func ReverseIfnameTranslation(ifnames map[string]string) map[string]string {
+	reversed := make(map[string]string)
+
+	for orig, translated := range ifnames {
+		// Replace '.' with an empty string to match expected format
+		reversed[strings.ReplaceAll(translated, ".", "")] = orig
+	}
+	return reversed
+}
+
+// SetWanInterfaces sets the WAN interface names based on logical interface mappings.
+func SetWanInterfaces(logicalIfNames []interface{}, reversedInterfaceNames map[string]string) (string, error) {
+	var wanInterfaces []string
+	for _, logicalIfName := range logicalIfNames {
+		ifName, ok := logicalIfName.(string)
+		if !ok {
+			return "", fmt.Errorf("logical_ifnames must be a list of strings")
+		}
+		interfaceName, exists := reversedInterfaceNames[ifName]
+		if !exists {
+			return "", fmt.Errorf("logical interface name %s not found in translation map", ifName)
+		}
+		wanInterfaces = append(wanInterfaces, interfaceName)
+	}
+
+	return strings.Join(wanInterfaces, ","), nil
 }
