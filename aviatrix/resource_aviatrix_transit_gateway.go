@@ -3956,10 +3956,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	// create the transit gateway
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
-	// err = client.LaunchTransitVpc(gateway)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
-	// }
+	err = client.LaunchTransitVpc(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
+	}
 	// create ha transit gateway if ha_interfaces are provided
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if ok && len(haInterfaces) > 0 {
@@ -3969,10 +3969,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 		// log transit ha gateway details
 		log.Printf("[INFO] Creating HA Aviatrix Transit Gateway: %#v", transitHaGw)
-		// _, err = client.CreateTransitHaGw(transitHaGw)
-		// if err != nil {
-		// 	return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-		// }
+		_, err = client.CreateTransitHaGw(transitHaGw)
+		if err != nil {
+			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
+		}
 	}
 
 	// eip map is updated after the transit is created
