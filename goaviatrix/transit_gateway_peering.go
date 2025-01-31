@@ -77,8 +77,9 @@ type TransitGatewayPeeringDetailsResults struct {
 	TunnelCount            int                         `json:"tunnel_count"`
 	EnableJumboFrame       bool                        `json:"jumbo_frame"` // jumbo frame
 	NoMaxPerformance       bool                        `json:"no_max_performance"`
-	Gateway1LogicalIfNames []string                    `json:"gateway1_logical_ifnames"`
-	Gateway2LogicalIfNames []string                    `json:"gateway2_logical_ifnames"`
+	Gateway1LogicalIfNames []string                    `json:"src_gw_logical_ifnames"`
+	Gateway2LogicalIfNames []string                    `json:"dst_gw_logical_ifnames"`
+	InsaneMode             bool                        `json:"insane_mode"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -168,6 +169,22 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	if data.Results.Site2.ExcludedTGWConnections != nil {
 		transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
 	}
+
+	// set the gateway1 logical interface names
+	if data.Results.Gateway1LogicalIfNames != nil {
+		transitGatewayPeering.Gateway1LogicalIfNames = data.Results.Gateway1LogicalIfNames
+	}
+
+	// set the gateway2 logical interface names
+	if data.Results.Gateway2LogicalIfNames != nil {
+		transitGatewayPeering.Gateway2LogicalIfNames = data.Results.Gateway2LogicalIfNames
+	}
+
+	// set insane mode
+	transitGatewayPeering.EnableInsaneMode = data.Results.InsaneMode
+
+	// set over private network
+	transitGatewayPeering.EnableOverPrivateNetwork = data.Results.PrivateNetworkPeering
 
 	if data.Results.PrivateNetworkPeering {
 		transitGatewayPeering.PrivateIPPeering = "yes"
