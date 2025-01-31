@@ -91,7 +91,6 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 				Description: "(Optional) Advanced option. Enable peering over private network. Only appears and applies to " +
 					"when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
 					"Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. " +
@@ -277,11 +276,11 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		}
 		d.SetId(edgeTransitGatewayPeering.TransitGatewayName1 + "~" + edgeTransitGatewayPeering.TransitGatewayName2)
 		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
-		log.Printf("[INFO] Creating Aviatrix Edge Transit Gateway peering: %#v", edgeTransitGatewayPeering)
-		err := client.CreateTransitGatewayPeering(context.Background(), edgeTransitGatewayPeering)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
-		}
+		// log.Printf("[INFO] Creating Aviatrix Edge Transit Gateway peering: %#v", edgeTransitGatewayPeering)
+		// err := client.CreateTransitGatewayPeering(context.Background(), edgeTransitGatewayPeering)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
+		// }
 	} else {
 		var gw1Cidrs []string
 		for _, cidr := range d.Get("gateway1_excluded_network_cidrs").([]interface{}) {
@@ -311,6 +310,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 			InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 			NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
 		}
+
 		if d.Get("enable_peering_over_private_network").(bool) {
 			transitGatewayPeering.PrivateIPPeering = "yes"
 		} else {

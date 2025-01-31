@@ -70,13 +70,15 @@ type TransitGatewayPeeringDetailsAPIResp struct {
 type TransitGatewayPeeringDetailsResults struct {
 	Site1                  TransitGatewayPeeringDetail `json:"site_1"`
 	Site2                  TransitGatewayPeeringDetail `json:"site_2"`
-	PrivateNetworkPeering  bool                        `json:"private_network_peering"`
+	PrivateNetworkPeering  bool                        `json:"private_network_peering"` // over private network
 	Tunnels                []TunnelsDetail             `json:"tunnels"`
 	InsaneModeOverInternet bool                        `json:"insane_mode_over_internet"`
 	InsaneModeTunnelCount  int                         `json:"insane_mode_tunnel_count"`
 	TunnelCount            int                         `json:"tunnel_count"`
-	EnableJumboFrame       bool                        `json:"jumbo_frame"`
+	EnableJumboFrame       bool                        `json:"jumbo_frame"` // jumbo frame
 	NoMaxPerformance       bool                        `json:"no_max_performance"`
+	Gateway1LogicalIfNames []string                    `json:"gateway1_logical_ifnames"`
+	Gateway2LogicalIfNames []string                    `json:"gateway2_logical_ifnames"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -154,10 +156,19 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 		return nil, err
 	}
 
-	transitGatewayPeering.Gateway1ExcludedCIDRsSlice = data.Results.Site1.ExcludedCIDRs
-	transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
-	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
-	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
+	if data.Results.Site1.ExcludedCIDRs != nil {
+		transitGatewayPeering.Gateway1ExcludedCIDRsSlice = data.Results.Site1.ExcludedCIDRs
+	}
+	if data.Results.Site1.ExcludedTGWConnections != nil {
+		transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
+	}
+	if data.Results.Site2.ExcludedCIDRs != nil {
+		transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
+	}
+	if data.Results.Site2.ExcludedTGWConnections != nil {
+		transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
+	}
+
 	if data.Results.PrivateNetworkPeering {
 		transitGatewayPeering.PrivateIPPeering = "yes"
 	} else {
