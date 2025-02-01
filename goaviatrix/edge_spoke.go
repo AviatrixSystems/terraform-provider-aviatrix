@@ -84,6 +84,7 @@ type EdgeSpokeVlan struct {
 type EdgeSpokeResp struct {
 	GwName                             string `json:"gw_name"`
 	SiteId                             string `json:"vpc_id"`
+	CloudType                          int    `json:"cloud_type"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
 	DnsServerIp                        string `json:"dns_server_ip"`

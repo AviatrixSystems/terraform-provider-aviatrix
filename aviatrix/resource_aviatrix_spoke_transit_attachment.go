@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -117,7 +118,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
-		err := client.CreateSpokeTransitAttachment(attachment)
+		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
 		if err != nil {
 			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
