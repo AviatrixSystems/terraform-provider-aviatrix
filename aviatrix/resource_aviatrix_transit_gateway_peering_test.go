@@ -3,12 +3,14 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) {
@@ -150,4 +152,151 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestReverseIfnameTranslation(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]string
+		expected map[string]string
+	}{
+		{
+			name: "Basic translation reversal",
+			input: map[string]string{
+				"eth0": "wan.0",
+				"eth1": "wan.1",
+			},
+			expected: map[string]string{
+				"wan0": "eth0",
+				"wan1": "eth1",
+			},
+		},
+		{
+			name:     "Handles empty map",
+			input:    map[string]string{},
+			expected: map[string]string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ReverseIfnameTranslation(tt.input)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("Test %s failed. Expected %v, got %v", tt.name, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestSetWanInterfaces(t *testing.T) {
+	tests := []struct {
+		name                   string
+		logicalIfNames         []interface{}
+		reversedInterfaceNames map[string]string
+		expected               string
+		expectErr              bool
+	}{
+		{
+			name:           "Valid input - single interface",
+			logicalIfNames: []interface{}{"wan0"},
+			reversedInterfaceNames: map[string]string{
+				"wan0": "eth0",
+			},
+			expected:  "eth0",
+			expectErr: false,
+		},
+		{
+			name:           "Valid input - multiple interfaces",
+			logicalIfNames: []interface{}{"wan0", "wan1"},
+			reversedInterfaceNames: map[string]string{
+				"wan0": "eth0",
+				"wan1": "eth1",
+			},
+			expected:  "eth0,eth1",
+			expectErr: false,
+		},
+		{
+			name:           "Interface name not found in map",
+			logicalIfNames: []interface{}{"wan2"},
+			reversedInterfaceNames: map[string]string{
+				"wan0": "eth0",
+			},
+			expected:  "",
+			expectErr: true,
+		},
+		{
+			name:           "Empty logicalIfNames",
+			logicalIfNames: []interface{}{},
+			reversedInterfaceNames: map[string]string{
+				"wan0": "eth0",
+			},
+			expected:  "",
+			expectErr: false, // Empty input should return an empty string
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := SetWanInterfaces(tt.logicalIfNames, tt.reversedInterfaceNames)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("Test %s failed: expected error=%v, got error=%v", tt.name, tt.expectErr, err != nil)
+			}
+			if !tt.expectErr && !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("Test %s failed: expected %q, got %q", tt.name, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestSetWanInterfaceNames(t *testing.T) {
+	tests := []struct {
+		name           string
+		logicalIfNames []string
+		cloudType      int
+		gatewayDetails *goaviatrix.Gateway
+		gatewayPrefix  string
+		expectedError  bool
+	}{
+		{
+			name:           "Valid logical interfaces for Equinix cloud type",
+			logicalIfNames: []string{"wan0", "wan1"},
+			cloudType:      goaviatrix.EDGEEQUINIX,
+			gatewayDetails: &goaviatrix.Gateway{IfNamesTranslation: map[string]string{"eth0": "wan.0", "eth1": "wan.1"}},
+			gatewayPrefix:  "gateway1",
+			expectedError:  false,
+		},
+		{
+			name:           "Valid logical interfaces for Megaport cloud type",
+			logicalIfNames: []string{"wan0", "wan1"},
+			cloudType:      goaviatrix.EDGEMEGAPORT,
+			gatewayDetails: &goaviatrix.Gateway{},
+			gatewayPrefix:  "gateway1",
+			expectedError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transitGatewayPeering := &goaviatrix.TransitGatewayPeering{}
+
+			// Call the function with actual cloud type
+			err := setWanInterfaceNames(tt.logicalIfNames, tt.cloudType, tt.gatewayDetails, tt.gatewayPrefix, transitGatewayPeering)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				if tt.cloudType == goaviatrix.EDGEEQUINIX || tt.cloudType == goaviatrix.EDGENEO {
+					assert.NotEmpty(t, transitGatewayPeering.SrcWanInterfaces)
+				} else if tt.cloudType == goaviatrix.EDGEMEGAPORT {
+					// Check the logical interfaces set for Megaport
+					if tt.gatewayPrefix == "gateway1" {
+						assert.Equal(t, tt.logicalIfNames, transitGatewayPeering.Gateway1LogicalIfNames)
+					} else {
+						assert.Equal(t, tt.logicalIfNames, transitGatewayPeering.Gateway2LogicalIfNames)
+					}
+				}
+			}
+		})
+	}
 }

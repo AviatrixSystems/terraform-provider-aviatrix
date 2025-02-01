@@ -38,11 +38,11 @@ resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
 resource "aviatrix_transit_gateway_peering" "test_edge_transit_gateway_peering" {
   transit_gateway_name1   = "test-edge-transit-1"
   transit_gateway_name2   = "test-edge-transit-2"
-  over_private_network    = true
+  enable_peering_over_private_network  = true
   jumbo_frame             = false
   insane_mode             = true
-  src_wan_interfaces      = "eth1"
-  dst_wan_interfaces      = "eth1"
+  gateway1_logical_ifnames      = ["wan1"]
+  gateway2_logical_ifnames      = ["wan1"]
 }
 ```
 
@@ -66,11 +66,10 @@ The following arguments are supported:
 * `enable_insane_mode_encryption_over_internet` - (Optional) Advanced option. Enable Insane Mode Encryption over Internet. Transit gateways must be in Insane Mode. Currently, only inter-cloud connections between AWS and Azure are supported. Required with valid `tunnel_count`. Conflicts with `enable_peering_over_private_network` and `enable_single_tunnel_mode`. Type: Boolean. Default: false. Available as of provider version R2.19+.
 * `tunnel_count` - (Optional) Advanced option. Number of public tunnels. Required with `enable_insane_mode_encryption_over_internet`. Conflicts with `enable_peering_over_private_network` and `enable_single_tunnel_mode`. Type: Integer. Valid Range: 2-20. Available as of provider version R2.19+.
 * `enable_max_performance` - (Optional) Indicates whether the maximum amount of HPE tunnels will be created. Only valid when the two transit gateways are each launched in Insane Mode and in the same cloud type. Default value: true. Available as of provider version R2.22.2+.
-* `over_private_network` - (Optional) This underlay connects over the private network for peering with Edge Transit. Required only for edge transit attachments.
-* `jumbo_frame` - (Optional) Enable jumbo frame for over private peering with Edge Transit. Required only for edge transit attachments.
-* `insane_mode` - (Optional) Enable HPE mode for peering with Edge Transit. Required only for edge transit attachments.
-* `src_wan_interfaces` - (Optional) Source WAN interface for edge gateways where the peering originates. Required only for edge transit attachments.
-* `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where the peering terminates. Required only for edge transit attachments.
+* `jumbo_frame` - (Optional) Enable jumbo frame for over private peering with Edge Transit. Required only for edge transit peerings.
+* `insane_mode` - (Optional) Enable HPE mode for peering with Edge Transit. Required only for edge transit peerings.
+* `gateway1_logical_ifnames` - (Optional) Logical source WAN interfaces for edge gateways where the peering originates. Required only for edge transit attachments.
+* `gateway2_logical_ifnames` - (Optional) Logical destination WAN interface for edge gateways where the peering terminates. Required only for edge transit attachments.
 
 
 ~> **NOTE:** `enable_single_tunnel_mode` is only valid when `enable_peering_over_private_network` is set to `true`. Private Transit Gateway Peering with Single-Tunnel Mode expands the existing Insane Mode Transit Gateway Peering Over Private Network to apply it to single IPSec tunnel. One use case is for low speed encryption between cloud networks.
