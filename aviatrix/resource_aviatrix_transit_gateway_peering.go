@@ -204,21 +204,39 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		return err
 	}
 	gateway1CloudType := gateway1Details.CloudType
-	// Set source WAN interface names for gateway1
-	gw1LogicalIfNames := getStringList(d, "gateway1_logical_ifnames")
-	if err := setWanInterfaceNames(gw1LogicalIfNames, gateway1CloudType, gateway1Details, "gateway1", transitGatewayPeering); err != nil {
-		return err
-	}
-
 	gateway2Details, err := getGatewayDetails(client, transitGatewayName2)
 	if err != nil {
 		return err
 	}
 	gateway2CloudType := gateway2Details.CloudType
+	// Set source WAN interface names for gateway1
+	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		transit1InterfaceRaw, ok := d.GetOk("gateway1_logical_ifnames")
+		if !ok {
+			return fmt.Errorf("gateway1_logical_ifnames is required for edge gateway peering")
+		}
+		if _, ok := transit1InterfaceRaw.([]interface{}); !ok {
+			return fmt.Errorf("gateway1_logical_ifnames must be a list of strings")
+		}
+		gw1LogicalIfNames := getStringList(d, "gateway1_logical_ifnames")
+		if err := setWanInterfaceNames(gw1LogicalIfNames, gateway1CloudType, gateway1Details, "gateway1", transitGatewayPeering); err != nil {
+			return err
+		}
+	}
+
 	// Set destination WAN interface names for gateway2
-	gw2LogicalIfNames := getStringList(d, "gateway2_logical_ifnames")
-	if err := setWanInterfaceNames(gw2LogicalIfNames, gateway2CloudType, gateway2Details, "gateway2", transitGatewayPeering); err != nil {
-		return err
+	if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		transit2InterfaceRaw, ok := d.GetOk("gateway2_logical_ifnames")
+		if !ok {
+			return fmt.Errorf("gateway2_logical_ifnames is required for edge gateway peering")
+		}
+		if _, ok := transit2InterfaceRaw.([]interface{}); !ok {
+			return fmt.Errorf("gateway2_logical_ifnames must be a list of strings")
+		}
+		gw2LogicalIfNames := getStringList(d, "gateway2_logical_ifnames")
+		if err := setWanInterfaceNames(gw2LogicalIfNames, gateway2CloudType, gateway2Details, "gateway2", transitGatewayPeering); err != nil {
+			return err
+		}
 	}
 
 	if err := setExcludedResources(d, transitGatewayPeering); err != nil {
@@ -226,7 +244,8 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	}
 
 	// options only supported for non EAT peerings
-	if len(transitGatewayPeering.Gateway1LogicalIfNames) == 0 && len(transitGatewayPeering.Gateway2LogicalIfNames) == 0 {
+	if !goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) && !goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		log.Printf("[INFO] Setting non EAT peering options")
 		if err := setNonEATPeeringOptions(d, transitGatewayPeering); err != nil {
 			return err
 		}
@@ -309,6 +328,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	}
 	if err := d.Set("gateway1_logical_ifnames", transitGatewayPeering.Gateway1LogicalIfNames); err != nil {
 		return fmt.Errorf("failed to set gateway1_logical_ifnames: %w", err)
+	}
+	if err := d.Set("gateway2_logical_ifnames", transitGatewayPeering.Gateway2LogicalIfNames); err != nil {
+		return fmt.Errorf("failed to set gateway2_logical_ifnames: %w", err)
 	}
 
 	gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")

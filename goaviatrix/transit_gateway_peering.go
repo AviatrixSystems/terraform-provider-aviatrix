@@ -97,7 +97,6 @@ func (c *Client) CreateTransitGatewayPeering(ctx context.Context, transitGateway
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "create_inter_transit_gateway_peering"
 	return c.PostAPIContext2(ctx, nil, transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
-	// return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
 }
 
 func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
