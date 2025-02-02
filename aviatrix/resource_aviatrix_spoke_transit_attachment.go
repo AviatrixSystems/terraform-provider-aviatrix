@@ -89,6 +89,14 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether the spoke gateway is BGP enabled or not.",
 			},
+			"transit_gateway_logical_ifnames": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Transit gateway logical interface names for edge gateways, where the peering terminates. Required for all edge gateways.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -101,6 +109,11 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	spoke, err := client.GetGateway(&goaviatrix.Gateway{GwName: attachment.SpokeGwName})
 	if err != nil {
 		return fmt.Errorf("could not find spoke gateway: %s", err)
+	}
+
+	// get edge transit logical interface names
+	if err := getEdgeTransitLogicalIfNames(d, client, attachment); err != nil {
+		return fmt.Errorf("%w", err)
 	}
 
 	if !spoke.EnableBgp && (len(attachment.SpokePrependAsPath) != 0 || len(attachment.TransitPrependAsPath) != 0) {
@@ -225,6 +238,18 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
+	}
+
+	// set the transit gateway logical interface names only for edge gateways
+	transitGateway, err := getGatewayDetails(client, transitGwName)
+	if err != nil {
+		return fmt.Errorf("could not get transit gateway details for %s: %w", transitGwName, err)
+	}
+
+	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
+			_ = d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
+		}
 	}
 
 	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
