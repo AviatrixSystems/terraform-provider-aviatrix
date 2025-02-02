@@ -25,6 +25,14 @@ resource "aviatrix_spoke_transit_attachment" "test_attachment" {
   ]
 }
 ```
+```hcl
+# Create an Aviatrix Spoke Transit Attachment for EAT
+resource "aviatrix_spoke_transit_attachment" "test_attachment" {
+  spoke_gw_name   = "spoke-gw"
+  transit_gw_name = "transit-gw"
+  transit_gateway_logical_ifnames = ["wan1"]
+}
+```
 
 ## Argument Reference
 
@@ -40,6 +48,7 @@ The following arguments are supported:
 * `enable_max_performance` - (Optional) Indicates whether the maximum amount of HPE tunnels will be created. Only valid when transit and spoke gateways are each launched in Insane Mode and in the same cloud type. Default value: true. Available as of provider version R2.22.2+.
 * `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on spoke_gateway_name. Available as of provider version R2.23+.
 * `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on transit_gateway_name. Available as of provider version R2.23+.
+* `transit_gateway_logical_ifnames` - (Optional) Transit gateway logical interface names for edge gateways where the peering terminates. Required only for edge as a transit attachment.
 
 ## Attribute Reference
 
