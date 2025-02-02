@@ -32,6 +32,14 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 
 	resourceName := "aviatrix_transit_gateway_peering.foo"
 
+	accountName := "megaport-" + rName
+	transit1GwName := "spoke-" + rName
+	transit1SiteID := "site-" + rName
+	path, _ := os.Getwd()
+	transit2GwName := "transit-" + rName
+	transit2SiteID := "site-" + rName
+	resourceNameEdge := "aviatrix_transit_gateway_peering.test_transit_gateway_peering"
+
 	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
 	if skipAcc == "yes" {
 		t.Skip("Skipping Aviatrix transit gateway peering test as SKIP_TRANSIT_GATEWAY_PEERING is set")
@@ -59,6 +67,19 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit1SiteID, path, transit2GwName, transit2SiteID),
+				Check: resource.ComposeTestCheckFunc(
+					tesAccCheckTransitGatewayPeeringExists(resourceNameEdge),
+					resource.TestCheckResourceAttr(resourceNameEdge, "transit_gateway_name1", transit1GwName),
+					resource.TestCheckResourceAttr(resourceNameEdge, "transit_gateway_name2", transit2GwName),
+					resource.TestCheckResourceAttr(resourceNameEdge, "enable_peering_over_private_network", "true"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "jumbo_frame", "false"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "insane_mode", "true"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "gateway1_logical_ifnames.0", "wan1"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "gateway2_logical_ifnames.0", "wan1"),
+				),
 			},
 		},
 	})
@@ -130,6 +151,99 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit1SiteID, path, transit2GwName, transit2SiteID string) string {
+	return fmt.Sprintf(`
+	resource "aviatrix_account" "test_acc_edge_megaport" {
+		account_name       = "edge-%s"
+		cloud_type         = 1048576
+	}
+	
+	resource "aviatrix_transit_gateway" "test_edge_transit_1" {
+		cloud_type   = 1048576
+		account_name = aviatrix_account.test_acc_edge_megaport.account_name
+		gw_name      = "%s"
+		vpc_id       = "%s"
+		gw_size      = "SMALL"
+		ztp_file_download_path = "%s"
+		interfaces {
+			gateway_ip     = "192.168.20.1"
+			ip_address     = "192.168.20.11/24"
+			public_ip      = "67.207.104.19"
+			logical_ifname = "wan0"
+			secondary_private_cidr_list = ["192.168.20.16/29"]
+		}
+		interfaces {
+			gateway_ip     = "192.168.21.1"
+			ip_address     = "192.168.21.11/24"
+			public_ip      = "67.71.12.148"
+			logical_ifname = "wan1"
+			secondary_private_cidr_list = ["192.168.21.16/29"]
+		}
+		interfaces {
+			dhcp           = true
+			logical_ifname = "mgmt0"
+		}
+		interfaces {
+			gateway_ip     = "192.168.22.1"
+			ip_address     = "192.168.22.11/24"
+			logical_ifname = "wan2"
+		}
+		interfaces {
+			gateway_ip     = "192.168.23.1"
+			ip_address     = "192.168.23.11/24"
+			logical_ifname = "wan3"
+		}
+	}
+	
+	resource "aviatrix_transit_gateway" "test_edge_transit_2" {
+		cloud_type   = 1048576
+		account_name = aviatrix_account.test_acc_edge_megaport.account_name
+		gw_name      = "%s"
+		vpc_id       = "%s"
+		gw_size      = "SMALL"
+		ztp_file_download_path = "%s"
+		interfaces {
+			gateway_ip     = "192.168.24.1"
+			ip_address     = "192.168.24.11/24"
+			public_ip      = "67.207.104.24"
+			logical_ifname = "wan0"
+			secondary_private_cidr_list = ["192.168.24.16/29"]
+		}
+		interfaces {
+			gateway_ip     = "192.168.25.1"
+			ip_address     = "192.168.25.11/24"
+			public_ip      = "67.71.12.25"
+			logical_ifname = "wan1"
+			secondary_private_cidr_list = ["192.168.25.16/29"]
+		}
+		interfaces {
+			dhcp           = true
+			logical_ifname = "mgmt0"
+		}
+		interfaces {
+			gateway_ip     = "192.168.26.1"
+			ip_address     = "192.168.26.11/24"
+			logical_ifname = "wan2"
+		}
+		interfaces {
+			gateway_ip     = "192.168.27.1"
+			ip_address     = "192.168.27.11/24"
+			logical_ifname = "wan3"
+		}
+	}
+	
+	resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
+		transit_gateway_name1 = aviatrix_transit_gateway.test_edge_transit_1.gw_name
+		transit_gateway_name2 = aviatrix_transit_gateway.test_edge_transit_2.gw_name
+		enable_peering_over_private_network = true
+		jumbo_frame = false
+		insane_mode = true
+		gateway1_logical_ifnames = ["wan1"]
+		gateway2_logical_ifnames = ["wan1"]
+	}
+		`, accountName, transit1GwName, transit1SiteID, path, transit2GwName, transit2SiteID, path)
 }
 
 func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {

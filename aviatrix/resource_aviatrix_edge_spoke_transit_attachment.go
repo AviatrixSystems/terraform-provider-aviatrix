@@ -114,7 +114,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 			"spoke_gateway_logical_ifnames": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Spoke gateway logical interface names for edge gateways, where the peering originates",
+				Description: "Spoke gateway logical interface names for edge gateways, where the peering originates. Required for Megaport cloud type.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -122,7 +122,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 			"transit_gateway_logical_ifnames": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Transit gateway logical interface names for edge gateways, where the peering terminates",
+				Description: "Transit gateway logical interface names for edge gateways, where the peering terminates. Required for all edge gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -152,21 +152,29 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
 
-	// get spoke and transit gateway logical interface names
-	attachment.SpokeGatewayLogicalIfNames = getStringList(d, "spoke_gateway_logical_ifnames")
+	// get edge spoke logical interface names
+	edgeSpoke, err := client.GetEdgeSpoke(ctx, attachment.SpokeGwName)
+	if err != nil {
+		return diag.Errorf("failed to get spoke gateway details: %v", err)
+	}
+	if edgeSpoke.CloudType == goaviatrix.EDGEMEGAPORT {
+		attachment.SpokeGatewayLogicalIfNames = getStringList(d, "spoke_gateway_logical_ifnames")
+	}
 
-	// get the dst wan interfaces for transit type Equinix and AEP
+	// get edge transit logical interface names
 	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
 	if err != nil {
 		return diag.Errorf("could not get transit gateway details for %s: %v", attachment.TransitGwName, err)
 	}
 	transitCloudType := transitGatewayDetails.CloudType
+	// get the dst wan interfaces for Equinix & AEP EAT gateway
 	if goaviatrix.IsCloudType(transitCloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGENEO) {
 		attachment.DstWanInterfaces, err = getDstWanInterfaces(attachment.TransitGatewayLogicalIfNames, transitGatewayDetails)
 		if err != nil {
 			return diag.Errorf("could not get dst wan interfaces for transit gateway: %v", err)
 		}
 	} else if goaviatrix.IsCloudType(transitCloudType, goaviatrix.EDGEMEGAPORT) {
+		// get the logical if names for megaport
 		attachment.TransitGatewayLogicalIfNames = getStringList(d, "transit_gateway_logical_ifnames")
 	}
 
@@ -300,7 +308,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	if edgeSpoke.CloudType == goaviatrix.EDGEMEGAPORT {
 		if len(attachment.SpokeGatewayLogicalIfNames) > 0 {
-			d.Set("spoke_gateway_logical_ifnames", attachment.SpokeGatewayLogicalIfNames)
+			_ = d.Set("spoke_gateway_logical_ifnames", attachment.SpokeGatewayLogicalIfNames)
 		}
 	} else {
 		var defaultWanInterfaces []string
@@ -314,13 +322,13 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 		if len(attachment.EdgeWanInterfacesResp) == 0 || (len(edgeWanInterfacesInput) == 0 && goaviatrix.Equivalent(attachment.EdgeWanInterfacesResp, defaultWanInterfaces)) ||
 			(len(edgeWanInterfacesInput) != 0 && goaviatrix.Equivalent(edgeWanInterfacesInput, defaultWanInterfaces)) {
-			d.Set("edge_wan_interfaces", nil)
+			_ = d.Set("edge_wan_interfaces", nil)
 		} else {
-			d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
+			_ = d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
 		}
 
 		if len(defaultWanInterfaces) != 0 && len(attachment.EdgeWanInterfacesResp) != 0 {
-			d.Set("default_edge_wan_interfaces", defaultWanInterfaces)
+			_ = d.Set("default_edge_wan_interfaces", defaultWanInterfaces)
 		}
 	}
 
@@ -331,7 +339,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
-			d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
+			_ = d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
 		}
 	}
 
