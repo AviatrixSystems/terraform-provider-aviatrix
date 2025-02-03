@@ -380,8 +380,8 @@ func createOrderMap(order []string) map[string]int {
 func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface) []goaviatrix.EdgeTransitInterface {
 	orderMap := createOrderMap(interfaceOrder)
 	sort.SliceStable(interfaces, func(i, j int) bool {
-		iIndex, iExists := orderMap[interfaces[i].LogicalIfName]
-		jIndex, jExists := orderMap[interfaces[j].LogicalIfName]
+		iIndex, iExists := orderMap[interfaces[i].Name]
+		jIndex, jExists := orderMap[interfaces[j].Name]
 		if !iExists {
 			iIndex = len(orderMap)
 		}

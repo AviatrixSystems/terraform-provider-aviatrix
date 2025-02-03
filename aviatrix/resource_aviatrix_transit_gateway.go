@@ -1965,6 +1965,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			_ = d.Set("ha_management_egress_ip_prefix_list", strings.Split(gw.HaGw.ManagementEgressIPPrefix, ","))
 		}
+		if err := setGatewayResourceData(d, gw); err != nil {
+			log.Printf("[ERROR] %v", err)
+			return err
+		}
 	} else {
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
@@ -3956,10 +3960,10 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	// create the transit gateway
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
-	err = client.LaunchTransitVpc(gateway)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
-	}
+	// err = client.LaunchTransitVpc(gateway)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
+	// }
 	// create ha transit gateway if ha_interfaces are provided
 	haInterfaces, ok := d.Get("ha_interfaces").([]interface{})
 	if ok && len(haInterfaces) > 0 {
@@ -4546,4 +4550,58 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		}
 	}
 	return eipMapList, nil
+}
+
+func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) error {
+	settings := map[string]interface{}{
+		"eip":                                  gw.PublicIP,
+		"cloud_instance_id":                    gw.CloudnGatewayInstID,
+		"security_group_id":                    gw.GwSecurityGroupID,
+		"single_ip_snat":                       gw.EnableNat == "yes" && gw.SnatMode == "primary",
+		"connected_transit":                    gw.ConnectedTransit == "yes",
+		"bgp_hold_time":                        gw.BgpHoldTime,
+		"bgp_polling_time":                     gw.BgpPollingTime,
+		"bgp_neighbor_status_polling_time":     gw.BgpBfdPollingTime,
+		"image_version":                        gw.ImageVersion,
+		"software_version":                     gw.SoftwareVersion,
+		"local_as_number":                      gw.LocalASNumber,
+		"bgp_ecmp":                             gw.BgpEcmp,
+		"enable_active_standby":                gw.EnableActiveStandby,
+		"enable_active_standby_preemptive":     gw.EnableActiveStandbyPreemptive,
+		"enable_s2c_rx_balancing":              gw.EnableS2CRxBalancing,
+		"enable_transit_summarize_cidr_to_tgw": gw.EnableTransitSummarizeCidrToTgw,
+		"enable_segmentation":                  gw.EnableSegmentation,
+		"learned_cidrs_approval_mode":          gw.LearnedCidrsApprovalMode,
+		"enable_jumbo_frame":                   gw.JumboFrame,
+		"enable_private_oob":                   gw.EnablePrivateOob,
+		"enable_firenet":                       gw.EnableFirenet,
+		"enable_gateway_load_balancer":         gw.EnableGatewayLoadBalancer,
+		"enable_egress_transit_firenet":        gw.EnableEgressTransitFirenet,
+		"enable_preserve_as_path":              gw.EnablePreserveAsPath,
+		"customized_transit_vpc_routes":        gw.CustomizedTransitVpcRoutes,
+		"enable_transit_firenet":               gw.EnableTransitFirenet,
+		"enable_advertise_transit_cidr":        gw.EnableAdvertiseTransitCidr,
+		"enable_learned_cidrs_approval":        gw.EnableLearnedCidrsApproval,
+		"enable_multi_tier_transit":            gw.EnableMultitierTransit,
+		"tunnel_detection_time":                gw.TunnelDetectionTime,
+	}
+
+	for key, value := range settings {
+		if err := d.Set(key, value); err != nil {
+			return fmt.Errorf("failed to set %s: %w", key, err)
+		}
+	}
+
+	var prependAsPath []string
+	for _, p := range strings.Split(gw.PrependASPath, " ") {
+		if p != "" {
+			prependAsPath = append(prependAsPath, p)
+		}
+	}
+
+	if err := d.Set("prepend_as_path", prependAsPath); err != nil {
+		return fmt.Errorf("failed to set prepend_as_path: %w", err)
+	}
+
+	return nil
 }
