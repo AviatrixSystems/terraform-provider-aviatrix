@@ -292,6 +292,13 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAEP, "ha_interfaces.0.logical_ifname", "wan0"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "peer_backup_logical_ifname", "wan1"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "peer_connection_type", "private"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "eip_map.0.logical_ifname", "wan0"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "eip_map.0.private_ip", "192.168.19.18"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "eip_map.0.public_ip", "35.0.16.1"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "bgp_polling_time", "55"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "local_as_number", "65000"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "enable_jumbo_frame", "true"),
+						resource.TestCheckResourceAttr(resourceNameAEP, "tunnel_detection_time", "10"),
 					),
 				},
 				{
@@ -541,6 +548,16 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
         ip_address     = "192.168.23.12/24"
         logical_ifname = "wan3"
     }
+
+	eip_map {
+        logical_ifname = "wan0"
+        private_ip     = "192.168.19.18"
+        public_ip      = "35.0.16.1"
+    }
+	bgp_polling_time   = 55
+	local_as_number    = 65000
+	enable_jumbo_frame = true
+	tunnel_detection_time = 10
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
 }
