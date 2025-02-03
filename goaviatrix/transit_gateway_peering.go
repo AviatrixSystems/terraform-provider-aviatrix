@@ -77,8 +77,8 @@ type TransitGatewayPeeringDetailsResults struct {
 	TunnelCount            int                         `json:"tunnel_count"`
 	EnableJumboFrame       bool                        `json:"jumbo_frame"` // jumbo frame
 	NoMaxPerformance       bool                        `json:"no_max_performance"`
-	Gateway1LogicalIfNames []string                    `json:"src_gw_logical_ifnames"`
-	Gateway2LogicalIfNames []string                    `json:"dst_gw_logical_ifnames"`
+	Gateway1LogicalIfNames []string                    `json:"src_wan_interfaces"`
+	Gateway2LogicalIfNames []string                    `json:"dst_wan_interfaces"`
 	InsaneMode             bool                        `json:"insane_mode"`
 }
 

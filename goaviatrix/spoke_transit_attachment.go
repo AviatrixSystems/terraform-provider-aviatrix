@@ -46,7 +46,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	InsaneModeTunnelNumber       int        `json:"insane_mode_tunnel_count"`
 	EdgeWanInterfaces            []string   `json:"src_wan_interfaces"`
 	SpokeGatewayLogicalIfNames   []string   `json:"src_gw_logical_ifnames"`
-	TransitGatewayLogicalIfNames []string   `json:"dst_gw_logical_ifnames"`
+	TransitGatewayLogicalIfNames []string   `json:"dst_wan_interfaces"`
 }
 
 type SiteDetail struct {

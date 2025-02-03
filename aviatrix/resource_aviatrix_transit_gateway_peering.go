@@ -326,11 +326,30 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
 		return fmt.Errorf("failed to set insane_mode: %w", err)
 	}
-	if err := d.Set("gateway1_logical_ifnames", transitGatewayPeering.Gateway1LogicalIfNames); err != nil {
-		return fmt.Errorf("failed to set gateway1_logical_ifnames: %w", err)
+	// Set the gateway1 logical interface names for the edge gateways
+	if len(transitGatewayPeering.Gateway1LogicalIfNames) > 0 {
+		gateway1Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName1)
+		if err != nil {
+			return fmt.Errorf("failed to get gateway1 details for logical ifnames: %w", err)
+		}
+		logicalIfNames, err := getLogicalIfNames(gateway1Details, transitGatewayPeering.Gateway1LogicalIfNames)
+		if err != nil {
+			return fmt.Errorf("failed to set gateway1_logical_ifnames: %w", err)
+		}
+		_ = d.Set("gateway1_logical_ifnames", logicalIfNames)
 	}
-	if err := d.Set("gateway2_logical_ifnames", transitGatewayPeering.Gateway2LogicalIfNames); err != nil {
-		return fmt.Errorf("failed to set gateway2_logical_ifnames: %w", err)
+
+	// Set the gateway2 logical interface names for the edge gateways
+	if len(transitGatewayPeering.Gateway2LogicalIfNames) > 0 {
+		gateway2Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName2)
+		if err != nil {
+			return fmt.Errorf("failed to get gateway2 details for logical ifnames: %w", err)
+		}
+		logicalIfNames, err := getLogicalIfNames(gateway2Details, transitGatewayPeering.Gateway2LogicalIfNames)
+		if err != nil {
+			return fmt.Errorf("failed to set gateway2 logical ifnames: %w", err)
+		}
+		_ = d.Set("gateway2_logical_ifnames", logicalIfNames)
 	}
 
 	gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
@@ -736,4 +755,19 @@ func getGatewayDetails(client *goaviatrix.Client, gatewayName string) (*goaviatr
 		return nil, fmt.Errorf("failed to get gateway %s: %w", gatewayName, err)
 	}
 	return gatewayDetails, nil
+}
+
+// getLogicalIfNames returns the logical interface names for the given gateway and interface list
+func getLogicalIfNames(gateway *goaviatrix.Gateway, interfaceList []string) ([]string, error) {
+	var logicalIfNames []string
+	for _, interfaceName := range interfaceList {
+		ifName, exists := gateway.IfNamesTranslation[interfaceName]
+		if !exists {
+			return nil, fmt.Errorf("logical interface name %s not found in translation map", interfaceName)
+		}
+		// Convert "wan.0" -> "wan0"
+		formattedIfName := strings.ReplaceAll(ifName, ".", "")
+		logicalIfNames = append(logicalIfNames, formattedIfName)
+	}
+	return logicalIfNames, nil
 }

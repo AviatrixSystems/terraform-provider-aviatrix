@@ -414,3 +414,71 @@ func TestSetWanInterfaceNames(t *testing.T) {
 		})
 	}
 }
+
+func TestGetLogicalIfNames(t *testing.T) {
+	gateway := &goaviatrix.Gateway{
+		IfNamesTranslation: map[string]string{
+			"eth0": "wan.0",
+			"eth1": "wan.1",
+			"eth2": "mgmt.0",
+			"eth3": "wan.2",
+			"eth4": "wan.3",
+		},
+	}
+
+	tests := []struct {
+		name          string
+		interfaceList []string
+		expected      []string
+		expectErr     bool
+	}{
+		{
+			name:          "Valid interface list",
+			interfaceList: []string{"eth0", "eth1", "eth2", "eth3", "eth4"},
+			expected:      []string{"wan0", "wan1", "mgmt0", "wan2", "wan3"},
+			expectErr:     false,
+		},
+		{
+			name:          "Single valid interface",
+			interfaceList: []string{"eth0"},
+			expected:      []string{"wan0"},
+			expectErr:     false,
+		},
+		{
+			name:          "Interface not found",
+			interfaceList: []string{"eth5"},
+			expected:      nil,
+			expectErr:     true,
+		},
+		{
+			name:          "Mixed valid and invalid interfaces",
+			interfaceList: []string{"eth0", "eth5"},
+			expected:      nil,
+			expectErr:     true,
+		},
+		{
+			name:          "Empty interface list",
+			interfaceList: []string{},
+			expected:      []string{},
+			expectErr:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getLogicalIfNames(gateway, tt.interfaceList)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("expected error: %v, got: %v", tt.expectErr, err)
+			}
+			if result == nil {
+				result = []string{}
+			}
+			if tt.expected == nil {
+				tt.expected = []string{}
+			}
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("expected: %v, got: %v", tt.expected, result)
+			}
+		})
+	}
+}

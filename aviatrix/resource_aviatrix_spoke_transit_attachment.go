@@ -248,7 +248,11 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 
 	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
-			_ = d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
+			logicalIfNames, err := getLogicalIfNames(transitGateway, attachment.TransitGatewayLogicalIfNames)
+			if err != nil {
+				return fmt.Errorf("could not get logical interface names for edge transit gateway %s: %w", transitGwName, err)
+			}
+			_ = d.Set("transit_gateway_logical_ifnames", logicalIfNames)
 		}
 	}
 
