@@ -3979,6 +3979,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
+	// for AEP EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Updates to the gateway while is in the process of being created will fail.
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+		return nil
+	}
+
 	// eip map is updated after the transit is created
 	eipMap, ok := d.Get("eip_map").([]interface{})
 	if !ok {
@@ -4009,6 +4014,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
+		log.Printf("[INFO] Setting BGP Polling Time: %d", val.(int))
 		err := client.SetBgpPollingTime(gateway, val.(int))
 		if err != nil {
 			return fmt.Errorf("could not set bgp polling time: %w", err)
