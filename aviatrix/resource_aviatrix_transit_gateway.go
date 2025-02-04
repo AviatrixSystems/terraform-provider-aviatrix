@@ -4014,7 +4014,6 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		log.Printf("[INFO] Setting BGP Polling Time: %d", val.(int))
 		err := client.SetBgpPollingTime(gateway, val.(int))
 		if err != nil {
 			return fmt.Errorf("could not set bgp polling time: %w", err)
