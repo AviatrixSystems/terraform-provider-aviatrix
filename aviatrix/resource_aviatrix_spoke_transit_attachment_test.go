@@ -161,7 +161,7 @@ resource "aviatrix_transit_gateway" "test_edge_transit" {
 	interfaces {
         gateway_ip     = "192.168.20.1"
         ip_address     = "192.168.20.11/24"
-		public_ip      = "67.207.104.19"
+        public_ip      = "67.207.104.19"
         logical_ifname = "wan0"
         secondary_private_cidr_list = ["192.168.20.16/29"]
     }
@@ -169,7 +169,7 @@ resource "aviatrix_transit_gateway" "test_edge_transit" {
     interfaces {
         gateway_ip     = "192.168.21.1"
         ip_address     = "192.168.21.11/24"
-		public_ip      = "67.71.12.148"
+        public_ip      = "67.71.12.148"
         logical_ifname = "wan1"
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
