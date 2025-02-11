@@ -116,7 +116,7 @@ resource "aviatrix_spoke_transit_attachment" "test" {
 }
 
 func testAccSpokeTransitAttachmentConfigEdge(accountName, spokeGwName, path, transitGwName, transitSiteID string) string {
-	filePath := filepath.Join("testdata", "testAccEdgeSpokeTransitAttachmentConfigEdge.tf")
+	filePath := filepath.Join("test-data", "testAccEdgeSpokeTransitAttachmentConfigEdge.tf")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return ""
