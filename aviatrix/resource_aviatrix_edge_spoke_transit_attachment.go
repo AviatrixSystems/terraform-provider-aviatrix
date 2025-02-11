@@ -184,7 +184,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	retryInterval := d.Get("retry_interval").(int)
 
 	for i := 0; ; i++ {
-		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
+		err := client.CreateSpokeTransitAttachment(ctx, attachment)
 		if err != nil {
 			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
 				!strings.Contains(err.Error(), "try again") {
