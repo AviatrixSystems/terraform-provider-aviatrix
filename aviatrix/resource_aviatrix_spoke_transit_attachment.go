@@ -128,10 +128,13 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
+	timeout := 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
-		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
+		err := client.CreateSpokeTransitAttachment(ctx, attachment)
 		if err != nil {
 			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
