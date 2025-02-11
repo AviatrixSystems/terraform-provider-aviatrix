@@ -500,9 +500,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		}
 	}
 
-	d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+	err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
 	if err != nil {
-		return diag.Errorf("could not set value for enable_bgp_multihop: %w", err)
+		return diag.Errorf("could not set value for enable_bgp_multihop: %v", err)
 	}
 
 	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
