@@ -571,12 +571,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		apiConn := goaviatrix.ExternalDeviceConn{
-			GwName:            d.Get("gw_name").(string),
-			ConnectionName:    d.Get("connection_name").(string),
-			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
-		}
-		if err := client.EditConnectionBgpMultihop(&apiConn); err != nil {
+		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
 			return diag.Errorf("could not update BGP BFD config: %v", err)
 		}
 	}

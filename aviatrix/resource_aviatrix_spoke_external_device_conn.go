@@ -1305,12 +1305,16 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		apiConn := goaviatrix.ExternalDeviceConn{
-			GwName:            d.Get("gw_name").(string),
-			ConnectionName:    d.Get("connection_name").(string),
-			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
+		enableMultihop, ok := d.Get("enable_bgp_multihop").(bool)
+		if !ok {
+			return fmt.Errorf("Can't make bool from enable_bgp_multihop value: '%v'", d.Get("enable_bgp_multihop"))
 		}
-		if err := client.EditConnectionBgpMultihop(&apiConn); err != nil {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			GwName:            gwName,
+			ConnectionName:    connName,
+			EnableBgpMultihop: enableMultihop,
+		}
+		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
 			return fmt.Errorf("could not update multihop: %w", err)
 		}
 	}
