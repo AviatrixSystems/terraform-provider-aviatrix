@@ -438,6 +438,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					},
 				},
 			},
+			"enable_bgp_multihop": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable multihop on BGP connection.",
+			},
 		},
 	}
 }
@@ -473,6 +479,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BgpMd5Key:              d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
+		EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -720,6 +727,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 	if externalDeviceConn.PreSharedKey != "" {
 		externalDeviceConn.AuthType = "psk"
+	}
+
+	if !externalDeviceConn.EnableBgpMultihop && externalDeviceConn.ConnectionType != "bgp" {
+		return fmt.Errorf("multihop can only be configured for BGP connections")
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
@@ -1124,6 +1135,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				return fmt.Errorf("could not set value for prepend_as_path: %v", err)
 			}
 		}
+		d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -1379,6 +1391,17 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			if err != nil {
 				return fmt.Errorf("could not disable BGP BFD config: %v", err)
 			}
+		}
+	}
+
+	if d.HasChanges("enable_bgp_multihop") {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			GwName:            d.Get("gw_name").(string),
+			ConnectionName:    d.Get("connection_name").(string),
+			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
+		}
+		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
+			return fmt.Errorf("could not update BGP BFD config: %v", err)
 		}
 	}
 
