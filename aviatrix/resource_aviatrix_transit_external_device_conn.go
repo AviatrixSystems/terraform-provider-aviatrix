@@ -1398,12 +1398,12 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		externalDeviceConn := goaviatrix.ExternalDeviceConn{
+		apiConn := goaviatrix.ExternalDeviceConn{
 			GwName:            d.Get("gw_name").(string),
 			ConnectionName:    d.Get("connection_name").(string),
 			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
 		}
-		if err := client.EditConnectionBgpMultihop(&externalDeviceConn); err != nil {
+		if err := client.EditConnectionBgpMultihop(&apiConn); err != nil {
 			return fmt.Errorf("could not update multihop: %w", err)
 		}
 	}
