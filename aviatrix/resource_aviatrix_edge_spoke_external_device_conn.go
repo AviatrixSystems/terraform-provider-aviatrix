@@ -501,6 +501,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	}
 
 	d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+	if err != nil {
+		return diag.Errorf("could not set value for enable_bgp_multihop: %w", err)
+	}
 
 	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
@@ -568,12 +571,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+		externalDeviceConn := goaviatrix.ExternalDeviceConn{
 			GwName:            d.Get("gw_name").(string),
 			ConnectionName:    d.Get("connection_name").(string),
 			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
 		}
-		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
+		if err := client.EditConnectionBgpMultihop(&externalDeviceConn); err != nil {
 			return diag.Errorf("could not update BGP BFD config: %v", err)
 		}
 	}

@@ -1065,7 +1065,10 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 				return fmt.Errorf("could not set value for prepend_as_path: %v", err)
 			}
 		}
-		d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+		err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+		if err != nil {
+			return fmt.Errorf("could not set value for enable_bgp_multihop: %w", err)
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -1302,13 +1305,13 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+		externalDeviceConn := goaviatrix.ExternalDeviceConn{
 			GwName:            d.Get("gw_name").(string),
 			ConnectionName:    d.Get("connection_name").(string),
 			EnableBgpMultihop: d.Get("enable_bgp_multihop").(bool),
 		}
-		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
-			return fmt.Errorf("could not update BGP BFD config: %v", err)
+		if err := client.EditConnectionBgpMultihop(&externalDeviceConn); err != nil {
+			return fmt.Errorf("could not update multihop: %w", err)
 		}
 	}
 
