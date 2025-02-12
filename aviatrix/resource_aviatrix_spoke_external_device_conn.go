@@ -420,6 +420,12 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 					},
 				},
 			},
+			"enable_bgp_multihop": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable multihop on BGP connection.",
+			},
 		},
 	}
 }
@@ -455,6 +461,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		BgpMd5Key:              d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
+		EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -697,6 +704,10 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 
 	if externalDeviceConn.PreSharedKey != "" {
 		externalDeviceConn.AuthType = "psk"
+	}
+
+	if !externalDeviceConn.EnableBgpMultihop && externalDeviceConn.ConnectionType != "bgp" {
+		return fmt.Errorf("multihop can only be configured for BGP connections")
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
@@ -1054,6 +1065,10 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 				return fmt.Errorf("could not set value for prepend_as_path: %v", err)
 			}
 		}
+		err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+		if err != nil {
+			return fmt.Errorf("could not set value for enable_bgp_multihop: %w", err)
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -1286,6 +1301,21 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			if err != nil {
 				return fmt.Errorf("failed to update BGP MD5 authentication key: %v", err)
 			}
+		}
+	}
+
+	if d.HasChanges("enable_bgp_multihop") {
+		enableMultihop, ok := d.Get("enable_bgp_multihop").(bool)
+		if !ok {
+			return fmt.Errorf("Can't make bool from enable_bgp_multihop value: '%v'", d.Get("enable_bgp_multihop"))
+		}
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			GwName:            gwName,
+			ConnectionName:    connName,
+			EnableBgpMultihop: enableMultihop,
+		}
+		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
+			return fmt.Errorf("could not update multihop: %w", err)
 		}
 	}
 

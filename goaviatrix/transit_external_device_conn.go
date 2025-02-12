@@ -74,6 +74,9 @@ type ExternalDeviceConn struct {
 	BgpMd5KeyChanged       bool         `form:"bgp_md5_key_changed,omitempty"`
 	BgpBfdConfig           BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
+	// Multihop must not use "omitempty"; It defaults to true and omitempty
+	// breaks that.
+	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -117,6 +120,7 @@ type EditExternalDeviceConnDetail struct {
 	RemoteCloudType        string         `json:"remote_cloud_type,omitempty"`
 	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
+	EnableBgpMultihop      bool           `json:"bgp_multihop_enabled,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -331,6 +335,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.BgpBfdConfig.ReceiveInterval = externalDeviceConnDetail.BgpBfdConfig["rx_interval"]
 			externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
 		}
+		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 		return externalDeviceConn, nil
 	}
 
@@ -482,6 +487,22 @@ func (c *Client) EditConnectionBgpBfd(externalDeviceConn *ExternalDeviceConn) er
 		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig.ReceiveInterval
 		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig.TransmitInterval
 		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig.Multiplier
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EditConnectionBgpMultihop(externalDeviceConn *ExternalDeviceConn) error {
+	var action string
+	if externalDeviceConn.EnableBgpMultihop {
+		action = "enable_connection_bgp_multihop"
+	} else {
+		action = "disable_connection_bgp_multihop"
+	}
+	data := map[string]interface{}{
+		"CID":             c.CID,
+		"action":          action,
+		"gateway_name":    externalDeviceConn.GwName,
+		"connection_name": externalDeviceConn.ConnectionName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }
@@ -718,6 +739,8 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
 		}
+
+		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 
 		return externalDeviceConn, nil
 	}
