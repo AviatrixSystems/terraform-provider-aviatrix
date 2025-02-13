@@ -201,6 +201,94 @@ func TestAccAviatrixSmartGroup_reject_bad_k8s_names(t *testing.T) {
 	})
 }
 
+func TestAccAviatrixSmartGroup_k8s_node(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.k8s_node"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupK8sNode(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "k8s-test-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "k8s_node"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.k8s_cluster_id", "test-cluster-id"),
+
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.type", "k8s_node"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.account_name", "aws"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSmartGroupK8sNode() string {
+	return `
+resource "aviatrix_smart_group" "k8s_node" {
+	name = "k8s-test-smart-group"
+
+	selector {
+		match_expressions {
+			type           = "k8s_node"
+			k8s_cluster_id = "test-cluster-id"
+		}
+
+		match_expressions {
+			type           = "k8s_node"
+			account_name   = "aws"
+		}
+	}
+}
+`
+}
+
+func TestAccAviatrixSmartGroup_reject_bad_k8s_node_combinations(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProvidersVersionValidation,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "aviatrix_smart_group" "bad-k8s" {
+					name = "bad-k8s-test-smart-group"
+
+					selector {
+						match_expressions {
+							type          = "k8s_node"
+							k8s_namespace = "test-namespace"
+						}
+					}
+				}
+				`,
+				ExpectError: regexp.MustCompile(`invalid selector keys for k8s_node resource type. invalid keys \['k8s_namespace']`),
+			},
+		},
+	})
+}
+
 func TestAccAviatrixSmartGroup_s2c(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_SMART_GROUP")
 	if skipAcc == "yes" {

@@ -63,7 +63,7 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet", "k8s"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet", "k8s", "k8s_node"}, false),
 										Description:  "Type of resource this expression matches.",
 									},
 									goaviatrix.K8sClusterIdKey: {
