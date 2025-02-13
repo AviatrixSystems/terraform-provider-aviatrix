@@ -103,6 +103,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   backup_local_lan_ip      = "172.12.13.17"
 }
 ```
+```hcl
 # Create a BGP BFD over IPSEC tunnel Aviatrix Transit External Device Connection
 resource "aviatrix_transit_external_device_conn" "ex-conn" {
   vpc_id                   = aviatrix_transit_gateway.transit-gateway.vpc_id
