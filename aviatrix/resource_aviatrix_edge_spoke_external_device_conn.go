@@ -212,6 +212,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 					},
 				},
 			},
+			"enable_bgp_multihop": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable multihop on BGP connection.",
+			},
 		},
 	}
 }
@@ -231,6 +237,7 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix
 		BackupRemoteLanIP:  d.Get("backup_remote_lan_ip").(string),
 		BgpMd5Key:          d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
+		EnableBgpMultihop:  d.Get("enable_bgp_multihop").(bool),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -387,6 +394,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
+	if !externalDeviceConn.EnableBgpMultihop && externalDeviceConn.ConnectionType != "bgp" {
+		return diag.Errorf("multihop can only be configured for BGP connections")
+	}
+
 	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
@@ -489,6 +500,11 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		}
 	}
 
+	err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
+	if err != nil {
+		return diag.Errorf("could not set value for enable_bgp_multihop: %v", err)
+	}
+
 	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
 	}
@@ -551,6 +567,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 			if err != nil {
 				return diag.Errorf("could not disable BGP BFD config: %v", err)
 			}
+		}
+	}
+
+	if d.HasChanges("enable_bgp_multihop") {
+		if err := client.EditConnectionBgpMultihop(externalDeviceConn); err != nil {
+			return diag.Errorf("could not update BGP BFD config: %v", err)
 		}
 	}
 

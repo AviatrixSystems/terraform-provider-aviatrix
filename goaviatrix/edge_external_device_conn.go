@@ -54,6 +54,9 @@ type EdgeExternalDeviceConn struct {
 	BgpMd5KeyChanged       bool         `json:"bgp_md5_key_changed,omitempty"`
 	BgpBfdConfig           BgpBfdConfig `json:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool         `json:"bgp_bfd_enabled,omitempty"`
+	// Multihop must not use "omitempty"; It defaults to true and omitempty
+	// breaks that.
+	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {
