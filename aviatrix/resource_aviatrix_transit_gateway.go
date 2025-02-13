@@ -1965,6 +1965,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			_ = d.Set("ha_management_egress_ip_prefix_list", strings.Split(gw.HaGw.ManagementEgressIPPrefix, ","))
 		}
+		// for EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Set these attributes to gateway default values when the transit is coming up.
 		if err := setGatewayResourceData(d, gw); err != nil {
 			log.Printf("[ERROR] %v", err)
 			return err
@@ -4561,6 +4562,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 	return eipMapList, nil
 }
 
+// for EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Set these attributes to gateway default values when the transit is coming up.
 func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) error {
 	settings := map[string]interface{}{
 		"eip":                                  gw.PublicIP,
