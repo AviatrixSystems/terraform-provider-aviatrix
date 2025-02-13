@@ -91,6 +91,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 				Description: "(Optional) Advanced option. Enable peering over private network. Only appears and applies to " +
 					"when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
 					"Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. " +
