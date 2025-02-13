@@ -2530,6 +2530,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitHaGw.Eip = haEip
 		}
 
+		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
+			return fmt.Errorf("ha_subnet must change if ha_insane_mode_az changes")
+		}
+
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
 		oldZone, newZone := d.GetChange("ha_zone")
 		haGwSize := d.Get("ha_gw_size").(string)
@@ -2596,10 +2600,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		} else if haAzureEipNameOk {
 			return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
-		}
-
-		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
-			return fmt.Errorf("ha_subnet must change if ha_insane_mode_az changes")
 		}
 
 		if d.Get("insane_mode").(bool) {
