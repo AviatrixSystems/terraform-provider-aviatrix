@@ -90,6 +90,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 				Description: "(Optional) Advanced option. Enable peering over private network. Only appears and applies to " +
 					"when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
 					"Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. " +
@@ -615,63 +616,69 @@ func setASPathPrepend(d *schema.ResourceData, client *goaviatrix.Client, prepend
 	return nil
 }
 
+func getNonEATPeeringOptions(d *schema.ResourceData) (map[string]bool, error) {
+	transitPeering := make(map[string]bool)
+	enableMaxPerformance, err := getBooleanValue(d, "enable_max_performance")
+	if err != nil {
+		return nil, err
+	}
+	transitPeering["enable_max_performance"] = enableMaxPerformance
+	insaneMode, err := getBooleanValue(d, "enable_insane_mode_encryption_over_internet")
+	if err != nil {
+		return nil, err
+	}
+	transitPeering["insane_mode"] = insaneMode
+	peeringOverPrivate, err := getBooleanValue(d, "enable_peering_over_private_network")
+	if err != nil {
+		return nil, err
+	}
+	transitPeering["enable_peering_over_private_network"] = peeringOverPrivate
+	singleTunnelMode, err := getBooleanValue(d, "enable_single_tunnel_mode")
+	if err != nil {
+		return nil, err
+	}
+	transitPeering["enable_single_tunnel_mode"] = singleTunnelMode
+	return transitPeering, nil
+}
+
 func setNonEATPeeringOptions(d *schema.ResourceData, transitGatewayPeering *goaviatrix.TransitGatewayPeering) error {
 	// Validate and set boolean fields
-	boolValues, err := getBooleanValues(d, "enable_max_performance", "enable_insane_mode_encryption_over_internet", "enable_peering_over_private_network", "enable_single_tunnel_mode")
+	transitPeering, err := getNonEATPeeringOptions(d)
 	if err != nil {
 		return err
 	}
-	noMaxPerformance, insaneMode, peeringOverPrivate, singleTunnelMode := boolValues[0], boolValues[1], boolValues[2], boolValues[3]
-
-	// Set Max Performance and Insane Mode
-	transitGatewayPeering.NoMaxPerformance = !noMaxPerformance
-	transitGatewayPeering.InsaneModeOverInternet = insaneMode
-
-	// Validate Private IP Peering
-	if err := validatePrivateIPPeering(transitGatewayPeering, peeringOverPrivate, insaneMode); err != nil {
-		return err
-	}
-
-	// Validate and set Single Tunnel Mode
-	if err := validateSingleTunnelMode(transitGatewayPeering, singleTunnelMode); err != nil {
-		return err
-	}
-
-	// Validate and set Tunnel Count
 	tunnelCount, ok := d.Get("tunnel_count").(int)
 	if !ok {
 		return fmt.Errorf("tunnel_count must be an integer")
 	}
-	if err := validateTunnelCount(insaneMode, tunnelCount); err != nil {
+	if err := validateTunnelCount(transitPeering["insane_mode"], tunnelCount); err != nil {
 		return err
 	}
 	if tunnelCount != 0 {
 		transitGatewayPeering.TunnelCount = tunnelCount
 	}
 
-	return nil
-}
-
-// validate Private IP Peering
-func validatePrivateIPPeering(transitGatewayPeering *goaviatrix.TransitGatewayPeering, peeringOverPrivate, insaneMode bool) error {
-	transitGatewayPeering.PrivateIPPeering = "no"
-	if peeringOverPrivate {
+	// Set No max Performance and Insane Mode
+	transitGatewayPeering.NoMaxPerformance = !transitPeering["enable_max_performance"]
+	transitGatewayPeering.InsaneModeOverInternet = transitPeering["insane_mode"]
+	// set private ip peering
+	if transitPeering["enable_peering_over_private_network"] {
 		transitGatewayPeering.PrivateIPPeering = "yes"
-		if insaneMode {
+		if transitPeering["insane_mode"] {
 			return fmt.Errorf("enable_peering_over_private_network conflicts with enable_insane_mode_encryption_over_internet")
 		}
+	} else {
+		transitGatewayPeering.PrivateIPPeering = "no"
 	}
-	return nil
-}
 
-// Helper function to validate Single Tunnel Mode
-func validateSingleTunnelMode(transitGatewayPeering *goaviatrix.TransitGatewayPeering, singleTunnelMode bool) error {
-	if singleTunnelMode {
+	// Validate and set Single Tunnel Mode
+	if transitPeering["enable_single_tunnel_mode"] {
 		if transitGatewayPeering.PrivateIPPeering == "no" {
 			return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
 		}
 		transitGatewayPeering.SingleTunnel = "yes"
 	}
+
 	return nil
 }
 
@@ -684,15 +691,12 @@ func validateTunnelCount(insaneMode bool, tunnelCount int) error {
 }
 
 // Helper function to get multiple boolean values and validate them
-func getBooleanValues(d *schema.ResourceData, keys ...string) ([]bool, error) {
-	results := make([]bool, len(keys))
-	var ok bool
-	for i, key := range keys {
-		if results[i], ok = d.Get(key).(bool); !ok {
-			return nil, fmt.Errorf("%s is required and must be a boolean", key)
-		}
+func getBooleanValue(d *schema.ResourceData, key string) (bool, error) {
+	value, ok := d.Get(key).(bool)
+	if !ok {
+		return false, fmt.Errorf("%s is required and must be a boolean", key)
 	}
-	return results, nil
+	return value, nil
 }
 
 func setExcludedResources(d *schema.ResourceData, transitGatewayPeering *goaviatrix.TransitGatewayPeering) error {
