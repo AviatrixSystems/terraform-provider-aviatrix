@@ -79,6 +79,12 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_pod        = "testpod"
     }
 
+    # Match all nodes of a cluster
+    match_expressions {
+      type           = "k8s_node"
+      k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
+    }
+
     // Below are external group type examples
 
     // generic format
