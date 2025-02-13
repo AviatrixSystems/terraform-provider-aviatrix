@@ -157,7 +157,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 		account_name       = "edge-%s"
 		cloud_type         = 1048576
 	}
-	
+
 	resource "aviatrix_transit_gateway" "test_edge_transit_1" {
 		cloud_type   = 1048576
 		account_name = aviatrix_account.test_acc_edge_megaport.account_name
@@ -194,7 +194,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 			logical_ifname = "wan3"
 		}
 	}
-	
+
 	resource "aviatrix_transit_gateway" "test_edge_transit_2" {
 		cloud_type   = 1048576
 		account_name = aviatrix_account.test_acc_edge_megaport.account_name
@@ -231,7 +231,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 			logical_ifname = "wan3"
 		}
 	}
-	
+
 	resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
 		transit_gateway_name1 = aviatrix_transit_gateway.test_edge_transit_1.gw_name
 		transit_gateway_name2 = aviatrix_transit_gateway.test_edge_transit_2.gw_name
