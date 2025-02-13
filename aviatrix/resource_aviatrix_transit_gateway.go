@@ -2584,6 +2584,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
+		// TODO. Re-using EIP for HA GW on update needs test coverage
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			if haEip != "" && (newHaGwEnabled || changeHaGw) {
