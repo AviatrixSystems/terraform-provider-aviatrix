@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -73,6 +74,9 @@ type ExternalDeviceConn struct {
 	BgpMd5KeyChanged       bool         `form:"bgp_md5_key_changed,omitempty"`
 	BgpBfdConfig           BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
+	// Multihop must not use "omitempty"; It defaults to true and omitempty
+	// breaks that.
+	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -116,6 +120,7 @@ type EditExternalDeviceConnDetail struct {
 	RemoteCloudType        string         `json:"remote_cloud_type,omitempty"`
 	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
+	EnableBgpMultihop      bool           `json:"bgp_multihop_enabled,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -330,6 +335,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.BgpBfdConfig.ReceiveInterval = externalDeviceConnDetail.BgpBfdConfig["rx_interval"]
 			externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
 		}
+		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 		return externalDeviceConn, nil
 	}
 
@@ -344,59 +350,29 @@ func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 }
 
 func ExternalDeviceConnBgpBfdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	// if enable_bfd is changed, then the BFD configuration needs to be updated
-	if d.HasChange("enable_bfd") {
+	// In the case where BFD is disabled, we need to *not* suppress any
+	// diffs to "bgp_bfd", otherwise BFD config can be left in the state.
+	// That can break things, as BFD config is not allowed when BFD is
+	// disabled.
+	enabled, ok := d.Get("enable_bfd").(bool)
+	if !enabled || !ok {
 		return false
 	}
-	defaultBfd := map[string]interface{}{
-		"transmit_interval": defaultBfdTransmitInterval,
-		"receive_interval":  defaultBfdReceiveInterval,
-		"multiplier":        defaultBfdMultiplier,
-	}
-	// Retrieve necessary attributes from the schema
-	o, n := d.GetChange("bgp_bfd")
-	bfdEnabled := d.Get("enable_bfd").(bool)
-	// Expand old and new BGP BFD configurations
-	var oldConfig []map[string]interface{}
-	var newConfig []map[string]interface{}
-	if o != nil {
-		oldConfig = ExpandBfdConfig(o.([]interface{}))
-	}
-	if n != nil {
-		newConfig = ExpandBfdConfig(n.([]interface{}))
-	}
-	if bfdEnabled {
-		// If BFD is enabled, then compare the old and new BFD configurations
-		if len(oldConfig) != len(newConfig) {
-			return false
-		}
-		for i := range oldConfig {
-			// If the BFD configuration is different, then update the BFD configuration
-			if oldConfig[i]["transmit_interval"] != newConfig[i]["transmit_interval"] ||
-				oldConfig[i]["receive_interval"] != newConfig[i]["receive_interval"] ||
-				oldConfig[i]["multiplier"] != newConfig[i]["multiplier"] {
-				return false
-			}
-			// If the BFD configuration is the same as the default, then do not update the BFD configuration
-			if newConfig[i]["transmit_interval"] == defaultBfd["transmit_interval"] ||
-				oldConfig[i]["receive_interval"] == defaultBfd["receive_interval"] ||
-				oldConfig[i]["multiplier"] == defaultBfd["multiplier"] {
-				return true
-			}
-		}
-	}
-	return false
-}
 
-// ExpandBfdConfig expands a BGP BFD configuration from an interface slice
-func ExpandBfdConfig(config []interface{}) []map[string]interface{} {
-	expanded := make([]map[string]interface{}, 0, len(config))
-	for _, item := range config {
-		if itemMap, ok := item.(map[string]interface{}); ok {
-			expanded = append(expanded, itemMap)
-		}
-	}
-	return expanded
+	// You might expect that GetChange("bgp_bfd") would return old and
+	// new lists that could be compared. Unfortunately, it doesn't seem to
+	// work that way. The API can report identical values for "bgp_bfd",
+	// (along with HasChange() == false), while at the same time reporting
+	// a change for the first element ("bgp_bfd.0"). Fortunately for us, we
+	// enforce only a single element in bgp_bfd, so we can just check that.
+	// terraform will auto-populate all defaults - including for an empty
+	// list - so all we need to do is compare the two elements.
+	// The strong consensus on the internet is that SDKv2 was simply not
+	// designed for for this sort of thing and the recommended solution
+	// is to migrate to the plugin framework. Unfortunately that's not
+	// a small undertaking.
+	o, n := d.GetChange("bgp_bfd.0")
+	return reflect.DeepEqual(o, n)
 }
 
 func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
@@ -511,6 +487,22 @@ func (c *Client) EditConnectionBgpBfd(externalDeviceConn *ExternalDeviceConn) er
 		data["connection_bgp_bfd_receive_interval"] = externalDeviceConn.BgpBfdConfig.ReceiveInterval
 		data["connection_bgp_bfd_transmit_interval"] = externalDeviceConn.BgpBfdConfig.TransmitInterval
 		data["connection_bgp_bfd_detect_multiplier"] = externalDeviceConn.BgpBfdConfig.Multiplier
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EditConnectionBgpMultihop(externalDeviceConn *ExternalDeviceConn) error {
+	var action string
+	if externalDeviceConn.EnableBgpMultihop {
+		action = "enable_connection_bgp_multihop"
+	} else {
+		action = "disable_connection_bgp_multihop"
+	}
+	data := map[string]interface{}{
+		"CID":             c.CID,
+		"action":          action,
+		"gateway_name":    externalDeviceConn.GwName,
+		"connection_name": externalDeviceConn.ConnectionName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }
@@ -747,6 +739,8 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
 		}
+
+		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 
 		return externalDeviceConn, nil
 	}

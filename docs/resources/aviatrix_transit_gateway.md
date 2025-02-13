@@ -425,8 +425,7 @@ The following arguments are supported:
 * `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix EAT gateway.
 * `device_id` - (Optional) Device ID for AEP EAT gateway. Required only for AEP gateway.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
-  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
-  * `index` - (Required) Interface index. Valid values are 0,1,2 etc.
+  * `logical_ifname` - (Required) Logical interface name e.g., wan0, mgmt0.
   * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
@@ -437,8 +436,7 @@ The following arguments are supported:
   * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
   * `index` - (Required) Interface index e.g. 0, 1 etc.
 * `eip_map` - (Optional) A list of mappings between interface names and their associated private and public IPs.
-  * `interface_type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
-  * `interface_index` - (Required) Interface index. Valid values are 0,1,2 etc.
+  * `logical_ifname` - (Required) Logical interface name e.g., wan0, mgmt0.
   * `private_ip` - (Required) The private IP address associated with the interface.
   * `public_ip` - (Required) The public IP address associated with the interface.
 
@@ -454,12 +452,10 @@ The following arguments are supported:
 * `ha_availability_domain` - (Optional) HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_device_id` - (Optional) Device ID for HA AEP EAT gateway. Required only for AEP HA gateway.
-* `peer_backup_port_type` - (Optional) Peer backup port type for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
-* `peer_backup_port_index` - (Optional) Peer backup port index for edge transit gateway. Required and valid only for edge gateways AEP and Equinix.
+* `peer_backup_logical_ifname` - (Optional) Peer backup logical interface name for the edge transit gateway (e.g., 'wan0', 'wan1').
 * `peer_connection_type` - (Optional) Connection type for edge transit gateway e.g., "private", "public". Required and valid only for edge gateways AEP and Equinix.
 * `ha_interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
-  * `type` - (Required) Interface type. Valid values are 'WAN' or 'MANAGEMENT'.
-  * `index` - (Required) Interface index. Valid values are 0,1,2 etc.
+  * `logical_ifname` - (Required) Logical interface name e.g., wan0, mgmt0.
   * `gateway_ip` - (Optional) The gateway IP address associated with this interface.
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
