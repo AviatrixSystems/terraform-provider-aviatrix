@@ -2530,21 +2530,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitHaGw.Eip = haEip
 		}
 
-		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
-		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			if haEip != "" && transitHaGw.GwSize != "" {
-				// No change will be detected when ha_eip is set to the empty string because it is computed.
-				// Instead, check ha_gw_size to detect when HA gateway is being deleted.
-				if !haAzureEipNameOk {
-					return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
-				}
-				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-				transitHaGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
-			}
-		} else if haAzureEipNameOk {
-			return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
-		}
-
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
 			return fmt.Errorf("ha_subnet must change if ha_insane_mode_az changes")
 		}
@@ -2597,6 +2582,25 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			} else if oldZone != "" && newZone != "" {
 				changeHaGw = true
 			}
+		}
+
+		// TODO. Re-using EIP for HA GW on update needs test coverage
+		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if haEip != "" && (newHaGwEnabled || changeHaGw) {
+				// No change will be detected when ha_eip is set to the empty string because it is computed.
+				if !haAzureEipNameOk {
+					return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				haAzureEipNameString, assertOk := haAzureEipName.(string)
+				if !assertOk {
+					return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be a string")
+				}
+				transitHaGw.Eip = fmt.Sprintf("%s:%s", haAzureEipNameString, haEip)
+			}
+		} else if haAzureEipNameOk {
+			return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 		}
 
 		if d.Get("insane_mode").(bool) {
