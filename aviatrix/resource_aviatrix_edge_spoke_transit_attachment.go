@@ -421,7 +421,7 @@ func getDstWanInterfaces(
 	gatewayDetails *goaviatrix.Gateway,
 ) (string, error) {
 	reversedInterfaceNames := ReverseIfnameTranslation(gatewayDetails.IfNamesTranslation)
-	dstWanInterfaceStr, err := SetWanInterfaces(convertToInterfaceSlice(logicalIfNames), reversedInterfaceNames)
+	dstWanInterfaceStr, err := SetWanInterfaces(logicalIfNames, reversedInterfaceNames)
 	if err != nil {
 		return "", err
 	}
