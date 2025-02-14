@@ -513,9 +513,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BgpMd5Key:              d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
-		// EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
-		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
-		DisableActivemesh:  d.Get("disable_activemesh").(bool),
+		EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
+		EnableEdgeUnderlay:     d.Get("enable_edge_underlay").(bool),
+		DisableActivemesh:      d.Get("disable_activemesh").(bool),
 	}
 
 	if !externalDeviceConn.EnableEdgeUnderlay && externalDeviceConn.ConnectionName == "" {
@@ -768,8 +768,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("jumbo frame is only supported on bgp connection")
 		}
 	}
-	if d.Get("tunnel_src_ip").(string) != "" {
-		externalDeviceConn.TunnelSrcIP = d.Get("tunnel_src_ip").(string)
+	if val, ok := d.Get("tunnel_src_ip").(string); ok && val != "" {
+		externalDeviceConn.TunnelSrcIP = val
 	}
 	if externalDeviceConn.PreSharedKey != "" {
 		externalDeviceConn.AuthType = "psk"
@@ -818,7 +818,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("could not get underlay BGP connection name")
 		}
 		connName := match[1]
-		d.Set("connection_name", connName)
+		if err := d.Set("connection_name", connName); err != nil {
+			return fmt.Errorf("error setting connection_name: %v", err)
+		}
 		externalDeviceConn.ConnectionName = connName
 	}
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
@@ -1032,14 +1034,18 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("phase1_local_identifier", conn.Phase1LocalIdentifier)
 
 		if conn.TunnelSrcIP != "" {
-			d.Set("tunnel_src_ip", conn.TunnelSrcIP)
+			if err := d.Set("tunnel_src_ip", conn.TunnelSrcIP); err != nil {
+				return fmt.Errorf("error setting tunnel_src_ip: %v", err)
+			}
 		}
 
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_lan_ip", conn.RemoteLanIP)
 			d.Set("local_lan_ip", conn.LocalLanIP)
 			d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
-			d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
+			if err := d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay); err != nil {
+				return fmt.Errorf("error setting enable_edge_underlay: %v", err)
+			}
 		} else {
 			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
@@ -1536,22 +1542,24 @@ func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, met
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:              d.Get("vpc_id").(string),
 		ConnectionName:     d.Get("connection_name").(string),
-		EnableEdgeUnderlay: bool(d.Get("enable_edge_underlay").(bool)),
+		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix external device connection: %#v", externalDeviceConn)
 	if externalDeviceConn.EnableEdgeUnderlay {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
-		edgeExternalDeviceConn.LocalLanIP = d.Get("local_lan_ip").(string)
+		if val, ok := d.Get("local_lan_ip").(string); ok {
+			edgeExternalDeviceConn.LocalLanIP = val
+		}
 		edgeExternalDeviceConn.GwName = d.Get("gw_name").(string)
 		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix external device connection: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix external device connection: %w", err)
 		}
 	} else {
 		err := client.DeleteExternalDeviceConn(externalDeviceConn)
 		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix external device connection: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix external device connection: %w", err)
 		}
 	}
 
