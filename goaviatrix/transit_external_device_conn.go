@@ -62,7 +62,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 	EventTriggeredHA       bool
-	EnableJumboFrame       bool
+	EnableJumboFrame       bool `form:"jumbo_frame,omitempty"`
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
@@ -76,7 +76,9 @@ type ExternalDeviceConn struct {
 	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
 	// Multihop must not use "omitempty"; It defaults to true and omitempty
 	// breaks that.
-	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
+	EnableBgpMultihop bool   `form:"enable_bgp_multihop"`
+	DisableActivemesh bool   `form:"disable_activemesh,omitempty"`
+	TunnelSrcIP       string `form:"local_device_ip,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -121,6 +123,8 @@ type EditExternalDeviceConnDetail struct {
 	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
 	EnableBgpMultihop      bool           `json:"bgp_multihop_enabled,omitempty"`
+	DisableActivemesh      bool           `json:"disable_activemesh,omitempty"`
+	TunnelSrcIP            string         `json:"local_device_ip,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -246,6 +250,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		}
 
 		if externalDeviceConn.TunnelProtocol != "LAN" {
+			externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
+			externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
 			if externalDeviceConnDetail.HAEnabled == "enabled" {
 				if len(externalDeviceConnDetail.Tunnels) == 2 {
 					remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
@@ -255,10 +261,13 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
 							externalDeviceConn.HAEnabled = "disabled"
 						} else {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+							externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+							externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+							externalDeviceConn.HAEnabled = "enabled"
+							externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 						}
 					} else if len(remoteIP) == 4 {
 						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
@@ -580,8 +589,6 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 
 	externalDeviceConnDetail := data.Results.Connections
 	if len(externalDeviceConnDetail.ConnectionName) != 0 {
-		inputGwName := externalDeviceConn.GwName
-
 		if len(externalDeviceConnDetail.VpcID) != 0 {
 			externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
 		}
@@ -649,6 +656,8 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 		}
 
 		if externalDeviceConn.TunnelProtocol != "LAN" {
+			externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
+			externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
 			if externalDeviceConnDetail.HAEnabled == "enabled" {
 				if len(externalDeviceConnDetail.Tunnels) == 2 {
 					remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
@@ -658,10 +667,13 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
 							externalDeviceConn.HAEnabled = "disabled"
 						} else {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+							externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+							externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+							externalDeviceConn.HAEnabled = "enabled"
+							externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 						}
 					} else if len(remoteIP) == 4 {
 						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
@@ -732,15 +744,6 @@ func (c *Client) GetEdgeExternalDeviceConnDetail(externalDeviceConn *ExternalDev
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
 		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
 		externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
-
-		if externalDeviceConnDetail.WanUnderlay && strings.Contains(inputGwName, "hagw") {
-			externalDeviceConn.GwName = inputGwName
-			externalDeviceConn.BgpRemoteAsNum = externalDeviceConn.BackupBgpRemoteAsNum
-			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
-			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
-		}
-
-		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 
 		return externalDeviceConn, nil
 	}
