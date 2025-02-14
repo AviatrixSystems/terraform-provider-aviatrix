@@ -57,6 +57,8 @@ type EdgeExternalDeviceConn struct {
 	// Multihop must not use "omitempty"; It defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
+	DisableActivemesh bool
+	TunnelSrcIP       string
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {

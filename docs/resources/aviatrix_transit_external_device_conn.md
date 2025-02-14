@@ -134,7 +134,7 @@ The following arguments are supported:
 
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~project_name".
-* `connection_name` - (Required) Transit external device connection name.
+* `connection_name` - (Optional) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
@@ -214,6 +214,11 @@ The following arguments are supported:
 * `phase1_local_identifier` - (Optional) Phase 1 local identifier. By default, gateway’s public IP is configured as the Local Identifier. Available as of provider version R3.1.0+.
 * `phase1_remote_identifier` - (Optional) List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "abcd"] when HA is enabled. Available as of provider version R2.19+.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Available as of provider version R2.19.2.
+
+* `enable_edge_underlay` - (Optional) Enable BGP over WAN underlay. Valid values: true, false. Default value: false.
+* `disable_activemesh` - (Optional) Switch to disable ActiveMesh mode. Only valid for Edge Transit gateway BGPoIPSec and BGPoGRE connections. Valid values: true, false. Default value: false.
+* `tunnel_src_ip` - (Optional) Local WAN interface IP used for Tunnel Source IP. Required for Edge Transit gateway BGPoIPSec and BGPoGRE connections.
+
 
 ## Import
 
