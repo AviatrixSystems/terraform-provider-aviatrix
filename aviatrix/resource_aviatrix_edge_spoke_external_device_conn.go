@@ -433,13 +433,23 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetEdgeExternalDeviceConnDetail(externalDeviceConn)
+	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("couldn't find Edge as a Spoke external device conn: %s, %#v", err, externalDeviceConn)
+	}
+
+	// If we are dealing with a HAGW, we're interested in the BGP backup
+	// parameters.
+	inputGwName := externalDeviceConn.GwName
+	if conn.EnableEdgeUnderlay && strings.Contains(inputGwName, "hagw") {
+		conn.GwName = inputGwName
+		conn.BgpRemoteAsNum = conn.BackupBgpRemoteAsNum
+		conn.LocalLanIP = conn.BackupLocalLanIP
+		conn.RemoteLanIP = conn.BackupRemoteLanIP
 	}
 
 	d.Set("site_id", conn.VpcID)
