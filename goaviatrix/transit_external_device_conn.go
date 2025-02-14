@@ -74,7 +74,7 @@ type ExternalDeviceConn struct {
 	BgpMd5KeyChanged       bool         `form:"bgp_md5_key_changed,omitempty"`
 	BgpBfdConfig           BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
-	// Multihop must not use "omitempty"; It defaults to true and omitempty
+	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
 }

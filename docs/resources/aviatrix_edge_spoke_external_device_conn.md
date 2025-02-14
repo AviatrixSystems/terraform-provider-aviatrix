@@ -82,6 +82,7 @@ The following arguments are supported:
   * `transmit_interval` - (Optional) BFD transmit interval in ms. Valid values between 10 to 60000. Default: 300.
   * `receive_interval` - (Optional) BFD receive interval in ms. Valid values between 10 to 60000. Default: 300.
   * `multiplier` - (Optional) BFD detection multiplier. Valid values between 2 to 255. Default: 3.
+* `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
 
 ## Import
 
