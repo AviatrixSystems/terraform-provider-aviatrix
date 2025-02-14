@@ -300,7 +300,7 @@ func testAccCheckTransitExternalDeviceConnDestroy(s *terraform.State) error {
 func TestAccAviatrixEdgeTransitExternalDeviceConn(t *testing.T) {
 	var externalDeviceConn goaviatrix.ExternalDeviceConn
 
-	bgpoipsec_rName := "aviatrix_transit_external_device_conn.eat-2-bgpoipsec-1"
+	rName := "aviatrix_transit_external_device_conn.eat-2-bgpoipsec-1"
 
 	skipAcc := os.Getenv("SKIP_EDGE_TRANSIT_EXTERNAL_DEVICE_CONN")
 	if skipAcc == "yes" {
@@ -318,15 +318,15 @@ func TestAccAviatrixEdgeTransitExternalDeviceConn(t *testing.T) {
 			{
 				Config: testAccEdgeTransitExternalDeviceConnConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitExternalDeviceConnExists(bgpoipsec_rName, &externalDeviceConn),
-					resource.TestCheckResourceAttr(bgpoipsec_rName, "connection_name", "eat-2-bgpoipsec-1"),
-					resource.TestCheckResourceAttr(bgpoipsec_rName, "gw_name", "e2e-edge-transit-2"),
-					resource.TestCheckResourceAttr(bgpoipsec_rName, "enable_jumbo_frame", "true"),
-					resource.TestCheckResourceAttr(bgpoipsec_rName, "tunnel_src_ip", "192.168.20.117,192.168.23.16"),
+					testAccCheckTransitExternalDeviceConnExists(rName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(rName, "connection_name", "eat-2-bgpoipsec-1"),
+					resource.TestCheckResourceAttr(rName, "gw_name", "e2e-edge-transit-2"),
+					resource.TestCheckResourceAttr(rName, "enable_jumbo_frame", "true"),
+					resource.TestCheckResourceAttr(rName, "tunnel_src_ip", "192.168.20.117,192.168.23.16"),
 				),
 			},
 			{
-				ResourceName:      bgpoipsec_rName,
+				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

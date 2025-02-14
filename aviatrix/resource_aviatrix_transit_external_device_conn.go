@@ -460,23 +460,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
 			"tunnel_src_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Local gateway tunnel source IP",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					oldIpList := strings.Split(old, ",")
-					newIpList := strings.Split(new, ",")
-					if len(oldIpList) == len(newIpList) {
-						for i := range oldIpList {
-							if strings.TrimSpace(oldIpList[i]) != strings.TrimSpace(newIpList[i]) {
-								return false
-							}
-						}
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Description:      "Local gateway tunnel source IP",
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 			},
 		},
 	}
@@ -819,7 +807,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 		connName := match[1]
 		if err := d.Set("connection_name", connName); err != nil {
-			return fmt.Errorf("error setting connection_name: %v", err)
+			return fmt.Errorf("error setting connection_name: %w", err)
 		}
 		externalDeviceConn.ConnectionName = connName
 	}
@@ -1035,7 +1023,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 		if conn.TunnelSrcIP != "" {
 			if err := d.Set("tunnel_src_ip", conn.TunnelSrcIP); err != nil {
-				return fmt.Errorf("error setting tunnel_src_ip: %v", err)
+				return fmt.Errorf("error setting tunnel_src_ip: %w", err)
 			}
 		}
 
@@ -1044,12 +1032,14 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("local_lan_ip", conn.LocalLanIP)
 			d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 			if err := d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay); err != nil {
-				return fmt.Errorf("error setting enable_edge_underlay: %v", err)
+				return fmt.Errorf("error setting enable_edge_underlay: %w", err)
 			}
 		} else {
 			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-			d.Set("disable_activemesh", conn.DisableActivemesh)
+			if err := d.Set("disable_activemesh", conn.DisableActivemesh); err != nil {
+				return fmt.Errorf("error setting disable_activemesh: %w", err)
+			}
 		}
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {
@@ -1550,8 +1540,14 @@ func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, met
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 		if val, ok := d.Get("local_lan_ip").(string); ok {
 			edgeExternalDeviceConn.LocalLanIP = val
+		} else {
+			return fmt.Errorf("failed to get 'local_lan_ip' as string")
 		}
-		edgeExternalDeviceConn.GwName = d.Get("gw_name").(string)
+		if gwName, ok := d.Get("gw_name").(string); ok {
+			edgeExternalDeviceConn.GwName = gwName
+		} else {
+			return fmt.Errorf("failed to get 'gw_name' as string")
+		}
 		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		if err != nil {
 			return fmt.Errorf("failed to delete Aviatrix external device connection: %w", err)
