@@ -266,7 +266,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 							externalDeviceConn.HAEnabled = "disabled"
 						} else {
 							// two external devices, remote has HA
-							// activemesh is diabled, 2 straight tunnels only
+							// activemesh is disabled, 2 straight tunnels only
 							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 							externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
