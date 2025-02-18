@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccAviatrixEdgeSpokeTransitAttachment_basic(t *testing.T) {
@@ -253,4 +255,66 @@ func testAccCheckEdgeSpokeTransitAttachmentDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestGetDstWanInterfaces(t *testing.T) {
+	tests := []struct {
+		name                 string
+		logicalIfNames       []string
+		gatewayDetails       *goaviatrix.Gateway
+		reversedIfNames      map[string]string
+		setWanInterfacesResp string
+		setWanInterfacesErr  error
+		expectedResult       string
+		expectErr            bool
+	}{
+		{
+			name:           "Successful case",
+			logicalIfNames: []string{"eth0", "eth1"},
+			gatewayDetails: &goaviatrix.Gateway{
+				IfNamesTranslation: map[string]string{
+					"wan1": "eth0",
+					"wan2": "eth1",
+				},
+			},
+			reversedIfNames: map[string]string{
+				"eth0": "wan1",
+				"eth1": "wan2",
+			},
+			setWanInterfacesResp: "wan1,wan2",
+			setWanInterfacesErr:  nil,
+			expectedResult:       "wan1,wan2",
+			expectErr:            false,
+		},
+		{
+			name:           "SetWanInterfaces returns an error",
+			logicalIfNames: []string{"eth0", "eth2"},
+			gatewayDetails: &goaviatrix.Gateway{
+				IfNamesTranslation: map[string]string{
+					"wan1": "eth0",
+					"wan2": "eth1",
+				},
+			},
+			reversedIfNames: map[string]string{
+				"eth0": "wan1",
+				"eth1": "wan2",
+			},
+			setWanInterfacesResp: "",
+			setWanInterfacesErr:  errors.New("invalid interface"),
+			expectedResult:       "",
+			expectErr:            true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getDstWanInterfaces(tt.logicalIfNames, tt.gatewayDetails)
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedResult, result)
+			}
+		})
+	}
 }
