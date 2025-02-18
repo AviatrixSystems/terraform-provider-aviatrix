@@ -111,8 +111,13 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("could not find spoke gateway: %s", err)
 	}
 
+	// get transit gateway details
+	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
+	if err != nil {
+		return fmt.Errorf("could not get transit gateway details for %s: %w", attachment.TransitGwName, err)
+	}
 	// get edge transit logical interface names
-	if err := getEdgeTransitLogicalIfNames(d, client, attachment); err != nil {
+	if err := getEdgeTransitLogicalIfNames(d, transitGatewayDetails, attachment); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 

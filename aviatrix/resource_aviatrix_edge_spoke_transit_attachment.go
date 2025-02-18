@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -162,8 +161,13 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 		attachment.SpokeGatewayLogicalIfNames = getStringList(d, "spoke_gateway_logical_ifnames")
 	}
 
+	// Get transit gateway details
+	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
+	if err != nil {
+		return diag.Errorf("could not get transit gateway details for %s: %v", attachment.TransitGwName, err)
+	}
 	// get edge transit logical interface names
-	if err := getEdgeTransitLogicalIfNames(d, client, attachment); err != nil {
+	if err := getEdgeTransitLogicalIfNames(d, transitGatewayDetails, attachment); err != nil {
 		return diag.Errorf("%v", err)
 	}
 
@@ -413,48 +417,5 @@ func resourceAviatrixEdgeSpokeTransitAttachmentDelete(ctx context.Context, d *sc
 		return diag.Errorf("could not detach Edge as a Spoke: %s from transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 	}
 
-	return nil
-}
-
-func getDstWanInterfaces(
-	logicalIfNames []string,
-	gatewayDetails *goaviatrix.Gateway,
-) (string, error) {
-	reversedInterfaceNames := ReverseIfnameTranslation(gatewayDetails.IfNamesTranslation)
-	dstWanInterfaceStr, err := SetWanInterfaces(logicalIfNames, reversedInterfaceNames)
-	if err != nil {
-		return "", err
-	}
-	return dstWanInterfaceStr, nil
-}
-
-func getEdgeTransitLogicalIfNames(d *schema.ResourceData, client *goaviatrix.Client, attachment *goaviatrix.SpokeTransitAttachment) error {
-	// Get transit gateway details
-	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
-	if err != nil {
-		return fmt.Errorf("could not get transit gateway details for %s: %w", attachment.TransitGwName, err)
-	}
-
-	transitCloudType := transitGatewayDetails.CloudType
-
-	if goaviatrix.IsCloudType(transitCloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		transitInterfaceRaw, ok := d.GetOk("transit_gateway_logical_ifnames")
-		if !ok {
-			return fmt.Errorf("transit_gateway_logical_ifnames is required for all edge gateways")
-		}
-		if _, ok := transitInterfaceRaw.([]interface{}); !ok {
-			return fmt.Errorf("transit_gateway_logical_ifnames must be a list of strings")
-		}
-
-		attachment.TransitGatewayLogicalIfNames = getStringList(d, "transit_gateway_logical_ifnames")
-
-		// Get the destination WAN interfaces for Equinix & AEP EAT gateway
-		if goaviatrix.IsCloudType(transitCloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGENEO) {
-			attachment.DstWanInterfaces, err = getDstWanInterfaces(attachment.TransitGatewayLogicalIfNames, transitGatewayDetails)
-			if err != nil {
-				return fmt.Errorf("could not get dst wan interfaces for transit gateway: %w", err)
-			}
-		}
-	}
 	return nil
 }
