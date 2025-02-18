@@ -1,9 +1,11 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -136,12 +138,6 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 					"Only valid when the two transit gateways are each launched in Insane Mode and in the same cloud type. " +
 					"Available as of provider version R2.22.2+.",
 			},
-			"over_private_network": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "The underlay connects over the private network for peering with Edge Transit",
-			},
 			"jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -154,15 +150,21 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Default:     false,
 				Description: "Enable HPE mode for peering with Edge Transit",
 			},
-			"src_wan_interfaces": {
-				Type:        schema.TypeString,
+			"gateway1_logical_ifnames": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Source WAN interface for edge gateways where the peering originates",
+				Description: "Gateway 1 logical interface names for edge gateways where the peering originates",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
-			"dst_wan_interfaces": {
-				Type:        schema.TypeString,
+			"gateway2_logical_ifnames": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Destination WAN interface for edge gateways where the peering terminates",
+				Description: "Gateway 2 logical interface names for edge gateways where the peering terminates",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -171,126 +173,110 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	flag := false
+	transitGatewayName1, ok := d.Get("transit_gateway_name1").(string)
+	if !ok {
+		return fmt.Errorf("transit_gateway_name1 is required")
+	}
 
-	if (d.Get("dst_wan_interfaces").(string) != "") && (d.Get("src_wan_interfaces").(string) != "") {
-		edgeTransitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1:      d.Get("transit_gateway_name1").(string),
-			TransitGatewayName2:      d.Get("transit_gateway_name2").(string),
-			EnableOverPrivateNetwork: d.Get("over_private_network").(bool),
-			EnableJumboFrame:         d.Get("jumbo_frame").(bool),
-			EnableInsaneMode:         d.Get("insane_mode").(bool),
-			SrcWanInterfaces:         d.Get("src_wan_interfaces").(string),
-			DstWanInterfaces:         d.Get("dst_wan_interfaces").(string),
-		}
-		d.SetId(edgeTransitGatewayPeering.TransitGatewayName1 + "~" + edgeTransitGatewayPeering.TransitGatewayName2)
-		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
+	transitGatewayName2, ok := d.Get("transit_gateway_name2").(string)
+	if !ok {
+		return fmt.Errorf("transit_gateway_name2 is required")
+	}
 
-		err := client.CreateTransitGatewayPeering(edgeTransitGatewayPeering)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
-		}
-	} else {
-		var gw1Cidrs []string
-		for _, cidr := range d.Get("gateway1_excluded_network_cidrs").([]interface{}) {
-			gw1Cidrs = append(gw1Cidrs, cidr.(string))
-		}
-		var gw2Cidrs []string
-		for _, cidr := range d.Get("gateway2_excluded_network_cidrs").([]interface{}) {
-			gw2Cidrs = append(gw2Cidrs, cidr.(string))
-		}
+	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+		TransitGatewayName1: transitGatewayName1,
+		TransitGatewayName2: transitGatewayName2,
+	}
 
-		var gw1Tgws []string
-		for _, tgw := range d.Get("gateway1_excluded_tgw_connections").([]interface{}) {
-			gw1Tgws = append(gw1Tgws, tgw.(string))
+	transitGatewayPeering.EnableOverPrivateNetwork, ok = d.Get("enable_peering_over_private_network").(bool)
+	if !ok {
+		return fmt.Errorf("enable_peering_over_private_network is required for edge gateway peering")
+	}
+	transitGatewayPeering.EnableJumboFrame, ok = d.Get("jumbo_frame").(bool)
+	if !ok {
+		return fmt.Errorf("jumbo_frame is required for edge gateway peering")
+	}
+	transitGatewayPeering.EnableInsaneMode, ok = d.Get("insane_mode").(bool)
+	if !ok {
+		return fmt.Errorf("insane_mode is required for edge gateway peering")
+	}
+
+	gateway1Details, err := getGatewayDetails(client, transitGatewayName1)
+	if err != nil {
+		return err
+	}
+	gateway1CloudType := gateway1Details.CloudType
+	gateway2Details, err := getGatewayDetails(client, transitGatewayName2)
+	if err != nil {
+		return err
+	}
+	gateway2CloudType := gateway2Details.CloudType
+	// Set source WAN interface names for gateway1
+	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		transit1InterfaceRaw, ok := d.GetOk("gateway1_logical_ifnames")
+		if !ok {
+			return fmt.Errorf("gateway1_logical_ifnames is required for edge gateway peering")
 		}
-		var gw2Tgws []string
-		for _, tgw := range d.Get("gateway2_excluded_tgw_connections").([]interface{}) {
-			gw2Tgws = append(gw2Tgws, tgw.(string))
+		if _, ok := transit1InterfaceRaw.([]interface{}); !ok {
+			return fmt.Errorf("gateway1_logical_ifnames must be a list of strings")
 		}
-
-		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1:            d.Get("transit_gateway_name1").(string),
-			TransitGatewayName2:            d.Get("transit_gateway_name2").(string),
-			Gateway1ExcludedCIDRs:          strings.Join(gw1Cidrs, ","),
-			Gateway2ExcludedCIDRs:          strings.Join(gw2Cidrs, ","),
-			Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
-			Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
-			InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
-			NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
+		gw1LogicalIfNames := getStringList(d, "gateway1_logical_ifnames")
+		if err := setWanInterfaceNames(gw1LogicalIfNames, gateway1CloudType, gateway1Details, "gateway1", transitGatewayPeering); err != nil {
+			return err
 		}
-		if d.Get("enable_peering_over_private_network").(bool) {
-			transitGatewayPeering.PrivateIPPeering = "yes"
-		} else {
-			transitGatewayPeering.PrivateIPPeering = "no"
+	}
+
+	// Set destination WAN interface names for gateway2
+	if goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		transit2InterfaceRaw, ok := d.GetOk("gateway2_logical_ifnames")
+		if !ok {
+			return fmt.Errorf("gateway2_logical_ifnames is required for edge gateway peering")
 		}
-
-		if transitGatewayPeering.PrivateIPPeering == "yes" && transitGatewayPeering.InsaneModeOverInternet {
-			return fmt.Errorf("enable_peering_over_private_network conflicts with enable_insane_mode_encryption_over_internet")
+		if _, ok := transit2InterfaceRaw.([]interface{}); !ok {
+			return fmt.Errorf("gateway2_logical_ifnames must be a list of strings")
 		}
-
-		if d.Get("enable_single_tunnel_mode").(bool) {
-			if transitGatewayPeering.PrivateIPPeering == "yes" {
-				transitGatewayPeering.SingleTunnel = "yes"
-			} else {
-				return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
-			}
+		gw2LogicalIfNames := getStringList(d, "gateway2_logical_ifnames")
+		if err := setWanInterfaceNames(gw2LogicalIfNames, gateway2CloudType, gateway2Details, "gateway2", transitGatewayPeering); err != nil {
+			return err
 		}
+	}
 
-		tunnelCount := d.Get("tunnel_count").(int)
-		if tunnelCount != 0 {
-			if transitGatewayPeering.InsaneModeOverInternet {
-				transitGatewayPeering.TunnelCount = tunnelCount
-			} else {
-				return fmt.Errorf("tunnel_count is only valid when enable_insane_mode_encryption_over_internet is set to true")
-			}
-		} else {
-			if transitGatewayPeering.InsaneModeOverInternet {
-				return fmt.Errorf("enable_insane_mode_encryption_over_internet being set to true requires valid tunnel_count")
-			}
+	if err := setExcludedResources(d, transitGatewayPeering); err != nil {
+		return err
+	}
+
+	// options only supported for non EAT peerings
+	if setNonEATPeering(gateway1CloudType, gateway2CloudType) {
+		log.Printf("[INFO] Setting non EAT peering options")
+		if err := setNonEATPeeringOptions(d, transitGatewayPeering); err != nil {
+			return err
 		}
+	}
 
-		log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
-
-		d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
-		flag := false
-		defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
-
-		err := client.CreateTransitGatewayPeering(transitGatewayPeering)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
+	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
+	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
+	defer func() {
+		if err := resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag); err != nil {
+			log.Printf("[ERROR] Failed to read Aviatrix Transit Gateway peering: %v", err)
 		}
+	}()
 
-		if _, ok := d.GetOk("prepend_as_path1"); ok {
-			var prependASPath []string
-			for _, v := range d.Get("prepend_as_path1").([]interface{}) {
-				prependASPath = append(prependASPath, v.(string))
-			}
-			transGwPeering := &goaviatrix.TransitGatewayPeering{
-				TransitGatewayName1: d.Get("transit_gateway_name1").(string),
-				TransitGatewayName2: d.Get("transit_gateway_name2").(string),
-			}
+	const timeoutDuration = 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
+	defer cancel()
+	err = client.CreateTransitGatewayPeering(ctx, transitGatewayPeering)
+	if err != nil {
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %w", err)
+	}
 
-			err = client.EditTransitConnectionASPathPrepend(transGwPeering, prependASPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path1: %v", err)
-			}
-		}
+	// Set AS Path prepend for gateway1 (prepend_as_path1)
+	if err := setASPathPrepend(d, client, "prepend_as_path1", transitGatewayName1, transitGatewayName2); err != nil {
+		return err
+	}
 
-		if _, ok := d.GetOk("prepend_as_path2"); ok {
-			var prependASPath []string
-			for _, v := range d.Get("prepend_as_path2").([]interface{}) {
-				prependASPath = append(prependASPath, v.(string))
-			}
-			transGwPeering := &goaviatrix.TransitGatewayPeering{
-				TransitGatewayName1: d.Get("transit_gateway_name2").(string),
-				TransitGatewayName2: d.Get("transit_gateway_name1").(string),
-			}
-
-			err = client.EditTransitConnectionASPathPrepend(transGwPeering, prependASPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path2: %v", err)
-			}
-		}
+	// Set AS Path prepend for gateway2 (prepend_as_path2)
+	if err := setASPathPrepend(d, client, "prepend_as_path2", transitGatewayName2, transitGatewayName1); err != nil {
+		return err
 	}
 
 	return resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
@@ -336,72 +322,86 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("could not get transit peering details: %v", err)
 	}
 
-	dstWanInterfaces := d.Get("dst_wan_interfaces").(string)
-	srcWanInterfaces := d.Get("src_wan_interfaces").(string)
-	if dstWanInterfaces != "" && srcWanInterfaces != "" {
-		d.Set("over_private_network", transitGatewayPeering.EnableOverPrivateNetwork)
-		d.Set("jumbo_frame", transitGatewayPeering.EnableJumboFrame)
-		d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode)
-		d.Set("src_wan_interfaces", transitGatewayPeering.SrcWanInterfaces)
-		d.Set("dst_wan_interfaces", transitGatewayPeering.DstWanInterfaces)
-	} else {
-		gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
-		err = setConfigValueIfEquivalent(d, "gateway1_excluded_network_cidrs", gw1CidrsFromConfig, transitGatewayPeering.Gateway1ExcludedCIDRsSlice)
-		if err != nil {
-			return fmt.Errorf("could not write gateway1_excluded_network_cidrs to state: %v", err)
-		}
-		gw2CidrsFromConfig := getStringList(d, "gateway2_excluded_network_cidrs")
-		err = setConfigValueIfEquivalent(d, "gateway2_excluded_network_cidrs", gw2CidrsFromConfig, transitGatewayPeering.Gateway2ExcludedCIDRsSlice)
-		if err != nil {
-			return fmt.Errorf("could not write gateway2_excluded_network_cidrs to state: %v", err)
-		}
-		gw1TgwsFromConfig := getStringList(d, "gateway1_excluded_tgw_connections")
-		err = setConfigValueIfEquivalent(d, "gateway1_excluded_tgw_connections", gw1TgwsFromConfig, transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice)
-		if err != nil {
-			return fmt.Errorf("could not write gateway1_excluded_tgw_connections to state: %v", err)
-		}
-		gw2TgwsFromConfig := getStringList(d, "gateway2_excluded_tgw_connections")
-		err = setConfigValueIfEquivalent(d, "gateway2_excluded_tgw_connections", gw2TgwsFromConfig, transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice)
-		if err != nil {
-			return fmt.Errorf("could not write gateway2_excluded_tgw_connections to state: %v", err)
-		}
-
-		if transitGatewayPeering.PrependAsPath1 != "" {
-			var prependAsPath []string
-			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
-				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
-			}
-
-			err = d.Set("prepend_as_path1", prependAsPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path1: %v", err)
-			}
-		}
-		if transitGatewayPeering.PrependAsPath2 != "" {
-			var prependAsPath []string
-			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
-				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
-			}
-
-			err = d.Set("prepend_as_path2", prependAsPath)
-			if err != nil {
-				return fmt.Errorf("could not set prepend_as_path2: %v", err)
-			}
-		}
-		d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering == "yes")
-		if transitGatewayPeering.PrivateIPPeering == "yes" {
-			d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel == "yes")
-		} else {
-			d.Set("enable_single_tunnel_mode", false)
-		}
-		d.Set("enable_insane_mode_encryption_over_internet", transitGatewayPeering.InsaneModeOverInternet)
-		if transitGatewayPeering.InsaneModeOverInternet {
-			d.Set("tunnel_count", transitGatewayPeering.TunnelCount)
-		}
-
-		d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
+	if err := d.Set("enable_peering_over_private_network", transitGatewayPeering.EnableOverPrivateNetwork); err != nil {
+		return fmt.Errorf("failed to set enable_peering_over_private_network: %w", err)
+	}
+	if err := d.Set("jumbo_frame", transitGatewayPeering.EnableJumboFrame); err != nil {
+		return fmt.Errorf("failed to set jumbo_frame: %w", err)
+	}
+	if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
+		return fmt.Errorf("failed to set insane_mode: %w", err)
+	}
+	if err := d.Set("gateway1_logical_ifnames", transitGatewayPeering.Gateway1LogicalIfNames); err != nil {
+		return fmt.Errorf("failed to set gateway1_logical_ifnames: %w", err)
+	}
+	if err := d.Set("gateway2_logical_ifnames", transitGatewayPeering.Gateway2LogicalIfNames); err != nil {
+		return fmt.Errorf("failed to set gateway2_logical_ifnames: %w", err)
 	}
 
+	gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
+	err = setConfigValueIfEquivalent(d, "gateway1_excluded_network_cidrs", gw1CidrsFromConfig, transitGatewayPeering.Gateway1ExcludedCIDRsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway1_excluded_network_cidrs to state: %w", err)
+	}
+	gw2CidrsFromConfig := getStringList(d, "gateway2_excluded_network_cidrs")
+	err = setConfigValueIfEquivalent(d, "gateway2_excluded_network_cidrs", gw2CidrsFromConfig, transitGatewayPeering.Gateway2ExcludedCIDRsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway2_excluded_network_cidrs to state: %w", err)
+	}
+	gw1TgwsFromConfig := getStringList(d, "gateway1_excluded_tgw_connections")
+	err = setConfigValueIfEquivalent(d, "gateway1_excluded_tgw_connections", gw1TgwsFromConfig, transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway1_excluded_tgw_connections to state: %w", err)
+	}
+	gw2TgwsFromConfig := getStringList(d, "gateway2_excluded_tgw_connections")
+	err = setConfigValueIfEquivalent(d, "gateway2_excluded_tgw_connections", gw2TgwsFromConfig, transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway2_excluded_tgw_connections to state: %w", err)
+	}
+
+	if transitGatewayPeering.PrependAsPath1 != "" {
+		var prependAsPath []string
+		for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
+			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+		}
+
+		err = d.Set("prepend_as_path1", prependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path1: %w", err)
+		}
+	}
+	if transitGatewayPeering.PrependAsPath2 != "" {
+		var prependAsPath []string
+		for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
+			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+		}
+
+		err = d.Set("prepend_as_path2", prependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path2: %w", err)
+		}
+	}
+	if err := d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering == "yes"); err != nil {
+		return fmt.Errorf("failed to set enable_peering_over_private_network: %w", err)
+	}
+
+	enableSingleTunnel := transitGatewayPeering.PrivateIPPeering == "yes" && transitGatewayPeering.SingleTunnel == "yes"
+	if err := d.Set("enable_single_tunnel_mode", enableSingleTunnel); err != nil {
+		return fmt.Errorf("failed to set enable_single_tunnel_mode: %w", err)
+	}
+	if err := d.Set("enable_insane_mode_encryption_over_internet", transitGatewayPeering.InsaneModeOverInternet); err != nil {
+		return fmt.Errorf("failed to set enable_insane_mode_encryption_over_internet: %w", err)
+	}
+
+	if transitGatewayPeering.InsaneModeOverInternet {
+		if err := d.Set("tunnel_count", transitGatewayPeering.TunnelCount); err != nil {
+			return fmt.Errorf("failed to set tunnel_count: %w", err)
+		}
+	}
+
+	if err := d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance); err != nil {
+		return fmt.Errorf("failed to set enable_max_performance: %w", err)
+	}
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil
 }
@@ -473,6 +473,10 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 			return fmt.Errorf("could not update prepend_as_path2: %v", err)
 		}
 
+	}
+
+	if d.HasChanges("gateway1_logical_ifnames") || d.HasChange("gateway2_logical_ifnames") {
+		return fmt.Errorf("cannot update logical interface names for edge transit peerings")
 	}
 
 	d.Partial(false)
