@@ -158,7 +158,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	if err != nil {
 		return diag.Errorf("failed to get spoke gateway details: %v", err)
 	}
-	if edgeSpoke.CloudType == goaviatrix.EDGEMEGAPORT {
+	if goaviatrix.IsCloudType(edgeSpoke.CloudType, goaviatrix.EDGEMEGAPORT) {
 		attachment.SpokeGatewayLogicalIfNames = getStringList(d, "spoke_gateway_logical_ifnames")
 	}
 
@@ -184,7 +184,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	retryInterval := d.Get("retry_interval").(int)
 
 	for i := 0; ; i++ {
-		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
+		err := client.CreateSpokeTransitAttachment(ctx, attachment)
 		if err != nil {
 			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
 				!strings.Contains(err.Error(), "try again") {
@@ -295,7 +295,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		return diag.Errorf("couldn't get wan interfaces for edge gateway %s: %s", spokeGwName, err)
 	}
 
-	if edgeSpoke.CloudType == goaviatrix.EDGEMEGAPORT {
+	if goaviatrix.IsCloudType(edgeSpoke.CloudType, goaviatrix.EDGEMEGAPORT) {
 		if len(attachment.SpokeGatewayLogicalIfNames) > 0 {
 			_ = d.Set("spoke_gateway_logical_ifnames", attachment.SpokeGatewayLogicalIfNames)
 		}
