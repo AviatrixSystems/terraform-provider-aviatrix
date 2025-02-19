@@ -27,8 +27,20 @@ resource "aviatrix_edge_spoke_transit_attachment" "test_attachment_2" {
   enable_over_private_network = true
   enable_jumbo_frame          = false
   enable_insane_mode          = true
-  dst_wan_interfaces          = "eth1"
   edge_wan_interfaces         = ["eth0"]
+  transit_gateway_logical_ifnames = ["wan1"]
+}
+```
+```hcl
+# Create an Aviatrix Edge as a Spoke to Edge as a Transit Attachment for Megaport
+resource "aviatrix_edge_spoke_transit_attachment" "test_attachment_2" {
+  spoke_gw_name                   = "test-edge-spoke-1"
+  transit_gw_name                 = "test-edge-transit-1"
+  enable_over_private_network     = true
+  enable_jumbo_frame              = false
+  enable_insane_mode              = true
+  spoke_gateway_logical_ifnames   = ["wan1"]
+  transit_gateway_logical_ifnames = ["wan1"]
 }
 ```
 
@@ -52,7 +64,8 @@ The following arguments are supported:
 * `number_of_retries` - (Optional) Number of retries. Default value: 0.
 * `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
 * `edge_wan_interfaces` - (Optional) Set of Edge WAN interfaces.
-* `dst_wan_interfaces` - (Optional) Destination WAN interface for edge gateways where the peering terminates. Required only for edge as a transit attachment.
+* `spoke_gateway_logical_ifnames` - (Optional) Spoke gateway logical interface names for edge gateways where the peering originates. Required only for Megaport edge as a transit attachment.
+* `transit_gateway_logical_ifnames` - (Optional) Transit gateway logical interface names for edge gateways where the peering terminates. Required only for edge as a transit attachment.
 
 ## Import
 

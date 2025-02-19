@@ -11,22 +11,24 @@ import (
 )
 
 type SpokeTransitAttachment struct {
-	Action                   string `form:"action,omitempty"`
-	CID                      string `form:"CID,omitempty"`
-	SpokeGwName              string `form:"spoke_gw,omitempty"`
-	TransitGwName            string `form:"transit_gw,omitempty"`
-	RouteTables              string `form:"route_table_list,omitempty"`
-	SpokeBgpEnabled          bool
-	SpokePrependAsPath       []string
-	TransitPrependAsPath     []string
-	EnableOverPrivateNetwork bool   `form:"over_private_network,omitempty"`
-	EnableJumboFrame         bool   `form:"jumbo_frame,omitempty"`
-	EnableInsaneMode         bool   `form:"insane_mode,omitempty"`
-	InsaneModeTunnelNumber   int    `form:"tunnel_count,omitempty"`
-	NoMaxPerformance         bool   `form:"no_max_performance,omitempty"`
-	EdgeWanInterfaces        string `form:"edge_wan_interfaces,omitempty"`
-	EdgeWanInterfacesResp    []string
-	DstWanInterfaces         string `form:"dst_wan_interfaces,omitempty"`
+	Action                       string `form:"action,omitempty" json:"action,omitempty"`
+	CID                          string `form:"CID,omitempty" json:"CID,omitempty"`
+	SpokeGwName                  string `form:"spoke_gw,omitempty" json:"spoke_gw,omitempty"`
+	TransitGwName                string `form:"transit_gw,omitempty" json:"transit_gw,omitempty"`
+	RouteTables                  string `form:"route_table_list,omitempty" json:"route_table_list,omitempty"`
+	SpokeBgpEnabled              bool
+	SpokePrependAsPath           []string
+	TransitPrependAsPath         []string
+	EnableOverPrivateNetwork     bool   `form:"over_private_network,omitempty" json:"over_private_network,omitempty"`
+	EnableJumboFrame             bool   `form:"jumbo_frame,omitempty" json:"jumbo_frame,omitempty"`
+	EnableInsaneMode             bool   `form:"insane_mode,omitempty" json:"insane_mode,omitempty"`
+	InsaneModeTunnelNumber       int    `form:"tunnel_count,omitempty" json:"tunnel_count,omitempty"`
+	NoMaxPerformance             bool   `form:"no_max_performance,omitempty" json:"no_max_performance,omitempty"`
+	EdgeWanInterfaces            string `form:"edge_wan_interfaces,omitempty" json:"edge_wan_interfaces,omitempty"`
+	EdgeWanInterfacesResp        []string
+	DstWanInterfaces             string   `form:"dst_wan_interfaces,omitempty" json:"dst_wan_interfaces,omitempty"`
+	SpokeGatewayLogicalIfNames   []string `form:"spoke_gw_logical_ifnames,omitempty" json:"spoke_gw_logical_ifnames,omitempty"`
+	TransitGatewayLogicalIfNames []string `form:"transit_gw_logical_ifnames,omitempty" json:"transit_gw_logical_ifnames,omitempty"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {
@@ -36,24 +38,26 @@ type EdgeSpokeTransitAttachmentResp struct {
 }
 
 type EdgeSpokeTransitAttachmentResults struct {
-	Site1                    SiteDetail `json:"site_1"`
-	Site2                    SiteDetail `json:"site_2"`
-	EnableOverPrivateNetwork bool       `json:"private_network_peering"`
-	EnableJumboFrame         bool       `json:"jumbo_frame"`
-	EnableInsaneMode         bool       `json:"insane_mode"`
-	InsaneModeTunnelNumber   int        `json:"insane_mode_tunnel_count"`
-	EdgeWanInterfaces        []string   `json:"src_wan_interfaces"`
+	Site1                        SiteDetail `json:"site_1"`
+	Site2                        SiteDetail `json:"site_2"`
+	EnableOverPrivateNetwork     bool       `json:"private_network_peering"`
+	EnableJumboFrame             bool       `json:"jumbo_frame"`
+	EnableInsaneMode             bool       `json:"insane_mode"`
+	InsaneModeTunnelNumber       int        `json:"insane_mode_tunnel_count"`
+	EdgeWanInterfaces            []string   `json:"src_wan_interfaces"`
+	SpokeGatewayLogicalIfNames   []string   `json:"src_gw_logical_ifnames"`
+	TransitGatewayLogicalIfNames []string   `json:"dst_gw_logical_ifnames"`
 }
 
 type SiteDetail struct {
 	ConnBgpPrependAsPath string `json:"conn_bgp_prepend_as_path"`
 }
 
-func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
+func (c *Client) CreateSpokeTransitAttachment(ctx context.Context, spokeTransitAttachment *SpokeTransitAttachment) error {
 	action := "attach_spoke_to_transit_gw"
 	spokeTransitAttachment.CID = c.CID
 	spokeTransitAttachment.Action = action
-	return c.PostAPI(action, spokeTransitAttachment, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, action, spokeTransitAttachment, BasicCheck)
 }
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
@@ -145,6 +149,16 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 		}
 		spokeTransitAttachment.TransitPrependAsPath = prependAsPath
+	}
+
+	// set the spoke gateway logical interface names
+	if data.Results.SpokeGatewayLogicalIfNames != nil {
+		spokeTransitAttachment.SpokeGatewayLogicalIfNames = data.Results.SpokeGatewayLogicalIfNames
+	}
+
+	// set the transit gateway logical interface names
+	if data.Results.TransitGatewayLogicalIfNames != nil {
+		spokeTransitAttachment.TransitGatewayLogicalIfNames = data.Results.TransitGatewayLogicalIfNames
 	}
 
 	return spokeTransitAttachment, nil

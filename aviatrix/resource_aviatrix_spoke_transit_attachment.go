@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -88,6 +89,14 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether the spoke gateway is BGP enabled or not.",
 			},
+			"transit_gateway_logical_ifnames": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Transit gateway logical interface names for edge gateways, where the peering terminates. Required for all edge gateways.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -100,6 +109,16 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	spoke, err := client.GetGateway(&goaviatrix.Gateway{GwName: attachment.SpokeGwName})
 	if err != nil {
 		return fmt.Errorf("could not find spoke gateway: %s", err)
+	}
+
+	// get transit gateway details
+	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
+	if err != nil {
+		return fmt.Errorf("could not get transit gateway details for %s: %w", attachment.TransitGwName, err)
+	}
+	// get edge transit logical interface names
+	if err := getEdgeTransitLogicalIfNames(d, transitGatewayDetails, attachment); err != nil {
+		return fmt.Errorf("%w", err)
 	}
 
 	if !spoke.EnableBgp && (len(attachment.SpokePrependAsPath) != 0 || len(attachment.TransitPrependAsPath) != 0) {
@@ -117,7 +136,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
-		err := client.CreateSpokeTransitAttachment(attachment)
+		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
 		if err != nil {
 			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
@@ -224,6 +243,18 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
+	}
+
+	// set the transit gateway logical interface names only for edge gateways
+	transitGateway, err := getGatewayDetails(client, transitGwName)
+	if err != nil {
+		return fmt.Errorf("could not get transit gateway details for %s: %w", transitGwName, err)
+	}
+
+	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
+			_ = d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
+		}
 	}
 
 	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)

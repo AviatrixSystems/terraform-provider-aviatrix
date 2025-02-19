@@ -711,10 +711,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("edge_csp_username and edge_csp_password are required to create an Aviatrix account for Edge CSP, " +
 				"edge_zededa_username and edge_zededa_password are required to create an Aviatrix account for Edge Zededa")
 		}
-	} else if account.CloudType == goaviatrix.EDGEEQUINIX || account.CloudType == goaviatrix.EDGENEO || account.CloudType == goaviatrix.EDGEMEGAPORT {
-		log.Printf("no check is needed to create an Aviatrix account for Edge Equinix and Edge NEO")
+	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		log.Printf("no check is needed to create an Aviatrix account for Edge Equinix, Edge NEO and Edge Megaport")
 	} else {
-		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768), Edge CSP/Zededa (65536), Edge Equinix (524288) or Edge NEO/Platform (262144)")
+		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768), Edge CSP/Zededa (65536), Edge Equinix (524288), Edge Megaport(1048576) or Edge NEO/Platform (262144)")
 	}
 
 	var err error
