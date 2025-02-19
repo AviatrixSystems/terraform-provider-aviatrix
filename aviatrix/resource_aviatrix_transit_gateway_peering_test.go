@@ -240,6 +240,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 	}
 		`, accountName, transit1GwName, transit1SiteID, path, transit2GwName, transit2SiteID, path)
 }
+
 func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
