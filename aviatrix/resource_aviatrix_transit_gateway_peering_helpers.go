@@ -258,3 +258,18 @@ func setNonEATPeering(gateway1CloudType, gateway2CloudType int) bool {
 	return !goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) &&
 		!goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes)
 }
+
+// getLogicalIfNames returns the logical interface names for the given gateway and interface list
+func getLogicalIfNames(gateway *goaviatrix.Gateway, interfaceList []string) ([]string, error) {
+	var logicalIfNames []string
+	for _, interfaceName := range interfaceList {
+		ifName, exists := gateway.IfNamesTranslation[interfaceName]
+		if !exists {
+			return nil, fmt.Errorf("logical interface name %s not found in translation map", interfaceName)
+		}
+		// Convert "wan.0" -> "wan0"
+		formattedIfName := strings.ReplaceAll(ifName, ".", "")
+		logicalIfNames = append(logicalIfNames, formattedIfName)
+	}
+	return logicalIfNames, nil
+}
