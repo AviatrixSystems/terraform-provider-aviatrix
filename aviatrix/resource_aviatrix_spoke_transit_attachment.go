@@ -133,10 +133,13 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
+	timeout := 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
-		err := client.CreateSpokeTransitAttachment(context.Background(), attachment)
+		err := client.CreateSpokeTransitAttachment(ctx, attachment)
 		if err != nil {
 			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
@@ -253,7 +256,11 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 
 	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
-			_ = d.Set("transit_gateway_logical_ifnames", attachment.TransitGatewayLogicalIfNames)
+			logicalIfNames, err := getLogicalIfNames(transitGateway, attachment.TransitGatewayLogicalIfNames)
+			if err != nil {
+				return fmt.Errorf("could not get logical interface names for edge transit gateway %s: %w", transitGwName, err)
+			}
+			_ = d.Set("transit_gateway_logical_ifnames", logicalIfNames)
 		}
 	}
 
