@@ -8,11 +8,10 @@
     "netnstest",
     "manual",
   ]
-  skip-files = [ ".*goaviatrix/client_mock\\.go" ]
-
 
 [issues]
   fix = true
+  exclude-files = [ ".*goaviatrix/client_mock\\.go" ]
 
 [linters]
   disable-all = true

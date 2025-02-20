@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -43,6 +44,16 @@ func TestAccAviatrixSpokeTransitAttachment_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSpokeTransitAttachmentConfigEdge("acc-"+rName, "spoke-"+rName, os.Getenv("PWD"), "transit-"+rName, "site-"+rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeTransitAttachmentExists(resourceName, &spokeTransitAttachment),
+					resource.TestCheckResourceAttr(resourceName, "spoke_gw_name", "spoke-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "transit_gw_name", "transit-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_logical_ifnames.0", "wan1"),
+				),
 			},
 		},
 	})
@@ -102,6 +113,29 @@ resource "aviatrix_spoke_transit_attachment" "test" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, rName)
+}
+
+func testAccSpokeTransitAttachmentConfigEdge(accountName, spokeGwName, path, transitGwName, transitSiteID string) string {
+	repoRootPath := filepath.Dir(path)
+	filePath := filepath.Join(repoRootPath, "test-data", "testAccEdgeSpokeTransitAttachmentConfigEdge.tf")
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return ""
+	}
+
+	tfConfig := string(content)
+	// Replace placeholders with actual values
+	return fmt.Sprintf(tfConfig,
+		accountName,
+		os.Getenv("AWS_ACCOUNT_NUMBER"),
+		os.Getenv("AWS_ACCESS_KEY"),
+		os.Getenv("AWS_SECRET_KEY"),
+		accountName,
+		spokeGwName,
+		transitGwName,
+		transitSiteID,
+		path,
+	)
 }
 
 func testAccCheckSpokeTransitAttachmentExists(n string, spokeTransitAttachment *goaviatrix.SpokeTransitAttachment) resource.TestCheckFunc {
