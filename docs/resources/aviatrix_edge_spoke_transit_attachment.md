@@ -66,6 +66,7 @@ The following arguments are supported:
 * `edge_wan_interfaces` - (Optional) Set of Edge WAN interfaces.
 * `spoke_gateway_logical_ifnames` - (Optional) Spoke gateway logical interface names for edge gateways where the peering originates. Required only for Megaport edge as a transit attachment.
 * `transit_gateway_logical_ifnames` - (Optional) Transit gateway logical interface names for edge gateways where the peering terminates. Required only for edge as a transit attachment.
+* `disable_activemesh` - (Optional) Switch to disable ActiveMesh mode. Only valid for Edge Spoke to Edge Transit attachments. Valid values: true, false. Default value: false.
 
 ## Import
 
