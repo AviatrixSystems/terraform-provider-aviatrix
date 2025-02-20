@@ -296,3 +296,68 @@ func testAccCheckTransitExternalDeviceConnDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAviatrixEdgeTransitExternalDeviceConn(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	rName := "aviatrix_transit_external_device_conn.eat-2-bgpoipsec-1"
+
+	skipAcc := os.Getenv("SKIP_EDGE_TRANSIT_EXTERNAL_DEVICE_CONN")
+	if skipAcc == "yes" {
+		t.Skip("Skipping edge transit external device connection tests as 'SKIP_EDGE_TRANSIT_EXTERNAL_DEVICE_CONN' is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_EDGE_TRANSIT_EXTERNAL_DEVICE_CONN' to 'yes' to skip Edge transit external device connection tests")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEdgeTransitExternalDeviceConnConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(rName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(rName, "connection_name", "eat-2-bgpoipsec-1"),
+					resource.TestCheckResourceAttr(rName, "gw_name", "e2e-edge-transit-2"),
+					resource.TestCheckResourceAttr(rName, "enable_jumbo_frame", "true"),
+					resource.TestCheckResourceAttr(rName, "tunnel_src_ip", "192.168.20.117,192.168.23.16"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEdgeTransitExternalDeviceConnConfig() string {
+	return `
+	resource "aviatrix_transit_external_device_conn" "eat-2-bgpoipsec-1" {
+	vpc_id                    = "tsite-2"
+	connection_name           = "eat-2-bgpoipsec-1"
+	gw_name                   = "e2e-edge-transit-2"
+	connection_type           = "bgp"
+	tunnel_protocol           = "IPsec"
+	bgp_local_as_num          = "65402"
+	bgp_remote_as_num         = "65151"
+	remote_gateway_ip         = "3.140.40.45"
+	pre_shared_key         = "aviatrix,aviatrix"
+	direct_connect            = true
+	enable_jumbo_frame            = true
+	disable_activemesh = false
+	ha_enabled                = true
+	local_tunnel_cidr         = "169.254.22.54/30, 169.254.238.22/30"
+	remote_tunnel_cidr        = "169.254.22.53/30, 169.254.238.21/30"
+	backup_local_tunnel_cidr  = "169.254.33.94/30, 169.254.165.254/30"
+	backup_remote_tunnel_cidr = "169.254.33.93/30, 169.254.165.253/30"
+	backup_bgp_remote_as_num  = "65151"
+	backup_remote_gateway_ip  = "18.223.219.22"
+	backup_direct_connect     = true
+	backup_pre_shared_key         = "aviatrix,aviatrix"
+	tunnel_src_ip  = "192.168.20.117,192.168.23.16"
+	}`
+}

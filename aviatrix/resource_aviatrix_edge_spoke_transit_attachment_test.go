@@ -61,6 +61,7 @@ func TestAccAviatrixEdgeSpokeTransitAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameEdge, "enable_insane_mode", "true"),
 					resource.TestCheckResourceAttr(resourceNameEdge, "spoke_gateway_logical_ifnames.0", "wan1"),
 					resource.TestCheckResourceAttr(resourceNameEdge, "transit_gateway_logical_ifnames.0", "wan1"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "disable_activemesh", "false"),
 				),
 			},
 		},
@@ -201,6 +202,7 @@ resource "aviatrix_edge_spoke_transit_attachment" "test_edge_spoke_transit_attac
 	enable_insane_mode = true
 	spoke_gateway_logical_ifnames = ["wan1"]
 	transit_gateway_logical_ifnames = ["wan1"]
+	disable_activemesh = false
   }
 	`, accountName, spokeGwName, spokeSiteID, path, transitGwName, transitSiteID, path)
 }

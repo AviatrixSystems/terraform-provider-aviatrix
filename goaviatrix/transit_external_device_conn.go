@@ -62,7 +62,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 	EventTriggeredHA       bool
-	EnableJumboFrame       bool
+	EnableJumboFrame       bool `form:"jumbo_frame,omitempty"`
 	Phase1LocalIdentifier  string
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
@@ -76,7 +76,9 @@ type ExternalDeviceConn struct {
 	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
-	EnableBgpMultihop bool `form:"enable_bgp_multihop"`
+	EnableBgpMultihop bool   `form:"enable_bgp_multihop"`
+	DisableActivemesh bool   `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
+	TunnelSrcIP       string `form:"local_device_ip,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -121,6 +123,8 @@ type EditExternalDeviceConnDetail struct {
 	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
 	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
 	EnableBgpMultihop      bool           `json:"bgp_multihop_enabled,omitempty"`
+	DisableActivemesh      bool           `json:"disable_activemesh,omitempty"`
+	TunnelSrcIP            string         `json:"local_device_ip,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -246,19 +250,30 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		}
 
 		if externalDeviceConn.TunnelProtocol != "LAN" {
+			externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
+			externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
+			// extrnalDeviceConnDetail.HAEnabled returned from API indicate whether connection's local gateway has HA enabled
+			// We need to put whether remote HA is enabled in externalDeviceConn.HAEnabled
 			if externalDeviceConnDetail.HAEnabled == "enabled" {
+				// connection local gateway has HA enabled
 				if len(externalDeviceConnDetail.Tunnels) == 2 {
 					remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
 					if len(remoteIP) == 2 {
 						if remoteIP[0] == remoteIP[1] {
+							// one external device, no remote HA
 							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
 							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
 							externalDeviceConn.HAEnabled = "disabled"
 						} else {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
+							// two external devices, remote has HA
+							// activemesh is disabled, 2 straight tunnels only
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+							externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+							externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+							externalDeviceConn.HAEnabled = "enabled"
+							externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 						}
 					} else if len(remoteIP) == 4 {
 						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
@@ -269,6 +284,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 						}
 					}
 				} else if len(externalDeviceConnDetail.Tunnels) == 4 {
+					// activemesh is enabled, 4 tunnels, 2 straight tunnels and 2 crossing tunnels
 					externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 					externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
@@ -278,15 +294,18 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 				}
 			} else {
+				// local gateway no HA
 				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 				if len(externalDeviceConnDetail.Tunnels) == 2 {
+					// two external devices, remote has HA
 					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 					externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 					externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 					externalDeviceConn.HAEnabled = "enabled"
 				} else {
+					// one external device, no remote HA
 					externalDeviceConn.HAEnabled = "disabled"
 				}
 			}
