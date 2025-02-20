@@ -134,7 +134,7 @@ The following arguments are supported:
 
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~project_name".
-* `connection_name` - (Optional) Transit external device connection name.
+* `connection_name` - (Optional) Transit external device connection name. Required when 'enable_edge_underlay' is false, must set to empty when 'enable_edge_underlay' is true
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.

@@ -70,7 +70,7 @@ The following arguments are supported:
 * `insane_mode` - (Optional) Enable HPE mode for peering with Edge Transit. Required only for edge transit peerings.
 * `gateway1_logical_ifnames` - (Optional) Logical source WAN interfaces for edge gateways where the peering originates. Required only for edge transit attachments.
 * `gateway2_logical_ifnames` - (Optional) Logical destination WAN interface for edge gateways where the peering terminates. Required only for edge transit attachments.
-
+* `disable_activemesh` - (Optional) Switch to disable ActiveMesh mode. Only valid for Edge Transit to Edge Transit peerings. Valid values: true, false. Default value: false.
 
 ~> **NOTE:** `enable_single_tunnel_mode` is only valid when `enable_peering_over_private_network` is set to `true`. Private Transit Gateway Peering with Single-Tunnel Mode expands the existing Insane Mode Transit Gateway Peering Over Private Network to apply it to single IPSec tunnel. One use case is for low speed encryption between cloud networks.
 
