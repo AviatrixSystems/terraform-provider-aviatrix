@@ -77,6 +77,7 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameEdge, "insane_mode", "true"),
 					resource.TestCheckResourceAttr(resourceNameEdge, "gateway1_logical_ifnames.0", "wan1"),
 					resource.TestCheckResourceAttr(resourceNameEdge, "gateway2_logical_ifnames.0", "wan1"),
+					resource.TestCheckResourceAttr(resourceNameEdge, "disable_activemesh", "true"),
 				),
 			},
 		},
@@ -237,6 +238,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 		insane_mode = true
 		gateway1_logical_ifnames = ["wan1"]
 		gateway2_logical_ifnames = ["wan1"]
+		disable_activemesh = true
 	}
 		`, accountName, transit1GwName, transit1SiteID, path, transit2GwName, transit2SiteID, path)
 }

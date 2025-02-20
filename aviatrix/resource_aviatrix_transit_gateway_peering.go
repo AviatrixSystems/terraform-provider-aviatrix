@@ -166,6 +166,13 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"disable_activemesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Disable ActiveMesh, no crossing tunnels",
+			},
 		},
 	}
 }
@@ -186,6 +193,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: transitGatewayName1,
 		TransitGatewayName2: transitGatewayName2,
+		DisableActivemesh:   d.Get("disable_activemesh").(bool),
 	}
 
 	transitGatewayPeering.EnableOverPrivateNetwork, ok = d.Get("enable_peering_over_private_network").(bool)
@@ -423,6 +431,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 
 	if err := d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance); err != nil {
 		return fmt.Errorf("failed to set enable_max_performance: %w", err)
+	}
+	if err := d.Set("disable_activemesh", transitGatewayPeering.DisableActivemesh); err != nil {
+		return fmt.Errorf("error setting disable_activemesh: %w", err)
 	}
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil

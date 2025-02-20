@@ -36,6 +36,7 @@ type TransitGatewayPeering struct {
 	DstWanInterfaces                    string   `form:"dst_wan_interfaces,omitempty" json:"dst_wan_interfaces,omitempty"`
 	Gateway1LogicalIfNames              []string `form:"gateway1_logical_ifnames,omitempty" json:"gateway1_logical_ifnames,omitempty"`
 	Gateway2LogicalIfNames              []string `form:"gateway2_logical_ifnames,omitempty" json:"gateway2_logical_ifnames,omitempty"`
+	DisableActivemesh                   bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
 }
 
 type TransitGatewayPeeringEdit struct {
@@ -80,6 +81,7 @@ type TransitGatewayPeeringDetailsResults struct {
 	Gateway1LogicalIfNames []string                    `json:"src_wan_interfaces"`
 	Gateway2LogicalIfNames []string                    `json:"dst_wan_interfaces"`
 	InsaneMode             bool                        `json:"insane_mode"`
+	DisableActivemesh      bool                        `json:"disable_activemesh,omitempty"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -201,6 +203,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	} else {
 		transitGatewayPeering.SingleTunnel = "no"
 	}
+	transitGatewayPeering.DisableActivemesh = data.Results.DisableActivemesh
 
 	return transitGatewayPeering, nil
 }

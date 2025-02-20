@@ -127,6 +127,13 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"disable_activemesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Disable ActiveMesh, no crossing tunnels",
+			},
 		},
 	}
 }
@@ -142,6 +149,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
 		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
+		DisableActivemesh:        d.Get("disable_activemesh").(bool),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -339,7 +347,9 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 			_ = d.Set("transit_gateway_logical_ifnames", logicalIfNames)
 		}
 	}
-
+	if err := d.Set("disable_activemesh", attachment.DisableActivemesh); err != nil {
+		return diag.Errorf("error setting disable_activemesh: %v", err)
+	}
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return nil
 }

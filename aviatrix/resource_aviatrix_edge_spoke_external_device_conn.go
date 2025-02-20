@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -305,10 +304,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	}
 
 	var err error
-	var result string
+	var connName string
 	for i := 0; ; i++ {
 		if externalDeviceConn.EnableEdgeUnderlay {
-			result, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			connName, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		} else {
 			err = client.CreateExternalDeviceConn(externalDeviceConn)
 		}
@@ -364,13 +363,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	}
 
 	if externalDeviceConn.EnableEdgeUnderlay {
-		re := regexp.MustCompile(`underlay BGP connection (.*) (?:in|on)`)
-		match := re.FindStringSubmatch(result)
-		if len(match) < 2 {
-			return diag.Errorf("could not get underlay BGP connection name")
-		}
-		connName := match[1]
-		d.Set("connection_name", connName)
 		externalDeviceConn.ConnectionName = connName
 	}
 
