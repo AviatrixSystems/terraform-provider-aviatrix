@@ -77,7 +77,7 @@ type ExternalDeviceConn struct {
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop bool   `form:"enable_bgp_multihop"`
-	DisableActivemesh bool   `form:"disable_activemesh,omitempty"`
+	DisableActivemesh bool   `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
 	TunnelSrcIP       string `form:"local_device_ip,omitempty"`
 }
 

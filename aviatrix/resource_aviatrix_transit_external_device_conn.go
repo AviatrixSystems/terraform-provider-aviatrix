@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -45,11 +44,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "ID of the VPC where the Transit Gateway is located. For GCP BGP over LAN connection, it is in the format of 'vpc_name~-~account_name'.",
 			},
 			"connection_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Description: "The name of the transit external device connection which is going to be created.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Description: "The name of the transit external device connection which is going to be created. " +
+					"Required when 'enable_edge_underlay' is false, must set to empty when 'enable_edge_underlay' is true.",
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
@@ -775,12 +775,14 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		edgeExternalDeviceConn = goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 	}
 
-	var result string
+	var connName string
 	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
 	for {
 		try++
 		if externalDeviceConn.EnableEdgeUnderlay {
-			result, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			connName, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			log.Printf("[DEBUG] Created underlay connection %s", connName)
+
 		} else {
 			err = client.CreateExternalDeviceConn(externalDeviceConn)
 		}
@@ -800,15 +802,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	if externalDeviceConn.EnableEdgeUnderlay {
-		re := regexp.MustCompile(`underlay BGP connection (.*) (?:in|on)`)
-		match := re.FindStringSubmatch(result)
-		if len(match) < 2 {
-			return fmt.Errorf("could not get underlay BGP connection name")
-		}
-		connName := match[1]
-		if err := d.Set("connection_name", connName); err != nil {
-			return fmt.Errorf("error setting connection_name: %w", err)
-		}
 		externalDeviceConn.ConnectionName = connName
 	}
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)

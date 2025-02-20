@@ -272,5 +272,9 @@ func checkAndReturnAPIResp2WithResult(resp *http.Response, v interface{}, method
 		}
 	}
 
-	return data.Results["status"], nil
+	connName, exists := data.Results["conn_name"]
+	if !exists {
+		return "", fmt.Errorf("conn_name not found")
+	}
+	return connName, nil
 }

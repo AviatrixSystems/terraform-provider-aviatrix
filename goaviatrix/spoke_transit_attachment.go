@@ -29,6 +29,7 @@ type SpokeTransitAttachment struct {
 	DstWanInterfaces             string   `form:"dst_wan_interfaces,omitempty" json:"dst_wan_interfaces,omitempty"`
 	SpokeGatewayLogicalIfNames   []string `form:"spoke_gw_logical_ifnames,omitempty" json:"spoke_gw_logical_ifnames,omitempty"`
 	TransitGatewayLogicalIfNames []string `form:"transit_gw_logical_ifnames,omitempty" json:"transit_gw_logical_ifnames,omitempty"`
+	DisableActivemesh            bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {
@@ -47,6 +48,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	EdgeWanInterfaces            []string   `json:"src_wan_interfaces"`
 	SpokeGatewayLogicalIfNames   []string   `json:"src_gw_logical_ifnames"`
 	TransitGatewayLogicalIfNames []string   `json:"dst_wan_interfaces"`
+	DisableActivemesh            bool       `json:"disable_activemesh,omitempty"`
 }
 
 type SiteDetail struct {
@@ -134,6 +136,7 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 	spokeTransitAttachment.EnableInsaneMode = data.Results.EnableInsaneMode
 	spokeTransitAttachment.InsaneModeTunnelNumber = data.Results.InsaneModeTunnelNumber
 	spokeTransitAttachment.EdgeWanInterfacesResp = data.Results.EdgeWanInterfaces
+	spokeTransitAttachment.DisableActivemesh = data.Results.DisableActivemesh
 
 	if data.Results.Site1.ConnBgpPrependAsPath != "" {
 		var prependAsPath []string
