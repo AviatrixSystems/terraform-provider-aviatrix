@@ -271,7 +271,8 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 	if !ok {
 		return nil, fmt.Errorf("expected enable_bgp_lan_activemesh to be a boolean, but got %T", d.Get("enable_bgp_lan_activemesh"))
 	}
-	if enableBgpLanActiveMesh && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+	if enableBgpLanActiveMesh &&
+		(externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return nil, fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection " +
 			"with 'LAN' tunnel protocol")
 	}
