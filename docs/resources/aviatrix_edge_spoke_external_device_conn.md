@@ -25,7 +25,6 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
   local_lan_ip      = "10.230.3.23"
   remote_lan_ip     = "10.0.60.1"
   connection_type   = "bgp"
-  ha_enabled        = true
   enable_bgp_lan_activemesh = true
 }
 ```
