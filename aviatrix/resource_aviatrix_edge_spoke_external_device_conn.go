@@ -92,12 +92,11 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				},
 			},
 			"enable_bgp_lan_activemesh": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-				Description: "Switch to enable BGP LAN ActiveMesh. Only valid for GCP and Azure with Remote Gateway HA enabled. " +
-					"Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Switch to enable BGP LAN ActiveMesh. Valid values: true, false. Default: false.",
 			},
 			"number_of_retries": {
 				Type:        schema.TypeInt,
