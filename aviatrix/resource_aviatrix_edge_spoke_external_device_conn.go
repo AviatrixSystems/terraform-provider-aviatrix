@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -89,6 +90,13 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
+			},
+			"enable_bgp_lan_activemesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Switch to enable BGP LAN ActiveMesh. Valid values: true, false. Default: false.",
 			},
 			"number_of_retries": {
 				Type:        schema.TypeInt,
@@ -221,7 +229,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 	}
 }
 
-func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix.ExternalDeviceConn {
+func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatrix.ExternalDeviceConn, error) {
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:              d.Get("site_id").(string),
 		ConnectionName:     d.Get("connection_name").(string),
@@ -259,13 +267,27 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
 	}
 
-	return externalDeviceConn
+	enableBgpLanActiveMesh, ok := d.Get("enable_bgp_lan_activemesh").(bool)
+	if !ok {
+		return nil, fmt.Errorf("expected enable_bgp_lan_activemesh to be a boolean, but got %T", d.Get("enable_bgp_lan_activemesh"))
+	}
+	if enableBgpLanActiveMesh &&
+		(externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+		return nil, fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection " +
+			"with 'LAN' tunnel protocol")
+	}
+	externalDeviceConn.EnableBgpLanActiveMesh = enableBgpLanActiveMesh
+
+	return externalDeviceConn, nil
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
+	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if !externalDeviceConn.EnableEdgeUnderlay && externalDeviceConn.ConnectionName == "" {
 		return diag.Errorf("'connection_name' is required when 'enable_edge_underlay' is false")
@@ -303,7 +325,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		edgeExternalDeviceConn = goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 	}
 
-	var err error
 	var connName string
 	for i := 0; ; i++ {
 		if externalDeviceConn.EnableEdgeUnderlay {
@@ -453,6 +474,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	d.Set("remote_lan_ip", conn.RemoteLanIP)
 	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
 	d.Set("remote_cloud_type", conn.RemoteCloudType)
+	_ = d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 	if conn.BgpLocalAsNum != 0 {
 		d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
 	}
@@ -519,7 +541,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	client := meta.(*goaviatrix.Client)
 	d.Partial(true)
 
-	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
+	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("prepend_as_path") {
 		var prependASPath []string
@@ -604,7 +629,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	externalDeviceConn := marshalEdgeSpokeExternalDeviceConnInput(d)
+	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if externalDeviceConn.EnableEdgeUnderlay {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)

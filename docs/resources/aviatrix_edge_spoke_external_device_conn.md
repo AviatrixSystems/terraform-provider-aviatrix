@@ -24,6 +24,8 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
   bgp_remote_as_num = "345"
   local_lan_ip      = "10.230.3.23"
   remote_lan_ip     = "10.0.60.1"
+  connection_type   = "bgp"
+  enable_bgp_lan_activemesh = true
 }
 ```
 ```hcl
@@ -83,6 +85,7 @@ The following arguments are supported:
   * `receive_interval` - (Optional) BFD receive interval in ms. Valid values between 10 to 60000. Default: 300.
   * `multiplier` - (Optional) BFD detection multiplier. Valid values between 2 to 255. Default: 3.
 * `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
+* `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Valid values: true, false. Default: false.
 
 ## Import
 
