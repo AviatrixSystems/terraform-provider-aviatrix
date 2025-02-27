@@ -39,6 +39,8 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "65002"),
 					resource.TestCheckResourceAttr(resourceName, "local_lan_ip", "1.2.3.4"),
 					resource.TestCheckResourceAttr(resourceName, "remote_lan_ip", "5.6.7.8"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
+					resource.TestCheckResourceAttr(resourceName, "enable_bgp_lan_activemesh", "true"),
 				),
 			},
 			{
@@ -109,6 +111,8 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
 	bgp_remote_as_num = "65002"
 	local_lan_ip      = "1.2.3.4"
 	remote_lan_ip     = "5.6.7.8"
+	connection_type   = "bgp"
+	enable_bgp_lan_activemesh = true
 }
 	`, os.Getenv("EDGE_SPOKE_SITE_ID"), rName, os.Getenv("EDGE_SPOKE_NAME"))
 }
