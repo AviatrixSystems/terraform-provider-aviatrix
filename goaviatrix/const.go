@@ -39,15 +39,15 @@ const (
 
 // The value is corresponding to cloudn repro definition of the same name
 const (
-	SHORTHAND_AWS_VENDOR_NAME             = "aws"
-	SHORTHAND_GOOGLE_VENDOR_NAME          = "gcp"
-	SHORTHAND_AZURE_ARM_VENDOR_NAME       = "arm"
-	SHORTHAND_ORACLE_VENDOR_NAME          = "oci"
-	SHORTHAND_ARM_GOV_VENDOR_NAME         = "arm_gov"
-	SHORTHAND_AWS_GOV_VENDOR_NAME         = "aws_gov"
-	SHORTHAND_AWS_CHINA_VENDOR_NAME       = "aws_cn"
-	SHORTHAND_AZURE_ARM_CHINA_VENDOR_NAME = "arm_cn"
-	SHORTHAND_ALIYUN_VENDOR_NAME          = "acs"
+	ShorthandAWSVendorName           = "aws"
+	ShorthandGOOGLEVendorName        = "gcp"
+	ShorthandAzureARMVendorName      = "arm"
+	ShorthandOracleVendorName        = "oci"
+	ShorthandARMGovVendorName        = "arm_gov"
+	ShorthandAWSGovVendorName        = "aws_gov"
+	ShorthandAWSChinaVendorName      = "aws_cn"
+	ShorthandAzureARMChinaVendorName = "arm_cn"
+	ShorthandAliYunVendorName        = "acs"
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
