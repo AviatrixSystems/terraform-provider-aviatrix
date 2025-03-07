@@ -4,6 +4,7 @@
 package goaviatrix
 
 // Cloud provider ids
+// The value is corresponding to cloudn repro definition for cloud type bit, e.g. AWS is AWS_CLOUD_TYPE_BIT
 const (
 	AWS          = 1
 	GCP          = 4
@@ -34,6 +35,19 @@ const (
 	OCIRelatedCloudTypes      = OCI
 	AliCloudRelatedCloudTypes = AliCloud
 	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT
+)
+
+// The value is corresponding to cloudn repro definition of the same name
+const (
+	ShorthandAWSVendorName           = "aws"
+	ShorthandGOOGLEVendorName        = "gcp"
+	ShorthandAzureARMVendorName      = "arm"
+	ShorthandOracleVendorName        = "oci"
+	ShorthandARMGovVendorName        = "arm_gov"
+	ShorthandAWSGovVendorName        = "aws_gov"
+	ShorthandAWSChinaVendorName      = "aws_cn"
+	ShorthandAzureARMChinaVendorName = "arm_cn"
+	ShorthandAliYunVendorName        = "acs"
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
