@@ -1108,6 +1108,9 @@ func TestSetInterfaceMappingDetails(t *testing.T) {
 }
 
 func TestSetInterfaceDetails(t *testing.T) {
+	// Define the interface order
+	interfaceOrder := []string{"wan0", "wan1", "mgmt0", "wan2", "wan3"}
+
 	// Define test cases
 	tests := []struct {
 		name       string
@@ -1132,16 +1135,16 @@ func TestSetInterfaceDetails(t *testing.T) {
 		{
 			name: "Multiple WAN and MANAGEMENT interfaces",
 			interfaces: []goaviatrix.EdgeTransitInterface{
-				{LogicalIfName: "wan0", IpAddress: "10.0.0.2"},
-				{LogicalIfName: "wan1", IpAddress: "10.0.0.3"},
 				{LogicalIfName: "wan2", GatewayIp: "192.168.1.1"},
 				{LogicalIfName: "mgmt0", Dhcp: true},
+				{LogicalIfName: "wan0", IpAddress: "10.0.0.2"},
+				{LogicalIfName: "wan1", IpAddress: "10.0.0.3"},
 			},
 			expected: []map[string]interface{}{
 				{"logical_ifname": "wan0", "ip_address": "10.0.0.2"},
 				{"logical_ifname": "wan1", "ip_address": "10.0.0.3"},
-				{"logical_ifname": "wan2", "gateway_ip": "192.168.1.1"},
 				{"logical_ifname": "mgmt0", "dhcp": true},
+				{"logical_ifname": "wan2", "gateway_ip": "192.168.1.1"},
 			},
 		},
 		{
@@ -1183,7 +1186,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := setInterfaceDetails(tt.interfaces)
+			result := setInterfaceDetails(tt.interfaces, interfaceOrder)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -1432,6 +1435,36 @@ func TestParseInterface(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, result)
 			}
+		})
+	}
+}
+
+func TestGetUserInterfaceOrder(t *testing.T) {
+	tests := []struct {
+		name       string
+		interfaces []interface{}
+		expected   []string
+	}{
+		{
+			name: "Valid interface list",
+			interfaces: []interface{}{
+				map[string]interface{}{"logical_ifname": "wan0"},
+				map[string]interface{}{"logical_ifname": "wan1"},
+				map[string]interface{}{"logical_ifname": "mgmt0"},
+			},
+			expected: []string{"wan0", "wan1", "mgmt0"},
+		},
+		{
+			name:       "Empty interface list",
+			interfaces: []interface{}{},
+			expected:   []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getUserInterfaceOrder(tt.interfaces)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
