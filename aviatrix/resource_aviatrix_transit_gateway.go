@@ -1878,7 +1878,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if !ok {
 				return fmt.Errorf("could not get user interfaces")
 			}
-			userInterfaceOrder := getUserInterfaceOrder(userInterfaces)
+			userInterfaceOrder, err := getUserInterfaceOrder(userInterfaces)
+			if err != nil {
+				return fmt.Errorf("could not get user interface order: %w", err)
+			}
 			interfaces := setInterfaceDetails(gw.Interfaces, userInterfaceOrder)
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %w", err)
@@ -1960,9 +1963,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if !ok {
 				return fmt.Errorf("could not get user interfaces")
 			}
-			userInterfaceOrder := getUserInterfaceOrder(userInterfaces)
-			ha_interfaces := setInterfaceDetails(gw.HaGw.Interfaces, userInterfaceOrder)
-			if err = d.Set("ha_interfaces", ha_interfaces); err != nil {
+			userInterfaceOrder, err := getUserInterfaceOrder(userInterfaces)
+			if err != nil {
+				return fmt.Errorf("could not get user interface order: %w", err)
+			}
+			haInterfaces := setInterfaceDetails(gw.HaGw.Interfaces, userInterfaceOrder)
+			if err = d.Set("ha_interfaces", haInterfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
 		}
@@ -2952,12 +2958,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 					gateway.LogicalEipMap = eipMapList
 					gateway.CloudType = cloudType
-					gateway.GwName = d.Get("gw_name").(string)
 					ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 					defer cancel()
 					err = client.UpdateTransitGateway(ctx, gateway)
 					if err != nil {
-						return fmt.Errorf("failed to update logical eip map for edge gateway: %s", err)
+						return fmt.Errorf("failed to update logical eip map for edge gateway: %w", err)
 					}
 				} else {
 					eipMapJSON, err := json.Marshal(eipMapList)
@@ -2967,7 +2972,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					gateway.EipMap = string(eipMapJSON)
 					err = client.UpdateEdgeGateway(gateway)
 					if err != nil {
-						return fmt.Errorf("failed to update eip map for edge gateway: %s", err)
+						return fmt.Errorf("failed to update eip map for edge gateway: %w", err)
 					}
 				}
 
@@ -4641,12 +4646,18 @@ func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) erro
 }
 
 // get the user provided interface order
-func getUserInterfaceOrder(interfaces []interface{}) []string {
+func getUserInterfaceOrder(interfaces []interface{}) ([]string, error) {
 	userInterfaceOrder := make([]string, 0)
 	for _, iface := range interfaces {
-		ifaceMap := iface.(map[string]interface{})
-		logicalIfName := ifaceMap["logical_ifname"].(string)
+		ifaceMap, ok := iface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("interface is not a map[string]interface{}")
+		}
+		logicalIfName, ok := ifaceMap["logical_ifname"].(string)
+		if !ok {
+			return nil, fmt.Errorf("logical interface name must be a string")
+		}
 		userInterfaceOrder = append(userInterfaceOrder, logicalIfName)
 	}
-	return userInterfaceOrder
+	return userInterfaceOrder, nil
 }
