@@ -1441,9 +1441,10 @@ func TestParseInterface(t *testing.T) {
 
 func TestGetUserInterfaceOrder(t *testing.T) {
 	tests := []struct {
-		name       string
-		interfaces []interface{}
-		expected   []string
+		name        string
+		interfaces  []interface{}
+		expected    []string
+		expectError bool
 	}{
 		{
 			name: "Valid interface list",
@@ -1452,19 +1453,50 @@ func TestGetUserInterfaceOrder(t *testing.T) {
 				map[string]interface{}{"logical_ifname": "wan1"},
 				map[string]interface{}{"logical_ifname": "mgmt0"},
 			},
-			expected: []string{"wan0", "wan1", "mgmt0"},
+			expected:    []string{"wan0", "wan1", "mgmt0"},
+			expectError: false,
 		},
 		{
-			name:       "Empty interface list",
-			interfaces: []interface{}{},
-			expected:   []string{},
+			name:        "Empty interface list",
+			interfaces:  []interface{}{},
+			expected:    []string{},
+			expectError: false,
+		},
+		{
+			name: "Interface is not a map[string]interface{}",
+			interfaces: []interface{}{
+				"invalid_entry",
+			},
+			expected:    nil,
+			expectError: true,
+		},
+		{
+			name: "Missing logical_ifname key",
+			interfaces: []interface{}{
+				map[string]interface{}{"interface_type": "WAN"},
+			},
+			expected:    nil,
+			expectError: true,
+		},
+		{
+			name: "Logical_ifname is not a string",
+			interfaces: []interface{}{
+				map[string]interface{}{"logical_ifname": 12345},
+			},
+			expected:    nil,
+			expectError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getUserInterfaceOrder(tt.interfaces)
-			assert.Equal(t, tt.expected, result)
+			result, err := getUserInterfaceOrder(tt.interfaces)
+			if tt.expectError {
+				assert.Error(t, err, "Expected an error but got nil")
+			} else {
+				assert.NoError(t, err, "Expected no error but got one")
+				assert.Equal(t, tt.expected, result)
+			}
 		})
 	}
 }
