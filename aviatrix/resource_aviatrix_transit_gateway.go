@@ -4032,17 +4032,24 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 			// print eip map for edge mega port
 			log.Printf("[INFO] EIP Map for Edge Mega Port: %#v", eipMapList)
 			gateway.LogicalEipMap = eipMapList
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			// update logical eip map
+			err = client.UpdateTransitGateway(ctx, gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update logical eip map for edge gateway: %w", err)
+			}
 		} else {
 			eipMapJSON, err := json.Marshal(eipMapList)
 			if err != nil {
 				return fmt.Errorf("failed to marshal eip_map to JSON: %w", err)
 			}
 			gateway.EipMap = string(eipMapJSON)
-		}
-		// update EIP map
-		err = client.UpdateEdgeGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to update edge gateway: %s", err)
+			// update EIP map
+			err = client.UpdateEdgeGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update edge gateway: %w", err)
+			}
 		}
 	}
 
