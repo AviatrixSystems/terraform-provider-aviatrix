@@ -1500,3 +1500,68 @@ func TestGetUserInterfaceOrder(t *testing.T) {
 		})
 	}
 }
+
+func TestSortInterfacesByCustomOrder(t *testing.T) {
+	tests := []struct {
+		name               string
+		interfaces         []goaviatrix.EdgeTransitInterface
+		userInterfaceOrder []string
+		expected           []goaviatrix.EdgeTransitInterface
+	}{
+		{
+			name: "Sort interfaces based on custom order",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan2"},
+				{LogicalIfName: "wan0"},
+				{LogicalIfName: "mgmt0"},
+				{LogicalIfName: "wan1"},
+			},
+			userInterfaceOrder: []string{"wan0", "wan1", "mgmt0", "wan2"},
+			expected: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan0"},
+				{LogicalIfName: "wan1"},
+				{LogicalIfName: "mgmt0"},
+				{LogicalIfName: "wan2"},
+			},
+		},
+		{
+			name: "Handles interfaces not in custom order",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "extra0"},
+				{LogicalIfName: "wan1"},
+				{LogicalIfName: "mgmt0"},
+			},
+			userInterfaceOrder: []string{"wan1", "mgmt0"},
+			expected: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan1"},
+				{LogicalIfName: "mgmt0"},
+				{LogicalIfName: "extra0"},
+			},
+		},
+		{
+			name: "Handles empty custom order",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan2"},
+				{LogicalIfName: "wan0"},
+			},
+			userInterfaceOrder: []string{},
+			expected: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan2"},
+				{LogicalIfName: "wan0"},
+			},
+		},
+		{
+			name:               "Handles empty interface list",
+			interfaces:         []goaviatrix.EdgeTransitInterface{},
+			userInterfaceOrder: []string{"wan0", "wan1"},
+			expected:           []goaviatrix.EdgeTransitInterface{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := sortInterfacesByCustomOrder(tt.interfaces, tt.userInterfaceOrder)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
