@@ -377,11 +377,11 @@ func createOrderMap(order []string) map[string]int {
 }
 
 // Sorting function that uses the interface order
-func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface) []goaviatrix.EdgeTransitInterface {
-	orderMap := createOrderMap(interfaceOrder)
+func sortInterfacesByCustomOrder(interfaces []goaviatrix.EdgeTransitInterface, userInterfaceOrder []string) []goaviatrix.EdgeTransitInterface {
+	orderMap := createOrderMap(userInterfaceOrder)
 	sort.SliceStable(interfaces, func(i, j int) bool {
-		iIndex, iExists := orderMap[interfaces[i].Name]
-		jIndex, jExists := orderMap[interfaces[j].Name]
+		iIndex, iExists := orderMap[interfaces[i].LogicalIfName]
+		jIndex, jExists := orderMap[interfaces[j].LogicalIfName]
 		if !iExists {
 			iIndex = len(orderMap)
 		}
