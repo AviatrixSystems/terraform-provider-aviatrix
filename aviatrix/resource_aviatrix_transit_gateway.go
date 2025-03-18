@@ -2960,7 +2960,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					gateway.CloudType = cloudType
 					ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 					defer cancel()
-					err = client.UpdateTransitGateway(ctx, gateway)
+					err = client.UpdateEdgeGatewayV2(ctx, gateway)
 					if err != nil {
 						return fmt.Errorf("failed to update logical eip map for edge gateway: %w", err)
 					}
@@ -4035,7 +4035,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			// update logical eip map
-			err = client.UpdateTransitGateway(ctx, gateway)
+			err = client.UpdateEdgeGatewayV2(ctx, gateway)
 			if err != nil {
 				return fmt.Errorf("failed to update logical eip map for edge gateway: %w", err)
 			}

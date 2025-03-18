@@ -293,7 +293,7 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 	return c.PostAPI(action, form, BasicCheck)
 }
 
-func (c *Client) UpdateTransitGateway(ctx context.Context, gateway *TransitVpc) error {
+func (c *Client) UpdateEdgeGatewayV2(ctx context.Context, gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "update_edge_gateway"
 	return c.PostAPIContext2(ctx, nil, gateway.Action, gateway, BasicCheck)
