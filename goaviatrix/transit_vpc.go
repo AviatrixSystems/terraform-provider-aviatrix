@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,11 +14,11 @@ import (
 // Gateway simple struct to hold gateway details
 type TransitVpc struct {
 	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                       string `form:"action,omitempty"`
-	CID                          string `form:"CID,omitempty"`
+	Action                       string `form:"action,omitempty" json:"action,omitempty"`
+	CID                          string `form:"CID,omitempty" json:"CID,omitempty"`
 	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	DnsServer                    string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
-	GwName                       string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GwName                       string `form:"gw_name,omitempty" json:"name,omitempty"`
 	GwSize                       string `form:"gw_size,omitempty"`
 	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
@@ -290,6 +291,12 @@ func (c *Client) UpdateEdgeGateway(gateway *TransitVpc) error {
 	}
 	log.Printf("Formm details: %v", form)
 	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) UpdateEdgeGatewayV2(ctx context.Context, gateway *TransitVpc) error {
+	gateway.CID = c.CID
+	gateway.Action = "update_edge_gateway"
+	return c.PostAPIContext2(ctx, nil, gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DeleteEdgeGateway(gateway *Gateway) error {
