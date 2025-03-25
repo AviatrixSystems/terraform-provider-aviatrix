@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -261,6 +262,36 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					},
 				},
 			},
+			"custom_interface_mapping": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
+							),
+						},
+						"identifier_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.",
+							ValidateFunc: validation.StringInSlice([]string{"mac", "pci", "system-assigned"}, false),
+						},
+						"identifier_value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.",
+							ValidateFunc: validateIdentifierValue,
+						},
+					},
+				},
+			},
 			"vlan": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -314,7 +345,7 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 	}
 }
 
-func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
+func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.EdgeSpoke, error) {
 	edgeSpoke := &goaviatrix.EdgeSpoke{
 		GwName:                             d.Get("gw_name").(string),
 		SiteId:                             d.Get("site_id").(string),
@@ -384,14 +415,26 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.Edge
 		edgeSpoke.VlanList = append(edgeSpoke.VlanList, vlan2)
 	}
 
-	return edgeSpoke
+	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+	if ok {
+		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
+		if err != nil {
+			return nil, err
+		}
+		edgeSpoke.CustomInterfaceMapping = customInterfaceMap
+	}
+
+	return edgeSpoke, nil
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeSpoke := marshalEdgeGatewaySelfmanagedInput(d)
+	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// checks before creation
 	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
@@ -688,7 +731,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeSpoke := marshalEdgeGatewaySelfmanagedInput(d)
+	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// checks before update
 	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
@@ -901,4 +947,59 @@ func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema
 	}
 
 	return nil
+}
+
+func validateIdentifierValue(val interface{}, key string) (warns []string, errs []error) {
+	value := val.(string)
+	// Check if the value is "auto"
+	if value == "auto" {
+		return
+	}
+	// Check if the value is a valid MAC address
+	macRegex := `^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`
+	if matched, _ := regexp.MatchString(macRegex, value); matched {
+		return
+	}
+	// Check if the value is a valid PCI ID
+	pciRegex := `^[0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$`
+	if matched, _ := regexp.MatchString(pciRegex, value); matched {
+		return
+	}
+	errs = append(errs, fmt.Errorf("%q must be a valid MAC address, PCI ID, or 'auto', got: %s", key, value))
+	return
+}
+
+func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string][]goaviatrix.CustomInterfaceMap, error) {
+	// Create a map to structure the Custom interface map data
+	customInterfaceMapStructured := make(map[string][]goaviatrix.CustomInterfaceMap)
+
+	// Populate the structured map
+	for _, customInterfaceMap := range customInterfaceMap {
+		customInterface, ok := customInterfaceMap.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", customInterfaceMap)
+		}
+		logicalIfName, ok := customInterface["logical_ifname"].(string)
+		if !ok {
+			return nil, fmt.Errorf("logical interface name must be a string")
+		}
+
+		identifierType, ok := customInterface["identifier_type"].(string)
+		if !ok {
+			return nil, fmt.Errorf("identifier type must be a string")
+		}
+		identifierValue, ok := customInterface["idenitifer_value"].(string)
+		if !ok {
+			return nil, fmt.Errorf("identifier value must be a string")
+		}
+
+		// Append the EIP entry to the corresponding interface
+		customInterfaceEntry := goaviatrix.CustomInterfaceMap{
+			IdentifierType:  identifierType,
+			IdentifierValue: identifierValue,
+		}
+		customInterfaceMapStructured[logicalIfName] = append(customInterfaceMapStructured[logicalIfName], customInterfaceEntry)
+	}
+
+	return customInterfaceMapStructured, nil
 }
