@@ -108,7 +108,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		identifier_type = mac,
 		identifier_value = "00:00:00:00:00:00",
 	}
-	
+
 }
 resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 	primary_gw_name         = aviatrix_edge_gateway_selfmanaged.test.gw_name
