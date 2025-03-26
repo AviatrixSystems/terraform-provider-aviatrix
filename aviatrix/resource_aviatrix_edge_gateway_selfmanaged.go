@@ -371,55 +371,16 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
-
-		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:    if1["name"].(string),
-			Type:      if1["type"].(string),
-			Dhcp:      if1["enable_dhcp"].(bool),
-			PublicIp:  if1["wan_public_ip"].(string),
-			IpAddr:    if1["ip_address"].(string),
-			GatewayIp: if1["gateway_ip"].(string),
-			Tag:       if1["tag"].(string),
-		}
-
-		// vrrp and vrrp_virtual_ip are only applicable for LAN interfaces
-		if if1["type"].(string) == "LAN" {
-			if2.VrrpState = if1["enable_vrrp"].(bool)
-			if2.VirtualIp = if1["vrrp_virtual_ip"].(string)
-		}
-
-		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
+	if err := populateInterfaces(d, edgeSpoke); err != nil {
+		return nil, err
 	}
 
-	vlan := d.Get("vlan").(*schema.Set).List()
-	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
-
-		vlan2 := &goaviatrix.EdgeSpokeVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
-		}
-
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
-
-		edgeSpoke.VlanList = append(edgeSpoke.VlanList, vlan2)
+	if err := populateVlans(d, edgeSpoke); err != nil {
+		return nil, err
 	}
 
-	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-	if ok {
-		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
-		if err != nil {
-			return nil, err
-		}
-		edgeSpoke.CustomInterfaceMapping = customInterfaceMap
+	if err := populateCustomInterfaceMapping(d, edgeSpoke); err != nil {
+		return nil, err
 	}
 
 	return edgeSpoke, nil
@@ -647,6 +608,28 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		}
 	} else {
 		d.Set("approved_learned_cidrs", nil)
+	}
+
+	if len(edgeSpoke.CustomInterfaceMapping) != 0 {
+		// get the order of custom interface mapping
+		userCustomInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+		if !ok {
+			return diag.Errorf("failed to get custom_interface_mapping")
+		}
+		userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
+		if err != nil {
+			return diag.Errorf("failed to get custom_interface_order: %s\n", err)
+		}
+		customInterfaceMapping, err := setCustomInterfaceMapping(edgeSpoke.CustomInterfaceMapping, userCustomInterfaceOrder)
+		if !ok {
+			return diag.Errorf("failed to get custom_interface_mapping: %s\n", err)
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
+			return diag.Errorf("failed to set custom_interface_mapping: %s\n", err)
+		}
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
@@ -913,6 +896,11 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		}
 	}
 
+	if d.HasChange("custom_interface_mapping") {
+		// updating the custom interface mapping after the Edge Gateway Selfmanaged is created is not supported
+		return diag.Errorf("updating custom interface mapping after the Edge Gateway Selfmanaged is created is not supported")
+	}
+
 	d.Partial(false)
 
 	return resourceAviatrixEdgeGatewaySelfmanagedRead(ctx, d, meta)
@@ -945,59 +933,4 @@ func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema
 	}
 
 	return nil
-}
-
-func validateIdentifierValue(val interface{}, key string) (warns []string, errs []error) {
-	value := val.(string)
-	// Check if the value is "auto"
-	if value == "auto" {
-		return
-	}
-	// Check if the value is a valid MAC address
-	macRegex := `^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`
-	if matched, _ := regexp.MatchString(macRegex, value); matched {
-		return
-	}
-	// Check if the value is a valid PCI ID
-	pciRegex := `^[0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$`
-	if matched, _ := regexp.MatchString(pciRegex, value); matched {
-		return
-	}
-	errs = append(errs, fmt.Errorf("%q must be a valid MAC address, PCI ID, or 'auto', got: %s", key, value))
-	return
-}
-
-func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string][]goaviatrix.CustomInterfaceMap, error) {
-	// Create a map to structure the Custom interface map data
-	customInterfaceMapStructured := make(map[string][]goaviatrix.CustomInterfaceMap)
-
-	// Populate the structured map
-	for _, customInterfaceMap := range customInterfaceMap {
-		customInterface, ok := customInterfaceMap.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", customInterfaceMap)
-		}
-		logicalIfName, ok := customInterface["logical_ifname"].(string)
-		if !ok {
-			return nil, fmt.Errorf("logical interface name must be a string")
-		}
-
-		identifierType, ok := customInterface["identifier_type"].(string)
-		if !ok {
-			return nil, fmt.Errorf("identifier type must be a string")
-		}
-		identifierValue, ok := customInterface["idenitifer_value"].(string)
-		if !ok {
-			return nil, fmt.Errorf("identifier value must be a string")
-		}
-
-		// Append the EIP entry to the corresponding interface
-		customInterfaceEntry := goaviatrix.CustomInterfaceMap{
-			IdentifierType:  identifierType,
-			IdentifierValue: identifierValue,
-		}
-		customInterfaceMapStructured[logicalIfName] = append(customInterfaceMapStructured[logicalIfName], customInterfaceEntry)
-	}
-
-	return customInterfaceMapStructured, nil
 }
