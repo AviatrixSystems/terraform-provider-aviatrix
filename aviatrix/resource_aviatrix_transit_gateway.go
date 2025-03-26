@@ -1937,14 +1937,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 			userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
 			if err != nil {
-				return fmt.Errorf("failed to get custom_interface_order: %s", err)
+				return fmt.Errorf("failed to get custom_interface_order: %w", err)
 			}
 			customInterfaceMapping, err := setCustomInterfaceMapping(gw.CustomInterfaceMapping, userCustomInterfaceOrder)
 			if err != nil {
 				return fmt.Errorf("could not set custom interface mapping details: %w", err)
 			}
 			if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
-				return fmt.Errorf("failed to set custom_interface_mapping: %s", err)
+				return fmt.Errorf("failed to set custom_interface_mapping: %w", err)
 			}
 		}
 		// set eip map
