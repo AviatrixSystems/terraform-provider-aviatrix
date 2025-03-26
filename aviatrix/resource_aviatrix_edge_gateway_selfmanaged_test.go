@@ -99,7 +99,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		identifier_type = mac,
 		identifier_value = "00:00:00:00:00:00",
 	}
-	
+
 	custom_interface_mapping {
 		logical_ifname = wan1,
 		identifier_type = mac,
