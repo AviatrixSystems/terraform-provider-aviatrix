@@ -130,23 +130,85 @@ func populateInterfaces(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke)
 		if !ok {
 			return fmt.Errorf("failed to get interface: expected map[string]interface{}, got %T", if0)
 		}
-		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:    if1["name"].(string),
-			Type:      if1["type"].(string),
-			Dhcp:      if1["enable_dhcp"].(bool),
-			PublicIp:  if1["wan_public_ip"].(string),
-			IpAddr:    if1["ip_address"].(string),
-			GatewayIp: if1["gateway_ip"].(string),
-			Tag:       if1["tag"].(string),
-		}
 
-		if if1["type"].(string) == "LAN" {
-			if2.VrrpState = if1["enable_vrrp"].(bool)
-			if2.VirtualIp = if1["vrrp_virtual_ip"].(string)
+		if2, err := buildEdgeSpokeInterface(if1)
+		if err != nil {
+			return err
 		}
 
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
 	}
+	return nil
+}
+
+func buildEdgeSpokeInterface(if1 map[string]interface{}) (*goaviatrix.EdgeSpokeInterface, error) {
+	ifName, err := getStringFromMap(if1, "name")
+	if err != nil {
+		return nil, err
+	}
+
+	ifType, err := getStringFromMap(if1, "type")
+	if err != nil {
+		return nil, err
+	}
+
+	enableDhcp, err := getBoolFromMap(if1, "enable_dhcp")
+	if err != nil {
+		return nil, err
+	}
+
+	publicIP, err := getStringFromMap(if1, "wan_public_ip")
+	if err != nil {
+		return nil, err
+	}
+
+	ipAddr, err := getStringFromMap(if1, "ip_address")
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayIP, err := getStringFromMap(if1, "gateway_ip")
+	if err != nil {
+		return nil, err
+	}
+
+	tag, err := getStringFromMap(if1, "tag")
+	if err != nil {
+		return nil, err
+	}
+
+	if2 := &goaviatrix.EdgeSpokeInterface{
+		IfName:    ifName,
+		Type:      ifType,
+		Dhcp:      enableDhcp,
+		PublicIp:  publicIP,
+		IpAddr:    ipAddr,
+		GatewayIp: gatewayIP,
+		Tag:       tag,
+	}
+
+	if ifType == "LAN" {
+		if err := populateLANFields(if1, if2); err != nil {
+			return nil, err
+		}
+	}
+
+	return if2, nil
+}
+
+func populateLANFields(if1 map[string]interface{}, if2 *goaviatrix.EdgeSpokeInterface) error {
+	enableVrrp, err := getBoolFromMap(if1, "enable_vrrp")
+	if err != nil {
+		return err
+	}
+
+	virtualIP, err := getStringFromMap(if1, "vrrp_virtual_ip")
+	if err != nil {
+		return err
+	}
+
+	if2.VrrpState = enableVrrp
+	if2.VirtualIp = virtualIP
 	return nil
 }
 
@@ -155,22 +217,75 @@ func populateVlans(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) erro
 	if !ok {
 		return fmt.Errorf("failed to get vlan: expected *schema.Set, got %T", d.Get("vlan"))
 	}
+
 	vlan := vlanRaw.List()
 	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
-		vlan2 := &goaviatrix.EdgeSpokeVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
+		vlan1, ok := vlan0.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("failed to get vlan entry: expected map[string]interface{}, got %T", vlan0)
 		}
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+
+		vlan2, err := buildEdgeSpokeVlan(vlan1)
+		if err != nil {
+			return err
+		}
+
 		edgeSpoke.VlanList = append(edgeSpoke.VlanList, vlan2)
 	}
 	return nil
+}
+
+func buildEdgeSpokeVlan(vlan1 map[string]interface{}) (*goaviatrix.EdgeSpokeVlan, error) {
+	parentInterface, err := getStringFromMap(vlan1, "parent_interface_name")
+	if err != nil {
+		return nil, err
+	}
+
+	ipAddr, err := getStringFromMap(vlan1, "ip_address")
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayIP, err := getStringFromMap(vlan1, "gateway_ip")
+	if err != nil {
+		return nil, err
+	}
+
+	peerIPAddr, err := getStringFromMap(vlan1, "peer_ip_address")
+	if err != nil {
+		return nil, err
+	}
+
+	peerGatewayIP, err := getStringFromMap(vlan1, "peer_gateway_ip")
+	if err != nil {
+		return nil, err
+	}
+
+	virtualIP, err := getStringFromMap(vlan1, "vrrp_virtual_ip")
+	if err != nil {
+		return nil, err
+	}
+
+	tag, err := getStringFromMap(vlan1, "tag")
+	if err != nil {
+		return nil, err
+	}
+
+	vlanID, err := getIntFromMap(vlan1, "vlan_id")
+	if err != nil {
+		return nil, err
+	}
+
+	return &goaviatrix.EdgeSpokeVlan{
+		ParentInterface: parentInterface,
+		IpAddr:          ipAddr,
+		GatewayIp:       gatewayIP,
+		PeerIpAddr:      peerIPAddr,
+		PeerGatewayIp:   peerGatewayIP,
+		VirtualIp:       virtualIP,
+		Tag:             tag,
+		VlanId:          strconv.Itoa(vlanID),
+	}, nil
 }
 
 func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) error {
@@ -183,4 +298,28 @@ func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatri
 		edgeSpoke.CustomInterfaceMapping = customInterfaceMap
 	}
 	return nil
+}
+
+func getStringFromMap(data map[string]interface{}, key string) (string, error) {
+	value, ok := data[key].(string)
+	if !ok {
+		return "", fmt.Errorf("invalid type for '%s': expected string, got %T", key, data[key])
+	}
+	return value, nil
+}
+
+func getBoolFromMap(data map[string]interface{}, key string) (bool, error) {
+	value, ok := data[key].(bool)
+	if !ok {
+		return false, fmt.Errorf("invalid type for '%s': expected bool, got %T", key, data[key])
+	}
+	return value, nil
+}
+
+func getIntFromMap(data map[string]interface{}, key string) (int, error) {
+	value, ok := data[key].(int)
+	if !ok {
+		return 0, fmt.Errorf("invalid type for '%s': expected int, got %T", key, data[key])
+	}
+	return value, nil
 }

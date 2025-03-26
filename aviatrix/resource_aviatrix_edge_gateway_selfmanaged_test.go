@@ -41,6 +41,15 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.logical_ifname", "wan0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_value", "00:00:00:00:00:00"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.logical_ifname", "wan1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_value", "00:00:00:00:00:00"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.logical_ifname", "wan2"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_value", "00:00:00:00:00:00"),
 				),
 			},
 			{
@@ -83,6 +92,24 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		enable_dhcp = false
 		ip_address  = "172.16.15.162/20"
 		gateway_ip  = "172.16.0.1"
+	}
+
+	custom_interface_mapping {
+	    logical_ifname = wan0,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+	
+	custom_interface_mapping {
+		logical_ifname = wan1,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+    }
+
+	custom_interface_mapping {
+		logical_ifname = wan2,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
 	}
 }
   `, gwName, siteId, path)
