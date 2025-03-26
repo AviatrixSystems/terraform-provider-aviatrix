@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -126,6 +127,36 @@ func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"custom_interface_mapping": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"logical_ifname": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Logical interface name e.g., wan0, mgmt0.",
+							ValidateFunc: validation.StringMatch(
+								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
+								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
+							),
+						},
+						"identifier_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.",
+							ValidateFunc: validation.StringInSlice([]string{"mac", "pci", "system-assigned"}, false),
+						},
+						"identifier_value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.",
+							ValidateFunc: validateIdentifierValue,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -138,7 +169,7 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
 		DnsServerIp:              d.Get("dns_server_ip").(string),
 		SecondaryDnsServerIp:     d.Get("secondary_dns_server_ip").(string),
-		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+		ManagementEgressIPPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -166,6 +197,15 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaCreate(ctx context.Context, d *sche
 	client := meta.(*goaviatrix.Client)
 
 	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
+
+	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+	if ok {
+		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
+		if err != nil {
+			return diag.Errorf("failed to get custom interface mapping details: %s", err)
+		}
+		edgeGatewaySelfmanagedHa.CustomInterfaceMapping = customInterfaceMap
+	}
 
 	edgeGatewaySelfmanagedHaName, err := client.CreateEdgeVmSelfmanagedHa(ctx, edgeGatewaySelfmanagedHa)
 	if err != nil {
@@ -196,10 +236,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		return diag.Errorf("could not read Edge Gateway Selfmanaged HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
-	d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteId)
-	d.Set("dns_server_ip", edgeGatewaySelfmanagedHaResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDnsServerIp)
+	_ = d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
+	_ = d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteID)
+	_ = d.Set("dns_server_ip", edgeGatewaySelfmanagedHaResp.DNSServerIP)
+	_ = d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDNSServerIP)
 
 	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "iso" || edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)
@@ -209,10 +249,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		d.Set("ztp_file_type", "cloud-init")
 	}
 
-	if edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+	if edgeGatewaySelfmanagedHaResp.ManagementEgressIPPrefix == "" {
+		_ = d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix, ","))
+		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeGatewaySelfmanagedHaResp.ManagementEgressIPPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -234,6 +274,28 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
 
+	if len(edgeGatewaySelfmanagedHaResp.CustomInterfaceMapping) != 0 {
+		// get the order of custom interface mapping
+		userCustomInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+		if !ok {
+			return diag.Errorf("failed to get custom_interface_mapping")
+		}
+		userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
+		if err != nil {
+			return diag.Errorf("failed to get custom_interface_order: %s\n", err)
+		}
+		customInterfaceMapping, err := setCustomInterfaceMapping(edgeGatewaySelfmanagedHaResp.CustomInterfaceMapping, userCustomInterfaceOrder)
+		if !ok {
+			return diag.Errorf("failed to get custom_interface_mapping: %s\n", err)
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
+			return diag.Errorf("failed to set custom_interface_mapping: %s\n", err)
+		}
+	}
+
 	d.SetId(edgeGatewaySelfmanagedHaResp.GwName)
 	return nil
 }
@@ -251,12 +313,16 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaUpdate(ctx context.Context, d *sche
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeGatewaySelfmanagedFunctions.InterfaceList = edgeGatewaySelfmanagedHa.InterfaceList
-		gatewayForEdgeGatewaySelfmanagedFunctions.ManagementEgressIpPrefix = edgeGatewaySelfmanagedHa.ManagementEgressIpPrefix
+		gatewayForEdgeGatewaySelfmanagedFunctions.ManagementEgressIpPrefix = edgeGatewaySelfmanagedHa.ManagementEgressIPPrefix
 
 		err := client.UpdateEdgeVmSelfmanagedHa(ctx, gatewayForEdgeGatewaySelfmanagedFunctions)
 		if err != nil {
 			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Gateway Selfmanaged HA update: %v", err)
 		}
+	}
+
+	if d.HasChange("custom_interface_mapping") {
+		return diag.Errorf("updating custom interface mapping after the selfmanaged Edge Gateway creation is not supported")
 	}
 
 	d.Partial(false)
