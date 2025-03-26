@@ -283,8 +283,8 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 							Required:    true,
 							Description: "Logical interface name e.g., wan0, mgmt0.",
 							ValidateFunc: validation.StringMatch(
-								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
+								regexp.MustCompile(`^(wan|mgmt|lan)[0-9]+$`),
+								"Logical interface name must start with 'wan', 'lan', or 'mgmt' followed by a number (e.g., 'wan0', 'lan0', 'mgmt0').",
 							),
 						},
 						"identifier_type": {
@@ -663,9 +663,6 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 			return diag.Errorf("failed to get custom_interface_order: %s\n", err)
 		}
 		customInterfaceMapping, err := setCustomInterfaceMapping(edgeSpoke.CustomInterfaceMapping, userCustomInterfaceOrder)
-		if !ok {
-			return diag.Errorf("failed to get custom_interface_mapping: %s\n", err)
-		}
 		if err != nil {
 			return diag.FromErr(err)
 		}
