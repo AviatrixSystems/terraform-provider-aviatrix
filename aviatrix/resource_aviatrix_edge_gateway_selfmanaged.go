@@ -912,7 +912,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("custom_interface_mapping") {
-		return diag.Errorf("updating custom interface mapping after the selfmanaged Edge Gateway creation is not supported")
+		// updating the custom interface mapping after the Edge Gateway Selfmanaged is created is not supported
+		return diag.Errorf("updating custom interface mapping after the Edge Gateway Selfmanaged is created is not supported")
 	}
 
 	d.Partial(false)
