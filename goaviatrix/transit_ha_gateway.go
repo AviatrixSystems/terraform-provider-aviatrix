@@ -27,12 +27,13 @@ type TransitHaGateway struct {
 	TagJSON                  string `json:"tag_json"`
 	AutoGenHaGwName          string `json:"autogen_hagw_name"`
 	BackupLinkList           []BackupLinkInterface
-	BackupLinkConfig         string `json:"backup_link_config,omitempty"`
-	InterfaceMapping         string `json:"interface_mapping,omitempty"`
-	Interfaces               string `json:"interfaces,omitempty"`
-	DeviceID                 string `json:"device_id,omitempty"`
-	ZtpFileDownloadPath      string `json:"-"`
-	ManagementEgressIPPrefix string `json:"mgmt_egress_ip,omitempty"`
+	BackupLinkConfig         string                          `json:"backup_link_config,omitempty"`
+	InterfaceMapping         string                          `json:"interface_mapping,omitempty"`
+	Interfaces               string                          `json:"interfaces,omitempty"`
+	DeviceID                 string                          `json:"device_id,omitempty"`
+	ZtpFileDownloadPath      string                          `json:"-"`
+	ManagementEgressIPPrefix string                          `json:"mgmt_egress_ip,omitempty"`
+	CustomInterfaceMapping   map[string][]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
 }
 
 type BackupLinkInterface struct {
