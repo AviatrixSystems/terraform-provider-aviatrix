@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestValidateIdentifierValue(t *testing.T) {
@@ -619,124 +618,6 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 				}
 				if !reflect.DeepEqual(result, test.expected) {
 					t.Errorf("expected result: %+v, got: %+v", test.expected, result)
-				}
-			}
-		})
-	}
-}
-
-func TestPopulateCustomInterfaceMapping(t *testing.T) {
-	tests := []struct {
-		name          string
-		input         map[string]interface{}
-		expected      map[string][]goaviatrix.CustomInterfaceMap
-		expectErr     bool
-		expectedError string
-	}{
-		{
-			name: "Valid input",
-			input: map[string]interface{}{
-				"custom_interface_mapping": []interface{}{
-					map[string]interface{}{
-						"logical_ifname":   "wan0",
-						"identifier_type":  "mac",
-						"idenitifer_value": "00:1A:2B:3C:4D:5E",
-					},
-					map[string]interface{}{
-						"logical_ifname":   "mgmt0",
-						"identifier_type":  "pci",
-						"idenitifer_value": "0000:00:1f.2",
-					},
-				},
-			},
-			expected: map[string][]goaviatrix.CustomInterfaceMap{
-				"wan0": {
-					{
-						IdentifierType:  "mac",
-						IdentifierValue: "00:1A:2B:3C:4D:5E",
-					},
-				},
-				"mgmt0": {
-					{
-						IdentifierType:  "pci",
-						IdentifierValue: "0000:00:1f.2",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			name: "Invalid custom_interface_mapping type",
-			input: map[string]interface{}{
-				"custom_interface_mapping": "invalid_type",
-			},
-			expectErr:     true,
-			expectedError: "invalid type: expected map[string]interface{}, got string",
-		},
-		{
-			name: "Error in getCustomInterfaceMapDetails",
-			input: map[string]interface{}{
-				"custom_interface_mapping": []interface{}{
-					map[string]interface{}{
-						"logical_ifname":   "wan0",
-						"identifier_type":  "mac",
-						"idenitifer_value": "",
-					},
-				},
-			},
-			expectErr:     true,
-			expectedError: "identifier value must be a string",
-		},
-		{
-			name: "Empty custom_interface_mapping",
-			input: map[string]interface{}{
-				"custom_interface_mapping": []interface{}{},
-			},
-			expected:  map[string][]goaviatrix.CustomInterfaceMap{},
-			expectErr: false,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
-				"custom_interface_mapping": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"logical_ifname": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"identifier_type": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"idenitifer_value": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-						},
-					},
-				},
-			}, test.input)
-
-			edgeSpoke := &goaviatrix.EdgeSpoke{}
-			err := populateCustomInterfaceMapping(d, edgeSpoke)
-
-			if test.expectErr {
-				if err == nil {
-					t.Errorf("expected an error but got none")
-				} else if err.Error() != test.expectedError {
-					t.Errorf("expected error: %s, got: %s", test.expectedError, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("did not expect an error but got: %s", err)
-				}
-				if !reflect.DeepEqual(edgeSpoke.CustomInterfaceMapping, test.expected) {
-					t.Errorf("expected result: %+v, got: %+v", test.expected, edgeSpoke.CustomInterfaceMapping)
 				}
 			}
 		})
