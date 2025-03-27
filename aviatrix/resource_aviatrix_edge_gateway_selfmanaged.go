@@ -271,10 +271,10 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 						"logical_ifname": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Logical interface name e.g., wan0, mgmt0.",
+							Description: "Logical interface name e.g., wan0, mgmt0, lan0.",
 							ValidateFunc: validation.StringMatch(
-								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
+								regexp.MustCompile(`^(wan|mgmt|lan)[0-9]+$`),
+								"Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').",
 							),
 						},
 						"identifier_type": {
