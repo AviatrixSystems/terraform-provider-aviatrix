@@ -2,7 +2,7 @@ package goaviatrix
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log"
 )
 
@@ -57,24 +57,11 @@ func makeWebGroupForm(webGroup *WebGroup) map[string]interface{} {
 }
 
 func (c *Client) CreateWebGroup(ctx context.Context, webGroup *WebGroup) (string, error) {
-	endpoint := "app-domains"
 	form := makeWebGroupForm(webGroup)
-
-	type WebGroupResp struct {
-		UUID string `json:"uuid"`
-	}
-
-	var data WebGroupResp
-	err := c.PostAPIContext25(ctx, &data, endpoint, form)
-	if err != nil {
-		return "", err
-	}
-	return data.UUID, nil
+	return c.appdomainCache.Create(ctx, c, form)
 }
 
 func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error) {
-	endpoint := "app-domains"
-
 	type WebGroupMatchExpressionResult struct {
 		All map[string]string `json:"all"`
 	}
@@ -93,42 +80,40 @@ func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error
 		WebGroups []WebGroupResult `json:"app_domains"`
 	}
 
-	var data WebGroupResp
-	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
+	g, err := c.appdomainCache.Get(ctx, c, uuid)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, webGroupResult := range data.WebGroups {
-		if webGroupResult.UUID == uuid {
-			webGroup := &WebGroup{
-				Name: webGroupResult.Name,
-				UUID: webGroupResult.UUID,
-			}
-
-			for _, filterResult := range webGroupResult.Selector.Any {
-				filterMap := filterResult.All
-
-				filter := &WebGroupMatchExpression{
-					SniFilter: filterMap["snifilter"],
-					UrlFilter: filterMap["urlfilter"],
-				}
-
-				webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
-			}
-			return webGroup, nil
-		}
+	selector := WebGroupAnyResult{}
+	if err := json.Unmarshal(g.Selector, &selector); err != nil {
+		return nil, err
 	}
-	return nil, ErrNotFound
+
+	webGroup := &WebGroup{
+		Name: g.Name,
+		UUID: g.UUID,
+	}
+
+	for _, filterResult := range selector.Any {
+		filterMap := filterResult.All
+
+		filter := &WebGroupMatchExpression{
+			SniFilter: filterMap["snifilter"],
+			UrlFilter: filterMap["urlfilter"],
+		}
+
+		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
+	}
+
+	return webGroup, nil
 }
 
 func (c *Client) UpdateWebGroup(ctx context.Context, webGroup *WebGroup, uuid string) error {
-	endpoint := fmt.Sprintf("app-domains/%s", uuid)
 	form := makeWebGroupForm(webGroup)
-	return c.PutAPIContext25(ctx, endpoint, form)
+	return c.appdomainCache.Update(ctx, c, uuid, form)
 }
 
 func (c *Client) DeleteWebGroup(ctx context.Context, uuid string) error {
-	endpoint := fmt.Sprintf("app-domains/%s", uuid)
-	return c.DeleteAPIContext25(ctx, endpoint, nil)
+	return c.appdomainCache.Delete(ctx, c, uuid)
 }
