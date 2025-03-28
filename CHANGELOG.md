@@ -1,6 +1,6 @@
-## 3.2.1 (Unreleased)
+## 8.0.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-7.2.4996**
+- Supported Controller version: **UserConnect-8.0.xxxx**
 - Supported Terraform version **v1.x**
 
 ### Bug Fixes:
@@ -25,6 +25,7 @@
    a restriction on using ``user_data`` on Palo Alto Firewalls.
 5. Updated documentation for **aviatrix_spoke_gateway**. Clarified use of the ``included_advertised_spoke_routes`` attribute.
 6. Updated documentation for **aviatrix_smart_group** with examples of external groups usage.
+7. Improved performance for **aviatrix_smart_group** and **aviatrix_web_group** resources.
 
 ### Deprecations:
 Customers can no longer re-bootstrap their PKI with a custom root CA using Terraform. However, this functionality remains available through the Controller UI for added flexibility.
