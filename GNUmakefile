@@ -20,7 +20,11 @@ endif
 build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -ldflags "-X github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix.Version=99.0.0" -o $(DESTINATION)/terraform-provider-aviatrix_v99.0.0
+	CGO_ENABLED=0 \
+	go build \
+		-ldflags "-X github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix.Version=99.0.0" \
+		-ldflags "-extldflags -static -s -w" \
+		-o $(DESTINATION)/terraform-provider-aviatrix_v99.0.0
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
