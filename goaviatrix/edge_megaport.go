@@ -162,14 +162,12 @@ func (c *Client) CreateEdgeMegaport(ctx context.Context, edgeMegaport *EdgeMegap
 
 	if len(edgeMegaport.VlanList) == 0 {
 		edgeMegaport.VlanList = []*EdgeMegaportVlan{}
+		vlan, err := json.Marshal(edgeMegaport.VlanList)
+		if err != nil {
+			return err
+		}
+		edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 	}
-
-	vlan, err := json.Marshal(edgeMegaport.VlanList)
-	if err != nil {
-		return err
-	}
-
-	edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	var data CreateEdgeMegaportResp
 
