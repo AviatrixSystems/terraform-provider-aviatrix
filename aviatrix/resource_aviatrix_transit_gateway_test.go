@@ -121,6 +121,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceNameAws, "bgp_polling_time", "50"),
 						resource.TestCheckResourceAttr(resourceNameAws, "bgp_neighbor_status_polling_time", "0"),
+						resource.TestCheckResourceAttr(resourceNameAws, "enable_jumbo_frame", "true"),
 					),
 				},
 				{
@@ -340,6 +341,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameEquinix, "ha_interfaces.0.logical_ifname", "wan0"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_backup_logical_ifname", "wan1"),
 						resource.TestCheckResourceAttr(resourceNameEquinix, "peer_connection_type", "private"),
+						resource.TestCheckResourceAttr(resourceNameEquinix, "enable_jumbo_frame", "false"),
 					),
 				},
 				{
