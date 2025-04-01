@@ -26,6 +26,7 @@
 5. Updated documentation for **aviatrix_spoke_gateway**. Clarified use of the ``included_advertised_spoke_routes`` attribute.
 6. Updated documentation for **aviatrix_smart_group** with examples of external groups usage.
 7. Improved performance for **aviatrix_smart_group** and **aviatrix_web_group** resources.
+8. Updated the attribute ``enable_jumbo_frame`` default value in **aviatrix_transit_gateway**. For CSP transit gateways, ``enable_jumbo_frame`` will be set to true by default and for Edge EAT it will be set to false by default.
 
 ### Deprecations:
 Customers can no longer re-bootstrap their PKI with a custom root CA using Terraform. However, this functionality remains available through the Controller UI for added flexibility.
