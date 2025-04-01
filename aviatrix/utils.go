@@ -410,10 +410,19 @@ func sortInterfaceMappingByCustomOrder(interfaceMapping []goaviatrix.InterfaceMa
 	return interfaceMapping
 }
 
-// Sorting interfaces by type and index
-func sortInterfacesByTypeIndex(interfaces []goaviatrix.MegaportInterface) []goaviatrix.MegaportInterface {
+// Sorting EAS interfaces using the custom order
+func sortSpokeInterfacesByCustomOrder(interfaces []goaviatrix.MegaportInterface, userInterfaceOrder []string) []goaviatrix.MegaportInterface {
+	orderMap := createOrderMap(userInterfaceOrder)
 	sort.SliceStable(interfaces, func(i, j int) bool {
-		return interfaces[i].LogicalInterfaceName < interfaces[j].LogicalInterfaceName
+		iIndex, iExists := orderMap[interfaces[i].LogicalInterfaceName]
+		jIndex, jExists := orderMap[interfaces[j].LogicalInterfaceName]
+		if !iExists {
+			iIndex = len(orderMap)
+		}
+		if !jExists {
+			jIndex = len(orderMap)
+		}
+		return iIndex < jIndex
 	})
 	return interfaces
 }
