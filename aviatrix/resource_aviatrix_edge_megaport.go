@@ -814,8 +814,8 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIP
 				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIP
 				vlan1["tag"] = vlan0.Tag
-				vlanId, _ := strconv.Atoi(vlan0.VlanID)
-				vlan1["vlan_id"] = vlanId
+				vlanID, _ := strconv.Atoi(vlan0.VlanID)
+				vlan1["vlan_id"] = vlanID
 
 				vlan = append(vlan, vlan1)
 			}
