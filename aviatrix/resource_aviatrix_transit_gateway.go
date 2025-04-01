@@ -483,8 +483,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
-				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
+				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true for CSP transit gateways and false for edge transit gateways.",
 			},
 			"enable_gro_gso": {
 				Type:        schema.TypeBool,
@@ -942,6 +941,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			FaultDomain:              d.Get("fault_domain").(string),
 			ApprovedLearnedCidrs:     getStringSet(d, "approved_learned_cidrs"),
 			Transit:                  true,
+		}
+
+		// for CSPs the enable_jumbo_frame is set to true by default
+		if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
+			_ = d.Set("enable_jumbo_frame", true)
 		}
 
 		enableNAT := d.Get("single_ip_snat").(bool)
@@ -4084,6 +4088,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
+	}
+
+	// for edge transit gateways, the enable_jumbo_frame is set to false by default
+	if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
+		_ = d.Set("enable_jumbo_frame", false)
 	}
 	return nil
 }
