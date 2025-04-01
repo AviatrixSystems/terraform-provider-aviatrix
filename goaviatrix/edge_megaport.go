@@ -128,18 +128,18 @@ type EdgeMegaportListResp struct {
 }
 
 type MegaportInterface struct {
-	LogicalInterfaceName string  `json:"logical_ifname"`
-	Name                 string  `json:"ifname,omitempty"`
-	PublicIP             string  `json:"public_ip,omitempty"`
-	Tag                  string  `json:"tag,omitempty"`
-	Dhcp                 bool    `json:"dhcp,omitempty"`
-	IPAddr               string  `json:"ipaddr,omitempty"`
-	GatewayIP            string  `json:"gateway_ip,omitempty"`
-	DNSPrimary           string  `json:"dns_primary,omitempty"`
-	DNSSecondary         string  `json:"dns_secondary,omitempty"`
-	SubInterfaces        []*Vlan `json:"subinterfaces,omitempty"`
-	VrrpState            bool    `json:"vrrp_state,omitempty"`
-	VirtualIP            string  `json:"virtual_ip,omitempty"`
+	LogicalInterfaceName string              `json:"logical_ifname"`
+	Name                 string              `json:"ifname,omitempty"`
+	PublicIP             string              `json:"public_ip,omitempty"`
+	Tag                  string              `json:"tag,omitempty"`
+	Dhcp                 bool                `json:"dhcp,omitempty"`
+	IPAddr               string              `json:"ipaddr,omitempty"`
+	GatewayIP            string              `json:"gateway_ip,omitempty"`
+	DNSPrimary           string              `json:"dns_primary,omitempty"`
+	DNSSecondary         string              `json:"dns_secondary,omitempty"`
+	SubInterfaces        []*EdgeMegaportVlan `json:"subinterfaces,omitempty"`
+	VrrpState            bool                `json:"vrrp_state,omitempty"`
+	VirtualIP            string              `json:"virtual_ip,omitempty"`
 }
 
 type CreateEdgeMegaportResp struct {
@@ -160,16 +160,14 @@ func (c *Client) CreateEdgeMegaport(ctx context.Context, edgeMegaport *EdgeMegap
 
 	edgeMegaport.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if len(edgeMegaport.VlanList) == 0 {
+	if len(edgeMegaport.VlanList) != 0 {
 		edgeMegaport.VlanList = []*EdgeMegaportVlan{}
+		vlan, err := json.Marshal(edgeMegaport.VlanList)
+		if err != nil {
+			return err
+		}
+		edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 	}
-
-	vlan, err := json.Marshal(edgeMegaport.VlanList)
-	if err != nil {
-		return err
-	}
-
-	edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	var data CreateEdgeMegaportResp
 
