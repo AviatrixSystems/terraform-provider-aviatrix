@@ -767,7 +767,16 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	interfaceList := sortInterfacesByTypeIndex(edgeMegaportResp.InterfaceList)
+	// get user interface order
+	userInterfaces, ok := d.Get("interfaces").([]interface{})
+	if !ok {
+		return diag.Errorf("incorrect type for interfaces, expected a list")
+	}
+	userInterfaceOrder, err := getUserInterfaceOrder(userInterfaces)
+	if err != nil {
+		return diag.Errorf("failed to get user interface order: %s", err)
+	}
+	interfaceList := sortSpokeInterfacesByCustomOrder(edgeMegaportResp.InterfaceList, userInterfaceOrder)
 	for _, interface0 := range interfaceList {
 		interface1 := make(map[string]interface{})
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
@@ -798,15 +807,14 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
 				vlan1 := make(map[string]interface{})
-				vlan1["parent_logical_interface_name"] = vlan0.ParentInterface
-				vlan1["ip_address"] = vlan0.IpAddr
-				vlan1["gateway_ip"] = vlan0.GatewayIp
-				vlan1["peer_ip_address"] = vlan0.PeerIpAddr
-				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIp
-				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIp
+				vlan1["parent_logical_interface_name"] = vlan0.ParentLogicalInterface
+				vlan1["ip_address"] = vlan0.IPAddr
+				vlan1["gateway_ip"] = vlan0.GatewayIP
+				vlan1["peer_ip_address"] = vlan0.PeerIPAddr
+				vlan1["peer_gateway_ip"] = vlan0.PeerGatewayIP
+				vlan1["vrrp_virtual_ip"] = vlan0.VirtualIP
 				vlan1["tag"] = vlan0.Tag
-
-				vlanId, _ := strconv.Atoi(vlan0.VlanId)
+				vlanId, _ := strconv.Atoi(vlan0.VlanID)
 				vlan1["vlan_id"] = vlanId
 
 				vlan = append(vlan, vlan1)
