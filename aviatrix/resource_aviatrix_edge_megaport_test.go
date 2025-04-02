@@ -123,7 +123,7 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
  `, accountName, gwName, siteId, path)
 }
 
-func testAccEdgeMegaportUpdate(accountName, gwName, siteId, path string) string {
+func testAccEdgeMegaportUpdate(accountName, gwName, siteID, path string) string {
 	return fmt.Sprintf(`
 	resource "aviatrix_account" "test" {
 		account_name          = "%s"
@@ -173,7 +173,7 @@ func testAccEdgeMegaportUpdate(accountName, gwName, siteId, path string) string 
 			ip_address                     = "10.220.21.11/24"
 		}
 	}
- `, accountName, gwName, siteId, path)
+ `, accountName, gwName, siteID, path)
 }
 
 func testAccCheckEdgeMegaportExists(resourceName string) resource.TestCheckFunc {
