@@ -243,16 +243,13 @@ func (c *Client) UpdateEdgeMegaport(ctx context.Context, edgeMegaport *EdgeMegap
 
 	edgeMegaport.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
 
-	if len(edgeMegaport.VlanList) == 0 {
-		edgeMegaport.VlanList = []*EdgeMegaportVlan{}
+	if len(edgeMegaport.VlanList) != 0 {
+		vlan, err := json.Marshal(edgeMegaport.VlanList)
+		if err != nil {
+			return err
+		}
+		edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 	}
-
-	vlan, err := json.Marshal(edgeMegaport.VlanList)
-	if err != nil {
-		return err
-	}
-
-	edgeMegaport.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
 	return c.PostAPIContext2(ctx, nil, edgeMegaport.Action, edgeMegaport, BasicCheck)
 }
