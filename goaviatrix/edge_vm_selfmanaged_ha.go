@@ -19,23 +19,21 @@ type EdgeVmSelfmanagedHa struct {
 	DnsServerIp              string `json:"dns_server_ip,omitempty"`
 	SecondaryDnsServerIp     string `json:"dns_server_ip_secondary,omitempty"`
 	InterfaceList            []*EdgeSpokeInterface
-	Interfaces               string                          `json:"interfaces"`
-	NoProgressBar            bool                            `json:"no_progress_bar,omitempty"`
-	ManagementEgressIPPrefix string                          `json:"mgmt_egress_ip,omitempty"`
-	CloudInit                bool                            `json:"cloud_init"`
-	CustomInterfaceMapping   map[string][]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	Interfaces               string `json:"interfaces"`
+	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
+	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
+	CloudInit                bool   `json:"cloud_init"`
 }
 
 type EdgeVmSelfmanagedHaResp struct {
-	PrimaryGwName            string                          `json:"primary_gw_name"`
-	GwName                   string                          `json:"gw_name"`
-	SiteID                   string                          `json:"vpc_id"`
-	ZtpFileType              string                          `json:"ztp_file_type"`
-	InterfaceList            []*EdgeSpokeInterface           `json:"interfaces"`
-	ManagementEgressIPPrefix string                          `json:"mgmt_egress_ip"`
-	DNSServerIP              string                          `json:"dns_server_ip,omitempty"`
-	SecondaryDNSServerIP     string                          `json:"dns_server_ip_secondary,omitempty"`
-	CustomInterfaceMapping   map[string][]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	PrimaryGwName            string                `json:"primary_gw_name"`
+	GwName                   string                `json:"gw_name"`
+	SiteId                   string                `json:"vpc_id"`
+	ZtpFileType              string                `json:"ztp_file_type"`
+	InterfaceList            []*EdgeSpokeInterface `json:"interfaces"`
+	ManagementEgressIpPrefix string                `json:"mgmt_egress_ip"`
+	DnsServerIp              string                `json:"dns_server_ip,omitempty"`
+	SecondaryDnsServerIp     string                `json:"dns_server_ip_secondary,omitempty"`
 }
 
 type EdgeVmSelfmanagedHaListResp struct {

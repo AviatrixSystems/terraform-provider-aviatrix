@@ -137,24 +137,6 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 		type        = "MANAGEMENT"
 		enable_dhcp = true
 	}
-
-	custom_interface_mapping {
-	    logical_ifname = wan0,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
-	}
-
-	custom_interface_mapping {
-		logical_ifname = wan1,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
-    }
-
-	custom_interface_mapping {
-		logical_ifname = wan2,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
-	}
 }
  `, gwName, siteId, path)
 }
