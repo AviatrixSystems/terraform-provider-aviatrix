@@ -51,6 +51,16 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccEdgeMegaportUpdate(accountName, gwName, siteId, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEdgeMegaportExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.14.10/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "192.168.95.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "192.168.85.14/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.3.ip_address", "192.168.75.14/24"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -111,6 +121,59 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 		}
 	}
  `, accountName, gwName, siteId, path)
+}
+
+func testAccEdgeMegaportUpdate(accountName, gwName, siteID, path string) string {
+	return fmt.Sprintf(`
+	resource "aviatrix_account" "test" {
+		account_name          = "%s"
+		cloud_type            = 1048576
+	}
+	resource "aviatrix_edge_megaport" "test_spoke" {
+		account_name                       = aviatrix_account.test.account_name
+		gw_name                            = "%s"
+		site_id                            = "%s"
+		ztp_file_download_path             = "%s"
+
+		interfaces {
+			gateway_ip     = "10.220.15.1"
+			ip_address     = "10.220.15.10/24"
+			logical_ifname = "lan0"
+		}
+
+		interfaces {
+			gateway_ip     = "192.168.95.1"
+			ip_address     = "192.168.95.14/24"
+			logical_ifname = "wan0"
+			wan_public_ip  = "67.207.104.19"
+		}
+
+		interfaces {
+			gateway_ip     = "192.168.85.1"
+			ip_address     = "192.168.85.14/24"
+			logical_ifname = "wan1"
+			wan_public_ip  = "67.71.12.148"
+		}
+
+		interfaces {
+			gateway_ip     = "192.168.75.1"
+			ip_address     = "192.168.75.14/24"
+			logical_ifname = "wan2"
+			wan_public_ip  = "67.72.12.149"
+		}
+
+		interfaces {
+			enable_dhcp   = true
+			logical_ifname = "mgmt0"
+		}
+
+		vlan {
+			parent_logical_interface_name = "lan0"
+			vlan_id                        = 21
+			ip_address                     = "10.220.21.11/24"
+		}
+	}
+ `, accountName, gwName, siteID, path)
 }
 
 func testAccCheckEdgeMegaportExists(resourceName string) resource.TestCheckFunc {
