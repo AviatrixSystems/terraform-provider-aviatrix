@@ -86,6 +86,7 @@ The following arguments are supported:
   * `multiplier` - (Optional) BFD detection multiplier. Valid values between 2 to 255. Default: 3.
 * `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
 * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Valid values: true, false. Default: false.
+* `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the external device connection. Requires Edge gateway to be jumbo frame enabled. Valid values: true, false. Default value: false.
 
 ## Import
 

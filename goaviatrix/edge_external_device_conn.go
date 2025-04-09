@@ -1,6 +1,9 @@
 package goaviatrix
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type EdgeExternalDeviceConn struct {
 	Action                 string `json:"action,omitempty"`
@@ -62,10 +65,26 @@ type EdgeExternalDeviceConn struct {
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {
+	type apirespUnderlay struct {
+		Return  bool              `json:"return"`
+		Results map[string]string `json:"results"`
+		Reason  string            `json:"reason"`
+	}
 	edgeExternalDeviceConn.CID = c.CID
 	edgeExternalDeviceConn.Action = "transit_connect_external_device"
 
-	return c.PostAPIContext2WithResult(context.Background(), nil, edgeExternalDeviceConn.Action, edgeExternalDeviceConn, BasicCheck)
+	var data apirespUnderlay
+
+	err := c.PostAPIContext2(context.Background(), &data, edgeExternalDeviceConn.Action, edgeExternalDeviceConn, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+
+	connName, exists := data.Results["conn_name"]
+	if !exists {
+		return "", fmt.Errorf("conn_name not found in results")
+	}
+	return connName, nil
 }
 
 func (c *Client) DeleteEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) error {

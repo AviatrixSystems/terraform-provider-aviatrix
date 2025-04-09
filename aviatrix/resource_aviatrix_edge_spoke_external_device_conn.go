@@ -225,6 +225,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Default:     true,
 				Description: "Enable multihop on BGP connection.",
 			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Jumbo Frame for the edge spoke external device connection. Valid values: true, false.",
+			},
 		},
 	}
 }
@@ -245,6 +251,7 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 		BgpMd5Key:          d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
 		EnableBgpMultihop:  d.Get("enable_bgp_multihop").(bool),
+		EnableJumboFrame:   d.Get("enable_jumbo_frame").(bool),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -329,6 +336,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	for i := 0; ; i++ {
 		if externalDeviceConn.EnableEdgeUnderlay {
 			connName, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			log.Printf("[DEBUG] Created underlay connection %s", connName)
 		} else {
 			err = client.CreateExternalDeviceConn(externalDeviceConn)
 		}
@@ -411,7 +419,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		return diag.Errorf("multihop can only be configured for BGP connections")
 	}
 
-	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
+	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -426,8 +434,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Conte
 func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
+	connectionName := d.Get("connection_name").(string)
 	vpcID := d.Get("site_id").(string)
-	if vpcID == "" {
+	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'site_id' received. Import Id is %s", id)
 		parts := strings.Split(id, "~")
@@ -532,7 +541,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
 	}
-
+	if err := d.Set("enable_jumbo_frame", conn.EnableJumboFrame); err != nil {
+		return diag.Errorf("could not set value for enable_jumbo_frame: %v", err)
+	}
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID + "~" + conn.GwName)
 	return nil
 }
@@ -622,6 +633,28 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		}
 	}
 
+	if d.HasChange("enable_jumbo_frame") {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			VpcID:            d.Get("site_id").(string),
+			ConnectionName:   d.Get("connection_name").(string),
+			GwName:           d.Get("gw_name").(string),
+			ConnectionType:   d.Get("connection_type").(string),
+			TunnelProtocol:   d.Get("tunnel_protocol").(string),
+			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
+		}
+		if externalDeviceConn.EnableJumboFrame {
+			if externalDeviceConn.ConnectionType != "bgp" {
+				return diag.Errorf("jumbo frame is only supported on BGP connection")
+			}
+			if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return diag.Errorf("could not enable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
+			}
+		} else {
+			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return diag.Errorf("could not disable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
+			}
+		}
+	}
 	d.Partial(false)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }

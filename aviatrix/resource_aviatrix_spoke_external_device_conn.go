@@ -697,8 +697,8 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 
 	enableJumboFrame := d.Get("enable_jumbo_frame").(bool)
 	if enableJumboFrame {
-		if externalDeviceConn.ConnectionType != "bgp" || strings.ToUpper(externalDeviceConn.TunnelProtocol) != "GRE" {
-			return fmt.Errorf("jumbo frame is only supported on GRE tunnels under bgp connection")
+		if externalDeviceConn.ConnectionType != "bgp" {
+			return fmt.Errorf("jumbo frame is only supported on bgp connection")
 		}
 	}
 
@@ -768,7 +768,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 			return fmt.Errorf("could not enable jumbo frame for external device conn: %v after create: %v", externalDeviceConn.ConnectionName, err)
 		}
 	} else {
-		if externalDeviceConn.ConnectionType == "bgp" && strings.ToUpper(externalDeviceConn.TunnelProtocol) == "GRE" {
+		if externalDeviceConn.ConnectionType == "bgp" {
 			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
 				return fmt.Errorf("could not disable jumbo frame for external device conn: %v after create: %v", externalDeviceConn.ConnectionName, err)
 			}
@@ -1137,8 +1137,8 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
 		}
 		if externalDeviceConn.EnableJumboFrame {
-			if externalDeviceConn.ConnectionType != "bgp" || strings.ToUpper(externalDeviceConn.TunnelProtocol) != "GRE" {
-				return fmt.Errorf("jumbo frame is only supported on GRE tunnels under BGP connection")
+			if externalDeviceConn.ConnectionType != "bgp" {
+				return fmt.Errorf("jumbo frame is only supported on BGP connection")
 			}
 			if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
 				return fmt.Errorf("could not enable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
