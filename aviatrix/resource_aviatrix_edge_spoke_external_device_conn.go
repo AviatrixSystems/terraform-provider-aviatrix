@@ -434,7 +434,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Conte
 func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	connectionName := d.Get("connection_name").(string)
+	connectionName, ok := d.Get("connection_name").(string)
+	if !ok {
+		return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
+	}
 	vpcID := d.Get("site_id").(string)
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
@@ -634,13 +637,37 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	}
 
 	if d.HasChange("enable_jumbo_frame") {
+		vpcID, ok := d.Get("site_id").(string)
+		if !ok {
+			return diag.Errorf("expected site_id to be a string, but got %T", d.Get("site_id"))
+		}
+		connectionName, ok := d.Get("connection_name").(string)
+		if !ok {
+			return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
+		}
+		gwName, ok := d.Get("gw_name").(string)
+		if !ok {
+			return diag.Errorf("expected gw_name to be a string, but got %T", d.Get("gw_name"))
+		}
+		connectionType, ok := d.Get("connection_type").(string)
+		if !ok {
+			return diag.Errorf("expected connection_type to be a string, but got %T", d.Get("connection_type"))
+		}
+		tunnelProtocol, ok := d.Get("tunnel_protocol").(string)
+		if !ok {
+			return diag.Errorf("expected tunnel_protocol to be a string, but got %T", d.Get("tunnel_protocol"))
+		}
+		enableJumboFrame, ok := d.Get("enable_jumbo_frame").(bool)
+		if !ok {
+			return diag.Errorf("expected enable_jumbo_frame to be a boolean, but got %T", d.Get("enable_jumbo_frame"))
+		}
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-			VpcID:            d.Get("site_id").(string),
-			ConnectionName:   d.Get("connection_name").(string),
-			GwName:           d.Get("gw_name").(string),
-			ConnectionType:   d.Get("connection_type").(string),
-			TunnelProtocol:   d.Get("tunnel_protocol").(string),
-			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
+			VpcID:            vpcID,
+			ConnectionName:   connectionName,
+			GwName:           gwName,
+			ConnectionType:   connectionType,
+			TunnelProtocol:   tunnelProtocol,
+			EnableJumboFrame: enableJumboFrame,
 		}
 		if externalDeviceConn.EnableJumboFrame {
 			if externalDeviceConn.ConnectionType != "bgp" {
