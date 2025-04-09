@@ -1274,11 +1274,11 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				return fmt.Errorf("jumbo frame is only supported on BGP connection")
 			}
 			if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
-				return fmt.Errorf("could not enable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
+				return fmt.Errorf("failed to enable jumbo frame for external device connection %q: %v", externalDeviceConn.ConnectionName, err)
 			}
 		} else {
 			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
-				return fmt.Errorf("could not disable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
+				return fmt.Errorf("failed to disable jumbo frame for external device connection %q: %v", externalDeviceConn.ConnectionName, err)
 			}
 		}
 	}
