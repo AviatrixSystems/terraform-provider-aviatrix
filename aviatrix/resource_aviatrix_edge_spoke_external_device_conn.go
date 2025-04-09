@@ -225,6 +225,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Default:     true,
 				Description: "Enable multihop on BGP connection.",
 			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Jumbo Frame for the edge spoke external device connection. Valid values: true, false.",
+			},
 		},
 	}
 }
@@ -245,6 +251,7 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 		BgpMd5Key:          d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
 		EnableBgpMultihop:  d.Get("enable_bgp_multihop").(bool),
+		EnableJumboFrame:   d.Get("enable_jumbo_frame").(bool),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -329,6 +336,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	for i := 0; ; i++ {
 		if externalDeviceConn.EnableEdgeUnderlay {
 			connName, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			log.Printf("[DEBUG] Created underlay connection %s", connName)
 		} else {
 			err = client.CreateExternalDeviceConn(externalDeviceConn)
 		}
@@ -411,7 +419,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		return diag.Errorf("multihop can only be configured for BGP connections")
 	}
 
-	d.SetId(d.Get("connection_name").(string) + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
+	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -426,8 +434,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Conte
 func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
+	connectionName, ok := d.Get("connection_name").(string)
+	if !ok {
+		return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
+	}
 	vpcID := d.Get("site_id").(string)
-	if vpcID == "" {
+	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'site_id' received. Import Id is %s", id)
 		parts := strings.Split(id, "~")
@@ -532,7 +544,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 		return diag.Errorf("could not set value for manual_bgp_advertised_cidrs: %v", err)
 	}
-
+	if err := d.Set("enable_jumbo_frame", conn.EnableJumboFrame); err != nil {
+		return diag.Errorf("could not set value for enable_jumbo_frame: %v", err)
+	}
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID + "~" + conn.GwName)
 	return nil
 }
@@ -622,6 +636,52 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		}
 	}
 
+	if d.HasChange("enable_jumbo_frame") {
+		vpcID, ok := d.Get("site_id").(string)
+		if !ok {
+			return diag.Errorf("expected site_id to be a string, but got %T", d.Get("site_id"))
+		}
+		connectionName, ok := d.Get("connection_name").(string)
+		if !ok {
+			return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
+		}
+		gwName, ok := d.Get("gw_name").(string)
+		if !ok {
+			return diag.Errorf("expected gw_name to be a string, but got %T", d.Get("gw_name"))
+		}
+		connectionType, ok := d.Get("connection_type").(string)
+		if !ok {
+			return diag.Errorf("expected connection_type to be a string, but got %T", d.Get("connection_type"))
+		}
+		tunnelProtocol, ok := d.Get("tunnel_protocol").(string)
+		if !ok {
+			return diag.Errorf("expected tunnel_protocol to be a string, but got %T", d.Get("tunnel_protocol"))
+		}
+		enableJumboFrame, ok := d.Get("enable_jumbo_frame").(bool)
+		if !ok {
+			return diag.Errorf("expected enable_jumbo_frame to be a boolean, but got %T", d.Get("enable_jumbo_frame"))
+		}
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			VpcID:            vpcID,
+			ConnectionName:   connectionName,
+			GwName:           gwName,
+			ConnectionType:   connectionType,
+			TunnelProtocol:   tunnelProtocol,
+			EnableJumboFrame: enableJumboFrame,
+		}
+		if externalDeviceConn.EnableJumboFrame {
+			if externalDeviceConn.ConnectionType != "bgp" {
+				return diag.Errorf("jumbo frame is only supported on BGP connection")
+			}
+			if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return diag.Errorf("failed to enable jumbo frame for external device connection %q: %v", externalDeviceConn.ConnectionName, err)
+			}
+		} else {
+			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return diag.Errorf("failed to disable jumbo frame for external device connection %q: %v", externalDeviceConn.ConnectionName, err)
+			}
+		}
+	}
 	d.Partial(false)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }
