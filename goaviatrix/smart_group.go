@@ -202,21 +202,18 @@ func (c *Client) CreateSmartGroup(ctx context.Context, smartGroup *SmartGroup) (
 }
 
 func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, error) {
-	g, err := c.appdomainCache.Get(ctx, c, uuid)
+	var endpoint = fmt.Sprintf("app-domains/%s", uuid)
+
+	var response struct {
+		Group SmartGroupResult `json:"app_domains"`
+	}
+
+	err := c.GetAPIContext25(ctx, &response, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	result := SmartGroupResult{
-		UUID: g.UUID,
-		Name: g.Name,
-	}
-
-	if err := json.Unmarshal(g.Selector, &result.Selector); err != nil {
-		return nil, err
-	}
-
-	return createSmartGroup(result), nil
+	return createSmartGroup(response.Group), nil
 }
 
 func (c *Client) UpdateSmartGroup(ctx context.Context, smartGroup *SmartGroup, uuid string) error {
