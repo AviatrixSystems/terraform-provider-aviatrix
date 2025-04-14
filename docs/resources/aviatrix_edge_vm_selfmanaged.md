@@ -104,3 +104,6 @@ In addition to all arguments above, the following attribute is exported:
 ```
 $ terraform import aviatrix_edge_vm_selfmanaged.test gw_name
 ```
+
+## Deprecations
+* Deprecated ``dns_server_ip`` and ``secondary_dns_server_ip``. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**. It will be removed from the Aviatrix provider in the 8.1.0 release.
