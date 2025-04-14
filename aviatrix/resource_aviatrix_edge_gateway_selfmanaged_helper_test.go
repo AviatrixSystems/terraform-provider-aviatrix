@@ -109,7 +109,7 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 			input: []interface{}{
 				map[string]interface{}{
 					"identifier_type":  "mac",
-					"idenitifer_value": "00:1A:2B:3C:4D:5E",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
 			},
 			expectErr:     true,
@@ -120,7 +120,7 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 			input: []interface{}{
 				map[string]interface{}{
 					"logical_ifname":   "wan0",
-					"idenitifer_value": "00:1A:2B:3C:4D:5E",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
 			},
 			expectErr:     true,
@@ -237,7 +237,7 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 func TestSetCustomInterfaceMapping(t *testing.T) {
 	tests := []struct {
 		name                     string
-		customInterfaceMap       map[string][]goaviatrix.CustomInterfaceMap
+		customInterfaceMap       map[string]goaviatrix.CustomInterfaceMap
 		userCustomInterfaceOrder []string
 		expected                 []interface{}
 		expectErr                bool
@@ -245,18 +245,14 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 	}{
 		{
 			name: "Valid input with correct order",
-			customInterfaceMap: map[string][]goaviatrix.CustomInterfaceMap{
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
 				"wan0": {
-					{
-						IdentifierType:  "mac",
-						IdentifierValue: "00:1A:2B:3C:4D:5E",
-					},
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
 				},
 				"mgmt0": {
-					{
-						IdentifierType:  "pci",
-						IdentifierValue: "0000:00:1f.2",
-					},
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
 				},
 			},
 			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
@@ -264,24 +260,22 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 				map[string]interface{}{
 					"logical_ifname":   "mgmt0",
 					"identifier_type":  "pci",
-					"idenitifer_value": "0000:00:1f.2",
+					"identifier_value": "0000:00:1f.2",
 				},
 				map[string]interface{}{
 					"logical_ifname":   "wan0",
 					"identifier_type":  "mac",
-					"idenitifer_value": "00:1A:2B:3C:4D:5E",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
 			},
 			expectErr: false,
 		},
 		{
 			name: "Logical interface name not found",
-			customInterfaceMap: map[string][]goaviatrix.CustomInterfaceMap{
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
 				"wan0": {
-					{
-						IdentifierType:  "mac",
-						IdentifierValue: "00:1A:2B:3C:4D:5E",
-					},
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
 				},
 			},
 			userCustomInterfaceOrder: []string{"mgmt0"},
@@ -290,31 +284,73 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 		},
 		{
 			name: "Empty identifier type",
-			customInterfaceMap: map[string][]goaviatrix.CustomInterfaceMap{
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
 				"wan0": {
-					{
-						IdentifierType:  "",
-						IdentifierValue: "00:1A:2B:3C:4D:5E",
-					},
+					IdentifierType:  "",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
 				},
 			},
 			userCustomInterfaceOrder: []string{"wan0"},
 			expectErr:                true,
-			expectedError:            "identifier type cannot be empty for logical interface: wan0",
+			expectedError:            "logical interface name wan0 not found in custom interface map",
 		},
 		{
 			name: "Empty identifier value",
-			customInterfaceMap: map[string][]goaviatrix.CustomInterfaceMap{
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
 				"wan0": {
-					{
-						IdentifierType:  "mac",
-						IdentifierValue: "",
-					},
+					IdentifierType:  "mac",
+					IdentifierValue: "",
 				},
 			},
 			userCustomInterfaceOrder: []string{"wan0"},
 			expectErr:                true,
-			expectedError:            "identifier value cannot be empty for logical interface: wan0",
+			expectedError:            "logical interface name wan0 not found in custom interface map",
+		},
+		{
+			name: "Valid input with mixed case logical interface names",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+				"MGMT0": {
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
+				},
+			},
+			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
+			expected: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":   "mgmt0",
+					"identifier_type":  "pci",
+					"identifier_value": "0000:00:1f.2",
+				},
+				map[string]interface{}{
+					"logical_ifname":   "wan0",
+					"identifier_type":  "mac",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Empty userCustomInterfaceOrder",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"wan0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+			},
+			userCustomInterfaceOrder: []string{},
+			expected:                 []interface{}{},
+			expectErr:                false,
+		},
+		{
+			name:                     "Empty customInterfaceMap",
+			customInterfaceMap:       map[string]goaviatrix.CustomInterfaceMap{},
+			userCustomInterfaceOrder: []string{"wan0"},
+			expectErr:                true,
+			expectedError:            "logical interface name wan0 not found in custom interface map",
 		},
 	}
 
