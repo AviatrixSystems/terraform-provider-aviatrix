@@ -381,6 +381,8 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 		return nil, err
 	}
 
+	log.Print("[DEBUG] custom_interface_mapping")
+
 	if err := populateCustomInterfaceMapping(d, edgeSpoke); err != nil {
 		return nil, err
 	}
@@ -661,7 +663,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	for _, if0 := range edgeSpoke.InterfaceList {
+	interfaceList := sortSpokeInterfacesByName(edgeSpoke.InterfaceList)
+	for _, if0 := range interfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type

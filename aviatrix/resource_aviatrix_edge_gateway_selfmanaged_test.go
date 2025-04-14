@@ -44,10 +44,10 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.logical_ifname", "wan0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_type", "mac"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_value", "00:00:00:00:00:00"),
-					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.logical_ifname", "wan1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.logical_ifname", "lan0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_type", "mac"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_value", "00:00:00:00:00:00"),
-					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.logical_ifname", "wan2"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.logical_ifname", "mgmt0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_type", "mac"),
 					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_value", "00:00:00:00:00:00"),
 				),
@@ -95,21 +95,21 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	}
 
 	custom_interface_mapping {
-	    logical_ifname = wan0,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
+	    logical_ifname = "wan0"
+		identifier_type = "mac"
+		identifier_value = "00:00:00:00:00:00"
 	}
 
 	custom_interface_mapping {
-		logical_ifname = wan1,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
+		logical_ifname = "lan0"
+		identifier_type = "mac"
+		identifier_value = "00:00:00:00:00:00"
     }
 
 	custom_interface_mapping {
-		logical_ifname = wan2,
-		identifier_type = mac,
-		identifier_value = "00:00:00:00:00:00",
+		logical_ifname = "mgmt0"
+		identifier_type = "mac"
+		identifier_value = "00:00:00:00:00:00"
 	}
 }
   `, gwName, siteId, path)
@@ -154,3 +154,36 @@ func testAccCheckEdgeGatewaySelfmanagedDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// [
+//   {
+//     "ifname": "eth0",
+//     "type": "WAN",
+//     "dhcp": false,
+//     "ipaddr": "10.220.9.89/24",
+//     "gateway_ip": "10.220.9.100",
+//     "dns_primary": "8.8.8.8",
+//     "admin_state": "enabled"
+//   },
+//   {
+//     "ifname": "eth1",
+//     "type": "LAN",
+//     "dhcp": false,
+//     "ipaddr": "10.220.10.89/24",
+//     "gateway_ip": "10.220.10.100",
+//     "dns_primary": "8.8.8.8",
+//     "admin_state": "enabled"
+//   },
+//   {
+//     "ifname": "eth2",
+//     "type": "MANAGEMENT",
+//     "dhcp": true,
+//     "admin_state": "enabled"
+//   }
+// ]
+
+// "custom_interface_mapping": {
+//         "wan0": {"identifier_type": "system-assigned", "identifier_value": "auto"},
+//         "mgmt0": {"identifier_type": "mac", "identifier_value": "00:0c:29:63:82:b2"},
+//         "lan0": {"identifier_type": "pci", "identifier_value": "pci@0000:04:00.0"}
+//     }

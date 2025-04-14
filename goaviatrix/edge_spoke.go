@@ -54,8 +54,8 @@ type EdgeSpoke struct {
 	InterfaceList                      []*EdgeSpokeInterface
 	Interfaces                         string `json:"interfaces,omitempty"`
 	VlanList                           []*EdgeSpokeVlan
-	Vlan                               string                          `json:"vlan,omitempty"`
-	CustomInterfaceMapping             map[string][]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	Vlan                               string                        `json:"vlan,omitempty"`
+	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
 }
 
 type EdgeSpokeInterface struct {
@@ -100,23 +100,23 @@ type EdgeSpokeResp struct {
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string                          `json:"prepend_as_path"`
-	IncludeCidrList                    []string                        `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool                            `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string                        `form:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string                        `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool                            `json:"preserve_as_path"`
-	BgpPollingTime                     int                             `json:"bgp_polling_time"`
-	BgpBfdPollingTime                  int                             `json:"bgp_neighbor_status_polling_time"`
-	BgpHoldTime                        int                             `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool                            `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool                            `json:"jumbo_frame"`
-	Latitude                           float64                         `json:"latitude"`
-	Longitude                          float64                         `json:"longitude"`
-	RxQueueSize                        string                          `json:"rx_queue_size"`
-	State                              string                          `json:"vpc_state"`
-	InterfaceList                      []*EdgeSpokeInterface           `json:"interfaces"`
-	CustomInterfaceMapping             map[string][]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	PrependAsPathReturn                string                        `json:"prepend_as_path"`
+	IncludeCidrList                    []string                      `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool                          `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string                      `form:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string                      `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool                          `json:"preserve_as_path"`
+	BgpPollingTime                     int                           `json:"bgp_polling_time"`
+	BgpBfdPollingTime                  int                           `json:"bgp_neighbor_status_polling_time"`
+	BgpHoldTime                        int                           `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool                          `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool                          `json:"jumbo_frame"`
+	Latitude                           float64                       `json:"latitude"`
+	Longitude                          float64                       `json:"longitude"`
+	RxQueueSize                        string                        `json:"rx_queue_size"`
+	State                              string                        `json:"vpc_state"`
+	InterfaceList                      []*EdgeSpokeInterface         `json:"interfaces"`
+	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
 }
 
 type EdgeSpokeListResp struct {
