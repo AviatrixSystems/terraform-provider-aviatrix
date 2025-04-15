@@ -381,8 +381,6 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 		return nil, err
 	}
 
-	log.Print("[DEBUG] custom_interface_mapping")
-
 	if err := populateCustomInterfaceMapping(d, edgeSpoke); err != nil {
 		return nil, err
 	}
