@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -289,9 +288,7 @@ func buildEdgeSpokeVlan(vlan1 map[string]interface{}) (*goaviatrix.EdgeSpokeVlan
 }
 
 func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) error {
-	log.Print("populateCustomInterfaceMapping")
 	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-	log.Printf("customInterfaceMapping: %v", customInterfaceMapping)
 	if ok {
 		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
 		if err != nil {
