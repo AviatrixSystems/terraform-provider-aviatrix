@@ -1,3 +1,9 @@
+## 8.1.0 (Unreleased)
+
+### Deprecations:
+
+1.  Removed ``dns_server_ip`` and ``secondary_dns_server_ip`` from all Edge related resources. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**.
+
 ## 8.0.0 (Unreleased)
 ### Notes:
 - Supported Controller version: **UserConnect-8.0.xxxx**

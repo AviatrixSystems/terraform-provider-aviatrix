@@ -59,6 +59,7 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 				ForceNew:     true,
 				Description:  "DNS server IP.",
 				ValidateFunc: validation.IsIPAddress,
+				Deprecated:   "DNS server ip attribute will be removed in the future release.",
 			},
 			"secondary_dns_server_ip": {
 				Type:         schema.TypeString,
@@ -66,6 +67,7 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 				ForceNew:     true,
 				Description:  "Secondary DNS server IP.",
 				ValidateFunc: validation.IsIPAddress,
+				Deprecated:   "Secondary DNS server ip attribute will be removed in the future release.",
 			},
 			"ztp_file_type": {
 				Type:         schema.TypeString,
