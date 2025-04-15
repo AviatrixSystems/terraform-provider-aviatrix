@@ -39,6 +39,8 @@ func TestAccAviatrixEdgeVmSelfmanaged_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.dns_server_ip", "8.8.8.8"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.secondary_dns_server_ip", "9.9.9.9"),
 				),
 			},
 			{
@@ -65,6 +67,8 @@ resource "aviatrix_edge_vm_selfmanaged" "test" {
 		ip_address    = "10.230.5.32/24"
 		gateway_ip    = "10.230.5.100"
 		wan_public_ip = "64.71.24.221"
+		dns_server_ip = "8.8.8.8"
+		secondary_dns_server_ip = "9.9.9.9"
 	}
 
 	interfaces {
