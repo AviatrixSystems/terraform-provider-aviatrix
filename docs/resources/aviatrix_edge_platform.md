@@ -151,3 +151,4 @@ $ terraform import aviatrix_edge_platform.test gw_name
 
 ## Deprecations
 * Deprecated ``bandwidth`` in **WAN/LAN/MGMT interfaces**. This configuration value no longer has any effect. It will be removed from the Aviatrix provider in the 3.2.0 release.
+* Deprecated ``dns_server_ip`` and ``secondary_dns_server_ip``. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**. It will be removed from the Aviatrix provider in the 8.1.0 release.

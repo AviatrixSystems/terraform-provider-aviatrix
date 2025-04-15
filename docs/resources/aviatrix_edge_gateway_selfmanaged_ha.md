@@ -76,3 +76,6 @@ The following arguments are supported:
 ```
 $ terraform import aviatrix_edge_gateway_selfmanaged_ha.test primary_gw_name-hagw
 ```
+
+## Deprecations
+* Deprecated ``dns_server_ip`` and ``secondary_dns_server_ip``. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**. It will be removed from the Aviatrix provider in the 8.1.0 release.
