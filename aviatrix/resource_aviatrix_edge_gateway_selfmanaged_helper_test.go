@@ -58,6 +58,111 @@ func TestValidateIdentifierValue(t *testing.T) {
 	}
 }
 
+func TestGetCustomInterfaceMapDetails(t *testing.T) {
+	tests := []struct {
+		name                string
+		input               []interface{}
+		expected            map[string]goaviatrix.CustomInterfaceMap
+		expectErr           bool
+		expectedErrorString string
+	}{
+		{
+			name: "Valid input",
+			input: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":   "wan0",
+					"identifier_type":  "mac",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
+				map[string]interface{}{
+					"logical_ifname":   "mgmt0",
+					"identifier_type":  "pci",
+					"identifier_value": "0000:00:1f.2",
+				},
+			},
+			expected: map[string]goaviatrix.CustomInterfaceMap{
+				"wan0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+				"mgmt0": {
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Invalid input type",
+			input: []interface{}{
+				"invalid-entry",
+			},
+			expectErr:           true,
+			expectedErrorString: "invalid type: expected map[string]interface{}, got string",
+		},
+		{
+			name: "Missing logical_ifname",
+			input: []interface{}{
+				map[string]interface{}{
+					"identifier_type":  "mac",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
+			},
+			expectErr:           true,
+			expectedErrorString: "logical interface name must be a string",
+		},
+		{
+			name: "Missing identifier_type",
+			input: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":   "wan0",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
+			},
+			expectErr:           true,
+			expectedErrorString: "identifier type must be a string",
+		},
+		{
+			name: "Missing identifier_value",
+			input: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":  "wan0",
+					"identifier_type": "mac",
+				},
+			},
+			expectErr:           true,
+			expectedErrorString: "identifier value must be a string",
+		},
+		{
+			name:      "Empty input",
+			input:     []interface{}{},
+			expected:  map[string]goaviatrix.CustomInterfaceMap{},
+			expectErr: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := getCustomInterfaceMapDetails(test.input)
+
+			if test.expectErr {
+				if err == nil {
+					t.Errorf("expected an error but got none")
+				} else if err.Error() != test.expectedErrorString {
+					t.Errorf("expected error: %s, got: %s", test.expectedErrorString, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("did not expect an error but got: %s", err)
+				}
+				if !reflect.DeepEqual(result, test.expected) {
+					t.Errorf("expected result: %+v, got: %+v", test.expected, result)
+				}
+			}
+		})
+	}
+}
+
 func TestSetCustomInterfaceMapping(t *testing.T) {
 	tests := []struct {
 		name                     string
