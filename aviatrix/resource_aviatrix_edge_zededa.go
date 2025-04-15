@@ -83,6 +83,7 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 				ForceNew:     true,
 				Description:  "DNS server IP.",
 				ValidateFunc: validation.IsIPAddress,
+				Deprecated:   "DNS server ip attribute will be removed in the future release.",
 			},
 			"secondary_dns_server_ip": {
 				Type:         schema.TypeString,
@@ -90,6 +91,7 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 				ForceNew:     true,
 				Description:  "Secondary DNS server IP.",
 				ValidateFunc: validation.IsIPAddress,
+				Deprecated:   "Secondary DNS server ip attribute will be removed in the future release.",
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
