@@ -663,7 +663,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	interfaceList := sortSpokeInterfacesByName(edgeSpoke.InterfaceList)
+	interfaceList := edgeSpoke.InterfaceList
 	for _, if0 := range interfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
