@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -39,8 +38,6 @@ func validateIdentifierValue(val interface{}, key string) (warns []string, errs 
 func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string]goaviatrix.CustomInterfaceMap, error) {
 	// Create a map to structure the Custom interface map data
 	customInterfaceMapStructured := make(map[string]goaviatrix.CustomInterfaceMap)
-	log.Print("getCustomInterfaceMapDetails")
-	log.Printf("customInterfaceMap: %v", customInterfaceMap)
 
 	// Populate the structured map
 	for _, customInterfaceMap := range customInterfaceMap {
@@ -48,20 +45,16 @@ func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string]
 		if !ok {
 			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", customInterfaceMap)
 		}
-		log.Printf("customInterface: %v", customInterface)
 		logicalIfName, ok := customInterface["logical_ifname"].(string)
-		log.Print("logicalIfName: ", logicalIfName)
 		if !ok {
 			return nil, fmt.Errorf("logical interface name must be a string")
 		}
 
 		identifierType, ok := customInterface["identifier_type"].(string)
-		log.Print("identifierType: ", identifierType)
 		if !ok {
 			return nil, fmt.Errorf("identifier type must be a string")
 		}
 		identifierValue, ok := customInterface["identifier_value"].(string)
-		log.Print("identifierValue: ", identifierValue)
 		if !ok {
 			return nil, fmt.Errorf("identifier value must be a string")
 		}
@@ -331,21 +324,4 @@ func getIntFromMap(data map[string]interface{}, key string) (int, error) {
 		return 0, fmt.Errorf("invalid type for '%s': expected int, got %T", key, data[key])
 	}
 	return value, nil
-}
-
-// Sorting EAS self managed interfaces using the custom order
-func sortSpokeInterfacesByName(interfaces []*goaviatrix.EdgeSpokeInterface) []*goaviatrix.EdgeSpokeInterface {
-	orderMap := createOrderMap(interfaceOrder)
-	sort.SliceStable(interfaces, func(i, j int) bool {
-		iIndex, iExists := orderMap[interfaces[i].IfName]
-		jIndex, jExists := orderMap[interfaces[j].IfName]
-		if !iExists {
-			iIndex = len(orderMap)
-		}
-		if !jExists {
-			jIndex = len(orderMap)
-		}
-		return iIndex < jIndex
-	})
-	return interfaces
 }
