@@ -233,6 +233,16 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
 					},
 				},
 			},
@@ -274,12 +284,14 @@ func marshalEdgeVmSelfmanagedInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke
 		if1 := if0.(map[string]interface{})
 
 		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:    if1["name"].(string),
-			Type:      if1["type"].(string),
-			Dhcp:      if1["enable_dhcp"].(bool),
-			PublicIp:  if1["wan_public_ip"].(string),
-			IpAddr:    if1["ip_address"].(string),
-			GatewayIp: if1["gateway_ip"].(string),
+			IfName:       if1["name"].(string),
+			Type:         if1["type"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			PublicIp:     if1["wan_public_ip"].(string),
+			IpAddr:       if1["ip_address"].(string),
+			GatewayIp:    if1["gateway_ip"].(string),
+			DNSPrimary:   if1["dns_server_ip"].(string),
+			DNSSecondary: if1["secondary_dns_server_ip"].(string),
 		}
 
 		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
@@ -536,6 +548,8 @@ func resourceAviatrixEdgeVmSelfmanagedRead(ctx context.Context, d *schema.Resour
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DNSPrimary
+		if1["secondary_dns_server_ip"] = if0.DNSSecondary
 
 		interfaces = append(interfaces, if1)
 	}

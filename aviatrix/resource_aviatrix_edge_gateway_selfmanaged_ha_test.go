@@ -35,9 +35,9 @@ func TestAccAviatrixEdgeGatewaySelfmanagedHa_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedHaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.11.20/24"),
-					resource.TestCheckResourceAttr(resourceName, "dns_server_ip", "8.8.8.8"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_dns_server_ip", "8.8.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "10.220.11.20/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.dns_server_ip", "7.7.7.7"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.secondary_dns_server_ip", "6.6.6.6"),
 				),
 			},
 			{
@@ -64,6 +64,8 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		ip_address    = "10.230.5.32/24"
 		gateway_ip    = "10.230.5.100"
 		wan_public_ip = "64.71.24.221"
+		dns_server_ip = "8.8.8.8"
+		secondary_dns_server_ip = "9.9.9.9"
 	}
 
 	interfaces {
@@ -85,14 +87,14 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 	site_id                 = aviatrix_edge_gateway_selfmanaged.test.site_id
 	ztp_file_type           = "iso"
 	ztp_file_download_path  = "%[3]s"
-	dns_server_ip           = "8.8.8.8"
-	secondary_dns_server_ip = "8.8.6.6"
 
 	interfaces {
 		name       = "eth0"
 		type       = "WAN"
 		ip_address = "10.220.11.20/24"
 		gateway_ip = "10.220.11.0"
+		dns_server_ip = "7.7.7.7"
+		secondary_dns_server_ip = "6.6.6.6"
 	}
 
 	interfaces {

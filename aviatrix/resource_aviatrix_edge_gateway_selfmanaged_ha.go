@@ -105,6 +105,16 @@ func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
 					},
 				},
 			},
@@ -136,12 +146,14 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 		if1 := if0.(map[string]interface{})
 
 		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:    if1["name"].(string),
-			Type:      if1["type"].(string),
-			PublicIp:  if1["wan_public_ip"].(string),
-			Dhcp:      if1["enable_dhcp"].(bool),
-			IpAddr:    if1["ip_address"].(string),
-			GatewayIp: if1["gateway_ip"].(string),
+			IfName:       if1["name"].(string),
+			Type:         if1["type"].(string),
+			PublicIp:     if1["wan_public_ip"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
+			GatewayIp:    if1["gateway_ip"].(string),
+			DNSPrimary:   if1["dns_server_ip"].(string),
+			DNSSecondary: if1["secondary_dns_server_ip"].(string),
 		}
 
 		edgeGatewaySelfmanagedHa.InterfaceList = append(edgeGatewaySelfmanagedHa.InterfaceList, if2)
@@ -212,6 +224,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		if1["enable_dhcp"] = if0.Dhcp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DNSPrimary
+		if1["secondary_dns_server_ip"] = if0.DNSSecondary
 
 		interfaces = append(interfaces, if1)
 	}
