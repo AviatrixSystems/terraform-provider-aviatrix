@@ -35,9 +35,9 @@ func TestAccAviatrixEdgeGatewaySelfmanagedHa_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedHaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.11.20/24"),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.0.dns_server_ip", "7.7.7.7"),
-					resource.TestCheckResourceAttr(resourceName, "interfaces.0.secondary_dns_server_ip", "6.6.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "10.220.11.20/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.dns_server_ip", "7.7.7.7"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.secondary_dns_server_ip", "6.6.6.6"),
 				),
 			},
 			{
