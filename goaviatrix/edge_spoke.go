@@ -64,6 +64,8 @@ type EdgeSpokeInterface struct {
 	PublicIp      string           `json:"public_ip,omitempty"`
 	IpAddr        string           `json:"ipaddr,omitempty"`
 	GatewayIp     string           `json:"gateway_ip,omitempty"`
+	DNSPrimary    string           `json:"dns_primary,omitempty"`
+	DNSSecondary  string           `json:"dns_secondary,omitempty"`
 	SubInterfaces []*EdgeSpokeVlan `json:"subinterfaces,omitempty"`
 	VrrpState     bool             `json:"vrrp_state,omitempty"`
 	VirtualIp     string           `json:"virtual_ip,omitempty"`
