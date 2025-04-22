@@ -244,6 +244,16 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
 						"enable_vrrp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
@@ -670,6 +680,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DNSPrimary
+		if1["secondary_dns_server_ip"] = if0.DNSSecondary
 		if1["tag"] = if0.Tag
 
 		// set vrrp and vrrp_virtual_ip only for LAN interfaces
