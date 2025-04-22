@@ -61,10 +61,9 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Description:  "Edge Site-ID this expression matches.",
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet", "k8s"}, false),
-										Description:  "Type of resource this expression matches.",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Type of resource this expression matches.",
 									},
 									goaviatrix.K8sClusterIdKey: {
 										Type:        schema.TypeString,
