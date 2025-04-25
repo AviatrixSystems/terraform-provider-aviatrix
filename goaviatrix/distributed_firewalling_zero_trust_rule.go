@@ -18,7 +18,6 @@ func (c *Client) UpdateDistributedFirewallingZeroTrust(ctx context.Context, requ
 }
 
 func (c *Client) GetDistributedFirewallingZeroTrustRule(ctx context.Context) (map[string]string, error) {
-
 	postRuleListUUID := "defa11a1-3000-5000-0000-000000000000"
 	zeroTrustRuleUUID := "defa11a1-0000-0000-0000-000000000000"
 
