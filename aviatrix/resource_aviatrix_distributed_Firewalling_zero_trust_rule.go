@@ -48,9 +48,19 @@ func resourceAviatrixDistributedFirewallingZeroTrustRuleUpdate(ctx context.Conte
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
 	}
 
+	action, ok := d.Get("action").(string)
+	if !ok {
+		return diag.Errorf("failed to assert 'action' as string")
+	}
+
+	logging, ok := d.Get("logging").(bool)
+	if !ok {
+		return diag.Errorf("failed to assert 'logging' as bool")
+	}
+
 	zeroTrustRuleConfig := &goaviatrix.DistributedFirewallingZeroTrustRule{
-		Action:  d.Get("action").(string),
-		Logging: d.Get("logging").(bool),
+		Action:  action,
+		Logging: logging,
 	}
 
 	if err := client.UpdateDistributedFirewallingZeroTrust(ctx, zeroTrustRuleConfig); err != nil {
