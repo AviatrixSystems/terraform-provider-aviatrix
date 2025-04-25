@@ -12,7 +12,6 @@ import (
 )
 
 func resourceAviatrixDistributedFirewallingZeroTrustRule() *schema.Resource {
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingZeroTrustRuleCreate,
 		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingZeroTrustRuleUpdate,
@@ -42,7 +41,6 @@ func resourceAviatrixDistributedFirewallingZeroTrustRule() *schema.Resource {
 }
 
 func resourceAviatrixDistributedFirewallingZeroTrustRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
