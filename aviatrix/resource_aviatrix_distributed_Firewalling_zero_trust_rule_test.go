@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -62,11 +63,15 @@ func testAccCheckDistributedFirewallingZeroTrustRuleExists(n string) resource.Te
 			return fmt.Errorf("no Distributed Firewalling Zero Trust Rule ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		meta := testAccProviderVersionValidation.Meta()
+		client, ok := meta.(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
+		}
 
 		_, err := client.GetDistributedFirewallingZeroTrustRule(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get Distributed Firewalling Zero Trust Rule status: %v", err)
+			return fmt.Errorf("failed to get Distributed Firewalling Zero Trust Rule status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -78,7 +83,11 @@ func testAccCheckDistributedFirewallingZeroTrustRuleExists(n string) resource.Te
 }
 
 func testAccDistributedFirewallingZeroTrustRuleDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	meta := testAccProviderVersionValidation.Meta()
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_zero_trust_rule" {
@@ -86,7 +95,7 @@ func testAccDistributedFirewallingZeroTrustRuleDestroy(s *terraform.State) error
 		}
 
 		_, err := client.GetDistributedFirewallingZeroTrustRule(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("distributed firewalling zero trust rule configured when it should be destroyed")
 		}
 	}
