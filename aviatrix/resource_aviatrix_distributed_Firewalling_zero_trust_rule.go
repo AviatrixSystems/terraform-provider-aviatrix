@@ -132,7 +132,7 @@ func resourceAviatrixDistributedFirewallingZeroTrustRuleRead(ctx context.Context
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
-func resourceAviatrixDistributedFirewallingZeroTrustRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingZeroTrustRuleDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
