@@ -92,7 +92,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	}
 
     custom_interface_mapping {
-	    logical_ifname = wan0,
+		logical_ifname = wan0,
 		identifier_type = mac,
 		identifier_value = "00:00:00:00:00:00",
 	}
@@ -139,7 +139,7 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 	}
 
 	custom_interface_mapping {
-	    logical_ifname = wan0,
+		logical_ifname = wan0,
 		identifier_type = mac,
 		identifier_value = "00:00:00:00:00:00",
 	}

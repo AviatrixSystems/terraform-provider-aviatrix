@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestValidateIdentifierValue(t *testing.T) {
@@ -163,86 +164,110 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 	}
 }
 
-func TestBuildEdgeSpokeVlan(t *testing.T) {
+func TestSetCustomInterfaceMapping(t *testing.T) {
 	tests := []struct {
-		name          string
-		input         map[string]interface{}
-		expected      *goaviatrix.EdgeSpokeVlan
-		expectErr     bool
-		expectedError string
+		name                     string
+		customInterfaceMap       map[string]goaviatrix.CustomInterfaceMap
+		userCustomInterfaceOrder []string
+		expected                 []interface{}
+		expectErr                bool
+		expectedError            string
 	}{
 		{
-			name: "Valid input",
-			input: map[string]interface{}{
-				"parent_interface_name": "eth0",
-				"ip_address":            "192.168.1.2",
-				"gateway_ip":            "192.168.1.254",
-				"peer_ip_address":       "192.168.1.3",
-				"peer_gateway_ip":       "192.168.1.253",
-				"vrrp_virtual_ip":       "192.168.1.100",
-				"tag":                   "tag1",
-				"vlan_id":               100,
+			name: "Valid input with correct order",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+				"MGMT0": {
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
+				},
 			},
-			expected: &goaviatrix.EdgeSpokeVlan{
-				ParentInterface: "eth0",
-				IpAddr:          "192.168.1.2",
-				GatewayIp:       "192.168.1.254",
-				PeerIpAddr:      "192.168.1.3",
-				PeerGatewayIp:   "192.168.1.253",
-				VirtualIp:       "192.168.1.100",
-				Tag:             "tag1",
-				VlanId:          "100",
+			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
+			expected: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":   "mgmt0",
+					"identifier_type":  "pci",
+					"identifier_value": "0000:00:1f.2",
+				},
+				map[string]interface{}{
+					"logical_ifname":   "wan0",
+					"identifier_type":  "mac",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
 			},
 			expectErr: false,
 		},
 		{
-			name: "Missing parent_interface_name",
-			input: map[string]interface{}{
-				"ip_address":      "192.168.1.2",
-				"gateway_ip":      "192.168.1.254",
-				"peer_ip_address": "192.168.1.3",
-				"peer_gateway_ip": "192.168.1.253",
-				"vrrp_virtual_ip": "192.168.1.100",
-				"tag":             "tag1",
-				"vlan_id":         100,
+			name: "Logical interface name not found",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
 			},
-			expectErr:     true,
-			expectedError: "invalid type for 'parent_interface_name': expected string, got <nil>",
+			userCustomInterfaceOrder: []string{"mgmt0"},
+			expectErr:                true,
+			expectedError:            "logical interface name mgmt0 not found in custom interface map",
 		},
 		{
-			name: "Invalid type for vlan_id",
-			input: map[string]interface{}{
-				"parent_interface_name": "eth0",
-				"ip_address":            "192.168.1.2",
-				"gateway_ip":            "192.168.1.254",
-				"peer_ip_address":       "192.168.1.3",
-				"peer_gateway_ip":       "192.168.1.253",
-				"vrrp_virtual_ip":       "192.168.1.100",
-				"tag":                   "tag1",
-				"vlan_id":               "invalid",
+			name: "Empty identifier type",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
 			},
-			expectErr:     true,
-			expectedError: "invalid type for 'vlan_id': expected int, got string",
+			userCustomInterfaceOrder: []string{"wan0"},
+			expectErr:                true,
+			expectedError:            "identifier type cannot be empty for logical interface: wan0",
 		},
 		{
-			name: "Missing ip_address",
-			input: map[string]interface{}{
-				"parent_interface_name": "eth0",
-				"gateway_ip":            "192.168.1.254",
-				"peer_ip_address":       "192.168.1.3",
-				"peer_gateway_ip":       "192.168.1.253",
-				"vrrp_virtual_ip":       "192.168.1.100",
-				"tag":                   "tag1",
-				"vlan_id":               100,
+			name: "Empty identifier value",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "",
+				},
 			},
-			expectErr:     true,
-			expectedError: "invalid type for 'ip_address': expected string, got <nil>",
+			userCustomInterfaceOrder: []string{"wan0"},
+			expectErr:                true,
+			expectedError:            "identifier value cannot be empty for logical interface: wan0",
+		},
+		{
+			name: "Valid input with mixed case logical interface names",
+			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
+				"WAN0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+				"MGMT0": {
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
+				},
+			},
+			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
+			expected: []interface{}{
+				map[string]interface{}{
+					"logical_ifname":   "mgmt0",
+					"identifier_type":  "pci",
+					"identifier_value": "0000:00:1f.2",
+				},
+				map[string]interface{}{
+					"logical_ifname":   "wan0",
+					"identifier_type":  "mac",
+					"identifier_value": "00:1A:2B:3C:4D:5E",
+				},
+			},
+			expectErr: false,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result, err := buildEdgeSpokeVlan(test.input)
+			result, err := setCustomInterfaceMapping(test.customInterfaceMap, test.userCustomInterfaceOrder)
 
 			if test.expectErr {
 				if err == nil {
@@ -316,103 +341,6 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result, err := getCustomInterfaceOrder(test.input)
-
-			if test.expectErr {
-				if err == nil {
-					t.Errorf("expected an error but got none")
-				} else if err.Error() != test.expectedError {
-					t.Errorf("expected error: %s, got: %s", test.expectedError, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("did not expect an error but got: %s", err)
-				}
-				if !reflect.DeepEqual(result, test.expected) {
-					t.Errorf("expected result: %+v, got: %+v", test.expected, result)
-				}
-			}
-		})
-	}
-}
-
-func TestSetCustomInterfaceMapping(t *testing.T) {
-	tests := []struct {
-		name                     string
-		customInterfaceMap       map[string]goaviatrix.CustomInterfaceMap
-		userCustomInterfaceOrder []string
-		expected                 []interface{}
-		expectErr                bool
-		expectedError            string
-	}{
-		{
-			name: "Valid input with correct order",
-			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
-				"wan0": {
-					IdentifierType:  "mac",
-					IdentifierValue: "00:1A:2B:3C:4D:5E",
-				},
-
-				"mgmt0": {
-					IdentifierType:  "pci",
-					IdentifierValue: "0000:00:1f.2",
-				},
-			},
-			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
-			expected: []interface{}{
-				map[string]interface{}{
-					"logical_ifname":   "mgmt0",
-					"identifier_type":  "pci",
-					"idenitifer_value": "0000:00:1f.2",
-				},
-				map[string]interface{}{
-					"logical_ifname":   "wan0",
-					"identifier_type":  "mac",
-					"idenitifer_value": "00:1A:2B:3C:4D:5E",
-				},
-			},
-			expectErr: false,
-		},
-		{
-			name: "Logical interface name not found",
-			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
-				"wan0": {
-					IdentifierType:  "mac",
-					IdentifierValue: "00:1A:2B:3C:4D:5E",
-				},
-			},
-			userCustomInterfaceOrder: []string{"mgmt0"},
-			expectErr:                true,
-			expectedError:            "logical interface name mgmt0 not found in custom interface map",
-		},
-		{
-			name: "Empty identifier type",
-			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
-				"wan0": {
-					IdentifierType:  "",
-					IdentifierValue: "00:1A:2B:3C:4D:5E",
-				},
-			},
-			userCustomInterfaceOrder: []string{"wan0"},
-			expectErr:                true,
-			expectedError:            "identifier type cannot be empty for logical interface: wan0",
-		},
-		{
-			name: "Empty identifier value",
-			customInterfaceMap: map[string]goaviatrix.CustomInterfaceMap{
-				"wan0": {
-					IdentifierType:  "mac",
-					IdentifierValue: "",
-				},
-			},
-			userCustomInterfaceOrder: []string{"wan0"},
-			expectErr:                true,
-			expectedError:            "identifier value cannot be empty for logical interface: wan0",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			result, err := setCustomInterfaceMapping(test.customInterfaceMap, test.userCustomInterfaceOrder)
 
 			if test.expectErr {
 				if err == nil {
@@ -611,6 +539,197 @@ func TestPopulateLANFields(t *testing.T) {
 				}
 				if !reflect.DeepEqual(if2, test.expected) {
 					t.Errorf("expected result: %+v, got: %+v", test.expected, if2)
+				}
+			}
+		})
+	}
+}
+
+func TestBuildEdgeSpokeVlan(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         map[string]interface{}
+		expected      *goaviatrix.EdgeSpokeVlan
+		expectErr     bool
+		expectedError string
+	}{
+		{
+			name: "Valid input",
+			input: map[string]interface{}{
+				"parent_interface_name": "eth0",
+				"ip_address":            "192.168.1.2",
+				"gateway_ip":            "192.168.1.254",
+				"peer_ip_address":       "192.168.1.3",
+				"peer_gateway_ip":       "192.168.1.253",
+				"vrrp_virtual_ip":       "192.168.1.100",
+				"tag":                   "tag1",
+				"vlan_id":               100,
+			},
+			expected: &goaviatrix.EdgeSpokeVlan{
+				ParentInterface: "eth0",
+				IpAddr:          "192.168.1.2",
+				GatewayIp:       "192.168.1.254",
+				PeerIpAddr:      "192.168.1.3",
+				PeerGatewayIp:   "192.168.1.253",
+				VirtualIp:       "192.168.1.100",
+				Tag:             "tag1",
+				VlanId:          "100",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Missing parent_interface_name",
+			input: map[string]interface{}{
+				"ip_address":      "192.168.1.2",
+				"gateway_ip":      "192.168.1.254",
+				"peer_ip_address": "192.168.1.3",
+				"peer_gateway_ip": "192.168.1.253",
+				"vrrp_virtual_ip": "192.168.1.100",
+				"tag":             "tag1",
+				"vlan_id":         100,
+			},
+			expectErr:     true,
+			expectedError: "invalid type for 'parent_interface_name': expected string, got <nil>",
+		},
+		{
+			name: "Invalid type for vlan_id",
+			input: map[string]interface{}{
+				"parent_interface_name": "eth0",
+				"ip_address":            "192.168.1.2",
+				"gateway_ip":            "192.168.1.254",
+				"peer_ip_address":       "192.168.1.3",
+				"peer_gateway_ip":       "192.168.1.253",
+				"vrrp_virtual_ip":       "192.168.1.100",
+				"tag":                   "tag1",
+				"vlan_id":               "invalid",
+			},
+			expectErr:     true,
+			expectedError: "invalid type for 'vlan_id': expected int, got string",
+		},
+		{
+			name: "Missing ip_address",
+			input: map[string]interface{}{
+				"parent_interface_name": "eth0",
+				"gateway_ip":            "192.168.1.254",
+				"peer_ip_address":       "192.168.1.3",
+				"peer_gateway_ip":       "192.168.1.253",
+				"vrrp_virtual_ip":       "192.168.1.100",
+				"tag":                   "tag1",
+				"vlan_id":               100,
+			},
+			expectErr:     true,
+			expectedError: "invalid type for 'ip_address': expected string, got <nil>",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := buildEdgeSpokeVlan(test.input)
+
+			if test.expectErr {
+				if err == nil {
+					t.Errorf("expected an error but got none")
+				} else if err.Error() != test.expectedError {
+					t.Errorf("expected error: %s, got: %s", test.expectedError, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("did not expect an error but got: %s", err)
+				}
+				if !reflect.DeepEqual(result, test.expected) {
+					t.Errorf("expected result: %+v, got: %+v", test.expected, result)
+				}
+			}
+		})
+	}
+}
+
+func TestPopulateCustomInterfaceMapping(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         map[string]interface{}
+		expected      map[string]goaviatrix.CustomInterfaceMap
+		expectErr     bool
+		expectedError string
+	}{
+		{
+			name: "Valid input",
+			input: map[string]interface{}{
+				"custom_interface_mapping": []interface{}{
+					map[string]interface{}{
+						"logical_ifname":   "wan0",
+						"identifier_type":  "mac",
+						"identifier_value": "00:1A:2B:3C:4D:5E",
+					},
+					map[string]interface{}{
+						"logical_ifname":   "mgmt0",
+						"identifier_type":  "pci",
+						"identifier_value": "0000:00:1f.2",
+					},
+				},
+			},
+			expected: map[string]goaviatrix.CustomInterfaceMap{
+				"wan0": {
+					IdentifierType:  "mac",
+					IdentifierValue: "00:1A:2B:3C:4D:5E",
+				},
+				"mgmt0": {
+					IdentifierType:  "pci",
+					IdentifierValue: "0000:00:1f.2",
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Empty custom_interface_mapping",
+			input: map[string]interface{}{
+				"custom_interface_mapping": []interface{}{},
+			},
+			expected:  map[string]goaviatrix.CustomInterfaceMap{},
+			expectErr: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"custom_interface_mapping": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"logical_ifname": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"identifier_type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"identifier_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			}, test.input)
+
+			edgeSpoke := &goaviatrix.EdgeSpoke{}
+			err := populateCustomInterfaceMapping(d, edgeSpoke)
+
+			if test.expectErr {
+				if err == nil {
+					t.Errorf("expected an error but got none")
+				} else if err.Error() != test.expectedError {
+					t.Errorf("expected error: %s, got: %s", test.expectedError, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("did not expect an error but got: %s", err)
+				}
+				if !reflect.DeepEqual(edgeSpoke.CustomInterfaceMapping, test.expected) {
+					t.Errorf("expected result: %+v, got: %+v", test.expected, edgeSpoke.CustomInterfaceMapping)
 				}
 			}
 		})

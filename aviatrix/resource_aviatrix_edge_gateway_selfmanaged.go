@@ -633,6 +633,9 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 			return diag.Errorf("failed to get custom_interface_order: %s\n", err)
 		}
 		customInterfaceMapping, err := setCustomInterfaceMapping(edgeSpoke.CustomInterfaceMapping, userCustomInterfaceOrder)
+		if !ok {
+			return diag.Errorf("failed to get custom_interface_mapping: %s\n", err)
+		}
 		if err != nil {
 			return diag.FromErr(err)
 		}
