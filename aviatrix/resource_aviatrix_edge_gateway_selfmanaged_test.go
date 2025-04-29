@@ -97,9 +97,9 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		ip_address  = "172.16.15.162/20"
 		gateway_ip  = "172.16.0.1"
 	}
-	
+
 	custom_interface_mapping {
-	    logical_ifname = "wan0"
+		logical_ifname = "wan0"
 		identifier_type = "mac"
 		identifier_value = "00:00:00:00:00:00"
 	}
@@ -108,7 +108,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		logical_ifname = "lan0"
 		identifier_type = "mac"
 		identifier_value = "00:00:00:00:00:00"
-    }
+	}
 
 	custom_interface_mapping {
 		logical_ifname = "mgmt0"
