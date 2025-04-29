@@ -50,7 +50,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
   }
 
   custom_interface_mapping {
-	  logical_ifname   = "wan0"
+    logical_ifname   = "wan0"
     identifier_type  = "system-assigned"
     identifier_value = "auto"
   }
