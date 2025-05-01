@@ -44,6 +44,24 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
     type        = "MANAGEMENT"
     enable_dhcp = true
   }
+
+  custom_interface_mapping {
+    logical_ifname   = "wan0"
+    identifier_type  = "system-assigned"
+    identifier_value = "auto"
+  }
+
+  custom_interface_mapping {
+    logical_ifname   = "lan0"
+    identifier_type  = "mac"
+    identifier_value = "00:0c:29:63:82:b2"
+  }
+
+  custom_interface_mapping {
+    logical_ifname   = "mgmt0"
+    identifier_type  = "pci"
+    identifier_value = "pci@0000:04:00.0"
+  }
 }
 ```
 
@@ -70,6 +88,10 @@ The following arguments are supported:
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
+* `custom_interface_mapping` - (Optional) A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.
+  * `logical_ifname` - (Required) Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').
+  * `idenitifer_type` - (Required) Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.
+  * `idenitifer_value` - (Required) Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.
 
 ## Import
 
