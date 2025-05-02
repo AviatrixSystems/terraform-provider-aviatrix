@@ -33,6 +33,8 @@ resource "aviatrix_edge_vm_selfmanaged" "test" {
     ip_address    = "10.230.5.32/24"
     gateway_ip    = "10.230.5.100"
     wan_public_ip = "64.71.24.221"
+    dns_server_ip = "8.8.8.8"
+    secondary_dns_server_ip = "9.9.9.9"
   }
 
   interfaces {
@@ -67,6 +69,8 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `dns_server_ip` - (Optional) Primary DNS server IP.
+  * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix.

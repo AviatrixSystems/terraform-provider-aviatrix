@@ -31,6 +31,8 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
     ip_address    = "10.230.5.32/24"
     gateway_ip    = "10.230.5.100"
     wan_public_ip = "64.71.24.221"
+    dns_server_ip = "8.8.8.8"
+    secondary_dns_server_ip = "9.9.9.9"
   }
 
   interfaces {
@@ -45,6 +47,24 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
     enable_dhcp = false
     ip_address  = "172.16.15.162/20"
     gateway_ip  = "172.16.0.1"
+  }
+
+  custom_interface_mapping {
+    logical_ifname   = "wan0"
+    identifier_type  = "system-assigned"
+    identifier_value = "auto"
+  }
+
+  custom_interface_mapping {
+    logical_ifname   = "lan0"
+    identifier_type  = "mac"
+    identifier_value = "00:0c:29:63:82:b2"
+  }
+
+  custom_interface_mapping {
+    logical_ifname   = "mgmt0"
+    identifier_type  = "pci"
+    identifier_value = "pci@0000:04:00.0"
   }
 }
 ```
@@ -65,6 +85,8 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `dns_server_ip` - (Optional) Primary DNS server IP.
+  * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
   * `enable_vrrp` - (Optional) Enable VRRP. Valid values: true, false. Default value: false.
   * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
   * `tag` - (Optional) Tag.
@@ -99,6 +121,10 @@ The following arguments are supported:
   * `peer_gateway_ip` - (Optional) LAN sub-interface gateway IP on HA gateway.
   * `vrrp_virtual_ip` - (Optional) LAN sub-interface virtual IP.
   * `tag` - (Optional) Tag.
+* `custom_interface_mapping` - (Optional) A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.
+  * `logical_ifname` - (Required) Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').
+  * `idenitifer_type` - (Required) Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.
+  * `idenitifer_value` - (Required) Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.
 
 ## Attribute Reference
 
