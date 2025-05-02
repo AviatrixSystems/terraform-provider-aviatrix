@@ -38,6 +38,15 @@ func TestAccAviatrixEdgeGatewaySelfmanagedHa_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "10.220.11.20/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.dns_server_ip", "7.7.7.7"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.secondary_dns_server_ip", "6.6.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.logical_ifname", "wan0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.0.identifier_value", "00:00:00:00:00:00"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.logical_ifname", "wan1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.1.identifier_value", "00:00:00:00:00:00"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.logical_ifname", "wan2"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_type", "mac"),
+					resource.TestCheckResourceAttr(resourceName, "custom_interface_mapping.2.identifier_value", "00:00:00:00:00:00"),
 				),
 			},
 			{
@@ -81,6 +90,25 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		ip_address  = "172.16.15.162/20"
 		gateway_ip  = "172.16.0.1"
 	}
+
+	custom_interface_mapping {
+		logical_ifname = wan0,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+
+	custom_interface_mapping {
+		logical_ifname = wan1,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+
+	custom_interface_mapping {
+		logical_ifname = wan2,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+
 }
 resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 	primary_gw_name         = aviatrix_edge_gateway_selfmanaged.test.gw_name
@@ -108,6 +136,24 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
 		name        = "eth2"
 		type        = "MANAGEMENT"
 		enable_dhcp = true
+	}
+
+	custom_interface_mapping {
+		logical_ifname = wan0,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+
+	custom_interface_mapping {
+		logical_ifname = wan1,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
+	}
+
+	custom_interface_mapping {
+		logical_ifname = wan2,
+		identifier_type = mac,
+		identifier_value = "00:00:00:00:00:00",
 	}
 }
  `, gwName, siteId, path)
