@@ -90,8 +90,8 @@ The following arguments are supported:
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `custom_interface_mapping` - (Optional) A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.
   * `logical_ifname` - (Required) Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').
-  * `idenitifer_type` - (Required) Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.
-  * `idenitifer_value` - (Required) Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.
+  * `identifier_type` - (Required) Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.
+  * `identifier_value` - (Required) Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.
 
 ## Import
 

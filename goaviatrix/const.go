@@ -15,11 +15,11 @@ const (
 	AWSChina        = 1024
 	AzureChina      = 2048
 	AliCloud        = 8192
+	EDGESELFMANAGED = 4096    // ESXI/KVM
 	EDGECSP         = 65536   // Zededa
 	EDGEEQUINIX     = 524288  // Equinix
 	EDGENEO         = 262144  // AEP
 	EDGEMEGAPORT    = 1048576 // Megaport
-	EDGESELFMANAGED = 4096    // ESXI/KVM
 )
 
 // Cloud vendor names
