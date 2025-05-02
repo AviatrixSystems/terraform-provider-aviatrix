@@ -17,8 +17,8 @@ const (
 	AliCloud        = 8192
 	EDGESELFMANAGED = 4096    // ESXI/KVM
 	EDGECSP         = 65536   // Zededa
-	EDGEEQUINIX     = 524288  // Equinix
 	EDGENEO         = 262144  // AEP
+	EDGEEQUINIX     = 524288  // Equinix
 	EDGEMEGAPORT    = 1048576 // Megaport
 )
 
