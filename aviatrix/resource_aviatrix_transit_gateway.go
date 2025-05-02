@@ -867,6 +867,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "Connection type for the edge transit gateway (e.g., 'public', 'private').",
 				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
+
 			"eip_map": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1896,6 +1897,25 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			interfaceMapping := setInterfaceMappingDetails(gw.InterfaceMapping)
 			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
 				return fmt.Errorf("could not set interface mapping into state: %w", err)
+			}
+		}
+		// set custom interface mapping
+		if len(gw.CustomInterfaceMapping) != 0 && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EDGESELFMANAGED) {
+			// get the order of custom interface mapping
+			userCustomInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+			if !ok {
+				return fmt.Errorf("failed to get custom_interface_mapping")
+			}
+			userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
+			if err != nil {
+				return fmt.Errorf("failed to get custom_interface_order: %w", err)
+			}
+			customInterfaceMapping, err := setCustomInterfaceMapping(gw.CustomInterfaceMapping, userCustomInterfaceOrder)
+			if err != nil {
+				return fmt.Errorf("could not set custom interface mapping details: %w", err)
+			}
+			if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
+				return fmt.Errorf("failed to set custom_interface_mapping: %w", err)
 			}
 		}
 		// set eip map
@@ -2942,6 +2962,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating gw_size is not supported for edge transit gateway")
 		}
 
+		// Update to custom interface mapping
+		if d.HasChange("custom_interface_mapping") {
+			return fmt.Errorf("updating custom_interface_mapping is not supported after the creation of self managed edge transit gateway")
+		}
+
 		// update eip mapping for edge transit gateway
 		if d.HasChange("eip_map") {
 			eipMap, ok := d.Get("eip_map").([]interface{})
@@ -3982,8 +4007,20 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
-	// ztp file download path is required for Equinix and Megaport edge gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	// custom interface mapping is supported only for edge self managed gateways ESXI/KVM
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+		customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+		if ok {
+			customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
+			if err != nil {
+				return err
+			}
+			gateway.CustomInterfaceMapping = customInterfaceMap
+		}
+	}
+
+	// ztp file download path is required for Equinix, Megaport, Selfmanaged edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
@@ -4302,6 +4339,17 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 		transitHaGw.DeviceID, ok = d.Get("ha_device_id").(string)
 		if !ok {
 			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
+		}
+	}
+	// custom interface mapping is supported only for edge self managed gateways ESXI/KVM
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+		customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
+		if ok {
+			customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
+			if err != nil {
+				return nil, err
+			}
+			transitHaGw.CustomInterfaceMapping = customInterfaceMap
 		}
 	}
 	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")

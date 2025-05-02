@@ -81,6 +81,7 @@ type EdgeEquinixResp struct {
 	AccountName                        string `json:"account_name"`
 	GwName                             string `json:"gw_name"`
 	SiteId                             string `json:"vpc_id"`
+	CloudType                          int    `json:"cloud_type"`
 	ManagementInterfaceConfig          string
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
