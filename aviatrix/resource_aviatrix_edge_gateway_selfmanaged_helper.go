@@ -2,120 +2,11 @@ package aviatrix
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-func validateIdentifierValue(val interface{}, key string) (warns []string, errs []error) {
-	value, ok := val.(string)
-	if !ok {
-		errs = append(errs, fmt.Errorf("%q must be a string, got: %T", key, val))
-		return warns, errs
-	}
-	// Check if the value is "auto"
-	if value == "auto" {
-		return
-	}
-	// Check if the value is a valid MAC address
-	macRegex := `^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`
-	if matched, _ := regexp.MatchString(macRegex, value); matched {
-		return
-	}
-	// Check if the value is a valid PCI ID
-	pciRegex := `^(pci@)?[0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$`
-	if matched, _ := regexp.MatchString(pciRegex, value); matched {
-		return
-	}
-	errs = append(errs, fmt.Errorf("%q must be a valid MAC address, PCI ID, or 'auto', got: %s", key, value))
-	return warns, errs
-}
-
-func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string]goaviatrix.CustomInterfaceMap, error) {
-	// Create a map to structure the Custom interface map data
-	customInterfaceMapStructured := make(map[string]goaviatrix.CustomInterfaceMap)
-
-	// Populate the structured map
-	for _, customInterfaceMap := range customInterfaceMap {
-		customInterface, ok := customInterfaceMap.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", customInterfaceMap)
-		}
-		logicalIfName, ok := customInterface["logical_ifname"].(string)
-		if !ok {
-			return nil, fmt.Errorf("logical interface name must be a string")
-		}
-
-		identifierType, ok := customInterface["identifier_type"].(string)
-		if !ok {
-			return nil, fmt.Errorf("identifier type must be a string")
-		}
-		identifierValue, ok := customInterface["identifier_value"].(string)
-		if !ok {
-			return nil, fmt.Errorf("identifier value must be a string")
-		}
-
-		// Append the EIP entry to the corresponding interface
-		customInterfaceEntry := goaviatrix.CustomInterfaceMap{
-			IdentifierType:  identifierType,
-			IdentifierValue: identifierValue,
-		}
-		customInterfaceMapStructured[logicalIfName] = customInterfaceEntry
-	}
-
-	return customInterfaceMapStructured, nil
-}
-
-func setCustomInterfaceMapping(customInterfaceMap map[string]goaviatrix.CustomInterfaceMap, userCustomInterfaceOrder []string) ([]interface{}, error) {
-	var result []interface{}
-
-	// Iterate over the user-provided order
-	for _, logicalIfName := range userCustomInterfaceOrder {
-		logicalName := strings.ToUpper(logicalIfName)
-		mapping, exists := customInterfaceMap[logicalName]
-		if !exists {
-			return nil, fmt.Errorf("logical interface name %s not found in custom interface map", logicalIfName)
-		}
-
-		if mapping.IdentifierType == "" {
-			return nil, fmt.Errorf("identifier type cannot be empty for logical interface: %s", logicalIfName)
-		}
-		if mapping.IdentifierValue == "" {
-			return nil, fmt.Errorf("identifier value cannot be empty for logical interface: %s", logicalIfName)
-		}
-
-		entry := map[string]interface{}{
-			"logical_ifname":   logicalIfName,
-			"identifier_type":  mapping.IdentifierType,
-			"identifier_value": mapping.IdentifierValue,
-		}
-		result = append(result, entry)
-	}
-	return result, nil
-}
-
-func getCustomInterfaceOrder(userCustomInterfaceMapping []interface{}) ([]string, error) {
-	var order []string
-
-	for _, mapping := range userCustomInterfaceMapping {
-		mappingMap, ok := mapping.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", mapping)
-		}
-
-		logicalIfName, ok := mappingMap["logical_ifname"].(string)
-		if !ok || logicalIfName == "" {
-			return nil, fmt.Errorf("logical_ifname must be a non-empty string")
-		}
-
-		order = append(order, logicalIfName)
-	}
-
-	return order, nil
-}
 
 func populateInterfaces(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) error {
 	interfacesRaw, ok := d.Get("interfaces").(*schema.Set)
@@ -285,18 +176,6 @@ func buildEdgeSpokeVlan(vlan1 map[string]interface{}) (*goaviatrix.EdgeSpokeVlan
 		Tag:             tag,
 		VlanId:          strconv.Itoa(vlanID),
 	}, nil
-}
-
-func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) error {
-	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-	if ok {
-		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
-		if err != nil {
-			return err
-		}
-		edgeSpoke.CustomInterfaceMapping = customInterfaceMap
-	}
-	return nil
 }
 
 func getStringFromMap(data map[string]interface{}, key string) (string, error) {
