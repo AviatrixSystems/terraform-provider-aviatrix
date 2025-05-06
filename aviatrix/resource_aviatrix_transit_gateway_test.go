@@ -378,15 +378,6 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.ip_address", "192.168.20.11/24"),
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.logical_ifname", "wan0"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.0.logical_ifname", "wan0"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.0.identifier_type", "system-assigned"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.0.identifier_value", "auto"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.1.logical_ifname", "wan1"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.1.identifier_type", "mac"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.1.identifier_value", "00:0c:29:63:82:b2"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.2.logical_ifname", "mgmt0"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.2.identifier_type", "pci"),
-						resource.TestCheckResourceAttr(resourceNameSelfManaged, "custom_interface_mapping.2.identifier_value", "pci@0000:04:00.0"),
 					),
 				},
 				{
@@ -718,24 +709,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_selfmanaged" {
     interfaces {
         dhcp           = true
         logical_ifname = "mgmt0"
-    }
-
-    custom_interface_mapping {
-	    logical_ifname = "wan0"
-		identifier_type = "system-assigned"
-		identifier_value = "auto"
-    }
-
-    custom_interface_mapping {
-		logical_ifname = "wan1"
-		identifier_type = "mac"
-		identifier_value = "00:0c:29:63:82:b2"
-    }
-
-    custom_interface_mapping {
-		logical_ifname = "mgmt0"
-		identifier_type = "pci"
-		identifier_value = "pci@0000:04:00.0"
     }
 }
 	`, rName, os.Getenv("SELFMANAGED_VPC_ID"))

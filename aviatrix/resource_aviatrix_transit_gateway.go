@@ -867,36 +867,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "Connection type for the edge transit gateway (e.g., 'public', 'private').",
 				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
-			"custom_interface_mapping": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"logical_ifname": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Logical interface name e.g., wan0, mgmt0.",
-							ValidateFunc: validation.StringMatch(
-								regexp.MustCompile(`^(wan|mgmt)[0-9]+$`),
-								"Logical interface name must start with 'wan', or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0').",
-							),
-						},
-						"identifier_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.",
-							ValidateFunc: validation.StringInSlice([]string{"mac", "pci", "system-assigned"}, false),
-						},
-						"identifier_value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.",
-							ValidateFunc: validateIdentifierValue,
-						},
-					},
-				},
-			},
 			"eip_map": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1926,25 +1896,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			interfaceMapping := setInterfaceMappingDetails(gw.InterfaceMapping)
 			if err = d.Set("interface_mapping", interfaceMapping); err != nil {
 				return fmt.Errorf("could not set interface mapping into state: %w", err)
-			}
-		}
-		// set custom interface mapping
-		if len(gw.CustomInterfaceMapping) != 0 && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EDGESELFMANAGED) {
-			// get the order of custom interface mapping
-			userCustomInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-			if !ok {
-				return fmt.Errorf("failed to get custom_interface_mapping")
-			}
-			userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
-			if err != nil {
-				return fmt.Errorf("failed to get custom_interface_order: %w", err)
-			}
-			customInterfaceMapping, err := setCustomInterfaceMapping(gw.CustomInterfaceMapping, userCustomInterfaceOrder)
-			if err != nil {
-				return fmt.Errorf("could not set custom interface mapping details: %w", err)
-			}
-			if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
-				return fmt.Errorf("failed to set custom_interface_mapping: %w", err)
 			}
 		}
 		// set eip map
@@ -2991,11 +2942,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating gw_size is not supported for edge transit gateway")
 		}
 
-		// Update to custom interface mapping
-		if d.HasChange("custom_interface_mapping") {
-			return fmt.Errorf("updating custom_interface_mapping is not supported after the creation of self managed edge transit gateway")
-		}
-
 		// update eip mapping for edge transit gateway
 		if d.HasChange("eip_map") {
 			eipMap, ok := d.Get("eip_map").([]interface{})
@@ -4036,18 +3982,6 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
-	// custom interface mapping is supported only for edge self managed gateways ESXI/KVM
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-		customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-		if ok {
-			customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
-			if err != nil {
-				return err
-			}
-			gateway.CustomInterfaceMapping = customInterfaceMap
-		}
-	}
-
 	// ztp file download path is required for Equinix, Megaport, Selfmanaged edge gateways
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
@@ -4370,17 +4304,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
 		}
 	}
-	// custom interface mapping is supported only for edge self managed gateways ESXI/KVM
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-		customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-		if ok {
-			customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
-			if err != nil {
-				return nil, err
-			}
-			transitHaGw.CustomInterfaceMapping = customInterfaceMap
-		}
-	}
+
 	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
 	if len(haManagementEgressIPPrefixList) > 0 {
 		transitHaGw.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
