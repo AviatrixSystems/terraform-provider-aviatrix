@@ -3982,8 +3982,8 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
-	// ztp file download path is required for Equinix and Megaport edge gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	// ztp file download path is required for Equinix, Megaport, Selfmanaged edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
@@ -4304,6 +4304,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
 		}
 	}
+
 	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
 	if len(haManagementEgressIPPrefixList) > 0 {
 		transitHaGw.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
