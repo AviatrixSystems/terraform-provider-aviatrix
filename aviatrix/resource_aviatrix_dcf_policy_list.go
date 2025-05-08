@@ -223,7 +223,12 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 		}
 
 		for _, smartGroup := range srcSmartGroups.List() {
-			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, smartGroup.(string))
+			smartGroupStr, ok := smartGroup.(string)
+			if !ok {
+				return nil, fmt.Errorf("src smart groups must be of type string")
+			}
+
+			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, smartGroupStr)
 		}
 
 		dstSmartGroups, ok := policy["dst_smart_groups"].(*schema.Set)
@@ -232,7 +237,12 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 		}
 
 		for _, smartGroup := range dstSmartGroups.List() {
-			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroup.(string))
+			smartGroupStr, ok := smartGroup.(string)
+			if !ok {
+				return nil, fmt.Errorf("dst smart groups must be of type string")
+			}
+
+			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroupStr)
 		}
 
 		webGroups, ok := policy["web_groups"].(*schema.Set)
@@ -241,7 +251,12 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 		}
 
 		for _, webGroup := range webGroups.List() {
-			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, webGroup.(string))
+			webGroupStr, ok := webGroup.(string)
+			if !ok {
+				return nil, fmt.Errorf("web groups must be of type string")
+			}
+
+			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, webGroupStr)
 		}
 
 		distributedFirewallingPolicy.Logging, ok = policy["logging"].(bool)
