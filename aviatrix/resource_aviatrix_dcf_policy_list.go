@@ -11,139 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func getPolicyListSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Name of the policy list.",
-		},
-		"policies": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "List of distributed-firewalling policies.",
-			Elem: &schema.Resource{
-				Schema: getPolicySchema(),
-			},
-		},
-	}
-}
-
-func getPolicySchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"action": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
-			Description: "Action for the specified source and destination Smart Groups." +
-				"Must be one of PERMIT or DENY.",
-		},
-		"decrypt_policy": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "DECRYPT_UNSPECIFIED",
-			ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
-			Description:  "Decryption options for the policy.",
-		},
-		"dst_smart_groups": {
-			Type:        schema.TypeSet,
-			Required:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Set of destination Smart Group UUIDs for the policy.",
-		},
-		"exclude_sg_orchestration": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "If this flag is set to true, this policy will be ignored for SG orchestration.",
-		},
-		"flow_app_requirement": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "APP_UNSPECIFIED",
-			ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
-			Description:  "Flow application requirement for the policy.",
-		},
-		"logging": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether to enable logging for the policy.",
-		},
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Name of the policy.",
-		},
-		"port_ranges": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of port ranges for the policy.",
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"lo": {
-						Type:         schema.TypeInt,
-						Required:     true,
-						ValidateFunc: validation.IntAtLeast(0),
-						Description:  "Lower bound of port range.",
-					},
-					"hi": {
-						Type:             schema.TypeInt,
-						Optional:         true,
-						ValidateFunc:     validation.IntAtLeast(0),
-						DiffSuppressFunc: DiffSuppressFuncDistributedFirewallingPolicyPortRangeHi,
-						Description:      "Upper bound of port range.",
-					},
-				},
-			},
-			MaxItems: 64,
-		},
-		"priority": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
-			Description: "Priority level of the policy",
-		},
-		"protocol": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
-			DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-				return strings.EqualFold(old, new)
-			},
-			Description: "Protocol for the policy to filter.",
-		},
-		"src_smart_groups": {
-			Type:        schema.TypeSet,
-			Required:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Set of source Smart Group UUIDs for the policy.",
-		},
-		"tls_profile": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TLS profile UUID for the policy.",
-		},
-		"uuid": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "UUID of the policy.",
-		},
-		"watch": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether to enable watch mode for the policy.",
-		},
-		"web_groups": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Set of Web Group UUIDs for the policy.",
-		},
-	}
-}
-
+// nolint:funlen
 func resourceAviatrixDCFPolicyList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDCFPolicyListCreate,
@@ -153,7 +21,132 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: getPolicyListSchema(),
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the policy list.",
+			},
+			"policies": {
+				Type:        schema.TypeList,
+				Required:    true,
+				Description: "List of distributed-firewalling policies.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
+							Description: "Action for the specified source and destination Smart Groups." +
+								"Must be one of PERMIT or DENY.",
+						},
+						"decrypt_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "DECRYPT_UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
+							Description:  "Decryption options for the policy.",
+						},
+						"dst_smart_groups": {
+							Type:        schema.TypeSet,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Set of destination Smart Group UUIDs for the policy.",
+						},
+						"exclude_sg_orchestration": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "If this flag is set to true, this policy will be ignored for SG orchestration.",
+						},
+						"flow_app_requirement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "APP_UNSPECIFIED",
+							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
+							Description:  "Flow application requirement for the policy.",
+						},
+						"logging": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether to enable logging for the policy.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the policy.",
+						},
+						"port_ranges": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "List of port ranges for the policy.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lo": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+										Description:  "Lower bound of port range.",
+									},
+									"hi": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										ValidateFunc:     validation.IntAtLeast(0),
+										DiffSuppressFunc: DiffSuppressFuncDistributedFirewallingPolicyPortRangeHi,
+										Description:      "Upper bound of port range.",
+									},
+								},
+							},
+							MaxItems: 64,
+						},
+						"priority": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "Priority level of the policy",
+						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							Description: "Protocol for the policy to filter.",
+						},
+						"src_smart_groups": {
+							Type:        schema.TypeSet,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Set of source Smart Group UUIDs for the policy.",
+						},
+						"tls_profile": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "TLS profile UUID for the policy.",
+						},
+						"uuid": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "UUID of the policy.",
+						},
+						"watch": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether to enable watch mode for the policy.",
+						},
+						"web_groups": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Set of Web Group UUIDs for the policy.",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
