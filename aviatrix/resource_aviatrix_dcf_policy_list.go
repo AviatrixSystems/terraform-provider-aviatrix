@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// nolint:funlen
+//nolint:funlen
 func resourceAviatrixDCFPolicyList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDCFPolicyListCreate,
@@ -185,6 +185,7 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 	return policyList, nil
 }
 
+//nolint:funlen
 func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy, error) {
 	var ok bool
 	var err error
@@ -345,6 +346,7 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 	return nil
 }
 
+//nolint:funlen
 func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
