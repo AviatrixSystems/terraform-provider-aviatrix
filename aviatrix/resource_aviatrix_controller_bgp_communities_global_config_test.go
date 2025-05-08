@@ -59,11 +59,14 @@ func testAccCheckControllerBgpCommunitiesGlobalConfigExists(n string) resource.T
 			return fmt.Errorf("no controller bgp communities global config ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
+		}
 
 		_, err := client.GetControllerBgpCommunitiesGlobal(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get controller bgp communities global config status: %v", err)
+			return fmt.Errorf("failed to get controller bgp communities global config status")
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {

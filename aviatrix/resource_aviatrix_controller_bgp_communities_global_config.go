@@ -31,9 +31,15 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfig() *schema.Resource {
 }
 
 func resourceAviatrixControllerBgpCommunitiesGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
-	bgpCommunities := d.Get("bgp_communities_global").(bool)
+	bgpCommunities, ok := d.Get("bgp_communities_global").(bool)
+	if !ok {
+		return diag.Errorf("failed to assert bgp_communities_global as bool")
+	}
 	if bgpCommunities {
 		err := client.EnableControllerBgpCommunitiesGlobal(ctx)
 		if err != nil {
@@ -51,7 +57,10 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigCreate(ctx context.Cont
 }
 
 func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -75,10 +84,16 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Contex
 }
 
 func resourceAviatrixControllerBgpCommunitiesGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	if d.HasChange("bgp_communities_global") {
-		bgpCommunities := d.Get("bgp_communities_global").(bool)
+		bgpCommunities, ok := d.Get("bgp_communities_global").(bool)
+		if !ok {
+			return diag.Errorf("failed to assert bgp_communities_global as bool")
+		}
 		if bgpCommunities {
 			err := client.EnableControllerBgpCommunitiesGlobal(ctx)
 			if err != nil {
@@ -96,8 +111,11 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigUpdate(ctx context.Cont
 	return resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpCommunitiesGlobalConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+func resourceAviatrixControllerBgpCommunitiesGlobalConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	err := client.DisableControllerBgpCommunitiesGlobal(ctx)
 	if err != nil {

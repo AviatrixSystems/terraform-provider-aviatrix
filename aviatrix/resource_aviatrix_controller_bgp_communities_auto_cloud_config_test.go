@@ -63,7 +63,10 @@ func testAccCheckControllerBgpCommunitiesAutoCloudConfigExists(n string) resourc
 			return fmt.Errorf("no controller bgp communities auto cloud config ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
+		}
 
 		_, err := client.GetControllerBgpCommunitiesAutoCloud(context.Background())
 		if err != nil {
@@ -79,7 +82,10 @@ func testAccCheckControllerBgpCommunitiesAutoCloudConfigExists(n string) resourc
 }
 
 func testAccCheckControllerBgpCommunitiesAutoCloudConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	if !ok {
+		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_bgp_communities_auto_cloud_config" {

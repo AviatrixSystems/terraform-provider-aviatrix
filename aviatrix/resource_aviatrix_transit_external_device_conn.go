@@ -526,15 +526,46 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		DisableActivemesh:      d.Get("disable_activemesh").(bool),
 	}
 
-	sendComm := d.Get("connection_bgp_send_communities").(string)
-	blockComm := d.Get("connection_bgp_send_communities_block").(bool)
+	sendComm, ok := d.Get("connection_bgp_send_communities").(string)
+	if !ok {
+		return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
+	}
+	blockComm, ok := d.Get("connection_bgp_send_communities_block").(bool)
+	if !ok {
+		return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
+	}
 	if sendComm != "" || blockComm {
+		connName, ok := d.Get("connection_name").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_name as string")
+		}
+
+		gwName, ok := d.Get("gw_name").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert gw_name as string")
+		}
+
+		sendComm, ok := d.Get("connection_bgp_send_communities").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
+		}
+
+		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
+		}
+
+		sendBlock, ok := d.Get("connection_bgp_send_communities_block").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
+		}
+
 		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
-			ConnectionName:      d.Get("connection_name").(string),
-			GwName:              d.Get("gw_name").(string),
+			ConnectionName:      connName,
+			GwName:              gwName,
 			ConnSendCommunities: sendComm,
-			ConnSendAdditive:    d.Get("connection_bgp_send_communities_additive").(bool),
-			ConnSendBlock:       blockComm,
+			ConnSendAdditive:    sendAdditive,
+			ConnSendBlock:       sendBlock,
 		}
 		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
 			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)
@@ -1555,12 +1586,37 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	}
 
 	if d.HasChange("connection_bgp_send_communities") || d.HasChange("connection_bgp_send_communities_additive") || d.HasChange("connection_bgp_send_communities_block") {
+		connName, ok := d.Get("connection_name").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_name as string")
+		}
+
+		gwName, ok := d.Get("gw_name").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert gw_name as string")
+		}
+
+		sendComm, ok := d.Get("connection_bgp_send_communities").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
+		}
+
+		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
+		}
+
+		sendBlock, ok := d.Get("connection_bgp_send_communities_block").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
+		}
+
 		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
-			ConnectionName:      d.Get("connection_name").(string),
-			GwName:              d.Get("gw_name").(string),
-			ConnSendCommunities: d.Get("connection_bgp_send_communities").(string),
-			ConnSendAdditive:    d.Get("connection_bgp_send_communities_additive").(bool),
-			ConnSendBlock:       d.Get("connection_bgp_send_communities_block").(bool),
+			ConnectionName:      connName,
+			GwName:              gwName,
+			ConnSendCommunities: sendComm,
+			ConnSendAdditive:    sendAdditive,
+			ConnSendBlock:       sendBlock,
 		}
 		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
 			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)

@@ -67,7 +67,10 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.C
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -97,12 +100,21 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Con
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	if d.HasChange("community_prefix") {
-		autoCloud := d.Get("auto_cloud_enabled").(bool)
+		autoCloud, ok := d.Get("auto_cloud_enabled").(bool)
+		if !ok {
+			return diag.Errorf("failed to assert auto_cloud_enabled as bool")
+		}
 		if autoCloud {
-			commPrefix := d.Get("community_prefix").(int)
+			commPrefix, ok := d.Get("community_prefix").(int)
+			if !ok {
+				return diag.Errorf("failed to assert community_prefix as int")
+			}
 			err := client.SetControllerBgpCommunitiesAutoCloud(ctx, commPrefix)
 			if err != nil {
 				return diag.Errorf("failed to enable controller BGP communities auto cloud config: %v", err)
@@ -119,7 +131,10 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.C
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	err := client.DisableControllerBgpCommunitiesAutoCloud(ctx)
 	if err != nil {
