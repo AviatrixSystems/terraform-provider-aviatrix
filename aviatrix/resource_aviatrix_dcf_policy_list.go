@@ -166,45 +166,92 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 	}
 
 	for _, policyInterface := range policies {
+		var ok bool
+
 		policy, ok := policyInterface.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("PolicyList policies items must be of type map[string]interface{}")
+			return nil, fmt.Errorf("policies must be of type map[string]interface{}")
 		}
 
-		distributedFirewallingPolicy := &goaviatrix.DCFPolicy{
-			Name:                   policy["name"].(string),
-			Action:                 policy["action"].(string),
-			Priority:               policy["priority"].(int),
-			FlowAppRequirement:     policy["flow_app_requirement"].(string),
-			DecryptPolicy:          policy["decrypt_policy"].(string),
-			ExcludeSgOrchestration: policy["exclude_sg_orchestration"].(bool),
+		distributedFirewallingPolicy := &goaviatrix.DCFPolicy{}
+
+		distributedFirewallingPolicy.Name, ok = policy["name"].(string)
+		if !ok {
+			return nil, fmt.Errorf("name must be of type string")
 		}
 
-		protocol := strings.ToUpper(policy["protocol"].(string))
+		distributedFirewallingPolicy.Action, ok = policy["action"].(string)
+		if !ok {
+			return nil, fmt.Errorf("action must be of type string")
+		}
+
+		distributedFirewallingPolicy.Priority, ok = policy["priority"].(int)
+		if !ok {
+			return nil, fmt.Errorf("priority must be of type int")
+		}
+
+		distributedFirewallingPolicy.FlowAppRequirement, ok = policy["flow_app_requirement"].(string)
+		if !ok {
+			return nil, fmt.Errorf("flow_app_requirement must be of type string")
+		}
+
+		distributedFirewallingPolicy.DecryptPolicy, ok = policy["decrypt_policy"].(string)
+		if !ok {
+			return nil, fmt.Errorf("decrypt_policy must be of type string")
+		}
+
+		distributedFirewallingPolicy.ExcludeSgOrchestration, ok = policy["exclude_sg_orchestration"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("exclude_sg_orchestration must be of type bool")
+		}
+
+		protocol, ok := policy["protocol"].(string)
+		if !ok {
+			return nil, fmt.Errorf("protocol must be of type string")
+		}
+		protocol = strings.ToUpper(protocol)
+
 		if protocol == "ANY" {
 			distributedFirewallingPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
 		} else {
 			distributedFirewallingPolicy.Protocol = protocol
 		}
 
-		for _, smartGroup := range policy["src_smart_groups"].(*schema.Set).List() {
+		srcSmartGroups, ok := policy["src_smart_groups"].(*schema.Set)
+		if !ok {
+			return nil, fmt.Errorf("src_smart_groups must be of type *schema.Set")
+		}
+
+		for _, smartGroup := range srcSmartGroups.List() {
 			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, smartGroup.(string))
 		}
 
-		for _, smartGroup := range policy["dst_smart_groups"].(*schema.Set).List() {
+		dstSmartGroups, ok := policy["dst_smart_groups"].(*schema.Set)
+		if !ok {
+			return nil, fmt.Errorf("dst_smart_groups must be of type *schema.Set")
+		}
+
+		for _, smartGroup := range dstSmartGroups.List() {
 			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroup.(string))
 		}
 
-		for _, webGroup := range policy["web_groups"].(*schema.Set).List() {
+		webGroups, ok := policy["web_groups"].(*schema.Set)
+		if !ok {
+			return nil, fmt.Errorf("web_groups must be of type *schema.Set")
+		}
+
+		for _, webGroup := range webGroups.List() {
 			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, webGroup.(string))
 		}
 
-		if logging, loggingOk := policy["logging"]; loggingOk {
-			distributedFirewallingPolicy.Logging = logging.(bool)
+		distributedFirewallingPolicy.Logging, ok = policy["logging"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("logging must be of type bool")
 		}
 
-		if watch, watchOk := policy["watch"]; watchOk {
-			distributedFirewallingPolicy.Watch = watch.(bool)
+		distributedFirewallingPolicy.Watch, ok = policy["watch"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("watch must be of type bool")
 		}
 
 		if goaviatrix.MapContains(policy, "port_ranges") {
