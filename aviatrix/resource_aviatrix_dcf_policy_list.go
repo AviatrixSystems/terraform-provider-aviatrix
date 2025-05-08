@@ -273,14 +273,28 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 			if distributedFirewallingPolicy.Protocol == "ICMP" {
 				return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 			}
-			for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
-				portRangeMap := portRangeInterface.(map[string]interface{})
-				portRange := &goaviatrix.DCFPortRange{
-					Lo: portRangeMap["lo"].(int),
+
+			portRanges, ok := policy["port_ranges"].([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("port_ranges must be of type []interface{}")
+			}
+
+			for _, portRangeInterface := range portRanges {
+				portRangeMap, ok := portRangeInterface.(map[string]interface{})
+				if !ok {
+					return nil, fmt.Errorf("port_ranges items must be of type []interface{}")
 				}
 
-				if hi, hiOk := portRangeMap["hi"]; hiOk {
-					portRange.Hi = hi.(int)
+				portRange := &goaviatrix.DCFPortRange{}
+
+				portRange.Lo, ok = portRangeMap["lo"].(int)
+				if !ok {
+					return nil, fmt.Errorf("port range lo must be of type bool")
+				}
+
+				portRange.Hi, ok = portRangeMap["hi"].(int)
+				if !ok {
+					return nil, fmt.Errorf("port range hi must be of type bool")
 				}
 
 				distributedFirewallingPolicy.PortRanges = append(distributedFirewallingPolicy.PortRanges, *portRange)
