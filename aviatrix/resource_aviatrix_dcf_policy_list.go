@@ -301,16 +301,16 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 			}
 		}
 
-		if uuid, uuidOk := policy["uuid"]; uuidOk {
-			distributedFirewallingPolicy.UUID = uuid.(string)
+		distributedFirewallingPolicy.UUID, ok = policy["uuid"].(string)
+		if !ok {
+			return nil, fmt.Errorf("uuid must be of type string")
 		}
 
 		if tlsProfileUUID, ok := policy["tls_profile"]; ok {
-			uuidStr, ok := tlsProfileUUID.(string)
+			distributedFirewallingPolicy.TLSProfile, ok = tlsProfileUUID.(string)
 			if !ok {
 				return nil, fmt.Errorf("invalid type for tls_profile, should be a string")
 			}
-			distributedFirewallingPolicy.TLSProfile = uuidStr
 		}
 
 		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
@@ -322,7 +322,10 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 }
 
 func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("client must be of type *goaviatrix.Client")
+	}
 
 	policyList, err := marshalDCFPolicyListInput(d)
 	if err != nil {
@@ -340,7 +343,10 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("client must be of type *goaviatrix.Client")
+	}
 
 	uuid := d.Id()
 
@@ -408,7 +414,10 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixDCFPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("client must be of type *goaviatrix.Client")
+	}
 
 	policyList, err := marshalDCFPolicyListInput(d)
 	if err != nil {
@@ -424,7 +433,10 @@ func resourceAviatrixDCFPolicyListUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("client must be of type *goaviatrix.Client")
+	}
 
 	uuid := d.Id()
 
