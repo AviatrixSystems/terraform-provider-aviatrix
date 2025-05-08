@@ -306,7 +306,6 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 }
 
 func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]string, error) {
-
 	var smartGroups []string
 
 	smartGroupsSet, ok := policyMap[key].(*schema.Set)
