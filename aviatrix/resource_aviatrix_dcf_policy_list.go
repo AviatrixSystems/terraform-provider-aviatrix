@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -110,7 +111,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
 							Description: "Protocol for the policy to filter.",
@@ -153,11 +154,22 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
 	policyList := &goaviatrix.DCFPolicyList{}
 
-	policyList.Name = d.Get("name").(string)
+	name, ok := d.Get("name").(string)
+	if !ok {
+		return nil, fmt.Errorf("PolicyList name must be of type string")
+	}
+	policyList.Name = name
 
-	policies := d.Get("policies").([]interface{})
+	policies, ok := d.Get("policies").([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("PolicyList policies must be of type []interface{}")
+	}
+
 	for _, policyInterface := range policies {
-		policy := policyInterface.(map[string]interface{})
+		policy, ok := policyInterface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("PolicyList policies items must be of type map[string]interface{}")
+		}
 
 		distributedFirewallingPolicy := &goaviatrix.DCFPolicy{
 			Name:                   policy["name"].(string),
@@ -258,7 +270,7 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 
 	policyList, err := client.GetDCFPolicyList(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -306,7 +318,9 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 		policies = append(policies, p)
 	}
 
-	d.Set("name", policyList.Name)
+	if err := d.Set("name", policyList.Name); err != nil {
+		return diag.Errorf("failed to set name during Distributed-firewalling Policy List read: %s\n", err)
+	}
 
 	if err := d.Set("policies", policies); err != nil {
 		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
