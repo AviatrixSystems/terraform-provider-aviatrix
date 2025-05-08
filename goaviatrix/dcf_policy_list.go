@@ -5,11 +5,6 @@ import (
 	"fmt"
 )
 
-// TODO Remove after AVX-62451
-type RootObject struct {
-	DCFPolicies DCFPolicyList `json:"dcf_policies"`
-}
-
 type DCFPolicyList struct {
 	Name           string      `json:"name"`
 	Policies       []DCFPolicy `json:"policies"`
@@ -57,9 +52,7 @@ func (c *Client) GetDCFPolicyList(ctx context.Context, uuid string) (*DCFPolicyL
 	endpoint := fmt.Sprintf("microseg/policy-list3/%s", uuid)
 
 	var policyList DCFPolicyList
-	var rootObject RootObject
-	err := c.GetAPIContext25(ctx, &rootObject, endpoint, nil)
-	policyList = rootObject.DCFPolicies
+	err := c.GetAPIContext25(ctx, &policyList, endpoint, nil)
 
 	if err != nil {
 		return nil, err
