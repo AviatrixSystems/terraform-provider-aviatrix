@@ -47,7 +47,6 @@ func (c *Client) GetControllerBgpCommunitiesAutoCloud(ctx context.Context) (int,
 	}
 	if resp.Results.BgpCommunitiesAutoCloudEnabled {
 		return resp.Results.BgpCommunitiesAutoCloudPrefix, nil
-	} else {
-		return 0, nil
 	}
+	return 0, nil
 }

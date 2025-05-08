@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -66,7 +67,7 @@ func testAccCheckControllerBgpCommunitiesAutoCloudConfigExists(n string) resourc
 
 		_, err := client.GetControllerBgpCommunitiesAutoCloud(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get controller bgp communities auto cloud config status: %v", err)
+			return fmt.Errorf("failed to get controller bgp communities auto cloud config status")
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -86,7 +87,7 @@ func testAccCheckControllerBgpCommunitiesAutoCloudConfigDestroy(s *terraform.Sta
 		}
 
 		_, err := client.GetControllerBgpCommunitiesAutoCloud(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("controller bgp communities auto cloud configured when it should be destroyed")
 		}
 	}

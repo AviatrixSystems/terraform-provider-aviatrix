@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -58,14 +59,17 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Contex
 
 	commGlobal, err := client.GetControllerBgpCommunitiesGlobal(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not get controller BGP communities global config: %v", err)
 	}
 
-	d.Set("bgp_communities_global", commGlobal)
+	err = d.Set("bgp_communities_global", commGlobal)
+	if err != nil {
+		return diag.Errorf("failed to set bgp_communities_global: %v", err)
+	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }

@@ -526,18 +526,18 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		DisableActivemesh:      d.Get("disable_activemesh").(bool),
 	}
 
-	send_comm := d.Get("connection_bgp_send_communities").(string)
-	block_comm := d.Get("connection_bgp_send_communities_block").(bool)
-	if send_comm != "" || block_comm {
+	sendComm := d.Get("connection_bgp_send_communities").(string)
+	blockComm := d.Get("connection_bgp_send_communities_block").(bool)
+	if sendComm != "" || blockComm {
 		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
 			ConnectionName:      d.Get("connection_name").(string),
 			GwName:              d.Get("gw_name").(string),
-			ConnSendCommunities: send_comm,
+			ConnSendCommunities: sendComm,
 			ConnSendAdditive:    d.Get("connection_bgp_send_communities_additive").(bool),
-			ConnSendBlock:       block_comm,
+			ConnSendBlock:       blockComm,
 		}
 		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
-			return fmt.Errorf("failed to update bgp connection based communities for connection %q: %s", bgpSendCommunities.ConnectionName, err)
+			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)
 		}
 	}
 
@@ -1563,7 +1563,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			ConnSendBlock:       d.Get("connection_bgp_send_communities_block").(bool),
 		}
 		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
-			return fmt.Errorf("failed to update bgp connection based communities for connection %q: %s", bgpSendCommunities.ConnectionName, err)
+			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)
 		}
 	}
 

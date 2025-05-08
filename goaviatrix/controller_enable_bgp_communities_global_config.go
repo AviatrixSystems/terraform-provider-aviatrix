@@ -44,7 +44,6 @@ func (c *Client) GetControllerBgpCommunitiesGlobal(ctx context.Context) (bool, e
 		return true, nil
 	} else if strings.Contains(resp.Results.BgpCommunitiesGlobal, "disabled") {
 		return false, nil
-	} else {
-		return false, ErrNotFound
 	}
+	return false, ErrNotFound
 }
