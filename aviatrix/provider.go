@@ -106,6 +106,7 @@ func Provider() *schema.Provider {
 			"aviatrix_copilot_security_group_management_config":               resourceAviatrixCopilotSecurityGroupManagementConfig(),
 			"aviatrix_copilot_simple_deployment":                              resourceAviatrixCopilotSimpleDeployment(),
 			"aviatrix_datadog_agent":                                          resourceAviatrixDatadogAgent(),
+			"aviatrix_dcf_policy_list":                                        resourceAviatrixDCFPolicyList(),
 			"aviatrix_device_interface_config":                                resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_distributed_firewalling_config":                         resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":                      resourceAviatrixDistributedFirewallingIntraVpc(),
