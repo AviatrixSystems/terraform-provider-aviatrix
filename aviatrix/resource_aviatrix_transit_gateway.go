@@ -1019,7 +1019,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			setComm = true
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 
@@ -1031,7 +1031,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			setComm = true
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 
@@ -2433,10 +2433,16 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
 	if err != nil {
-		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway, err)
+		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
 	}
-	d.Set("bgp_send_communities", sendComm)
-	d.Set("bgp_accept_communities", acceptComm)
+	err = d.Set("bgp_send_communities", sendComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+	}
+	err = d.Set("bgp_accept_communities", acceptComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	}
 
 	return nil
 }
@@ -2464,7 +2470,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if acceptComm != commAcceptCurr || err != nil {
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 	}
@@ -2476,7 +2482,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if sendComm != commSendCurr || err != nil {
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 	}
@@ -4031,7 +4037,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		setComm = true
 		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
 		if err != nil {
-			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
@@ -4043,7 +4049,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		setComm = true
 		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 		if err != nil {
-			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway, err)
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
