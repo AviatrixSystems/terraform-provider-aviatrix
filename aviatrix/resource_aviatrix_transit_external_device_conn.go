@@ -493,6 +493,8 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var bgpSendCommunities *goaviatrix.BgpSendCommunities
+
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:                  d.Get("vpc_id").(string),
 		ConnectionName:         d.Get("connection_name").(string),
@@ -534,8 +536,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if !ok {
 		return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
 	}
+	setComm := false
 	if sendComm != "" || blockComm {
 		connName, ok := d.Get("connection_name").(string)
+		setComm = true
 		if !ok {
 			return fmt.Errorf("failed to assert connection_name as string")
 		}
@@ -560,15 +564,12 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
 		}
 
-		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
+		bgpSendCommunities = &goaviatrix.BgpSendCommunities{
 			ConnectionName:      connName,
 			GwName:              gwName,
 			ConnSendCommunities: sendComm,
 			ConnSendAdditive:    sendAdditive,
 			ConnSendBlock:       sendBlock,
-		}
-		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
-			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)
 		}
 	}
 
@@ -849,6 +850,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			connName, err = client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 			log.Printf("[DEBUG] Created underlay connection %s", connName)
 
+		} else if setComm {
+			err = client.ConnectionBGPSendCommunities(bgpSendCommunities)
 		} else {
 			err = client.CreateExternalDeviceConn(externalDeviceConn)
 		}
