@@ -17,7 +17,6 @@ func (c *Client) UpdateDistributedFirewallingDefaultActionPolicy(ctx context.Con
 }
 
 func (c *Client) GetDistributedFirewallingDefaultActionPolicy(ctx context.Context) (map[string]string, error) {
-
 	endpoint := "microseg/default-action-policy"
 
 	var response DistributedFirewallingDefaultActionPolicy
