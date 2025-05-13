@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -27,6 +26,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionPolicy() *schema.Resourc
 			"action": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT"}, true),
 				Description: "Action for the specified source and destination Smart Groups." +
 					"Must be one of PERMIT or DENY.",
@@ -119,15 +119,11 @@ func resourceAviatrixDistributedFirewallingDefaultActionPolicyRead(ctx context.C
 		return diag.Errorf("failed to read the default action policy: %s", err)
 	}
 
-	if err := d.Set("action", defaultActionPolicy["action"]); err != nil {
+	if err := d.Set("action", defaultActionPolicy.Action); err != nil {
 		return diag.Errorf("failed to set 'action': %v", err)
 	}
 
-	logging, err := strconv.ParseBool(defaultActionPolicy["logging"])
-	if err != nil {
-		return diag.Errorf("failed to parse 'logging' as bool: %v", err)
-	}
-	if err := d.Set("logging", logging); err != nil {
+	if err := d.Set("logging", defaultActionPolicy.Logging); err != nil {
 		return diag.Errorf("failed to set 'logging': %v", err)
 	}
 

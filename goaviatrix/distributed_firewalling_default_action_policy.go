@@ -3,7 +3,6 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
-	"strconv"
 )
 
 type DistributedFirewallingDefaultActionPolicy struct {
@@ -16,7 +15,7 @@ func (c *Client) UpdateDistributedFirewallingDefaultActionPolicy(ctx context.Con
 	return c.PutAPIContext25(ctx, endpoint, request)
 }
 
-func (c *Client) GetDistributedFirewallingDefaultActionPolicy(ctx context.Context) (map[string]string, error) {
+func (c *Client) GetDistributedFirewallingDefaultActionPolicy(ctx context.Context) (*DistributedFirewallingDefaultActionPolicy, error) {
 	endpoint := "microseg/default-action-policy"
 
 	var response DistributedFirewallingDefaultActionPolicy
@@ -26,9 +25,9 @@ func (c *Client) GetDistributedFirewallingDefaultActionPolicy(ctx context.Contex
 		return nil, fmt.Errorf("failed to get distributed firewalling default action policy: %w", err)
 	}
 
-	result := map[string]string{
-		"action":  response.Action,
-		"logging": strconv.FormatBool(response.Logging),
+	result := &DistributedFirewallingDefaultActionPolicy{
+		Action:  response.Action,
+		Logging: response.Logging,
 	}
 
 	return result, nil
