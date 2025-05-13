@@ -5,22 +5,21 @@ import (
 	"fmt"
 )
 
+const distributedFirewallingDefaultActionPolicyEndpoint = "microseg/default-action-policy"
+
 type DistributedFirewallingDefaultActionPolicy struct {
 	Action  string `json:"action"`
 	Logging bool   `json:"logging"`
 }
 
 func (c *Client) UpdateDistributedFirewallingDefaultActionPolicy(ctx context.Context, request *DistributedFirewallingDefaultActionPolicy) error {
-	endpoint := "microseg/default-action-policy"
-	return c.PutAPIContext25(ctx, endpoint, request)
+	return c.PutAPIContext25(ctx, distributedFirewallingDefaultActionPolicyEndpoint, request)
 }
 
 func (c *Client) GetDistributedFirewallingDefaultActionPolicy(ctx context.Context) (*DistributedFirewallingDefaultActionPolicy, error) {
-	endpoint := "microseg/default-action-policy"
-
 	var response DistributedFirewallingDefaultActionPolicy
 
-	err := c.GetAPIContext25(ctx, &response, endpoint, nil)
+	err := c.GetAPIContext25(ctx, &response, distributedFirewallingDefaultActionPolicyEndpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get distributed firewalling default action policy: %w", err)
 	}

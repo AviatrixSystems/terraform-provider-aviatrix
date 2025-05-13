@@ -10,6 +10,10 @@ description: |-
 
 The **aviatrix_distributed_firewalling_default_action_policy** resource handles the creation and management of Distributed-firewalling default action policy. Available as of Provider 3.2.2+.
 
+Once the Distributed Cloud Firewall (DCF) is enabled, the system will generate a default action policy (a DCF rule) with the following settings: action=PERMIT, logging=false, src=Anywhere, and dst=Anywhere. This configuration ensures that no traffic will be dropped.
+
+However, if the default policy action is set to DENY, all traffic in the applied gateways (GWs) will be blocked. To allow traffic to pass, additional PERMIT rules must be created based on the specific requirements of the architecture design.
+
 ## Example Usage
 
 ```hcl
