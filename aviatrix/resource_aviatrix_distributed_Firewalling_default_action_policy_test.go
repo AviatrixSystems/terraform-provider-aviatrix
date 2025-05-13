@@ -45,12 +45,10 @@ func TestAccAviatrixDistributedFirewallingDefaultActionPolicy_basic(t *testing.T
 }
 
 func testAccDistributedFirewallingDefaultActionPolicyBasic() string {
-	return `
-resource "aviatrix_distributed_firewalling_default_action_policy" "test" {
-    action  = "PERMIT"
-    logging = true
-}
-`
+	return `resource "aviatrix_distributed_firewalling_default_action_policy" "test" {
+    			action  = "PERMIT"
+    			logging = true
+			}`
 }
 
 func testAccCheckDistributedFirewallingDefaultActionPolicyExists(n string) resource.TestCheckFunc {

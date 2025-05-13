@@ -26,7 +26,6 @@ func resourceAviatrixDistributedFirewallingDefaultActionPolicy() *schema.Resourc
 			"action": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT"}, true),
 				Description: "Action for the specified source and destination Smart Groups." +
 					"Must be one of PERMIT or DENY.",
@@ -34,7 +33,6 @@ func resourceAviatrixDistributedFirewallingDefaultActionPolicy() *schema.Resourc
 			"logging": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				ForceNew:    true,
 				Description: "Boolean value to enable or disable logging for the default action policy.",
 			},
 		},
