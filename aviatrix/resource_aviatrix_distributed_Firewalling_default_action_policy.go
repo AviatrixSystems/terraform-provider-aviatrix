@@ -141,7 +141,6 @@ func resourceAviatrixDistributedFirewallingDefaultActionPolicyDelete(ctx context
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
 	}
 
-
 	defaultActionPolicyConfig := &goaviatrix.DistributedFirewallingDefaultActionPolicy{
 		Action:  "PERMIT",
 		Logging: false,
