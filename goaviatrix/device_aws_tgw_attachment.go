@@ -48,7 +48,8 @@ func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment
 			// String failed, must be int
 			err = json.Unmarshal(tgwAttachmentInfo.AwsSideAsnRaw, &asnInt)
 			if err != nil {
-				return nil, fmt.Errorf("json decode get_tgw_attachment_details aws_side_asn field failed: aws_side_asn = %s: %v", string(tgwAttachmentInfo.AwsSideAsnRaw), err)
+				return nil, fmt.Errorf("json decode get_tgw_attachment_details aws_side_asn field failed: aws_side_asn = %s: %w",
+					string(tgwAttachmentInfo.AwsSideAsnRaw), err)
 			}
 			asnString = strconv.Itoa(asnInt)
 		}
