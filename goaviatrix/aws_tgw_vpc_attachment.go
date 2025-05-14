@@ -69,20 +69,46 @@ func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
-	awsTgw := &AWSTgw{
-		Name: awsTgwVpcAttachment.TgwName,
+// GetAwsTgwAttachment return generic TGW attachment info.
+func (c *Client) GetAwsTgwAttachmentInfo(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AttachmentInfo, error) {
+	var data TgwAttachmentResp
+	params := map[string]string{
+		"action":          "get_tgw_attachment_details",
+		"CID":             c.CID,
+		"tgw_name":        awsTgwVpcAttachment.TgwName,
+		"attachment_name": awsTgwVpcAttachment.VpcID,
 	}
-	awsTgw, err := c.ListTgwDetails(awsTgw)
-	if err != nil {
-		if err == ErrNotFound {
-			return nil, err
+	check := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
-		return nil, fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgwVpcAttachment.TgwName, err)
+		return nil
 	}
-	awsTgwVpcAttachment.Region = awsTgw.Region
+	err := c.GetAPI(&data, params["action"], params, check)
+	if err != nil {
+		return nil, err
+	}
+	for _, attachment := range data.Results {
+		if attachment.VpcID == awsTgwVpcAttachment.VpcID {
+			return &attachment, nil
+		}
+	}
+	return nil, ErrNotFound
 
-	err = c.GetAwsTgwDomain(awsTgw, awsTgwVpcAttachment.SecurityDomainName)
+}
+
+func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
+	tgwAttachmentInfo, err := c.GetAwsTgwAttachmentInfo(awsTgwVpcAttachment)
+	if err != nil {
+		return nil, err
+	}
+	awsTgwVpcAttachment.Region = tgwAttachmentInfo.Region
+	awsTgwVpcAttachment.VpcAccountName = tgwAttachmentInfo.AccountName
+
+	err = c.GetAwsTgwDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
 		if err == ErrNotFound {
 			return nil, err
@@ -137,10 +163,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 		aTVA.CustomizedRouteAdvertisement = ""
 	}
 
-	firenetManagementDetails, err := c.GetFirenetManagementDetails(awsTgwVpcAttachment)
-	if err != nil {
-		return nil, fmt.Errorf("could not get firenet management details: %s", err)
-	}
+	firenetManagementDetails := tgwAttachmentInfo.AccessFromEdge
 	if len(firenetManagementDetails) != 0 {
 		aTVA.EdgeAttachment = firenetManagementDetails[1]
 	}
@@ -178,12 +201,12 @@ func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
 	return awsTgw, nil
 }
 
-func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
+func (c *Client) GetAwsTgwDomain(awsTgwName string, sDM string) error {
 	var data DomainListResp
 	form := map[string]string{
 		"CID":      c.CID,
 		"action":   "list_route_domain_names",
-		"tgw_name": awsTgw.Name,
+		"tgw_name": awsTgwName,
 	}
 	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
@@ -261,30 +284,4 @@ func (c *Client) UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment *A
 	}
 
 	return c.PostAPI(params["action"], params, BasicCheck)
-}
-
-func (c *Client) GetFirenetManagementDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) ([]string, error) {
-	params := map[string]string{
-		"action":          "get_tgw_attachment_details",
-		"CID":             c.CID,
-		"tgw_name":        awsTgwVpcAttachment.TgwName,
-		"attachment_name": awsTgwVpcAttachment.VpcID,
-	}
-
-	type AccessFromEdge struct {
-		AccessFromEdge []string `json:"access_from_edge"`
-	}
-
-	type Resp struct {
-		Results []AccessFromEdge
-	}
-
-	var data Resp
-
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	return data.Results[0].AccessFromEdge, nil
 }
