@@ -1599,6 +1599,9 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("failed to assert gw_name as string")
 		}
 
+		// Detect whether the user wants to change the set of BGP communities sent on a given connection
+		// if so, update the connection with the new set of communities, either additively or as a replacement
+		// or block the communities entirely, depending on the user's choice
 		sendComm, ok := d.Get("connection_bgp_send_communities").(string)
 		if !ok {
 			return fmt.Errorf("failed to assert connection_bgp_send_communities as string")

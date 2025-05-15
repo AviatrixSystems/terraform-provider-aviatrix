@@ -94,6 +94,11 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Con
 		if err != nil {
 			return diag.Errorf("failed to set auto cloud enabled: %v", err)
 		}
+	} else {
+		err = d.Set("auto_cloud_enabled", false)
+		if err != nil {
+			return diag.Errorf("failed to set auto cloud enabled: %v", err)
+		}
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -105,7 +110,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.C
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
 	}
 
-	if d.HasChange("community_prefix") {
+	if d.HasChange("auto_cloud_enabled") || d.HasChange("community_prefix") {
 		autoCloud, ok := d.Get("auto_cloud_enabled").(bool)
 		if !ok {
 			return diag.Errorf("failed to assert auto_cloud_enabled as bool")
