@@ -27,6 +27,9 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
     - Added examples of required Equinic resources.
     - Clarified the description of **management_egress_ip_prefix_list**.
 
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
+
 ## 3.2.1
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4996**
