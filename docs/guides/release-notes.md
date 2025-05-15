@@ -12,17 +12,56 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.1 (UserConnect-7.2.4996)``
+``Last updated: R8.0.0``
 
 ---
+## 8.0.0
+### Versioning Scheme Update
+Starting with this release, the Terraform provider will synchronize its version with the Aviatrix Controller version. This means the provider version has jumped from v3.2.2 to v8.0.0 to align with the Controller’s latest major version. This change makes it easier to determine which provider version is compatible with which Controller version.
+Moving forward, the provider will follow semantic versioning (major.minor.patch).
 
-## 8.0
 ### Notes:
 - Supported Controller version: **UserConnect-8.0.0**
 
 ### Enhancements:
 1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile in a DCF policy.
+2. Added support for importing the **aviatrix_edge_proxy_profile** resource.
+3. Allow special characters in Azure tags on gateway instances, to align with UI behavior.
+4. Extended k8s examples for the **aviatrix_smart_group** resource.
+5. Implemented new resources **aviatrix_edge_megaport** and **aviatrix_edge_megaport_ha** for deployment of spoke gateway in Megaport.
+6. The **aviatrix_transit_gateway** resource now supports deploying in Equinix and Megaport.
+7. Added support for `enable_bgp_multihop` to **aviatrix_edge_spoke_external_device_conn**, **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn** resources.
+8. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_edge_underlay` which allows for configuring BGP on the underlay.
+9. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_bgp_lan_activemesh` enabling activemesh support for BGP peering on the LAN.
+10. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_jumbo_frame`.
 
+### Deprecations
+1. The argument **aviatrix_dns_profile** has been removed from the following resources, as it was never used.
+  - **aviatrix_edge_csp**
+  - **aviatrix_edge_equinix**
+  - **aviatrix_edge_neo**
+  - **aviatrix_edge_platform**
+  - **aviatrix_edge_zededa**
+2. The CloudN related resources **aviatrix_cloudn_registration** and **aviatrix_cloudn_transit_gateway_attachment** have been removed, as they are no longer supported.
+
+### Bug Fixes:
+1. Fixed an issue where `ha_eip` was not applied to an Azure transit HA gateway.
+2. Fixed an issue where the **aviatrix_vpc_tracker** data source was returning incorrect `cloud_type` information.
+3. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
+
+## 3.2.2
+### Notes:
+- Supported Controller version: **UserConnect-7.2.xxxx**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinic resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
+
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
 
 ## 3.2.1
 ### Notes:
