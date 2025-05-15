@@ -47,6 +47,7 @@ Moving forward, the provider will follow semantic versioning (major.minor.patch)
 ### Bug Fixes:
 1. Fixed an issue where `ha_eip` was not applied to an Azure transit HA gateway.
 2. Fixed an issue where the **aviatrix_vpc_tracker** data source was returning incorrect `cloud_type` information.
+3. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
 
 ## 3.2.2
 ### Notes:
@@ -58,6 +59,9 @@ Moving forward, the provider will follow semantic versioning (major.minor.patch)
     - Added examples for static and DHCP management interface.
     - Added examples of required Equinic resources.
     - Clarified the description of **management_egress_ip_prefix_list**.
+
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
 
 ## 3.2.1
 ### Notes:
