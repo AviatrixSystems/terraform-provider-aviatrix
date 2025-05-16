@@ -1838,32 +1838,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
-	if d.HasChange("bgp_accept_communities") {
-		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-		}
-		if acceptComm != commAcceptCurr || err != nil {
-			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
-			if err != nil {
-				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
-			}
-		}
-	}
-	if d.HasChange("bgp_send_communities") {
-		sendComm, ok := d.Get("bgp_send_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
-		}
-		if sendComm != commSendCurr || err != nil {
-			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
-			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
-			}
-		}
-	}
-
 	manageHaGw := d.Get("manage_ha_gateway").(bool)
 	if d.HasChange("manage_ha_gateway") {
 		_, nMHG := d.GetChange("manage_ha_gateway")
@@ -1892,6 +1866,32 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if d.HasChange("bgp_accept_communities") {
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
+		}
+		if acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+	if d.HasChange("bgp_send_communities") {
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
+		}
+		if sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+
 	if d.Get("enable_private_vpc_default_route").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}

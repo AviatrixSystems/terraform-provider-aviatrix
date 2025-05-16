@@ -1017,9 +1017,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 		if acceptComm != commAcceptCurr || err != nil {
 			setComm = true
-			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 
@@ -1905,6 +1905,19 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
 
+	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+	}
+	err = d.Set("bgp_send_communities", sendComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+	}
+	err = d.Set("bgp_accept_communities", acceptComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	}
+
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		d.Set("vpc_id", gw.VpcID)
@@ -2431,19 +2444,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 		}
 	}
-	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
-	if err != nil {
-		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
-	}
-	err = d.Set("bgp_send_communities", sendComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
-	}
-	err = d.Set("bgp_accept_communities", acceptComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
-	}
-
 	return nil
 }
 
@@ -2461,6 +2461,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
+	// Clarification : Can the user update EAT interface after its created. Add/Delete EAT interface
+	d.Partial(true)
 	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
 	if d.HasChange("bgp_accept_communities") {
 		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
@@ -2468,9 +2470,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
 		}
 		if acceptComm != commAcceptCurr || err != nil {
-			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 	}
@@ -2486,9 +2488,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 	}
-
-	// Clarification : Can the user update EAT interface after its created. Add/Delete EAT interface
-	d.Partial(true)
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -4035,9 +4034,9 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 	if acceptComm != commAcceptCurr || err != nil {
 		setComm = true
-		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, acceptComm)
+		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 		if err != nil {
-			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
