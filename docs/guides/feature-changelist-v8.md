@@ -48,4 +48,3 @@ The following attributes are removed:
 |(deprecated)|aviatrix_edge_equinix|aviatrix_dns_profile|**Yes**; please remove this attribute from the config.|
 |(deprecated)|aviatrix_edge_platform|aviatrix_dns_profile|**Yes**; please remove this attribute from the config.|
 |(deprecated)|aviatrix_edge_zededa|aviatrix_dns_profile|**Yes**; please remove this attribute from the config.|
-
