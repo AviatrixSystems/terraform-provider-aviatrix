@@ -955,8 +955,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Transit:                  true,
 		}
 
-		// for CSPs the enable_jumbo_frame is set to true by default
-		if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
+		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
+		if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+			enableJumboFrame := val.(bool)
+			gateway.JumboFrame = enableJumboFrame // set to user-provided value
+		} else {
+			gateway.JumboFrame = true // new default for CSPs
 			_ = d.Set("enable_jumbo_frame", true)
 		}
 
