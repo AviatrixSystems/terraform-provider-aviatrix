@@ -15,14 +15,14 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 ---
 
-``Last updated: R8.0.0 (UserConnect-8.0.0-1000.2432)``
+``Last updated: R8.0.0 (8.0.0-1000.2432)``
 
 ---
 
 
 | Terraform Version (v) | Aviatrix Provider Version (R) |   Supported Controller Version   |
 | :-------------------: | :---------------------------: | :------------------------------: |
-|          1.0          |             8.0.0             |       UserConnect-8.0.0-1000.2432       |
+|          1.0          |             8.0.0             |       8.0.0-1000.2432            |
 |          1.0          |             3.2.2             |       UserConnect-7.2.5090       |
 |          1.0          |             3.2.1             |       UserConnect-7.2.4996       |
 |          1.0          |             3.2.0             |       UserConnect-7.2.4820       |

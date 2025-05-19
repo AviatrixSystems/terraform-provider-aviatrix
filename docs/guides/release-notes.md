@@ -21,7 +21,7 @@ Starting with this release, the Terraform provider will synchronize its version 
 Moving forward, the provider will follow semantic versioning (major.minor.patch).
 
 ### Notes:
-- Supported Controller version: **UserConnect-8.0.0**
+- Supported Controller version: **8.0.0**
 
 ### Enhancements:
 1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile in a DCF policy.
