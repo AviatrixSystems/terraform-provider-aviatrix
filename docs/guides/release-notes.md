@@ -12,17 +12,26 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.1 (UserConnect-7.2.4996)``
+``Last updated: R3.2.2 (UserConnect-7.2.5090)``
 
 ---
-
-## 8.0
-### Notes:
-- Supported Controller version: **UserConnect-8.0.0**
 
 ### Enhancements:
 1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile in a DCF policy.
 
+## 3.2.2
+### Notes:
+- Supported Controller version: **UserConnect-7.2.5090**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinix resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
+
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
 
 ## 3.2.1
 ### Notes:
