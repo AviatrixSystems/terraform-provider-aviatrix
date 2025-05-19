@@ -479,7 +479,7 @@ func testAccSmartGroupDestroy(s *terraform.State) error {
 		_, err := client.GetSmartGroup(context.Background(), rs.Primary.ID)
 		expectedError := "App domain not found"
 		if err == nil || !strings.Contains(err.Error(), expectedError) {
-			return fmt.Errorf("smart group configured when it should be destroyed, want %s, got: %s", expectedError, err)
+			return fmt.Errorf("smart group configured when it should be destroyed, want %s, got: %w", expectedError, err)
 		}
 	}
 
