@@ -484,6 +484,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true for CSP transit gateways and false for edge transit gateways.",
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+					// Suppress diff if the user has not set the value (i.e., it's null in the config)
+					_, exists := d.GetOk("enable_jumbo_frame")
+					return !exists
+				},
 			},
 			"enable_gro_gso": {
 				Type:        schema.TypeBool,
