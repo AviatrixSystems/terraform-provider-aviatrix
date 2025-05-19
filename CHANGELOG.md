@@ -1,4 +1,18 @@
-## 3.2.1 (Unreleased)
+## 3.2.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.2.5090**
+- Supported Terraform version **v1.x**
+
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinix resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
+
+## 3.2.1
 ### Notes:
 - Supported Controller version: **UserConnect-7.2.4996**
 - Supported Terraform version **v1.x**
