@@ -19,7 +19,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 ---
 
-## R8.0.0 (UserConnect-8.0.0-1000.2432)
+## R8.0.0 (8.0.0-1000.2432)
 **NOTICE:** Starting with this release, the Terraform provider will synchronize its version with the Aviatrix Controller version. This means the provider version has jumped from v3.2.2 to v8.0.0 to align with the Controller’s latest major version. This change makes it easier to determine which provider version is compatible with which Controller version.
 Moving forward, the provider will follow semantic versioning (major.minor.patch).
 
