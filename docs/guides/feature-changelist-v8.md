@@ -8,14 +8,13 @@ description: |-
 # Aviatrix R8.x Feature Changelist
 
 ## USAGE:
-Tracks customer-impacting changes to Terraform environment (existing resources) throughout releases from R4.0 to present. New resources may be tracked in the [Release Notes](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-notes).
+Tracks customer-impacting changes to Terraform environment (existing resources) throughout releases from R8.0 to present. New resources may be tracked in the [Release Notes](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-notes).
 
 -> **NOTE:** This changelist assumes that customers have an existing Terraform configuration and is planning to upgrade their Controller (and subsequently must also update their Aviatrix Terraform provider version to the appropriate corresponding one).
 
 ---
 
-``Last updated: R8.0.0 (UserConnect-8.0-xxxx)``
-
+``Last updated: R8.0.0 (8.0.0-1000.2432)``
 
 ---
 
