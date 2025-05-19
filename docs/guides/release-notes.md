@@ -24,7 +24,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Enhancements:
 1. Updated documentation for **aviatrix_edge_equinix**.
     - Added examples for static and DHCP management interface.
-    - Added examples of required Equinic resources.
+    - Added examples of required Equinix resources.
     - Clarified the description of **management_egress_ip_prefix_list**.
 
 ### Bug Fixes:
