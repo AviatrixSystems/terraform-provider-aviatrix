@@ -37,15 +37,16 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
-							Description: "Action for the specified source and destination Smart Groups." +
-								"Must be one of PERMIT or DENY.",
+							Description: "Action for the specified source and destination Smart Groups. " +
+								"Must be one of DEEP_PACKET_INSPECTION_PERMIT, INTRUSION_DETECTION_PERMIT, PERMIT or DENY.",
 						},
 						"decrypt_policy": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "DECRYPT_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
-							Description:  "Decryption options for the policy.",
+							Description: "Decryption options for the policy. " +
+								"Must be one of DECRYPT_UNSPECIFIED, DECRYPT_ALLOWED or DECRYPT_NOT_ALLOWED.",
 						},
 						"dst_smart_groups": {
 							Type:        schema.TypeSet,
@@ -64,7 +65,8 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Optional:     true,
 							Default:      "APP_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
-							Description:  "Flow application requirement for the policy.",
+							Description: "Flow application requirement for the policy. " +
+								"Must be one of APP_UNSPECIFIED, TLS_REQUIRED or NOT_TLS_REQUIRED.",
 						},
 						"logging": {
 							Type:        schema.TypeBool,
@@ -75,7 +77,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Name of the policy.",
+							Description: "Name of the policy. Policy names must be unique.",
 						},
 						"port_ranges": {
 							Type:        schema.TypeList,
@@ -113,7 +115,8 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
-							Description: "Protocol for the policy to filter.",
+							Description: "Protocol for the policy to filter. " +
+								"Must bew one of ANY, ICMP, TCP or UDP.",
 						},
 						"src_smart_groups": {
 							Type:        schema.TypeSet,
