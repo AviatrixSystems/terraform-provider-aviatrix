@@ -1,6 +1,6 @@
 ## 8.0.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-8.0.1000.2432**
+- Supported Controller version: **UserConnect-8.0.0-1000.2432**
 - Supported Terraform version **v1.x**
 
 ### Enhancements:
