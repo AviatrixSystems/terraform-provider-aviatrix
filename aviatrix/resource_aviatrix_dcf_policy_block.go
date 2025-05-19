@@ -99,21 +99,21 @@ func marshalSubPolicyInput(subPolicyMap map[string]interface{}) (*goaviatrix.DCF
 	subPolicy := &goaviatrix.DCFSubPolicy{}
 
 	if subPolicy.Name, ok = subPolicyMap["name"].(string); !ok {
-		return nil, fmt.Errorf("policy_object name must be of type string.")
+		return nil, fmt.Errorf("policy_object name must be of type string")
 	}
 
 	if subPolicy.Priority, ok = subPolicyMap["priority"].(int); !ok {
-		return nil, fmt.Errorf("policy_object priority must be of type string.")
+		return nil, fmt.Errorf("policy_object priority must be of type string")
 	}
 
 	uuid, ok := subPolicyMap["uuid"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_object uuid must be of type string.")
+		return nil, fmt.Errorf("policy_object uuid must be of type string")
 	}
 
 	subPolicyType, ok := subPolicyMap["type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_object type must be of type string.")
+		return nil, fmt.Errorf("policy_object type must be of type string")
 	}
 
 	switch strings.ToUpper(subPolicyType) {
@@ -122,7 +122,7 @@ func marshalSubPolicyInput(subPolicyMap map[string]interface{}) (*goaviatrix.DCF
 	case "LIST":
 		subPolicy.List = uuid
 	default:
-		return nil, fmt.Errorf("policy_object type must be either 'BLOCK' or 'List'.")
+		return nil, fmt.Errorf("policy_object type must be either 'BLOCK' or 'List'")
 	}
 
 	return subPolicy, nil

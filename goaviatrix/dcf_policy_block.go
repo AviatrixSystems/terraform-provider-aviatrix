@@ -37,7 +37,6 @@ func (c *Client) GetDCFPolicyBlock(ctx context.Context, uuid string) (*DCFPolicy
 
 	var policyBlock DCFPolicyBlock
 	err := c.GetAPIContext25(ctx, &policyBlock, endpoint, nil)
-
 	if err != nil {
 		return nil, err
 	}
