@@ -138,7 +138,7 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
 		DnsServerIp:              d.Get("dns_server_ip").(string),
 		SecondaryDnsServerIp:     d.Get("secondary_dns_server_ip").(string),
-		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+		ManagementEgressIPPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -196,10 +196,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		return diag.Errorf("could not read Edge Gateway Selfmanaged HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
-	d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteId)
-	d.Set("dns_server_ip", edgeGatewaySelfmanagedHaResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDnsServerIp)
+	_ = d.Set("primary_gw_name", edgeGatewaySelfmanagedHaResp.PrimaryGwName)
+	_ = d.Set("site_id", edgeGatewaySelfmanagedHaResp.SiteID)
+	_ = d.Set("dns_server_ip", edgeGatewaySelfmanagedHaResp.DNSServerIP)
+	_ = d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDNSServerIP)
 
 	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "iso" || edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)
@@ -209,10 +209,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		d.Set("ztp_file_type", "cloud-init")
 	}
 
-	if edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+	if edgeGatewaySelfmanagedHaResp.ManagementEgressIPPrefix == "" {
+		_ = d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeGatewaySelfmanagedHaResp.ManagementEgressIpPrefix, ","))
+		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeGatewaySelfmanagedHaResp.ManagementEgressIPPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -251,7 +251,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaUpdate(ctx context.Context, d *sche
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeGatewaySelfmanagedFunctions.InterfaceList = edgeGatewaySelfmanagedHa.InterfaceList
-		gatewayForEdgeGatewaySelfmanagedFunctions.ManagementEgressIpPrefix = edgeGatewaySelfmanagedHa.ManagementEgressIpPrefix
+		gatewayForEdgeGatewaySelfmanagedFunctions.ManagementEgressIpPrefix = edgeGatewaySelfmanagedHa.ManagementEgressIPPrefix
 
 		err := client.UpdateEdgeVmSelfmanagedHa(ctx, gatewayForEdgeGatewaySelfmanagedFunctions)
 		if err != nil {
