@@ -6,19 +6,20 @@ package goaviatrix
 // Cloud provider ids
 // The value is corresponding to cloudn repro definition for cloud type bit, e.g. AWS is AWS_CLOUD_TYPE_BIT
 const (
-	AWS          = 1
-	GCP          = 4
-	Azure        = 8
-	OCI          = 16
-	AzureGov     = 32
-	AWSGov       = 256
-	AWSChina     = 1024
-	AzureChina   = 2048
-	AliCloud     = 8192
-	EDGECSP      = 65536   // Zededa
-	EDGEEQUINIX  = 524288  // Equinix
-	EDGENEO      = 262144  // AEP
-	EDGEMEGAPORT = 1048576 // Megaport
+	AWS             = 1
+	GCP             = 4
+	Azure           = 8
+	OCI             = 16
+	AzureGov        = 32
+	AWSGov          = 256
+	AWSChina        = 1024
+	AzureChina      = 2048
+	AliCloud        = 8192
+	EDGESELFMANAGED = 4096    // ESXI/KVM
+	EDGECSP         = 65536   // Zededa
+	EDGEEQUINIX     = 524288  // Equinix
+	EDGENEO         = 262144  // AEP
+	EDGEMEGAPORT    = 1048576 // Megaport
 )
 
 // Cloud vendor names
@@ -34,7 +35,7 @@ const (
 	AzureArmRelatedCloudTypes = Azure | AzureGov | AzureChina
 	OCIRelatedCloudTypes      = OCI
 	AliCloudRelatedCloudTypes = AliCloud
-	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT
+	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT | EDGESELFMANAGED
 )
 
 // The value is corresponding to cloudn repro definition of the same name
@@ -74,6 +75,7 @@ func GetSupportedClouds() []int {
 		EDGEEQUINIX,
 		EDGENEO,
 		EDGEMEGAPORT,
+		EDGESELFMANAGED,
 	}
 }
 
