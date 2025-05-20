@@ -21,19 +21,19 @@ type EdgeVmSelfmanagedHa struct {
 	InterfaceList            []*EdgeSpokeInterface
 	Interfaces               string `json:"interfaces"`
 	NoProgressBar            bool   `json:"no_progress_bar,omitempty"`
-	ManagementEgressIpPrefix string `json:"mgmt_egress_ip,omitempty"`
+	ManagementEgressIPPrefix string `json:"mgmt_egress_ip,omitempty"`
 	CloudInit                bool   `json:"cloud_init"`
 }
 
 type EdgeVmSelfmanagedHaResp struct {
 	PrimaryGwName            string                `json:"primary_gw_name"`
 	GwName                   string                `json:"gw_name"`
-	SiteId                   string                `json:"vpc_id"`
+	SiteID                   string                `json:"vpc_id"`
 	ZtpFileType              string                `json:"ztp_file_type"`
 	InterfaceList            []*EdgeSpokeInterface `json:"interfaces"`
-	ManagementEgressIpPrefix string                `json:"mgmt_egress_ip"`
-	DnsServerIp              string                `json:"dns_server_ip,omitempty"`
-	SecondaryDnsServerIp     string                `json:"dns_server_ip_secondary,omitempty"`
+	ManagementEgressIPPrefix string                `json:"mgmt_egress_ip"`
+	DNSServerIP              string                `json:"dns_server_ip,omitempty"`
+	SecondaryDNSServerIP     string                `json:"dns_server_ip_secondary,omitempty"`
 }
 
 type EdgeVmSelfmanagedHaListResp struct {
