@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R8.0.0-1000.2432``
+Last updated: R8.0.0 (8.0.0-1000.2432)
 
 ---
 ## 8.0.0
