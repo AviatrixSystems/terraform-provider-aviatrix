@@ -112,7 +112,7 @@ func marshalEdgeVmSelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmS
 		SiteId:                   d.Get("site_id").(string),
 		ZtpFileType:              d.Get("ztp_file_type").(string),
 		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
-		ManagementEgressIPPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -168,8 +168,8 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("could not read Edge VM Selfmanaged HA: %v", err)
 	}
 
-	_ = d.Set("primary_gw_name", edgeVmSelfmanagedHaResp.PrimaryGwName)
-	_ = d.Set("site_id", edgeVmSelfmanagedHaResp.SiteID)
+	d.Set("primary_gw_name", edgeVmSelfmanagedHaResp.PrimaryGwName)
+	d.Set("site_id", edgeVmSelfmanagedHaResp.SiteId)
 
 	if edgeVmSelfmanagedHaResp.ZtpFileType == "iso" || edgeVmSelfmanagedHaResp.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeVmSelfmanagedHaResp.ZtpFileType)
@@ -179,10 +179,10 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 		d.Set("ztp_file_type", "cloud-init")
 	}
 
-	if edgeVmSelfmanagedHaResp.ManagementEgressIPPrefix == "" {
-		_ = d.Set("management_egress_ip_prefix_list", nil)
+	if edgeVmSelfmanagedHaResp.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
-		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeVmSelfmanagedHaResp.ManagementEgressIPPrefix, ","))
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeVmSelfmanagedHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -219,7 +219,7 @@ func resourceAviatrixEdgeVmSelfmanagedHaUpdate(ctx context.Context, d *schema.Re
 
 	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 		gatewayForEdgeVmSelfmanagedFunctions.InterfaceList = edgeVmSelfmanagedHa.InterfaceList
-		gatewayForEdgeVmSelfmanagedFunctions.ManagementEgressIpPrefix = edgeVmSelfmanagedHa.ManagementEgressIPPrefix
+		gatewayForEdgeVmSelfmanagedFunctions.ManagementEgressIpPrefix = edgeVmSelfmanagedHa.ManagementEgressIpPrefix
 
 		err := client.UpdateEdgeVmSelfmanagedHa(ctx, gatewayForEdgeVmSelfmanagedFunctions)
 		if err != nil {
