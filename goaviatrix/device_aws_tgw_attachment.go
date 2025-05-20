@@ -30,57 +30,38 @@ func (c *Client) CreateDeviceAwsTgwAttachment(attachment *DeviceAwsTgwAttachment
 }
 
 func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment) (*DeviceAwsTgwAttachment, error) {
-	form := map[string]string{
-		"action":                    "list_tgw_details",
-		"CID":                       c.CID,
-		"connection_name":           tgwAttachment.ConnectionName,
-		"device_name":               tgwAttachment.DeviceName,
-		"tgw_name":                  tgwAttachment.AwsTgwName,
-		"external_device_as_number": tgwAttachment.DeviceAsn,
-		"route_domain_name":         tgwAttachment.SecurityDomainName,
-		"enable_global_accelerator": tgwAttachment.EnableGlobalAccelerator,
+	tgwVpcAttachment := &AwsTgwVpcAttachment{
+		TgwName: tgwAttachment.AwsTgwName,
+		VpcID:   tgwAttachment.ConnectionName,
 	}
-	var data TgwAttachmentResp
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	tgwAttachmentInfo, err := c.GetAwsTgwAttachmentInfo(tgwVpcAttachment)
 	if err != nil {
 		return nil, err
 	}
-
-	var deviceAttachment AttachmentInfo
-	var found bool
-	for _, attachment := range data.Results.Attachments {
-		if attachment.VpcName == tgwAttachment.ConnectionName {
-			deviceAttachment = attachment
-			found = true
-		}
-	}
-	if !found {
-		return nil, ErrNotFound
-	}
-
 	// aws_side_asn can return as either string or int from API
-	if len(deviceAttachment.AwsSideAsnRaw) != 0 {
+	if len(tgwAttachmentInfo.AwsSideAsnRaw) != 0 {
 		// First try as string
 		var asnString string
 		var asnInt int
-		err = json.Unmarshal(deviceAttachment.AwsSideAsnRaw, &asnString)
+		err = json.Unmarshal(tgwAttachmentInfo.AwsSideAsnRaw, &asnString)
 		if err != nil {
 			// String failed, must be int
-			err = json.Unmarshal(deviceAttachment.AwsSideAsnRaw, &asnInt)
+			err = json.Unmarshal(tgwAttachmentInfo.AwsSideAsnRaw, &asnInt)
 			if err != nil {
-				return nil, fmt.Errorf("json decode list_tgw_details aws_side_asn field failed: aws_side_asn = %s: %v", string(deviceAttachment.AwsSideAsnRaw), err)
+				return nil, fmt.Errorf("json decode get_tgw_attachment_details aws_side_asn field failed: aws_side_asn = %s: %w",
+					string(tgwAttachmentInfo.AwsSideAsnRaw), err)
 			}
 			asnString = strconv.Itoa(asnInt)
 		}
-		deviceAttachment.AwsSideAsn = asnString
+		tgwAttachmentInfo.AwsSideAsn = asnString
 	}
 
 	return &DeviceAwsTgwAttachment{
 		ConnectionName:          tgwAttachment.ConnectionName,
 		DeviceName:              tgwAttachment.DeviceName,
 		AwsTgwName:              tgwAttachment.AwsTgwName,
-		DeviceAsn:               deviceAttachment.AwsSideAsn,
-		SecurityDomainName:      deviceAttachment.SecurityDomainName,
-		EnableGlobalAccelerator: strconv.FormatBool(deviceAttachment.EnableGlobalAccelerator),
+		DeviceAsn:               tgwAttachmentInfo.AwsSideAsn,
+		SecurityDomainName:      tgwAttachmentInfo.SecurityDomainName,
+		EnableGlobalAccelerator: strconv.FormatBool(tgwAttachmentInfo.EnableGlobalAccelerator),
 	}, nil
 }
