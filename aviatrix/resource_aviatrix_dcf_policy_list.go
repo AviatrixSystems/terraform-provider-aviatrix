@@ -360,6 +360,10 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 
 	policyList, err := client.GetDCFPolicyList(ctx, uuid)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed to read Distributed-firewalling Policy List: %s", err)
 	}
 
