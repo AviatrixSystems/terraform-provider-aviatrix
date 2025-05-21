@@ -39,8 +39,8 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 							Required:    true,
 							Type:        schema.TypeInt,
 						},
-						"uuid": {
-							Description: "UUID of the DCF Policy Block.",
+						"target_uuid": {
+							Description: "Target UUID of the DCF Policy Block.",
 							Required:    true,
 							Type:        schema.TypeString,
 						},
@@ -63,8 +63,8 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 							Required:    true,
 							Type:        schema.TypeInt,
 						},
-						"uuid": {
-							Description: "UUID of the DCF Policy List.",
+						"target_uuid": {
+							Description: "Target UUID of the DCF Policy List.",
 							Required:    true,
 							Type:        schema.TypeString,
 						},
@@ -129,7 +129,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	}
 
 	if len(policyBlock.SubPolicies) == 0 {
-		return nil, fmt.Errorf("policy_object type must contain a sub-policy (block or list)")
+		return nil, fmt.Errorf("policy_block type must contain a sub-policy (block or list)")
 	}
 
 	policyBlock.UUID = d.Id()
@@ -143,19 +143,19 @@ func marshalSubPolicyBlockInput(subPolicyMap map[string]interface{}) (*goaviatri
 	subPolicy := &goaviatrix.DCFSubPolicy{}
 
 	if subPolicy.Name, ok = subPolicyMap["name"].(string); !ok {
-		return nil, fmt.Errorf("policy_object name must be of type string")
+		return nil, fmt.Errorf("policy_block name must be of type string")
 	}
 
 	if subPolicy.Priority, ok = subPolicyMap["priority"].(int); !ok {
-		return nil, fmt.Errorf("policy_object priority must be of type string")
+		return nil, fmt.Errorf("policy_block priority must be of type string")
 	}
 
-	uuid, ok := subPolicyMap["uuid"].(string)
+	target_uuid, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_object uuid must be of type string")
+		return nil, fmt.Errorf("policy_block target_uuid must be of type string")
 	}
 
-	subPolicy.Block = uuid
+	subPolicy.Block = target_uuid
 
 	return subPolicy, nil
 }
@@ -166,19 +166,19 @@ func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix
 	subPolicy := &goaviatrix.DCFSubPolicy{}
 
 	if subPolicy.Name, ok = subPolicyMap["name"].(string); !ok {
-		return nil, fmt.Errorf("policy_object name must be of type string")
+		return nil, fmt.Errorf("policy_list name must be of type string")
 	}
 
 	if subPolicy.Priority, ok = subPolicyMap["priority"].(int); !ok {
-		return nil, fmt.Errorf("policy_object priority must be of type string")
+		return nil, fmt.Errorf("policy_list priority must be of type string")
 	}
 
-	uuid, ok := subPolicyMap["uuid"].(string)
+	target_uuid, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_object uuid must be of type string")
+		return nil, fmt.Errorf("policy_list target_uuid must be of type string")
 	}
 
-	subPolicy.List = uuid
+	subPolicy.List = target_uuid
 
 	return subPolicy, nil
 }
