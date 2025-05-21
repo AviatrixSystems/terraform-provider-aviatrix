@@ -17,7 +17,6 @@ type DCFSubPolicy struct {
 	List     string `json:"list,omitempty"`
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
-	UUID     string `json:"uuid"`
 }
 
 func (c *Client) CreateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolicyBlock) (string, error) {
