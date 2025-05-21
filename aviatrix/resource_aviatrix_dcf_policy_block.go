@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -213,6 +214,10 @@ func resourceAviatrixDCFPolicyBlockRead(ctx context.Context, d *schema.ResourceD
 
 	policyBlock, err := client.GetDCFPolicyBlock(ctx, uuid)
 	if err != nil {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed to read DCF Policy List: %s", err)
 	}
 
