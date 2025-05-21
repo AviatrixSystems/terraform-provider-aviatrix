@@ -28,7 +28,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 				Description: "Name of the policy list.",
 			},
 			"policies": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Description: "List of distributed-firewalling policies.",
 				Elem: &schema.Resource{
@@ -162,12 +162,12 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 	}
 	policyList.Name = name
 
-	policies, ok := d.Get("policies").([]interface{})
+	policiesSet, ok := d.Get("policies").(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList policies must be of type []interface{}")
+		return nil, fmt.Errorf("PolicyList policies must be of type *schema.Set")
 	}
 
-	for _, policyInterface := range policies {
+	for _, policyInterface := range policiesSet.List() {
 		var ok bool
 
 		policyMap, ok := policyInterface.(map[string]interface{})
