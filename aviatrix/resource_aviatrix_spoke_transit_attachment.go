@@ -133,7 +133,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
-	timeout := 30 * time.Second
+	timeout := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
