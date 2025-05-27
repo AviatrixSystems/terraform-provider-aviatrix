@@ -1020,10 +1020,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		setComm := false
 		commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
 		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-		}
-		if acceptComm != commAcceptCurr || err != nil {
+		if ok && acceptComm != commAcceptCurr || err != nil {
 			setComm = true
 			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 			if err != nil {
@@ -1032,10 +1029,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		sendComm, ok := d.Get("bgp_send_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
-		}
-		if sendComm != commSendCurr || err != nil {
+		if ok && sendComm != commSendCurr || err != nil {
 			setComm = true
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 			if err != nil {
@@ -2474,10 +2468,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
 	if d.HasChange("bgp_accept_communities") {
 		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-		}
-		if acceptComm != commAcceptCurr || err != nil {
+		if ok && acceptComm != commAcceptCurr || err != nil {
 			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 			if err != nil {
 				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
@@ -2486,10 +2477,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("bgp_send_communities") {
 		sendComm, ok := d.Get("bgp_send_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
-		}
-		if sendComm != commSendCurr || err != nil {
+		if ok && sendComm != commSendCurr || err != nil {
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 			if err != nil {
 				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
@@ -4034,32 +4022,6 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		Transit:     true,
 	}
 
-	setComm := false
-	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
-	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-	if !ok {
-		return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-	}
-	if acceptComm != commAcceptCurr || err != nil {
-		setComm = true
-		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
-		if err != nil {
-			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
-		}
-	}
-
-	sendComm, ok := d.Get("bgp_send_communities").(bool)
-	if !ok {
-		return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
-	}
-	if sendComm != commSendCurr || err != nil {
-		setComm = true
-		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
-		if err != nil {
-			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
-		}
-	}
-
 	// get the interface config details
 	interfaces, ok := d.Get("interfaces").([]interface{})
 	if !ok || len(interfaces) == 0 {
@@ -4109,7 +4071,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
 	err = client.LaunchTransitVpc(gateway)
-	if err != nil && !setComm {
+	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
 	}
 	// create ha transit gateway if ha_interfaces are provided
@@ -4130,6 +4092,23 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	// for AEP EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Updates to the gateway while is in the process of being created will fail.
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		return nil
+	}
+
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+	if ok && acceptComm != commAcceptCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	sendComm, ok := d.Get("bgp_send_communities").(bool)
+	if ok && sendComm != commSendCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
 	}
 
 	// eip map is updated after the transit is created

@@ -670,10 +670,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	setComm := false
 	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
 	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-	if !ok {
-		return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-	}
-	if acceptComm != commAcceptCurr || err != nil {
+	if ok && acceptComm != commAcceptCurr || err != nil {
 		setComm = true
 		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 		if err != nil {
@@ -1869,10 +1866,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
 	if d.HasChange("bgp_accept_communities") {
 		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
-		}
-		if acceptComm != commAcceptCurr || err != nil {
+		if ok && acceptComm != commAcceptCurr || err != nil {
 			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
 			if err != nil {
 				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
