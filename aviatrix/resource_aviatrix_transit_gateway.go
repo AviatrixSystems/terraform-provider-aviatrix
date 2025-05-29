@@ -4114,6 +4114,18 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
+	// for edge the enable_jumbo_frame is set to false by default if not explicitly set by the user
+	if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+		enableJumboFrame, ok := val.(bool)
+		if !ok {
+			return fmt.Errorf("enable_jumbo_frame must be a boolean")
+		}
+		gateway.JumboFrame = enableJumboFrame // set to user-provided value
+	} else {
+		gateway.JumboFrame = false // new default for EAT's
+		_ = d.Set("enable_jumbo_frame", false)
+	}
+
 	// create the transit gateway
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
