@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -476,8 +477,9 @@ func testAccSmartGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetSmartGroup(context.Background(), rs.Primary.ID)
-		if err == nil || err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("smart group configured when it should be destroyed")
+		expectedError := "App domain not found"
+		if err == nil || !strings.Contains(err.Error(), expectedError) {
+			return fmt.Errorf("smart group configured when it should be destroyed, want %s, got: %w", expectedError, err)
 		}
 	}
 
