@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"sort"
 	"strconv"
@@ -425,4 +426,86 @@ func sortSpokeInterfacesByCustomOrder(interfaces []goaviatrix.MegaportInterface,
 		return iIndex < jIndex
 	})
 	return interfaces
+}
+
+// ValidateCIDRRule validates that the string is a valid CIDR rule in the format:
+// a.b.c.d/x [ge y] [le z] where x <= y <= z <= 32
+func ValidateCIDRRule(i interface{}, k string) (warnings []string, errors []error) {
+	cidrRuleStr, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return warnings, errors
+	}
+
+	// Helper function to add error
+	invalidRule := func(message string) {
+		errors = append(errors, fmt.Errorf("invalid CIDR rule %s: %s", cidrRuleStr, message))
+	}
+
+	// Validate the rule
+	parts := strings.Fields(cidrRuleStr)
+	if len(parts) != 1 && len(parts) != 3 && len(parts) != 5 {
+		invalidRule("invalid number of parts in rule")
+		return
+	}
+
+	// Validate the CIDR part
+	cidrPart := parts[0]
+	ip, ipNet, err := net.ParseCIDR(cidrPart)
+	if err != nil {
+		invalidRule(fmt.Sprintf("invalid CIDR %s", cidrPart))
+		return
+	}
+
+	// Ensure the CIDR is normalized (using existing functions from net package)
+	normalizedIP := ip.Mask(ipNet.Mask)
+	if !ip.Equal(normalizedIP) {
+		invalidRule(fmt.Sprintf("CIDR %s is not normalized, should be %s%s",
+			cidrPart, normalizedIP.String(), cidrPart[strings.LastIndex(cidrPart, "/"):]))
+		return
+	}
+
+	// Extract prefix length
+	prefixLen, _ := ipNet.Mask.Size()
+
+	// Handle rules with ge/le qualifiers
+	if len(parts) == 3 || len(parts) == 5 {
+		if parts[1] != "ge" && parts[1] != "le" {
+			invalidRule(fmt.Sprintf("invalid qualifier %s", parts[1]))
+			return
+		}
+
+		geLeLen, err := strconv.Atoi(parts[2])
+		if err != nil {
+			invalidRule(fmt.Sprintf("invalid value %s", parts[2]))
+			return
+		}
+
+		if prefixLen > geLeLen || geLeLen > 32 {
+			invalidRule(fmt.Sprintf("invalid ge/le_len %d", geLeLen))
+			return
+		}
+	}
+
+	// Handle rules with both ge and le qualifiers
+	if len(parts) == 5 {
+		if parts[1] != "ge" || parts[3] != "le" {
+			invalidRule(fmt.Sprintf("invalid qualifiers %s and %s", parts[1], parts[3]))
+			return
+		}
+
+		geLen, _ := strconv.Atoi(parts[2]) // We already validated this above
+		leLen, err := strconv.Atoi(parts[4])
+		if err != nil {
+			invalidRule(fmt.Sprintf("invalid le_len %s", parts[4]))
+			return
+		}
+
+		if prefixLen > geLen || geLen > leLen || leLen > 32 {
+			invalidRule("invalid prefix_len, ge_len, le_len relationship")
+			return
+		}
+	}
+
+	return
 }

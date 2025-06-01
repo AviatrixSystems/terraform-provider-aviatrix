@@ -2,9 +2,11 @@ package aviatrix
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSortSpokeInterfacesByCustomOrder(t *testing.T) {
@@ -65,4 +67,151 @@ func TestSortSpokeInterfacesByCustomOrder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateCIDRRule(t *testing.T) {
+	testCases := []struct {
+		name          string
+		rule          string
+		expectedError bool
+		errorContains string
+	}{
+		// Valid cases
+		{
+			name:          "simple CIDR",
+			rule:          "10.1.0.0/16",
+			expectedError: false,
+		},
+		{
+			name:          "CIDR with ge equal to prefix",
+			rule:          "10.1.0.0/16 ge 16",
+			expectedError: false,
+		},
+		{
+			name:          "CIDR with ge greater than prefix",
+			rule:          "10.1.0.0/16 ge 24",
+			expectedError: false,
+		},
+		{
+			name:          "CIDR with le only",
+			rule:          "10.1.0.0/16 le 24",
+			expectedError: false,
+		},
+		{
+			name:          "CIDR with ge and le",
+			rule:          "10.0.0.0/8 ge 16 le 24",
+			expectedError: false,
+		},
+		{
+			name:          "CIDR with equal ge and le",
+			rule:          "10.1.0.0/16 ge 24 le 24",
+			expectedError: false,
+		},
+
+		// Invalid cases
+		{
+			name:          "empty string",
+			rule:          "",
+			expectedError: true,
+			errorContains: "invalid number of parts",
+		},
+		{
+			name:          "invalid CIDR format",
+			rule:          "10.1.0.0.0/16",
+			expectedError: true,
+			errorContains: "invalid CIDR",
+		},
+		{
+			name:          "CIDR with invalid prefix",
+			rule:          "10.1.0.0/33",
+			expectedError: true,
+			errorContains: "invalid CIDR",
+		},
+		{
+			name:          "incorrect number of parts",
+			rule:          "10.1.0.0/16 ge",
+			expectedError: true,
+			errorContains: "invalid number of parts",
+		},
+		{
+			name:          "invalid qualifier",
+			rule:          "10.1.0.0/16 gt 24",
+			expectedError: true,
+			errorContains: "invalid qualifier",
+		},
+		{
+			name:          "non-numeric value for ge",
+			rule:          "10.1.0.0/16 ge abc",
+			expectedError: true,
+			errorContains: "invalid value",
+		},
+		{
+			name:          "ge less than prefix",
+			rule:          "10.1.0.0/24 ge 16",
+			expectedError: true,
+			errorContains: "invalid ge/le_len",
+		},
+		{
+			name:          "ge greater than 32",
+			rule:          "10.1.0.0/16 ge 33",
+			expectedError: true,
+			errorContains: "invalid ge/le_len",
+		},
+		{
+			name:          "wrong order of qualifiers",
+			rule:          "10.1.0.0/16 le 24 ge 16",
+			expectedError: true,
+			errorContains: "invalid qualifiers",
+		},
+		{
+			name:          "non-numeric value for le",
+			rule:          "10.1.0.0/16 ge 24 le xyz",
+			expectedError: true,
+			errorContains: "invalid le_len",
+		},
+		{
+			name:          "le less than ge",
+			rule:          "10.1.0.0/16 ge 24 le 20",
+			expectedError: true,
+			errorContains: "invalid prefix_len, ge_len, le_len relationship",
+		},
+		{
+			name:          "too many parts",
+			rule:          "10.1.0.0/16 ge 24 le 28 extra part",
+			expectedError: true,
+			errorContains: "invalid number of parts",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			warnings, errors := ValidateCIDRRule(tc.rule, "test_property")
+
+			// Warnings should always be empty in our implementation
+			assert.Empty(t, warnings, "Expected no warnings")
+
+			if tc.expectedError {
+				assert.NotEmpty(t, errors, "Expected validation errors, but got none")
+				if tc.errorContains != "" {
+					errorFound := false
+					for _, err := range errors {
+						if assert.Error(t, err) {
+							if contains(err.Error(), tc.errorContains) {
+								errorFound = true
+								break
+							}
+						}
+					}
+					assert.True(t, errorFound, "Expected error to contain '%s', but it didn't", tc.errorContains)
+				}
+			} else {
+				assert.Empty(t, errors, "Expected no validation errors, but got: %v", errors)
+			}
+		})
+	}
+}
+
+// Helper function to check if a string contains another string
+func contains(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
