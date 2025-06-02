@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -321,36 +320,6 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					},
 				},
 			},
-			"custom_interface_mapping": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"logical_ifname": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Logical interface name e.g., wan0, mgmt0, lan0.",
-							ValidateFunc: validation.StringMatch(
-								regexp.MustCompile(`^(wan|mgmt|lan)[0-9]+$`),
-								"Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').",
-							),
-						},
-						"identifier_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.",
-							ValidateFunc: validation.StringInSlice([]string{"mac", "pci", "system-assigned"}, false),
-						},
-						"identifier_value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.",
-							ValidateFunc: validateIdentifierValue,
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -388,10 +357,6 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 	}
 
 	if err := populateVlans(d, edgeSpoke); err != nil {
-		return nil, err
-	}
-
-	if err := populateCustomInterfaceMapping(d, edgeSpoke); err != nil {
 		return nil, err
 	}
 
@@ -620,28 +585,6 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		}
 	} else {
 		d.Set("approved_learned_cidrs", nil)
-	}
-
-	if len(edgeSpoke.CustomInterfaceMapping) != 0 {
-		// get the order of custom interface mapping
-		userCustomInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-		if !ok {
-			return diag.Errorf("failed to get custom_interface_mapping")
-		}
-		userCustomInterfaceOrder, err := getCustomInterfaceOrder(userCustomInterfaceMapping)
-		if err != nil {
-			return diag.Errorf("failed to get custom_interface_order: %s\n", err)
-		}
-		customInterfaceMapping, err := setCustomInterfaceMapping(edgeSpoke.CustomInterfaceMapping, userCustomInterfaceOrder)
-		if !ok {
-			return diag.Errorf("failed to get custom_interface_mapping: %s\n", err)
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("custom_interface_mapping", customInterfaceMapping); err != nil {
-			return diag.Errorf("failed to set custom_interface_mapping: %s\n", err)
-		}
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
@@ -909,10 +852,6 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT/VLAN interfaces, "+
 				"Edge active standby or Edge active standby preemptive during Edge as a Spoke update: %v", err)
 		}
-	}
-
-	if d.HasChange("custom_interface_mapping") {
-		return diag.Errorf("updating custom interface mapping after the selfmanaged Edge Gateway creation is not supported")
 	}
 
 	d.Partial(false)
