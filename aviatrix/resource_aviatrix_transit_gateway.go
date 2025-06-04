@@ -483,6 +483,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true for CSP transit gateways and false for edge transit gateways.",
 			},
 			"enable_gro_gso": {
@@ -911,6 +912,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"bgp_send_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway send configuration.",
+				Default:     false,
+			},
+			"bgp_accept_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway accept configuration.",
+				Default:     false,
+			},
 		},
 	}
 }
@@ -943,8 +956,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Transit:                  true,
 		}
 
-		// for CSPs the enable_jumbo_frame is set to true by default
-		if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
+		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
+		if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+			enableJumboFrame, ok := val.(bool)
+			if !ok {
+				return fmt.Errorf("enable_jumbo_frame must be a boolean")
+			}
+			gateway.JumboFrame = enableJumboFrame // set to user-provided value
+		} else {
+			gateway.JumboFrame = true // new default for CSPs
 			_ = d.Set("enable_jumbo_frame", true)
 		}
 
@@ -995,6 +1015,32 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.Zone = d.Get("vpc_reg").(string)
 		} else {
 			return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
+		}
+
+		setComm := false
+		commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
+		}
+		if acceptComm != commAcceptCurr || err != nil {
+			setComm = true
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
+		}
+		if sendComm != commSendCurr || err != nil {
+			setComm = true
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
 		}
 
 		insaneMode := d.Get("insane_mode").(bool)
@@ -1375,8 +1421,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		d.SetId(gateway.GwName)
 		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-		err := client.LaunchTransitVpc(gateway)
-		if err != nil {
+		err = client.LaunchTransitVpc(gateway)
+		if err != nil && !setComm {
 			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 		}
 
@@ -1866,6 +1912,19 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_name", gw.AccountName)
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
+
+	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+	}
+	err = d.Set("bgp_send_communities", sendComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+	}
+	err = d.Set("bgp_accept_communities", acceptComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	}
 
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
@@ -2412,6 +2471,31 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	// Clarification : Can the user update EAT interface after its created. Add/Delete EAT interface
 	d.Partial(true)
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if d.HasChange("bgp_accept_communities") {
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
+		}
+		if acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+	if d.HasChange("bgp_send_communities") {
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
+		}
+		if sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -3949,6 +4033,33 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		VpcSize:     d.Get("gw_size").(string),
 		Transit:     true,
 	}
+
+	setComm := false
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+	if !ok {
+		return fmt.Errorf("failed to assert bgp_accept_communities as a boolean")
+	}
+	if acceptComm != commAcceptCurr || err != nil {
+		setComm = true
+		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	sendComm, ok := d.Get("bgp_send_communities").(bool)
+	if !ok {
+		return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
+	}
+	if sendComm != commSendCurr || err != nil {
+		setComm = true
+		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
 	// get the interface config details
 	interfaces, ok := d.Get("interfaces").([]interface{})
 	if !ok || len(interfaces) == 0 {
@@ -3998,7 +4109,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 	d.SetId(gateway.GwName)
 	err = client.LaunchTransitVpc(gateway)
-	if err != nil {
+	if err != nil && !setComm {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %w", err)
 	}
 	// create ha transit gateway if ha_interfaces are provided

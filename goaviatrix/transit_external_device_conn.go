@@ -31,6 +31,7 @@ type ExternalDeviceConn struct {
 	ConnectionType         string `form:"routing_protocol,omitempty"`
 	BgpLocalAsNum          int    `form:"bgp_local_as_number,omitempty"`
 	BgpRemoteAsNum         int    `form:"external_device_as_number,omitempty"`
+	BgpSendCommunities     string `json:"conn_bgp_send_communities,omitempty"`
 	RemoteGatewayIP        string `form:"external_device_ip_address,omitempty"`
 	RemoteSubnet           string `form:"remote_subnet,omitempty"`
 	DirectConnect          string `form:"direct_connect,omitempty"`
@@ -88,6 +89,7 @@ type EditExternalDeviceConnDetail struct {
 	BgpLocalAsNum          string        `json:"bgp_local_asn_number,omitempty"`
 	BgpRemoteAsNum         string        `json:"bgp_remote_asn_number,omitempty"`
 	BgpStatus              string        `json:"bgp_status,omitempty"`
+	BgpSendCommunities     string        `json:"conn_bgp_send_communities,omitempty"`
 	EnableBgpLanActiveMesh bool          `json:"bgp_lan_activemesh,omitempty"`
 	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
 	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
@@ -140,6 +142,16 @@ type EditBgpMd5Key struct {
 	GwName         string `form:"gateway_name,omitempty"`
 	BgpMd5Key      string `form:"bgp_md5_key,omitempty"`
 	BgpRemoteIP    string `form:"bgp_remote_ip,omitempty"`
+}
+
+type BgpSendCommunities struct {
+	Action              string `form:"action,omitempty"`
+	CID                 string `form:"CID,omitempty"`
+	ConnectionName      string `form:"connection_name,omitempty"`
+	GwName              string `form:"gateway_name,omitempty"`
+	ConnSendCommunities string `form:"connection_bgp_send_communities,omitempty"`
+	ConnSendAdditive    bool   `form:"connection_bgp_send_communities_additive,omitempty"`
+	ConnSendBlock       bool   `form:"connection_bgp_send_communities_block,omitempty"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -210,6 +222,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.ConnectionType = "static"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
+		externalDeviceConn.BgpSendCommunities = externalDeviceConnDetail.BgpSendCommunities
 
 		// GRE and LAN tunnels cannot set Algorithms
 		if externalDeviceConn.TunnelProtocol != "GRE" && externalDeviceConn.TunnelProtocol != "LAN" {
@@ -573,4 +586,21 @@ func (c *Client) DisableJumboFrameExternalDeviceConn(externalDeviceConn *Externa
 	}
 
 	return c.PostAPI(externalDeviceConn.Action, params, checkFunc)
+}
+
+func (c *Client) ConnectionBGPSendCommunities(bgpSendCommunities *BgpSendCommunities) error {
+	bgpSendCommunities.CID = c.CID
+	bgpSendCommunities.Action = "edit_connection_bgp_send_communities"
+
+	params := map[string]string{
+		"CID":                             c.CID,
+		"action":                          "edit_connection_bgp_send_communities",
+		"gateway_name":                    bgpSendCommunities.GwName,
+		"connection_name":                 bgpSendCommunities.ConnectionName,
+		"connection_bgp_send_communities": bgpSendCommunities.ConnSendCommunities,
+		"connection_bgp_send_communities_additive": fmt.Sprint(bgpSendCommunities.ConnSendAdditive),
+		"connection_bgp_send_communities_block":    fmt.Sprint(bgpSendCommunities.ConnSendBlock),
+	}
+
+	return c.PostAPI(params["action"], params, BasicCheck)
 }

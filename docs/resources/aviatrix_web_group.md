@@ -29,7 +29,7 @@ resource "aviatrix_web_group" "test_web_group_ip" {
   name = "web-group"
   selector {
     match_expressions {
-      urlfilter = "https://aviatrix.com/test"
+      urlfilter = "aviatrix.com/test"
     }
   }
 }

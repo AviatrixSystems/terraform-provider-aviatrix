@@ -41,6 +41,19 @@ data "azurerm_kubernetes_cluster" "aks_cluster" {
 ```
 
 ```hcl
+# Register an GKE cluster so that the controller allows building Aviatrix Smart Groups from its workloads
+resource "aviatrix_kubernetes_cluster" "gke_cluster" {
+  cluster_id          = data.google_container_cluster.gke_cluster.self_link
+  use_csp_credentials = true
+}
+
+data "google_container_cluster" "gke_cluster" {
+  name     = "mycluster"
+  location = "us-central1"
+}
+```
+
+```hcl
 # Register a custom built cluster in AWS so that the controller allows building Aviatrix Smart Groups from its workloads
 data "aws_vpc" "vpc" {
   tags = {
