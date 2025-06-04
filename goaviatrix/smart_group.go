@@ -108,6 +108,10 @@ func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupM
 func setFilterInterface(filterField *string, filterMap map[string]interface{}, fieldKey string) {
 	if val, ok := filterMap[fieldKey]; ok {
 		*filterField = val.(string)
+		if fieldKey == RegionKey {
+			// Ensure that the region is always in lowercase, no-space
+			*filterField = strings.ToLower(strings.ReplaceAll(*filterField, " ", ""))
+		}
 	}
 }
 
