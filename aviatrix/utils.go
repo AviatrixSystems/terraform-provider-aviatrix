@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"sort"
 	"strconv"
@@ -425,4 +426,64 @@ func sortSpokeInterfacesByCustomOrder(interfaces []goaviatrix.MegaportInterface,
 		return iIndex < jIndex
 	})
 	return interfaces
+}
+
+// ValidateCIDRRule validates that the string is a valid CIDR rule in the format:
+// a.b.c.d/x [ge y] [le z] where x <= y <= z <= 32
+func ValidateCIDRRule(v interface{}, k string) ([]string, []error) {
+	cidrRuleStr, ok := v.(string)
+	if !ok {
+		return nil, []error{fmt.Errorf("%q must be a string, got %T", k, v)}
+	}
+	// Validate the rule
+	fields := strings.Fields(cidrRuleStr)
+	if len(fields) != 1 && len(fields) != 3 && len(fields) != 5 {
+		return nil, []error{fmt.Errorf("invalid CIDR rule %s: invalid number of fields in rule", cidrRuleStr)}
+	}
+	// Parse and validate the CIDR is IPv4
+	ip, netCIDR, err := net.ParseCIDR(fields[0])
+	if err != nil || ip.To4() == nil {
+		return nil, []error{fmt.Errorf("invalid CIDR rule %s: invalid IPv4 CIDR %q", cidrRuleStr, fields[0])}
+	}
+	// Ensure the CIDR is in canonical form
+	if fields[0] != netCIDR.String() {
+		return nil, []error{fmt.Errorf("invalid CIDR rule %s: CIDR %q is not canonical; use %q",
+			cidrRuleStr, fields[0], netCIDR.String())}
+	}
+	if len(fields) == 1 {
+		return nil, nil
+	}
+	// Extract prefix length
+	prefixLen, _ := netCIDR.Mask.Size()
+	var ge, le *int
+	for i := 1; i < len(fields); i += 2 {
+		n, err := strconv.Atoi(fields[i+1])
+		if err != nil {
+			return nil, []error{fmt.Errorf("invalid CIDR rule %s: invalid value %q", cidrRuleStr, fields[i+1])}
+		}
+		switch fields[i] {
+		case "ge":
+			if ge != nil {
+				return nil, []error{fmt.Errorf("invalid CIDR rule %s: duplicate 'ge' qualifier", cidrRuleStr)}
+			}
+			if i > 1 && fields[i-2] == "le" {
+				return nil, []error{fmt.Errorf("invalid CIDR rule %s: 'ge' must come before 'le'", cidrRuleStr)}
+			}
+			ge = &n
+		case "le":
+			if le != nil {
+				return nil, []error{fmt.Errorf("invalid CIDR rule %s: duplicate 'le' qualifier", cidrRuleStr)}
+			}
+			le = &n
+		default:
+			return nil, []error{fmt.Errorf("invalid CIDR rule %s: unknown qualifier %q", cidrRuleStr, fields[i])}
+		}
+		if n < prefixLen || n > 32 {
+			return nil, []error{fmt.Errorf("invalid CIDR rule %s: length %d out of range", cidrRuleStr, n)}
+		}
+	}
+	if ge != nil && le != nil && *ge > *le {
+		return nil, []error{fmt.Errorf("invalid CIDR rule %s: ge length %d > le length %d", cidrRuleStr, *ge, *le)}
+	}
+	return nil, nil
 }
