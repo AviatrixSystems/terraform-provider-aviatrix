@@ -652,11 +652,11 @@ func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	defer w.Close()
 	_, err = w.Write(args)
 	if err != nil {
 		return err
 	}
+	w.Close() // Ensure all data is flushed
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
@@ -681,11 +681,11 @@ func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	defer w.Close()
 	_, err = w.Write(args)
 	if err != nil {
 		return err
 	}
+	w.Close() // Ensure all data is flushed
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
