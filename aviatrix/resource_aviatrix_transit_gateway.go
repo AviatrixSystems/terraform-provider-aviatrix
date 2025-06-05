@@ -318,7 +318,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
+					ValidateFunc: ValidateCIDRRule,
 				},
 				Optional:    true,
 				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",

@@ -412,7 +412,7 @@ func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) erro
 func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "enable_transit_learned_cidrs_approval",
+		"action":       "enable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -422,7 +422,7 @@ func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "disable_transit_learned_cidrs_approval",
+		"action":       "disable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -431,10 +431,10 @@ func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 
 func (c *Client) UpdateTransitPendingApprovedCidrs(gateway *TransitVpc) error {
 	form := map[string]string{
-		"CID":                    c.CID,
-		"action":                 "update_transit_pending_approved_cidrs",
-		"gateway_name":           gateway.GwName,
-		"approved_learned_cidrs": strings.Join(gateway.ApprovedLearnedCidrs, ","),
+		"CID":          c.CID,
+		"action":       "set_bgp_gateway_approved_cidr_rules",
+		"gateway_name": gateway.GwName,
+		"cidr_rules":   strings.Join(gateway.ApprovedLearnedCidrs, ","),
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -583,7 +583,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 
 func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string) error {
 	data := map[string]string{
-		"action":       "set_transit_learned_cidrs_approval_mode",
+		"action":       "set_bgp_gateway_cidr_approval_mode",
 		"CID":          c.CID,
 		"gateway_name": gw.GwName,
 		"mode":         mode,
@@ -593,7 +593,7 @@ func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string)
 
 func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "enable_transit_connection_learned_cidrs_approval",
+		"action":          "enable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -603,7 +603,7 @@ func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName str
 
 func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "disable_transit_connection_learned_cidrs_approval",
+		"action":          "disable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -613,11 +613,11 @@ func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName st
 
 func (c *Client) UpdateTransitConnectionPendingApprovedCidrs(gwName, connName string, approvedCidrs []string) error {
 	data := map[string]string{
-		"action":                            "update_transit_connection_pending_approved_cidrs",
-		"CID":                               c.CID,
-		"gateway_name":                      gwName,
-		"connection_name":                   connName,
-		"connection_approved_learned_cidrs": strings.Join(approvedCidrs, ","),
+		"action":          "set_bgp_connection_approved_cidr_rules",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+		"cidr_rules":      strings.Join(approvedCidrs, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
