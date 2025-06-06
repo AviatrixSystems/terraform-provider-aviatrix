@@ -1017,26 +1017,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
 		}
 
-		setComm := false
-		commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
-		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
-		if ok && acceptComm != commAcceptCurr || err != nil {
-			setComm = true
-			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
-			if err != nil {
-				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
-			}
-		}
-
-		sendComm, ok := d.Get("bgp_send_communities").(bool)
-		if ok && sendComm != commSendCurr || err != nil {
-			setComm = true
-			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
-			if err != nil {
-				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
-			}
-		}
-
 		insaneMode := d.Get("insane_mode").(bool)
 		if insaneMode {
 			// Insane Mode encryption is not supported in China regions
@@ -1415,8 +1395,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		d.SetId(gateway.GwName)
 		defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-		err = client.LaunchTransitVpc(gateway)
-		if err != nil && !setComm {
+		err := client.LaunchTransitVpc(gateway)
+		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 		}
 
@@ -1431,6 +1411,24 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+			}
+		}
+
+		/* Set BGP communities per gateway */
+		commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if ok && acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if ok && sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 
