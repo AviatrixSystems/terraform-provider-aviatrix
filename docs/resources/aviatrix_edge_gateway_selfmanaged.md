@@ -31,6 +31,8 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
     ip_address    = "10.230.5.32/24"
     gateway_ip    = "10.230.5.100"
     wan_public_ip = "64.71.24.221"
+    dns_server_ip = "8.8.8.8"
+    secondary_dns_server_ip = "9.9.9.9"
   }
 
   interfaces {
@@ -65,6 +67,8 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `dns_server_ip` - (Optional) Primary DNS server IP.
+  * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
   * `enable_vrrp` - (Optional) Enable VRRP. Valid values: true, false. Default value: false.
   * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
   * `tag` - (Optional) Tag.
@@ -113,3 +117,6 @@ In addition to all arguments above, the following attribute is exported:
 ```
 $ terraform import aviatrix_edge_gateway_selfmanaged.test gw_name
 ```
+
+## Deprecations
+* Deprecated ``dns_server_ip`` and ``secondary_dns_server_ip``. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**. It will be removed from the Aviatrix provider in the 8.1.0 release.

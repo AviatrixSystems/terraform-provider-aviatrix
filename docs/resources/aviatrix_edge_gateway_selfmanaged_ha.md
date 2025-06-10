@@ -21,8 +21,6 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
   site_id                 = "site-123"
   ztp_file_type           = "iso"
   ztp_file_download_path  = "/ztp/download/path"
-  dns_server_ip           = "8.8.8.8"
-  secondary_dns_server_ip = "8.8.6.6"
 
   interfaces {
     name          = "eth0"
@@ -30,6 +28,8 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
     ip_address    = "10.230.6.32/24"
     gateway_ip    = "10.230.6.100"
     wan_public_ip = "64.71.25.221"
+    dns_server_ip = "8.8.8.8"
+    secondary_dns_server_ip = "8.8.6.6"
   }
 
   interfaces {
@@ -63,6 +63,8 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `dns_server_ip` - (Optional) Primary DNS server IP.
+  * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
@@ -76,3 +78,6 @@ The following arguments are supported:
 ```
 $ terraform import aviatrix_edge_gateway_selfmanaged_ha.test primary_gw_name-hagw
 ```
+
+## Deprecations
+* Deprecated ``dns_server_ip`` and ``secondary_dns_server_ip``. These configuration values have no effect and have been replaced with ``dns_server_ip`` and  ``secondary_dns_server_ip`` present in **WAN/LAN/MGMT interfaces**. It will be removed from the Aviatrix provider in the 8.1.0 release.

@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -109,6 +108,10 @@ func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupM
 func setFilterInterface(filterField *string, filterMap map[string]interface{}, fieldKey string) {
 	if val, ok := filterMap[fieldKey]; ok {
 		*filterField = val.(string)
+		if fieldKey == RegionKey {
+			// Ensure that the region is always in lowercase, no-space
+			*filterField = strings.ToLower(strings.ReplaceAll(*filterField, " ", ""))
+		}
 	}
 }
 
@@ -198,57 +201,52 @@ func makeSmartGroupForm(smartGroup *SmartGroup) map[string]interface{} {
 
 func (c *Client) CreateSmartGroup(ctx context.Context, smartGroup *SmartGroup) (string, error) {
 	form := makeSmartGroupForm(smartGroup)
-	return c.appdomainCache.Create(ctx, c, form)
+	var data SmartGroupResp
+	if err := c.PostAPIContext25(ctx, &data, ApiEndpoint, form); err != nil {
+		return "", err
+	}
+	return data.UUID, nil
 }
 
 func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, error) {
-	g, err := c.appdomainCache.Get(ctx, c, uuid)
+	endpoint := fmt.Sprintf("app-domains/%s", uuid)
+
+	var response SmartGroupResult
+
+	err := c.GetAPIContext25(ctx, &response, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	result := SmartGroupResult{
-		UUID: g.UUID,
-		Name: g.Name,
-	}
-
-	if err := json.Unmarshal(g.Selector, &result.Selector); err != nil {
-		return nil, err
-	}
-
-	return createSmartGroup(result), nil
+	return createSmartGroup(response), nil
 }
 
 func (c *Client) UpdateSmartGroup(ctx context.Context, smartGroup *SmartGroup, uuid string) error {
+	endpoint := fmt.Sprintf("app-domains/%s", uuid)
 	form := makeSmartGroupForm(smartGroup)
-	return c.appdomainCache.Update(ctx, c, uuid, form)
+	return c.PutAPIContext25(ctx, endpoint, form)
 }
 
 func (c *Client) DeleteSmartGroup(ctx context.Context, uuid string) error {
-	return c.appdomainCache.Delete(ctx, c, uuid)
+	endpoint := fmt.Sprintf("app-domains/%s", uuid)
+	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
 
 func (c *Client) GetSmartGroups(ctx context.Context) ([]*SmartGroup, error) {
-	groups, err := c.appdomainCache.List(ctx, c)
+	endpoint := "app-domains"
+
+	var data SmartGroupResp
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	smartGroups := make([]*SmartGroup, 0, len(groups))
-
-	for _, g := range groups {
-		result := SmartGroupResult{
-			UUID: g.UUID,
-			Name: g.Name,
+	var smartGroups []*SmartGroup
+	for _, smartGroupResult := range data.SmartGroups {
+		if smartGroupResult.UUID != "" {
+			smartGroups = append(smartGroups, createSmartGroup(smartGroupResult))
 		}
-
-		if err := json.Unmarshal(g.Selector, &result.Selector); err != nil {
-			return nil, err
-		}
-
-		smartGroups = append(smartGroups, createSmartGroup(result))
 	}
-
 	return smartGroups, nil
 }
 
