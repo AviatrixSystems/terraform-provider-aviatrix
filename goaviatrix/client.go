@@ -63,7 +63,6 @@ type Client struct {
 	IgnoreTagsConfig *IgnoreTagsConfig
 	cachedAccounts   []Account
 	cacheMutex       sync.Mutex
-	appdomainCache   AppdomainCache
 }
 
 type GetApiTokenResp struct {

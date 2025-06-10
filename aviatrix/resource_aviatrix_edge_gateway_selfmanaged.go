@@ -243,6 +243,16 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
 						"enable_vrrp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
@@ -314,7 +324,7 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 	}
 }
 
-func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
+func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.EdgeSpoke, error) {
 	edgeSpoke := &goaviatrix.EdgeSpoke{
 		GwName:                             d.Get("gw_name").(string),
 		SiteId:                             d.Get("site_id").(string),
@@ -342,56 +352,25 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) *goaviatrix.Edge
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
-	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
-
-		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:    if1["name"].(string),
-			Type:      if1["type"].(string),
-			Dhcp:      if1["enable_dhcp"].(bool),
-			PublicIp:  if1["wan_public_ip"].(string),
-			IpAddr:    if1["ip_address"].(string),
-			GatewayIp: if1["gateway_ip"].(string),
-			Tag:       if1["tag"].(string),
-		}
-
-		// vrrp and vrrp_virtual_ip are only applicable for LAN interfaces
-		if if1["type"].(string) == "LAN" {
-			if2.VrrpState = if1["enable_vrrp"].(bool)
-			if2.VirtualIp = if1["vrrp_virtual_ip"].(string)
-		}
-
-		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
+	if err := populateInterfaces(d, edgeSpoke); err != nil {
+		return nil, err
 	}
 
-	vlan := d.Get("vlan").(*schema.Set).List()
-	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
-
-		vlan2 := &goaviatrix.EdgeSpokeVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
-		}
-
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
-
-		edgeSpoke.VlanList = append(edgeSpoke.VlanList, vlan2)
+	if err := populateVlans(d, edgeSpoke); err != nil {
+		return nil, err
 	}
 
-	return edgeSpoke
+	return edgeSpoke, nil
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeSpoke := marshalEdgeGatewaySelfmanagedInput(d)
+	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// checks before creation
 	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
@@ -635,7 +614,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
-	for _, if0 := range edgeSpoke.InterfaceList {
+	interfaceList := edgeSpoke.InterfaceList
+	for _, if0 := range interfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
@@ -643,6 +623,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		if1["wan_public_ip"] = if0.PublicIp
 		if1["ip_address"] = if0.IpAddr
 		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DNSPrimary
+		if1["secondary_dns_server_ip"] = if0.DNSSecondary
 		if1["tag"] = if0.Tag
 
 		// set vrrp and vrrp_virtual_ip only for LAN interfaces
@@ -688,7 +670,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	client := meta.(*goaviatrix.Client)
 
 	// read configs
-	edgeSpoke := marshalEdgeGatewaySelfmanagedInput(d)
+	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// checks before update
 	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
