@@ -1262,6 +1262,14 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if err != nil {
 			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
 		}
+		err = d.Set("connection_bgp_send_communities_additive", conn.BgpSendCommunitiesAdditive)
+		if err != nil {
+			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
+		}
+		err = d.Set("connection_bgp_send_communities_block", conn.BgpSendCommunitiesBlock)
+		if err != nil {
+			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
