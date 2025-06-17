@@ -65,7 +65,7 @@ type SpokeGatewayAdvancedConfig struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
-	PeerVnetId                        []string
+	PeerVnetID                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
 	ApprovedLearnedCidrs              []string
@@ -89,7 +89,7 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
-	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	PeerVnetID                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
 	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
@@ -246,7 +246,7 @@ func (c *Client) GetSpokeGatewayAdvancedConfig(spokeGateway *SpokeVpc) (*SpokeGa
 		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
-		PeerVnetId:                        data.Results.PeerVnetId,
+		PeerVnetID:                        data.Results.PeerVnetID,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
 		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,
