@@ -42,7 +42,7 @@ type EdgeExternalDeviceConn struct {
 	ManualBGPCidrs             []string
 	TunnelProtocol             string `json:"tunnel_protocol,omitempty"`
 	EnableBgpLanActiveMesh     bool   `json:"bgp_lan_activemesh,omitempty"`
-	PeerVnetId                 string `json:"peer_vnet_id,omitempty"`
+	PeerVnetID                 string `json:"peer_vnet_id,omitempty"`
 	RemoteLanIP                string `json:"remote_lan_ip,omitempty"`
 	LocalLanIP                 string `json:"local_lan_ip,omitempty"`
 	BackupRemoteLanIP          string `json:"backup_remote_lan_ip,omitempty"`

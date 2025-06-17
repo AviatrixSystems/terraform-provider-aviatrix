@@ -515,7 +515,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
-		PeerVnetId:             d.Get("remote_vpc_name").(string),
+		PeerVnetID:             d.Get("remote_vpc_name").(string),
 		RemoteLanIP:            d.Get("remote_lan_ip").(string),
 		LocalLanIP:             d.Get("local_lan_ip").(string),
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
@@ -739,7 +739,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
 		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
 	}
-	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+	if externalDeviceConn.PeerVnetID != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
 	}
 	if externalDeviceConn.TunnelProtocol == "LAN" {
@@ -1199,7 +1199,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("tunnel_protocol", conn.TunnelProtocol)
 		}
 		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_vpc_name", conn.PeerVnetId)
+			err = d.Set("remote_vpc_name", conn.PeerVnetID)
+			if err != nil {
+				return fmt.Errorf("could not set value for remote_vpc_name: %w", err)
+			}
 		}
 
 		if conn.Phase1RemoteIdentifier != "" {
