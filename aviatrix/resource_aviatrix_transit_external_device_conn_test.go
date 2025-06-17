@@ -323,6 +323,9 @@ func TestAccAviatrixEdgeTransitExternalDeviceConn(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "gw_name", "e2e-edge-transit-2"),
 					resource.TestCheckResourceAttr(rName, "enable_jumbo_frame", "true"),
 					resource.TestCheckResourceAttr(rName, "tunnel_src_ip", "192.168.20.117,192.168.23.16"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities", "444:444"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities_additive", "true"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities_block", "false"),
 				),
 			},
 			{
@@ -359,5 +362,8 @@ func testAccEdgeTransitExternalDeviceConnConfig() string {
 	backup_direct_connect     = true
 	backup_pre_shared_key         = "aviatrix,aviatrix"
 	tunnel_src_ip  = "192.168.20.117,192.168.23.16"
+	connection_bgp_send_communities           = "444:444"
+	connection_bgp_send_communities_additive  = true
+	connection_bgp_send_communities_block     = false
 	}`
 }
