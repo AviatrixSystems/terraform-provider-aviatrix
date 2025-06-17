@@ -859,7 +859,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			err = client.ConnectionBGPSendCommunities(bgpSendCommunities)
 		}
 		if err != nil {
-			return fmt.Errorf("failed to set/block BGP communities for connection %s: %s", externalDeviceConn.ConnectionName, err)
+			return fmt.Errorf("failed to set/block BGP communities for connection %s: %w", externalDeviceConn.ConnectionName, err)
 		}
 		break
 	}
