@@ -241,7 +241,24 @@
       "inputs": {
         "devenv": "devenv",
         "nixpkgs": "nixpkgs_3",
+        "stable": "stable",
         "systems": "systems"
+      }
+    },
+    "stable": {
+      "locked": {
+        "lastModified": 1750115571,
+        "narHash": "sha256-JqZzHpwoqPMuFUnj59KxjRFdSstLpUYAkX2+8jVh3p4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "6a373cbe418339ff4783653b6b86aaf9e4602031",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "release-25.05",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "systems": {
