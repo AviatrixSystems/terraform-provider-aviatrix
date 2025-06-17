@@ -451,7 +451,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		Phase2Encryption:       d.Get("phase_2_encryption").(string),
 		BackupRemoteGatewayIP:  d.Get("backup_remote_gateway_ip").(string),
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
-		PeerVnetID:             d.Get("remote_vpc_name").(string),
+		PeerVnetId:             d.Get("remote_vpc_name").(string),
 		RemoteLanIP:            d.Get("remote_lan_ip").(string),
 		LocalLanIP:             d.Get("local_lan_ip").(string),
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
@@ -627,7 +627,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
 		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
 	}
-	if externalDeviceConn.PeerVnetID != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
 	}
 	if externalDeviceConn.TunnelProtocol == "LAN" {
@@ -1036,7 +1036,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("tunnel_protocol", conn.TunnelProtocol)
 		}
 		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_vpc_name", conn.PeerVnetID)
+			d.Set("remote_vpc_name", conn.PeerVnetId)
 		}
 
 		if conn.Phase1RemoteIdentifier != "" {

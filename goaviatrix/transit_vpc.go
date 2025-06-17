@@ -88,7 +88,7 @@ type TransitGatewayAdvancedConfig struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
-	PeerVnetID                        []string
+	PeerVnetId                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
 	ApprovedLearnedCidrs              []string
@@ -111,7 +111,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
-	PeerVnetID                        []string                  `json:"peer_vnet_id"`
+	PeerVnetId                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
 	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
@@ -574,7 +574,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
-		PeerVnetID:                        data.Results.PeerVnetID,
+		PeerVnetId:                        data.Results.PeerVnetId,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
 		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,

@@ -59,7 +59,7 @@ type ExternalDeviceConn struct {
 	ManualBGPCidrs             []string
 	TunnelProtocol             string `form:"tunnel_protocol,omitempty"`
 	EnableBgpLanActiveMesh     bool   `form:"bgp_lan_activemesh,omitempty"`
-	PeerVnetID                 string `form:"peer_vnet_id,omitempty"`
+	PeerVnetId                 string `form:"peer_vnet_id,omitempty"`
 	RemoteLanIP                string `form:"remote_lan_ip,omitempty"`
 	LocalLanIP                 string `form:"local_lan_ip,omitempty"`
 	BackupRemoteLanIP          string `form:"backup_remote_lan_ip,omitempty"`
@@ -114,7 +114,7 @@ type EditExternalDeviceConnDetail struct {
 	PreSharedKey               string
 	BackupPreSharedKey         string
 	IkeVer                     string         `json:"ike_ver,omitempty"`
-	PeerVnetID                 string         `json:"peer_vnet_id,omitempty"`
+	PeerVnetId                 string         `json:"peer_vnet_id,omitempty"`
 	RemoteLanIP                string         `json:"remote_lan_ip,omitempty"`
 	LocalLanIP                 string         `json:"local_lan_ip,omitempty"`
 	BackupRemoteLanIP          string         `json:"backup_remote_lan_ip,omitempty"`
@@ -359,7 +359,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		}
 		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 		externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
-		externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
+		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
