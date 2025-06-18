@@ -32,8 +32,8 @@ type ExternalDeviceConn struct {
 	BgpLocalAsNum              int    `form:"bgp_local_as_number,omitempty"`
 	BgpRemoteAsNum             int    `form:"external_device_as_number,omitempty"`
 	BgpSendCommunities         string `json:"conn_bgp_send_communities,omitempty"`
-	BgpSendCommunitiesAdditive string `json:"conn_bgp_send_communities_additive,omitempty"`
-	BgpSendCommunitiesBlock    string `json:"conn_bgp_send_communities_block,omitempty"`
+	BgpSendCommunitiesAdditive bool   `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool   `json:"conn_bgp_send_communities_block,omitempty"`
 	RemoteGatewayIP            string `form:"external_device_ip_address,omitempty"`
 	RemoteSubnet               string `form:"remote_subnet,omitempty"`
 	DirectConnect              string `form:"direct_connect,omitempty"`
@@ -92,8 +92,8 @@ type EditExternalDeviceConnDetail struct {
 	BgpRemoteAsNum             string        `json:"bgp_remote_asn_number,omitempty"`
 	BgpStatus                  string        `json:"bgp_status,omitempty"`
 	BgpSendCommunities         string        `json:"conn_bgp_send_communities,omitempty"`
-	BgpSendCommunitiesAdditive string        `json:"conn_bgp_send_communities_additive,omitempty"`
-	BgpSendCommunitiesBlock    string        `json:"conn_bgp_send_communities_block,omitempty"`
+	BgpSendCommunitiesAdditive bool          `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool          `json:"conn_bgp_send_communities_block,omitempty"`
 	EnableBgpLanActiveMesh     bool          `json:"bgp_lan_activemesh,omitempty"`
 	RemoteGatewayIP            string        `json:"peer_ip,omitempty"`
 	RemoteSubnet               string        `json:"remote_cidr,omitempty"`
