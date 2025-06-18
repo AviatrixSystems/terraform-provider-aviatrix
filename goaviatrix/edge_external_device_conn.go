@@ -15,8 +15,8 @@ type EdgeExternalDeviceConn struct {
 	BgpLocalAsNum              int    `json:"local_asn,omitempty"`
 	BgpRemoteAsNum             int    `json:"external_device_asn,omitempty"`
 	BgpSendCommunities         string `json:"conn_bgp_send_communities,omitempty"`
-	BgpSendCommunitiesAdditive string `json:"conn_bgp_send_communities_additive,omitempty"`
-	BgpSendCommunitiesBlock    string `json:"conn_bgp_send_communities_block,omitempty"`
+	BgpSendCommunitiesAdditive bool   `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool   `json:"conn_bgp_send_communities_block,omitempty"`
 	RemoteGatewayIP            string `json:"external_device_ip_address,omitempty"`
 	RemoteSubnet               string `json:"remote_subnet,omitempty"`
 	DirectConnect              string `json:"direct_connect,omitempty"`
