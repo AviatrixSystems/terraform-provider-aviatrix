@@ -1905,17 +1905,20 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
 
-	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
-	if err != nil {
-		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
-	}
-	err = d.Set("bgp_send_communities", sendComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
-	}
-	err = d.Set("bgp_accept_communities", acceptComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	// get the gateway bgp communities details only if gw size is not UNKNOWN or empty
+	if gw.GwSize != "UNKNOWN" && gw.GwSize != "" {
+		sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+		err = d.Set("bgp_send_communities", sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+		}
+		err = d.Set("bgp_accept_communities", acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+		}
 	}
 
 	// edge cloud type
