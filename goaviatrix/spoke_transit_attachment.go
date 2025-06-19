@@ -30,6 +30,7 @@ type SpokeTransitAttachment struct {
 	SpokeGatewayLogicalIfNames   []string `form:"spoke_gw_logical_ifnames,omitempty" json:"spoke_gw_logical_ifnames,omitempty"`
 	TransitGatewayLogicalIfNames []string `form:"transit_gw_logical_ifnames,omitempty" json:"transit_gw_logical_ifnames,omitempty"`
 	DisableActivemesh            bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
+	EnableFirenetForEdge         bool     `form:"enable_firenet_for_edge,omitempty" json:"enable_firenet_for_edge"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {
@@ -49,6 +50,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	SpokeGatewayLogicalIfNames   []string   `json:"src_gw_logical_ifnames"`
 	TransitGatewayLogicalIfNames []string   `json:"dst_wan_interfaces"`
 	DisableActivemesh            bool       `json:"disable_activemesh,omitempty"`
+	EnableFirenetForEdge         bool       `json:"enable_firenet_for_edge,omitempty"`
 }
 
 type SiteDetail struct {
