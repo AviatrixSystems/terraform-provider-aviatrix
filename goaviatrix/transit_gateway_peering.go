@@ -83,7 +83,7 @@ type TransitGatewayPeeringDetailsResults struct {
 	Gateway2LogicalIfNames []string                    `json:"dst_wan_interfaces"`
 	InsaneMode             bool                        `json:"insane_mode"`
 	DisableActivemesh      bool                        `json:"disable_activemesh,omitempty"`
-	EnableFirenetForEdge   bool                        `json:"enable_firenet_for_edge"`
+	EnableFirenetForEdge   bool                        `json:"enable_firenet_for_edge,omitempty"`
 }
 
 type TransitGatewayPeeringDetail struct {
