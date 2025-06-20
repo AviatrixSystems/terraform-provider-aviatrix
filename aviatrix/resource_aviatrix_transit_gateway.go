@@ -1905,7 +1905,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
 
-	// get the gateway bgp communities details only if gw size is not UNKNOWN or empty
+	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
+	// This will allow the AEP EAT gateways to be created before setting the communities.
 	if gw.GwSize != "UNKNOWN" && gw.GwSize != "" {
 		sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
 		if err != nil {
