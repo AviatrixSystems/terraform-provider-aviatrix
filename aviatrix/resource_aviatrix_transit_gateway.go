@@ -1905,17 +1905,21 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
 
-	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
-	if err != nil {
-		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
-	}
-	err = d.Set("bgp_send_communities", sendComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
-	}
-	err = d.Set("bgp_accept_communities", acceptComm)
-	if err != nil {
-		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
+	// This will allow the AEP EAT gateways to be created before setting the communities.
+	if gw.GwSize != "UNKNOWN" && gw.GwSize != "" {
+		sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+		err = d.Set("bgp_send_communities", sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+		}
+		err = d.Set("bgp_accept_communities", acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+		}
 	}
 
 	// edge cloud type
@@ -4063,6 +4067,18 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		if len(managementEgressIPPrefixList) > 0 {
 			gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
 		}
+	}
+
+	// for edge the enable_jumbo_frame is set to false by default if not explicitly set by the user
+	if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+		enableJumboFrame, ok := val.(bool)
+		if !ok {
+			return fmt.Errorf("enable_jumbo_frame must be a boolean")
+		}
+		gateway.JumboFrame = enableJumboFrame // set to user-provided value
+	} else {
+		gateway.JumboFrame = false // new default for EAT's
+		_ = d.Set("enable_jumbo_frame", false)
 	}
 
 	// create the transit gateway
