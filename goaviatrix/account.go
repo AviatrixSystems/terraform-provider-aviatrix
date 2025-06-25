@@ -62,6 +62,7 @@ type Account struct {
 	GroupNames                            string   `form:"groups,omitempty"`
 	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
 	EdgeCSPUsername                       string   `json:"edge_csp_username"`
+	EdgeCSPApiEndpoint                    string   `json:"edge_csp_api_endpoint,omitempty"`
 	EdgeEquinixUsername                   string   `json:"equinix_username"`
 }
 
@@ -72,6 +73,7 @@ type EdgeAccount struct {
 	CloudType           int    `json:"cloud_type,omitempty"`
 	EdgeCSPUsername     string `json:"edge_csp_username,omitempty"`
 	EdgeCSPPassword     string `json:"edge_csp_password,omitempty"`
+	EdgeCSPApiEndpoint  string `json:"edge_csp_api_endpoint,omitempty"`
 	EdgeEquinixUsername string `json:"equinix_username,omitempty"`
 }
 
