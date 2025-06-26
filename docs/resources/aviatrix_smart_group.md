@@ -85,6 +85,13 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       k8s_cluster_id = resource.aviatrix_kubernetes_cluster.test_cluster.cluster_id
     }
 
+    # Below are serverless functions examples
+
+    match_expressions {
+      type     = "serverless_function"
+      name     = "my-function"
+    }
+
     // Below are external group type examples
 
     // generic format
