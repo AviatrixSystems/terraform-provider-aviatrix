@@ -97,7 +97,6 @@ func (c *Client) GetAwsTgwAttachmentInfo(awsTgwVpcAttachment *AwsTgwVpcAttachmen
 		}
 	}
 	return nil, ErrNotFound
-
 }
 
 func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
