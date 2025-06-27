@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -442,6 +443,55 @@ resource "aviatrix_smart_group" "external_geo" {
 `
 }
 
+func TestAccAviatrixSmartGroup_serverless(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.serverless"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupServerless(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "serverless-test-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "serverless_function"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.name", "test-function"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSmartGroupServerless() string {
+	return `
+resource "aviatrix_smart_group" "serverless" {
+	name = "serverless-test-smart-group"
+
+	selector {
+		match_expressions {
+			type = "serverless_function"
+			name = "test-function"
+		}
+	}
+}
+`
+}
+
 func testAccCheckSmartGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -476,8 +526,9 @@ func testAccSmartGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetSmartGroup(context.Background(), rs.Primary.ID)
-		if err == nil || err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("smart group configured when it should be destroyed")
+		expectedError := "App domain not found"
+		if err == nil || !strings.Contains(err.Error(), expectedError) {
+			return fmt.Errorf("smart group configured when it should be destroyed, want %s, got: %w", expectedError, err)
 		}
 	}
 
