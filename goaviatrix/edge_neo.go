@@ -51,7 +51,8 @@ type EdgeNEO struct {
 	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
-	DirectAttachLan                    bool `json:"direct_attach_lan,omitempty"`
+	DirectAttachLan                    bool     `json:"direct_attach_lan,omitempty"`
+	AdvertisedSpokeRoutes              []string `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeNEOInterface struct {

@@ -783,6 +783,14 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		}
 	}
 
+	if d.HasChange("included_advertised_spoke_routes") {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.AdvertisedSpokeRoutes
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Gateway Selfmanaged update: %v", err)
+		}
+	}
+
 	if edgeSpoke.EnableLearnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
 		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeSpoke.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)

@@ -881,6 +881,14 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if d.HasChange("included_advertised_spoke_routes") {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.AdvertisedSpokeRoutes
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Platform update: %v", err)
+		}
+	}
+
 	if d.HasChange("enable_learned_cidrs_approval") {
 		if edgeNEO.EnableLearnedCidrsApproval {
 			err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
