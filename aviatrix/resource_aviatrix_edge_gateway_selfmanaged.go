@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -308,6 +309,14 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					},
 				},
 			},
+			"included_advertised_spoke_routes": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -536,6 +545,25 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 		}
 	}
 
+	// set the advertised spoke cidr routes
+	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
+	if len(includedAdvertisedSpokeRoutes) > 0 {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
+			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+			if err == nil {
+				break
+			}
+			if i <= 30 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down") ||
+				strings.Contains(err.Error(), "gateway is down")) {
+				time.Sleep(10 * time.Second)
+			} else {
+				return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
+			}
+		}
+	}
+
 	return resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -590,6 +618,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
 		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
+	}
+
+	if len(edgeSpoke.AdvertisedSpokeRoutes) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeSpoke.AdvertisedSpokeRoutes)
 	}
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
