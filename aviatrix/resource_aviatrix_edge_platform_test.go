@@ -100,7 +100,7 @@ resource "aviatrix_edge_platform" "test" {
 		ip_address  = "172.16.15.162/20"
 		gateway_ip  = "172.16.0.1"
 	}
-	
+
 	included_advertised_spoke_routes = [
 		"10.230.3.0/24",
 		"10.230.5.0/24"
