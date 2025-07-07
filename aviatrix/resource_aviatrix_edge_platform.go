@@ -1026,15 +1026,6 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 
 	}
 
-	if d.HasChange("included_advertised_spoke_routes") {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.ApprovedLearnedCidrs
-		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-		log.Printf("[INFO] Editing included advertised spoke vpc routes of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
-		if err != nil {
-			return diag.Errorf("failed to edit included advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
-		}
-	}
-
 	d.Partial(false)
 
 	return resourceAviatrixEdgePlatformRead(ctx, d, meta)
