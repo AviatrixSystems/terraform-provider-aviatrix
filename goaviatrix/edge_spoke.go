@@ -119,6 +119,7 @@ type EdgeSpokeResp struct {
 	State                              string                        `json:"vpc_state"`
 	InterfaceList                      []*EdgeSpokeInterface         `json:"interfaces"`
 	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	AdvertisedSpokeRoutes              []string                      `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeSpokeListResp struct {
