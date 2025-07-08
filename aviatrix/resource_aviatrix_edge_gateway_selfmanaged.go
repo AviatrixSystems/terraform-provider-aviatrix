@@ -527,22 +527,9 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	}
 
 	// set the advertised spoke cidr routes
-	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
-	if len(includedAdvertisedSpokeRoutes) > 0 {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
-		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
-			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-			if err == nil {
-				break
-			}
-			if i <= 30 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down") ||
-				strings.Contains(err.Error(), "gateway is down")) {
-				time.Sleep(10 * time.Second)
-			} else {
-				return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
-			}
-		}
+	err = editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
 	}
 
 	return resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx, d, meta, &flag)
@@ -601,8 +588,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
 	}
 
-	if len(edgeSpoke.AdvertisedSpokeRoutes) > 0 {
-		_ = d.Set("included_advertised_spoke_routes", edgeSpoke.AdvertisedSpokeRoutes)
+	if len(edgeSpoke.AdvertisedCidrList) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeSpoke.AdvertisedCidrList)
 	}
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
@@ -784,7 +771,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.AdvertisedSpokeRoutes
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.AdvertisedCidrList
 		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("could not update included advertised spoke routes during Edge Gateway Selfmanaged update: %v", err)
@@ -925,5 +912,32 @@ func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema
 		log.Printf("[WARN] could not remove the ztp file: %v", err)
 	}
 
+	return nil
+}
+
+func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGatewayFunctions *goaviatrix.Gateway, d *schema.ResourceData) error {
+	const maxRetries = 30
+	const retryDelay = 10 * time.Second
+	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
+	if len(includedAdvertisedSpokeRoutes) > 0 {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
+		// Retry logic: EditGatewayAdvertisedCidr may fail if the gateway or HA gateway is down.
+		// These transient errors can occur during provisioning or if the gateway is rebooting,
+		// so retry for up to 5 minutes before failing.
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
+			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+			if err == nil {
+				break
+			}
+			// If the gateway is unreachable, retry before failing as this can be transient.
+			if i <= maxRetries && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down") ||
+				strings.Contains(err.Error(), "gateway is down")) {
+				time.Sleep(retryDelay)
+			} else {
+				return err
+			}
+		}
+	}
 	return nil
 }

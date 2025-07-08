@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -640,22 +639,9 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// set the advertised spoke cidr routes
-	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
-	if len(includedAdvertisedSpokeRoutes) > 0 {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
-		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
-			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-			if err == nil {
-				break
-			}
-			if i <= 30 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down") ||
-				strings.Contains(err.Error(), "gateway is down")) {
-				time.Sleep(10 * time.Second)
-			} else {
-				return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
-			}
-		}
+	err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
 	}
 
 	return resourceAviatrixEdgePlatformReadIfRequired(ctx, d, meta, &flag)
@@ -703,8 +689,8 @@ func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("enable_edge_active_standby_preemptive", edgeNEOResp.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeNEOResp.EnableLearnedCidrsApproval)
 
-	if len(edgeNEOResp.AdvertisedSpokeRoutes) > 0 {
-		_ = d.Set("included_advertised_spoke_routes", edgeNEOResp.AdvertisedSpokeRoutes)
+	if len(edgeNEOResp.AdvertisedCidrList) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeNEOResp.AdvertisedCidrList)
 	}
 
 	if edgeNEOResp.ManagementEgressIpPrefix == "" {
@@ -882,7 +868,7 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.AdvertisedSpokeRoutes
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.AdvertisedCidrList
 		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("could not update included advertised spoke routes during Edge Platform update: %v", err)
