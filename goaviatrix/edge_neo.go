@@ -52,7 +52,7 @@ type EdgeNEO struct {
 	EnableAutoAdvertiseLanCidrs        string `json:"auto_advertise_lan_cidrs,omitempty"`
 	LanInterfaceIpPrefix               string
 	DirectAttachLan                    bool     `json:"direct_attach_lan,omitempty"`
-	AdvertisedSpokeRoutes              []string `json:"advertise_cidr_list,omitempty"`
+	AdvertisedCidrList                 []string `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeNEOInterface struct {
@@ -120,7 +120,7 @@ type EdgeNEOResp struct {
 	EnableNat                          string              `json:"enable_nat"`
 	SnatMode                           string              `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`
-	AdvertisedSpokeRoutes              []string            `json:"advertise_cidr_list,omitempty"`
+	AdvertisedCidrList                 []string            `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeNEOListResp struct {
