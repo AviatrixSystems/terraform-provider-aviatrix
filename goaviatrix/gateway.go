@@ -660,6 +660,8 @@ func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
+	// Reset the SnatPolicy field after encoding so we don't send both.
+	gateway.SnatPolicy = nil
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
