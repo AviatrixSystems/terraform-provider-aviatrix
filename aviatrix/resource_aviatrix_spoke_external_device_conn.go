@@ -1452,17 +1452,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("connection_bgp_send_communities") || d.HasChange("connection_bgp_send_communities_additive") || d.HasChange("connection_bgp_send_communities_block") {
-		connName, ok := d.Get("connection_name").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_name as string")
-		}
-
-		gwName, ok := d.Get("gw_name").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert gw_name as string")
-		}
-
+	if d.HasChanges("connection_bgp_send_communities", "connection_bgp_send_communities_additive", "connection_bgp_send_communities_block") {
 		// Detect whether the user wants to change the set of BGP communities sent on a given connection
 		// if so, update the connection with the new set of communities, either additively or as a replacement
 		// or block the communities entirely, depending on the user's choice
