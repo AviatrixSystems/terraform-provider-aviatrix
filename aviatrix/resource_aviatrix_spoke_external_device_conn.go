@@ -301,9 +301,9 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional: true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(k, oldStr, newStr string, d *schema.ResourceData) bool {
 					// Suppress diff if old is null ("" or "<nil>") and new is an empty set/list ("[]")
-					return (old == "" || old == "<nil>") && (new == "[]" || new == "")
+					return (oldStr == "" || oldStr == "<nil>") && (newStr == "[]" || newStr == "")
 				},
 			},
 			"remote_vpc_name": {
