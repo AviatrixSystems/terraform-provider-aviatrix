@@ -301,7 +301,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional: true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'.",
-				DiffSuppressFunc: func(k, oldStr, newStr string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, oldStr, newStr string, _ *schema.ResourceData) bool {
 					// Suppress diff if old is null ("" or "<nil>") and new is an empty set/list ("[]")
 					return (oldStr == "" || oldStr == "<nil>") && (newStr == "[]" || newStr == "")
 				},
@@ -433,7 +433,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 			"connection_bgp_send_communities": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Connection based additional BGP communities to be sent",
+				Description: "Connection based additional BGP communities to be sent. E.g. 111:111, 444:444",
 			},
 			"connection_bgp_send_communities_additive": {
 				Type:        schema.TypeBool,
