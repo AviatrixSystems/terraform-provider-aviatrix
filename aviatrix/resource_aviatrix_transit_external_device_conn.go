@@ -323,6 +323,10 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional: true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'. Available as of provider version R2.18+.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff if old is null ("" or "<nil>") and new is an empty set/list ("[]")
+					return (old == "" || old == "<nil>") && (new == "[]" || new == "")
+				},
 			},
 			"remote_vpc_name": {
 				Type:        schema.TypeString,
@@ -469,21 +473,18 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"connection_bgp_send_communities": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Connection based additional BGP communities to be sent",
 			},
 			"connection_bgp_send_communities_additive": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				ForceNew:    true,
 				Description: "Do additive operation instead of replacement operation",
 			},
 			"connection_bgp_send_communities_block": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				ForceNew:    true,
 				Description: "Block advertisement of any BGP communities on this connection",
 			},
 		},
@@ -1593,17 +1594,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("connection_bgp_send_communities") || d.HasChange("connection_bgp_send_communities_additive") || d.HasChange("connection_bgp_send_communities_block") {
-		connName, ok := d.Get("connection_name").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_name as string")
-		}
-
-		gwName, ok := d.Get("gw_name").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert gw_name as string")
-		}
-
+	if d.HasChanges("connection_bgp_send_communities", "connection_bgp_send_communities_additive", "connection_bgp_send_communities_block") {
 		// Detect whether the user wants to change the set of BGP communities sent on a given connection
 		// if so, update the connection with the new set of communities, either additively or as a replacement
 		// or block the communities entirely, depending on the user's choice
