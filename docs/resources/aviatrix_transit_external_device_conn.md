@@ -123,6 +123,24 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   }
 }
 ```
+```hcl
+# Create a BGP over LAN Aviatrix Transit External Device Connection with BGP Communities
+resource "aviatrix_transit_external_device_conn" "conn-1" {
+  vpc_id                                    = aviatrix_spoke_gateway.spoke-gateway.vpc_id
+  connection_name                           = "my_conn"
+  gw_name                                   = aviatrix_spoke_gateway.spoke-gateway.gw_name
+  connection_bgp_send_communities           = "444:444 111:111"
+  connection_bgp_send_communities_additive  = true
+  connection_bgp_send_communities_block     = false
+  backup_bgp_remote_as_num                  = "123"
+  remote_lan_ip                             = "172.12.13.14"
+  backup_remote_lan_ip                      = "172.12.13.16"
+  bgp_local_as_num                          = "456"
+  bgp_remote_as_num                         = "789"
+  ha_enabled                                = true
+  tunnel_protocol                           = "LAN"
+}
+```
 
 ## Argument Reference
 
@@ -178,6 +196,9 @@ The following arguments are supported:
 * `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
 * `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
 * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP and Azure with Remote Gateway HA enabled. Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. Available as of provider version R2.21+.
+* `connection_bgp_send_communities` - (Optional) Extra BGP communities to send over this connection.
+* `connection_bgp_send_communities_additive` - (Optional) Whether the BGP communities should be sent additively or as a replacement (true/false).
+* `connection_bgp_send_communities_block` - (Optional) If set to true, block all BGP communities over this connection.
 
 ### BGP MD5 Authentication (Available as of provider version R2.21.1+)
 ~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
