@@ -620,6 +620,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	if externalDeviceConn.EnableEdgeUnderlay && d.HasChanges("bgp_md5_key", "backup_bgp_md5_key") {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 
+		bgpMD5Key, ok := d.Get("bgp_md5_key").(string)
+		if !ok {
+			return diag.Errorf("failed to assert bgp_md5_key as string")
+		}
+		edgeExternalDeviceConn.BgpMd5Key = bgpMD5Key
+
+		backupBGPMD5Key, ok := d.Get("backup_bgp_md5_key").(string)
+		if !ok {
+			return diag.Errorf("failed to assert backup_bgp_md5_key as string")
+		}
+		edgeExternalDeviceConn.BackupBgpMd5Key = backupBGPMD5Key
+
 		edgeExternalDeviceConn.BgpMd5KeyChanged = true
 
 		_, err := client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
