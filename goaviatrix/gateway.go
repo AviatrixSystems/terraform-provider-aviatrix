@@ -228,6 +228,7 @@ type Gateway struct {
 	LogicalEipMap                   map[string][]EipMap                 `json:"logical_intf_eip_map,omitempty"`
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
+	EnableIpv6                      bool                                `json:"enable_ipv6,omitempty"`
 }
 
 type HaGateway struct {
