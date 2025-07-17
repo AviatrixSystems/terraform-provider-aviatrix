@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -921,18 +922,25 @@ func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGat
 	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
 	if len(includedAdvertisedSpokeRoutes) > 0 {
 		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
-		// Retry logic: EditGatewayAdvertisedCidr may fail if the gateway or HA gateway is down.
-		// These transient errors can occur during provisioning or if the gateway is rebooting,
-		// so retry for up to 5 minutes before failing.
+		avxerrRegex := regexp.MustCompile(`AVXERR[-_A-Z0-9]+`)
 		for i := 0; ; i++ {
 			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
 			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
 			if err == nil {
 				break
 			}
-			// If the gateway is unreachable, retry before failing as this can be transient.
-			if i <= maxRetries && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down") ||
-				strings.Contains(err.Error(), "gateway is down")) {
+
+			shouldRetry := false
+			// Try to extract AVXERR code from error string
+			matches := avxerrRegex.FindStringSubmatch(err.Error())
+			if len(matches) > 0 {
+				switch matches[0] {
+				case "AVXERR-GATEWAY-0079", "AVXERR-SITE2CLOUD-0049", "AVXERR-SECDOMAIN-0013":
+					shouldRetry = true
+				}
+			}
+
+			if i <= maxRetries && shouldRetry {
 				time.Sleep(retryDelay)
 			} else {
 				return err
