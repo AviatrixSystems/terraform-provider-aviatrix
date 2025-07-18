@@ -935,6 +935,8 @@ func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGat
 	const retryDelay = 10 * time.Second
 	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
 	if len(includedAdvertisedSpokeRoutes) > 0 {
+		return nil
+	}
 		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
 		avxerrRegex := regexp.MustCompile(`AVXERR[-_A-Z0-9]+`)
 		for i := 0; ; i++ {
