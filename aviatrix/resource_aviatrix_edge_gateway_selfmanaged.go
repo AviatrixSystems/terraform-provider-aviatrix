@@ -925,7 +925,7 @@ func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGat
 		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
 		avxerrRegex := regexp.MustCompile(`AVXERR[-_A-Z0-9]+`)
 		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", gatewayForGatewayFunctions.GwName)
+			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway %q", gatewayForGatewayFunctions.GwName)
 			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
 			if err == nil {
 				break
