@@ -641,7 +641,7 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 	// set the advertised spoke cidr routes
 	err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
 	if err != nil {
-		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", gatewayForGatewayFunctions.GwName, err)
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway %q: %s", gatewayForGatewayFunctions.GwName, err)
 	}
 
 	return resourceAviatrixEdgePlatformReadIfRequired(ctx, d, meta, &flag)
