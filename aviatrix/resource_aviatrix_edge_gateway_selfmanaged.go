@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -320,6 +322,14 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					},
 				},
 			},
+			"included_advertised_spoke_routes": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -517,6 +527,12 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 		}
 	}
 
+	// set the advertised spoke cidr routes
+	err = editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %q: %s", gatewayForGatewayFunctions.GwName, err)
+	}
+
 	return resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -571,6 +587,10 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		d.Set("management_egress_ip_prefix_list", nil)
 	} else {
 		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
+	}
+
+	if len(edgeSpoke.AdvertisedCidrList) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeSpoke.AdvertisedCidrList)
 	}
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
@@ -751,6 +771,14 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		}
 	}
 
+	if d.HasChange("included_advertised_spoke_routes") {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.AdvertisedCidrList
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Gateway Selfmanaged update: %v", err)
+		}
+	}
+
 	if edgeSpoke.EnableLearnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
 		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeSpoke.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
@@ -885,5 +913,41 @@ func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema
 		log.Printf("[WARN] could not remove the ztp file: %v", err)
 	}
 
+	return nil
+}
+
+func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGatewayFunctions *goaviatrix.Gateway, d *schema.ResourceData) error {
+	const maxRetries = 30
+	const retryDelay = 10 * time.Second
+	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
+	if len(includedAdvertisedSpokeRoutes) == 0 {
+		return nil
+	}
+
+	gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
+	avxerrRegex := regexp.MustCompile(`AVXERR-[A-Z0-9-]+`)
+	for i := 0; ; i++ {
+		log.Printf("[INFO] Editing customized routes advertisement of spoke gateway %q", gatewayForGatewayFunctions.GwName)
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err == nil {
+			break
+		}
+
+		shouldRetry := false
+		// Try to extract AVXERR code from error string
+		matches := avxerrRegex.FindStringSubmatch(err.Error())
+		if len(matches) > 0 {
+			switch matches[0] {
+			case "AVXERR-GATEWAY-0079", "AVXERR-SITE2CLOUD-0049", "AVXERR-SECDOMAIN-0013":
+				shouldRetry = true
+			}
+		}
+
+		if i <= maxRetries && shouldRetry {
+			time.Sleep(retryDelay)
+		} else {
+			return err
+		}
+	}
 	return nil
 }
