@@ -622,13 +622,13 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 
 		bgpMD5Key, ok := d.Get("bgp_md5_key").(string)
 		if !ok {
-			return diag.Errorf("failed to assert bgp_md5_key as string")
+			return diag.Errorf("invalid value for 'bgp_md5_key': expected a string, but got a %T (value: %v)", bgpMD5Key, bgpMD5Key)
 		}
 		edgeExternalDeviceConn.BgpMd5Key = bgpMD5Key
 
 		backupBGPMD5Key, ok := d.Get("backup_bgp_md5_key").(string)
 		if !ok {
-			return diag.Errorf("failed to assert backup_bgp_md5_key as string")
+			return diag.Errorf("invalid value for 'backup_bgp_md5_key': expected a string, but got a %T (value: %v)", backupBGPMD5Key, backupBGPMD5Key)
 		}
 		edgeExternalDeviceConn.BackupBgpMd5Key = backupBGPMD5Key
 
