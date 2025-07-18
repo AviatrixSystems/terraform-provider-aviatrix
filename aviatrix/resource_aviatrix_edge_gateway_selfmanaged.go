@@ -531,7 +531,6 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	err = editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
 	if err != nil {
 		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %q: %s", gatewayForGatewayFunctions.GwName, err)
-
 	}
 
 	return resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx, d, meta, &flag)
@@ -921,33 +920,33 @@ func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGat
 	const maxRetries = 30
 	const retryDelay = 10 * time.Second
 	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
-	if len(includedAdvertisedSpokeRoutes) > 0 {
+	if len(includedAdvertisedSpokeRoutes) == 0 {
 		return nil
 	}
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
-		avxerrRegex := regexp.MustCompile(`AVXERR-[A-Z0-9-]+`)
-		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway %q", gatewayForGatewayFunctions.GwName)
-			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-			if err == nil {
-				break
-			}
 
-			shouldRetry := false
-			// Try to extract AVXERR code from error string
-			matches := avxerrRegex.FindStringSubmatch(err.Error())
-			if len(matches) > 0 {
-				switch matches[0] {
-				case "AVXERR-GATEWAY-0079", "AVXERR-SITE2CLOUD-0049", "AVXERR-SECDOMAIN-0013":
-					shouldRetry = true
-				}
-			}
+	gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
+	avxerrRegex := regexp.MustCompile(`AVXERR-[A-Z0-9-]+`)
+	for i := 0; ; i++ {
+		log.Printf("[INFO] Editing customized routes advertisement of spoke gateway %q", gatewayForGatewayFunctions.GwName)
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err == nil {
+			break
+		}
 
-			if i <= maxRetries && shouldRetry {
-				time.Sleep(retryDelay)
-			} else {
-				return err
+		shouldRetry := false
+		// Try to extract AVXERR code from error string
+		matches := avxerrRegex.FindStringSubmatch(err.Error())
+		if len(matches) > 0 {
+			switch matches[0] {
+			case "AVXERR-GATEWAY-0079", "AVXERR-SITE2CLOUD-0049", "AVXERR-SECDOMAIN-0013":
+				shouldRetry = true
 			}
+		}
+
+		if i <= maxRetries && shouldRetry {
+			time.Sleep(retryDelay)
+		} else {
+			return err
 		}
 	}
 	return nil
