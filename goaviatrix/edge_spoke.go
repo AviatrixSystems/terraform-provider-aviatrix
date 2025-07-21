@@ -56,6 +56,7 @@ type EdgeSpoke struct {
 	VlanList                           []*EdgeSpokeVlan
 	Vlan                               string                        `json:"vlan,omitempty"`
 	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	AdvertisedCidrList                 []string                      `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeSpokeInterface struct {
@@ -119,6 +120,7 @@ type EdgeSpokeResp struct {
 	State                              string                        `json:"vpc_state"`
 	InterfaceList                      []*EdgeSpokeInterface         `json:"interfaces"`
 	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
+	AdvertisedCidrList                 []string                      `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeSpokeListResp struct {
