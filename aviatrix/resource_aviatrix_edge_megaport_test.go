@@ -38,8 +38,10 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.220.14.10/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.logical_ifname", "lan0"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.tag", "LAN"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "192.168.99.14/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.logical_ifname", "wan0"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.tag", "WAN"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "192.168.88.14/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.logical_ifname", "wan1"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.3.ip_address", "192.168.77.14/24"),
@@ -88,6 +90,7 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 			gateway_ip     = "10.220.14.1"
 			ip_address     = "10.220.14.10/24"
 			logical_ifname = "lan0"
+			tag            = "LAN"
 		}
 
 		interfaces {
@@ -95,6 +98,7 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 			ip_address     = "192.168.99.14/24"
 			logical_ifname = "wan0"
 			wan_public_ip  = "67.207.104.19"
+			tag            = "WAN"
 		}
 
 		interfaces {
