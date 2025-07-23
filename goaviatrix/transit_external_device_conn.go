@@ -266,6 +266,21 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			backupBgpRemoteAsNumber = backupBgpRemoteAsNumberRead
 		}
 
+		// get_site2cloud_conn_detail API returns one field for communities, namely, conn_bgp_send_communities
+		// Example1: "conn_bgp_send_communities": "additive 444:444"
+		// Example2: "conn_bgp_send_communities": "block"
+		// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
+		if externalDeviceConnDetail.BgpSendCommunities != "" {
+			commList := strings.Split(externalDeviceConnDetail.BgpSendCommunities, " ")
+			if len(commList) > 0 && commList[0] == "block" {
+				externalDeviceConn.BgpSendCommunitiesBlock = true
+			} else if len(commList) > 0 && commList[0] == "additive" {
+				externalDeviceConn.BgpSendCommunitiesAdditive = true
+				commList = commList[1:]
+				externalDeviceConn.BgpSendCommunities = strings.Join(commList, " ")
+			}
+		}
+
 		if externalDeviceConn.TunnelProtocol != "LAN" {
 			externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
 			externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
