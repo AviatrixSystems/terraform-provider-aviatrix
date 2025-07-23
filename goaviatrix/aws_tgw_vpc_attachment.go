@@ -100,6 +100,7 @@ func (c *Client) GetAwsTgwAttachmentInfo(awsTgwVpcAttachment *AwsTgwVpcAttachmen
 }
 
 // GetAwsTgwVpcAttachment returns the details of an AWS TGW VPC attachment.
+//
 //nolint:cyclop
 func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
 	tgwAttachmentInfo, err := c.GetAwsTgwAttachmentInfo(awsTgwVpcAttachment)
