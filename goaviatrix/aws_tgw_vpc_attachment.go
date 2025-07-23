@@ -69,7 +69,7 @@ func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-// GetAwsTgwAttachment return generic TGW attachment info.
+// GetAwsTgwAttachment returns the details of an AWS TGW generic attachment for given attachment name.
 func (c *Client) GetAwsTgwAttachmentInfo(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AttachmentInfo, error) {
 	var data TgwAttachmentResp
 	params := map[string]string{
@@ -99,6 +99,8 @@ func (c *Client) GetAwsTgwAttachmentInfo(awsTgwVpcAttachment *AwsTgwVpcAttachmen
 	return nil, ErrNotFound
 }
 
+// GetAwsTgwVpcAttachment returns the details of an AWS TGW VPC attachment.
+//nolint:cyclop
 func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
 	tgwAttachmentInfo, err := c.GetAwsTgwAttachmentInfo(awsTgwVpcAttachment)
 	if err != nil {
