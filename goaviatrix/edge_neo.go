@@ -5,6 +5,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 type EdgeNEO struct {
@@ -156,6 +157,23 @@ func (c *Client) CreateEdgeNEO(ctx context.Context, edgeNEO *EdgeNEO) error {
 	err = c.PostAPIContext2(ctx, nil, edgeNEO.Action, edgeNEO, BasicCheck)
 	if err != nil {
 		return err
+	}
+
+	// check the status of the edge gateway creation
+	for i := 0; i < 240; i++ {
+		edgeNEOResp, err := c.GetEdgeNEO(ctx, edgeNEO.GwName)
+		if err != nil {
+			if err == ErrNotFound {
+				// Gateway not found yet, keep polling
+				time.Sleep(10 * time.Minute)
+				continue
+			}
+			return err
+		}
+		if edgeNEOResp.State == "up" || edgeNEOResp.State == "active" {
+			break
+		}
+		time.Sleep(5 * time.Second)
 	}
 
 	return nil
