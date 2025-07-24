@@ -1,0 +1,141 @@
+package aviatrix
+
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingDeploymentPolicyCreate,
+		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingDeploymentPolicyRead,
+		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingDeploymentPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"providers": {
+				Type:        schema.TypeSet,
+				ForceNew:    true,
+				Required:    true,
+				Sensitive:   true,
+				Description: "List of CSPs to apply the DCF policies to.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+		},
+	}
+}
+
+func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
+	providers, ok := d.Get("providers").(*schema.Set)
+	if !ok {
+		return diag.Errorf("failed to assert 'providers' as array of strings")
+	}
+	providersList := []string{}
+	for _, v := range providers.List() {
+		providersList = append(providersList, v.(string))
+	}
+
+	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
+		Providers: providersList,
+	}
+
+	if err := client.CreateDistributedFirewallingDeploymentPolicy(ctx, deploymentPolicy); err != nil {
+		return diag.Errorf("failed to create Aviatrix Distributed Firewalling Deployment Policy: %v", err)
+	}
+
+	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
+	return resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)
+}
+
+func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client, ok := meta.(*goaviatrix.Client)
+
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
+
+	if d.Id() != strings.ReplaceAll(client.ControllerIP, ".", "-") {
+		return diag.Errorf("ID: %s does not match controller IP %q: please provide correct ID for importing", d.Id(), client.ControllerIP)
+	}
+
+	deploymentPolicy, err := client.GetDistributedFirewallingDeploymentPolicy(ctx)
+	if err != nil {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("failed to read Aviatrix Distributed Firewalling Deployment Policy: %s", err)
+	}
+
+	if err := d.Set("providers", deploymentPolicy.Providers); err != nil {
+		return diag.Errorf("failed to set 'providers': %v", err)
+	}
+
+	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
+	return nil
+}
+
+// func resourceAviatrixDistributedFirewallingDeploymentPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// 	client := meta.(*goaviatrix.Client)
+
+// 	policy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
+// 		PolicyName: d.Get("policy_name").(string),
+// 	}
+
+// 	log.Printf("[INFO] Updating Aviatrix Distributed Firewalling Deployment Policy: %#v", policy)
+
+// 	d.Partial(true)
+
+// 	if d.HasChanges("deployment_mode", "enabled", "gateways") {
+// 		policy.DeploymentMode = d.Get("deployment_mode").(string)
+// 		policy.Enabled = d.Get("enabled").(bool)
+
+// 		if v, ok := d.GetOk("gateways"); ok {
+// 			policy.Gateways = expandStringSet(v.(*schema.Set))
+// 		}
+
+// 		if err := client.UpdateDistributedFirewallingDeploymentPolicy(ctx, policy); err != nil {
+// 			return diag.Errorf("failed to update Aviatrix Distributed Firewalling Deployment Policy: %s", err)
+// 		}
+// 	}
+
+// 	d.Partial(false)
+// 	return resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)
+// }
+
+func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
+	defaultProviders := []string{
+		"GCP",
+		"AWS",
+		"AWS-GOV",
+		"AZURE-GOV",
+		"AZURE",
+		"AVX-TEST",
+	}
+	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
+		Providers: defaultProviders,
+	}
+
+	if err := client.CreateDistributedFirewallingDeploymentPolicy(ctx, deploymentPolicy); err != nil {
+		return diag.Errorf("failed to delete the current deployment policy and reset to default: %v", err)
+	}
+
+	return nil
+}
