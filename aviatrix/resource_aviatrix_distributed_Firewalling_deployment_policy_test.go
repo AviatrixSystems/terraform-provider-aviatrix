@@ -83,7 +83,11 @@ func testAccCheckDistributedFirewallingDeploymentPolicyExists(resourceName strin
 }
 
 func testAccCheckDistributedFirewallingDeploymentPolicyDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	meta := testAccProviderVersionValidation.Meta()
+	client, ok := meta.(*goaviatrix.Client)
+	if !ok {
+		return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_deployment_policy" {
