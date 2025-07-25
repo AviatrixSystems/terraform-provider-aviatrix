@@ -88,34 +88,6 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Cont
 	return nil
 }
 
-// func resourceAviatrixDistributedFirewallingDeploymentPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	client := meta.(*goaviatrix.Client)
-
-// 	policy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
-// 		PolicyName: d.Get("policy_name").(string),
-// 	}
-
-// 	log.Printf("[INFO] Updating Aviatrix Distributed Firewalling Deployment Policy: %#v", policy)
-
-// 	d.Partial(true)
-
-// 	if d.HasChanges("deployment_mode", "enabled", "gateways") {
-// 		policy.DeploymentMode = d.Get("deployment_mode").(string)
-// 		policy.Enabled = d.Get("enabled").(bool)
-
-// 		if v, ok := d.GetOk("gateways"); ok {
-// 			policy.Gateways = expandStringSet(v.(*schema.Set))
-// 		}
-
-// 		if err := client.UpdateDistributedFirewallingDeploymentPolicy(ctx, policy); err != nil {
-// 			return diag.Errorf("failed to update Aviatrix Distributed Firewalling Deployment Policy: %s", err)
-// 		}
-// 	}
-
-// 	d.Partial(false)
-// 	return resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)
-// }
-
 func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
