@@ -71,7 +71,7 @@ func testAccCheckDistributedFirewallingDeploymentPolicyExists(resourceName strin
 
 		_, err := client.GetDistributedFirewallingDeploymentPolicy(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get distributed firewalling deployment policy: %v", err)
+			return fmt.Errorf("failed to get distributed firewalling deployment policy: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -92,7 +92,7 @@ func testAccCheckDistributedFirewallingDeploymentPolicyDestroy(s *terraform.Stat
 
 		_, err := client.GetDistributedFirewallingDeploymentPolicy(context.Background())
 		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
-			return fmt.Errorf("distributed firewalling deployment policy still exists: %v", err)
+			return fmt.Errorf("distributed firewalling deployment policy still exists: %w", err)
 		}
 	}
 
