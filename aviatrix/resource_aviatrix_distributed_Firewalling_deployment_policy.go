@@ -45,7 +45,11 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	}
 	providersList := []string{}
 	for _, v := range providers.List() {
-		providersList = append(providersList, v.(string))
+		if str, ok := v.(string); ok {
+			providersList = append(providersList, str)
+		} else {
+			return diag.Errorf("failed to convert provider value %v to string", v)
+		}
 	}
 
 	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
@@ -88,7 +92,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Cont
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")

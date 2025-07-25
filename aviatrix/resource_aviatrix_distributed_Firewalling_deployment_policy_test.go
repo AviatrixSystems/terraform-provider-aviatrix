@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -62,11 +63,19 @@ func testAccCheckDistributedFirewallingDeploymentPolicyExists(resourceName strin
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Distributed Firewalling Deployment Policy is set")
 		}
+		meta := testAccProviderVersionValidation.Meta()
+		client, ok := meta.(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
+		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
 		_, err := client.GetDistributedFirewallingDeploymentPolicy(context.Background())
 		if err != nil {
 			return fmt.Errorf("failed to get distributed firewalling deployment policy: %v", err)
+		}
+
+		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
+			return fmt.Errorf("distributed firewalling deployment policy ID not found")
 		}
 
 		return nil
