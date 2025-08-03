@@ -7,6 +7,7 @@ import (
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAviatrixVpc() *schema.Resource {
@@ -223,6 +224,36 @@ func resourceAviatrixVpc() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the VPC. Only supported for Azure (8), AzureGov (32), AzureChina (2048) and GCP (4).",
+			},
+			"vpc_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure. For GCP, required when ipv6_access_type is INTERNAL.",
+				ValidateFunc: validation.IsCIDR,
+			},
+			"ipv6_access_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "IPv6 access type for GCP. Valid values: INTERNAL, EXTERNAL. Required when enable_ipv6 is true for GCP.",
+				ValidateFunc: validation.StringInSlice([]string{"INTERNAL", "EXTERNAL"}, false),
+			},
+			"vpc_ipv6_cidr_list": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "List of IPv6 CIDRs for the VPC.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+			},
 		},
 	}
 }
@@ -327,6 +358,36 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
+	}
+
+	// Handle IPv6 fields
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for Azure (8), AzureGov (32), AzureChina (2048) and GCP (4)")
+		}
+		vpc.EnableIpv6 = true
+
+		// Handle vpc_ipv6_cidr
+		if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+			vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+		}
+
+		// Handle ipv6_access_type for GCP
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			if ipv6AccessType, ok := d.GetOk("ipv6_access_type"); ok {
+				vpc.Ipv6AccessType = ipv6AccessType.(string)
+			} else {
+				return fmt.Errorf("error creating vpc: ipv6_access_type is required when enable_ipv6 is true for GCP")
+			}
+		}
+
+		// Handle vpc_ipv6_cidr_list
+		if v, ok := d.GetOk("vpc_ipv6_cidr_list"); ok {
+			for _, cidr := range v.([]interface{}) {
+				vpc.VpcIpv6CidrList = append(vpc.VpcIpv6CidrList, cidr.(string))
+			}
+		}
 	}
 
 	err := client.CreateVpc(vpc)
@@ -570,6 +631,20 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
 
+	// Set IPv6 fields
+	d.Set("enable_ipv6", vC.EnableIpv6)
+	if vC.VpcIpv6Cidr != "" {
+		d.Set("vpc_ipv6_cidr", vC.VpcIpv6Cidr)
+	}
+	if vC.Ipv6AccessType != "" {
+		d.Set("ipv6_access_type", vC.Ipv6AccessType)
+	}
+	if len(vC.VpcIpv6CidrList) > 0 {
+		d.Set("vpc_ipv6_cidr_list", vC.VpcIpv6CidrList)
+	} else {
+		d.Set("vpc_ipv6_cidr_list", nil)
+	}
+
 	return nil
 }
 
@@ -595,6 +670,22 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("could not disable native AWS gwlb firenet: %v", err)
 			}
 		}
+	}
+
+	if d.HasChange("enable_ipv6") {
+		log.Printf("[INFO] IPv6 enablement change detected.")
+	}
+
+	if d.HasChange("vpc_ipv6_cidr") {
+		log.Printf("[INFO] IPv6 CIDR change detected.")
+	}
+
+	if d.HasChange("ipv6_access_type") {
+		log.Printf("[INFO] IPv6 access type change detected.")
+	}
+
+	if d.HasChange("vpc_ipv6_cidr_list") {
+		log.Printf("[INFO] IPv6 CIDR list change detected.")
 	}
 
 	return nil

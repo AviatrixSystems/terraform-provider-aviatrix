@@ -25,6 +25,10 @@ type Vpc struct {
 	PublicRoutesOnly       bool
 	ResourceGroup          string `json:"resource_group,omitempty"`
 	PrivateModeSubnets     bool
+	EnableIpv6             bool     `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
+	VpcIpv6Cidr            string   `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
+	Ipv6AccessType         string   `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
+	VpcIpv6CidrList        []string `form:"vpc_ipv6_cidr_list,omitempty" json:"vpc_ipv6_cidr_list,omitempty"`
 }
 
 type VpcEdit struct {
@@ -43,6 +47,10 @@ type VpcEdit struct {
 	PublicSubnets          []SubnetInfo `json:"public_subnets,omitempty"`
 	PrivateSubnets         []SubnetInfo `json:"private_subnets,omitempty"`
 	PrivateModeSubnets     bool         `json:"private_mode_subnets"`
+	EnableIpv6             bool         `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
+	VpcIpv6Cidr            string       `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
+	Ipv6AccessType         string       `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
+	VpcIpv6CidrList        []string     `form:"vpc_ipv6_cidr_list,omitempty" json:"vpc_ipv6_cidr_list,omitempty"`
 }
 
 type VpcResp struct {
@@ -77,6 +85,12 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		"account_name": vpc.AccountName,
 		"pool_name":    vpc.Name,
 	}
+	if vpc.EnableIpv6 {
+		form["enable_ipv6"] = "true"
+	}
+	if vpc.CloudType == Azure && vpc.EnableIpv6 {
+		form["vpc_ipv6_cidr"] = vpc.VpcIpv6Cidr
+	}
 	if vpc.CloudType != GCP {
 		form["region"] = vpc.Region
 		form["vpc_cidr"] = vpc.Cidr
@@ -89,6 +103,13 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 				return err
 			}
 			form["subnet_list"] = string(args)
+		}
+
+		if vpc.EnableIpv6 {
+			form["ipv6_access_type"] = vpc.Ipv6AccessType
+			if vpc.Ipv6AccessType == "INTERNAL" {
+				form["vpc_ipv6_cidr"] = vpc.VpcIpv6Cidr
+			}
 		}
 	}
 	if vpc.SubnetSize != 0 {
@@ -203,6 +224,10 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	vpc.NumOfSubnetPairs = data.Results.NumOfSubnetPairs
 	vpc.EnablePrivateOobSubnet = data.Results.EnablePrivateOobSubnet
 	vpc.PrivateModeSubnets = data.Results.PrivateModeSubnets
+	vpc.EnableIpv6 = data.Results.EnableIpv6
+	vpc.VpcIpv6Cidr = data.Results.VpcIpv6Cidr
+	vpc.Ipv6AccessType = data.Results.Ipv6AccessType
+	vpc.VpcIpv6CidrList = data.Results.VpcIpv6CidrList
 	return vpc, nil
 }
 
