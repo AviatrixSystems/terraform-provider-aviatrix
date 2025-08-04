@@ -244,16 +244,6 @@ func resourceAviatrixVpc() *schema.Resource {
 				Description:  "IPv6 access type for GCP. Valid values: INTERNAL, EXTERNAL. Required when enable_ipv6 is true for GCP.",
 				ValidateFunc: validation.StringInSlice([]string{"INTERNAL", "EXTERNAL"}, false),
 			},
-			"vpc_ipv6_cidr_list": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "List of IPv6 CIDRs for the VPC.",
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
-				},
-			},
 		},
 	}
 }
@@ -363,8 +353,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	// Handle IPv6 fields
 	enableIpv6 := d.Get("enable_ipv6").(bool)
 	if enableIpv6 {
-		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
-			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for Azure (8), AzureGov (32), AzureChina (2048) and GCP (4)")
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8) and GCP (4)")
 		}
 		vpc.EnableIpv6 = true
 
@@ -373,21 +363,31 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
 		}
 
-		// Handle ipv6_access_type for GCP
+		// Handle ipv6_access_type for Azure
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+			} else {
+				return fmt.Errorf("error creating vpc: valid vpc_ipv6_cidr is required when enable_ipv6 is true for Azure and GCP")
+			}
+		}
+		// Handle ipv6_access_type and vpc_ipv6_cidr for GCP
 		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			if ipv6AccessType, ok := d.GetOk("ipv6_access_type"); ok {
 				vpc.Ipv6AccessType = ipv6AccessType.(string)
+				// GCP requires vpc_ipv6_cidr only when ipv6_access_type is INTERNAL
+				if vpc.Ipv6AccessType == "INTERNAL" {
+					if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+						vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+					} else {
+						return fmt.Errorf("error creating vpc: vpc_ipv6_cidr is required when enable_ipv6 is true and ipv6_access_type is INTERNAL for GCP")
+					}
+				}
 			} else {
 				return fmt.Errorf("error creating vpc: ipv6_access_type is required when enable_ipv6 is true for GCP")
 			}
 		}
 
-		// Handle vpc_ipv6_cidr_list
-		if v, ok := d.GetOk("vpc_ipv6_cidr_list"); ok {
-			for _, cidr := range v.([]interface{}) {
-				vpc.VpcIpv6CidrList = append(vpc.VpcIpv6CidrList, cidr.(string))
-			}
-		}
 	}
 
 	err := client.CreateVpc(vpc)
@@ -639,11 +639,6 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if vC.Ipv6AccessType != "" {
 		d.Set("ipv6_access_type", vC.Ipv6AccessType)
 	}
-	if len(vC.VpcIpv6CidrList) > 0 {
-		d.Set("vpc_ipv6_cidr_list", vC.VpcIpv6CidrList)
-	} else {
-		d.Set("vpc_ipv6_cidr_list", nil)
-	}
 
 	return nil
 }
@@ -682,10 +677,6 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("ipv6_access_type") {
 		log.Printf("[INFO] IPv6 access type change detected.")
-	}
-
-	if d.HasChange("vpc_ipv6_cidr_list") {
-		log.Printf("[INFO] IPv6 CIDR list change detected.")
 	}
 
 	return nil

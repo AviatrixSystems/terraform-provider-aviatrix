@@ -25,10 +25,9 @@ type Vpc struct {
 	PublicRoutesOnly       bool
 	ResourceGroup          string `json:"resource_group,omitempty"`
 	PrivateModeSubnets     bool
-	EnableIpv6             bool     `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
-	VpcIpv6Cidr            string   `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
-	Ipv6AccessType         string   `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
-	VpcIpv6CidrList        []string `form:"vpc_ipv6_cidr_list,omitempty" json:"vpc_ipv6_cidr_list,omitempty"`
+	EnableIpv6             bool   `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
+	VpcIpv6Cidr            string `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
+	Ipv6AccessType         string `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
 }
 
 type VpcEdit struct {
@@ -50,7 +49,6 @@ type VpcEdit struct {
 	EnableIpv6             bool         `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
 	VpcIpv6Cidr            string       `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
 	Ipv6AccessType         string       `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
-	VpcIpv6CidrList        []string     `form:"vpc_ipv6_cidr_list,omitempty" json:"vpc_ipv6_cidr_list,omitempty"`
 }
 
 type VpcResp struct {
@@ -227,7 +225,6 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	vpc.EnableIpv6 = data.Results.EnableIpv6
 	vpc.VpcIpv6Cidr = data.Results.VpcIpv6Cidr
 	vpc.Ipv6AccessType = data.Results.Ipv6AccessType
-	vpc.VpcIpv6CidrList = data.Results.VpcIpv6CidrList
 	return vpc, nil
 }
 
