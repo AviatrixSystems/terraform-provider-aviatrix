@@ -190,6 +190,7 @@ func Provider() *schema.Provider {
 			"aviatrix_trans_peer":                                             resourceAviatrixTransPeer(),
 			"aviatrix_transit_firenet_policy":                                 resourceAviatrixTransitFireNetPolicy(),
 			"aviatrix_transit_gateway":                                        resourceAviatrixTransitGateway(),
+			"aviatrix_transit_ha_gateway":                                     resourceAviatrixTransitHaGateway(),
 			"aviatrix_transit_gateway_peering":                                resourceAviatrixTransitGatewayPeering(),
 			"aviatrix_tunnel":                                                 resourceAviatrixTunnel(),
 			"aviatrix_vgw_conn":                                               resourceAviatrixVGWConn(),
