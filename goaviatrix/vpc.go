@@ -225,6 +225,7 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	vpc.EnableIpv6 = data.Results.EnableIpv6
 	vpc.VpcIpv6Cidr = data.Results.VpcIpv6Cidr
 	vpc.Ipv6AccessType = data.Results.Ipv6AccessType
+	
 	return vpc, nil
 }
 
