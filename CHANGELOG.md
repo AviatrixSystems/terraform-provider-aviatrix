@@ -1,4 +1,22 @@
-## 8.0.10 (Unreleased)
+## 8.1.0 (Unreleased)
+### Notes:
+- Supported Controller version: **8.1.0**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Added support in **aviatrix_spoke_external_device_conn** for configuring BGP communities in BGP over LAN connections.
+2. Enhanced the ``approved_learned_cidrs`` attribute in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** to support optional `ge` and `le` values for specifying prefix ranges, in addition to exact matches.
+3. Added new **aviatrix_distributed_firewalling_default_action_rule** resource for managing Distributed Firewalling default action rules.
+
+### Bug Fixes:
+1. Fixed an issue in **aviatrix_gateway_snat** where both the encoded policy and the raw policy object were sent. The raw policy object has been removed to reduce payload size.
+2. Increased the timeout for **aviatrix_spoke_transit_attachment** to 15 minutes to improve reliability for long-running operations.
+3. Fixed an issue in **aviatrix_gateway_snat** where sending NAT API requests with encoded data could result in `Error reading decompressed data: unexpected EOF`.
+4. Fixed an issue in **aviatrix_edge_spoke_external_device_conn** where the BGP MD5 key could not be added after initial creation. The resource now supports adding the key in subsequent updates.
+5. Fixed the default value of **enable_jumbo_frame** for edge gateways to be `false`.
+
+## 8.0.10 (August 11, 2025)
+### Notes:
 - Supported Controller version: **8.0.10**
 - Supported Terraform version **v1.x**
 
