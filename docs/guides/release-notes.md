@@ -11,10 +11,18 @@ description: |-
 Track all Aviatrix Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-
-``Last updated: R8.0.0 (8.0.0-1000.2432)``
+Last updated: R8.0.10 (8.0.10)
 
 ---
+## 8.0.10
+### Notes:
+- Supported Controller version: **8.0.10**
+
+### Bug Fixes:
+1. Fixed an issue in **aviatrix_gateway_snat** where both the encoded policy and the raw policy object were sent. The raw policy object has been removed to reduce payload size.
+2. Increased the timeout for **aviatrix_spoke_transit_attachment** to 15 minutes to improve reliability for long-running operations.
+3. Fixed an issue in **aviatrix_gateway_snat** where sending NAT API requests with encoded data could result in `Error reading decompressed data: unexpected EOF`.
+
 ## 8.0.0
 ### Versioning Scheme Update
 Starting with this release, the Terraform provider will synchronize its version with the Aviatrix Controller version. This means the provider version has jumped from v3.2.2 to v8.0.0 to align with the Controller’s latest major version. This change makes it easier to determine which provider version is compatible with which Controller version.
