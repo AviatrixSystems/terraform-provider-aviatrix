@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAviatrixVpc() *schema.Resource {
@@ -223,6 +225,27 @@ func resourceAviatrixVpc() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8)and GCP (4).",
+			},
+			"vpc_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				Description:  "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure.For GCP, required when ipv6_access_type is INTERNAL. For AWS, this is auto-allocated and computed.",
+				ValidateFunc: validation.IsCIDR,
+			},
+			"ipv6_access_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "IPv6 access type for GCP. Valid values: INTERNAL, EXTERNAL. Required when enable_ipv6 is true for GCP.",
+				ValidateFunc: validation.StringInSlice([]string{"INTERNAL", "EXTERNAL"}, false),
+			},
 		},
 	}
 }
@@ -289,18 +312,18 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if aviatrixTransitVpc {
 		vpc.AviatrixTransitVpc = "yes"
-		log.Printf("[INFO] Creating a new Aviatrix Transit VPC: %#v", vpc)
+		tflog.Info(context.Background(), fmt.Sprintf("Creating a new Aviatrix Transit VPC: %#v", vpc))
 	} else {
 		vpc.AviatrixTransitVpc = "no"
 	}
 	if aviatrixFireNetVpc {
 		vpc.AviatrixFireNetVpc = "yes"
-		log.Printf("[INFO] Creating a new Aviatrix FireNet VPC: %#v", vpc)
+		tflog.Info(context.Background(), fmt.Sprintf("Creating a new Aviatrix FireNet VPC: %#v", vpc))
 	} else {
 		vpc.AviatrixFireNetVpc = "no"
 	}
 	if !aviatrixTransitVpc && !aviatrixFireNetVpc {
-		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
+		tflog.Info(context.Background(), fmt.Sprintf("Creating a new VPC: %#v", vpc))
 	}
 
 	if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -327,6 +350,46 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
+	}
+
+	// Handle IPv6 fields
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8) and GCP (4)")
+		}
+		vpc.EnableIpv6 = true
+
+		// Handle vpc_ipv6_cidr
+		if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+			vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+		}
+
+		// Handle ipv6_access_type for Azure
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+			} else {
+				return fmt.Errorf("error creating vpc: valid vpc_ipv6_cidr is required when enable_ipv6 is true for Azure and GCP")
+			}
+		}
+		// Handle ipv6_access_type and vpc_ipv6_cidr for GCP
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			if ipv6AccessType, ok := d.GetOk("ipv6_access_type"); ok {
+				vpc.Ipv6AccessType = ipv6AccessType.(string)
+				// GCP requires vpc_ipv6_cidr only when ipv6_access_type is INTERNAL
+				if vpc.Ipv6AccessType == "INTERNAL" {
+					if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+						vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+					} else {
+						return fmt.Errorf("error creating vpc: vpc_ipv6_cidr is required when enable_ipv6 is true and ipv6_access_type is INTERNAL for GCP")
+					}
+				}
+			} else {
+				return fmt.Errorf("error creating vpc: ipv6_access_type is required when enable_ipv6 is true for GCP")
+			}
+		}
+
 	}
 
 	err := client.CreateVpc(vpc)
@@ -362,7 +425,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	vpcName := d.Get("name").(string)
 	if vpcName == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
+		tflog.Debug(context.Background(), fmt.Sprintf("Looks like an import, no vpc names received. Import Id is %s", id))
 		d.Set("name", id)
 		d.SetId(id)
 		return resourceAviatrixVpcRead(d, meta)
@@ -381,7 +444,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("couldn't find VPC: %s", err)
 	}
 
-	log.Printf("[INFO] Found VPC: %#v", vpc)
+	tflog.Info(context.Background(), fmt.Sprintf("Found VPC: %#v", vpc))
 
 	d.Set("cloud_type", vC.CloudType)
 	d.Set("account_name", vC.AccountName)
@@ -493,7 +556,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("subnets", subnetsFromFile); err != nil {
-		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
+		tflog.Warn(context.Background(), fmt.Sprintf("Error setting 'subnets' for (%s): %s", d.Id(), err))
 	}
 
 	var privateSubnets []map[string]interface{}
@@ -506,7 +569,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		privateSubnets = append(privateSubnets, subnetInfo)
 	}
 	if err := d.Set("private_subnets", privateSubnets); err != nil {
-		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+		tflog.Warn(context.Background(), fmt.Sprintf("Error setting 'private_subnets' for (%s): %s", d.Id(), err))
 	}
 
 	var publicSubnets []map[string]interface{}
@@ -519,7 +582,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		publicSubnets = append(publicSubnets, subnetInfo)
 	}
 	if err := d.Set("public_subnets", publicSubnets); err != nil {
-		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
+		tflog.Warn(context.Background(), fmt.Sprintf("Error setting 'public_subnets' for (%s): %s", d.Id(), err))
 	}
 
 	d.SetId(vC.Name)
@@ -545,7 +608,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := d.Set("route_tables", rtbs); err != nil {
-			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
+			tflog.Warn(context.Background(), fmt.Sprintf("Error setting route tables for (%s): %s", d.Id(), err))
 		}
 	} else {
 		d.Set("route_tables", []string{})
@@ -569,6 +632,15 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
+
+	// Set IPv6 fields
+	d.Set("enable_ipv6", vC.EnableIpv6)
+	if vC.VpcIpv6Cidr != "" {
+		d.Set("vpc_ipv6_cidr", vC.VpcIpv6Cidr)
+	}
+	if vC.Ipv6AccessType != "" {
+		d.Set("ipv6_access_type", vC.Ipv6AccessType)
+	}
 
 	return nil
 }
@@ -597,6 +669,21 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Use context.Background() for tflog in SDK v2
+	ctx := context.Background()
+
+	if d.HasChange("enable_ipv6") {
+		tflog.Info(ctx, "IPv6 enablement change detected")
+	}
+
+	if d.HasChange("vpc_ipv6_cidr") {
+		tflog.Info(ctx, "IPv6 CIDR change detected")
+	}
+
+	if d.HasChange("ipv6_access_type") {
+		tflog.Info(ctx, "IPv6 access type change detected")
+	}
+
 	return nil
 }
 
@@ -609,7 +696,7 @@ func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
 		VpcID:       d.Get("vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Deleting VPC: %#v", vpc)
+	tflog.Info(context.Background(), fmt.Sprintf("Deleting VPC: %#v", vpc))
 
 	if d.Get("enable_native_gwlb").(bool) {
 		err := client.DisableNativeAwsGwlbFirenet(vpc)

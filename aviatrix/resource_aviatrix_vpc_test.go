@@ -129,10 +129,204 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	}
 }
 
+func TestAccAviatrixVpc_ipv6_aws(t *testing.T) {
+	var vpc goaviatrix.Vpc
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_vpc.test_vpc_ipv6"
+
+	skipAcc := os.Getenv("SKIP_VPC")
+	if skipAcc == "yes" {
+		t.Skip("Skipping VPC tests as 'SKIP_VPC' is set")
+	}
+
+	skipAccAWS := os.Getenv("SKIP_VPC_AWS")
+	if skipAccAWS != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_AWS' to 'yes' to skip VPC tests in AWS"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckVpcDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccVpcConfigIPv6AWS(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckVpcExists(resourceName, &vpc),
+						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s-ipv6", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", ""),
+						resource.TestCheckResourceAttr(resourceName, "cloud_type", "1"),
+						resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+						resource.TestCheckResourceAttr(resourceName, "aviatrix_transit_vpc", "false"),
+						resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/16"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping IPv6 VPC tests in AWS as 'SKIP_VPC_AWS' is set")
+	}
+}
+
+func TestAccAviatrixVpc_ipv6_azure(t *testing.T) {
+	var vpc goaviatrix.Vpc
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_vpc.test_vpc_ipv6_azure"
+
+	skipAcc := os.Getenv("SKIP_VPC")
+	if skipAcc == "yes" {
+		t.Skip("Skipping VPC tests as 'SKIP_VPC' is set")
+	}
+
+	skipAccAZURE := os.Getenv("SKIP_VPC_AZURE")
+	if skipAccAZURE != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_AZURE' to 'yes' to skip VPC tests in Azure"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckVpcDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccVpcConfigIPv6Azure(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckVpcExists(resourceName, &vpc),
+						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s-ipv6", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", ""),
+						resource.TestCheckResourceAttr(resourceName, "cloud_type", "8"),
+						resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+						resource.TestCheckResourceAttr(resourceName, "vpc_ipv6_cidr", "2001:db8::/48"),
+						resource.TestCheckResourceAttr(resourceName, "aviatrix_transit_vpc", "false"),
+						resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AZURE_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/16"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping IPv6 VPC tests in Azure as 'SKIP_VPC_AZURE' is set")
+	}
+}
+
+func TestAccAviatrixVpc_ipv6_gcp(t *testing.T) {
+	var vpc goaviatrix.Vpc
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_vpc.test_vpc_ipv6_gcp"
+
+	skipAcc := os.Getenv("SKIP_VPC")
+	if skipAcc == "yes" {
+		t.Skip("Skipping VPC tests as 'SKIP_VPC' is set")
+	}
+
+	skipAccGCP := os.Getenv("SKIP_VPC_GCP")
+	if skipAccGCP != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_GCP' to 'yes' to skip VPC tests in GCP"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckVpcDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccVpcConfigIPv6GCP(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckVpcExists(resourceName, &vpc),
+						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s-ipv6", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", ""),
+						resource.TestCheckResourceAttr(resourceName, "cloud_type", "4"),
+						resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+						resource.TestCheckResourceAttr(resourceName, "ipv6_access_type", "EXTERNAL"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.region", "us-east1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.name", "us-east1-subnet-new"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.cidr", "10.0.0.0/16"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping IPv6 VPC tests in GCP as 'SKIP_VPC_GCP' is set")
+	}
+}
+
+func TestAccAviatrixVpc_ipv6_gcp_internal(t *testing.T) {
+	var vpc goaviatrix.Vpc
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_vpc.test_vpc_ipv6_gcp_internal"
+
+	skipAcc := os.Getenv("SKIP_VPC")
+	if skipAcc == "yes" {
+		t.Skip("Skipping VPC tests as 'SKIP_VPC' is set")
+	}
+
+	skipAccGCP := os.Getenv("SKIP_VPC_GCP")
+	if skipAccGCP != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_GCP' to 'yes' to skip VPC tests in GCP"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckVpcDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccVpcConfigIPv6GCPInternal(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckVpcExists(resourceName, &vpc),
+						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s-ipv6-internal", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", ""),
+						resource.TestCheckResourceAttr(resourceName, "cloud_type", "4"),
+						resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+						resource.TestCheckResourceAttr(resourceName, "ipv6_access_type", "INTERNAL"),
+						resource.TestCheckResourceAttr(resourceName, "vpc_ipv6_cidr", "fd20:cbe::/48"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.region", "us-east1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.name", "us-east1-subnet-new-internal"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.cidr", "10.0.0.0/16"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping IPv6 VPC tests in GCP as 'SKIP_VPC_GCP' is set")
+	}
+}
+
 func testAccVpcConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc" {
-	account_name       = "tfa-%s"
+	account_name       = ""
 	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = false
@@ -146,7 +340,7 @@ resource "aviatrix_vpc" "test_vpc" {
 	region       = "%s"
 	cidr         = "10.0.0.0/16"
 }
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+`, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_REGION"))
 }
 
@@ -192,6 +386,79 @@ resource "aviatrix_vpc" "test_vpc" {
 `, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
 		rName, os.Getenv("AZURE_REGION"))
+}
+
+func testAccVpcConfigIPv6AWS(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_vpc" "test_vpc_ipv6" {
+	cloud_type   = 1
+	account_name = ""
+	name         = "tfg-%s-ipv6"
+	region       = "%s"
+	cidr         = "10.0.0.0/16"
+	
+	enable_ipv6 = true
+	
+	aviatrix_transit_vpc = false
+	aviatrix_firenet_vpc = false
+}
+`, rName, os.Getenv("AWS_REGION"))
+}
+
+func testAccVpcConfigIPv6Azure(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_vpc" "test_vpc_ipv6_azure" {
+	cloud_type   = 8
+	account_name = "test-account"
+	name         = "tfg-%s-ipv6"
+	region       = "%s"
+	cidr         = "10.0.0.0/16"
+	enable_ipv6 = true
+	vpc_ipv6_cidr = "2001:db8::/48"
+	
+	aviatrix_transit_vpc = false
+	aviatrix_firenet_vpc = false
+}
+`, rName, os.Getenv("AZURE_REGION"))
+}
+
+func testAccVpcConfigIPv6GCP(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_vpc" "test_vpc_ipv6_gcp" {
+	cloud_type   = 4
+	account_name = ""
+	name         = "tfg-%s-ipv6"
+	
+	subnets {
+		name   = "us-east1-subnet-new"
+		region = "us-east1"
+		cidr   = "10.0.0.0/16"
+	}
+	
+	enable_ipv6 = true
+	ipv6_access_type = "EXTERNAL"
+}
+`, rName)
+}
+
+func testAccVpcConfigIPv6GCPInternal(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_vpc" "test_vpc_ipv6_gcp_internal" {
+	cloud_type   = 4
+	account_name = ""
+	name         = "tfg-%s-ipv6-internal"
+	
+	subnets {
+		name   = "us-east1-subnet-new-internal"
+		region = "us-east1"
+		cidr   = "10.0.0.0/16"
+	}
+	
+	enable_ipv6 = true
+	ipv6_access_type = "INTERNAL"
+	vpc_ipv6_cidr =  "fd20:cbe::/48"
+}
+`, rName)
 }
 
 func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc {
