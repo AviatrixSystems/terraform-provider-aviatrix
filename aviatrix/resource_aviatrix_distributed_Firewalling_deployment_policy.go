@@ -51,7 +51,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	if !ok {
 		return diag.Errorf("failed to assert 'providers' as array of strings")
 	}
-	set_defaults, ok := d.Get("set_defaults").(bool)
+	setDefaults, ok := d.Get("set_defaults").(bool)
 	if !ok {
 		return diag.Errorf("failed to assert 'set_defaults' as bool")
 	}
@@ -67,7 +67,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 
 	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
 		Providers:   providersList,
-		SetDefaults: set_defaults,
+		SetDefaults: setDefaults,
 	}
 
 	if err := client.CreateDistributedFirewallingDeploymentPolicy(ctx, deploymentPolicy); err != nil {
