@@ -49,6 +49,7 @@ func testAccDistributedFirewallingDeploymentPolicyConfigBasic() string {
 	return `
 resource "aviatrix_distributed_firewalling_deployment_policy" "test" {
 	providers = ["AWS", "GCP"]
+	set_defaults = false
 }
 	`
 }

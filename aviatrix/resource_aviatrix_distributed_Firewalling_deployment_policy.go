@@ -30,6 +30,14 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"set_defaults": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+				Description: "Set to true to reset the deployment policy to default values. " +
+					"Set to false to create a new deployment policy with the specified providers.",
+			},
 		},
 	}
 }
@@ -43,6 +51,11 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	if !ok {
 		return diag.Errorf("failed to assert 'providers' as array of strings")
 	}
+	set_defaults, ok := d.Get("set_defaults").(bool)
+	if !ok {
+		return diag.Errorf("failed to assert 'set_defaults' as bool")
+	}
+
 	providersList := []string{}
 	for _, v := range providers.List() {
 		if str, ok := v.(string); ok {
@@ -53,7 +66,8 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	}
 
 	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
-		Providers: providersList,
+		Providers:   providersList,
+		SetDefaults: set_defaults,
 	}
 
 	if err := client.CreateDistributedFirewallingDeploymentPolicy(ctx, deploymentPolicy); err != nil {
@@ -88,6 +102,10 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Cont
 		return diag.Errorf("failed to set 'providers': %v", err)
 	}
 
+	if err := d.Set("set_defaults", deploymentPolicy.SetDefaults); err != nil {
+		return diag.Errorf("failed to set 'set_defaults': %v", err)
+	}
+
 	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
 	return nil
 }
@@ -97,16 +115,13 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Co
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
 	}
-	defaultProviders := []string{
+	dummyProviders := []string{
 		"GCP",
 		"AWS",
-		"AWS-GOV",
-		"AZURE-GOV",
-		"AZURE",
-		"AVX-TEST",
 	}
 	deploymentPolicy := &goaviatrix.DistributedFirewallingDeploymentPolicy{
-		Providers: defaultProviders,
+		Providers:   dummyProviders,
+		SetDefaults: true, // Reset to default to delete
 	}
 
 	if err := client.CreateDistributedFirewallingDeploymentPolicy(ctx, deploymentPolicy); err != nil {

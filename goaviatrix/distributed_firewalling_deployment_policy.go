@@ -5,7 +5,8 @@ import (
 )
 
 type DistributedFirewallingDeploymentPolicy struct {
-	Providers []string `json:"providers"`
+	Providers   []string `json:"providers"`
+	SetDefaults bool     `json:"set_defaults,omitempty"`
 }
 
 func (c *Client) GetDistributedFirewallingDeploymentPolicy(ctx context.Context) (*DistributedFirewallingDeploymentPolicy, error) {
