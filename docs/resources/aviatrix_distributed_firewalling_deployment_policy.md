@@ -13,7 +13,7 @@ The **aviatrix_distributed_firewalling_deployment_policy** resource handles the 
 Default CSP providers: `["GCP", "AWS", "AWS-GOV", "AZURE-GOV", "AZURE", "AVX-TEST"]`
 Once the Distributed Cloud Firewall (DCF) is enabled a default deployment policy is created with default CSP providers. We can override this by adding a deployment policy to limit the use of DCF for CSPs. The policy has creation has two fields:
 -providers: This is a list of CSPs where DCF should be enabled.
--set_defaults: If this is set to true, the deployment policy will be enabled in default CSPs, if this is set to false, then it will enable DCF only in the CSPs mentioned in the providers list.
+-set_defaults: If this is set to true, the deployment policy will be enabled in default CSPs. The providers set will be ignoerd. If this is set to false, then it will enable DCF only in the CSPs mentioned in the providers list.
 
 Once this policy is destroyed the providers will be reset back to the default set of providers.
 
@@ -34,7 +34,7 @@ resource "aviatrix_distributed_firewalling_deployment_policy" "test" {
 The following arguments are supported:
 
 ### Required
-    * `providers` - (Required) This is the list of CSPs where we want DCF to be enabled. Type: List of Strings
+    * `providers` - (Optional) This is the list of CSPs where we want DCF to be enabled. This will be ignored when set_defaults is set to True Type: List of Strings
     * `set_defaults` - (Optional) Set to False if not provided. If we want to override the providers argument and set to default providers set this argument to True. Type: Boolean.
 
 ## Import

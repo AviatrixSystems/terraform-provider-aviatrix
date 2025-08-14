@@ -23,7 +23,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 			"providers": {
 				Type:        schema.TypeSet,
 				ForceNew:    true,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "List of CSPs to apply the DCF policies to.",
 				Elem: &schema.Schema{
@@ -43,17 +43,28 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 }
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
+	}
+	setDefaults, ok := d.Get("set_defaults").(bool)
+	if !ok {
+		return diag.Errorf("failed to assert 'set_defaults' as bool")
 	}
 	providers, ok := d.Get("providers").(*schema.Set)
 	if !ok {
 		return diag.Errorf("failed to assert 'providers' as array of strings")
 	}
-	setDefaults, ok := d.Get("set_defaults").(bool)
-	if !ok {
-		return diag.Errorf("failed to assert 'set_defaults' as bool")
+	if providers.Len() == 0 && !setDefaults {
+		return diag.Errorf("providers must be specified if set_defaults is false")
+	}
+	if providers.Len() > 0 && setDefaults {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Providers will be ignored",
+			Detail:   "When 'set_defaults' is set to true, providers that are set will be ignored.",
+		})
 	}
 
 	providersList := []string{}
@@ -75,7 +86,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	}
 
 	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
-	return resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)
+	return append(diags, resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)...)
 }
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
