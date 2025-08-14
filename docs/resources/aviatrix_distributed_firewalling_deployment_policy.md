@@ -6,7 +6,7 @@ description: |-
   Creates and manages an Aviatrix Distributed-firewalling deployment policy
 ---
 
-# aviatrix_distributed_firewalling_default_action_rule
+# aviatrix_distributed_firewalling_deployment_policy
 
 The **aviatrix_distributed_firewalling_deployment_policy** resource handles the creation and management of Distributed-firewalling deployment policy. Available as of Provider 3.2.2+.
 
