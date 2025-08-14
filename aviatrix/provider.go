@@ -114,6 +114,7 @@ func Provider() *schema.Provider {
 			"aviatrix_distributed_firewalling_origin_cert_enforcement_config": resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig(),
 			"aviatrix_distributed_firewalling_policy_list":                    resourceAviatrixDistributedFirewallingPolicyList(),
 			"aviatrix_distributed_firewalling_default_action_rule":            resourceAviatrixDistributedFirewallingDefaultActionRule(),
+			"aviatrix_distributed_firewalling_deployment_policy":              resourceAviatrixDistributedFirewallingDeploymentPolicy(),
 			"aviatrix_distributed_firewalling_proxy_ca_config":                resourceAviatrixDistributedFirewallingProxyCaConfig(),
 			"aviatrix_edge_csp":                                               resourceAviatrixEdgeCSP(),
 			"aviatrix_edge_csp_ha":                                            resourceAviatrixEdgeCSPHa(),
