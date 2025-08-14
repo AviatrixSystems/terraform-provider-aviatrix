@@ -56,15 +56,11 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 	if !ok {
 		return diag.Errorf("failed to assert 'providers' as array of strings")
 	}
-	if providers.Len() == 0 && !setDefaults {
-		return diag.Errorf("providers must be specified if set_defaults is false")
-	}
-	if providers.Len() > 0 && setDefaults {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "Providers will be ignored",
-			Detail:   "When 'set_defaults' is set to true, providers that are set will be ignored.",
-		})
+	validDiag, isValid := validateDeploymentPolicyInput(providers, setDefaults)
+	if !isValid {
+		return validDiag
+	} else if validDiag != nil {
+		diags = append(diags, validDiag...)
 	}
 
 	providersList := []string{}
@@ -87,6 +83,20 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Co
 
 	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
 	return append(diags, resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx, d, meta)...)
+}
+
+func validateDeploymentPolicyInput(providers *schema.Set, setDefaults bool) (diag.Diagnostics, bool) {
+	if providers.Len() == 0 && !setDefaults {
+		return diag.Errorf("providers must be specified if set_defaults is false"), false
+	}
+	if providers.Len() > 0 && setDefaults {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "Providers will be ignored",
+			Detail:   "When 'set_defaults' is set to true, providers that are set will be ignored.",
+		}}, true
+	}
+	return nil, true
 }
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
