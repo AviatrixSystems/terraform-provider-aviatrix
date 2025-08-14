@@ -2,9 +2,9 @@ package aviatrix
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -95,9 +95,22 @@ func testAccCheckDistributedFirewallingDeploymentPolicyDestroy(s *terraform.Stat
 			continue
 		}
 
-		_, err := client.GetDistributedFirewallingDeploymentPolicy(context.Background())
-		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
-			return fmt.Errorf("distributed firewalling deployment policy still exists: %w", err)
+		policy, err := client.GetDistributedFirewallingDeploymentPolicy(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to get distributed firewalling deployment policy ASQWREWREF: %w", err)
+		}
+
+		expectedProviders := []string{
+			"AWS",
+			"AZURE",
+			"GCP",
+			"AWS-GOV",
+			"AZURE-GOV",
+			"AVX-TEST",
+		}
+
+		if !slices.Equal(policy.Providers, expectedProviders) {
+			return fmt.Errorf("distributed firewalling deployment policy not reset to defaults after destroy: %s", rs.Primary.ID)
 		}
 	}
 
