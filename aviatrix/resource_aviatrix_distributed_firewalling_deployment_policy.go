@@ -115,7 +115,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Co
 	if !ok {
 		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
 	}
-	
+
 	// These dummy values are required but will be ignored by the API when SetDefaults=true
 	dummyProviders := []string{
 		"GCP",
