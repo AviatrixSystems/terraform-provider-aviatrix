@@ -626,6 +626,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "BGP communities gateway accept configuration.",
 				Default:     false,
 			},
+			"gateway_override": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP MED to SDN metric gateway override configuration.",
+				Default:     false,
+			},
 		},
 	}
 }
@@ -1053,6 +1059,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 		if err != nil {
 			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	/* Set BGP MED to SDN metric per gateway */
+	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	gwOverride, ok := d.Get("gateway_override").(bool)
+	if ok && gwOverride != override || err != nil {
+		err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
+		if err != nil {
+			return fmt.Errorf("failed to override BGP MED to SDN metric for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
@@ -1819,6 +1835,15 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
 	}
 
+	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("failed to get BGP MED to SDN metric for gateway %s: %w", gateway.GwName, err)
+	}
+	err = d.Set("gateway_override", override)
+	if err != nil {
+		return fmt.Errorf("failed to set gateway_override: %w", err)
+	}
+
 	return nil
 }
 
@@ -1877,6 +1902,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
 			if err != nil {
 				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+
+	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	if d.HasChange("gateway_override") {
+		gw_override, ok := d.Get("gateway_override").(bool)
+		if ok && gw_override != override || err != nil {
+			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gw_override)
+			if err != nil {
+				return fmt.Errorf("failed to override BGP MED to SDN metric for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 	}
