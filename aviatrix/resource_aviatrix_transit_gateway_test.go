@@ -379,6 +379,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.gateway_ip", "192.168.20.1"),
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.ip_address", "192.168.20.11/24"),
 						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.logical_ifname", "wan0"),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "ztp_file_type", "iso"),
 					),
 				},
 				{
@@ -692,6 +693,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_selfmanaged" {
 	vpc_id       = "%[2]s"
 	gw_size      = ""
 	ztp_file_download_path = "/tmp"
+	ztp_file_type = "iso"
 	interfaces {
         gateway_ip     = "192.168.20.1"
         ip_address     = "192.168.20.11/24"
