@@ -422,7 +422,8 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
-* `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix EAT gateway.
+* `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix, Megaport and Selfmanaged EAT gateway.
+* `ztp_file_type` - (Optional) ZTP file type. Valid values: "iso", "cloud-init". Required only for Selfmanaged EAT gateway.
 * `device_id` - (Optional) Device ID for AEP EAT gateway. Required only for AEP gateway.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
   * `logical_ifname` - (Required) Logical interface name e.g., wan0, mgmt0.
