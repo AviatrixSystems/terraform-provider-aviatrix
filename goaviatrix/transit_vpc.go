@@ -822,26 +822,36 @@ func createZtpFile(filePath, content string) error {
 	return nil
 }
 
-// createZtpFileISO handles binary ISO file content
+// createZtpFileISO handles ISO file content by decoding base64 from JSON response
 func createZtpFileISO(filePath, isoContent string) error {
+	// Parse the JSON response (equivalent to json.loads(cloud_init_transit))
+	var jsonCloudInit map[string]interface{}
+	err := json.Unmarshal([]byte(isoContent), &jsonCloudInit)
+	if err != nil {
+		return fmt.Errorf("failed to parse cloud_init_transit as JSON: %w", err)
+	}
+
+	// Extract the 'text' field from the JSON
+	text, ok := jsonCloudInit["text"].(string)
+	if !ok {
+		return fmt.Errorf("'text' field not found or is not a string in cloud_init_transit")
+	}
+
+	// Decode base64 content (equivalent to base64.b64decode(json_cloud_init_transit['text']))
+	decodedBytes, err := base64.StdEncoding.DecodeString(text)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 content: %w", err)
+	}
+
+	// Create the ISO file and write binary data (equivalent to open(iso_json_file, "wb"))
 	outFile, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create the ISO file: %w", err)
 	}
 	defer outFile.Close()
 
-	// Decode base64 content if it's encoded, otherwise treat as binary
-	var data []byte
-	if decoded, err := base64.StdEncoding.DecodeString(isoContent); err == nil {
-		// Successfully decoded base64
-		data = decoded
-	} else {
-		// Not base64, treat as raw bytes
-		data = []byte(isoContent)
-	}
-
-	// Write binary data to the file
-	_, err = outFile.Write(data)
+	// Write the decoded bytes to the file (equivalent to f.write(decoded_bytes))
+	_, err = outFile.Write(decodedBytes)
 	if err != nil {
 		return fmt.Errorf("failed to write ISO data to file: %w", err)
 	}
