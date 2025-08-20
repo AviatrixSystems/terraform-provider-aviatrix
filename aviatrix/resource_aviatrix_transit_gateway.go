@@ -4018,6 +4018,11 @@ func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 	if err := os.Remove(fileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("could not remove the ztp file: %w", err)
 	}
+	// remove iso file
+	isoFileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + ".iso"
+	if err := os.Remove(isoFileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("could not remove the iso file: %w", err)
+	}
 	return nil
 }
 
