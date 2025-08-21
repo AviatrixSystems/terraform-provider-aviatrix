@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -72,6 +73,8 @@ type TransitVpc struct {
 	EipMap                       string              `json:"eip_map,omitempty"`
 	LogicalEipMap                map[string][]EipMap `json:"logical_intf_eip_map,omitempty"`
 	ZtpFileDownloadPath          string              `json:"-"`
+	ZtpFileType                  string              `json:"ztp_file_type,omitempty"`
+	GatewayRegistrationMethod    string              `json:"gw_registration_method,omitempty"`
 	ManagementEgressIPPrefix     string              `json:"mgmt_egress_ip,omitempty"`
 	JumboFrame                   bool                `json:"jumbo_frame,omitempty"`
 }
@@ -189,7 +192,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 		return err
 	}
 	// create the ZTP file for Equinix and Megaport edge transit gateway
-	if IsCloudType(gateway.CloudType, EDGEEQUINIX|EDGEMEGAPORT|EDGESELFMANAGED) {
+	if IsCloudType(gateway.CloudType, EDGEEQUINIX|EDGEMEGAPORT) {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
 		fileContent, err := processZtpFileContent(data.Result)
 		if err != nil {
@@ -198,6 +201,29 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 		err = createZtpFile(fileName, fileContent)
 		if err != nil {
 			return err
+		}
+	}
+
+	if IsCloudType(gateway.CloudType, EDGESELFMANAGED) {
+		// log the ztp file type
+		var fileName string
+		if gateway.ZtpFileType == "iso" {
+			fileName = gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + ".iso"
+			// For ISO files, handle binary content differently
+			err = createZtpFileISO(fileName, data.Result)
+			if err != nil {
+				return err
+			}
+		} else {
+			fileName = getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
+			fileContent, err := processZtpFileContent(data.Result)
+			if err != nil {
+				return err
+			}
+			err = createZtpFile(fileName, fileContent)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -792,6 +818,42 @@ func createZtpFile(filePath, content string) error {
 	_, err = outFile.WriteString(content)
 	if err != nil {
 		return fmt.Errorf("failed to write to the file: %w", err)
+	}
+	return nil
+}
+
+// createZtpFileISO handles ISO file content by decoding base64 from JSON response
+func createZtpFileISO(filePath, isoContent string) error {
+	// Parse the JSON response (equivalent to json.loads(cloud_init_transit))
+	var jsonCloudInit map[string]interface{}
+	err := json.Unmarshal([]byte(isoContent), &jsonCloudInit)
+	if err != nil {
+		return fmt.Errorf("failed to parse cloud_init_transit as JSON: %w", err)
+	}
+
+	// Extract the 'text' field from the JSON
+	text, ok := jsonCloudInit["text"].(string)
+	if !ok {
+		return fmt.Errorf("'text' field not found or is not a string in cloud_init_transit")
+	}
+
+	// Decode base64 content (equivalent to base64.b64decode(json_cloud_init_transit['text']))
+	decodedBytes, err := base64.StdEncoding.DecodeString(text)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 content: %w", err)
+	}
+
+	// Create the ISO file and write binary data (equivalent to open(iso_json_file, "wb"))
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create the ISO file: %w", err)
+	}
+	defer outFile.Close()
+
+	// Write the decoded bytes to the file (equivalent to f.write(decoded_bytes))
+	_, err = outFile.Write(decodedBytes)
+	if err != nil {
+		return fmt.Errorf("failed to write ISO data to file: %w", err)
 	}
 	return nil
 }
