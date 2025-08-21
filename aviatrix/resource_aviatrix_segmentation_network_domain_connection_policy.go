@@ -55,7 +55,7 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.R
 	// validate domain names exist
 	domainNames, err := client.ListSegmentationSecurityDomains()
 	if err != nil {
-		return fmt.Errorf("could not find segmentation_network_domains: %v", err)
+		return fmt.Errorf("could not find segmentation_network_domains: %w", err)
 	}
 	for _, domainName := range []string{policy.Domain1.DomainName, policy.Domain2.DomainName} {
 		if !slices.Contains(domainNames, domainName) {
