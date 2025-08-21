@@ -120,8 +120,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"ztp_file_type": {
 				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Optional:     true,
 				Description:  "ZTP file type.",
 				ValidateFunc: validation.StringInSlice([]string{"iso", "cloud-init"}, false),
 			},
