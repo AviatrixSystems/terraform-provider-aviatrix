@@ -37,7 +37,7 @@ func (c *Client) DeleteSegmentationSecurityDomain(domain *SegmentationSecurityDo
 	return c.PostAPI(action, data, BasicCheck)
 }
 
-func (c *Client) GetSegmentationSecurityDomain(domain *SegmentationSecurityDomain) (*SegmentationSecurityDomain, error) {
+func (c *Client) ListSegmentationSecurityDomains() ([]string, error) {
 	form := map[string]string{
 		"CID":    c.CID,
 		"action": "list_multi_cloud_security_domain_names",
@@ -55,8 +55,15 @@ func (c *Client) GetSegmentationSecurityDomain(domain *SegmentationSecurityDomai
 	if err != nil {
 		return nil, err
 	}
+	return data.Results, nil
+}
 
-	if !Contains(data.Results, domain.DomainName) {
+func (c *Client) GetSegmentationSecurityDomain(domain *SegmentationSecurityDomain) (*SegmentationSecurityDomain, error) {
+	domainNames, err := c.ListSegmentationSecurityDomains()
+	if err != nil {
+		return nil, err
+	}
+	if !Contains(domainNames, domain.DomainName) {
 		return nil, ErrNotFound
 	}
 
