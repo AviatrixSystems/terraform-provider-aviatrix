@@ -118,6 +118,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 				Description: "The location where the ZTP file will be stored locally.",
 			},
+			"ztp_file_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "ZTP file type.",
+				ValidateFunc: validation.StringInSlice([]string{"iso", "cloud-init"}, false),
+			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -3968,7 +3974,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 			vpcID, ok := d.Get("vpc_id").(string)
 			if !ok {
 				return fmt.Errorf("vpc_id is not a string")
@@ -3988,7 +3994,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		vpcID, ok := d.Get("vpc_id").(string)
 		if !ok {
 			return fmt.Errorf("vpc_id is not a string")
@@ -4010,6 +4016,11 @@ func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 	fileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + "-cloud-init.txt"
 	if err := os.Remove(fileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("could not remove the ztp file: %w", err)
+	}
+	// remove iso file
+	isoFileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + ".iso"
+	if err := os.Remove(isoFileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("could not remove the iso file: %w", err)
 	}
 	return nil
 }
@@ -4062,6 +4073,13 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
+		}
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+			gateway.ZtpFileType, ok = d.Get("ztp_file_type").(string)
+			if !ok {
+				return fmt.Errorf("ztp_file_type attribute is required for Selfmanaged Edge Transit Gateway")
+			}
+			gateway.GatewayRegistrationMethod = gateway.ZtpFileType
 		}
 		managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
 		if len(managementEgressIPPrefixList) > 0 {
@@ -4412,6 +4430,15 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
 	if len(haManagementEgressIPPrefixList) > 0 {
 		transitHaGw.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
+	}
+
+	// ztp file type and registration method is only required for self-managed edge
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+		transitHaGw.ZtpFileType, ok = d.Get("ztp_file_type").(string)
+		if !ok {
+			return nil, fmt.Errorf("ztp_file_type is required for HA Edge Transit Gateway")
+		}
+		transitHaGw.GatewayRegistrationMethod = transitHaGw.ZtpFileType
 	}
 	return transitHaGw, nil
 }

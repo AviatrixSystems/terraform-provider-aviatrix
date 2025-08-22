@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -50,6 +51,17 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.R
 	client := meta.(*goaviatrix.Client)
 
 	policy := marshalSegmentationNetworkDomainConnectionPolicyInput(d)
+
+	// validate domain names exist
+	domainNames, err := client.ListSegmentationSecurityDomains()
+	if err != nil {
+		return fmt.Errorf("could not find segmentation_network_domains: %w", err)
+	}
+	for _, domainName := range []string{policy.Domain1.DomainName, policy.Domain2.DomainName} {
+		if !slices.Contains(domainNames, domainName) {
+			return fmt.Errorf("could not find segmentation_network_domain %s in %v", domainName, domainNames)
+		}
+	}
 
 	d.SetId(policy.Domain1.DomainName + "~" + policy.Domain2.DomainName)
 	flag := false
