@@ -282,12 +282,12 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 
 			portRange.Lo, ok = portRangeMap["lo"].(int)
 			if !ok {
-				return nil, fmt.Errorf("port range lo must be of type bool")
+				return nil, fmt.Errorf("port range lo must be of type int")
 			}
 
 			portRange.Hi, ok = portRangeMap["hi"].(int)
 			if !ok {
-				return nil, fmt.Errorf("port range hi must be of type bool")
+				return nil, fmt.Errorf("port range hi must be of type int")
 			}
 
 			policy.PortRanges = append(policy.PortRanges, *portRange)
