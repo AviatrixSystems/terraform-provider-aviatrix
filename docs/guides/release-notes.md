@@ -12,17 +12,98 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.2.1 (UserConnect-7.2.4996)``
+Last updated: R8.1.1 (8.1.1)
 
 ---
-
-## 8.0
+## 8.1.1
 ### Notes:
-- Supported Controller version: **UserConnect-8.0.0**
+- Supported Controller version: **8.1.0**
+
+### Enhancements:
+1. Added support in **aviatrix_spoke_external_device_conn** for configuring BGP communities in BGP over LAN connections.
+2. Enhanced the ``approved_learned_cidrs`` attribute in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** to support optional `ge` and `le` values for specifying prefix ranges, in addition to exact matches.
+3. Added new **aviatrix_distributed_firewalling_default_action_rule** resource for managing Distributed Firewalling default action rules.
+
+### Bug Fixes:
+1. Fixed an issue in **aviatrix_gateway_snat** where both the encoded policy and the raw policy object were sent. The raw policy object has been removed to reduce payload size.
+2. Increased the timeout for **aviatrix_spoke_transit_attachment** to 15 minutes to improve reliability for long-running operations.
+3. Fixed an issue in **aviatrix_gateway_snat** where sending NAT API requests with encoded data could result in `Error reading decompressed data: unexpected EOF`.
+4. Fixed an issue in **aviatrix_edge_spoke_external_device_conn** where the BGP MD5 key could not be added after initial creation. The resource now supports adding the key in subsequent updates.
+5. Fixed the default value of **enable_jumbo_frame** for edge gateways to be `false`.
+6. Fixed supported versions to support 8.1 controller.
+
+## 8.1.0
+### Notes:
+- Supported Controller version: **8.1.0**
+
+### Enhancements:
+1. Added support in **aviatrix_spoke_external_device_conn** for configuring BGP communities in BGP over LAN connections.
+2. Enhanced the ``approved_learned_cidrs`` attribute in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** to support optional `ge` and `le` values for specifying prefix ranges, in addition to exact matches.
+3. Added new **aviatrix_distributed_firewalling_default_action_rule** resource for managing Distributed Firewalling default action rules.
+
+### Bug Fixes:
+1. Fixed an issue in **aviatrix_gateway_snat** where both the encoded policy and the raw policy object were sent. The raw policy object has been removed to reduce payload size.
+2. Increased the timeout for **aviatrix_spoke_transit_attachment** to 15 minutes to improve reliability for long-running operations.
+3. Fixed an issue in **aviatrix_gateway_snat** where sending NAT API requests with encoded data could result in `Error reading decompressed data: unexpected EOF`.
+4. Fixed an issue in **aviatrix_edge_spoke_external_device_conn** where the BGP MD5 key could not be added after initial creation. The resource now supports adding the key in subsequent updates.
+5. Fixed the default value of **enable_jumbo_frame** for edge gateways to be `false`.
+
+## 8.0.10
+### Notes:
+- Supported Controller version: **8.0.10**
+
+### Bug Fixes:
+1. Fixed an issue in **aviatrix_gateway_snat** where both the encoded policy and the raw policy object were sent. The raw policy object has been removed to reduce payload size.
+2. Increased the timeout for **aviatrix_spoke_transit_attachment** to 15 minutes to improve reliability for long-running operations.
+3. Fixed an issue in **aviatrix_gateway_snat** where sending NAT API requests with encoded data could result in `Error reading decompressed data: unexpected EOF`.
+
+## 8.0.0
+### Versioning Scheme Update
+Starting with this release, the Terraform provider will synchronize its version with the Aviatrix Controller version. This means the provider version has jumped from v3.2.2 to v8.0.0 to align with the Controller’s latest major version. This change makes it easier to determine which provider version is compatible with which Controller version.
+Moving forward, the provider will follow semantic versioning (major.minor.patch).
+
+### Notes:
+- Supported Controller version: **8.0.0-1000.2432**
 
 ### Enhancements:
 1. Added field tls_profile to **aviatrix_distributed_firewalling_policy_list** to be able specify a TLS profile in a DCF policy.
+2. Added support for importing the **aviatrix_edge_proxy_profile** resource.
+3. Allow special characters in Azure tags on gateway instances, to align with UI behavior.
+4. Extended k8s examples for the **aviatrix_smart_group** resource.
+5. Implemented new resources **aviatrix_edge_megaport** and **aviatrix_edge_megaport_ha** for deployment of spoke gateway in Megaport.
+6. The **aviatrix_transit_gateway** resource now supports deploying in Equinix and Megaport.
+7. Added support for `enable_bgp_multihop` to **aviatrix_edge_spoke_external_device_conn**, **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn** resources.
+8. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_edge_underlay` which allows for configuring BGP on the underlay.
+9. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_bgp_lan_activemesh` enabling activemesh support for BGP peering on the LAN.
+10. The **aviatrix_edge_spoke_external_device_conn** resource now supports `enable_jumbo_frame`.
 
+### Deprecations
+1. The argument **aviatrix_dns_profile** has been removed from the following resources, as it was never used.
+  - **aviatrix_edge_csp**
+  - **aviatrix_edge_equinix**
+  - **aviatrix_edge_neo**
+  - **aviatrix_edge_platform**
+  - **aviatrix_edge_zededa**
+2. The CloudN related resources **aviatrix_cloudn_registration** and **aviatrix_cloudn_transit_gateway_attachment** have been removed, as they are no longer supported.
+
+### Bug Fixes:
+1. Fixed an issue where `ha_eip` was not applied to an Azure transit HA gateway.
+2. Fixed an issue where the **aviatrix_vpc_tracker** data source was returning incorrect `cloud_type` information.
+3. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
+
+## 3.2.2
+### Notes:
+- Supported Controller version: **UserConnect-7.2.5090**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Updated documentation for **aviatrix_edge_equinix**.
+    - Added examples for static and DHCP management interface.
+    - Added examples of required Equinic resources.
+    - Clarified the description of **management_egress_ip_prefix_list**.
+
+### Bug Fixes:
+1. Fixed an issue where retrieving a large number of objects could result in a 502 Proxy Error during terraform operations.
 
 ## 3.2.1
 ### Notes:

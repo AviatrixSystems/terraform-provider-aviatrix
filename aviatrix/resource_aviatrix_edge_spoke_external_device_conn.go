@@ -620,6 +620,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	if externalDeviceConn.EnableEdgeUnderlay && d.HasChanges("bgp_md5_key", "backup_bgp_md5_key") {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 
+		bgpMD5Key, ok := d.Get("bgp_md5_key").(string)
+		if !ok {
+			return diag.Errorf("invalid value for 'bgp_md5_key': expected a string, but got a %T (value: %v)", bgpMD5Key, bgpMD5Key)
+		}
+		edgeExternalDeviceConn.BgpMd5Key = bgpMD5Key
+
+		backupBGPMD5Key, ok := d.Get("backup_bgp_md5_key").(string)
+		if !ok {
+			return diag.Errorf("invalid value for 'backup_bgp_md5_key': expected a string, but got a %T (value: %v)", backupBGPMD5Key, backupBGPMD5Key)
+		}
+		edgeExternalDeviceConn.BackupBgpMd5Key = backupBGPMD5Key
+
 		edgeExternalDeviceConn.BgpMd5KeyChanged = true
 
 		_, err := client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)

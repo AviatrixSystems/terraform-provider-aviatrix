@@ -23,57 +23,60 @@ var defaultBfdConfig = BgpBfdConfig{
 }
 
 type ExternalDeviceConn struct {
-	Action                 string `form:"action,omitempty"`
-	CID                    string `form:"CID,omitempty"`
-	VpcID                  string `form:"vpc_id,omitempty"`
-	ConnectionName         string `form:"connection_name,omitempty"`
-	GwName                 string `form:"transit_gw,omitempty"`
-	ConnectionType         string `form:"routing_protocol,omitempty"`
-	BgpLocalAsNum          int    `form:"bgp_local_as_number,omitempty"`
-	BgpRemoteAsNum         int    `form:"external_device_as_number,omitempty"`
-	RemoteGatewayIP        string `form:"external_device_ip_address,omitempty"`
-	RemoteSubnet           string `form:"remote_subnet,omitempty"`
-	DirectConnect          string `form:"direct_connect,omitempty"`
-	PreSharedKey           string `form:"pre_shared_key,omitempty"`
-	LocalTunnelCidr        string `form:"local_tunnel_ip,omitempty"`
-	RemoteTunnelCidr       string `form:"remote_tunnel_ip,omitempty"`
-	CustomAlgorithms       bool
-	Phase1Auth             string `form:"phase1_authentication,omitempty"`
-	Phase1DhGroups         string `form:"phase1_dh_groups,omitempty"`
-	Phase1Encryption       string `form:"phase1_encryption,omitempty"`
-	Phase2Auth             string `form:"phase2_authentication,omitempty"`
-	Phase2DhGroups         string `form:"phase2_dh_groups,omitempty"`
-	Phase2Encryption       string `form:"phase2_encryption,omitempty"`
-	HAEnabled              string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
-	BackupRemoteGatewayIP  string `form:"backup_external_device_ip_address,omitempty"`
-	BackupBgpRemoteAsNum   int    `form:"backup_external_device_as_number,omitempty"`
-	BackupPreSharedKey     string `form:"backup_pre_shared_key,omitempty"`
-	BackupLocalTunnelCidr  string `form:"backup_local_tunnel_ip,omitempty"`
-	BackupRemoteTunnelCidr string `form:"backup_remote_tunnel_ip,omitempty"`
-	BackupDirectConnect    string `form:"backup_direct_connect,omitempty"`
-	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
-	EnableIkev2            string `form:"enable_ikev2,omitempty"`
-	ManualBGPCidrs         []string
-	TunnelProtocol         string `form:"tunnel_protocol,omitempty"`
-	EnableBgpLanActiveMesh bool   `form:"bgp_lan_activemesh,omitempty"`
-	PeerVnetId             string `form:"peer_vnet_id,omitempty"`
-	RemoteLanIP            string `form:"remote_lan_ip,omitempty"`
-	LocalLanIP             string `form:"local_lan_ip,omitempty"`
-	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
-	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
-	EventTriggeredHA       bool
-	EnableJumboFrame       bool `form:"jumbo_frame,omitempty"`
-	Phase1LocalIdentifier  string
-	Phase1RemoteIdentifier string
-	PrependAsPath          string
-	BgpMd5Key              string       `form:"bgp_md5_key,omitempty"`
-	BackupBgpMd5Key        string       `form:"backup_bgp_md5_key,omitempty"`
-	AuthType               string       `form:"auth_type,omitempty"`
-	EnableEdgeUnderlay     bool         `form:"edge_underlay,omitempty"`
-	RemoteCloudType        string       `form:"remote_cloud_type,omitempty"`
-	BgpMd5KeyChanged       bool         `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig           BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
-	EnableBfd              bool         `form:"bgp_bfd_enabled,omitempty"`
+	Action                     string `form:"action,omitempty"`
+	CID                        string `form:"CID,omitempty"`
+	VpcID                      string `form:"vpc_id,omitempty"`
+	ConnectionName             string `form:"connection_name,omitempty"`
+	GwName                     string `form:"transit_gw,omitempty"`
+	ConnectionType             string `form:"routing_protocol,omitempty"`
+	BgpLocalAsNum              int    `form:"bgp_local_as_number,omitempty"`
+	BgpRemoteAsNum             int    `form:"external_device_as_number,omitempty"`
+	BgpSendCommunities         string `json:"conn_bgp_send_communities,omitempty"`
+	BgpSendCommunitiesAdditive bool   `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool   `json:"conn_bgp_send_communities_block,omitempty"`
+	RemoteGatewayIP            string `form:"external_device_ip_address,omitempty"`
+	RemoteSubnet               string `form:"remote_subnet,omitempty"`
+	DirectConnect              string `form:"direct_connect,omitempty"`
+	PreSharedKey               string `form:"pre_shared_key,omitempty"`
+	LocalTunnelCidr            string `form:"local_tunnel_ip,omitempty"`
+	RemoteTunnelCidr           string `form:"remote_tunnel_ip,omitempty"`
+	CustomAlgorithms           bool
+	Phase1Auth                 string `form:"phase1_authentication,omitempty"`
+	Phase1DhGroups             string `form:"phase1_dh_groups,omitempty"`
+	Phase1Encryption           string `form:"phase1_encryption,omitempty"`
+	Phase2Auth                 string `form:"phase2_authentication,omitempty"`
+	Phase2DhGroups             string `form:"phase2_dh_groups,omitempty"`
+	Phase2Encryption           string `form:"phase2_encryption,omitempty"`
+	HAEnabled                  string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
+	BackupRemoteGatewayIP      string `form:"backup_external_device_ip_address,omitempty"`
+	BackupBgpRemoteAsNum       int    `form:"backup_external_device_as_number,omitempty"`
+	BackupPreSharedKey         string `form:"backup_pre_shared_key,omitempty"`
+	BackupLocalTunnelCidr      string `form:"backup_local_tunnel_ip,omitempty"`
+	BackupRemoteTunnelCidr     string `form:"backup_remote_tunnel_ip,omitempty"`
+	BackupDirectConnect        string `form:"backup_direct_connect,omitempty"`
+	EnableEdgeSegmentation     string `form:"connection_policy,omitempty"`
+	EnableIkev2                string `form:"enable_ikev2,omitempty"`
+	ManualBGPCidrs             []string
+	TunnelProtocol             string `form:"tunnel_protocol,omitempty"`
+	EnableBgpLanActiveMesh     bool   `form:"bgp_lan_activemesh,omitempty"`
+	PeerVnetID                 string `form:"peer_vnet_id,omitempty"`
+	RemoteLanIP                string `form:"remote_lan_ip,omitempty"`
+	LocalLanIP                 string `form:"local_lan_ip,omitempty"`
+	BackupRemoteLanIP          string `form:"backup_remote_lan_ip,omitempty"`
+	BackupLocalLanIP           string `form:"backup_local_lan_ip,omitempty"`
+	EventTriggeredHA           bool
+	EnableJumboFrame           bool `form:"jumbo_frame,omitempty"`
+	Phase1LocalIdentifier      string
+	Phase1RemoteIdentifier     string
+	PrependAsPath              string
+	BgpMd5Key                  string       `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key            string       `form:"backup_bgp_md5_key,omitempty"`
+	AuthType                   string       `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay         bool         `form:"edge_underlay,omitempty"`
+	RemoteCloudType            string       `form:"remote_cloud_type,omitempty"`
+	BgpMd5KeyChanged           bool         `form:"bgp_md5_key_changed,omitempty"`
+	BgpBfdConfig               BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
+	EnableBfd                  bool         `form:"bgp_bfd_enabled,omitempty"`
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop bool   `form:"enable_bgp_multihop"`
@@ -82,49 +85,52 @@ type ExternalDeviceConn struct {
 }
 
 type EditExternalDeviceConnDetail struct {
-	VpcID                  []string      `json:"vpc_id,omitempty"`
-	ConnectionName         []string      `json:"name,omitempty"`
-	GwName                 string        `json:"gw_name,omitempty"`
-	BgpLocalAsNum          string        `json:"bgp_local_asn_number,omitempty"`
-	BgpRemoteAsNum         string        `json:"bgp_remote_asn_number,omitempty"`
-	BgpStatus              string        `json:"bgp_status,omitempty"`
-	EnableBgpLanActiveMesh bool          `json:"bgp_lan_activemesh,omitempty"`
-	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
-	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
-	DirectConnect          bool          `json:"direct_connect_primary,omitempty"`
-	LocalTunnelCidr        string        `json:"bgp_local_ip,omitempty"`
-	RemoteTunnelCidr       string        `json:"bgp_remote_ip,omitempty"`
-	Algorithm              AlgorithmInfo `json:"algorithm,omitempty"`
-	HAEnabled              string        `json:"ha_status,omitempty"`
-	BackupBgpRemoteAsNum   string        `json:"bgp_remote_backup_asn_number,omitempty"`
-	BackupLocalTunnelCidr  string        `json:"bgp_backup_local_ip,omitempty"`
-	BackupRemoteTunnelCidr string        `json:"bgp_backup_remote_ip,omitempty"`
-	BackupDirectConnect    bool          `json:"direct_connect_backup,omitempty"`
-	EnableEdgeSegmentation bool          `json:"enable_edge_segmentation,omitempty"`
-	Tunnels                []TunnelInfo  `json:"tunnels,omitempty"`
-	ActiveActiveHA         string        `json:"active_active_ha,omitempty"`
-	ManualBGPCidrs         []string      `json:"conn_bgp_manual_advertise_cidrs,omitempty"`
-	BackupRemoteGatewayIP  string
-	PreSharedKey           string
-	BackupPreSharedKey     string
-	IkeVer                 string         `json:"ike_ver,omitempty"`
-	PeerVnetId             string         `json:"peer_vnet_id,omitempty"`
-	RemoteLanIP            string         `json:"remote_lan_ip,omitempty"`
-	LocalLanIP             string         `json:"local_lan_ip,omitempty"`
-	BackupRemoteLanIP      string         `json:"backup_remote_lan_ip,omitempty"`
-	BackupLocalLanIP       string         `json:"backup_local_lan_ip,omitempty"`
-	EventTriggeredHA       string         `json:"event_triggered_ha,omitempty"`
-	Phase1LocalIdentifier  string         `json:"ph1_identifier,omitempty"`
-	Phase1RemoteIdentifier string         `json:"phase1_remote_id,omitempty"`
-	PrependAsPath          string         `json:"conn_bgp_prepend_as_path,omitempty"`
-	EnableJumboFrame       bool           `json:"jumbo_frame,omitempty"`
-	WanUnderlay            bool           `json:"wan_underlay,omitempty"`
-	RemoteCloudType        string         `json:"remote_cloud_type,omitempty"`
-	BgpBfdConfig           map[string]int `json:"bgp_bfd_params,omitempty"`
-	EnableBfd              bool           `json:"bgp_bfd_enabled,omitempty"`
-	EnableBgpMultihop      bool           `json:"bgp_multihop_enabled,omitempty"`
-	DisableActivemesh      bool           `json:"disable_activemesh,omitempty"`
-	TunnelSrcIP            string         `json:"local_device_ip,omitempty"`
+	VpcID                      []string      `json:"vpc_id,omitempty"`
+	ConnectionName             []string      `json:"name,omitempty"`
+	GwName                     string        `json:"gw_name,omitempty"`
+	BgpLocalAsNum              string        `json:"bgp_local_asn_number,omitempty"`
+	BgpRemoteAsNum             string        `json:"bgp_remote_asn_number,omitempty"`
+	BgpStatus                  string        `json:"bgp_status,omitempty"`
+	BgpSendCommunities         string        `json:"conn_bgp_send_communities,omitempty"`
+	BgpSendCommunitiesAdditive bool          `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool          `json:"conn_bgp_send_communities_block,omitempty"`
+	EnableBgpLanActiveMesh     bool          `json:"bgp_lan_activemesh,omitempty"`
+	RemoteGatewayIP            string        `json:"peer_ip,omitempty"`
+	RemoteSubnet               string        `json:"remote_cidr,omitempty"`
+	DirectConnect              bool          `json:"direct_connect_primary,omitempty"`
+	LocalTunnelCidr            string        `json:"bgp_local_ip,omitempty"`
+	RemoteTunnelCidr           string        `json:"bgp_remote_ip,omitempty"`
+	Algorithm                  AlgorithmInfo `json:"algorithm,omitempty"`
+	HAEnabled                  string        `json:"ha_status,omitempty"`
+	BackupBgpRemoteAsNum       string        `json:"bgp_remote_backup_asn_number,omitempty"`
+	BackupLocalTunnelCidr      string        `json:"bgp_backup_local_ip,omitempty"`
+	BackupRemoteTunnelCidr     string        `json:"bgp_backup_remote_ip,omitempty"`
+	BackupDirectConnect        bool          `json:"direct_connect_backup,omitempty"`
+	EnableEdgeSegmentation     bool          `json:"enable_edge_segmentation,omitempty"`
+	Tunnels                    []TunnelInfo  `json:"tunnels,omitempty"`
+	ActiveActiveHA             string        `json:"active_active_ha,omitempty"`
+	ManualBGPCidrs             []string      `json:"conn_bgp_manual_advertise_cidrs,omitempty"`
+	BackupRemoteGatewayIP      string
+	PreSharedKey               string
+	BackupPreSharedKey         string
+	IkeVer                     string         `json:"ike_ver,omitempty"`
+	PeerVnetID                 string         `json:"peer_vnet_id,omitempty"`
+	RemoteLanIP                string         `json:"remote_lan_ip,omitempty"`
+	LocalLanIP                 string         `json:"local_lan_ip,omitempty"`
+	BackupRemoteLanIP          string         `json:"backup_remote_lan_ip,omitempty"`
+	BackupLocalLanIP           string         `json:"backup_local_lan_ip,omitempty"`
+	EventTriggeredHA           string         `json:"event_triggered_ha,omitempty"`
+	Phase1LocalIdentifier      string         `json:"ph1_identifier,omitempty"`
+	Phase1RemoteIdentifier     string         `json:"phase1_remote_id,omitempty"`
+	PrependAsPath              string         `json:"conn_bgp_prepend_as_path,omitempty"`
+	EnableJumboFrame           bool           `json:"jumbo_frame,omitempty"`
+	WanUnderlay                bool           `json:"wan_underlay,omitempty"`
+	RemoteCloudType            string         `json:"remote_cloud_type,omitempty"`
+	BgpBfdConfig               map[string]int `json:"bgp_bfd_params,omitempty"`
+	EnableBfd                  bool           `json:"bgp_bfd_enabled,omitempty"`
+	EnableBgpMultihop          bool           `json:"bgp_multihop_enabled,omitempty"`
+	DisableActivemesh          bool           `json:"disable_activemesh,omitempty"`
+	TunnelSrcIP                string         `json:"local_device_ip,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -140,6 +146,16 @@ type EditBgpMd5Key struct {
 	GwName         string `form:"gateway_name,omitempty"`
 	BgpMd5Key      string `form:"bgp_md5_key,omitempty"`
 	BgpRemoteIP    string `form:"bgp_remote_ip,omitempty"`
+}
+
+type BgpSendCommunities struct {
+	Action              string `form:"action,omitempty"`
+	CID                 string `form:"CID,omitempty"`
+	ConnectionName      string `form:"connection_name,omitempty"`
+	GwName              string `form:"gateway_name,omitempty"`
+	ConnSendCommunities string `form:"connection_bgp_send_communities,omitempty"`
+	ConnSendAdditive    bool   `form:"connection_bgp_send_communities_additive,omitempty"`
+	ConnSendBlock       bool   `form:"connection_bgp_send_communities_block,omitempty"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -210,6 +226,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.ConnectionType = "static"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
+		externalDeviceConn.BgpSendCommunities = externalDeviceConnDetail.BgpSendCommunities
 
 		// GRE and LAN tunnels cannot set Algorithms
 		if externalDeviceConn.TunnelProtocol != "GRE" && externalDeviceConn.TunnelProtocol != "LAN" {
@@ -247,6 +264,21 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		if externalDeviceConnDetail.BackupBgpRemoteAsNum != "" {
 			backupBgpRemoteAsNumberRead, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
 			backupBgpRemoteAsNumber = backupBgpRemoteAsNumberRead
+		}
+
+		// get_site2cloud_conn_detail API returns one field for communities, namely, conn_bgp_send_communities
+		// Example1: "conn_bgp_send_communities": "additive 444:444"
+		// Example2: "conn_bgp_send_communities": "block"
+		// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
+		if externalDeviceConnDetail.BgpSendCommunities != "" {
+			commList := strings.Split(externalDeviceConnDetail.BgpSendCommunities, " ")
+			if len(commList) > 0 && commList[0] == "block" {
+				externalDeviceConn.BgpSendCommunitiesBlock = true
+			} else if len(commList) > 0 && commList[0] == "additive" {
+				externalDeviceConn.BgpSendCommunitiesAdditive = true
+				commList = commList[1:]
+				externalDeviceConn.BgpSendCommunities = strings.Join(commList, " ")
+			}
 		}
 
 		if externalDeviceConn.TunnelProtocol != "LAN" {
@@ -342,7 +374,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		}
 		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 		externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
-		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
+		externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
 		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
@@ -573,4 +605,21 @@ func (c *Client) DisableJumboFrameExternalDeviceConn(externalDeviceConn *Externa
 	}
 
 	return c.PostAPI(externalDeviceConn.Action, params, checkFunc)
+}
+
+func (c *Client) ConnectionBGPSendCommunities(bgpSendCommunities *BgpSendCommunities) error {
+	bgpSendCommunities.CID = c.CID
+	bgpSendCommunities.Action = "edit_connection_bgp_send_communities"
+
+	params := map[string]string{
+		"CID":                             c.CID,
+		"action":                          "edit_connection_bgp_send_communities",
+		"gateway_name":                    bgpSendCommunities.GwName,
+		"connection_name":                 bgpSendCommunities.ConnectionName,
+		"connection_bgp_send_communities": bgpSendCommunities.ConnSendCommunities,
+		"connection_bgp_send_communities_additive": fmt.Sprint(bgpSendCommunities.ConnSendAdditive),
+		"connection_bgp_send_communities_block":    fmt.Sprint(bgpSendCommunities.ConnSendBlock),
+	}
+
+	return c.PostAPI(params["action"], params, BasicCheck)
 }

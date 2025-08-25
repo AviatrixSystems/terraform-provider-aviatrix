@@ -118,6 +118,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 				Description: "The location where the ZTP file will be stored locally.",
 			},
+			"ztp_file_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "ZTP file type.",
+				ValidateFunc: validation.StringInSlice([]string{"iso", "cloud-init"}, false),
+			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -318,7 +324,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
+					ValidateFunc: ValidateCIDRRule,
 				},
 				Optional:    true,
 				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
@@ -483,6 +489,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true for CSP transit gateways and false for edge transit gateways.",
 			},
 			"enable_gro_gso": {
@@ -911,6 +918,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"bgp_send_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway send configuration.",
+				Default:     false,
+			},
+			"bgp_accept_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway accept configuration.",
+				Default:     false,
+			},
 		},
 	}
 }
@@ -943,8 +962,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Transit:                  true,
 		}
 
-		// for CSPs the enable_jumbo_frame is set to true by default
-		if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
+		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
+		if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+			enableJumboFrame, ok := val.(bool)
+			if !ok {
+				return fmt.Errorf("enable_jumbo_frame must be a boolean")
+			}
+			gateway.JumboFrame = enableJumboFrame // set to user-provided value
+		} else {
+			gateway.JumboFrame = true // new default for CSPs
 			_ = d.Set("enable_jumbo_frame", true)
 		}
 
@@ -1391,6 +1417,24 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+			}
+		}
+
+		/* Set BGP communities per gateway */
+		commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if ok && acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if ok && sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 
@@ -1866,6 +1910,23 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_name", gw.AccountName)
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
+
+	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
+	// This will allow the AEP EAT gateways to be created before setting the communities.
+	if gw.GwSize != "UNKNOWN" && gw.GwSize != "" {
+		sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+		err = d.Set("bgp_send_communities", sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+		}
+		err = d.Set("bgp_accept_communities", acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+		}
+	}
 
 	// edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
@@ -2412,6 +2473,25 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	// Clarification : Can the user update EAT interface after its created. Add/Delete EAT interface
 	d.Partial(true)
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if d.HasChange("bgp_accept_communities") {
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if ok && acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+	if d.HasChange("bgp_send_communities") {
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if ok && sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -3894,7 +3974,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 			// Double the backoff time after each failed try
 			backoff *= 2
 		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 			vpcID, ok := d.Get("vpc_id").(string)
 			if !ok {
 				return fmt.Errorf("vpc_id is not a string")
@@ -3914,7 +3994,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Edge Transit Gateway: %s", err)
 	}
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		vpcID, ok := d.Get("vpc_id").(string)
 		if !ok {
 			return fmt.Errorf("vpc_id is not a string")
@@ -3937,6 +4017,11 @@ func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 	if err := os.Remove(fileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("could not remove the ztp file: %w", err)
 	}
+	// remove iso file
+	isoFileName := ztpFileDownloadPath + "/" + gatewayName + "-" + vpcID + ".iso"
+	if err := os.Remove(isoFileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("could not remove the iso file: %w", err)
+	}
 	return nil
 }
 
@@ -3949,6 +4034,7 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		VpcSize:     d.Get("gw_size").(string),
 		Transit:     true,
 	}
+
 	// get the interface config details
 	interfaces, ok := d.Get("interfaces").([]interface{})
 	if !ok || len(interfaces) == 0 {
@@ -3982,16 +4068,35 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 		}
 	}
 
-	// ztp file download path is required for Equinix and Megaport edge gateways
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	// ztp file download path is required for Equinix, Megaport, Selfmanaged edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		gateway.ZtpFileDownloadPath, ok = d.Get("ztp_file_download_path").(string)
 		if !ok {
 			return fmt.Errorf("ztp_file_download_path attribute is required for Edge Transit Gateway")
+		}
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+			gateway.ZtpFileType, ok = d.Get("ztp_file_type").(string)
+			if !ok {
+				return fmt.Errorf("ztp_file_type attribute is required for Selfmanaged Edge Transit Gateway")
+			}
+			gateway.GatewayRegistrationMethod = gateway.ZtpFileType
 		}
 		managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
 		if len(managementEgressIPPrefixList) > 0 {
 			gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
 		}
+	}
+
+	// for edge the enable_jumbo_frame is set to false by default if not explicitly set by the user
+	if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+		enableJumboFrame, ok := val.(bool)
+		if !ok {
+			return fmt.Errorf("enable_jumbo_frame must be a boolean")
+		}
+		gateway.JumboFrame = enableJumboFrame // set to user-provided value
+	} else {
+		gateway.JumboFrame = false // new default for EAT's
+		_ = d.Set("enable_jumbo_frame", false)
 	}
 
 	// create the transit gateway
@@ -4019,6 +4124,23 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	// for AEP EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Updates to the gateway while is in the process of being created will fail.
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
 		return nil
+	}
+
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+	if ok && acceptComm != commAcceptCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	sendComm, ok := d.Get("bgp_send_communities").(bool)
+	if ok && sendComm != commSendCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
 	}
 
 	// eip map is updated after the transit is created
@@ -4304,9 +4426,19 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 			return nil, fmt.Errorf("ha_device_id is required for AEP HA Edge Transit Gateway")
 		}
 	}
+
 	haManagementEgressIPPrefixList := getStringSet(d, "ha_management_egress_ip_prefix_list")
 	if len(haManagementEgressIPPrefixList) > 0 {
 		transitHaGw.ManagementEgressIPPrefix = strings.Join(haManagementEgressIPPrefixList, ",")
+	}
+
+	// ztp file type and registration method is only required for self-managed edge
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+		transitHaGw.ZtpFileType, ok = d.Get("ztp_file_type").(string)
+		if !ok {
+			return nil, fmt.Errorf("ztp_file_type is required for HA Edge Transit Gateway")
+		}
+		transitHaGw.GatewayRegistrationMethod = transitHaGw.ZtpFileType
 	}
 	return transitHaGw, nil
 }

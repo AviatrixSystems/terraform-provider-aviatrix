@@ -91,6 +91,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	skipGwOCI := os.Getenv("SKIP_TRANSIT_GATEWAY_OCI")
 	skipGwAEP := os.Getenv("SKIP_TRANSIT_GATEWAY_AEP")
 	skipGwEQUINIX := os.Getenv("SKIP_TRANSIT_GATEWAY_EQUINIX")
+	skipGwSelfManaged := os.Getenv("SKIP_TRANSIT_GATEWAY_SELF_MANAGED")
 
 	if skipGwAWS == "yes" && skipGwAZURE == "yes" && skipGwGCP == "yes" && skipGwOCI == "yes" && skipGwAEP == "yes" {
 		t.Skip("Skipping Transit gateway test as SKIP_TRANSIT_GATEWAY_AWS, SKIP_TRANSIT_GATEWAY_AZURE, " +
@@ -298,7 +299,8 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAEP, "eip_map.0.public_ip", "35.0.16.1"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "bgp_polling_time", "55"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "local_as_number", "65000"),
-						resource.TestCheckResourceAttr(resourceNameAEP, "enable_jumbo_frame", "true"),
+						// enable_jumbo_frame is false by default for edge EAT gateways
+						resource.TestCheckResourceAttr(resourceNameAEP, "enable_jumbo_frame", "false"),
 						resource.TestCheckResourceAttr(resourceNameAEP, "tunnel_detection_time", "10"),
 					),
 				},
@@ -353,6 +355,42 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		})
 	} else {
 		t.Log("Skipping Transit gateway test in edge Equinix as SKIP_TRANSIT_GATEWAY_EQUINIX is set")
+	}
+
+	if skipGwSelfManaged != "yes" {
+		resourceNameSelfManaged := "aviatrix_transit_gateway.test_transit_gateway_selfmanaged"
+		msgCommonSelfManaged := ". Set SKIP_TRANSIT_GATEWAY_SELF_MANAGED to yes to skip Transit Gateway tests in edge SelfManaged"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckEdge(t, msgCommonSelfManaged)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckTransitGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccTransitGatewayConfigBasicSelfManaged(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitGatewayExists(resourceNameSelfManaged, &gateway),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "gw_name", fmt.Sprintf("tfg-edge-self-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "vpc_id", os.Getenv("SEFLMANAGED_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "ztp_file_download_path", "/tmp"),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.gateway_ip", "192.168.20.1"),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.ip_address", "192.168.20.11/24"),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "interfaces.0.logical_ifname", "wan0"),
+						resource.TestCheckResourceAttr(resourceNameSelfManaged, "ztp_file_type", "iso"),
+					),
+				},
+				{
+					ResourceName:      resourceNameSelfManaged,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping Transit gateway test in edge Self Managed as SKIP_TRANSIT_GATEWAY_SELF_MANAGED is set")
 	}
 }
 
@@ -558,7 +596,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aep" {
     }
 	bgp_polling_time   = 55
 	local_as_number    = 65000
-	enable_jumbo_frame = true
 	tunnel_detection_time = 10
 }
 	`, rName, os.Getenv("AEP_VPC_ID"), os.Getenv("AEP_DEVICE_ID"))
@@ -641,6 +678,42 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_equinix" {
     }
 }
 	`, rName, os.Getenv("EQUINIX_VPC_ID"))
+}
+
+func testAccTransitGatewayConfigBasicSelfManaged(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_edge_selfmanaged" {
+	account_name       = "edge-%s"
+	cloud_type         = 4096
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_selfmanaged" {
+	cloud_type   = 4096
+	account_name = aviatrix_account.test_acc_edge_selmanaged.account_name
+	gw_name      = "tfg-edge-self-%[1]s"
+	vpc_id       = "%[2]s"
+	gw_size      = ""
+	ztp_file_download_path = "/tmp"
+	ztp_file_type = "iso"
+	interfaces {
+        gateway_ip     = "192.168.20.1"
+        ip_address     = "192.168.20.11/24"
+        logical_ifname = "wan0"
+        secondary_private_cidr_list = ["192.168.19.16/29"]
+    }
+
+    interfaces {
+        gateway_ip     = "192.168.21.1"
+        ip_address     = "192.168.21.11/24"
+        logical_ifname = "wan1"
+        secondary_private_cidr_list = ["192.168.21.16/29"]
+    }
+
+    interfaces {
+        dhcp           = true
+        logical_ifname = "mgmt0"
+    }
+}
+	`, rName, os.Getenv("SELFMANAGED_VPC_ID"))
 }
 
 func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
