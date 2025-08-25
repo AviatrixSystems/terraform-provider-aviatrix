@@ -113,8 +113,8 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
-							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-								return strings.EqualFold(old, new)
+							DiffSuppressFunc: func(_, oldProto, newProto string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(oldProto, newProto)
 							},
 							Description: "Protocol for the policy to filter. " +
 								"Must bew one of ANY, ICMP, TCP or UDP.",
