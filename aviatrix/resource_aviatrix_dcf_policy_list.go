@@ -189,7 +189,7 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 	return policyList, nil
 }
 
-//nolint:funlen
+//nolint:funlen,cyclop
 func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy, error) {
 	var ok bool
 	var err error
@@ -350,7 +350,7 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-//nolint:funlen
+//nolint:funlen,cyclop
 func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
