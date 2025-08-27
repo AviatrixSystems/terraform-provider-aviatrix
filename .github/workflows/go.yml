@@ -1,22 +1,34 @@
 name: go
 env:
-  Lint_Version: v1.61.0
+  Lint_Version: v2.1.6
 on:
   push:
     # Only trigger push workflow on main branch (prevent duplicate when running in PR)
     branches:
       - main
-    paths-ignore:
-      - 'docs/**'
-      - 'test-infra/**'
   pull_request:
-    # Trigger every time a PR is opened or updated
-    paths-ignore:
-      - 'docs/**'
-      - 'test-infra/**'
+# These permissions allow the dorny/paths-filter action to get the list of
+# changed files for a PR via the github API
+permissions:
+  contents: read
+  pull-requests: read
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant_files: ${{ steps.changes.outputs.relevant_files }}
+    steps:
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: changes
+        with:
+          filters: |
+            relevant_files:
+              - '!docs/**'
+              - '!test-infra/**'
   build:
     name: build
+    needs: changes
+    if: needs.changes.outputs.relevant_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
@@ -33,6 +45,8 @@ jobs:
         run: go build -v .
   test:
     name: test
+    needs: changes
+    if: needs.changes.outputs.relevant_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
@@ -50,6 +64,8 @@ jobs:
       - name: Test
         run: go test -v ./...
   pre-commit:
+    needs: changes
+    if: needs.changes.outputs.relevant_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,21 +82,25 @@ jobs:
       - uses: pre-commit/action@v3.0.1
   golangci:
     name: lint
+    needs: changes
+    if: needs.changes.outputs.relevant_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: ${{env.Lint_Version}}
           only-new-issues: true
   golangci-strict:
     name: lint-strict
+    needs: changes
+    if: needs.changes.outputs.relevant_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: ${{env.Lint_Version}}
           only-new-issues: true
