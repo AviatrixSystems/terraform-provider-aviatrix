@@ -102,11 +102,14 @@ func testAccCheckDcfMwpPolicyListExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF MWP Policy List ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		if !ok {
+			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
+		}
 
 		_, err := client.GetDCFPolicyList(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get DCF MWP Policy List status: %v", err)
+			return fmt.Errorf("failed to get DCF MWP Policy List status: %w", err)
 		}
 
 		return nil
@@ -114,7 +117,10 @@ func testAccCheckDcfMwpPolicyListExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDcfMwpPolicyListDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	if !ok {
+		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_smart_group" {
@@ -123,7 +129,7 @@ func testAccCheckDcfMwpPolicyListDestroy(s *terraform.State) error {
 
 		_, err := client.GetDCFPolicyList(context.Background(), rs.Primary.ID)
 		if err == nil || !strings.Contains(err.Error(), "does not exist") {
-			return fmt.Errorf("dcf mwp list configured when it should be destroyed %v", err)
+			return fmt.Errorf("dcf mwp list configured when it should be destroyed %w", err)
 		}
 	}
 
