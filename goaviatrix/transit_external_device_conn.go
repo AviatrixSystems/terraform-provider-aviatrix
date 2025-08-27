@@ -11,10 +11,26 @@ import (
 
 // ExternalDeviceConn: a simple struct to hold external device connection details
 const (
+	Enabled  = "enabled"
+	Disabled = "disabled"
+
 	defaultBfdReceiveInterval  = 300
 	defaultBfdTransmitInterval = 300
 	defaultBfdMultiplier       = 3
 )
+
+// on returns "enabled" if b is true, "disabled" otherwise
+func on(b bool) string {
+	if b {
+		return Enabled
+	}
+	return Disabled
+}
+
+// join2 joins two strings with a comma separator
+func join2(a, b string) string {
+	return strings.Join([]string{a, b}, ",")
+}
 
 var defaultBfdConfig = BgpBfdConfig{
 	TransmitInterval: defaultBfdTransmitInterval,
@@ -466,14 +482,14 @@ func configureHAForTwoDevices(externalDeviceConn *ExternalDeviceConn, externalDe
 		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.HAEnabled = Enabled
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 	} else {
 		// Non-edge gateways treat dual devices as combined configuration (no true HA)
-		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-		externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-		externalDeviceConn.HAEnabled = "disabled"
+		externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+		externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+		externalDeviceConn.RemoteGatewayIP = join2(remoteIP[0], remoteIP[1])
+		externalDeviceConn.HAEnabled = Disabled
 	}
 }
 
@@ -542,17 +558,8 @@ func populateAlgorithmInfo(externalDeviceConn *ExternalDeviceConn, externalDevic
 
 // populateDirectConnectInfo populates direct connect information
 func populateDirectConnectInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
-	if externalDeviceConnDetail.DirectConnect {
-		externalDeviceConn.DirectConnect = "enabled"
-	} else {
-		externalDeviceConn.DirectConnect = "disabled"
-	}
-
-	if externalDeviceConnDetail.BackupDirectConnect {
-		externalDeviceConn.BackupDirectConnect = "enabled"
-	} else {
-		externalDeviceConn.BackupDirectConnect = "disabled"
-	}
+	externalDeviceConn.DirectConnect = on(externalDeviceConnDetail.DirectConnect)
+	externalDeviceConn.BackupDirectConnect = on(externalDeviceConnDetail.BackupDirectConnect)
 }
 
 // parseBackupBgpRemoteAsNumber parses backup BGP remote AS number
@@ -570,15 +577,19 @@ func populateBgpSendCommunitiesInfo(externalDeviceConn *ExternalDeviceConn, exte
 	// Example1: "conn_bgp_send_communities": "additive 444:444"
 	// Example2: "conn_bgp_send_communities": "block"
 	// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
-	if externalDeviceConnDetail.BgpSendCommunities != "" {
-		commList := strings.Split(externalDeviceConnDetail.BgpSendCommunities, " ")
-		if len(commList) > 0 && commList[0] == "block" {
-			externalDeviceConn.BgpSendCommunitiesBlock = true
-		} else if len(commList) > 0 && commList[0] == "additive" {
-			externalDeviceConn.BgpSendCommunitiesAdditive = true
-			commList = commList[1:]
-			externalDeviceConn.BgpSendCommunities = strings.Join(commList, " ")
-		}
+	if externalDeviceConnDetail.BgpSendCommunities == "" {
+		return
+	}
+	parts := strings.Fields(externalDeviceConnDetail.BgpSendCommunities)
+	if len(parts) == 0 {
+		return
+	}
+	switch parts[0] {
+	case "block":
+		externalDeviceConn.BgpSendCommunitiesBlock = true
+	case "additive":
+		externalDeviceConn.BgpSendCommunitiesAdditive = true
+		externalDeviceConn.BgpSendCommunities = strings.Join(parts[1:], " ")
 	}
 }
 
@@ -598,35 +609,39 @@ func populateNonLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDe
 
 // configureLocalGatewayHAEnabled configures HA when local gateway has HA enabled
 func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int) {
-	if len(externalDeviceConnDetail.Tunnels) == 2 {
+	nTunnels := len(externalDeviceConnDetail.Tunnels)
+	switch nTunnels {
+	case 2:
 		remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
-		if len(remoteIP) == 2 {
+		nIPs := len(remoteIP)
+		switch nIPs {
+		case 2:
 			if remoteIP[0] == remoteIP[1] {
 				// one external device, no remote HA
-				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-				externalDeviceConn.HAEnabled = "disabled"
+				externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+				externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+				externalDeviceConn.HAEnabled = Disabled
 			} else {
 				// two external devices, remote has HA
 				// activemesh is disabled, 2 straight tunnels only
 				configureHAForTwoDevices(externalDeviceConn, externalDeviceConnDetail, localGateway, remoteIP, backupBgpRemoteAsNumber)
 			}
-		} else if len(remoteIP) == 4 {
+		case 4:
 			if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
-				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-				externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-				externalDeviceConn.HAEnabled = "disabled"
+				externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+				externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+				externalDeviceConn.RemoteGatewayIP = join2(remoteIP[0], remoteIP[1])
+				externalDeviceConn.HAEnabled = Disabled
 			}
 		}
-	} else if len(externalDeviceConnDetail.Tunnels) == 4 {
+	case 4:
 		// activemesh is enabled, 4 tunnels, 2 straight tunnels and 2 crossing tunnels
 		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.HAEnabled = Enabled
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 	}
 }
@@ -642,10 +657,10 @@ func configureLocalGatewayHADisabled(externalDeviceConn *ExternalDeviceConn, ext
 		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.HAEnabled = Enabled
 	} else {
 		// one external device, no remote HA
-		externalDeviceConn.HAEnabled = "disabled"
+		externalDeviceConn.HAEnabled = Disabled
 	}
 }
 
@@ -653,12 +668,12 @@ func configureLocalGatewayHADisabled(externalDeviceConn *ExternalDeviceConn, ext
 func populateLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, backupBgpRemoteAsNumber int) {
 	externalDeviceConn.EnableBgpLanActiveMesh = externalDeviceConnDetail.EnableBgpLanActiveMesh
 	if len(externalDeviceConnDetail.Tunnels) == 2 || len(externalDeviceConnDetail.Tunnels) == 4 {
-		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.HAEnabled = Enabled
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 		externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
 		externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 	} else {
-		externalDeviceConn.HAEnabled = "disabled"
+		externalDeviceConn.HAEnabled = Disabled
 	}
 	externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
 	externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
@@ -666,18 +681,10 @@ func populateLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDevic
 
 // populateAdditionalConnectionInfo populates additional connection information
 func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
-	if externalDeviceConnDetail.EnableEdgeSegmentation {
-		externalDeviceConn.EnableEdgeSegmentation = "enabled"
-	} else {
-		externalDeviceConn.EnableEdgeSegmentation = "disabled"
-	}
+	externalDeviceConn.EnableEdgeSegmentation = on(externalDeviceConnDetail.EnableEdgeSegmentation)
 	externalDeviceConn.ManualBGPCidrs = externalDeviceConnDetail.ManualBGPCidrs
 
-	if externalDeviceConnDetail.IkeVer == "2" {
-		externalDeviceConn.EnableIkev2 = "enabled"
-	} else {
-		externalDeviceConn.EnableIkev2 = "disabled"
-	}
+	externalDeviceConn.EnableIkev2 = on(externalDeviceConnDetail.IkeVer == "2")
 	externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 	externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
 	externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
