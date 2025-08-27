@@ -900,9 +900,15 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:          d.Get("vpc_id").(string),
 		ConnectionName: d.Get("connection_name").(string),
+		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
+	if err != nil {
+		return fmt.Errorf("could not get local gateway details: %w", err)
+	}
+
+	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
 
 	if err != nil {

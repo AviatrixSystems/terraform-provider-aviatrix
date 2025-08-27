@@ -458,7 +458,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
+	if err != nil {
+		return diag.Errorf("could not get local gateway details: %v", err)
+	}
+
+	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
