@@ -2743,12 +2743,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_ipv6").(bool) {
 			err := client.EnableIPv6(gateway)
 			if err != nil {
-				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %s", err)
+				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %w", err)
 			}
 		} else {
 			err := client.DisableIPv6(gateway)
 			if err != nil {
-				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %s", err)
+				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
 			}
 		}
 	}
