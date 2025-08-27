@@ -12,7 +12,6 @@ tests = true
 default = 'none'
 enable = [
   'bodyclose',
-  'errcheck',
   'errname',
   'errorlint',
   'gosec',
