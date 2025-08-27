@@ -213,7 +213,6 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	populateDirectConnectInfo(externalDeviceConn, externalDeviceConnDetail)
 
 	backupBgpRemoteAsNumber := parseBackupBgpRemoteAsNumber(externalDeviceConnDetail.BackupBgpRemoteAsNum)
-	populateBgpSendCommunitiesInfo(externalDeviceConn, externalDeviceConnDetail)
 
 	if externalDeviceConn.TunnelProtocol != "LAN" {
 		populateNonLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber)
@@ -440,23 +439,6 @@ func (c *Client) DisableJumboFrameExternalDeviceConn(externalDeviceConn *Externa
 	return c.PostAPI(externalDeviceConn.Action, params, checkFunc)
 }
 
-func (c *Client) ConnectionBGPSendCommunities(bgpSendCommunities *BgpSendCommunities) error {
-	bgpSendCommunities.CID = c.CID
-	bgpSendCommunities.Action = "edit_connection_bgp_send_communities"
-
-	params := map[string]string{
-		"CID":                             c.CID,
-		"action":                          "edit_connection_bgp_send_communities",
-		"gateway_name":                    bgpSendCommunities.GwName,
-		"connection_name":                 bgpSendCommunities.ConnectionName,
-		"connection_bgp_send_communities": bgpSendCommunities.ConnSendCommunities,
-		"connection_bgp_send_communities_additive": fmt.Sprint(bgpSendCommunities.ConnSendAdditive),
-		"connection_bgp_send_communities_block":    fmt.Sprint(bgpSendCommunities.ConnSendBlock),
-	}
-
-	return c.PostAPI(params["action"], params, BasicCheck)
-}
-
 // configureHAForTwoDevices configures HA settings when there are two external devices
 func configureHAForTwoDevices(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, remoteIP []string, backupBgpRemoteAsNumber int) {
 	// Check if this is an edge transit gateway that supports proper HA
@@ -488,7 +470,6 @@ func populateBasicConnectionInfo(externalDeviceConn *ExternalDeviceConn, externa
 	externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
 	externalDeviceConn.GwName = externalDeviceConnDetail.GwName
 	externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
-	externalDeviceConn.BgpSendCommunities = externalDeviceConnDetail.BgpSendCommunities
 }
 
 // populateConnectionTypeInfo populates connection type and BGP information
@@ -556,28 +537,6 @@ func parseBackupBgpRemoteAsNumber(backupBgpRemoteAsNumStr string) int {
 		return backupBgpRemoteAsNumberRead
 	}
 	return 0
-}
-
-// populateBgpSendCommunitiesInfo populates BGP send communities information
-func populateBgpSendCommunitiesInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
-	// get_site2cloud_conn_detail API returns one field for communities, namely, conn_bgp_send_communities
-	// Example1: "conn_bgp_send_communities": "additive 444:444"
-	// Example2: "conn_bgp_send_communities": "block"
-	// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
-	if externalDeviceConnDetail.BgpSendCommunities == "" {
-		return
-	}
-	parts := strings.Fields(externalDeviceConnDetail.BgpSendCommunities)
-	if len(parts) == 0 {
-		return
-	}
-	switch parts[0] {
-	case "block":
-		externalDeviceConn.BgpSendCommunitiesBlock = true
-	case "additive":
-		externalDeviceConn.BgpSendCommunitiesAdditive = true
-		externalDeviceConn.BgpSendCommunities = strings.Join(parts[1:], " ")
-	}
 }
 
 // populateNonLANTunnelInfo populates information for non-LAN tunnels including HA logic
@@ -674,7 +633,6 @@ func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, ex
 	externalDeviceConn.EnableIkev2 = on(externalDeviceConnDetail.IkeVer == "2")
 	externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 	externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
-	externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
 	externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 	externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
 	externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
