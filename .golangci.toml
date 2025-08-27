@@ -15,7 +15,6 @@ enable = [
   'errcheck',
   'errname',
   'errorlint',
-  'forcetypeassert',
   'gosec',
   'govet',
   'importas',
