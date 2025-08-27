@@ -199,206 +199,28 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	}
 
 	externalDeviceConnDetail := data.Results.Connections
-	if len(externalDeviceConnDetail.ConnectionName) != 0 {
-		if len(externalDeviceConnDetail.VpcID) != 0 {
-			externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
-		}
-
-		externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
-		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
-
-		if externalDeviceConnDetail.BgpStatus == "enabled" || externalDeviceConnDetail.BgpStatus == "Enabled" {
-			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
-			externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
-			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
-			externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
-			externalDeviceConn.ConnectionType = "bgp"
-			if len(externalDeviceConnDetail.Tunnels) >= 1 {
-				tunnelProtocol := externalDeviceConnDetail.Tunnels[0].TunnelProtocol
-				// LAN tunnel protocol is defined in the backend as "N/A(LAN)".
-				// Here we clean that up to be just "LAN" for Terraform users.
-				if strings.Contains(tunnelProtocol, "LAN") {
-					tunnelProtocol = "LAN"
-				}
-				externalDeviceConn.TunnelProtocol = tunnelProtocol
-			}
-		} else {
-			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
-			externalDeviceConn.ConnectionType = "static"
-		}
-		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
-		externalDeviceConn.BgpSendCommunities = externalDeviceConnDetail.BgpSendCommunities
-
-		// GRE and LAN tunnels cannot set Algorithms
-		if externalDeviceConn.TunnelProtocol != "GRE" && externalDeviceConn.TunnelProtocol != "LAN" {
-			if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
-				externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
-				externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
-				externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == "14" &&
-				externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
-				externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
-				externalDeviceConn.CustomAlgorithms = false
-				externalDeviceConn.Phase1Auth = ""
-				externalDeviceConn.Phase2Auth = ""
-				externalDeviceConn.Phase1DhGroups = ""
-				externalDeviceConn.Phase2DhGroups = ""
-				externalDeviceConn.Phase1Encryption = ""
-				externalDeviceConn.Phase2Encryption = ""
-			} else {
-				externalDeviceConn.CustomAlgorithms = true
-				externalDeviceConn.Phase1Auth = externalDeviceConnDetail.Algorithm.Phase1Auth[0]
-				externalDeviceConn.Phase2Auth = externalDeviceConnDetail.Algorithm.Phase2Auth[0]
-				externalDeviceConn.Phase1DhGroups = externalDeviceConnDetail.Algorithm.Phase1DhGroups[0]
-				externalDeviceConn.Phase2DhGroups = externalDeviceConnDetail.Algorithm.Phase2DhGroups[0]
-				externalDeviceConn.Phase1Encryption = externalDeviceConnDetail.Algorithm.Phase1Encrption[0]
-				externalDeviceConn.Phase2Encryption = externalDeviceConnDetail.Algorithm.Phase2Encrption[0]
-			}
-		}
-
-		if externalDeviceConnDetail.DirectConnect {
-			externalDeviceConn.DirectConnect = "enabled"
-		} else {
-			externalDeviceConn.DirectConnect = "disabled"
-		}
-
-		backupBgpRemoteAsNumber := 0
-		if externalDeviceConnDetail.BackupBgpRemoteAsNum != "" {
-			backupBgpRemoteAsNumberRead, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
-			backupBgpRemoteAsNumber = backupBgpRemoteAsNumberRead
-		}
-
-		// get_site2cloud_conn_detail API returns one field for communities, namely, conn_bgp_send_communities
-		// Example1: "conn_bgp_send_communities": "additive 444:444"
-		// Example2: "conn_bgp_send_communities": "block"
-		// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
-		if externalDeviceConnDetail.BgpSendCommunities != "" {
-			commList := strings.Split(externalDeviceConnDetail.BgpSendCommunities, " ")
-			if len(commList) > 0 && commList[0] == "block" {
-				externalDeviceConn.BgpSendCommunitiesBlock = true
-			} else if len(commList) > 0 && commList[0] == "additive" {
-				externalDeviceConn.BgpSendCommunitiesAdditive = true
-				commList = commList[1:]
-				externalDeviceConn.BgpSendCommunities = strings.Join(commList, " ")
-			}
-		}
-
-		if externalDeviceConn.TunnelProtocol != "LAN" {
-			externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
-			externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
-			// extrnalDeviceConnDetail.HAEnabled returned from API indicate whether connection's local gateway has HA enabled
-			// We need to put whether remote HA is enabled in externalDeviceConn.HAEnabled
-			if externalDeviceConnDetail.HAEnabled == "enabled" {
-				// connection local gateway has HA enabled
-				if len(externalDeviceConnDetail.Tunnels) == 2 {
-					remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
-					if len(remoteIP) == 2 {
-						if remoteIP[0] == remoteIP[1] {
-							// one external device, no remote HA
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.HAEnabled = "disabled"
-						} else {
-							// two external devices, remote has HA
-							// activemesh is disabled, 2 straight tunnels only
-							if localGateway != nil && localGateway.EdgeGateway && localGateway.TransitVpc == "yes" {
-								externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-								externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-								externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
-								externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-								externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-								externalDeviceConn.HAEnabled = "enabled"
-								externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-							} else {
-								externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-								externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-								externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-								externalDeviceConn.HAEnabled = "disabled"
-							}
-						}
-					} else if len(remoteIP) == 4 {
-						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
-						}
-					}
-				} else if len(externalDeviceConnDetail.Tunnels) == 4 {
-					// activemesh is enabled, 4 tunnels, 2 straight tunnels and 2 crossing tunnels
-					externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-					externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
-					externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-					externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-					externalDeviceConn.HAEnabled = "enabled"
-					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-				}
-			} else {
-				// local gateway no HA
-				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
-				if len(externalDeviceConnDetail.Tunnels) == 2 {
-					// two external devices, remote has HA
-					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-					externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-					externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-					externalDeviceConn.HAEnabled = "enabled"
-				} else {
-					// one external device, no remote HA
-					externalDeviceConn.HAEnabled = "disabled"
-				}
-			}
-		} else {
-			externalDeviceConn.EnableBgpLanActiveMesh = externalDeviceConnDetail.EnableBgpLanActiveMesh
-			if len(externalDeviceConnDetail.Tunnels) == 2 || len(externalDeviceConnDetail.Tunnels) == 4 {
-				externalDeviceConn.HAEnabled = "enabled"
-				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-				externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
-				externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
-			} else {
-				externalDeviceConn.HAEnabled = "disabled"
-			}
-			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
-			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
-		}
-
-		if externalDeviceConnDetail.BackupDirectConnect {
-			externalDeviceConn.BackupDirectConnect = "enabled"
-		} else {
-			externalDeviceConn.BackupDirectConnect = "disabled"
-		}
-		if externalDeviceConnDetail.EnableEdgeSegmentation {
-			externalDeviceConn.EnableEdgeSegmentation = "enabled"
-		} else {
-			externalDeviceConn.EnableEdgeSegmentation = "disabled"
-		}
-		externalDeviceConn.ManualBGPCidrs = externalDeviceConnDetail.ManualBGPCidrs
-
-		if externalDeviceConnDetail.IkeVer == "2" {
-			externalDeviceConn.EnableIkev2 = "enabled"
-		} else {
-			externalDeviceConn.EnableIkev2 = "disabled"
-		}
-		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
-		externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
-		externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
-		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
-		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
-		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
-		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
-		externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
-		externalDeviceConn.EnableBfd = externalDeviceConnDetail.EnableBfd
-		if externalDeviceConn.EnableBfd {
-			externalDeviceConn.BgpBfdConfig.TransmitInterval = externalDeviceConnDetail.BgpBfdConfig["tx_interval"]
-			externalDeviceConn.BgpBfdConfig.ReceiveInterval = externalDeviceConnDetail.BgpBfdConfig["rx_interval"]
-			externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
-		}
-		externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
-		return externalDeviceConn, nil
+	if len(externalDeviceConnDetail.ConnectionName) == 0 {
+		return nil, ErrNotFound
 	}
 
-	return nil, ErrNotFound
+	// Extract connection details into separate helper functions
+	populateBasicConnectionInfo(externalDeviceConn, externalDeviceConnDetail)
+	populateConnectionTypeInfo(externalDeviceConn, externalDeviceConnDetail)
+	populateAlgorithmInfo(externalDeviceConn, externalDeviceConnDetail)
+	populateDirectConnectInfo(externalDeviceConn, externalDeviceConnDetail)
+
+	backupBgpRemoteAsNumber := parseBackupBgpRemoteAsNumber(externalDeviceConnDetail.BackupBgpRemoteAsNum)
+	populateBgpSendCommunitiesInfo(externalDeviceConn, externalDeviceConnDetail)
+
+	if externalDeviceConn.TunnelProtocol != "LAN" {
+		populateNonLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber)
+	} else {
+		populateLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, backupBgpRemoteAsNumber)
+	}
+
+	populateAdditionalConnectionInfo(externalDeviceConn, externalDeviceConnDetail)
+
+	return externalDeviceConn, nil
 }
 
 func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn) error {
@@ -630,4 +452,245 @@ func (c *Client) ConnectionBGPSendCommunities(bgpSendCommunities *BgpSendCommuni
 	}
 
 	return c.PostAPI(params["action"], params, BasicCheck)
+}
+
+// configureHAForTwoDevices configures HA settings when there are two external devices
+func configureHAForTwoDevices(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, remoteIP []string, backupBgpRemoteAsNumber int) {
+	// Check if this is an edge transit gateway that supports proper HA
+	isEdgeTransitGateway := localGateway != nil && localGateway.EdgeGateway && localGateway.TransitVpc == "yes"
+
+	if isEdgeTransitGateway {
+		// Edge transit gateways support true HA with separate tunnel configurations
+		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+	} else {
+		// Non-edge gateways treat dual devices as combined configuration (no true HA)
+		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+		externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+		externalDeviceConn.HAEnabled = "disabled"
+	}
+}
+
+// populateBasicConnectionInfo populates basic connection information
+func populateBasicConnectionInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	if len(externalDeviceConnDetail.VpcID) != 0 {
+		externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
+	}
+	externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
+	externalDeviceConn.GwName = externalDeviceConnDetail.GwName
+	externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
+	externalDeviceConn.BgpSendCommunities = externalDeviceConnDetail.BgpSendCommunities
+}
+
+// populateConnectionTypeInfo populates connection type and BGP information
+func populateConnectionTypeInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	if externalDeviceConnDetail.BgpStatus == "enabled" || externalDeviceConnDetail.BgpStatus == "Enabled" {
+		bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
+		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
+		bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
+		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
+		externalDeviceConn.ConnectionType = "bgp"
+		if len(externalDeviceConnDetail.Tunnels) >= 1 {
+			tunnelProtocol := externalDeviceConnDetail.Tunnels[0].TunnelProtocol
+			// LAN tunnel protocol is defined in the backend as "N/A(LAN)".
+			// Here we clean that up to be just "LAN" for Terraform users.
+			if strings.Contains(tunnelProtocol, "LAN") {
+				tunnelProtocol = "LAN"
+			}
+			externalDeviceConn.TunnelProtocol = tunnelProtocol
+		}
+	} else {
+		externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
+		externalDeviceConn.ConnectionType = "static"
+	}
+}
+
+// populateAlgorithmInfo populates encryption algorithm information
+func populateAlgorithmInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	// GRE and LAN tunnels cannot set Algorithms
+	if externalDeviceConn.TunnelProtocol != "GRE" && externalDeviceConn.TunnelProtocol != "LAN" {
+		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
+			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
+			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
+			externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == "14" &&
+			externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
+			externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
+			externalDeviceConn.CustomAlgorithms = false
+			externalDeviceConn.Phase1Auth = ""
+			externalDeviceConn.Phase2Auth = ""
+			externalDeviceConn.Phase1DhGroups = ""
+			externalDeviceConn.Phase2DhGroups = ""
+			externalDeviceConn.Phase1Encryption = ""
+			externalDeviceConn.Phase2Encryption = ""
+		} else {
+			externalDeviceConn.CustomAlgorithms = true
+			externalDeviceConn.Phase1Auth = externalDeviceConnDetail.Algorithm.Phase1Auth[0]
+			externalDeviceConn.Phase2Auth = externalDeviceConnDetail.Algorithm.Phase2Auth[0]
+			externalDeviceConn.Phase1DhGroups = externalDeviceConnDetail.Algorithm.Phase1DhGroups[0]
+			externalDeviceConn.Phase2DhGroups = externalDeviceConnDetail.Algorithm.Phase2DhGroups[0]
+			externalDeviceConn.Phase1Encryption = externalDeviceConnDetail.Algorithm.Phase1Encrption[0]
+			externalDeviceConn.Phase2Encryption = externalDeviceConnDetail.Algorithm.Phase2Encrption[0]
+		}
+	}
+}
+
+// populateDirectConnectInfo populates direct connect information
+func populateDirectConnectInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	if externalDeviceConnDetail.DirectConnect {
+		externalDeviceConn.DirectConnect = "enabled"
+	} else {
+		externalDeviceConn.DirectConnect = "disabled"
+	}
+
+	if externalDeviceConnDetail.BackupDirectConnect {
+		externalDeviceConn.BackupDirectConnect = "enabled"
+	} else {
+		externalDeviceConn.BackupDirectConnect = "disabled"
+	}
+}
+
+// parseBackupBgpRemoteAsNumber parses backup BGP remote AS number
+func parseBackupBgpRemoteAsNumber(backupBgpRemoteAsNumStr string) int {
+	if backupBgpRemoteAsNumStr != "" {
+		backupBgpRemoteAsNumberRead, _ := strconv.Atoi(backupBgpRemoteAsNumStr)
+		return backupBgpRemoteAsNumberRead
+	}
+	return 0
+}
+
+// populateBgpSendCommunitiesInfo populates BGP send communities information
+func populateBgpSendCommunitiesInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	// get_site2cloud_conn_detail API returns one field for communities, namely, conn_bgp_send_communities
+	// Example1: "conn_bgp_send_communities": "additive 444:444"
+	// Example2: "conn_bgp_send_communities": "block"
+	// We need to parse this field to set the BgpSendCommunities, BgpSendCommunitiesAdditive and BgpSendCommunitiesBlock fields
+	if externalDeviceConnDetail.BgpSendCommunities != "" {
+		commList := strings.Split(externalDeviceConnDetail.BgpSendCommunities, " ")
+		if len(commList) > 0 && commList[0] == "block" {
+			externalDeviceConn.BgpSendCommunitiesBlock = true
+		} else if len(commList) > 0 && commList[0] == "additive" {
+			externalDeviceConn.BgpSendCommunitiesAdditive = true
+			commList = commList[1:]
+			externalDeviceConn.BgpSendCommunities = strings.Join(commList, " ")
+		}
+	}
+}
+
+// populateNonLANTunnelInfo populates information for non-LAN tunnels including HA logic
+func populateNonLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int) {
+	externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
+	externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
+
+	// extrnalDeviceConnDetail.HAEnabled returned from API indicate whether connection's local gateway has HA enabled
+	// We need to put whether remote HA is enabled in externalDeviceConn.HAEnabled
+	if externalDeviceConnDetail.HAEnabled == "enabled" {
+		configureLocalGatewayHAEnabled(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber)
+	} else {
+		configureLocalGatewayHADisabled(externalDeviceConn, externalDeviceConnDetail, backupBgpRemoteAsNumber)
+	}
+}
+
+// configureLocalGatewayHAEnabled configures HA when local gateway has HA enabled
+func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int) {
+	if len(externalDeviceConnDetail.Tunnels) == 2 {
+		remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
+		if len(remoteIP) == 2 {
+			if remoteIP[0] == remoteIP[1] {
+				// one external device, no remote HA
+				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+				externalDeviceConn.HAEnabled = "disabled"
+			} else {
+				// two external devices, remote has HA
+				// activemesh is disabled, 2 straight tunnels only
+				configureHAForTwoDevices(externalDeviceConn, externalDeviceConnDetail, localGateway, remoteIP, backupBgpRemoteAsNumber)
+			}
+		} else if len(remoteIP) == 4 {
+			if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
+				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+				externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+				externalDeviceConn.HAEnabled = "disabled"
+			}
+		}
+	} else if len(externalDeviceConnDetail.Tunnels) == 4 {
+		// activemesh is enabled, 4 tunnels, 2 straight tunnels and 2 crossing tunnels
+		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+	}
+}
+
+// configureLocalGatewayHADisabled configures HA when local gateway has HA disabled
+func configureLocalGatewayHADisabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, backupBgpRemoteAsNumber int) {
+	// local gateway no HA
+	externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+	externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+	if len(externalDeviceConnDetail.Tunnels) == 2 {
+		// two external devices, remote has HA
+		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+		externalDeviceConn.HAEnabled = "enabled"
+	} else {
+		// one external device, no remote HA
+		externalDeviceConn.HAEnabled = "disabled"
+	}
+}
+
+// populateLANTunnelInfo populates information for LAN tunnels
+func populateLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, backupBgpRemoteAsNumber int) {
+	externalDeviceConn.EnableBgpLanActiveMesh = externalDeviceConnDetail.EnableBgpLanActiveMesh
+	if len(externalDeviceConnDetail.Tunnels) == 2 || len(externalDeviceConnDetail.Tunnels) == 4 {
+		externalDeviceConn.HAEnabled = "enabled"
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+		externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
+		externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
+	} else {
+		externalDeviceConn.HAEnabled = "disabled"
+	}
+	externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
+	externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
+}
+
+// populateAdditionalConnectionInfo populates additional connection information
+func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	if externalDeviceConnDetail.EnableEdgeSegmentation {
+		externalDeviceConn.EnableEdgeSegmentation = "enabled"
+	} else {
+		externalDeviceConn.EnableEdgeSegmentation = "disabled"
+	}
+	externalDeviceConn.ManualBGPCidrs = externalDeviceConnDetail.ManualBGPCidrs
+
+	if externalDeviceConnDetail.IkeVer == "2" {
+		externalDeviceConn.EnableIkev2 = "enabled"
+	} else {
+		externalDeviceConn.EnableIkev2 = "disabled"
+	}
+	externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
+	externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
+	externalDeviceConn.PeerVnetID = externalDeviceConnDetail.PeerVnetID
+	externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
+	externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
+	externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
+	externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
+	externalDeviceConn.Phase1LocalIdentifier = externalDeviceConnDetail.Phase1LocalIdentifier
+	externalDeviceConn.EnableBfd = externalDeviceConnDetail.EnableBfd
+	if externalDeviceConn.EnableBfd {
+		externalDeviceConn.BgpBfdConfig.TransmitInterval = externalDeviceConnDetail.BgpBfdConfig["tx_interval"]
+		externalDeviceConn.BgpBfdConfig.ReceiveInterval = externalDeviceConnDetail.BgpBfdConfig["rx_interval"]
+		externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
+	}
+	externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 }

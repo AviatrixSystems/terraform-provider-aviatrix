@@ -970,7 +970,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 
 	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
 	if err != nil {
-		return fmt.Errorf("could not get local gateway details: %v", err)
+		return fmt.Errorf("could not get local gateway details: %w", err)
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)

@@ -120,7 +120,7 @@ func testAccCheckSpokeExternalDeviceConnExists(n string, externalDeviceConn *goa
 		}
 		localGateway, err := getGatewayDetails(client, foundExternalDeviceConn.GwName)
 		if err != nil {
-			return fmt.Errorf("could not get local gateway details: %v", err)
+			return fmt.Errorf("could not get local gateway details: %w", err)
 		}
 		foundExternalDeviceConn2, err := client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
 		if err != nil {
@@ -150,12 +150,12 @@ func testAccCheckSpokeExternalDeviceConnDestroy(s *terraform.State) error {
 		}
 		localGateway, err := getGatewayDetails(client, foundExternalDeviceConn.GwName)
 		if err != nil {
-			return fmt.Errorf("could not get local gateway details: %v", err)
+			return fmt.Errorf("could not get local gateway details: %w", err)
 		}
 
 		_, err = client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("site2cloud still exists %s", err.Error())
+			return fmt.Errorf("site2cloud still exists: %w", err)
 		}
 	}
 
