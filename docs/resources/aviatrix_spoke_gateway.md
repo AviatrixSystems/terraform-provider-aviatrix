@@ -254,6 +254,19 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   bgp_lan_interfaces_count = 2
 }
 ```
+```hcl
+# Create an Aviatrix IPv6 Spoke Gateway
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
+  cloud_type        = 1
+  account_name      = "my-aws"
+  gw_name           = "spoke-gw-aws"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-west-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  enable_ipv6       = true
+}
+```
 
 ## Argument Reference
 
@@ -381,6 +394,7 @@ The following arguments are supported:
 * `private_mode_lb_vpc_id` - (Optional) VPC ID of Private Mode load balancer. Required when Private Mode is enabled on the Controller. Available in provider version R2.23+.
 * `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
 * `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
+* `enable_ipv6` - (Optional) To enable IPv6 CIDR in Spoke Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
 
 !> **WARNING:** Aviatrix released the Global VPC feature in Preview mode. Preview features are not safe for deployment in production environments.
 * `enable_global_vpc` - (Optional) Enable global VPC. Only supported for GCP spoke gateways. Valid values: true, false. Default value: false.
