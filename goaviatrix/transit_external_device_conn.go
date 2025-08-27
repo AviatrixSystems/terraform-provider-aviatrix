@@ -163,7 +163,7 @@ func (c *Client) CreateExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 	return c.PostAPI(externalDeviceConn.Action, externalDeviceConn, BasicCheck)
 }
 
-func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn) (*ExternalDeviceConn, error) {
+func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn, localGateway *Gateway) (*ExternalDeviceConn, error) {
 	params := map[string]string{
 		"CID":       c.CID,
 		"action":    "get_site2cloud_conn_detail",
@@ -271,7 +271,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 						} else {
 							// two external devices, remote has HA
 							// activemesh is disabled, 2 straight tunnels only
-							if strings.HasPrefix(externalDeviceConnDetail.TunnelType, "Transit") {
+							if localGateway != nil && localGateway.EdgeGateway && localGateway.TransitVpc == "yes" {
 								externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 								externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 								externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
