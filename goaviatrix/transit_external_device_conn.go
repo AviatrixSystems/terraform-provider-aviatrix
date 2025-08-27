@@ -131,6 +131,7 @@ type EditExternalDeviceConnDetail struct {
 	EnableBgpMultihop          bool           `json:"bgp_multihop_enabled,omitempty"`
 	DisableActivemesh          bool           `json:"disable_activemesh,omitempty"`
 	TunnelSrcIP                string         `json:"local_device_ip,omitempty"`
+	TunnelType                 string         `json:"tunnel_type,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -299,10 +300,20 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 						} else {
 							// two external devices, remote has HA
 							// activemesh is disabled, 2 straight tunnels only
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
+							if strings.HasPrefix(externalDeviceConnDetail.TunnelType, "Transit") {
+								externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+								externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+								externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+								externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+								externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+								externalDeviceConn.HAEnabled = "enabled"
+								externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+							} else {
+								externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+								externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+								externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+								externalDeviceConn.HAEnabled = "disabled"
+							}
 						}
 					} else if len(remoteIP) == 4 {
 						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
