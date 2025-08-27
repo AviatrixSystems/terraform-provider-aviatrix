@@ -154,9 +154,15 @@ func testAccCheckEdgeSpokeExternalDeviceConnExists(resourceName string) resource
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["site_id"],
 			ConnectionName: rs.Primary.Attributes["connection_name"],
+			GwName:         rs.Primary.Attributes["gw_name"],
 		}
 
-		conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+		localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
+		if err != nil {
+			return fmt.Errorf("could not get local gateway details: %w", err)
+		}
+
+		conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 		if err != nil {
 			return err
 		}
@@ -180,9 +186,15 @@ func testAccCheckEdgeSpokeExternalDeviceConnDestroy(s *terraform.State) error {
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["site_id"],
 			ConnectionName: rs.Primary.Attributes["connection_name"],
+			GwName:         rs.Primary.Attributes["gw_name"],
 		}
 
-		_, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+		localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
+		if err != nil {
+			return fmt.Errorf("could not get local gateway details: %w", err)
+		}
+
+		_, err = client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("edge as a spoke external device conn still exists %s", err.Error())
 		}
