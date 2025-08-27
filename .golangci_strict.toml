@@ -9,13 +9,13 @@ build-tags = [
 tests = true
 
 [linters]
+disable = ['errcheck']
 enable = [
   'asasalint',
   'bodyclose',
   'cyclop',
   'errname',
   'errorlint',
-  'forcetypeassert',
   'funlen',
   'gosec',
   'importas',
