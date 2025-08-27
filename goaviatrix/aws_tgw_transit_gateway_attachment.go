@@ -18,13 +18,9 @@ type AwsTgwTransitGwAttachment struct {
 }
 
 type TgwAttachmentResp struct {
-	Return  bool            `json:"return"`
-	Results AttachmentsList `json:"results"`
-	Reason  string          `json:"reason"`
-}
-
-type AttachmentsList struct {
-	Attachments map[string]AttachmentInfo `json:"attachments"`
+	Return  bool             `json:"return"`
+	Results []AttachmentInfo `json:"results"`
+	Reason  string           `json:"reason"`
 }
 
 type AttachmentInfo struct {
@@ -37,6 +33,7 @@ type AttachmentInfo struct {
 	AwsSideAsn              string
 	AwsSideAsnRaw           json.RawMessage `json:"aws_side_asn"`
 	EnableGlobalAccelerator bool            `json:"enable_acceleration"`
+	AccessFromEdge          []string        `json:"access_from_edge"`
 }
 
 func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) error {
@@ -55,33 +52,19 @@ func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 }
 
 func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) (*AwsTgwTransitGwAttachment, error) {
-	var data TgwAttachmentResp
-	form := map[string]string{
-		"CID":      c.CID,
-		"action":   "list_tgw_details",
-		"tgw_name": awsTgwTransitGwAttachment.TgwName,
+	tgwVpcAttachment := &AwsTgwVpcAttachment{
+		TgwName: awsTgwTransitGwAttachment.TgwName,
+		VpcID:   awsTgwTransitGwAttachment.VpcID,
 	}
-	check := func(action, method, reason string, ret bool) error {
-		if !ret {
-			if strings.Contains(reason, "does not exist") {
-				return ErrNotFound
-			}
-			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
-		}
-		return nil
-	}
-	err := c.GetAPI(&data, form["action"], form, check)
+	tgwAttachmentInfo, err := c.GetAwsTgwAttachmentInfo(tgwVpcAttachment)
 	if err != nil {
 		return nil, err
 	}
-	if _, ok := data.Results.Attachments[awsTgwTransitGwAttachment.VpcID]; ok {
-		if data.Results.Attachments[awsTgwTransitGwAttachment.VpcID].GwName != "" {
-			awsTgwTransitGwAttachment.TransitGatewayName = data.Results.Attachments[awsTgwTransitGwAttachment.VpcID].GwName
-			awsTgwTransitGwAttachment.Region = data.Results.Attachments[awsTgwTransitGwAttachment.VpcID].Region
-			awsTgwTransitGwAttachment.VpcAccountName = data.Results.Attachments[awsTgwTransitGwAttachment.VpcID].AccountName
-			return awsTgwTransitGwAttachment, nil
-		}
-		return nil, ErrNotFound
+	if tgwAttachmentInfo.GwName != "" {
+		awsTgwTransitGwAttachment.TransitGatewayName = tgwAttachmentInfo.GwName
+		awsTgwTransitGwAttachment.Region = tgwAttachmentInfo.Region
+		awsTgwTransitGwAttachment.VpcAccountName = tgwAttachmentInfo.AccountName
+		return awsTgwTransitGwAttachment, nil
 	}
 	return nil, ErrNotFound
 }
