@@ -117,7 +117,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 								return strings.EqualFold(oldProto, newProto)
 							},
 							Description: "Protocol for the policy to filter. " +
-								"Must bew one of ANY, ICMP, TCP or UDP.",
+								"Must be one of ANY, ICMP, TCP or UDP.",
 						},
 						"src_smart_groups": {
 							Type:        schema.TypeSet,
@@ -337,12 +337,12 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 
 	policyList, err := marshalDCFPolicyListInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for Distributed-firewalling Policy during create: %s\n", err)
+		return diag.Errorf("invalid inputs for DCF MWP Policy during create: %s", err)
 	}
 
 	uuid, err := client.CreateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to create Distributed-firewalling Policy List: %s", err)
+		return diag.Errorf("failed to create DCF MWP Policy List: %s", err)
 	}
 
 	d.SetId(uuid)
@@ -365,7 +365,7 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read Distributed-firewalling Policy List: %s", err)
+		return diag.Errorf("failed to read DCF MWP Policy List: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -410,11 +410,11 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err := d.Set("name", policyList.Name); err != nil {
-		return diag.Errorf("failed to set name during Distributed-firewalling Policy List read: %s\n", err)
+		return diag.Errorf("failed to set name during DCF MWP Policy List read: %s", err)
 	}
 
 	if err := d.Set("policies", policies); err != nil {
-		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
+		return diag.Errorf("failed to set policies during DCF MWP Policy List read: %s", err)
 	}
 
 	d.SetId(policyList.UUID)
@@ -430,12 +430,12 @@ func resourceAviatrixDCFPolicyListUpdate(ctx context.Context, d *schema.Resource
 
 	policyList, err := marshalDCFPolicyListInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for Distributed-firewalling Policy during update: %s\n", err)
+		return diag.Errorf("invalid inputs for DCF MWP Policy during update: %s", err)
 	}
 
 	err = client.UpdateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to update Distributed-firewalling Policy List: %s", err)
+		return diag.Errorf("failed to update DCF MWP Policy List: %s", err)
 	}
 
 	return nil
@@ -451,7 +451,7 @@ func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.Resource
 
 	err := client.DeleteDCFPolicyList(ctx, uuid)
 	if err != nil {
-		return diag.Errorf("failed to delete Distributed-firewalling Policy List: %v", err)
+		return diag.Errorf("failed to delete DCF MWP Policy List: %v", err)
 	}
 
 	return nil
