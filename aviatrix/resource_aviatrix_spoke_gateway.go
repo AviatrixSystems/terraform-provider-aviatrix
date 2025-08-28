@@ -628,6 +628,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "BGP communities gateway accept configuration.",
 				Default:     false,
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
+			},
 			"insertion_gateway": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -1029,6 +1035,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	if gateway.EnableGlobalVpc && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
+	}
+
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		}
+		gateway.EnableIPv6 = true
 	}
 
 	insertionGateway := d.Get("insertion_gateway").(bool)
@@ -1523,6 +1537,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	d.Set("enable_ipv6", gw.EnableIPv6)
+
 	d.Set("insertion_gateway", gw.InsertionGateway)
 
 	if gw.InsertionGateway && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -2789,6 +2805,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.DisableGlobalVpc(gateway)
 			if err != nil {
 				return fmt.Errorf("could not disable global vpc during spoke gateway update: %w", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_ipv6") {
+		if d.Get("enable_ipv6").(bool) {
+			err := client.EnableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %w", err)
+			}
+		} else {
+			err := client.DisableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
 			}
 		}
 	}
