@@ -22,7 +22,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   vpc_reg                  = "us-east-1"
   gw_size                  = "t2.micro"
   subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
+  ha_subnet                = "10.1.1.0/24"
   ha_gw_size               = "t2.micro"
   tags                     = {
     name = "value"
@@ -411,12 +411,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   vpc_reg                  = "us-east-1"
   gw_size                  = "t2.micro"
   subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
-  ha_gw_size               = "t2.micro"
-  tags                     = {
-    name = "value"
-  }
-  enable_hybrid_connection = true
   connected_transit        = true
   enable_ipv6 = true
 }

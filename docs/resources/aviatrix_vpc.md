@@ -166,7 +166,7 @@ The following arguments are supported:
 * `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 * `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNet.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
 * `enable_ipv6` - (Optional) To enable IPv6 CIDR in VPC. Only AWS, Azure, AzureGov and AWSGov are supported.
-* `vpc_ipv6_cidr` - (Optional) To configure IPv6 CIDR in Azure VPC. Only Azure, AzureGov are supported.
+* `vpc_ipv6_cidr` - (Optional) To configure IPv6 CIDR in Azure VPC. Only Azure, AzureGov are supported. On AWS/AWSGov, the IPv6 CIDR is automatically assigned and this field is ignored.
 
 ### Misc.
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov, AWSChina, and Alibaba Cloud are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
