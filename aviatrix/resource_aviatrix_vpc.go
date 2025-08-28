@@ -3,11 +3,11 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAviatrixVpc() *schema.Resource {
@@ -232,12 +232,38 @@ func resourceAviatrixVpc() *schema.Resource {
 				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8).",
 			},
 			"vpc_ipv6_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				Description:  "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8).",
-				ValidateFunc: validation.IsCIDR,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8).",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					ip, ipnet, err := net.ParseCIDR(v)
+					if err != nil {
+						errs = append(errs, fmt.Errorf("%q must be a valid IPv6 CIDR, got: %s", key, v))
+						return
+					}
+
+					// Ensure IPv6
+					if ip.To4() != nil {
+						errs = append(errs, fmt.Errorf("%q must be an IPv6 CIDR, got IPv4: %s", key, v))
+						return
+					}
+
+					// Ensure it's the network address, not a host address
+					if !ip.Equal(ipnet.IP) {
+						errs = append(errs, fmt.Errorf("%q must be a network CIDR, not a host IP (%s)", key, v))
+					}
+
+					// Reject /128 (single host)
+					ones, _ := ipnet.Mask.Size()
+					if ones == 128 {
+						errs = append(errs, fmt.Errorf("%q cannot be /128, must be a valid IPv6 network range", key))
+					}
+
+					return
+				},
 			},
 		},
 	}
