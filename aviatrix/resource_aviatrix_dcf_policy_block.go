@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//no-lint:funlen
+//nolint:funlen
 func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDCFPolicyBlockCreate,
@@ -78,7 +78,7 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 	}
 }
 
-//no-lint:cyclop
+//nolint:cyclop
 func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBlock, error) {
 	policyBlock := &goaviatrix.DCFPolicyBlock{}
 
