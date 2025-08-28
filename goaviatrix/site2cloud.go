@@ -17,7 +17,6 @@ const (
 	Phase2AuthDefault       = "HMAC-SHA-256"
 	Phase2DhGroupDefault    = "14"
 	Phase2EncryptionDefault = "AES-256-CBC"
-	SslServerPoolDefault    = "192.168.44.0/24"
 )
 
 // Site2Cloud simple struct to hold site2cloud details
@@ -39,7 +38,6 @@ type Site2Cloud struct {
 	LocalSubnet                   string   `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
 	HAEnabled                     string   `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
 	PeerType                      string   `form:"peer_type,omitempty"`
-	SslServerPool                 string   `form:"ssl_server_pool,omitempty"`
 	CloudSubnetCidr               string   `form:"cloud_subnet_cidr,omitempty"`
 	RemoteCidr                    string   `form:"remote_cidr,omitempty"`
 	RemoteSubnetVirtual           string   `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
@@ -136,7 +134,6 @@ type EditSite2CloudConnDetail struct {
 	LocalSubnetVirtual             string        `json:"virt_local_cidr,omitempty"`
 	Algorithm                      AlgorithmInfo `json:"algorithm,omitempty"`
 	RouteTableList                 []string      `json:"rtbls,omitempty"`
-	SslServerPool                  []string      `json:"ssl_server_pool,omitempty"`
 	DeadPeerDetectionConfig        string        `json:"dpd_config,omitempty"`
 	EnableActiveActive             string        `json:"active_active_ha,omitempty"`
 	EnableIKEv2                    string        `json:"ike_ver,omitempty"`
@@ -243,10 +240,6 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	form["phase2_auth"] = site2cloud.Phase2Auth
 	form["phase2_dh_group"] = site2cloud.Phase2DhGroups
 	form["phase2_encryption"] = site2cloud.Phase2Encryption
-
-	if site2cloud.TunnelType == "tcp" {
-		form["ssl_server_pool"] = site2cloud.SslServerPool
-	}
 
 	if site2cloud.EnableIKEv2 == "true" {
 		form["enable_ikev2"] = "true"
@@ -422,9 +415,6 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			}
 		} else {
 			site2cloud.PrivateRouteEncryption = "false"
-		}
-		if s2cConnDetail.SslServerPool[0] != "192.168.44.0/24" {
-			site2cloud.SslServerPool = s2cConnDetail.SslServerPool[0]
 		}
 		if s2cConnDetail.DeadPeerDetectionConfig == "enable" {
 			site2cloud.DeadPeerDetection = true

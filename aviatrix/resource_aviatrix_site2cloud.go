@@ -706,15 +706,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	if s2c.TunnelType == "tcp" && s2c.RemoteGwType != "avx" {
 		return fmt.Errorf("only 'avx' remote gateway type is supported for tunnel type 'tcp'")
 	}
-	if s2c.TunnelType == "tcp" {
-		if sslServerPool == goaviatrix.SslServerPoolDefault {
-			return fmt.Errorf("'192.168.44.0/24' is default, please specify a different value for ssl_server_pool")
-		} else if sslServerPool == "" {
-			s2c.SslServerPool = goaviatrix.SslServerPoolDefault
-		} else {
-			s2c.SslServerPool = sslServerPool
-		}
-	}
 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
@@ -950,10 +941,6 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			}
 		} else {
 			d.Set("private_route_encryption", false)
-		}
-
-		if s2c.SslServerPool != "" {
-			d.Set("ssl_server_pool", s2c.SslServerPool)
 		}
 
 		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
