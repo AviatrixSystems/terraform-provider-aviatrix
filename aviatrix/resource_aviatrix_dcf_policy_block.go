@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+//no-lint:funlen
 func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixDCFPolicyBlockCreate,
@@ -77,6 +78,7 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 	}
 }
 
+//no-lint:cyclop
 func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBlock, error) {
 	policyBlock := &goaviatrix.DCFPolicyBlock{}
 
@@ -150,12 +152,12 @@ func marshalSubPolicyBlockInput(subPolicyMap map[string]interface{}) (*goaviatri
 		return nil, fmt.Errorf("policy_block priority must be of type string")
 	}
 
-	target_uuid, ok := subPolicyMap["target_uuid"].(string)
+	targetUUID, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
 		return nil, fmt.Errorf("policy_block target_uuid must be of type string")
 	}
 
-	subPolicy.Block = target_uuid
+	subPolicy.Block = targetUUID
 
 	return subPolicy, nil
 }
@@ -173,12 +175,12 @@ func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix
 		return nil, fmt.Errorf("policy_list priority must be of type string")
 	}
 
-	target_uuid, ok := subPolicyMap["target_uuid"].(string)
+	targetUUID, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
 		return nil, fmt.Errorf("policy_list target_uuid must be of type string")
 	}
 
-	subPolicy.List = target_uuid
+	subPolicy.List = targetUUID
 
 	return subPolicy, nil
 }
