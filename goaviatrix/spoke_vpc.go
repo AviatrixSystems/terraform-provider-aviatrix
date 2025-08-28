@@ -51,6 +51,7 @@ type SpokeVpc struct {
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc"`
+	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -65,7 +66,7 @@ type SpokeGatewayAdvancedConfig struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
-	PeerVnetId                        []string
+	PeerVnetID                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
 	ApprovedLearnedCidrs              []string
@@ -89,7 +90,7 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
-	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	PeerVnetID                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
 	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
@@ -246,7 +247,7 @@ func (c *Client) GetSpokeGatewayAdvancedConfig(spokeGateway *SpokeVpc) (*SpokeGa
 		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
-		PeerVnetId:                        data.Results.PeerVnetId,
+		PeerVnetID:                        data.Results.PeerVnetID,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
 		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,
@@ -255,7 +256,7 @@ func (c *Client) GetSpokeGatewayAdvancedConfig(spokeGateway *SpokeVpc) (*SpokeGa
 
 func (c *Client) EnableSpokeConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "enable_transit_connection_learned_cidrs_approval",
+		"action":          "enable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -265,7 +266,7 @@ func (c *Client) EnableSpokeConnectionLearnedCIDRApproval(gwName, connName strin
 
 func (c *Client) DisableSpokeConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "disable_transit_connection_learned_cidrs_approval",
+		"action":          "disable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -275,11 +276,11 @@ func (c *Client) DisableSpokeConnectionLearnedCIDRApproval(gwName, connName stri
 
 func (c *Client) UpdateSpokeConnectionPendingApprovedCidrs(gwName, connName string, approvedCidrs []string) error {
 	data := map[string]string{
-		"action":                            "update_transit_connection_pending_approved_cidrs",
-		"CID":                               c.CID,
-		"gateway_name":                      gwName,
-		"connection_name":                   connName,
-		"connection_approved_learned_cidrs": strings.Join(approvedCidrs, ","),
+		"action":          "set_bgp_connection_approved_cidr_rules",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+		"cidr_rules":      strings.Join(approvedCidrs, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
@@ -393,7 +394,7 @@ func (c *Client) SetSpokeBgpManualAdvertisedNetworks(spokeGateway *SpokeVpc) err
 func (c *Client) EnableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "enable_transit_learned_cidrs_approval",
+		"action":       "enable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -403,7 +404,7 @@ func (c *Client) EnableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
 func (c *Client) DisableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "disable_transit_learned_cidrs_approval",
+		"action":       "disable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -412,10 +413,10 @@ func (c *Client) DisableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
 
 func (c *Client) UpdateSpokePendingApprovedCidrs(gateway *SpokeVpc) error {
 	form := map[string]string{
-		"CID":                    c.CID,
-		"action":                 "update_transit_pending_approved_cidrs",
-		"gateway_name":           gateway.GwName,
-		"approved_learned_cidrs": strings.Join(gateway.ApprovedLearnedCidrs, ","),
+		"CID":          c.CID,
+		"action":       "set_bgp_gateway_approved_cidr_rules",
+		"gateway_name": gateway.GwName,
+		"cidr_rules":   strings.Join(gateway.ApprovedLearnedCidrs, ","),
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)

@@ -301,6 +301,10 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional: true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'.",
+				DiffSuppressFunc: func(_, oldStr, newStr string, _ *schema.ResourceData) bool {
+					// Suppress diff if old is null ("" or "<nil>") and new is an empty set/list ("[]")
+					return (oldStr == "" || oldStr == "<nil>") && (newStr == "[]" || newStr == "")
+				},
 			},
 			"remote_vpc_name": {
 				Type:     schema.TypeString,
@@ -426,12 +430,31 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Default:     true,
 				Description: "Enable multihop on BGP connection.",
 			},
+			"connection_bgp_send_communities": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Connection based additional BGP communities to be sent. E.g. 111:111, 444:444",
+			},
+			"connection_bgp_send_communities_additive": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Do additive operation instead of replacement operation",
+			},
+			"connection_bgp_send_communities_block": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Block advertisement of any BGP communities on this connection",
+			},
 		},
 	}
 }
 
 func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	var bgpSendCommunities *goaviatrix.BgpSendCommunities
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:                  d.Get("vpc_id").(string),
@@ -451,7 +474,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		Phase2Encryption:       d.Get("phase_2_encryption").(string),
 		BackupRemoteGatewayIP:  d.Get("backup_remote_gateway_ip").(string),
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
-		PeerVnetId:             d.Get("remote_vpc_name").(string),
+		PeerVnetID:             d.Get("remote_vpc_name").(string),
 		RemoteLanIP:            d.Get("remote_lan_ip").(string),
 		LocalLanIP:             d.Get("local_lan_ip").(string),
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
@@ -462,6 +485,41 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
 		EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
+	}
+
+	sendComm, ok := d.Get("connection_bgp_send_communities").(string)
+	if !ok {
+		return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
+	}
+	blockComm, ok := d.Get("connection_bgp_send_communities_block").(bool)
+	if !ok {
+		return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
+	}
+	setPerConnCommunity := false
+	if sendComm != "" || blockComm {
+		connName, ok := d.Get("connection_name").(string)
+		setPerConnCommunity = true
+		if !ok {
+			return fmt.Errorf("failed to assert connection_name as string")
+		}
+
+		gwName, ok := d.Get("gw_name").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert gw_name as string")
+		}
+
+		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
+		}
+
+		bgpSendCommunities = &goaviatrix.BgpSendCommunities{
+			ConnectionName:      connName,
+			GwName:              gwName,
+			ConnSendCommunities: sendComm,
+			ConnSendAdditive:    sendAdditive,
+			ConnSendBlock:       blockComm,
+		}
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -627,7 +685,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
 		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
 	}
-	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+	if externalDeviceConn.PeerVnetID != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
 	}
 	if externalDeviceConn.TunnelProtocol == "LAN" {
@@ -717,6 +775,13 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
+	}
+
+	if setPerConnCommunity {
+		err = client.ConnectionBGPSendCommunities(bgpSendCommunities)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to set/block BGP communities for connection %s: %w", externalDeviceConn.ConnectionName, err)
 	}
 
 	enableBFD, ok := d.Get("enable_bfd").(bool)
@@ -900,9 +965,15 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:          d.Get("vpc_id").(string),
 		ConnectionName: d.Get("connection_name").(string),
+		GwName:         d.Get("gw_name").(string),
 	}
 
-	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
+	if err != nil {
+		return fmt.Errorf("could not get local gateway details: %w", err)
+	}
+
+	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
 
 	if err != nil {
@@ -1036,7 +1107,10 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("tunnel_protocol", conn.TunnelProtocol)
 		}
 		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_vpc_name", conn.PeerVnetId)
+			err = d.Set("remote_vpc_name", conn.PeerVnetID)
+			if err != nil {
+				return fmt.Errorf("could not set value for remote_vpc_name: %w", err)
+			}
 		}
 
 		if conn.Phase1RemoteIdentifier != "" {
@@ -1068,6 +1142,19 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
 		if err != nil {
 			return fmt.Errorf("could not set value for enable_bgp_multihop: %w", err)
+		}
+
+		err = d.Set("connection_bgp_send_communities", conn.BgpSendCommunities)
+		if err != nil {
+			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
+		}
+		err = d.Set("connection_bgp_send_communities_additive", conn.BgpSendCommunitiesAdditive)
+		if err != nil {
+			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
+		}
+		err = d.Set("connection_bgp_send_communities_block", conn.BgpSendCommunitiesBlock)
+		if err != nil {
+			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
 		}
 	}
 
@@ -1369,6 +1456,37 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		err := client.EditSite2CloudPhase1LocalIdentifier(s2c)
 		if err != nil {
 			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %v", s2c.ConnName, err)
+		}
+	}
+
+	if d.HasChanges("connection_bgp_send_communities", "connection_bgp_send_communities_additive", "connection_bgp_send_communities_block") {
+		// Detect whether the user wants to change the set of BGP communities sent on a given connection
+		// if so, update the connection with the new set of communities, either additively or as a replacement
+		// or block the communities entirely, depending on the user's choice
+		sendComm, ok := d.Get("connection_bgp_send_communities").(string)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
+		}
+
+		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
+		}
+
+		sendBlock, ok := d.Get("connection_bgp_send_communities_block").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
+		}
+
+		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
+			ConnectionName:      connName,
+			GwName:              gwName,
+			ConnSendCommunities: sendComm,
+			ConnSendAdditive:    sendAdditive,
+			ConnSendBlock:       sendBlock,
+		}
+		if err := client.ConnectionBGPSendCommunities(bgpSendCommunities); err != nil {
+			return fmt.Errorf("failed to update bgp connection based communities for connection %q", bgpSendCommunities.ConnectionName)
 		}
 	}
 

@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:cachix/devenv-nixpkgs/rolling";
+    stable.url = "github:NixOS/nixpkgs/release-25.05";
     systems.url = "github:nix-systems/default";
     devenv.url = "github:cachix/devenv";
     devenv.inputs.nixpkgs.follows = "nixpkgs";
@@ -11,7 +12,7 @@
     extra-substituters = "https://devenv.cachix.org";
   };
 
-  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
+  outputs = { self, nixpkgs, stable, devenv, systems, ... } @ inputs:
     let
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
@@ -25,6 +26,7 @@
         (system:
           let
             pkgs = nixpkgs.legacyPackages.${system};
+            stablepkgs = stable.legacyPackages.${system};
           in
           {
             default = devenv.lib.mkShell {
@@ -33,6 +35,7 @@
                 {
                   packages = [
                     pkgs.gofumpt
+                    stablepkgs.golangci-lint
                   ];
                 }
               ];

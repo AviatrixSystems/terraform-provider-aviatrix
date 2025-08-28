@@ -22,7 +22,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   vpc_reg                  = "us-east-1"
   gw_size                  = "t2.micro"
   subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
+  ha_subnet                = "10.1.1.0/24"
   ha_gw_size               = "t2.micro"
   tags                     = {
     name = "value"
@@ -401,6 +401,20 @@ resource "aviatrix_transit_gateway" "edge-transit-test" {
     }
 }
 ```
+```hcl
+# Create an Aviatrix IPv6 Transit Network Gateway
+resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
+  cloud_type               = 1
+  account_name             = "devops_aws"
+  gw_name                  = "transit"
+  vpc_id                   = "vpc-abcd1234"
+  vpc_reg                  = "us-east-1"
+  gw_size                  = "t2.micro"
+  subnet                   = "10.1.0.0/24"
+  connected_transit        = true
+  enable_ipv6 = true
+}
+```
 
 ## Argument Reference
 
@@ -422,7 +436,8 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
-* `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix EAT gateway.
+* `ztp_file_download_path` - (Optional) Ztp file download path where the cloud init file will be stored locally. Required only for Equinix, Megaport and Selfmanaged EAT gateway.
+* `ztp_file_type` - (Optional) ZTP file type. Valid values: "iso", "cloud-init". Required only for Selfmanaged EAT gateway.
 * `device_id` - (Optional) Device ID for AEP EAT gateway. Required only for AEP gateway.
 * `interfaces` - (Optional) A list of WAN/Management interfaces, each represented as a map. Required and valid only for edge transit gateways AEP and Equinix. Each interface has the following attributes:
   * `logical_ifname` - (Required) Logical interface name e.g., wan0, mgmt0.
@@ -490,6 +505,7 @@ The following arguments are supported:
 * `enable_multi_tier_transit` - (Optional) Enable Multi-tier Transit mode on transit gateway. When enabled, transit gateway will propagate routes it receives from its transit peering peer to other transit peering peers. `local_as_number` is required. Default value: false. Available as of provider version R2.19+.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive packet CPU re-balancing on transit gateway. Valid values: true, false. Default value: false. Available in provider version R2.21.2+.
 * `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false. Available as of provider version R.2.22.1+.
+* `enable_ipv6` - (Optional) To enable IPv6 CIDR in Transit Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
 
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.
 

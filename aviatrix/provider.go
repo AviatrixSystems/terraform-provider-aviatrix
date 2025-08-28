@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"8.0"}
+var supportedVersions = []string{"8.1"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -93,6 +93,8 @@ func Provider() *schema.Provider {
 			"aviatrix_cloudwatch_agent":                                       resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_access_allow_list_config":                    resourceAviatrixControllerAccessAllowListConfig(),
 			"aviatrix_controller_bgp_max_as_limit_config":                     resourceAviatrixControllerBgpMaxAsLimitConfig(),
+			"aviatrix_controller_bgp_communities_global_config":               resourceAviatrixControllerBgpCommunitiesGlobalConfig(),
+			"aviatrix_controller_bgp_communities_auto_cloud_config":           resourceAviatrixControllerBgpCommunitiesAutoCloudConfig(),
 			"aviatrix_controller_cert_domain_config":                          resourceAviatrixControllerCertDomainConfig(),
 			"aviatrix_controller_config":                                      resourceAviatrixControllerConfig(),
 			"aviatrix_controller_email_config":                                resourceAviatrixControllerEmailConfig(),
@@ -107,11 +109,14 @@ func Provider() *schema.Provider {
 			"aviatrix_copilot_simple_deployment":                              resourceAviatrixCopilotSimpleDeployment(),
 			"aviatrix_datadog_agent":                                          resourceAviatrixDatadogAgent(),
 			"aviatrix_dcf_policy_block":                                       resourceAviatrixDCFPolicyBlock(),
+			"aviatrix_dcf_mwp_policy_list":                                    resourceAviatrixDCFPolicyList(),
 			"aviatrix_device_interface_config":                                resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_distributed_firewalling_config":                         resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":                      resourceAviatrixDistributedFirewallingIntraVpc(),
 			"aviatrix_distributed_firewalling_origin_cert_enforcement_config": resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig(),
 			"aviatrix_distributed_firewalling_policy_list":                    resourceAviatrixDistributedFirewallingPolicyList(),
+			"aviatrix_distributed_firewalling_default_action_rule":            resourceAviatrixDistributedFirewallingDefaultActionRule(),
+			"aviatrix_distributed_firewalling_deployment_policy":              resourceAviatrixDistributedFirewallingDeploymentPolicy(),
 			"aviatrix_distributed_firewalling_proxy_ca_config":                resourceAviatrixDistributedFirewallingProxyCaConfig(),
 			"aviatrix_edge_csp":                                               resourceAviatrixEdgeCSP(),
 			"aviatrix_edge_csp_ha":                                            resourceAviatrixEdgeCSPHa(),

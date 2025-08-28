@@ -228,6 +228,8 @@ type Gateway struct {
 	LogicalEipMap                   map[string][]EipMap                 `json:"logical_intf_eip_map,omitempty"`
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
+	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
+	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
 }
 
 type HaGateway struct {
@@ -652,14 +654,16 @@ func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	defer w.Close()
 	_, err = w.Write(args)
 	if err != nil {
 		return err
 	}
+	w.Close() // Ensure all data is flushed
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
+	// Reset the SnatPolicy field after encoding so we don't send both.
+	gateway.SnatPolicy = nil
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
@@ -681,11 +685,11 @@ func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	defer w.Close()
 	_, err = w.Write(args)
 	if err != nil {
 		return err
 	}
+	w.Close() // Ensure all data is flushed
 
 	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
@@ -1456,4 +1460,24 @@ func (c *Client) GetGroGsoStatus(gateway *Gateway) (bool, error) {
 		return false, err
 	}
 	return strings.Contains(resp.Results, "GRO/GSO is enabled"), nil
+}
+
+func (c *Client) EnableIPv6(gateway *Gateway) error {
+	action := "enable_ipv6"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableIPv6(gateway *Gateway) error {
+	action := "disable_ipv6"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
 }

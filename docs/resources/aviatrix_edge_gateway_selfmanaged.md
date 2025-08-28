@@ -49,23 +49,10 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
     gateway_ip  = "172.16.0.1"
   }
 
-  custom_interface_mapping {
-    logical_ifname   = "wan0"
-    identifier_type  = "system-assigned"
-    identifier_value = "auto"
-  }
-
-  custom_interface_mapping {
-    logical_ifname   = "lan0"
-    identifier_type  = "mac"
-    identifier_value = "00:0c:29:63:82:b2"
-  }
-
-  custom_interface_mapping {
-    logical_ifname   = "mgmt0"
-    identifier_type  = "pci"
-    identifier_value = "pci@0000:04:00.0"
-  }
+  included_advertised_spoke_routes = [
+    "10.10.0.0/16",
+    "172.16.0.0/12"
+  ]
 }
 ```
 
@@ -121,10 +108,7 @@ The following arguments are supported:
   * `peer_gateway_ip` - (Optional) LAN sub-interface gateway IP on HA gateway.
   * `vrrp_virtual_ip` - (Optional) LAN sub-interface virtual IP.
   * `tag` - (Optional) Tag.
-* `custom_interface_mapping` - (Optional) A list of custom interface mappings containing logical interfaces mapped to mac addresses or pci id's.
-  * `logical_ifname` - (Required) Logical interface name must start with 'wan','lan' or 'mgmt' followed by a number (e.g., 'wan0', 'mgmt0', 'lan0').
-  * `identifier_type` - (Required) Type of identifier used to map the logical interface to the physical interface e.g., mac, pci, system-assigned.
-  * `identifier_value` - (Required) Value of the identifier used to map the logical interface to the physical interface. Can be a MAC address, PCI ID, or auto if system-assigned.
+* `included_advertised_spoke_routes` - (Optional) A list of CIDRs to be advertised to on-prem gateways as Included CIDR List. When configured, it will replace all advertised routes from this VPC.
 
 ## Attribute Reference
 

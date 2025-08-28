@@ -261,8 +261,13 @@ func testAccCheckTransitExternalDeviceConnExists(n string, externalDeviceConn *g
 		foundExternalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["vpc_id"],
 			ConnectionName: rs.Primary.Attributes["connection_name"],
+			GwName:         rs.Primary.Attributes["gw_name"],
 		}
-		foundExternalDeviceConn2, err := client.GetExternalDeviceConnDetail(foundExternalDeviceConn)
+		localGateway, err := getGatewayDetails(client, foundExternalDeviceConn.GwName)
+		if err != nil {
+			return fmt.Errorf("could not get local gateway details: %w", err)
+		}
+		foundExternalDeviceConn2, err := client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
 		if err != nil {
 			return err
 		}
@@ -286,9 +291,15 @@ func testAccCheckTransitExternalDeviceConnDestroy(s *terraform.State) error {
 		foundExternalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["vpc_id"],
 			ConnectionName: rs.Primary.Attributes["connection_name"],
+			GwName:         rs.Primary.Attributes["gw_name"],
 		}
 
-		_, err := client.GetExternalDeviceConnDetail(foundExternalDeviceConn)
+		localGateway, err := getGatewayDetails(client, foundExternalDeviceConn.GwName)
+		if err != nil {
+			return fmt.Errorf("could not get local gateway details: %w", err)
+		}
+
+		_, err = client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("site2cloud still exists %s", err.Error())
 		}
@@ -323,6 +334,9 @@ func TestAccAviatrixEdgeTransitExternalDeviceConn(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "gw_name", "e2e-edge-transit-2"),
 					resource.TestCheckResourceAttr(rName, "enable_jumbo_frame", "true"),
 					resource.TestCheckResourceAttr(rName, "tunnel_src_ip", "192.168.20.117,192.168.23.16"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities", "444:444"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities_additive", "true"),
+					resource.TestCheckResourceAttr(rName, "connection_bgp_send_communities_block", "false"),
 				),
 			},
 			{
@@ -359,5 +373,8 @@ func testAccEdgeTransitExternalDeviceConnConfig() string {
 	backup_direct_connect     = true
 	backup_pre_shared_key         = "aviatrix,aviatrix"
 	tunnel_src_ip  = "192.168.20.117,192.168.23.16"
+	connection_bgp_send_communities           = "444:444"
+	connection_bgp_send_communities_additive  = true
+	connection_bgp_send_communities_block     = false
 	}`
 }

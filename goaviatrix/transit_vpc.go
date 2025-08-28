@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -72,7 +73,11 @@ type TransitVpc struct {
 	EipMap                       string              `json:"eip_map,omitempty"`
 	LogicalEipMap                map[string][]EipMap `json:"logical_intf_eip_map,omitempty"`
 	ZtpFileDownloadPath          string              `json:"-"`
+	ZtpFileType                  string              `json:"ztp_file_type,omitempty"`
+	GatewayRegistrationMethod    string              `json:"gw_registration_method,omitempty"`
 	ManagementEgressIPPrefix     string              `json:"mgmt_egress_ip,omitempty"`
+	JumboFrame                   bool                `json:"jumbo_frame,omitempty"`
+	EnableIPv6                   bool                `json:"enable_ipv6,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -87,7 +92,7 @@ type TransitGatewayAdvancedConfig struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
-	PeerVnetId                        []string
+	PeerVnetID                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
 	ApprovedLearnedCidrs              []string
@@ -110,7 +115,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
-	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	PeerVnetID                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
 	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
@@ -188,7 +193,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 		return err
 	}
 	// create the ZTP file for Equinix and Megaport edge transit gateway
-	if gateway.CloudType == EDGEEQUINIX || gateway.CloudType == EDGEMEGAPORT {
+	if IsCloudType(gateway.CloudType, EDGEEQUINIX|EDGEMEGAPORT) {
 		fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
 		fileContent, err := processZtpFileContent(data.Result)
 		if err != nil {
@@ -197,6 +202,29 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 		err = createZtpFile(fileName, fileContent)
 		if err != nil {
 			return err
+		}
+	}
+
+	if IsCloudType(gateway.CloudType, EDGESELFMANAGED) {
+		// log the ztp file type
+		var fileName string
+		if gateway.ZtpFileType == "iso" {
+			fileName = gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + ".iso"
+			// For ISO files, handle binary content differently
+			err = createZtpFileISO(fileName, data.Result)
+			if err != nil {
+				return err
+			}
+		} else {
+			fileName = getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
+			fileContent, err := processZtpFileContent(data.Result)
+			if err != nil {
+				return err
+			}
+			err = createZtpFile(fileName, fileContent)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -411,7 +439,7 @@ func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) erro
 func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "enable_transit_learned_cidrs_approval",
+		"action":       "enable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -421,7 +449,7 @@ func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "disable_transit_learned_cidrs_approval",
+		"action":       "disable_bgp_gateway_cidr_approval",
 		"gateway_name": gateway.GwName,
 	}
 
@@ -430,10 +458,10 @@ func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 
 func (c *Client) UpdateTransitPendingApprovedCidrs(gateway *TransitVpc) error {
 	form := map[string]string{
-		"CID":                    c.CID,
-		"action":                 "update_transit_pending_approved_cidrs",
-		"gateway_name":           gateway.GwName,
-		"approved_learned_cidrs": strings.Join(gateway.ApprovedLearnedCidrs, ","),
+		"CID":          c.CID,
+		"action":       "set_bgp_gateway_approved_cidr_rules",
+		"gateway_name": gateway.GwName,
+		"cidr_rules":   strings.Join(gateway.ApprovedLearnedCidrs, ","),
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -573,7 +601,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
-		PeerVnetId:                        data.Results.PeerVnetId,
+		PeerVnetID:                        data.Results.PeerVnetID,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
 		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,
@@ -582,7 +610,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 
 func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string) error {
 	data := map[string]string{
-		"action":       "set_transit_learned_cidrs_approval_mode",
+		"action":       "set_bgp_gateway_cidr_approval_mode",
 		"CID":          c.CID,
 		"gateway_name": gw.GwName,
 		"mode":         mode,
@@ -592,7 +620,7 @@ func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string)
 
 func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "enable_transit_connection_learned_cidrs_approval",
+		"action":          "enable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -602,7 +630,7 @@ func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName str
 
 func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "disable_transit_connection_learned_cidrs_approval",
+		"action":          "disable_bgp_connection_cidr_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -612,11 +640,11 @@ func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName st
 
 func (c *Client) UpdateTransitConnectionPendingApprovedCidrs(gwName, connName string, approvedCidrs []string) error {
 	data := map[string]string{
-		"action":                            "update_transit_connection_pending_approved_cidrs",
-		"CID":                               c.CID,
-		"gateway_name":                      gwName,
-		"connection_name":                   connName,
-		"connection_approved_learned_cidrs": strings.Join(approvedCidrs, ","),
+		"action":          "set_bgp_connection_approved_cidr_rules",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+		"cidr_rules":      strings.Join(approvedCidrs, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
@@ -791,6 +819,42 @@ func createZtpFile(filePath, content string) error {
 	_, err = outFile.WriteString(content)
 	if err != nil {
 		return fmt.Errorf("failed to write to the file: %w", err)
+	}
+	return nil
+}
+
+// createZtpFileISO handles ISO file content by decoding base64 from JSON response
+func createZtpFileISO(filePath, isoContent string) error {
+	// Parse the JSON response (equivalent to json.loads(cloud_init_transit))
+	var jsonCloudInit map[string]interface{}
+	err := json.Unmarshal([]byte(isoContent), &jsonCloudInit)
+	if err != nil {
+		return fmt.Errorf("failed to parse cloud_init_transit as JSON: %w", err)
+	}
+
+	// Extract the 'text' field from the JSON
+	text, ok := jsonCloudInit["text"].(string)
+	if !ok {
+		return fmt.Errorf("'text' field not found or is not a string in cloud_init_transit")
+	}
+
+	// Decode base64 content (equivalent to base64.b64decode(json_cloud_init_transit['text']))
+	decodedBytes, err := base64.StdEncoding.DecodeString(text)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 content: %w", err)
+	}
+
+	// Create the ISO file and write binary data (equivalent to open(iso_json_file, "wb"))
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create the ISO file: %w", err)
+	}
+	defer outFile.Close()
+
+	// Write the decoded bytes to the file (equivalent to f.write(decoded_bytes))
+	_, err = outFile.Write(decodedBytes)
+	if err != nil {
+		return fmt.Errorf("failed to write ISO data to file: %w", err)
 	}
 	return nil
 }

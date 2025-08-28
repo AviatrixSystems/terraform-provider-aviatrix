@@ -318,7 +318,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
+					ValidateFunc: ValidateCIDRRule,
 				},
 				Optional:    true,
 				Description: "Approved learned CIDRs for BGP Spoke Gateway. Available as of provider version R2.21+.",
@@ -613,6 +613,24 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Set to true to enable global VPC. Only supported for GCP.",
+			},
+			"bgp_send_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway send configuration.",
+				Default:     false,
+			},
+			"bgp_accept_communities": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP communities gateway accept configuration.",
+				Default:     false,
+			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
 			},
 		},
 	}
@@ -1001,6 +1019,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		}
+		gateway.EnableIPv6 = true
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	d.SetId(gateway.GwName)
@@ -1023,6 +1049,24 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+		}
+	}
+
+	/* Set BGP communities per gateway */
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+	if ok && acceptComm != commAcceptCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+		if err != nil {
+			return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	sendComm, ok := d.Get("bgp_send_communities").(bool)
+	if ok && sendComm != commSendCurr || err != nil {
+		err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+		if err != nil {
+			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
@@ -1441,6 +1485,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	d.Set("enable_ipv6", gw.EnableIPv6)
+
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
@@ -1776,6 +1822,19 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	sendComm, acceptComm, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("failed to get BGP communities for gateway %s: %w", gateway.GwName, err)
+	}
+	err = d.Set("bgp_send_communities", sendComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_send_communities: %w", err)
+	}
+	err = d.Set("bgp_accept_communities", acceptComm)
+	if err != nil {
+		return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
+	}
+
 	return nil
 }
 
@@ -1815,6 +1874,29 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(gateway.GwName)
+	if d.HasChange("bgp_accept_communities") {
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if ok && acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(gateway.GwName, acceptComm)
+			if err != nil {
+				return fmt.Errorf("failed to set accept BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+	if d.HasChange("bgp_send_communities") {
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if !ok {
+			return fmt.Errorf("failed to assert bgp_send_communities as a boolean")
+		}
+		if sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm)
+			if err != nil {
+				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+
 	if d.Get("enable_private_vpc_default_route").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
@@ -2653,6 +2735,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.DisableGlobalVpc(gateway)
 			if err != nil {
 				return fmt.Errorf("could not disable global vpc during spoke gateway update: %w", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_ipv6") {
+		if d.Get("enable_ipv6").(bool) {
+			err := client.EnableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %w", err)
+			}
+		} else {
+			err := client.DisableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
 			}
 		}
 	}
