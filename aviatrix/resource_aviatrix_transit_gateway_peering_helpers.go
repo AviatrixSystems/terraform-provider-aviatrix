@@ -48,7 +48,7 @@ func setWanInterfaceNames(
 
 	/* the cloud type here is a bit mask and we set the src/dst wan interfaces based on the cloud type
 	 * if the cloud type is Equinix or NEO, we need to convert the logical interface names from wan0, wan1 to eth0, eth1. The api for these edge types does not support logical interface names.
-	 * if the cloud type is Megaport, we need to set the logical interface names as the api for this edge type supports logical interface names.
+	 * if the cloud type is Megaport or SelfManaged, we need to set the logical interface names as the api for this edge type supports logical interface names.
 	 */
 	switch {
 	case goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGENEO):
