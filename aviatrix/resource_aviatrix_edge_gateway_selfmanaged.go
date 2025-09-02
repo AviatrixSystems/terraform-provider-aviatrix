@@ -547,7 +547,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	}
 
 	// set the advertised spoke cidr routes
-	err = editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
 	if err != nil {
 		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %q: %s", gatewayForGatewayFunctions.GwName, err)
 	}
