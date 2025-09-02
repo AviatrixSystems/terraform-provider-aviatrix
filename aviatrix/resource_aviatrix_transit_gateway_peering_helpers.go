@@ -63,7 +63,7 @@ func setWanInterfaceNames(
 		} else {
 			transitGatewayPeering.DstWanInterfaces = wanInterfacesStr
 		}
-	case goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED):
+	case goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEMEGAPORT):
 		if gatewayPrefix == "gateway1" {
 			transitGatewayPeering.Gateway1LogicalIfNames = logicalIfNames
 			log.Printf("[INFO] Gateway1 Logical Interface Names: %#v", transitGatewayPeering.Gateway1LogicalIfNames)

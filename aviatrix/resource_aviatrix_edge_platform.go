@@ -371,6 +371,14 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 				Default:     true,
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
+			"included_advertised_spoke_routes": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -628,6 +636,12 @@ func resourceAviatrixEdgePlatformCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	// set the advertised spoke cidr routes
+	err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway %q: %s", gatewayForGatewayFunctions.GwName, err)
+	}
+
 	return resourceAviatrixEdgePlatformReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -672,6 +686,10 @@ func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("enable_edge_active_standby", edgeNEOResp.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeNEOResp.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeNEOResp.EnableLearnedCidrsApproval)
+
+	if len(edgeNEOResp.AdvertisedCidrList) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeNEOResp.AdvertisedCidrList)
+	}
 
 	if edgeNEOResp.ManagementEgressIpPrefix == "" {
 		d.Set("management_egress_ip_prefix_list", nil)
@@ -844,6 +862,14 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return diag.Errorf("could not set prepend_as_path during Edge Platform update: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("included_advertised_spoke_routes") {
+		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.AdvertisedCidrList
+		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Platform update: %v", err)
 		}
 	}
 

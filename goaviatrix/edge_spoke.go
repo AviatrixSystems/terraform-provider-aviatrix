@@ -54,7 +54,8 @@ type EdgeSpoke struct {
 	InterfaceList                      []*EdgeSpokeInterface
 	Interfaces                         string `json:"interfaces,omitempty"`
 	VlanList                           []*EdgeSpokeVlan
-	Vlan                               string `json:"vlan,omitempty"`
+	Vlan                               string   `json:"vlan,omitempty"`
+	AdvertisedCidrList                 []string `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeSpokeInterface struct {
@@ -110,6 +111,7 @@ type EdgeSpokeResp struct {
 	RxQueueSize                        string                `json:"rx_queue_size"`
 	State                              string                `json:"vpc_state"`
 	InterfaceList                      []*EdgeSpokeInterface `json:"interfaces"`
+	AdvertisedCidrList                 []string              `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeSpokeListResp struct {

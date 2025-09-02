@@ -46,6 +46,11 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
     ip_address  = "172.16.15.162/20"
     gateway_ip  = "172.16.0.1"
   }
+
+  included_advertised_spoke_routes = [
+    "10.10.0.0/16",
+    "172.16.0.0/12"
+  ]
 }
 ```
 
@@ -99,6 +104,7 @@ The following arguments are supported:
   * `peer_gateway_ip` - (Optional) LAN sub-interface gateway IP on HA gateway.
   * `vrrp_virtual_ip` - (Optional) LAN sub-interface virtual IP.
   * `tag` - (Optional) Tag.
+* `included_advertised_spoke_routes` - (Optional) A list of CIDRs to be advertised to on-prem gateways as Included CIDR List. When configured, it will replace all advertised routes from this VPC.
 
 ## Attribute Reference
 
