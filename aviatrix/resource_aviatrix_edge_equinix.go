@@ -344,6 +344,14 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				Default:     true,
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
+			"included_advertised_spoke_routes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -601,6 +609,12 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	// set the advertised spoke cidr routes
+	err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %q: %s", gatewayForGatewayFunctions.GwName, err)
+	}
+
 	return resourceAviatrixEdgeEquinixReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -684,6 +698,10 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("latitude", "")
 		d.Set("longitude", "")
+	}
+
+	if len(edgeEquinixResp.AdvertisedCidrList) > 0 {
+		_ = d.Set("advertised_cidr_list", edgeEquinixResp.AdvertisedCidrList)
 	}
 
 	d.Set("rx_queue_size", edgeEquinixResp.RxQueueSize)
@@ -914,6 +932,13 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, gatewayForEaasFunctions)
 		if err != nil {
 			return diag.Errorf("could not update geo coordinate during Edge Equinix update: %v", err)
+		}
+	}
+
+	if d.HasChange("included_advertised_spoke_routes") {
+		err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Equinix Gateway update: %v", err)
 		}
 	}
 

@@ -56,6 +56,11 @@ resource "aviatrix_edge_megaport" "test" {
     dns_server_ip  = "192.168.77.1"
   }
   management_egress_ip_prefix_list = ["162.43.147.137/31"]
+
+  included_advertised_spoke_routes = [
+    "10.10.0.0/16",
+    "172.16.0.0/12"
+  ]
 }
 ```
 
@@ -112,6 +117,7 @@ The following arguments are supported:
   * `tag` - (Optional) Tag.
 * `enable_single_ip_snat` - (Optional) Enable Single IP SNAT. Valid values: true, false. Default value: false.
 * `enable_auto_advertise_lan_cidrs` - (Optional) Enable auto advertise LAN CIDRs. Valid values: true, false. Default value: true.
+* `included_advertised_spoke_routes` - (Optional) A list of CIDRs to be advertised to on-prem gateways as Included CIDR List. When configured, it will replace all advertised routes from this VPC.
 
 ## Attribute Reference
 
