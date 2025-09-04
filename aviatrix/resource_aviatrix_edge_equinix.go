@@ -701,7 +701,7 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if len(edgeEquinixResp.AdvertisedCidrList) > 0 {
-		_ = d.Set("advertised_cidr_list", edgeEquinixResp.AdvertisedCidrList)
+		_ = d.Set("included_advertised_spoke_routes", edgeEquinixResp.AdvertisedCidrList)
 	}
 
 	d.Set("rx_queue_size", edgeEquinixResp.RxQueueSize)
