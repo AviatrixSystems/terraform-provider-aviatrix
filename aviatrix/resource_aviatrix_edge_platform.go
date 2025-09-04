@@ -372,7 +372,7 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 				Description: "Enable auto advertise LAN CIDRs.",
 			},
 			"included_advertised_spoke_routes": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
 				Elem: &schema.Schema{
@@ -866,8 +866,7 @@ func resourceAviatrixEdgePlatformUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeNEO.AdvertisedCidrList
-		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
 		if err != nil {
 			return diag.Errorf("could not update included advertised spoke routes during Edge Platform update: %v", err)
 		}
