@@ -48,6 +48,8 @@ func TestAccAviatrixEdgeMegaport_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vlan.0.parent_logical_interface_name", "lan0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan.0.vlan_id", "21"),
 					resource.TestCheckResourceAttr(resourceName, "vlan.0.ip_address", "10.220.21.11/24"),
+					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.0", "10.230.3.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.1", "10.230.5.0/24"),
 				),
 			},
 			{
@@ -119,6 +121,11 @@ func testAccEdgeMegaportBasic(accountName, gwName, siteId, path string) string {
 			vlan_id                        = 21
 			ip_address                     = "10.220.21.11/24"
 		}
+
+	    included_advertised_spoke_routes = [
+			"10.230.3.0/24",
+			"10.230.5.0/24"
+		]
 	}
  `, accountName, gwName, siteId, path)
 }
