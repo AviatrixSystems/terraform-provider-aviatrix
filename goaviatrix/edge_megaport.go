@@ -119,6 +119,7 @@ type EdgeMegaportResp struct {
 	SnatMode                           string              `json:"snat_target"`
 	EnableAutoAdvertiseLanCidrs        bool                `json:"auto_advertise_lan_cidrs"`
 	InterfaceMapping                   []InterfaceMapping  `json:"interface_mapping"`
+	AdvertisedCidrList                 []string            `json:"advertise_cidr_list,omitempty"`
 }
 
 type EdgeMegaportListResp struct {
