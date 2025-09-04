@@ -19,7 +19,6 @@ resource "aviatrix_edge_megaport" "test" {
   gw_name                = "megaport-test"
   site_id                = "site-123"
   ztp_file_download_path = "/ztp/file/download/path"
-  tag                    = "edge-megaport-test"
   interfaces {
     gateway_ip     = "10.220.14.1"
     ip_address     = "10.220.14.10/24"
