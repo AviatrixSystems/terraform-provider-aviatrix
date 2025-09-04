@@ -359,6 +359,14 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 					},
 				},
 			},
+			"included_advertised_spoke_routes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -669,6 +677,11 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	err = editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+	if err != nil {
+		return diag.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %q: %s", gatewayForGatewayFunctions.GwName, err)
+	}
+
 	return resourceAviatrixEdgeMegaportReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -749,6 +762,10 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		}
 	} else {
 		_ = d.Set("approved_learned_cidrs", nil)
+	}
+
+	if len(edgeMegaportResp.AdvertisedCidrList) > 0 {
+		_ = d.Set("included_advertised_spoke_routes", edgeMegaportResp.AdvertisedCidrList)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
@@ -984,6 +1001,13 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 		err := client.SetBgpBfdPollingTimeSpoke(gatewayForSpokeFunctions, edgeMegaport.BgpBfdPollingTime)
 		if err != nil {
 			return diag.Errorf("could not set bgp neighbor status polling time during Edge Megaport update: %v", err)
+		}
+	}
+
+	if d.HasChange("included_advertised_spoke_routes") {
+		err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
+		if err != nil {
+			return diag.Errorf("could not update included advertised spoke routes during Edge Megaport Gateway update: %v", err)
 		}
 	}
 
