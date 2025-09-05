@@ -229,6 +229,7 @@ type Gateway struct {
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
+	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
 }
 
 type HaGateway struct {
@@ -1459,4 +1460,24 @@ func (c *Client) GetGroGsoStatus(gateway *Gateway) (bool, error) {
 		return false, err
 	}
 	return strings.Contains(resp.Results, "GRO/GSO is enabled"), nil
+}
+
+func (c *Client) EnableIPv6(gateway *Gateway) error {
+	action := "enable_ipv6"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableIPv6(gateway *Gateway) error {
+	action := "disable_ipv6"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
 }

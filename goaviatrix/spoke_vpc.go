@@ -51,6 +51,7 @@ type SpokeVpc struct {
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc"`
+	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {

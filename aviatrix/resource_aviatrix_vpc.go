@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -223,6 +224,47 @@ func resourceAviatrixVpc() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8).",
+			},
+			"vpc_ipv6_cidr": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8).",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					ip, ipnet, err := net.ParseCIDR(v)
+					if err != nil {
+						errs = append(errs, fmt.Errorf("%q must be a valid IPv6 CIDR, got: %s", key, v))
+						return
+					}
+
+					// Ensure IPv6
+					if ip.To4() != nil {
+						errs = append(errs, fmt.Errorf("%q must be an IPv6 CIDR, got IPv4: %s", key, v))
+						return
+					}
+
+					// Ensure it's the network address, not a host address
+					if !ip.Equal(ipnet.IP) {
+						errs = append(errs, fmt.Errorf("%q must be a network CIDR, not a host IP (%s)", key, v))
+					}
+
+					// Reject /128 (single host)
+					ones, _ := ipnet.Mask.Size()
+					if ones == 128 {
+						errs = append(errs, fmt.Errorf("%q cannot be /128, must be a valid IPv6 network range", key))
+					}
+
+					return
+				},
+			},
 		},
 	}
 }
@@ -327,6 +369,25 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
+	}
+
+	// Handle IPv6 fields
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		}
+		vpc.EnableIpv6 = true
+		log.Printf("[INFO] Enabling IPv6 in VPC: %#v", vpc)
+
+		// Handle ipv6_access_type for Azure
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+			} else {
+				return fmt.Errorf("error creating vpc: valid vpc_ipv6_cidr is required when enable_ipv6 is true for Azure")
+			}
+		}
 	}
 
 	err := client.CreateVpc(vpc)
@@ -569,6 +630,10 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
+	d.Set("enable_ipv6", vC.EnableIpv6)
+	if vC.VpcIpv6Cidr != "" {
+		d.Set("vpc_ipv6_cidr", vC.VpcIpv6Cidr)
+	}
 
 	return nil
 }
