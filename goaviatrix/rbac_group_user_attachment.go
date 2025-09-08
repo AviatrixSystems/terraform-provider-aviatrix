@@ -1,6 +1,8 @@
 package goaviatrix
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,4 +63,90 @@ func (c *Client) DeleteRbacGroupUserAttachment(rbacGroupUserAttachment *RbacGrou
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+// ListRbacGroupUsers retrieves a list of all users assigned to the specified
+// RBAC group.
+func (c *Client) ListRbacGroupUsers(groupName string) ([]string, error) {
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "list_users_in_rbac_group",
+		"group_name": groupName,
+	}
+	var data RbacGroupUserAttachmentListResp
+	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
+		return nil, err
+	}
+	return data.RbacGroupUserAttachmentList, nil
+}
+
+// AddRbacGroupUsers adds one or more users to the specified RBAC group.
+func (c *Client) AddRbacGroupUsers(groupName string, users []string) error {
+	if len(users) == 0 {
+		return nil
+	}
+	payload := &RbacGroupUserAttachment{
+		CID:       c.CID,
+		Action:    "add_users_to_rbac_group",
+		GroupName: groupName,
+		UserName:  strings.Join(users, ","), // API expects comma-separated in "users"
+	}
+	return c.PostAPI(payload.Action, payload, BasicCheck)
+}
+
+// DeleteRbacGroupUsers removes one or more users from the specified RBAC
+// group. Takes a group name and a slice of usernames to remove
+func (c *Client) DeleteRbacGroupUsers(groupName string, users []string) error {
+	if len(users) == 0 {
+		return nil
+	}
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "delete_users_from_rbac_group",
+		"group_name": groupName,
+		"users":      strings.Join(users, ","),
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+// SetRbacGroupUsers sets the exact membership of an RBAC group by comparing
+// current users with desired users, then adding missing users and removing
+// extra users. Ensures the group contains exactly the specified users.
+func (c *Client) SetRbacGroupUsers(groupName string, desired []string) error {
+	current, err := c.ListRbacGroupUsers(groupName)
+	if err != nil {
+		return err
+	}
+	toAdd, toDel := diffStrings(current, desired)
+	if err := c.AddRbacGroupUsers(groupName, toAdd); err != nil {
+		return err
+	}
+	if err := c.DeleteRbacGroupUsers(groupName, toDel); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DiffStrings compares two string slices and returns the elements that need to
+// be added to and deleted from the first slice to match the second slice.
+func diffStrings(curr, want []string) (add, del []string) {
+	cset := make(map[string]struct{}, len(curr))
+	wset := make(map[string]struct{}, len(want))
+	for _, x := range curr {
+		cset[x] = struct{}{}
+	}
+	for _, x := range want {
+		wset[x] = struct{}{}
+	}
+	for x := range wset {
+		if _, ok := cset[x]; !ok {
+			add = append(add, x)
+		}
+	}
+	for x := range cset {
+		if _, ok := wset[x]; !ok {
+			del = append(del, x)
+		}
+	}
+	return
 }
