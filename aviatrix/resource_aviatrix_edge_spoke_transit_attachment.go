@@ -49,6 +49,12 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Enable jumbo frame.",
 			},
+			"enable_firenet_for_edge": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable firenet for edge.",
+			},
 			"enable_insane_mode": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -144,6 +150,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		TransitGwName:            d.Get("transit_gw_name").(string),
 		EnableOverPrivateNetwork: d.Get("enable_over_private_network").(bool),
 		EnableJumboFrame:         d.Get("enable_jumbo_frame").(bool),
+		EnableFirenetForEdge:     d.Get("enable_firenet_for_edge").(bool),
 		EnableInsaneMode:         d.Get("enable_insane_mode").(bool),
 		InsaneModeTunnelNumber:   d.Get("insane_mode_tunnel_number").(int),
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
@@ -283,6 +290,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
+	d.Set("enable_firenet_for_edge", attachment.EnableFirenetForEdge)
 	d.Set("enable_insane_mode", attachment.EnableInsaneMode)
 	if attachment.EnableInsaneMode {
 		d.Set("insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
@@ -411,6 +419,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
 		if err != nil {
 			return diag.Errorf("could not update insane_mode_tunnel_number for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
+		}
+	}
+
+	if d.HasChange("enable_firenet_for_edge") {
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1:  spokeGwName,
+			TransitGatewayName2:  transitGwName,
+			EnableFirenetForEdge: d.Get("enable_firenet_for_edge").(bool),
+		}
+
+		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
+		if err != nil {
+			return diag.Errorf("could not update enable_firenet_for_edge for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
 		}
 	}
 

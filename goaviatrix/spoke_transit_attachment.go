@@ -139,6 +139,7 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 	spokeTransitAttachment.InsaneModeTunnelNumber = data.Results.InsaneModeTunnelNumber
 	spokeTransitAttachment.EdgeWanInterfacesResp = data.Results.EdgeWanInterfaces
 	spokeTransitAttachment.DisableActivemesh = data.Results.DisableActivemesh
+	spokeTransitAttachment.EnableFirenetForEdge = data.Results.EnableFirenetForEdge
 
 	if data.Results.Site1.ConnBgpPrependAsPath != "" {
 		var prependAsPath []string
