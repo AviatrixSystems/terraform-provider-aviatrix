@@ -932,8 +932,11 @@ func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGat
 	const maxRetries = 30
 	const retryDelay = 10 * time.Second
 	includedAdvertisedSpokeRoutes := getStringSet(d, "included_advertised_spoke_routes")
+
+	// If empty array is provided, we still want to make the API call to clear routes
+	// We'll pass an empty string to signal clearing all routes
 	if len(includedAdvertisedSpokeRoutes) == 0 {
-		return nil
+		includedAdvertisedSpokeRoutes = []string{""}
 	}
 
 	gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
