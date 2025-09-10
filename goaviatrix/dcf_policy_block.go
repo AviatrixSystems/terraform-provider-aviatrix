@@ -37,7 +37,7 @@ func (c *Client) CreateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolic
 			if err != nil {
 				return "", err
 			}
-			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointId
+			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointID
 		}
 	}
 
@@ -70,7 +70,7 @@ func (c *Client) UpdateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolic
 			if err != nil {
 				return err
 			}
-			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointId
+			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointID
 		}
 	}
 	return c.PutAPIContext25(ctx, endpoint, policyBlock)

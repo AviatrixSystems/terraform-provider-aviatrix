@@ -117,11 +117,11 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	}
 	policyBlock.Name = name
 
-	attach_to, ok := d.Get("attach_to").(string)
+	attachTo, ok := d.Get("attach_to").(string)
 	if !ok {
 		return nil, fmt.Errorf("PolicyBlock attach_to must be of type string")
 	}
-	policyBlock.AttachTo = attach_to
+	policyBlock.AttachTo = attachTo
 
 	policyBlocks, ok := d.Get("policy_block_reference").(*schema.Set)
 	if !ok {
@@ -265,6 +265,7 @@ func resourceAviatrixDCFPolicyBlockCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
+//nolint:cyclop
 func resourceAviatrixDCFPolicyBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
@@ -303,29 +304,29 @@ func resourceAviatrixDCFPolicyBlockRead(ctx context.Context, d *schema.ResourceD
 	if !ok {
 		return diag.Errorf("attachment_point must be of type *schema.Set")
 	}
-	for _, sub_policy := range policyBlock.SubPolicies {
-		if sub_policy.List != "" {
+	for _, subPolicy := range policyBlock.SubPolicies {
+		if subPolicy.List != "" {
 			policyLists.Add(map[string]interface{}{
-				"priority":    sub_policy.Priority,
-				"target_uuid": sub_policy.List,
+				"priority":    subPolicy.Priority,
+				"target_uuid": subPolicy.List,
 			})
 			if err := d.Set("policy_list_reference", policyLists); err != nil {
 				return diag.Errorf("failed to set policy_list_reference during DCF Policy List read: %s", err)
 			}
-		} else if sub_policy.Block != "" {
+		} else if subPolicy.Block != "" {
 			policyBlocks.Add(map[string]interface{}{
-				"priority":    sub_policy.Priority,
-				"target_uuid": sub_policy.Block,
+				"priority":    subPolicy.Priority,
+				"target_uuid": subPolicy.Block,
 			})
 			if err := d.Set("policy_block_reference", policyBlocks); err != nil {
 				return diag.Errorf("failed to set policy_block_reference during DCF Policy List read: %s", err)
 			}
-		} else if sub_policy.AttachmentPoint != (&goaviatrix.AttachmentPoint{}) {
+		} else if subPolicy.AttachmentPoint != (&goaviatrix.AttachmentPoint{}) {
 			policyAttachmentPoints.Add(map[string]interface{}{
-				"name":        sub_policy.AttachmentPoint.Name,
-				"uuid":        sub_policy.AttachmentPoint.UUID,
-				"target_uuid": sub_policy.AttachmentPoint.TargetUUID,
-				"priority":    sub_policy.Priority,
+				"name":        subPolicy.AttachmentPoint.Name,
+				"uuid":        subPolicy.AttachmentPoint.UUID,
+				"target_uuid": subPolicy.AttachmentPoint.TargetUUID,
+				"priority":    subPolicy.Priority,
 			})
 			if err := d.Set("attachment_point", policyAttachmentPoints); err != nil {
 				return diag.Errorf("failed to set attachment_point during DCF Policy List read: %s", err)

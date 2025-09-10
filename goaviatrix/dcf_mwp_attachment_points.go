@@ -5,7 +5,7 @@ import (
 )
 
 type AttachmentPointResp struct {
-	AttachmentPointId string `json:"attachment_point_id,omitempty"`
+	AttachmentPointID string `json:"attachment_point_id,omitempty"`
 	Name              string `json:"name,omitempty"`
 }
 
