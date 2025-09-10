@@ -10,17 +10,36 @@ type DCFPolicyBlock struct {
 	SubPolicies    []DCFSubPolicy `json:"sub_policies"`
 	SystemResource bool           `json:"system_resource,omitempty"`
 	UUID           string         `json:"uuid,omitempty"`
+	AttachTo       string         `json:"attach_to,omitempty"`
 }
 
 type DCFSubPolicy struct {
-	Block    string `json:"block,omitempty"`
-	List     string `json:"list,omitempty"`
-	Name     string `json:"name"`
-	Priority int    `json:"priority"`
+	Block           string           `json:"block,omitempty"`
+	List            string           `json:"list,omitempty"`
+	Name            string           `json:"name"`
+	AttachmentPoint *AttachmentPoint `json:"attachment_point,omitempty"`
+	Priority        int              `json:"priority"`
+}
+
+type AttachmentPoint struct {
+	Name       string `json:"name,omitempty"`
+	TargetUUID string `json:"target_uuid,omitempty"`
+	UUID       string `json:"uuid,omitempty"`
 }
 
 func (c *Client) CreateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolicyBlock) (string, error) {
 	endpoint := "microseg/policy-list3"
+
+	for _, sp := range policyBlock.SubPolicies {
+		if sp.AttachmentPoint != nil && sp.AttachmentPoint.Name != "" {
+			fmt.Printf("Processing subpolicy: %s\n", sp.AttachmentPoint.Name)
+			attachmentPoint, err := c.GetDCFAttachmentPoint(ctx, sp.AttachmentPoint.Name)
+			if err != nil {
+				return "", err
+			}
+			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointId
+		}
+	}
 
 	var data DCFPolicyBlock
 	err := c.PostAPIContext25(ctx, &data, endpoint, policyBlock)
@@ -45,6 +64,15 @@ func (c *Client) GetDCFPolicyBlock(ctx context.Context, uuid string) (*DCFPolicy
 
 func (c *Client) UpdateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolicyBlock) error {
 	endpoint := fmt.Sprintf("microseg/policy-list3/%s", policyBlock.UUID)
+	for _, sp := range policyBlock.SubPolicies {
+		if sp.AttachmentPoint != nil && sp.AttachmentPoint.Name != "" {
+			attachmentPoint, err := c.GetDCFAttachmentPoint(ctx, sp.AttachmentPoint.Name)
+			if err != nil {
+				return err
+			}
+			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointId
+		}
+	}
 	return c.PutAPIContext25(ctx, endpoint, policyBlock)
 }
 

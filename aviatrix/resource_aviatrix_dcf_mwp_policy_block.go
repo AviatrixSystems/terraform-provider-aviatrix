@@ -21,20 +21,25 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"attach_to": {
+				Description: "Attach the DCF Policy Block to an attachment point.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"system_resource": {
+				Description: "Indicates if the DCF Policy Block is a system resource.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 			"name": {
 				Description: "Name of the DCF Policy Block.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},
-			"policy_block": {
+			"policy_block_reference": {
 				Description: "Static set of DCF Policy Blocks.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Description: "Name of the DCF Policy Block.",
-							Required:    true,
-							Type:        schema.TypeString,
-						},
 						"priority": {
 							Description: "Priority of the DCF Policy Block.",
 							Required:    true,
@@ -50,15 +55,10 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 				Optional: true,
 				Type:     schema.TypeSet,
 			},
-			"policy_list": {
+			"policy_list_reference": {
 				Description: "Static set of DCF Policy Lists.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Description: "Name of the DCF Policy List.",
-							Required:    true,
-							Type:        schema.TypeString,
-						},
 						"priority": {
 							Description: "Priority of the DCF Policy List.",
 							Required:    true,
@@ -68,6 +68,35 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 							Description: "Target UUID of the DCF Policy List.",
 							Required:    true,
 							Type:        schema.TypeString,
+						},
+					},
+				},
+				Optional: true,
+				Type:     schema.TypeSet,
+			},
+			"attachment_point": {
+				Description: "Static set of DCF Attachment Points.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"priority": {
+							Description: "Priority of the DCF Policy List.",
+							Required:    true,
+							Type:        schema.TypeInt,
+						},
+						"name": {
+							Description: "Name of the DCF Attachment Point.",
+							Required:    true,
+							Type:        schema.TypeString,
+						},
+						"target_uuid": {
+							Description: "Target UUID of the DCF Attachment Point.",
+							Computed: true,
+							Type:     schema.TypeString,
+						},
+						"uuid": {
+							Description: "UUID of the DCF Attachment Point.",
+							Computed: true,
+							Type:     schema.TypeString,
 						},
 					},
 				},
@@ -88,9 +117,15 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	}
 	policyBlock.Name = name
 
-	policyBlocks, ok := d.Get("policy_block").(*schema.Set)
+	attach_to, ok := d.Get("attach_to").(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_block must be of type *schema.Set")
+		return nil, fmt.Errorf("PolicyBlock attach_to must be of type string")
+	}
+	policyBlock.AttachTo = attach_to
+
+	policyBlocks, ok := d.Get("policy_block_reference").(*schema.Set)
+	if !ok {
+		return nil, fmt.Errorf("policy_block_reference must be of type *schema.Set")
 	}
 
 	for _, policyBlockInterface := range policyBlocks.List() {
@@ -98,7 +133,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 
 		policyBlockMap, ok := policyBlockInterface.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("policy_block interface must be of type map[string]interface{}")
+			return nil, fmt.Errorf("policy_block_reference interface must be of type map[string]interface{}")
 		}
 
 		subPolicy, err := marshalSubPolicyBlockInput(policyBlockMap)
@@ -109,9 +144,9 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 		policyBlock.SubPolicies = append(policyBlock.SubPolicies, *subPolicy)
 	}
 
-	policyLists, ok := d.Get("policy_list").(*schema.Set)
+	policyLists, ok := d.Get("policy_list_reference").(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("policy_list must be of type *schema.Set")
+		return nil, fmt.Errorf("policy_list_reference must be of type *schema.Set")
 	}
 
 	for _, policyListInterface := range policyLists.List() {
@@ -119,7 +154,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 
 		policyListMap, ok := policyListInterface.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("policy_list interface must be of type map[string]interface{}")
+			return nil, fmt.Errorf("policy_list_reference interface must be of type map[string]interface{}")
 		}
 
 		subPolicy, err := marshalSubPolicyListInput(policyListMap)
@@ -130,8 +165,41 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 		policyBlock.SubPolicies = append(policyBlock.SubPolicies, *subPolicy)
 	}
 
+	attachmentPoints, ok := d.Get("attachment_point").(*schema.Set)
+	if !ok {
+		return nil, fmt.Errorf("attachment_point must be of type *schema.Set")
+	}
+	for _, attachmentPointInterface := range attachmentPoints.List() {
+		var ok bool
+		attachmentPointMap, ok := attachmentPointInterface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("attachment_point interface must be of type map[string]interface{}")
+		}
+		subPolicy := &goaviatrix.DCFSubPolicy{}
+		if subPolicy.Priority, ok = attachmentPointMap["priority"].(int); !ok {
+			return nil, fmt.Errorf("attachment_point priority must be of type int")
+		}
+		attachmentPoint := &goaviatrix.AttachmentPoint{}
+		if attachmentPoint.Name, ok = attachmentPointMap["name"].(string); !ok {
+			return nil, fmt.Errorf("attachment_point name must be of type string")
+		}
+		if attachmentPoint.UUID, ok = attachmentPointMap["uuid"].(string); !ok {
+			return nil, fmt.Errorf("attachment_point uuid must be of type string")
+		}
+		if attachmentPoint.TargetUUID, ok = attachmentPointMap["target_uuid"].(string); !ok {
+			return nil, fmt.Errorf("attachment_point target_uuid must be of type string")
+		}
+		subPolicy.AttachmentPoint = attachmentPoint
+		policyBlock.SubPolicies = append(policyBlock.SubPolicies, *subPolicy)
+	}
+	systemResource, ok := d.Get("system_resource").(bool)
+	if !ok {
+		return nil, fmt.Errorf("PolicyBlock system_resource must be of type bool")
+	}
+	policyBlock.SystemResource = systemResource
+
 	if len(policyBlock.SubPolicies) == 0 {
-		return nil, fmt.Errorf("policy_block type must contain a sub-policy (block or list)")
+		return nil, fmt.Errorf("policy_block_reference type must contain a sub-policy (block or list)")
 	}
 
 	policyBlock.UUID = d.Id()
@@ -144,17 +212,13 @@ func marshalSubPolicyBlockInput(subPolicyMap map[string]interface{}) (*goaviatri
 
 	subPolicy := &goaviatrix.DCFSubPolicy{}
 
-	if subPolicy.Name, ok = subPolicyMap["name"].(string); !ok {
-		return nil, fmt.Errorf("policy_block name must be of type string")
-	}
-
 	if subPolicy.Priority, ok = subPolicyMap["priority"].(int); !ok {
-		return nil, fmt.Errorf("policy_block priority must be of type string")
+		return nil, fmt.Errorf("policy_block_reference priority must be of type string")
 	}
 
 	targetUUID, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_block target_uuid must be of type string")
+		return nil, fmt.Errorf("policy_block_reference target_uuid must be of type string")
 	}
 
 	subPolicy.Block = targetUUID
@@ -167,17 +231,13 @@ func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix
 
 	subPolicy := &goaviatrix.DCFSubPolicy{}
 
-	if subPolicy.Name, ok = subPolicyMap["name"].(string); !ok {
-		return nil, fmt.Errorf("policy_list name must be of type string")
-	}
-
 	if subPolicy.Priority, ok = subPolicyMap["priority"].(int); !ok {
-		return nil, fmt.Errorf("policy_list priority must be of type string")
+		return nil, fmt.Errorf("policy_list_reference priority must be of type string")
 	}
 
 	targetUUID, ok := subPolicyMap["target_uuid"].(string)
 	if !ok {
-		return nil, fmt.Errorf("policy_list target_uuid must be of type string")
+		return nil, fmt.Errorf("policy_list_reference target_uuid must be of type string")
 	}
 
 	subPolicy.List = targetUUID
@@ -193,9 +253,8 @@ func resourceAviatrixDCFPolicyBlockCreate(ctx context.Context, d *schema.Resourc
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF Policy during create: %s\n", err)
+		return diag.Errorf("invalid inputs for DCF Policy during create: %s", err)
 	}
-
 	uuid, err := client.CreateDCFPolicyBlock(ctx, policyBlock)
 	if err != nil {
 		return diag.Errorf("failed to create DCF Policy List: %s", err)
@@ -224,7 +283,54 @@ func resourceAviatrixDCFPolicyBlockRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err := d.Set("name", policyBlock.Name); err != nil {
-		return diag.Errorf("failed to set name during DCF Policy List read: %s\n", err)
+		return diag.Errorf("failed to set name during DCF Policy Block read: %s", err)
+	}
+	if err := d.Set("system_resource", policyBlock.SystemResource); err != nil {
+		return diag.Errorf("failed to set system_resource during DCF Policy Block read: %s", err)
+	}
+	if err := d.Set("attach_to", policyBlock.AttachTo); err != nil {
+		return diag.Errorf("failed to set attach_to during DCF Policy Block read: %s", err)
+	}
+	policyLists, ok := d.Get("policy_list_reference").(*schema.Set)
+	if !ok {
+		return diag.Errorf("policy_list_reference must be of type *schema.Set")
+	}
+	policyBlocks, ok := d.Get("policy_block_reference").(*schema.Set)
+	if !ok {
+		return diag.Errorf("policy_block_reference must be of type *schema.Set")
+	}
+	policyAttachmentPoints, ok := d.Get("attachment_point").(*schema.Set)
+	if !ok {
+		return diag.Errorf("attachment_point must be of type *schema.Set")
+	}
+	for _, sub_policy := range policyBlock.SubPolicies {
+		if sub_policy.List != "" {
+			policyLists.Add(map[string]interface{}{
+				"priority":    sub_policy.Priority,
+				"target_uuid": sub_policy.List,
+			})
+			if err := d.Set("policy_list_reference", policyLists); err != nil {
+				return diag.Errorf("failed to set policy_list_reference during DCF Policy List read: %s", err)
+			}
+		} else if sub_policy.Block != "" {
+			policyBlocks.Add(map[string]interface{}{
+				"priority":    sub_policy.Priority,
+				"target_uuid": sub_policy.Block,
+			})
+			if err := d.Set("policy_block_reference", policyBlocks); err != nil {
+				return diag.Errorf("failed to set policy_block_reference during DCF Policy List read: %s", err)
+			}
+		} else if sub_policy.AttachmentPoint != (&goaviatrix.AttachmentPoint{}) {
+			policyAttachmentPoints.Add(map[string]interface{}{
+				"name":        sub_policy.AttachmentPoint.Name,
+				"uuid":        sub_policy.AttachmentPoint.UUID,
+				"target_uuid": sub_policy.AttachmentPoint.TargetUUID,
+				"priority":    sub_policy.Priority,
+			})
+			if err := d.Set("attachment_point", policyAttachmentPoints); err != nil {
+				return diag.Errorf("failed to set attachment_point during DCF Policy List read: %s", err)
+			}
+		}
 	}
 
 	d.SetId(policyBlock.UUID)
@@ -240,7 +346,7 @@ func resourceAviatrixDCFPolicyBlockUpdate(ctx context.Context, d *schema.Resourc
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF Policy during update: %s\n", err)
+		return diag.Errorf("invalid inputs for DCF Policy during update: %s", err)
 	}
 
 	err = client.UpdateDCFPolicyBlock(ctx, policyBlock)
