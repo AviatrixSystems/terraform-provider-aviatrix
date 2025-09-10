@@ -90,13 +90,13 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 						},
 						"target_uuid": {
 							Description: "Target UUID of the DCF Attachment Point.",
-							Computed: true,
-							Type:     schema.TypeString,
+							Computed:    true,
+							Type:        schema.TypeString,
 						},
 						"uuid": {
 							Description: "UUID of the DCF Attachment Point.",
-							Computed: true,
-							Type:     schema.TypeString,
+							Computed:    true,
+							Type:        schema.TypeString,
 						},
 					},
 				},
