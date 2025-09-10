@@ -107,7 +107,7 @@ func resourceAviatrixDCFPolicyBlock() *schema.Resource {
 	}
 }
 
-//nolint:cyclop
+//nolint:cyclop,funlen
 func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBlock, error) {
 	policyBlock := &goaviatrix.DCFPolicyBlock{}
 
@@ -265,7 +265,7 @@ func resourceAviatrixDCFPolicyBlockCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-//nolint:cyclop
+//nolint:cyclop,funlen
 func resourceAviatrixDCFPolicyBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
