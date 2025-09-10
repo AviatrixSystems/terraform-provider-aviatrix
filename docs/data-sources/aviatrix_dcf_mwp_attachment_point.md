@@ -12,7 +12,7 @@ data "aviatrix_dcf_mwp_attachment_point" "example" {
 resource "aviatrix_dcf_mwp_policy_block" "example" {
     attach_to = data.aviatrix_dcf_mwp_attachment_point.example.id // Get the uuid using an aviatrix_dcf_mwp_attachment_point datasource
     name = "example-policy-block"
-    
+
     policy_block_reference {
         priority    = 100
         target_uuid = "10002000-3000-4000-5000-600070008000"
