@@ -1257,6 +1257,54 @@ func TestSetInterfaceDetails(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "WAN interface with underlay CIDR",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan0", IpAddress: "192.168.1.10/24", GatewayIp: "169.254.100.1", UnderlayCidr: "169.254.100.2/30"},
+			},
+			expected: []map[string]interface{}{
+				{
+					"logical_ifname": "wan0",
+					"ip_address":     "192.168.1.10/24",
+					"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
+					"underlay_cidr":  "169.254.100.2/30",
+				},
+			},
+		},
+		{
+			name: "WAN interface with typical link-local underlay CIDR range",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan1", IpAddress: "10.0.1.10/24", GatewayIp: "169.254.100.1", UnderlayCidr: "169.254.100.2/28"},
+			},
+			expected: []map[string]interface{}{
+				{
+					"logical_ifname": "wan1",
+					"ip_address":     "10.0.1.10/24",
+					"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
+					"underlay_cidr":  "169.254.100.2/28",
+				},
+			},
+		},
+		{
+			name: "Multiple interfaces with and without underlay CIDR",
+			interfaces: []goaviatrix.EdgeTransitInterface{
+				{LogicalIfName: "wan0", IpAddress: "192.168.1.10/24", GatewayIp: "192.168.1.1"},
+				{LogicalIfName: "wan1", IpAddress: "10.0.1.10/24", GatewayIp: "169.254.1.1", UnderlayCidr: "169.254.1.2/30"},
+			},
+			expected: []map[string]interface{}{
+				{
+					"logical_ifname": "wan0",
+					"ip_address":     "192.168.1.10/24",
+					"gateway_ip":     "192.168.1.1",
+				},
+				{
+					"logical_ifname": "wan1",
+					"ip_address":     "10.0.1.10/24",
+					"gateway_ip":     "169.254.1.1", // Gateway IP within underlay_cidr subnet
+					"underlay_cidr":  "169.254.1.2/30",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1471,6 +1519,60 @@ func TestParseInterface(t *testing.T) {
 				IpAddress:      "192.168.1.2",
 				SecondaryCIDRs: []string{"10.0.0.0/16", "10.1.0.0/16"},
 				LogicalIfName:  "wan0",
+			},
+			expectErr: false,
+		},
+		{
+			name: "WAN interface with underlay CIDR",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": "wan1",
+				"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
+				"ip_address":     "192.168.2.10/24",
+				"underlay_cidr":  "169.254.100.2/30", // underlay_cidr range: 169.254.100.0-169.254.100.3
+			},
+			wanCount:  2,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected: goaviatrix.EdgeTransitInterface{
+				GatewayIp:     "169.254.100.1",
+				IpAddress:     "192.168.2.10/24",
+				UnderlayCidr:  "169.254.100.2/30",
+				LogicalIfName: "wan1",
+			},
+			expectErr: false,
+		},
+		{
+			name: "WAN interface with link-local underlay CIDR typical range",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": "wan2",
+				"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
+				"ip_address":     "10.0.1.10/24",
+				"underlay_cidr":  "169.254.100.2/28", // underlay_cidr range: 169.254.100.0-169.254.100.15
+			},
+			wanCount:  3,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected: goaviatrix.EdgeTransitInterface{
+				GatewayIp:     "169.254.100.1",
+				IpAddress:     "10.0.1.10/24",
+				UnderlayCidr:  "169.254.100.2/28",
+				LogicalIfName: "wan2",
+			},
+			expectErr: false,
+		},
+		{
+			name: "WAN interface with point-to-point underlay CIDR",
+			ifaceInfo: map[string]interface{}{
+				"logical_ifname": "wan0",
+				"gateway_ip":     "169.254.1.1", // Gateway IP within underlay_cidr subnet
+				"ip_address":     "172.16.1.10/24",
+				"underlay_cidr":  "169.254.1.2/30", // underlay_cidr range: 169.254.1.0-169.254.1.3
+			},
+			wanCount:  1,
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected: goaviatrix.EdgeTransitInterface{
+				GatewayIp:     "169.254.1.1",
+				IpAddress:     "172.16.1.10/24",
+				UnderlayCidr:  "169.254.1.2/30",
+				LogicalIfName: "wan0",
 			},
 			expectErr: false,
 		},
