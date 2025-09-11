@@ -785,6 +785,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"underlay_cidr": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "The underlay CIDR in the format of ipaddr/netmask for this interface.",
+							ValidateFunc: validation.IsCIDR,
+						},
 					},
 				},
 			},
@@ -830,6 +836,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+						"underlay_cidr": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "The underlay CIDR in the format of ipaddr/netmask for this interface.",
+							ValidateFunc: validation.IsCIDR,
 						},
 					},
 				},
@@ -4560,9 +4572,9 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 
 func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (goaviatrix.EdgeTransitInterface, error) {
 	var (
-		logicalIfName, ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP string
-		ifaceDHCP                                                                   bool
-		secondaryCIDRs                                                              []string
+		logicalIfName, ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP, ifaceUnderlayCidr string
+		ifaceDHCP                                                                                      bool
+		secondaryCIDRs                                                                                 []string
 	)
 
 	logicalIfName, err := getStringAttribute(ifaceInfo, "logical_ifname")
@@ -4583,6 +4595,7 @@ func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (
 	ifaceGatewayIP, _ = getStringAttribute(ifaceInfo, "gateway_ip")
 	ifaceIP, _ = getStringAttribute(ifaceInfo, "ip_address")
 	ifacePublicIP, _ = getStringAttribute(ifaceInfo, "public_ip")
+	ifaceUnderlayCidr, _ = getStringAttribute(ifaceInfo, "underlay_cidr")
 	ifaceDHCP, _ = getBoolAttribute(ifaceInfo, "dhcp")
 	secondaryCIDRs, _ = getStringListAttribute(ifaceInfo, "secondary_private_cidr_list")
 
@@ -4592,6 +4605,7 @@ func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (
 		Dhcp:           ifaceDHCP,
 		IpAddress:      ifaceIP,
 		SecondaryCIDRs: secondaryCIDRs,
+		UnderlayCidr:   ifaceUnderlayCidr,
 	}
 
 	if cloudType == goaviatrix.EDGEMEGAPORT {
@@ -4668,6 +4682,9 @@ func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface, interface
 		}
 		if intf.GatewayIp != "" {
 			interfaceDict["gateway_ip"] = intf.GatewayIp
+		}
+		if intf.UnderlayCidr != "" {
+			interfaceDict["underlay_cidr"] = intf.UnderlayCidr
 		}
 		if intf.SecondaryCIDRs != nil {
 			secondaryCIDRs := make([]string, 0)
