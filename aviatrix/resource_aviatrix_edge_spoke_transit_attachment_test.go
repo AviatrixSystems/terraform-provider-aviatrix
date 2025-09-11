@@ -264,11 +264,24 @@ resource "aviatrix_edge_spoke_transit_attachment" "test_edge_spoke_transit_attac
 }
 
 func testAccEdgeSpokeTransitAttachmentConfigFirenetForEdge(accountName, spokeGwName, spokeSiteID, path, transitGwName, transitSiteID string, enableFirenetForEdge bool) string {
+	accountConfig := testAccEdgeSpokeTransitAttachmentAccountConfig(accountName)
+	transitConfig := testAccEdgeSpokeTransitAttachmentTransitConfig(transitGwName, transitSiteID, path)
+	spokeConfig := testAccEdgeSpokeTransitAttachmentSpokeConfig(spokeGwName, spokeSiteID, path)
+	attachmentConfig := testAccEdgeSpokeTransitAttachmentAttachmentConfig(enableFirenetForEdge)
+
+	return fmt.Sprintf("%s\n%s\n%s\n%s", accountConfig, transitConfig, spokeConfig, attachmentConfig)
+}
+
+func testAccEdgeSpokeTransitAttachmentAccountConfig(accountName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_edge_megaport" {
 	account_name       = "edge-%s"
 	cloud_type         = 1048576
+}`, accountName)
 }
+
+func testAccEdgeSpokeTransitAttachmentTransitConfig(transitGwName, transitSiteID, path string) string {
+	return fmt.Sprintf(`
 resource "aviatrix_transit_gateway" "test_edge_transit" {
 	cloud_type   = 1048576
 	account_name = aviatrix_account.test_acc_edge_megaport.account_name
@@ -308,8 +321,11 @@ resource "aviatrix_transit_gateway" "test_edge_transit" {
         ip_address     = "192.168.23.11/24"
         logical_ifname = "wan3"
     }
+}`, transitGwName, transitSiteID, path)
 }
 
+func testAccEdgeSpokeTransitAttachmentSpokeConfig(spokeGwName, spokeSiteID, path string) string {
+	return fmt.Sprintf(`
 resource "aviatrix_edge_megaport" "test_edge_spoke" {
 	account_name                       = aviatrix_account.test_acc_edge_megaport.account_name
 	gw_name                            = "%s"
@@ -353,8 +369,11 @@ resource "aviatrix_edge_megaport" "test_edge_spoke" {
 		vlan_id                        = 21
 		ip_address                     = "10.220.21.11/24"
 	}
+}`, spokeGwName, spokeSiteID, path)
 }
 
+func testAccEdgeSpokeTransitAttachmentAttachmentConfig(enableFirenetForEdge bool) string {
+	return fmt.Sprintf(`
 resource "aviatrix_edge_spoke_transit_attachment" "test" {
 	spoke_gw_name   = "aviatrix_edge_megaport.test_edge_spoke.gw_name"
 	transit_gw_name = "aviatrix_transit_gateway.test_edge_transit.gw_name"
@@ -365,8 +384,7 @@ resource "aviatrix_edge_spoke_transit_attachment" "test" {
 	spoke_gateway_logical_ifnames = ["wan1"]
 	transit_gateway_logical_ifnames = ["wan1"]
 	disable_activemesh = false
-  }
-	`, accountName, transitGwName, transitSiteID, path, spokeGwName, spokeSiteID, path, enableFirenetForEdge)
+}`, enableFirenetForEdge)
 }
 
 func testAccCheckEdgeSpokeTransitAttachmentExists(resourceName string) resource.TestCheckFunc {
