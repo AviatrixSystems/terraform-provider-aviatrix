@@ -44,6 +44,12 @@ var interfaces = []interface{}{
 		"ip_address":     "192.168.23.11/24",
 		"logical_ifname": "wan3",
 	},
+	map[string]interface{}{
+		"gateway_ip":     "169.254.100.1",
+		"ip_address":     "10.0.1.10/24",
+		"logical_ifname": "wan4",
+		"underlay_cidr":  "169.254.100.2/30",
+	},
 }
 
 var expectedInterfaceDetails = []goaviatrix.EdgeTransitInterface{
@@ -72,6 +78,12 @@ var expectedInterfaceDetails = []goaviatrix.EdgeTransitInterface{
 		GatewayIp:     "192.168.23.1",
 		IpAddress:     "192.168.23.11/24",
 		LogicalIfName: "wan3",
+	},
+	{
+		GatewayIp:     "169.254.100.1",
+		IpAddress:     "10.0.1.10/24",
+		LogicalIfName: "wan4",
+		UnderlayCidr:  "169.254.100.2/30",
 	},
 }
 
@@ -1031,7 +1043,7 @@ func TestCountInterfaceTypes(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	// Check that the WAN count matches the expected value
-	expectedWANCount := 4
+	expectedWANCount := 5
 	if wanCount != expectedWANCount {
 		t.Errorf("Expected %d WAN interfaces, got %d", expectedWANCount, wanCount)
 	}
