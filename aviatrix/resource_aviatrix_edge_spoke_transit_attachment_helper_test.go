@@ -141,3 +141,126 @@ func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 		})
 	}
 }
+
+func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]interface{}
+		expected *goaviatrix.SpokeTransitAttachment
+	}{
+		{
+			name: "Basic configuration with enable_firenet_for_edge false",
+			input: map[string]interface{}{
+				"spoke_gw_name":               "test-spoke",
+				"transit_gw_name":             "test-transit",
+				"enable_over_private_network": true,
+				"enable_jumbo_frame":          false,
+				"enable_firenet_for_edge":     false,
+				"enable_insane_mode":          true,
+				"insane_mode_tunnel_number":   5,
+				"disable_activemesh":          false,
+				"spoke_prepend_as_path":       []interface{}{"65001", "65002"},
+				"transit_prepend_as_path":     []interface{}{"65003", "65004"},
+				"edge_wan_interfaces":         []interface{}{"wan0", "wan1"},
+			},
+			expected: &goaviatrix.SpokeTransitAttachment{
+				SpokeGwName:              "test-spoke",
+				TransitGwName:            "test-transit",
+				EnableOverPrivateNetwork: true,
+				EnableJumboFrame:         false,
+				EnableFirenetForEdge:     false,
+				EnableInsaneMode:         true,
+				InsaneModeTunnelNumber:   5,
+				DisableActivemesh:        false,
+				SpokePrependAsPath:       []string{"65001", "65002"},
+				TransitPrependAsPath:     []string{"65003", "65004"},
+				EdgeWanInterfaces:        "wan0,wan1",
+			},
+		},
+		{
+			name: "Configuration with enable_firenet_for_edge true",
+			input: map[string]interface{}{
+				"spoke_gw_name":               "test-spoke",
+				"transit_gw_name":             "test-transit",
+				"enable_over_private_network": true,
+				"enable_jumbo_frame":          false,
+				"enable_firenet_for_edge":     true,
+				"enable_insane_mode":          false,
+				"insane_mode_tunnel_number":   0,
+				"disable_activemesh":          true,
+				"spoke_prepend_as_path":       []interface{}{},
+				"transit_prepend_as_path":     []interface{}{},
+				"edge_wan_interfaces":         []interface{}{},
+			},
+			expected: &goaviatrix.SpokeTransitAttachment{
+				SpokeGwName:              "test-spoke",
+				TransitGwName:            "test-transit",
+				EnableOverPrivateNetwork: true,
+				EnableJumboFrame:         false,
+				EnableFirenetForEdge:     true,
+				EnableInsaneMode:         false,
+				InsaneModeTunnelNumber:   0,
+				DisableActivemesh:        true,
+				SpokePrependAsPath:       nil,
+				TransitPrependAsPath:     nil,
+				EdgeWanInterfaces:        "",
+			},
+		},
+		{
+			name: "Default values",
+			input: map[string]interface{}{
+				"spoke_gw_name":           "test-spoke",
+				"transit_gw_name":         "test-transit",
+				"spoke_prepend_as_path":   []interface{}{},
+				"transit_prepend_as_path": []interface{}{},
+				"edge_wan_interfaces":     []interface{}{},
+			},
+			expected: &goaviatrix.SpokeTransitAttachment{
+				SpokeGwName:              "test-spoke",
+				TransitGwName:            "test-transit",
+				EnableOverPrivateNetwork: true,  // default from schema
+				EnableJumboFrame:         false, // default from schema
+				EnableFirenetForEdge:     false, // default from schema
+				EnableInsaneMode:         false, // default from schema
+				InsaneModeTunnelNumber:   0,     // default from schema
+				DisableActivemesh:        false, // default from schema
+				SpokePrependAsPath:       nil,
+				TransitPrependAsPath:     nil,
+				EdgeWanInterfaces:        "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a schema.ResourceData from the input
+			d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"spoke_gw_name":               {Type: schema.TypeString, Required: true},
+				"transit_gw_name":             {Type: schema.TypeString, Required: true},
+				"enable_over_private_network": {Type: schema.TypeBool, Optional: true, Default: true},
+				"enable_jumbo_frame":          {Type: schema.TypeBool, Optional: true, Default: false},
+				"enable_firenet_for_edge":     {Type: schema.TypeBool, Optional: true, Default: false},
+				"enable_insane_mode":          {Type: schema.TypeBool, Optional: true, Default: false},
+				"insane_mode_tunnel_number":   {Type: schema.TypeInt, Optional: true, Default: 0},
+				"disable_activemesh":          {Type: schema.TypeBool, Optional: true, Default: false},
+				"spoke_prepend_as_path":       {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"transit_prepend_as_path":     {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"edge_wan_interfaces":         {Type: schema.TypeSet, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+			}, tt.input)
+
+			result := marshalEdgeSpokeTransitAttachmentInput(d)
+
+			assert.Equal(t, tt.expected.SpokeGwName, result.SpokeGwName)
+			assert.Equal(t, tt.expected.TransitGwName, result.TransitGwName)
+			assert.Equal(t, tt.expected.EnableOverPrivateNetwork, result.EnableOverPrivateNetwork)
+			assert.Equal(t, tt.expected.EnableJumboFrame, result.EnableJumboFrame)
+			assert.Equal(t, tt.expected.EnableFirenetForEdge, result.EnableFirenetForEdge)
+			assert.Equal(t, tt.expected.EnableInsaneMode, result.EnableInsaneMode)
+			assert.Equal(t, tt.expected.InsaneModeTunnelNumber, result.InsaneModeTunnelNumber)
+			assert.Equal(t, tt.expected.DisableActivemesh, result.DisableActivemesh)
+			assert.Equal(t, tt.expected.SpokePrependAsPath, result.SpokePrependAsPath)
+			assert.Equal(t, tt.expected.TransitPrependAsPath, result.TransitPrependAsPath)
+			assert.Equal(t, tt.expected.EdgeWanInterfaces, result.EdgeWanInterfaces)
+		})
+	}
+}
