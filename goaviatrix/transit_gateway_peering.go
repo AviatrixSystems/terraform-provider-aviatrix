@@ -37,7 +37,6 @@ type TransitGatewayPeering struct {
 	Gateway1LogicalIfNames              []string `form:"gateway1_logical_ifnames,omitempty" json:"gateway1_logical_ifnames,omitempty"`
 	Gateway2LogicalIfNames              []string `form:"gateway2_logical_ifnames,omitempty" json:"gateway2_logical_ifnames,omitempty"`
 	DisableActivemesh                   bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
-	EnableFirenetForEdge                bool     `form:"enable_firenet_for_edge" json:"enable_firenet_for_edge,omitempty"`
 }
 
 type TransitGatewayPeeringEdit struct {
@@ -83,7 +82,6 @@ type TransitGatewayPeeringDetailsResults struct {
 	Gateway2LogicalIfNames []string                    `json:"dst_wan_interfaces"`
 	InsaneMode             bool                        `json:"insane_mode"`
 	DisableActivemesh      bool                        `json:"disable_activemesh,omitempty"`
-	EnableFirenetForEdge   bool                        `json:"enable_firenet_for_edge,omitempty"`
 }
 
 type TransitGatewayPeeringDetail struct {
