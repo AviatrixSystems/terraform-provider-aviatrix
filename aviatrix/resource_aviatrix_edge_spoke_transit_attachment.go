@@ -422,19 +422,6 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 		}
 	}
 
-	if d.HasChange("enable_firenet_for_edge") {
-		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1:  spokeGwName,
-			TransitGatewayName2:  transitGwName,
-			EnableFirenetForEdge: d.Get("enable_firenet_for_edge").(bool),
-		}
-
-		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
-		if err != nil {
-			return diag.Errorf("could not update enable_firenet_for_edge for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
-		}
-	}
-
 	d.Partial(false)
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx, d, meta)
