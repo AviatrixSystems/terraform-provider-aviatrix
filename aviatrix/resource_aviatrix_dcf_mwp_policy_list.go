@@ -28,6 +28,16 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 				Required:    true,
 				Description: "Name of the policy list.",
 			},
+			"system_resource": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the policy list is a system resource.",
+			},
+			"attach_to": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The attachment point to which the policy list is attached.",
+			},
 			"policies": {
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -162,6 +172,12 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 		return nil, fmt.Errorf("PolicyList name must be of type string")
 	}
 	policyList.Name = name
+
+	attachTo, ok := d.Get("attach_to").(string)
+	if !ok {
+		return nil, fmt.Errorf("PolicyList attach_to must be of type string")
+	}
+	policyList.AttachTo = attachTo
 
 	policiesSet, ok := d.Get("policies").(*schema.Set)
 	if !ok {

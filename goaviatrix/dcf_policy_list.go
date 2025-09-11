@@ -6,6 +6,7 @@ import (
 )
 
 type DCFPolicyList struct {
+	AttachTo       string      `json:"attach_to,omitempty"`
 	Name           string      `json:"name"`
 	Policies       []DCFPolicy `json:"policies"`
 	SystemResource bool        `json:"system_resource,omitempty"`
