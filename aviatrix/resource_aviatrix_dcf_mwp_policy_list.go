@@ -51,6 +51,11 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Description: "Action for the specified source and destination Smart Groups. " +
 								"Must be one of DEEP_PACKET_INSPECTION_PERMIT, INTRUSION_DETECTION_PERMIT, PERMIT or DENY.",
 						},
+						"description": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Description of the policy.",
+						},
 						"decrypt_policy": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -219,6 +224,11 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 	policy.Action, ok = policyMap["action"].(string)
 	if !ok {
 		return nil, fmt.Errorf("action must be of type string")
+	}
+
+	policy.Description, ok = policyMap["description"].(string)
+	if !ok {
+		return nil, fmt.Errorf("description must be of type string")
 	}
 
 	policy.Priority, ok = policyMap["priority"].(int)
