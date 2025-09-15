@@ -11,7 +11,7 @@
 2. Fixed an issue where ``ha_enable`` was incorrectly set to true in certain scenarios within the **aviatrix_spoke_external_device_conn** resource.
 3. Fixed an issue where ``included_advertised_spoke_routes`` wasn't updated correctly when making changes in the **aviatrix_edge_megaport**, **aviatrix_edge_gateway_selfmanaged**, **aviatrix_edge_platform** and **aviatrix_edge_equinix** resources.
 
-## 8.0.30 (September 15, 2025)
+## 8.0.30 (September 16, 2025)
 ### Notes:
 - Supported Controller version: **8.0.30**
 - Supported Terraform version **v1.x**
