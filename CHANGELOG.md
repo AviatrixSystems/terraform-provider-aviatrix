@@ -1,4 +1,17 @@
-## 8.0.30 (Unreleased)
+## 8.1.10 (Unreleased)
+### Notes:
+- Supported Controller version: **8.1.10**
+
+### Enhancements:
+1. Allow downloading the cloud_init in ISO format by setting ``ztp_file_type = "ISO"``, in **aviatrix_transit_gateway**.
+2. Add the ability to set ``included_advertised_spoke_routes`` in **aviatrix_edge_platform** and **aviatrix_edge_gateway_selfmanaged** resources.
+
+### Bug Fixes:
+1. Increased the timeout for **aviatrix_transit_gateway_peering**, in order to prevent failures when creating a large amount of peerings.
+2. Fixed an issue where ``ha_enable`` was incorrectly set to true in certain scenarios within the **aviatrix_spoke_external_device_conn** resource.
+3. Fixed an issue where ``included_advertised_spoke_routes`` wasn't updated correctly when making changes in the **aviatrix_edge_megaport**, **aviatrix_edge_gateway_selfmanaged**, **aviatrix_edge_platform** and **aviatrix_edge_equinix** resources.
+
+## 8.0.30 (September 15, 2025)
 ### Notes:
 - Supported Controller version: **8.0.30**
 - Supported Terraform version **v1.x**
