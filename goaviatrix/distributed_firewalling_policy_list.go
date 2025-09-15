@@ -24,7 +24,7 @@ type DistributedFirewallingPolicy struct {
 	UUID                   string                            `json:"uuid,omitempty"`
 	SystemResource         bool                              `json:"system_resource,omitempty"`
 	TLSProfile             string                            `json:"tls_profile,omitempty"`
-	LogProfile			   string                            `json:"log_profile,omitempty"`
+	LogProfile             string                            `json:"log_profile,omitempty"`
 }
 
 type DistributedFirewallingPolicyList struct {

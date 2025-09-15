@@ -148,9 +148,9 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Description: "Set of Web Group UUIDs for the policy.",
 						},
 						"log_profile": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Log profile UUID for the policy.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Log profile UUID for the policy.",
 							ValidateFunc: validation.StringInSlice([]string{"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}, false),
 						},
 					},
