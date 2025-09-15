@@ -16,7 +16,6 @@ type DCFPolicyList struct {
 type DCFPolicy struct {
 	Action                 string         `json:"action"`
 	DecryptPolicy          string         `json:"decrypt_policy,omitempty"`
-	Description 		   string         `json:"desc,omitempty"`
 	DstSmartGroups         []string       `json:"dst_ads"`
 	ExcludeSgOrchestration bool           `json:"exclude_sg_orchestration,omitempty"`
 	FlowAppRequirement     string         `json:"flow_app_requirement,omitempty"`
