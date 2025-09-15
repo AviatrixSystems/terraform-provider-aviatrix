@@ -1,4 +1,17 @@
-## 8.1.1 (Unreleased)
+## 8.0.30 (Unreleased)
+### Notes:
+- Supported Controller version: **8.0.30**
+- Supported Terraform version **v1.x**
+
+### Enhancements:
+1. Add the ability to set ``included_advertised_spoke_routes`` in **aviatrix_edge_platform** and **aviatrix_edge_gateway_selfmanaged** resources.
+
+### Bug Fixes:
+1. Increased the timeout for **aviatrix_transit_gateway_peering**, in order to prevent failures when creating a large amount of peerings.
+2. Fixed an issue where ``ha_enable`` was incorrectly set to true in certain scenarios within the **aviatrix_spoke_external_device_conn** resource.
+3. Fixed an issue where ``included_advertised_spoke_routes`` wasn't updated correctly when making changes in the **aviatrix_edge_megaport**, **aviatrix_edge_gateway_selfmanaged**, **aviatrix_edge_platform** and **aviatrix_edge_equinix** resources.
+
+## 8.1.1 (August 12, 2025)
 ### Notes:
 - Supported Controller version: **8.1.0**
 - Supported Terraform version **v1.x**
