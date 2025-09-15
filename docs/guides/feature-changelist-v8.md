@@ -14,9 +14,31 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 ---
 
-``Last updated: R8.0.10 (8.0.10)``
+``Last updated: R8.0.30 (8.0.30)``
+
 
 ---
+
+## R8.0.30 (8.0.30)
+
+### Resource Renaming
+| Diff | Resource       | New Resource Name | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|-|-|-|-|
+
+### Resource Deprecations
+
+| Resource       | Action Required?           |
+|:--------------:|:--------------------------:|
+|-|-|
+
+### Attribute Deprecations
+
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|-|-|-|-|
+
+
 ## R8.0.10 (8.0.10)
 
 ### Resource Renaming
