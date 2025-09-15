@@ -138,6 +138,12 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Optional:    true,
 							Description: "TLS profile UUID for the policy.",
 						},
+						"log_profile": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Log profile UUID for the policy.",
+							ValidateFunc: validation.StringInSlice([]string{"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}, false),
+						},
 					},
 				},
 			},
@@ -218,6 +224,14 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.TLSProfile = uuidStr
 		}
 
+		if logProfileUUID, ok := policy["log_profile"]; ok {
+			uuidStr, ok := logProfileUUID.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid type for log_profile, should be a string")
+			}
+			distributedFirewallingPolicy.LogProfile = uuidStr
+		}
+
 		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
 	}
 
@@ -279,6 +293,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
 		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
+		p["log_profile"] = policy.LogProfile
 
 		if strings.EqualFold(policy.Protocol, "PROTOCOL_UNSPECIFIED") {
 			p["protocol"] = "ANY"
