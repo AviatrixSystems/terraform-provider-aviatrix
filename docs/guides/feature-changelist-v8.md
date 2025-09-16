@@ -18,6 +18,13 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 
 
 ---
+## R8.1.10 (8.1.10)
+
+### Resource Renaming
+| Diff | Resource       | New Resource Name | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|-|-|-|-|
+
 
 ## R8.0.30 (8.0.30)
 
