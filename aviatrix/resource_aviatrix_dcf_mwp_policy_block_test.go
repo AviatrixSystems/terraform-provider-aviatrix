@@ -45,8 +45,7 @@ func TestAccAviatrixDcfPolicyBlock_basic(t *testing.T) {
 }
 
 func testAccCheckDcfPolicyBlockBasic() string {
-	return `
-resource "aviatrix_smart_group" "ad1" {
+	return `resource "aviatrix_smart_group" "ad1" {
 	name = "test-smart_group-1"
 	selector {
 		match_expressions {
