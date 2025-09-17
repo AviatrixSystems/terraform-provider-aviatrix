@@ -1,6 +1,10 @@
 package goaviatrix
 
 import (
+	"encoding/base64"
+	"fmt"
+	"os"
+
 	"golang.org/x/net/context"
 )
 
@@ -68,14 +72,32 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 		var fileName string
 		if transitHaGateway.ZtpFileType == "iso" {
 			fileName = transitHaGateway.ZtpFileDownloadPath + "/" + transitHaGateway.GwName + "-" + transitHaGateway.VpcID + ".iso"
-			// For ISO files, handle binary content differently
-			err = createZtpFileISO(fileName, data.Result)
+
+			// Decode base64 content (the data.Result should contain base64-encoded ISO data)
+			decodedBytes, err := base64.StdEncoding.DecodeString(data.Result)
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to decode base64 content for ISO file: %w", err)
 			}
+
+			// Create and write the binary ISO file
+			outFile, err := os.Create(fileName)
+			if err != nil {
+				return "", fmt.Errorf("failed to create ISO file %s: %w", fileName, err)
+			}
+			defer outFile.Close()
+
+			// Write the decoded binary content to the file
+			_, err = outFile.Write(decodedBytes)
+			if err != nil {
+				return "", fmt.Errorf("failed to write binary content to ISO file %s: %w", fileName, err)
+			}
+
+			fmt.Printf("[DEBUG] CreateTransitHaGw: Successfully wrote %d bytes (decoded from %d base64 chars) to %s\n",
+				len(decodedBytes), len(data.Result), fileName)
 		} else {
 			fileName = getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
-			fileContent, err := processZtpFileContent(data.Result)
+
+			fileContent := data.Result
 			if err != nil {
 				return "", err
 			}
