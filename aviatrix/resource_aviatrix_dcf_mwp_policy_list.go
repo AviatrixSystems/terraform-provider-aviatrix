@@ -155,6 +155,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							// def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START
 							// def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END
 							// def000ad-7000-0000-0000-000000000003: DEF_LOG_PROFILE_ALL
+							// TODO(ACK): AVX-68895@everclear-CF2, implement API+datasource 
 							ValidateFunc: validation.StringInSlice([]string{"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}, false),
 						},
 					},
