@@ -42,5 +42,6 @@ func dataSourceAviatrixDcfMwpAttachmentPointsRead(ctx context.Context, d *schema
 
 	d.SetId(attachmentPoint.AttachmentPointID)
 	d.Set("name", name)
+	d.Set("attachment_point_id", attachmentPoint.AttachmentPointID)
 	return nil
 }

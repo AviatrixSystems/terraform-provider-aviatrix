@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAviatrixDcfMwpAttachmentPoints_basic(t *testing.T) {
-	resourceName := "data.aviatrix_dcf_mwp_attachment_points.test"
+	resourceName := "data.aviatrix_dcf_mwp_attachment_point.test"
 
 	skipAcc := os.Getenv("SKIP_DATA_DCF_MWP_ATTACHMENT_POINTS")
 	if skipAcc == "yes" {

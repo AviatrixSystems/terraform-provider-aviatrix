@@ -25,9 +25,10 @@ resource "aviatrix_dcf_mwp_policy_block" "example" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the attachment point which is unique to each attachment point.
+* `attachment_point_id` - (Optional) UUID of the attachment point which can be used as an exported output value to get the ID of attachment point when searching by name.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of the attachment point.
+* `id` - ID of the attachment point which is the same as the attachment_point_id
