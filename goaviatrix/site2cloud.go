@@ -423,7 +423,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else {
 			site2cloud.PrivateRouteEncryption = "false"
 		}
-		if s2cConnDetail.SslServerPool[0] != "192.168.44.0/24" {
+		if len(s2cConnDetail.SslServerPool) > 0 && s2cConnDetail.SslServerPool[0] != "192.168.44.0/24" {
 			site2cloud.SslServerPool = s2cConnDetail.SslServerPool[0]
 		}
 		if s2cConnDetail.DeadPeerDetectionConfig == "enable" {

@@ -311,10 +311,11 @@ resource "aviatrix_transit_gateway" "edge-transit-test" {
         secondary_private_cidr_list = ["192.168.19.16/29"]
     }
     interfaces {
-        gateway_ip    = "192.168.21.1"
+        gateway_ip    = "169.254.100.1"
         ip_address    = "192.168.21.11/24"
         type          = "WAN"
         index         = 1
+        underlay_cidr = "169.254.100.2/30"
         secondary_private_cidr_list = ["192.168.21.16/29"]
     }
     interfaces {
@@ -370,10 +371,11 @@ resource "aviatrix_transit_gateway" "edge-transit-test" {
         type          = "WAN"
     }
     ha_interfaces {
-        gateway_ip   = "192.168.21.1"
+        gateway_ip   = "169.254.200.1"
         index        = 1
         ip_address   = "192.168.21.12/24"
         type         = "WAN"
+        underlay_cidr = "169.254.200.2/30"
         secondary_private_cidr_list = ["192.168.21.32/29"]
     }
     ha_interfaces {
@@ -445,6 +447,7 @@ The following arguments are supported:
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
+  * `underlay_cidr` - (Optional) The underlay CIDR for BGP over LAN functionality. Must be a link-local address in CIDR format (e.g., "169.254.100.2/30"). When specified, the gateway_ip must be within this CIDR range.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
 * `interface_mapping` - (Optional) A list of interface names mapped to interface types and indices. Required and valid only for edge transit gateways (AEP). Each interface has the following attributes:
   * `name` - (Required) Interface name e.g. eth0, eth1, eth2 etc.
@@ -475,6 +478,7 @@ The following arguments are supported:
   * `ip_address` - (Optional) The static IP address assigned to this interface.
   * `public_ip` - (Optional) The public IP address associated with this interface.
   * `dhcp` - (Optional) Whether DHCP is enabled on this interface. Set the value to true or false. Applicable to only 'MANAGEMENT' type interface.
+  * `underlay_cidr` - (Optional) The underlay CIDR for BGP over LAN functionality. Must be a link-local address in CIDR format (e.g., "169.254.100.2/30"). When specified, the gateway_ip must be within this CIDR range.
   * `secondary_private_cidr_list` - (Optional) A list of secondary private CIDR blocks associated with this interface.
 
 ### Insane Mode

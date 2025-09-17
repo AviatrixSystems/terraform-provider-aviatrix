@@ -157,6 +157,7 @@ type EdgeTransitInterface struct {
 	GatewayIp      string   `json:"gateway_ip,omitempty"`
 	SecondaryCIDRs []string `json:"secondary_private_cidr_list,omitempty"`
 	LogicalIfName  string   `json:"logical_ifname,omitempty"`
+	UnderlayCidr   string   `json:"underlay_cidr,omitempty"`
 }
 
 type EipMap struct {

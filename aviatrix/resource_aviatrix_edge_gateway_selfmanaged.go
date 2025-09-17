@@ -323,7 +323,7 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 				},
 			},
 			"included_advertised_spoke_routes": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "A list of CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
 				Elem: &schema.Schema{
@@ -772,8 +772,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.AdvertisedCidrList
-		err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
+		err := editAdvertisedSpokeRoutesWithRetry(client, gatewayForGatewayFunctions, d)
 		if err != nil {
 			return diag.Errorf("could not update included advertised spoke routes during Edge Gateway Selfmanaged update: %v", err)
 		}
@@ -919,9 +918,13 @@ func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema
 func editAdvertisedSpokeRoutesWithRetry(client *goaviatrix.Client, gatewayForGatewayFunctions *goaviatrix.Gateway, d *schema.ResourceData) error {
 	const maxRetries = 30
 	const retryDelay = 10 * time.Second
-	includedAdvertisedSpokeRoutes := getStringList(d, "included_advertised_spoke_routes")
+
+	includedAdvertisedSpokeRoutes := getStringSet(d, "included_advertised_spoke_routes")
+
+	// If empty array is provided, we still want to make the API call to clear routes
+	// We'll pass an empty string to signal clearing all routes
 	if len(includedAdvertisedSpokeRoutes) == 0 {
-		return nil
+		includedAdvertisedSpokeRoutes = []string{""}
 	}
 
 	gatewayForGatewayFunctions.AdvertisedSpokeRoutes = includedAdvertisedSpokeRoutes
