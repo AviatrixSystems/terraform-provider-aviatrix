@@ -125,7 +125,7 @@ The following arguments are supported:
     * `logging` - (Optional) Whether to enable logging for packets that match the policy. Type: Boolean.
     * `uuid` - (Computed) UUID for the Policy.
     * `tls_profile` - (Optional) TLS profile UUID for the policy.
-    * `log_profile` - (Optional) Logging profile UUID. Must be one of {"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}
+    * `log_profile` - (Optional) Logging profile UUID. Must be one of {"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}. The UUIDs correspod to: def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START, def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END, def000ad-7000-0000-0000-000000000003: DEF_LOG_PROFILE_ALL
 
 ## Import
 
