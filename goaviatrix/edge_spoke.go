@@ -72,6 +72,8 @@ type EdgeSpokeInterface struct {
 	VrrpState     bool             `json:"vrrp_state,omitempty"`
 	VirtualIp     string           `json:"virtual_ip,omitempty"`
 	Tag           string           `json:"tag,omitempty"`
+	IPv6Addr      string           `json:"v6_ipaddr,omitempty"`
+	GatewayIPv6   string           `json:"gateway_ipv6_ip,omitempty"`
 }
 
 type CustomInterfaceMap struct {

@@ -176,14 +176,26 @@ func buildEdgeSpokeInterface(if1 map[string]interface{}) (*goaviatrix.EdgeSpokeI
 		return nil, err
 	}
 
+	ipv6Addr, err := getStringFromMap(if1, "ipv6_address")
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayIPv6, err := getStringFromMap(if1, "gateway_ipv6")
+	if err != nil {
+		return nil, err
+	}
+
 	if2 := &goaviatrix.EdgeSpokeInterface{
-		IfName:    ifName,
-		Type:      ifType,
-		Dhcp:      enableDhcp,
-		PublicIp:  publicIP,
-		IpAddr:    ipAddr,
-		GatewayIp: gatewayIP,
-		Tag:       tag,
+		IfName:      ifName,
+		Type:        ifType,
+		Dhcp:        enableDhcp,
+		PublicIp:    publicIP,
+		IpAddr:      ipAddr,
+		GatewayIp:   gatewayIP,
+		Tag:         tag,
+		IPv6Addr:    ipv6Addr,
+		GatewayIPv6: gatewayIPv6,
 	}
 
 	if ifType == "LAN" {
