@@ -147,6 +147,17 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "Set of Web Group UUIDs for the policy.",
 						},
+						"log_profile": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Log profile UUID for the policy.",
+							// The log profile UUID must be one of the predefined log profile UUIDs
+							// def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START
+							// def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END
+							// def000ad-7000-0000-0000-000000000003: DEF_LOG_PROFILE_ALL
+							// TODO(ACK): AVX-68895@everclear-CF2, implement API+datasource
+							ValidateFunc: validation.StringInSlice([]string{"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}, false),
+						},
 					},
 				},
 			},
@@ -208,6 +219,11 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 	policy.Priority, ok = policyMap["priority"].(int)
 	if !ok {
 		return nil, fmt.Errorf("priority must be of type int")
+	}
+
+	policy.LogProfile, ok = policyMap["log_profile"].(string)
+	if !ok {
+		return nil, fmt.Errorf("log_profile must be of type string")
 	}
 
 	policy.FlowAppRequirement, ok = policyMap["flow_app_requirement"].(string)
@@ -384,6 +400,7 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
 		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
+		p["log_profile"] = policy.LogProfile
 
 		if strings.EqualFold(policy.Protocol, "PROTOCOL_UNSPECIFIED") {
 			p["protocol"] = "ANY"

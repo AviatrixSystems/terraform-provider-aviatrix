@@ -29,6 +29,7 @@ type DCFPolicy struct {
 	UUID                   string         `json:"uuid,omitempty"`
 	Watch                  bool           `json:"watch,omitempty"`
 	WebGroups              []string       `json:"web_filters,omitempty"`
+	LogProfile             string         `json:"log_profile,omitempty"`
 }
 
 type DCFPortRange struct {
