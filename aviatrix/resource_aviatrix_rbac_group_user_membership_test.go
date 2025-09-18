@@ -135,30 +135,6 @@ func testAccCheckRbacGroupUserMembershipExists(n string, got *[]string) resource
 	}
 }
 
-func testCheckStringSet(res, attr string, expected []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
-		if !ok {
-			return fmt.Errorf("resource %s not found", res)
-		}
-		var got []string
-		prefix := attr + "."
-		for k, v := range rs.Primary.Attributes {
-			if strings.HasPrefix(k, prefix) && k != attr+".#" {
-				got = append(got, v)
-			}
-		}
-		sort.Strings(got)
-		exp := append([]string(nil), expected...)
-		sort.Strings(exp)
-
-		if !slices.Equal(got, exp) {
-			return fmt.Errorf("attribute %q mismatch.\n  got: %v\n  exp: %v", attr, got, exp)
-		}
-		return nil
-	}
-}
-
 // For destroy, because the resource may only remove users if remove_users_on_destroy=true,
 // we verify that none of the test users remain members. If the group is gone, that's fine.
 func testAccCheckRbacGroupUserMembershipDestroy(lastAppliedUsers []string) resource.TestCheckFunc {

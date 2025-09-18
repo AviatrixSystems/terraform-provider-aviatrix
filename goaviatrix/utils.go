@@ -3,7 +3,7 @@ package goaviatrix
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -141,7 +141,7 @@ func ReadFile(local_filepath string) (string, string, error) {
 		return "", "", errors.New("Failed to open local json file: " + err.Error())
 	}
 	defer jsonFile.Close()
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return "", "", errors.New("Failed to read local json file: " + err.Error())
 	}
@@ -161,7 +161,7 @@ func ReadPemFile(local_filepath string) (string, string, error) {
 		return "", "", errors.New("Failed to open local pem file: " + err.Error())
 	}
 	defer pemFile.Close()
-	byteValue, err := ioutil.ReadAll(pemFile)
+	byteValue, err := io.ReadAll(pemFile)
 	if err != nil {
 		return "", "", errors.New("Failed to read local pem file: " + err.Error())
 	}
@@ -303,4 +303,28 @@ func MapContains(m map[string]interface{}, key string) bool {
 	default:
 		return !reflect.ValueOf(val).IsZero()
 	}
+}
+
+// diffStrings compares two string slices and returns the elements that need to
+// be added to and deleted from the first slice to match the second slice.
+func diffStrings(curr, want []string) (add, del []string) {
+	cset := make(map[string]struct{}, len(curr))
+	wset := make(map[string]struct{}, len(want))
+	for _, x := range curr {
+		cset[x] = struct{}{}
+	}
+	for _, x := range want {
+		wset[x] = struct{}{}
+	}
+	for x := range wset {
+		if _, ok := cset[x]; !ok {
+			add = append(add, x)
+		}
+	}
+	for x := range cset {
+		if _, ok := wset[x]; !ok {
+			del = append(del, x)
+		}
+	}
+	return
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,8 +14,10 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone
@@ -486,4 +489,51 @@ func ValidateCIDRRule(v interface{}, k string) ([]string, []error) {
 		return nil, []error{fmt.Errorf("invalid CIDR rule %s: ge length %d > le length %d", cidrRuleStr, *ge, *le)}
 	}
 	return nil, nil
+}
+
+func expandStringSet(set *schema.Set) []string {
+	if set == nil {
+		return nil
+	}
+	items := set.List()
+	out := make([]string, 0, len(items))
+	for _, it := range items {
+		if s, ok := it.(string); ok {
+			out = append(out, strings.TrimSpace(s))
+		}
+	}
+	slices.Sort(out)
+	return out
+}
+
+func stringSliceToIfaceSlice(in []string) []interface{} {
+	out := make([]interface{}, len(in))
+	for i, s := range in {
+		out[i] = s
+	}
+	return out
+}
+
+func testCheckStringSet(res, attr string, expected []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[res]
+		if !ok {
+			return fmt.Errorf("resource %s not found", res)
+		}
+		var got []string
+		prefix := attr + "."
+		for k, v := range rs.Primary.Attributes {
+			if strings.HasPrefix(k, prefix) && k != attr+".#" {
+				got = append(got, v)
+			}
+		}
+		sort.Strings(got)
+		exp := append([]string(nil), expected...)
+		sort.Strings(exp)
+
+		if !slices.Equal(got, exp) {
+			return fmt.Errorf("attribute %q mismatch.\n  got: %v\n  exp: %v", attr, got, exp)
+		}
+		return nil
+	}
 }

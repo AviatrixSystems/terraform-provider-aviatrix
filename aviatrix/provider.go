@@ -170,6 +170,7 @@ func Provider() *schema.Provider {
 			"aviatrix_qos_policy_list":                                        resourceAviatrixQosPolicyList(),
 			"aviatrix_rbac_group":                                             resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment":                   resourceAviatrixRbacGroupAccessAccountAttachment(),
+			"aviatrix_rbac_group_access_account_membership":                   resourceAviatrixRbacGroupAccessAccountMembership(),
 			"aviatrix_rbac_group_permission_attachment":                       resourceAviatrixRbacGroupPermissionAttachment(),
 			"aviatrix_rbac_group_user_attachment":                             resourceAviatrixRbacGroupUserAttachment(),
 			"aviatrix_rbac_group_user_membership":                             resourceAviatrixRbacGroupUserMembership(),
