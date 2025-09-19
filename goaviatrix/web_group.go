@@ -21,6 +21,18 @@ type WebGroup struct {
 	Selector WebGroupSelector
 }
 
+type WebGroupMatchExpressionResult struct {
+	All map[string]string `json:"all"`
+}
+type WebGroupAnyResult struct {
+	Any []WebGroupMatchExpressionResult `json:"any"`
+}
+type WebGroupResult struct {
+	UUID     string            `json:"uuid"`
+	Name     string            `json:"name"`
+	Selector WebGroupAnyResult `json:"selector"`
+}
+
 func webGroupFilterToMap(filter *WebGroupMatchExpression) map[string]string {
 	filterMap := make(map[string]string)
 
@@ -72,20 +84,37 @@ func (c *Client) CreateWebGroup(ctx context.Context, webGroup *WebGroup) (string
 	return data.UUID, nil
 }
 
+func (c *Client) GetWebGroupByName(ctx context.Context, name string) (*WebGroup, error) {
+	endpoint := fmt.Sprintf("app-domains/name/%s", name)
+
+	var data WebGroupResult
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	if data.Name == name {
+		webGroup := &WebGroup{
+			Name: data.Name,
+			UUID: data.UUID,
+		}
+
+		for _, filterResult := range data.Selector.Any {
+			filterMap := filterResult.All
+
+			filter := &WebGroupMatchExpression{
+				SniFilter: filterMap["snifilter"],
+				UrlFilter: filterMap["urlfilter"],
+			}
+
+			webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
+		}
+		return webGroup, nil
+	}
+	return nil, ErrNotFound
+}
+
 func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error) {
 	endpoint := fmt.Sprintf("app-domains/%s", uuid)
-
-	type WebGroupMatchExpressionResult struct {
-		All map[string]string `json:"all"`
-	}
-	type WebGroupAnyResult struct {
-		Any []WebGroupMatchExpressionResult `json:"any"`
-	}
-	type WebGroupResult struct {
-		UUID     string            `json:"uuid"`
-		Name     string            `json:"name"`
-		Selector WebGroupAnyResult `json:"selector"`
-	}
 
 	var data WebGroupResult
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
