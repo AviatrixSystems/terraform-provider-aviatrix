@@ -110,6 +110,7 @@ func Provider() *schema.Provider {
 			"aviatrix_datadog_agent":                                          resourceAviatrixDatadogAgent(),
 			"aviatrix_dcf_mwp_policy_block":                                   resourceAviatrixDCFPolicyBlock(),
 			"aviatrix_dcf_mwp_policy_list":                                    resourceAviatrixDCFPolicyList(),
+			"aviatrix_dcf_tls_profile":                                        resourceAviatrixDCFTLSProfile(),
 			"aviatrix_device_interface_config":                                resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_distributed_firewalling_config":                         resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":                      resourceAviatrixDistributedFirewallingIntraVpc(),

@@ -15,6 +15,15 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 Last updated: R8.1.10 (8.1.10)
 
 ---
+
+### 8.2.0
+### Notes:
+- Supported Controller verison: **8.2.0**
+
+### Enhancements:
+1. Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
+
+
 ## 8.1.10
 ### Notes:
 - Supported Controller version: **8.1.10**
