@@ -1,0 +1,107 @@
+package goaviatrix
+
+import (
+	"context"
+	"fmt"
+)
+
+type TLSProfile struct {
+	// TLSProfile defines model for TLSProfile.
+	// CABundleId UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
+	CABundleId *string `json:"CA_bundle_id,omitempty"`
+
+	// CertificateValidation Certificate validation mode
+	CertificateValidation string `json:"certificate_validation"`
+
+	// DisplayName Display name for the TLS profile
+	DisplayName string `json:"display_name"`
+
+	// VerifySni Configuration to verify SNI of client
+	VerifySni bool `json:"verify_sni"`
+}
+
+type TLSProfileWithID struct {
+	// TLSProfile defines model for TLSProfile.
+	// CABundleId UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
+	CABundleId *string `json:"CA_bundle_id,omitempty"`
+
+	// CertificateValidation Certificate validation mode
+	CertificateValidation string `json:"certificate_validation"`
+
+	// DisplayName Display name for the TLS profile
+	DisplayName string `json:"display_name"`
+
+	// Uuid The unique identifier for the TLS profile
+	Uuid string `json:"uuid"`
+
+	// VerifySni Configuration to verify SNI of client
+	VerifySni bool `json:"verify_sni"`
+}
+
+type TLSProfileResponse struct {
+	// TLSProfileResponse defines response model for TLSProfile.
+	UUID string `json:"uuid"`
+}
+
+type TLSProfilesListResponse struct {
+	// Profiles List of all TLS profiles
+	Profiles []TLSProfileWithID `json:"profiles"`
+}
+
+func (c *Client) GetTLSProfile(ctx context.Context, uuid string) (*TLSProfile, error) {
+	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+
+	var tlsProfile TLSProfile
+	err := c.GetAPIContext25(ctx, &tlsProfile, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &tlsProfile, nil
+}
+
+func (c *Client) CreateTLSProfile(ctx context.Context, tlsProfile *TLSProfile) (string, error) {
+	endpoint := "dcf/tls-profile"
+
+	var data TLSProfileResponse
+	err := c.PostAPIContext25(ctx, &data, endpoint, tlsProfile)
+	if err != nil {
+		return "", err
+	}
+
+	return data.UUID, nil
+}
+
+func (c *Client) ListTLSProfiles(ctx context.Context) (*TLSProfilesListResponse, error) {
+	endpoint := "dcf/tls-profile"
+
+	var listResponse TLSProfilesListResponse
+	err := c.GetAPIContext25(ctx, &listResponse, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &listResponse, nil
+}
+
+func (c *Client) UpdateDCFPolicy(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
+	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+	err := c.PutAPIContext25(ctx, endpoint, tlsProfile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
+	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+	err := c.PutAPIContext25(ctx, endpoint, tlsProfile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) DeleteTLSProfile(ctx context.Context, uuid string) error {
+	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+	return c.DeleteAPIContext25(ctx, endpoint, nil)
+}
