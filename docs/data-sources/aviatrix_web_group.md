@@ -33,5 +33,5 @@ The following attributes are exported:
 * `uuid` - UUID of the Web Group.
 * `selector` - Block containing match expressions to filter the Web Group.
         * `match_expressions` - List of match expressions for the Web Group.
-                * `snifilter` - Server name indicator this expression matches.
+                * `snifilter` - Server name indication this expression matches.
                 * `urlfilter` - URL address this expression matches.
