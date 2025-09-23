@@ -72,8 +72,8 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 	}
 	tlsProfile.VerifySni = verifySni
 
-	if caBundleId, ok := d.Get("ca_bundle_id").(string); ok && caBundleId != "" {
-		tlsProfile.CABundleId = &caBundleId
+	if caBundleID, ok := d.Get("ca_bundle_id").(string); ok && caBundleID != "" {
+		tlsProfile.CABundleID = &caBundleID
 	}
 
 	return tlsProfile, nil
@@ -129,8 +129,8 @@ func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("failed to set verify_sni during DCF TLS Profile read: %s", err)
 	}
 
-	if tlsProfile.CABundleId != nil {
-		if err := d.Set("ca_bundle_id", *tlsProfile.CABundleId); err != nil {
+	if tlsProfile.CABundleID != nil {
+		if err := d.Set("ca_bundle_id", *tlsProfile.CABundleID); err != nil {
 			return diag.Errorf("failed to set ca_bundle_id during DCF TLS Profile read: %s", err)
 		}
 	}

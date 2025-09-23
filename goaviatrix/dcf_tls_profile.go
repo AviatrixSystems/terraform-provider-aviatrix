@@ -7,8 +7,8 @@ import (
 
 type TLSProfile struct {
 	// TLSProfile defines model for TLSProfile.
-	// CABundleId UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
-	CABundleId *string `json:"CA_bundle_id,omitempty"`
+	// CABundleID is the UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
+	CABundleID *string `json:"CA_bundle_id,omitempty"`
 
 	// CertificateValidation Certificate validation mode
 	CertificateValidation string `json:"certificate_validation"`
@@ -22,8 +22,8 @@ type TLSProfile struct {
 
 type TLSProfileWithID struct {
 	// TLSProfile defines model for TLSProfile.
-	// CABundleId UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
-	CABundleId *string `json:"CA_bundle_id,omitempty"`
+	// CABundleID is the UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.
+	CABundleID *string `json:"CA_bundle_id,omitempty"`
 
 	// CertificateValidation Certificate validation mode
 	CertificateValidation string `json:"certificate_validation"`
@@ -31,8 +31,8 @@ type TLSProfileWithID struct {
 	// DisplayName Display name for the TLS profile
 	DisplayName string `json:"display_name"`
 
-	// Uuid The unique identifier for the TLS profile
-	Uuid string `json:"uuid"`
+	// UUID The unique identifier for the TLS profile
+	UUID string `json:"uuid"`
 
 	// VerifySni Configuration to verify SNI of client
 	VerifySni bool `json:"verify_sni"`
