@@ -109,6 +109,53 @@ func TestAccAviatrixDCFIpsProfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAviatrixDCFIpsProfileVpc_basic(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_DCF_IPS_PROFILE_VPC")
+	if skipAcc == "yes" {
+		t.Skip("Skipping DCF IPS Profile VPC test as SKIP_DCF_IPS_PROFILE_VPC is set")
+	}
+
+	resourceName := "aviatrix_dcf_ips_profile_vpc.test"
+	vpcId := os.Getenv("AVIATRIX_VPC_ID")
+	if vpcId == "" {
+		t.Skip("Environment variable AVIATRIX_VPC_ID is not set")
+	}
+
+	profileName := "tf-test-profile-" + acctest.RandString(8)
+	feedName := "tf-test-feed-" + acctest.RandString(8)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccDCFIpsProfileVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDCFIpsProfileVpcBasic(vpcId, profileName, feedName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDCFIpsProfileVpcExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", vpcId),
+					resource.TestCheckResourceAttr(resourceName, "dcf_ips_profiles.#", "1"),
+				),
+			},
+			{
+				Config: testAccDCFIpsProfileVpcUpdate(vpcId, profileName, feedName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDCFIpsProfileVpcExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", vpcId),
+					resource.TestCheckResourceAttr(resourceName, "dcf_ips_profiles.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // Test configuration functions
 
 func testAccDCFIpsRuleFeedBasic(feedName string) string {
@@ -196,6 +243,97 @@ resource "aviatrix_dcf_ips_profile" "test" {
 `, feedName, profileName)
 }
 
+func testAccDCFIpsProfileVpcBasic(vpcId, profileName, feedName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_dcf_ips_rule_feed" "test_feed" {
+  feed_name    = "%s"
+  file_content = <<EOF
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
+EOF
+}
+
+resource "aviatrix_dcf_ips_profile" "test" {
+  profile_name = "%s"
+
+  rule_feeds {
+    custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+    external_feeds_ids = ["suricata-rules"]
+    ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003, 100004]
+  }
+
+  intrusion_actions = {
+    informational = "alert"
+    minor         = "alert"
+    major         = "alert_and_drop"
+    critical      = "alert_and_drop"
+  }
+}
+
+resource "aviatrix_dcf_ips_profile_vpc" "test" {
+  vpc_id           = "%s"
+  dcf_ips_profiles = [aviatrix_dcf_ips_profile.test.uuid]
+}
+`, feedName, profileName, vpcId)
+}
+
+func testAccDCFIpsProfileVpcUpdate(vpcId, profileName, feedName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_dcf_ips_rule_feed" "test_feed" {
+  feed_name    = "%s"
+  file_content = <<EOF
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
+EOF
+}
+
+resource "aviatrix_dcf_ips_profile" "test" {
+  profile_name = "%s"
+
+  rule_feeds {
+    custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+    external_feeds_ids = ["suricata-rules"]
+    ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003, 100004]
+  }
+
+  intrusion_actions = {
+    informational = "alert"
+    minor         = "alert"
+    major         = "alert_and_drop"
+    critical      = "alert_and_drop"
+  }
+}
+
+resource "aviatrix_dcf_ips_profile" "test2" {
+  profile_name = "%s-2"
+
+  rule_feeds {
+    custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+    external_feeds_ids = ["emerging-threats"]
+    ignored_sids       = [100005]
+    never_drop_sids    = [100006]
+  }
+
+  intrusion_actions = {
+    informational = "alert"
+    minor         = "alert_and_drop"
+    major         = "alert_and_drop"
+    critical      = "alert_and_drop"
+  }
+}
+
+resource "aviatrix_dcf_ips_profile_vpc" "test" {
+  vpc_id           = "%s"
+  dcf_ips_profiles = [
+    aviatrix_dcf_ips_profile.test.uuid,
+    aviatrix_dcf_ips_profile.test2.uuid
+  ]
+}
+`, feedName, profileName, profileName, vpcId)
+}
+
 // Check functions
 
 func testAccCheckDCFIpsRuleFeedExists(n string) resource.TestCheckFunc {
@@ -238,6 +376,26 @@ func testAccCheckDCFIpsProfileExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckDCFIpsProfileVpcExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("no DCF IPS profile VPC resource found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no DCF IPS profile VPC ID is set")
+		}
+
+		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		_, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get DCF IPS profile VPC: %v", err)
+		}
+
+		return nil
+	}
+}
+
 // Destroy check functions
 
 func testAccDCFIpsRuleFeedDestroy(s *terraform.State) error {
@@ -272,4 +430,27 @@ func testAccDCFIpsProfileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccDCFIpsProfileVpcDestroy(s *terraform.State) error {
+    client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+
+    for _, rs := range s.RootModule().Resources {
+        if rs.Type != "aviatrix_dcf_ips_profile_vpc" {
+            continue
+        }
+
+        profileVpc, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
+        if err != nil {
+            // If we get an error (like not found), that's what we expect after destroy
+            continue
+        }
+
+        // If the VPC exists but has profiles assigned, that's a problem
+        if len(profileVpc.DcfIpsProfiles) > 0 {
+            return fmt.Errorf("DCF IPS profile VPC %s still has profiles assigned: %v", rs.Primary.ID, profileVpc.DcfIpsProfiles)
+        }
+    }
+
+    return nil
 }
