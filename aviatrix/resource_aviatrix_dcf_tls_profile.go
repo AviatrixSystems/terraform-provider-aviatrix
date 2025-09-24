@@ -35,7 +35,7 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 			"verify_sni": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Description: "Configuration to verify SNI of client.",
+				Description: "Toggle to enable advanced SNI verification of client connections.",
 			},
 			"ca_bundle_id": {
 				Type:        schema.TypeString,
