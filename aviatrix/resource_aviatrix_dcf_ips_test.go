@@ -196,7 +196,6 @@ resource "aviatrix_dcf_ips_profile" "test" {
 `, feedName, profileName)
 }
 
-
 // Check functions
 
 func testAccCheckDCFIpsRuleFeedExists(n string) resource.TestCheckFunc {
