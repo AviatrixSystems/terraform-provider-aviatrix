@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	ipsRuleFeedsEndpoint = "dcf/ips-rule-feeds"
-	ipsProfilesEndpoint  = "dcf/ips-profiles"
+	ipsRuleFeedsEndpoint  = "dcf/ips-rule-feeds"
+	ipsProfilesEndpoint   = "dcf/ips-profiles"
+	ipsProfileVpcEndpoint = "dcf/ips-profile-vpc"
 )
 
 // IpsRuleFeed represents an IPS rule feed
@@ -56,6 +57,17 @@ type IpsProfilesList struct {
 type IpsProfileCreateResponse struct {
 	UUID        string `json:"uuid"`
 	ProfileName string `json:"profile_name"`
+}
+
+// IpsProfileVpc represents the DCF IPS profiles assigned to a VPC
+type IpsProfileVpc struct {
+	VpcId          string   `json:"vpc_id"`
+	DcfIpsProfiles []string `json:"dcf_ips_profiles"`
+}
+
+// IpsProfileVpcRequest represents the request to set DCF IPS profiles for a VPC
+type IpsProfileVpcRequest struct {
+	DcfIpsProfiles []string `json:"dcf_ips_profiles"`
 }
 
 // IPS Rule Feed methods
@@ -159,4 +171,33 @@ func (c *Client) ListIpsProfiles(ctx context.Context) (*IpsProfilesList, error) 
 	}
 
 	return &response, nil
+}
+
+// IPS Profile VPC methods
+
+func (c *Client) GetIpsProfileVpc(ctx context.Context, vpcId string) (*IpsProfileVpc, error) {
+	var response IpsProfileVpc
+
+	endpoint := fmt.Sprintf("%s/%s", ipsProfileVpcEndpoint, vpcId)
+	err := c.GetAPIContext25(ctx, &response, endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get IPS profiles for VPC %s: %w", vpcId, err)
+	}
+
+	return &response, nil
+}
+
+func (c *Client) SetIpsProfileVpc(ctx context.Context, vpcId string, profiles []string) (*IpsProfileVpc, error) {
+	request := IpsProfileVpcRequest{
+		DcfIpsProfiles: profiles,
+	}
+
+	endpoint := fmt.Sprintf("%s/%s", ipsProfileVpcEndpoint, vpcId)
+	err := c.PutAPIContext25(ctx, endpoint, request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set IPS profiles for VPC %s: %w", vpcId, err)
+	}
+
+	// Get updated VPC profile configuration
+	return c.GetIpsProfileVpc(ctx, vpcId)
 }

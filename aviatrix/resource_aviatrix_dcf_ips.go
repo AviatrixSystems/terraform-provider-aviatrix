@@ -295,23 +295,3 @@ func expandIntrusionActions(actions map[string]interface{}) map[string]string {
 	}
 	return result
 }
-
-func expandStringList(list []interface{}) []string {
-	result := make([]string, 0, len(list))
-	for _, v := range list {
-		if v != nil {
-			result = append(result, v.(string))
-		}
-	}
-	return result
-}
-
-func expandIntList(list []interface{}) []int {
-	result := make([]int, 0, len(list))
-	for _, v := range list {
-		if v != nil {
-			result = append(result, v.(int))
-		}
-	}
-	return result
-}
