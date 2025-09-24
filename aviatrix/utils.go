@@ -537,3 +537,25 @@ func testCheckStringSet(res, attr string, expected []string) resource.TestCheckF
 		return nil
 	}
 }
+
+// Helper function to expand string list from interface{}
+func expandStringList(list []interface{}) []string {
+	result := make([]string, 0, len(list))
+	for _, v := range list {
+		if v != nil {
+			result = append(result, v.(string))
+		}
+	}
+	return result
+}
+
+// Helper function to expand int list from interface{}
+func expandIntList(list []interface{}) []int {
+	result := make([]int, 0, len(list))
+	for _, v := range list {
+		if v != nil {
+			result = append(result, v.(int))
+		}
+	}
+	return result
+}
