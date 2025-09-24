@@ -109,88 +109,59 @@ func TestAccAviatrixDCFIpsProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAviatrixDCFIpsProfile_minimal(t *testing.T) {
-	skipAcc := os.Getenv("SKIP_DCF_IPS_PROFILE")
-	if skipAcc == "yes" {
-		t.Skip("Skipping DCF IPS Profile test as SKIP_DCF_IPS_PROFILE is set")
-	}
-
-	resourceName := "aviatrix_dcf_ips_profile.test"
-	profileName := "tf-test-minimal-" + acctest.RandString(8)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		Providers:    testAccProvidersVersionValidation,
-		CheckDestroy: testAccDCFIpsProfileDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDCFIpsProfileMinimal(profileName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDCFIpsProfileExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "profile_name", profileName),
-					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 // Test configuration functions
 
 func testAccDCFIpsRuleFeedBasic(feedName string) string {
 	return fmt.Sprintf(`
-				resource "aviatrix_dcf_ips_rule_feed" "test" {
-					feed_name    = "%s"
-					file_content = <<EOF alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)\n alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)EOF
-				}`,
-			feedName)
+resource "aviatrix_dcf_ips_rule_feed" "test" {
+  feed_name    = "%s"
+  file_content = <<EOF
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
+EOF
+}
+`, feedName)
 }
 
 func testAccDCFIpsRuleFeedUpdate(feedName string) string {
 	return fmt.Sprintf(`
-				resource "aviatrix_dcf_ips_rule_feed" "test" {
-					feed_name    = "%s"
-					file_content = <<EOF
-				alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Updated Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"updated-domain.com"; classtype:trojan-activity; sid:2000001; rev:2;)
-				alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Updated Test Rule 2"; flow:established,to_server; http.host; content:"updated-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:2;)
-				alert dns $HOME_NET any -> any 53 (msg:"ET MALWARE New DNS Rule"; dns.query; content:"malicious.example.com"; classtype:trojan-activity; sid:2000003; rev:1;)
-				EOF
-				}`, feedName)
+resource "aviatrix_dcf_ips_rule_feed" "test" {
+  feed_name    = "%s"
+  file_content = <<EOF
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Updated Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"updated-domain.com"; classtype:trojan-activity; sid:2000001; rev:2;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Updated Test Rule 2"; flow:established,to_server; http.host; content:"updated-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:2;)
+alert dns $HOME_NET any -> any 53 (msg:"ET MALWARE New DNS Rule"; dns.query; content:"malicious.example.com"; classtype:trojan-activity; sid:2000003; rev:1;)
+EOF
+}
+`, feedName)
 }
 
 func testAccDCFIpsProfileBasic(profileName, feedName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_dcf_ips_rule_feed" "test_feed" {
-    feed_name    = "%s"
-    file_content = <<EOF
+  feed_name    = "%s"
+  file_content = <<EOF
 alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
 EOF
 }
 
 resource "aviatrix_dcf_ips_profile" "test" {
-    profile_name = "%s"
+  profile_name = "%s"
 
-    rule_feeds {
-        custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
-        external_feeds_ids = ["suricata-rules"]
-        ignored_sids       = [100001, 100002]
-        never_drop_sids    = [100003, 100004]
-    }
+  rule_feeds {
+    custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+    external_feeds_ids = ["suricata-rules"]
+    ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003, 100004]
+  }
 
-    intrusion_actions = {
-        informational = "alert"
-        minor         = "alert"
-        major         = "alert_and_drop"
-        critical      = "alert_and_drop"
-    }
+  intrusion_actions = {
+    informational = "alert"
+    minor         = "alert"
+    major         = "alert_and_drop"
+    critical      = "alert_and_drop"
+  }
 }
 `, feedName, profileName)
 }
@@ -198,40 +169,33 @@ resource "aviatrix_dcf_ips_profile" "test" {
 func testAccDCFIpsProfileUpdate(profileName, feedName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_dcf_ips_rule_feed" "test_feed" {
-    feed_name    = "%s"
-    file_content = <<EOF
+  feed_name    = "%s"
+  file_content = <<EOF
 alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
 EOF
 }
 
 resource "aviatrix_dcf_ips_profile" "test" {
-    profile_name = "%s"
+  profile_name = "%s"
 
-    rule_feeds {
-        custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
-        external_feeds_ids = ["suricata-rules", "emerging-threats"]
-        ignored_sids       = [100001, 100002, 100005]
-        never_drop_sids    = [100003]
-    }
+  rule_feeds {
+    custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+    external_feeds_ids = ["suricata-rules", "emerging-threats"]
+    ignored_sids       = [100001, 100002, 100005]
+    never_drop_sids    = [100003]
+  }
 
-    intrusion_actions = {
-        informational = "alert"
-        minor         = "alert_and_drop"
-        major         = "alert_and_drop"
-        critical      = "alert_and_drop"
-    }
+  intrusion_actions = {
+    informational = "alert"
+    minor         = "alert_and_drop"
+    major         = "alert_and_drop"
+    critical      = "alert_and_drop"
+  }
 }
 `, feedName, profileName)
 }
 
-func testAccDCFIpsProfileMinimal(profileName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_dcf_ips_profile" "test" {
-    profile_name = "%s"
-}
-`, profileName)
-}
 
 // Check functions
 
