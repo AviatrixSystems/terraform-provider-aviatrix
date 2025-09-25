@@ -22,14 +22,6 @@ resource "aviatrix_dcf_ips_profile_vpc" "example" {
   ]
 }
 
-# Example with multiple profiles
-resource "aviatrix_dcf_ips_profile_vpc" "multi_profile" {
-  vpc_id = "vpc-0123456789abcdef0"
-  dcf_ips_profiles = [
-    "550e8400-e29b-41d4-a716-446655440001",
-    "550e8400-e29b-41d4-a716-446655440002"
-  ]
-}
 
 # Clear all profiles from a VPC
 resource "aviatrix_dcf_ips_profile_vpc" "clear_profiles" {
