@@ -1,3 +1,4 @@
+//revive:disable:var-naming
 package aviatrix
 
 import (
@@ -16,11 +17,9 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 		ReadWithoutTimeout:   resourceAviatrixDCFIpsProfileRead,
 		UpdateWithoutTimeout: resourceAviatrixDCFIpsProfileUpdate,
 		DeleteWithoutTimeout: resourceAviatrixDCFIpsProfileDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"profile_name": {
 				Type:        schema.TypeString,
@@ -55,12 +54,6 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "List of rule SIDs to ignore.",
-							Elem:        &schema.Schema{Type: schema.TypeInt},
-						},
-						"never_drop_sids": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "List of rule SIDs to never drop.",
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 					},
@@ -155,7 +148,6 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 			CustomFeedsIds:   []string{},
 			ExternalFeedsIds: []string{},
 			IgnoredSids:      []int{},
-			NeverDropSids:    []int{},
 		}
 	}
 
@@ -165,7 +157,6 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 		CustomFeedsIds:   expandStringList(ruleFeedsMap["custom_feeds_ids"].([]interface{})),
 		ExternalFeedsIds: expandStringList(ruleFeedsMap["external_feeds_ids"].([]interface{})),
 		IgnoredSids:      expandIntList(ruleFeedsMap["ignored_sids"].([]interface{})),
-		NeverDropSids:    expandIntList(ruleFeedsMap["never_drop_sids"].([]interface{})),
 	}
 }
 
@@ -175,7 +166,6 @@ func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []interface{} {
 			"custom_feeds_ids":   ruleFeeds.CustomFeedsIds,
 			"external_feeds_ids": ruleFeeds.ExternalFeedsIds,
 			"ignored_sids":       ruleFeeds.IgnoredSids,
-			"never_drop_sids":    ruleFeeds.NeverDropSids,
 		},
 	}
 }

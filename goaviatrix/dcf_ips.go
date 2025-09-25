@@ -1,3 +1,4 @@
+//revive:disable:var-naming
 package goaviatrix
 
 import (
@@ -37,7 +38,6 @@ type IpsRuleFeeds struct {
 	CustomFeedsIds   []string `json:"custom_feeds_ids"`
 	ExternalFeedsIds []string `json:"external_feeds_ids"`
 	IgnoredSids      []int    `json:"ignored_sids"`
-	NeverDropSids    []int    `json:"never_drop_sids"`
 }
 
 // IpsProfile represents an IPS profile
