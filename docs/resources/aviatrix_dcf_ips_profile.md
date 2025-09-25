@@ -21,7 +21,6 @@ resource "aviatrix_dcf_ips_profile" "custom_profile" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.custom_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
-    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -45,7 +44,6 @@ The following arguments are supported:
     - `custom_feeds_ids` - (Optional) List of custom rule feed UUIDs. Type: List(String).
     - `external_feeds_ids` - (Optional) List of external rule feed IDs. Type: List(String).
     - `ignored_sids` - (Optional) List of rule SIDs to ignore. Type: List(Number).
-    - `never_drop_sids` - (Optional) List of rule SIDs to never drop. Type: List(Number).
 - `intrusion_actions` - (Required) Actions for different severity levels. Type: Map(String). Valid values: `alert`, `alert_and_drop`.
     - `informational`, `minor`, `major`, `critical` - (Optional) Action for each severity level. Type: String.
 

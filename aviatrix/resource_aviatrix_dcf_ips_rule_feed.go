@@ -1,3 +1,4 @@
+//revive:disable:var-naming
 package aviatrix
 
 import (
