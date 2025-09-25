@@ -35,7 +35,9 @@ resource "aviatrix_dcf_ips_profile_vpc" "clear_profiles" {
 The following arguments are supported:
 
 ### Required
-- `vpc_id` - (Required) The VPC ID to assign DCF IPS profiles to. Type: String.
+- `vpc_id` - (Required) The VPC ID to which DCF IPS Profiles will be assigned.
+The VPC must have a DCF-applied gateway and must be created before the `aviatrix_dcf_ips_profile_vpc` resource is defined. Type: String
+
 - `dcf_ips_profiles` - (Required) List of DCF IPS profile UUIDs to assign to the VPC. Use an empty list to clear all profiles. Type: List(String).
 
 ## Import
