@@ -1,3 +1,4 @@
+//revive:disable:var-naming
 package aviatrix
 
 import (
@@ -85,7 +86,6 @@ func TestAccAviatrixDCFIpsProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.custom_feeds_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.external_feeds_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.ignored_sids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.never_drop_sids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.informational", "alert"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.minor", "alert"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.major", "alert_and_drop"),
@@ -200,7 +200,6 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
-    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -230,7 +229,6 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules", "emerging-threats"]
     ignored_sids       = [100001, 100002, 100005]
-    never_drop_sids    = [100003]
   }
 
   intrusion_actions = {
@@ -260,7 +258,6 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
-    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -295,7 +292,6 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
-    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -313,7 +309,6 @@ resource "aviatrix_dcf_ips_profile" "test2" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["emerging-threats"]
     ignored_sids       = [100005]
-    never_drop_sids    = [100006]
   }
 
   intrusion_actions = {
@@ -349,7 +344,7 @@ func testAccCheckDCFIpsRuleFeedExists(n string) resource.TestCheckFunc {
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 		_, err := client.GetIpsRuleFeed(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get DCF IPS rule feed: %v", err)
+			return fmt.Errorf("failed to get DCF IPS rule feed: %w", err)
 		}
 
 		return nil
@@ -369,7 +364,7 @@ func testAccCheckDCFIpsProfileExists(n string) resource.TestCheckFunc {
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 		_, err := client.GetIpsProfile(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get DCF IPS profile: %v", err)
+			return fmt.Errorf("failed to get DCF IPS profile: %w", err)
 		}
 
 		return nil
@@ -389,7 +384,7 @@ func testAccCheckDCFIpsProfileVpcExists(n string) resource.TestCheckFunc {
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 		_, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get DCF IPS profile VPC: %v", err)
+			return fmt.Errorf("failed to get DCF IPS profile VPC: %w", err)
 		}
 
 		return nil
@@ -433,24 +428,24 @@ func testAccDCFIpsProfileDestroy(s *terraform.State) error {
 }
 
 func testAccDCFIpsProfileVpcDestroy(s *terraform.State) error {
-    client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-    for _, rs := range s.RootModule().Resources {
-        if rs.Type != "aviatrix_dcf_ips_profile_vpc" {
-            continue
-        }
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aviatrix_dcf_ips_profile_vpc" {
+			continue
+		}
 
-        profileVpc, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
-        if err != nil {
-            // If we get an error (like not found), that's what we expect after destroy
-            continue
-        }
+		profileVpc, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
+		if err != nil {
+			// If we get an error (like not found), that's what we expect after destroy
+			continue
+		}
 
-        // If the VPC exists but has profiles assigned, that's a problem
-        if len(profileVpc.DcfIpsProfiles) > 0 {
-            return fmt.Errorf("DCF IPS profile VPC %s still has profiles assigned: %v", rs.Primary.ID, profileVpc.DcfIpsProfiles)
-        }
-    }
+		// If the VPC exists but has profiles assigned, that's a problem
+		if len(profileVpc.DcfIpsProfiles) > 0 {
+			return fmt.Errorf("DCF IPS profile VPC %s still has profiles assigned: %v", rs.Primary.ID, profileVpc.DcfIpsProfiles)
+		}
+	}
 
-    return nil
+	return nil
 }
