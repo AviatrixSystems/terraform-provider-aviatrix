@@ -37,6 +37,8 @@ resource "aviatrix_edge_gateway_selfmanaged_ha" "test" {
     type       = "LAN"
     ip_address = "10.220.11.20/24"
     gateway_ip = "10.220.11.1"
+    ipv6_address = "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4001/64"
+    gateway_ipv6 = "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4100"
   }
 
   interfaces {
@@ -65,6 +67,8 @@ The following arguments are supported:
   * `gateway_ip` - (Optional) Gateway IP.
   * `dns_server_ip` - (Optional) Primary DNS server IP.
   * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
+  * `ipv6_address` - (Optional) Interface static IPv6 address.
+  * `gateway_ipv6` - (Optional) Gateway IPv6 IP..
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
