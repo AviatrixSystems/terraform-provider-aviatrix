@@ -169,7 +169,7 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 		}
 		if len(filter.ExtArgs) > 0 {
 			for key, value := range filter.ExtArgs {
-				filterMap[key] = value
+				filterMap[fmt.Sprintf("%s.%s", ExtArgsPrefix, key)] = value
 			}
 		}
 	}
