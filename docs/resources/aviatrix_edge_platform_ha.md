@@ -65,7 +65,7 @@ The following arguments are supported:
     * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
     * `tag` - (Optional) Tag.
     * `ipv6_address` - (Optional) Interface static IPv6 address.
-    * `gateway_ipv6` - (Optional) Gateway IPv6 IP..
+    * `gateway_ipv6` - (Optional) Gateway IPv6 IP.
 
 ### Optional
 * `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
