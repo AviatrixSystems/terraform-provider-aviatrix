@@ -578,7 +578,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("'remote_lan_ip' is required when 'tunnel_protocol' = 'LAN'")
 	}
 	if externalDeviceConn.EnableIpv6 && externalDeviceConn.RemoteLanIPv6 == "" && externalDeviceConn.TunnelProtocol == "LAN" {
-		return fmt.Errorf("'remote_lan_ip' is required when 'tunnel_protocol' = 'LAN'")
+		return fmt.Errorf("'remote_lan_ipv6_ip' is required when 'tunnel_protocol' = 'LAN'")
 	}
 
 	if externalDeviceConn.RemoteGatewayIP == "" && externalDeviceConn.TunnelProtocol != "LAN" {

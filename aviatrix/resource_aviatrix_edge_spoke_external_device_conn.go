@@ -231,6 +231,19 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				Description: "Enable Jumbo Frame for the edge spoke external device connection. Valid values: true, false.",
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 on this connection",
+			},
+			"remote_lan_ipv6_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Remote LAN IPv6 address.",
+			},
 		},
 	}
 }
@@ -252,6 +265,8 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
 		EnableBgpMultihop:  d.Get("enable_bgp_multihop").(bool),
 		EnableJumboFrame:   d.Get("enable_jumbo_frame").(bool),
+		EnableIpv6:         d.Get("enable_ipv6").(bool),
+		RemoteLanIPv6:      d.Get("remote_lan_ipv6_ip").(string),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -319,6 +334,10 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 {
 			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
 		}
+	}
+
+	if externalDeviceConn.EnableIpv6 && externalDeviceConn.RemoteLanIPv6 == "" {
+		return diag.Errorf("'remote_lan_ipv6_ip' is required when 'enable_ipv6' is true")
 	}
 
 	flag := false
@@ -491,6 +510,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	d.Set("remote_lan_ip", conn.RemoteLanIP)
 	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
 	d.Set("remote_cloud_type", conn.RemoteCloudType)
+	d.Set("enable_ipv6", conn.EnableIpv6)
+	d.Set("remote_lan_ipv6_ip", conn.RemoteLanIPv6)
+
 	_ = d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 	if conn.BgpLocalAsNum != 0 {
 		d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
