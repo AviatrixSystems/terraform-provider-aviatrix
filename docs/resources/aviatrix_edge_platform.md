@@ -82,7 +82,7 @@ The following arguments are supported:
     * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
     * `tag` - (Optional) Tag.
     * `ipv6_address` - (Optional) Interface static IPv6 address.
-    * `gateway_ipv6` - (Optional) Gateway IPv6 IP..
+    * `gateway_ipv6` - (Optional) Gateway IPv6 IP.
 
     If you are deploying Edge Spoke, interface mapping is required. Please use the following mapping:
 
