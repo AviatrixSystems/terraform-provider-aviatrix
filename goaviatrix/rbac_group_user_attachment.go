@@ -126,27 +126,3 @@ func (c *Client) SetRbacGroupUsers(groupName string, desired []string) error {
 	}
 	return nil
 }
-
-// DiffStrings compares two string slices and returns the elements that need to
-// be added to and deleted from the first slice to match the second slice.
-func diffStrings(curr, want []string) (add, del []string) {
-	cset := make(map[string]struct{}, len(curr))
-	wset := make(map[string]struct{}, len(want))
-	for _, x := range curr {
-		cset[x] = struct{}{}
-	}
-	for _, x := range want {
-		wset[x] = struct{}{}
-	}
-	for x := range wset {
-		if _, ok := cset[x]; !ok {
-			add = append(add, x)
-		}
-	}
-	for x := range cset {
-		if _, ok := wset[x]; !ok {
-			del = append(del, x)
-		}
-	}
-	return
-}

@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"slices"
 	"sort"
-	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -140,27 +138,4 @@ func resourceAviatrixRbacGroupUserMembershipDelete(d *schema.ResourceData, meta 
 	}
 
 	return nil
-}
-
-func expandStringSet(set *schema.Set) []string {
-	if set == nil {
-		return nil
-	}
-	items := set.List()
-	out := make([]string, 0, len(items))
-	for _, it := range items {
-		if s, ok := it.(string); ok {
-			out = append(out, strings.TrimSpace(s))
-		}
-	}
-	slices.Sort(out)
-	return out
-}
-
-func stringSliceToIfaceSlice(in []string) []interface{} {
-	out := make([]interface{}, len(in))
-	for i, s := range in {
-		out[i] = s
-	}
-	return out
 }

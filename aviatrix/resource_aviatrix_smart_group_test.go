@@ -464,7 +464,7 @@ func TestAccAviatrixSmartGroup_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "serverless-test-smart-group"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "serverless_function"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "serverless"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.name", "test-function"),
 				),
 			},
@@ -484,7 +484,7 @@ resource "aviatrix_smart_group" "serverless" {
 
 	selector {
 		match_expressions {
-			type = "serverless_function"
+			type = "serverless"
 			name = "test-function"
 		}
 	}
