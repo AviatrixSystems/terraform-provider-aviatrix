@@ -46,6 +46,19 @@ resource "aviatrix_edge_spoke_external_device_conn" "test" {
   }
 }
 ```
+# Create an Edge as a Spoke External Device Connection with IPv6 neighbor
+resource "aviatrix_edge_spoke_external_device_conn" "test" {
+  site_id           = "site-abcd1234"
+  connection_name   = "conn"
+  gw_name           = "eaas"
+  bgp_local_as_num  = "123"
+  bgp_remote_as_num = "345"
+  local_lan_ip      = "10.230.3.23"
+  remote_lan_ip     = "10.0.60.1"
+  connection_type   = "bgp"
+  enable_ipv6 = true
+  remote_lan_ipv6_ip = "2100:1f1c:1c6:c704:3b17:884f:2343:7aef"
+}
 
 ## Argument Reference
 
@@ -87,6 +100,8 @@ The following arguments are supported:
 * `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
 * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Valid values: true, false. Default: false.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the external device connection. Requires Edge gateway to be jumbo frame enabled. Valid values: true, false. Default value: false.
+* `enable_ipv6` - (Optional) Enable IPv6 prefix learning for edge gateway.
+* `remote_lan_ipv6_ip` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for BGP over LAN. Only valid if gateway is IPv6 enabled.
 
 ## Import
 
