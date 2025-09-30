@@ -143,6 +143,20 @@ resource "aviatrix_spoke_external_device_conn" "conn-1" {
   tunnel_protocol                           = "LAN"
 }
 ```
+```hcl
+# Create an Aviatrix Spoke External Device Connection with IPv6
+resource "aviatrix_spoke_external_device_conn" "test" {
+  vpc_id            = "vpc-abcd1234"
+  connection_name   = "my_conn"
+  gw_name           = "spokeGw"
+  connection_type   = "bgp"
+  bgp_local_as_num  = "123"
+  bgp_remote_as_num = "345"
+  remote_gateway_ip = "172.12.13.14"
+  enable_ipv6 = true
+  external_device_ipv6 = "2100:1f1c:1c6:c704:3b17:884f:2343:7aef"
+}
+```
 
 ## Argument Reference
 
@@ -220,6 +234,11 @@ The following arguments are supported:
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires spoke to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R3.0.2+.
+* `enable_ipv6` - (Optional) Enable IPv6 prefix learning over IPv4 neighbor. Only valid if gateway is IPv6 enabled.
+* `external_device_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor. Only valid if gateway is IPv6 enabled.
+* `external_device_backup_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for HA gateway. Only valid if gateway is IPv6 enabled.
+* `remote_lan_ipv6_ip` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for BGP over LAN. Only valid if gateway is IPv6 enabled.
+
 
 -> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R3.1.0+, and a **spoke_external_device_conn** resource was originally created with a provider version <R3.1.0 with "private_ip" for `phase1_local_identifier`, you must paste "phase1_local_identifier = 'private_ip'" into the corresponding **spoke_external_device_conn** resource to avoid ‘terraform plan‘ from showing delta.
 
