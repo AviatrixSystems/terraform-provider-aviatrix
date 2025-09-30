@@ -270,6 +270,16 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 							Optional:    true,
 							Description: "Tag.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 					},
 				},
 			},
@@ -646,6 +656,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 		if1["dns_server_ip"] = if0.DNSPrimary
 		if1["secondary_dns_server_ip"] = if0.DNSSecondary
 		if1["tag"] = if0.Tag
+		if1["ipv6_address"] = if0.IPv6Addr
+		if1["gateway_ipv6"] = if0.GatewayIPv6
 
 		// set vrrp and vrrp_virtual_ip only for LAN interfaces
 		if if0.Type == "LAN" {
