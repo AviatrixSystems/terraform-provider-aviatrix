@@ -80,7 +80,7 @@ The following arguments are supported:
   * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
   * `tag` - (Optional) Tag.
   * `ipv6_address` - (Optional) Interface static IPv6 address.
-  * `gateway_ipv6` - (Optional) Gateway IPv6 IP..
+  * `gateway_ipv6` - (Optional) Gateway IPv6 IP.
 
 
 ### Optional
