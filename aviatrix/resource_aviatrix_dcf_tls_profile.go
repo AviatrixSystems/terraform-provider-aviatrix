@@ -75,7 +75,7 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 
 	if caBundleID, ok := d.Get("ca_bundle_id").(string); ok && caBundleID != "" {
 		if _, err := uuid.Parse(caBundleID); err != nil {
-			return nil, fmt.Errorf("ca_bundle_id must be a valid UUID: %s", err)
+			return nil, fmt.Errorf("ca_bundle_id must be a valid UUID: %w", err)
 		}
 		tlsProfile.CABundleID = &caBundleID
 	}
