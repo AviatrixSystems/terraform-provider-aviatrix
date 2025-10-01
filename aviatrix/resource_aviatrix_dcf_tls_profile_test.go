@@ -74,7 +74,7 @@ func TestAccAviatrixDcfTLSProfile_withCABundle(t *testing.T) {
 			{
 				Config: testAccCheckDcfTLSProfileWithCABundle(caBundleID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDcfTLSProfileExists(resourceName, t.Context()),
+					testAccCheckDcfTLSProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "test-dcf-tls-profile-with-ca"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation", "CERTIFICATE_VALIDATION_ENFORCE"),
 					resource.TestCheckResourceAttr(resourceName, "verify_sni", "true"),
