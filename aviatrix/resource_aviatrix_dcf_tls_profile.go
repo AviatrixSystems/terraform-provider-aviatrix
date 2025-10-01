@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -73,6 +74,9 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 	tlsProfile.VerifySni = verifySni
 
 	if caBundleID, ok := d.Get("ca_bundle_id").(string); ok && caBundleID != "" {
+		if _, err := uuid.Parse(caBundleID); err != nil {
+			return nil, fmt.Errorf("ca_bundle_id must be a valid UUID: %s", err)
+		}
 		tlsProfile.CABundleID = &caBundleID
 	}
 
@@ -94,9 +98,8 @@ func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.Errorf("failed to create DCF TLS Profile: %s", err)
 	}
-
 	d.SetId(uuid)
-
+	d.Set("uuid", uuid)
 	return nil
 }
 
@@ -154,7 +157,7 @@ func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	uuid := d.Id()
-	err = client.UpdateDCFPolicy(ctx, uuid, tlsProfile)
+	err = client.UpdateTLSProfile(ctx, uuid, tlsProfile)
 	if err != nil {
 		return diag.Errorf("failed to update DCF TLS Profile: %s", err)
 	}

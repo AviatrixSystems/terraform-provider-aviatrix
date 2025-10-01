@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -61,6 +62,7 @@ func TestAccAviatrixDcfTLSProfile_withCABundle(t *testing.T) {
 		t.Skip("Skipping DCF TLS Profile test as SKIP_DCF_TLS_PROFILE is set")
 	}
 	resourceName := "aviatrix_dcf_tls_profile.test"
+	caBundleID := uuid.New().String()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -70,13 +72,13 @@ func TestAccAviatrixDcfTLSProfile_withCABundle(t *testing.T) {
 		CheckDestroy: testAccCheckDcfTLSProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDcfTLSProfileWithCABundle(),
+				Config: testAccCheckDcfTLSProfileWithCABundle(caBundleID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDcfTLSProfileExists(resourceName),
+					testAccCheckDcfTLSProfileExists(resourceName, t.Context()),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "test-dcf-tls-profile-with-ca"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation", "CERTIFICATE_VALIDATION_ENFORCE"),
 					resource.TestCheckResourceAttr(resourceName, "verify_sni", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ca_bundle_id", "test-ca-bundle-uuid"),
+					resource.TestCheckResourceAttr(resourceName, "ca_bundle_id", caBundleID),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 				),
 			},
@@ -109,15 +111,15 @@ resource "aviatrix_dcf_tls_profile" "test" {
 `
 }
 
-func testAccCheckDcfTLSProfileWithCABundle() string {
-	return `
+func testAccCheckDcfTLSProfileWithCABundle(caBundleID string) string {
+	return fmt.Sprintf(`
 resource "aviatrix_dcf_tls_profile" "test" {
 	display_name           = "test-dcf-tls-profile-with-ca"
 	certificate_validation = "CERTIFICATE_VALIDATION_ENFORCE"
 	verify_sni            = true
-	ca_bundle_id          = "test-ca-bundle-uuid"
+	ca_bundle_id          =  "%s"
 }
-`
+`, caBundleID)
 }
 
 func testAccCheckDcfTLSProfileExists(n string) resource.TestCheckFunc {
@@ -156,7 +158,7 @@ func testAccCheckDcfTLSProfileDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetTLSProfile(context.Background(), rs.Primary.ID)
-		if err == nil || !strings.Contains(err.Error(), "does not exist") {
+		if err == nil || !strings.Contains(err.Error(), "not found") {
 			return fmt.Errorf("dcf tls profile configured when it should be destroyed %w", err)
 		}
 	}

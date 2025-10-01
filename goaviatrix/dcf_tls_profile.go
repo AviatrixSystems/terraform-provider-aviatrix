@@ -3,6 +3,8 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type TLSProfile struct {
@@ -48,10 +50,19 @@ type TLSProfilesListResponse struct {
 	Profiles []TLSProfileWithID `json:"profiles"`
 }
 
-func (c *Client) GetTLSProfile(ctx context.Context, uuid string) (*TLSProfile, error) {
-	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+func isValidUUID(u string) error {
+	if _, err := uuid.Parse(u); err != nil {
+		return fmt.Errorf("invalid UUID format: %w", err)
+	}
+	return nil
+}
 
-	var tlsProfile TLSProfile
+func (c *Client) GetTLSProfile(ctx context.Context, uuidStr string) (*TLSProfileWithID, error) {
+	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuidStr)
+	if err := isValidUUID(uuidStr); err != nil {
+		return nil, err
+	}
+	var tlsProfile TLSProfileWithID
 	err := c.GetAPIContext25(ctx, &tlsProfile, endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -63,8 +74,7 @@ func (c *Client) CreateTLSProfile(ctx context.Context, tlsProfile *TLSProfile) (
 	endpoint := "dcf/tls-profile"
 
 	var data TLSProfileResponse
-	err := c.PostAPIContext25(ctx, &data, endpoint, tlsProfile)
-	if err != nil {
+	if err := c.PostAPIContext25(ctx, &data, endpoint, tlsProfile); err != nil {
 		return "", err
 	}
 
@@ -83,16 +93,10 @@ func (c *Client) ListTLSProfiles(ctx context.Context) (*TLSProfilesListResponse,
 	return &listResponse, nil
 }
 
-func (c *Client) UpdateDCFPolicy(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
-	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
-	err := c.PutAPIContext25(ctx, endpoint, tlsProfile)
-	if err != nil {
+func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
+	if err := isValidUUID(uuid); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
 	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
 	err := c.PutAPIContext25(ctx, endpoint, tlsProfile)
 	if err != nil {
@@ -103,5 +107,8 @@ func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *
 
 func (c *Client) DeleteTLSProfile(ctx context.Context, uuid string) error {
 	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+	if err := isValidUUID(uuid); err != nil {
+		return err
+	}
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
