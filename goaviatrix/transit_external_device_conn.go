@@ -95,9 +95,13 @@ type ExternalDeviceConn struct {
 	EnableBfd                  bool         `form:"bgp_bfd_enabled,omitempty"`
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
-	EnableBgpMultihop bool   `form:"enable_bgp_multihop"`
-	DisableActivemesh bool   `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
-	TunnelSrcIP       string `form:"local_device_ip,omitempty"`
+	EnableBgpMultihop        bool   `form:"enable_bgp_multihop"`
+	DisableActivemesh        bool   `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
+	TunnelSrcIP              string `form:"local_device_ip,omitempty"`
+	EnableIpv6               bool   `form:"ipv6_enabled,omitempty"`
+	ExternalDeviceIPv6       string `form:"external_device_ipv6,omitempty"`
+	ExternalDeviceBackupIPv6 string `form:"external_device_backup_ipv6,omitempty"`
+	RemoteLanIPv6            string `form:"remote_lan_ipv6_ip,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -148,6 +152,12 @@ type EditExternalDeviceConnDetail struct {
 	DisableActivemesh          bool           `json:"disable_activemesh,omitempty"`
 	TunnelSrcIP                string         `json:"local_device_ip,omitempty"`
 	TunnelType                 string         `json:"tunnel_type,omitempty"`
+	EnableIpv6                 bool           `json:"ipv6_enabled,omitempty"`
+	ExternalDeviceIPv6         string         `json:"bgp_remote_ipv6,omitempty"`
+	ExternalDeviceBackupIPv6   string         `json:"bgp_backup_remote_ipv6,omitempty"`
+	ExternalLocalIPv6          string         `json:"bgp_local_ipv6,omitempty"`
+	ExternalBackupLocalIPv6    string         `json:"bgp_backup_local_ipv6,omitempty"`
+	RemoteLanIPv6              string         `json:"remote_lan_ipv6_ip,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -235,6 +245,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	}
 
 	populateAdditionalConnectionInfo(externalDeviceConn, externalDeviceConnDetail)
+
+	populateIPv6ConnectionInfo(externalDeviceConn, externalDeviceConnDetail)
 
 	return externalDeviceConn, nil
 }
@@ -700,4 +712,21 @@ func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, ex
 		externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
 	}
 	externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
+}
+
+// populateIPv6ConnectionInfo populates IPv6 related connection information
+func populateIPv6ConnectionInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
+	externalDeviceConn.EnableIpv6 = externalDeviceConnDetail.EnableIpv6
+	if !externalDeviceConn.EnableIpv6 {
+		return
+	}
+	if externalDeviceConn.TunnelProtocol == "LAN" {
+		externalDeviceConn.RemoteLanIPv6 = externalDeviceConnDetail.RemoteLanIPv6
+	} else {
+		// for ipsec and gre tunnels
+		externalDeviceConn.ExternalDeviceIPv6 = externalDeviceConnDetail.ExternalDeviceIPv6
+		if externalDeviceConnDetail.HAEnabled == "enabled" {
+			externalDeviceConn.ExternalDeviceBackupIPv6 = externalDeviceConnDetail.ExternalDeviceBackupIPv6
+		}
+	}
 }

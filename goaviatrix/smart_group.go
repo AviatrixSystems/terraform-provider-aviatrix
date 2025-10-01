@@ -260,13 +260,19 @@ func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 
 	for _, filterResult := range smartGroupResult.Selector.Any {
 		filterMap := filterResult.All
-		filter := NewSmartGroupMatchExpression(filterMap)
+		var filter *SmartGroupMatchExpression
+		if MapContains(filterMap, ExternalKey) {
+			filter = &SmartGroupMatchExpression{}
+			filter.External = filterMap[ExternalKey].(string)
+		} else {
+			filter = NewSmartGroupMatchExpression(filterMap)
+		}
 
 		if MapContains(filterMap, ExternalKey) {
 			extArgs := make(map[string]string)
 			for key, value := range filterMap {
 				if key != ExternalKey {
-					extArgs[strings.TrimPrefix(key, ExtArgsPrefix+".")] = value.(string)
+					extArgs[key] = value.(string)
 				}
 			}
 			if len(extArgs) > 0 {
