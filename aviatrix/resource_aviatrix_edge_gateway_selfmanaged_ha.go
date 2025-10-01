@@ -115,6 +115,16 @@ func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 							Optional:    true,
 							Description: "Secondary DNS server IP.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 					},
 				},
 			},
@@ -154,6 +164,8 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 			GatewayIp:    if1["gateway_ip"].(string),
 			DNSPrimary:   if1["dns_server_ip"].(string),
 			DNSSecondary: if1["secondary_dns_server_ip"].(string),
+			IPv6Addr:     if1["ipv6_address"].(string),
+			GatewayIPv6:  if1["gateway_ipv6"].(string),
 		}
 
 		edgeGatewaySelfmanagedHa.InterfaceList = append(edgeGatewaySelfmanagedHa.InterfaceList, if2)
@@ -226,6 +238,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 		if1["gateway_ip"] = if0.GatewayIp
 		if1["dns_server_ip"] = if0.DNSPrimary
 		if1["secondary_dns_server_ip"] = if0.DNSSecondary
+		if1["ipv6_address"] = if0.IPv6Addr
+		if1["gateway_ipv6"] = if0.GatewayIPv6
 
 		interfaces = append(interfaces, if1)
 	}

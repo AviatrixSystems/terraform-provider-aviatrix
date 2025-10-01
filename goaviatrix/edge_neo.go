@@ -68,6 +68,8 @@ type EdgeNEOInterface struct {
 	SubInterfaces []*EdgeNEOVlan `json:"subinterfaces,omitempty"`
 	VrrpState     bool           `json:"vrrp_state,omitempty"`
 	VirtualIp     string         `json:"virtual_ip,omitempty"`
+	IPv6Addr      string         `json:"v6_ipaddr,omitempty"`
+	GatewayIPv6   string         `json:"gateway_ipv6_ip,omitempty"`
 }
 
 type EdgeNEOVlan struct {
