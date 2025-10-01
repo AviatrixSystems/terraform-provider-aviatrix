@@ -36,6 +36,8 @@ resource "aviatrix_edge_platform" "test" {
     name       = "eth1"
     type       = "LAN"
     ip_address = "10.230.3.32/24"
+    ipv6_address = "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4001/64"
+    gateway_ipv6 = "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4100"
   }
 
   interfaces {
@@ -79,6 +81,8 @@ The following arguments are supported:
     * `enable_vrrp` - (Optional) Enable VRRP. Valid values: true, false. Default value: false.
     * `vrrp_virtual_ip` - (Optional) VRRP virtual IP.
     * `tag` - (Optional) Tag.
+    * `ipv6_address` - (Optional) Interface static IPv6 address.
+    * `gateway_ipv6` - (Optional) Gateway IPv6 IP.
 
     If you are deploying Edge Spoke, interface mapping is required. Please use the following mapping:
 

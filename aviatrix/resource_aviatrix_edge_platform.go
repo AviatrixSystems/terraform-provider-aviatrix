@@ -303,6 +303,16 @@ func resourceAviatrixEdgePlatform() *schema.Resource {
 							Optional:    true,
 							Description: "Tag.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 					},
 				},
 			},
@@ -434,6 +444,8 @@ func marshalEdgePlatformInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
 			VrrpState:    interface1["enable_vrrp"].(bool),
 			VirtualIp:    interface1["vrrp_virtual_ip"].(string),
+			IPv6Addr:     interface1["ipv6_address"].(string),
+			GatewayIPv6:  interface1["gateway_ipv6"].(string),
 		}
 
 		edgeNEO.InterfaceList = append(edgeNEO.InterfaceList, interface2)
@@ -755,6 +767,8 @@ func resourceAviatrixEdgePlatformRead(ctx context.Context, d *schema.ResourceDat
 		interface1["dns_server_ip"] = interface0.DnsPrimary
 		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
 		interface1["vrrp_virtual_ip"] = interface0.VirtualIp
+		interface1["ipv6_address"] = interface0.IPv6Addr
+		interface1["gateway_ipv6"] = interface0.GatewayIPv6
 
 		if interface0.Type == "LAN" {
 			interface1["enable_vrrp"] = interface0.VrrpState
