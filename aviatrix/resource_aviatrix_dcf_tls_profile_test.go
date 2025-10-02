@@ -153,7 +153,8 @@ func testAccCheckDcfTLSProfileDestroy(s *terraform.State) error {
 		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_tls_profile" {
 			continue
