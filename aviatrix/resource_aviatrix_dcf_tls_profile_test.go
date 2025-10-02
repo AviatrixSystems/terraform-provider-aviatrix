@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/google/uuid"
@@ -30,7 +31,7 @@ func TestAccAviatrixDcfTLSProfile_basic(t *testing.T) {
 			{
 				Config: testAccCheckDcfTLSProfileBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDcfTLSProfileExists(resourceName),
+					testAccCheckDcfTLSProfileExists(resourceName, t),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "test-dcf-tls-profile"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation", "CERTIFICATE_VALIDATION_LOG_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "verify_sni", "true"),
@@ -40,7 +41,7 @@ func TestAccAviatrixDcfTLSProfile_basic(t *testing.T) {
 			{
 				Config: testAccCheckDcfTLSProfileUpdate(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDcfTLSProfileExists(resourceName),
+					testAccCheckDcfTLSProfileExists(resourceName, t),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "test-dcf-tls-profile-updated"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation", "CERTIFICATE_VALIDATION_ENFORCE"),
 					resource.TestCheckResourceAttr(resourceName, "verify_sni", "false"),
@@ -74,7 +75,7 @@ func TestAccAviatrixDcfTLSProfile_withCABundle(t *testing.T) {
 			{
 				Config: testAccCheckDcfTLSProfileWithCABundle(caBundleID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDcfTLSProfileExists(resourceName),
+					testAccCheckDcfTLSProfileExists(resourceName, t),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "test-dcf-tls-profile-with-ca"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation", "CERTIFICATE_VALIDATION_ENFORCE"),
 					resource.TestCheckResourceAttr(resourceName, "verify_sni", "true"),
@@ -122,7 +123,7 @@ resource "aviatrix_dcf_tls_profile" "test" {
 `, caBundleID)
 }
 
-func testAccCheckDcfTLSProfileExists(n string) resource.TestCheckFunc {
+func testAccCheckDcfTLSProfileExists(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +138,7 @@ func testAccCheckDcfTLSProfileExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
 		}
 
-		_, err := client.GetTLSProfile(context.Background(), rs.Primary.ID)
+		_, err := client.GetTLSProfile(t.Context(), rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get DCF TLS Profile status: %w", err)
 		}
@@ -152,12 +153,12 @@ func testAccCheckDcfTLSProfileDestroy(s *terraform.State) error {
 		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
 	}
 
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_tls_profile" {
 			continue
 		}
-
-		_, err := client.GetTLSProfile(context.Background(), rs.Primary.ID)
+		_, err := client.GetTLSProfile(ctx, rs.Primary.ID)
 		if err == nil || !strings.Contains(err.Error(), "not found") {
 			return fmt.Errorf("dcf tls profile configured when it should be destroyed %w", err)
 		}

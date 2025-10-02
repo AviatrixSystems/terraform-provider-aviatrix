@@ -14,10 +14,10 @@ import (
 
 func resourceAviatrixDCFTLSProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixDCFTLSProfileCreate,
-		ReadWithoutTimeout:   resourceAviatrixDCFTLSProfileRead,
-		UpdateWithoutTimeout: resourceAviatrixDCFTLSProfileUpdate,
-		DeleteWithoutTimeout: resourceAviatrixDCFTLSProfileDelete,
+		CreateContext: resourceAviatrixDCFTLSProfileCreate,
+		ReadContext:   resourceAviatrixDCFTLSProfileRead,
+		UpdateContext: resourceAviatrixDCFTLSProfileUpdate,
+		DeleteContext: resourceAviatrixDCFTLSProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
