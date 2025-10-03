@@ -33,26 +33,26 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 			},
 			"rule_feeds": {
 				Type:        schema.TypeSet,
-				Optional:    true,
+				Required:    true,
 				MaxItems:    1,
 				Description: "Rule feeds configuration.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_feeds_ids": {
 							Type:        schema.TypeSet,
-							Optional:    true,
+							Required:    true,
 							Description: "List of custom rule feed UUIDs.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"external_feeds_ids": {
 							Type:        schema.TypeSet,
-							Optional:    true,
+							Required:    true,
 							Description: "List of external rule feed IDs.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"ignored_sids": {
 							Type:        schema.TypeSet,
-							Optional:    true,
+							Required:    true,
 							Description: "List of rule SIDs to ignore.",
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
@@ -61,7 +61,7 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 			},
 			"intrusion_actions": {
 				Type:        schema.TypeMap,
-				Optional:    true,
+				Required:    true,
 				Description: "Actions for different severity levels.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
