@@ -30,6 +30,7 @@ func resourceAviatrixDCFIpsRuleFeed() *schema.Resource {
 			"file_content": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "IPS rule feed file content containing Suricata rules.",
 			},
 			"uuid": {
@@ -92,6 +93,10 @@ func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if !d.HasChanges("feed_name", "file_content") {
+		return resourceAviatrixDCFIpsRuleFeedRead(ctx, d, meta)
+	}
+
 	client := meta.(*goaviatrix.Client)
 
 	ruleFeed := &goaviatrix.IpsRuleFeed{
