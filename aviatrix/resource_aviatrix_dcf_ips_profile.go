@@ -32,26 +32,26 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 				Description: "UUID of the IPS profile.",
 			},
 			"rule_feeds": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				MaxItems:    1,
 				Description: "Rule feeds configuration.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_feeds_ids": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "List of custom rule feed UUIDs.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"external_feeds_ids": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "List of external rule feed IDs.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"ignored_sids": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "List of rule SIDs to ignore.",
 							Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -67,9 +67,31 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{"alert", "alert_and_drop"}, false),
 				},
+				ValidateFunc: validateIntrusionActionsKeys,
 			},
 		},
 	}
+}
+
+// validateIntrusionActionsKeys ensures only allowed keys are used in the intrusion_actions map.
+func validateIntrusionActionsKeys(val interface{}, key string) (warns []string, errs []error) {
+	allowedKeys := map[string]struct{}{
+		"informational": {},
+		"minor":         {},
+		"major":         {},
+		"critical":      {},
+	}
+	m, ok := val.(map[string]interface{})
+	if !ok {
+		errs = append(errs, errors.New("intrusion_actions must be a map"))
+		return
+	}
+	for k := range m {
+		if _, found := allowedKeys[k]; !found {
+			errs = append(errs, errors.New("invalid key for intrusion_actions: '"+k+"'. Allowed keys are: informational, minor, major, critical"))
+		}
+	}
+	return
 }
 
 // IPS Profile CRUD operations
@@ -79,7 +101,7 @@ func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.Resource
 
 	profile := &goaviatrix.IpsProfile{
 		ProfileName:      d.Get("profile_name").(string),
-		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").([]interface{})),
+		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").(*schema.Set).List()),
 		IntrusionActions: expandIntrusionActions(d.Get("intrusion_actions").(map[string]interface{})),
 	}
 
@@ -117,7 +139,7 @@ func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.Resource
 
 	profile := &goaviatrix.IpsProfile{
 		ProfileName:      d.Get("profile_name").(string),
-		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").([]interface{})),
+		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").(*schema.Set).List()),
 		IntrusionActions: expandIntrusionActions(d.Get("intrusion_actions").(map[string]interface{})),
 	}
 
@@ -153,10 +175,25 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 
 	ruleFeedsMap := ruleFeeds[0].(map[string]interface{})
 
+	var customFeedsIds []string
+	if v, ok := ruleFeedsMap["custom_feeds_ids"]; ok && v != nil {
+		customFeedsIds = expandStringList(v.(*schema.Set).List())
+	}
+
+	var externalFeedsIds []string
+	if v, ok := ruleFeedsMap["external_feeds_ids"]; ok && v != nil {
+		externalFeedsIds = expandStringList(v.(*schema.Set).List())
+	}
+
+	var ignoredSids []int
+	if v, ok := ruleFeedsMap["ignored_sids"]; ok && v != nil {
+		ignoredSids = expandIntList(v.(*schema.Set).List())
+	}
+
 	return goaviatrix.IpsRuleFeeds{
-		CustomFeedsIds:   expandStringList(ruleFeedsMap["custom_feeds_ids"].([]interface{})),
-		ExternalFeedsIds: expandStringList(ruleFeedsMap["external_feeds_ids"].([]interface{})),
-		IgnoredSids:      expandIntList(ruleFeedsMap["ignored_sids"].([]interface{})),
+		CustomFeedsIds:   customFeedsIds,
+		ExternalFeedsIds: externalFeedsIds,
+		IgnoredSids:      ignoredSids,
 	}
 }
 

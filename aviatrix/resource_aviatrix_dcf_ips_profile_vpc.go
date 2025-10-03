@@ -29,7 +29,7 @@ func resourceAviatrixDCFIpsProfileVpc() *schema.Resource {
 				Description: "The VPC ID to assign DCF IPS profiles to.",
 			},
 			"dcf_ips_profiles": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Description: "List of DCF IPS profile UUIDs to assign to the VPC.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -42,7 +42,7 @@ func resourceAviatrixDCFIpsProfileVpcCreate(ctx context.Context, d *schema.Resou
 	client := meta.(*goaviatrix.Client)
 
 	vpcId := d.Get("vpc_id").(string)
-	profiles := expandStringList(d.Get("dcf_ips_profiles").([]interface{}))
+	profiles := expandStringList(d.Get("dcf_ips_profiles").(*schema.Set).List())
 
 	_, err := client.SetIpsProfileVpc(ctx, vpcId, profiles)
 	if err != nil {
@@ -76,7 +76,7 @@ func resourceAviatrixDCFIpsProfileVpcUpdate(ctx context.Context, d *schema.Resou
 	client := meta.(*goaviatrix.Client)
 
 	vpcId := d.Id()
-	profiles := expandStringList(d.Get("dcf_ips_profiles").([]interface{}))
+	profiles := expandStringList(d.Get("dcf_ips_profiles").(*schema.Set).List())
 
 	_, err := client.SetIpsProfileVpc(ctx, vpcId, profiles)
 	if err != nil {

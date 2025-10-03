@@ -61,12 +61,12 @@ The following arguments are supported:
 - `profile_name` – (Required) Name of the IPS profile. Type: String.
 
 ### Optional
-- `rule_feeds` – (Optional, Max 1) Rule feeds configuration block. If omitted, the profile will have no rule feeds by default.
-    - `custom_feeds_ids` – (Optional) List of custom rule feed UUIDs. Type: List(String). Can be empty.
-    - `external_feeds_ids` – (Optional) List of external rule feed IDs. Type: List(String). Can be empty.
-    - `ignored_sids` – (Optional) List of rule SIDs to ignore. Type: List(Number). Can be empty.
-- `intrusion_actions` – (Optional) Actions for different severity levels. Type: Map(String). Valid values: `alert`, `alert_and_drop`.
-    - Keys: `informational`, `minor`, `major`, `critical` – (Optional) Action for each severity level. Type: String.
+- `rule_feeds` – (Required) Rule feeds configuration block. If omitted, the profile will have no rule feeds by default.
+    - `custom_feeds_ids` – (Required) List of custom rule feed UUIDs. Type: List(String). Can be empty.
+    - `external_feeds_ids` – (Required) List of external rule feed IDs. Type: List(String). Can be empty.
+    - `ignored_sids` – (Required) List of rule SIDs to ignore. Type: List(Number). Can be empty.
+- `intrusion_actions` – (Required) Actions for different severity levels. Type: Map(String). Valid values: `alert`, `alert_and_drop`.
+    - Keys: `informational`, `minor`, `major`, `critical` – (Required) Action for each severity level. Type: String.
 
 ### Computed
 - `uuid` – UUID of the IPS profile. Type: String.
