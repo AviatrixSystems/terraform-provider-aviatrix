@@ -74,7 +74,7 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 }
 
 // validateIntrusionActionsKeys ensures only allowed keys are used in the intrusion_actions map.
-func validateIntrusionActionsKeys(val interface{}, key string) (warns []string, errs []error) {
+func validateIntrusionActionsKeys(val interface{}, _ string) (warns []string, errs []error) {
 	allowedKeys := map[string]struct{}{
 		"informational": {},
 		"minor":         {},
