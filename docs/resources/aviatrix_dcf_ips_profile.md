@@ -32,27 +32,6 @@ resource "aviatrix_dcf_ips_profile" "custom_profile" {
 }
 ```
 
-```hcl
-# Update an IPS Profile's name and intrusion_actions
-resource "aviatrix_dcf_ips_profile" "custom_profile" {
-  profile_name = "Updated Profile 1"
-
-  intrusion_actions = {
-    informational = "alert"
-    minor         = "alert"
-    major         = "alert"
-    critical      = "alert_and_drop"
-  }
-}
-```
-
-```hcl
-# Minimal configuration (only profile_name)
-resource "aviatrix_dcf_ips_profile" "minimal" {
-  profile_name = "Minimal Profile"
-}
-```
-
 ## Argument Reference
 
 The following arguments are supported:
