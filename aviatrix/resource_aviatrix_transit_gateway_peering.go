@@ -336,15 +336,25 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	if err := d.Set("jumbo_frame", transitGatewayPeering.EnableJumboFrame); err != nil {
 		return fmt.Errorf("failed to set jumbo_frame: %w", err)
 	}
-	if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
-		return fmt.Errorf("failed to set insane_mode: %w", err)
+	gateway1Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName1)
+	if err != nil {
+		return fmt.Errorf("failed to get gateway1 details: %w", err)
 	}
+	gateway1CloudType := gateway1Details.CloudType
+	gateway2Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName2)
+	if err != nil {
+		return fmt.Errorf("failed to get gateway2 details: %w", err)
+	}
+	gateway2CloudType := gateway2Details.CloudType
+	// Set insane mode only for the edge gateways
+	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) || goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
+			return fmt.Errorf("failed to set insane_mode: %w", err)
+		}
+	}
+
 	// Set the gateway1 logical interface names for the edge gateways
 	if len(transitGatewayPeering.Gateway1LogicalIfNames) > 0 {
-		gateway1Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName1)
-		if err != nil {
-			return fmt.Errorf("failed to get gateway1 details for logical ifnames: %w", err)
-		}
 		logicalIfNames, err := getLogicalIfNames(gateway1Details, transitGatewayPeering.Gateway1LogicalIfNames)
 		if err != nil {
 			return fmt.Errorf("failed to set gateway1_logical_ifnames: %w", err)
@@ -354,10 +364,6 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 
 	// Set the gateway2 logical interface names for the edge gateways
 	if len(transitGatewayPeering.Gateway2LogicalIfNames) > 0 {
-		gateway2Details, err := getGatewayDetails(client, transitGatewayPeering.TransitGatewayName2)
-		if err != nil {
-			return fmt.Errorf("failed to get gateway2 details for logical ifnames: %w", err)
-		}
 		logicalIfNames, err := getLogicalIfNames(gateway2Details, transitGatewayPeering.Gateway2LogicalIfNames)
 		if err != nil {
 			return fmt.Errorf("failed to set gateway2 logical ifnames: %w", err)
