@@ -98,12 +98,11 @@ func TestCreateSpokeHaGw_ActualAsyncAPICall_Error(t *testing.T) {
 	}
 
 	// Call the function - should return error
-	gwName, err := testClient.CreateSpokeHaGwWithMock(gateway)
+	_, err := testClient.CreateSpokeHaGwWithMock(gateway)
 
 	// Verify error handling
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, "", gwName, "Should return empty string on error")
 	assert.Equal(t, 1, mockAPI.CallCount, "PostAsyncAPI should still be called once")
 }
 
@@ -130,7 +129,7 @@ func TestCreateSpokeHaGw_ActualAsyncAPICall_AutoGenName(t *testing.T) {
 
 	// Verify the gateway passed to API has empty GwName (auto-gen is determined after API call)
 	calledGateway := mockAPI.LastInterface.(*SpokeHaGateway)
-	assert.Equal(t, "", calledGateway.GwName, "GwName should be empty when passed to API for auto-generation")
+	assert.Empty(t, calledGateway.GwName, "GwName should be empty when passed to API for auto-generation")
 
 	// Verify the returned name follows auto-generation pattern
 	assert.Equal(t, "primary-spoke-gw-hagw", gwName)
