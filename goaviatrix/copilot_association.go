@@ -7,6 +7,7 @@ func (c *Client) EnableCopilotAssociation(ctx context.Context, addr string) erro
 		"action":     "enable_copilot_association",
 		"CID":        c.CID,
 		"copilot_ip": addr,
+		"public_ip":  addr,
 	}
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
 }
