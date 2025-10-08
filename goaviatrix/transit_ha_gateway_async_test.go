@@ -163,11 +163,7 @@ func (tc *TestableClient) CreateTransitHaGwWithMock(transitHaGateway *TransitHaG
 
 		// Use mocked PostAsyncAPI instead of real one
 		err := tc.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
-		if err != nil {
-			return "", err
-		}
-
-		return "", nil // Return empty string for async calls
+		return "", err
 	}
 
 	// For Edge cloud types, we would normally call PostAPIContext2HaGw
