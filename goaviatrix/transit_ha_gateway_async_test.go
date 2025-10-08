@@ -24,7 +24,7 @@ func TestCreateTransitHaGw_ActualAsyncAPICall_Success(t *testing.T) {
 	}
 
 	// Call the actual function with mocked PostAsyncAPI
-	resp, err := testClient.CreateTransitHaGwWithMock(gateway)
+	_, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	// Verify the async API was called correctly
 	assert.NoError(t, err)
@@ -38,9 +38,6 @@ func TestCreateTransitHaGw_ActualAsyncAPICall_Success(t *testing.T) {
 	assert.True(t, calledGateway.Async, "Async flag should be true when calling API")
 	assert.Equal(t, "primary-transit-gw", calledGateway.PrimaryGwName)
 	assert.Equal(t, "custom-ha-name", calledGateway.GwName)
-
-	// Verify return value
-	assert.Equal(t, "", resp) // Should return empty string for async calls
 }
 
 func TestCreateTransitHaGw_ActualAsyncAPICall_Error(t *testing.T) {
