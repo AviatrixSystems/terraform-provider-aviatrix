@@ -47,32 +47,46 @@ func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("enable_dcf_policies can only be true when enable_k8s is also true")
 	}
 
-	if enableK8s {
-		err := client.EnableK8s(ctx)
-		if err != nil {
-			return diag.Errorf("failed to enable K8s: %s", err)
-		}
-	} else {
-		err := client.DisableK8s(ctx)
-		if err != nil {
-			return diag.Errorf("failed to disable K8s: %s", err)
-		}
+	if err := setK8sFeature(ctx, client, enableK8s); err != nil {
+		return err
 	}
 
-	if enableDcfPolicies {
-		err := client.EnableK8sDcfPolicies(ctx)
-		if err != nil {
-			return diag.Errorf("failed to enable K8s DCF policies: %s", err)
-		}
-	} else {
-		err := client.DisableK8sDcfPolicies(ctx)
-		if err != nil {
-			return diag.Errorf("failed to disable K8s DCF policies: %s", err)
-		}
+	if err := setK8sDcfPoliciesFeature(ctx, client, enableDcfPolicies); err != nil {
+		return err
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixK8sConfigRead(ctx, d, meta)
+}
+
+func setK8sFeature(ctx context.Context, client *goaviatrix.Client, enable bool) diag.Diagnostics {
+	if enable {
+		diags := client.EnableK8s(ctx)
+		if diags != nil {
+			return diag.Errorf("failed to enable K8s: %s", diags)
+		}
+	} else {
+		diags := client.DisableK8s(ctx)
+		if diags != nil {
+			return diag.Errorf("failed to disable K8s: %s", diags)
+		}
+	}
+	return nil
+}
+
+func setK8sDcfPoliciesFeature(ctx context.Context, client *goaviatrix.Client, enable bool) diag.Diagnostics {
+	if enable {
+		diags := client.EnableK8sDcfPolicies(ctx)
+		if diags != nil {
+			return diag.Errorf("failed to enable K8s DCF policies: %s", diags)
+		}
+	} else {
+		diags := client.DisableK8sDcfPolicies(ctx)
+		if diags != nil {
+			return diag.Errorf("failed to disable K8s DCF policies: %s", diags)
+		}
+	}
+	return nil
 }
 
 func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -105,47 +119,29 @@ func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("enable_k8s") {
-		if enableK8s {
-			err := client.EnableK8s(ctx)
-			if err != nil {
-				return diag.Errorf("failed to enable K8s during update: %s", err)
-			}
-		} else {
-			err := client.DisableK8s(ctx)
-			if err != nil {
-				return diag.Errorf("failed to disable K8s during update: %s", err)
-			}
+		if err := setK8sFeature(ctx, client, enableK8s); err != nil {
+			return err
 		}
 	}
 
 	if d.HasChange("enable_dcf_policies") {
-		if enableDcfPolicies {
-			err := client.EnableK8sDcfPolicies(ctx)
-			if err != nil {
-				return diag.Errorf("failed to enable K8s DCF policies during update: %s", err)
-			}
-		} else {
-			err := client.DisableK8sDcfPolicies(ctx)
-			if err != nil {
-				return diag.Errorf("failed to disable K8s DCF policies during update: %s", err)
-			}
+		if err := setK8sDcfPoliciesFeature(ctx, client, enableDcfPolicies); err != nil {
+			return err
 		}
 	}
 
 	return resourceAviatrixK8sConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixK8sConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixK8sConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DisableK8sDcfPolicies(ctx)
-	if err != nil {
-		return diag.Errorf("failed to disable K8s DCF policies during delete: %s", err)
+	if err := setK8sDcfPoliciesFeature(ctx, client, false); err != nil {
+		return err
 	}
 
-	err = client.DisableK8s(ctx)
-	if err != nil {
-		return diag.Errorf("failed to delete K8s config: %s", err)
+	if err := setK8sFeature(ctx, client, false); err != nil {
+		return err
 	}
 
 	return nil
