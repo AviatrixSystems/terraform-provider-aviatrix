@@ -102,7 +102,7 @@ func TestCreateTransitHaGw_Error(t *testing.T) {
 
 	// Verify error handling
 	assert.Error(t, err)
-	assert.Equal(t, expectedError, err) // Should return empty string even on error
+	assert.Equal(t, expectedError, err)
 	assert.Equal(t, 1, mockAPI.CallCount, "PostAsyncAPI should still be called once")
 }
 
