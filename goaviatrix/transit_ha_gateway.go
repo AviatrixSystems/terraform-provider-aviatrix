@@ -39,6 +39,7 @@ type TransitHaGateway struct {
 	ZtpFileType               string `json:"ztp_file_type,omitempty"`
 	GatewayRegistrationMethod string `json:"gw_registration_method,omitempty"`
 	ManagementEgressIPPrefix  string `json:"mgmt_egress_ip,omitempty"`
+	Async                     bool   `json:"async,omitempty"`
 }
 
 type BackupLinkInterface struct {
@@ -54,14 +55,26 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 	transitHaGateway.CID = c.CID
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
 	var data CreateEdgeEquinixResp
-	resp, err := c.PostAPIContext2HaGw(context.Background(), &data, transitHaGateway.Action, transitHaGateway, BasicCheck)
-	if err != nil {
-		return "", err
+	var resp string
+	if IsCloudType(transitHaGateway.CloudType, EdgeRelatedCloudTypes) {
+		var err error
+		resp, err = c.PostAPIContext2HaGw(context.Background(), &data, transitHaGateway.Action, transitHaGateway, BasicCheck)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		transitHaGateway.Async = true
+		err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
+		if err != nil {
+			return "", err
+		}
+		return "", nil
 	}
+
 	// create the ZTP file for Equinix Edge transit gateway
 	if transitHaGateway.CloudType == EDGEEQUINIX || transitHaGateway.CloudType == EDGEMEGAPORT {
 		fileName := getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
-		err = createZtpFile(fileName, data.Result)
+		err := createZtpFile(fileName, data.Result)
 		if err != nil {
 			return "", err
 		}
@@ -98,10 +111,7 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 			fileName = getFileName(transitHaGateway.ZtpFileDownloadPath, transitHaGateway.GwName, transitHaGateway.VpcID)
 
 			fileContent := data.Result
-			if err != nil {
-				return "", err
-			}
-			err = createZtpFile(fileName, fileContent)
+			err := createZtpFile(fileName, fileContent)
 			if err != nil {
 				return "", err
 			}
