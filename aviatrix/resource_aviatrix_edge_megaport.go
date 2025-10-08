@@ -823,6 +823,10 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 			interface1["vrrp_virtual_ip"] = interface0.VirtualIP
 		}
 
+		if interface0.Tag != "" {
+			interface1["tag"] = interface0.Tag
+		}
+
 		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
 				vlan1 := make(map[string]interface{})
