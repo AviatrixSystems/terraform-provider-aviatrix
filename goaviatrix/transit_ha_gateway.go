@@ -1,7 +1,5 @@
 package goaviatrix
 
-import "golang.org/x/net/context"
-
 type TransitHaGateway struct {
 	Action                string `json:"action"`
 	CID                   string `json:"CID"`
@@ -24,11 +22,25 @@ type TransitHaGateway struct {
 	TagList               string `json:"tag_string"`
 	TagJson               string `json:"tag_json"`
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
+	Async                 bool   `json:"async,omitempty"`
 }
 
 func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {
 	transitHaGateway.CID = c.CID
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
+	transitHaGateway.Async = true
+	err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
+	if err != nil {
+		return "", err
+	}
 
-	return c.PostAPIContext2HaGw(context.Background(), nil, transitHaGateway.Action, transitHaGateway, BasicCheck)
+	// Determine the gateway name for the return value
+	gwName := transitHaGateway.GwName
+	if gwName == "" {
+		// When AutoGenHaGwName is "yes", the controller generates the name
+		// following the pattern: primary_gateway_name + "-hagw"
+		gwName = transitHaGateway.PrimaryGwName + "-hagw"
+	}
+
+	return gwName, nil
 }
