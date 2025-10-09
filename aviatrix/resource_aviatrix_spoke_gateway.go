@@ -1664,9 +1664,21 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-		if err := d.Set("tags", tags); err != nil {
-			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
+		tags := &goaviatrix.Tags{
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+			CloudType:    gw.CloudType,
+		}
+
+		_, err := client.GetTags(tags)
+		if err != nil {
+			log.Printf("[WARN] Failed to get tags for spoke gateway %s: %v", tags.ResourceName, err)
+		}
+		if len(tags.Tags) > 0 {
+			tagsMap := goaviatrix.KeyValueTags(tags.Tags).IgnoreConfig(ignoreTagsConfig)
+			if err := d.Set("tags", tagsMap); err != nil {
+				log.Printf("[WARN] Error setting tags for spoke gateway %s: %v", tags.ResourceName, err)
+			}
 		}
 	}
 
