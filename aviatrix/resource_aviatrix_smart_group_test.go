@@ -270,6 +270,8 @@ func TestAccAviatrixSmartGroup_external_threat(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.external", "threatiq"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.ext_args.threat_type", "tor"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.ext_args.region", "eastus"),
 				),
 			},
 			{
@@ -289,6 +291,11 @@ resource "aviatrix_smart_group" "external_threat" {
 	selector {
 		match_expressions {
 			external           = "threatiq"
+			ext_args = {
+				threat_type   = "tor"
+				confidence    = "high"
+				region = "eastus"
+			}
 		}
 	}
 }
