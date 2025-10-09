@@ -264,3 +264,211 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAviatrixTransitGatewayPeering_insaneModeNotSetInState(t *testing.T) {
+	rName := acctest.RandString(5)
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
+
+	resourceName := "aviatrix_transit_gateway_peering.test_insane_mode_not_set"
+
+	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Aviatrix transit gateway peering test as SKIP_TRANSIT_GATEWAY_PEERING is set")
+	}
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_PEERING to yes to skip Aviatrix transit gateway peering tests"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAvxTransitGatewayPeeringCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringConfigInsaneModeNotSet(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2),
+				Check: resource.ComposeTestCheckFunc(
+					tesAccCheckTransitGatewayPeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name1", "transit-"+rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name2", "transit-"+rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_insane_mode_encryption_over_internet", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_count", "4"),
+					// Verify that insane_mode is NOT set in state when user doesn't explicitly set it
+					resource.TestCheckNoResourceAttr(resourceName, "insane_mode"),
+				),
+			},
+			{
+				// Import the resource to verify it can be imported without insane_mode
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Skip insane_mode during import verification since it's not set
+				ImportStateVerifyIgnore: []string{"insane_mode"},
+			},
+		},
+	})
+}
+
+func TestAccAviatrixTransitGatewayPeering_insaneModeSetInState(t *testing.T) {
+	rName := acctest.RandString(5)
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
+
+	resourceName := "aviatrix_transit_gateway_peering.test_insane_mode_set"
+
+	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Aviatrix transit gateway peering test as SKIP_TRANSIT_GATEWAY_PEERING is set")
+	}
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_PEERING to yes to skip Aviatrix transit gateway peering tests"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAvxTransitGatewayPeeringCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringConfigInsaneModeSet(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2),
+				Check: resource.ComposeTestCheckFunc(
+					tesAccCheckTransitGatewayPeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name1", "transit-"+rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name2", "transit-"+rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_insane_mode_encryption_over_internet", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_count", "4"),
+					// Verify that insane_mode IS set in state when user explicitly sets it
+					resource.TestCheckResourceAttr(resourceName, "insane_mode", "true"),
+				),
+			},
+			{
+				// Import the resource to verify it can be imported with insane_mode
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringConfigInsaneModeNotSet(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2 string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_account_1" {
+	account_name       = "tfa-%s-1"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_account" "test_account_2" {
+	account_name       = "tfa-%s-2"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_1" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test_account_1.account_name
+	gw_name      = "transit-%s-1"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_2" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test_account_2.account_name
+	gw_name      = "transit-%s-2"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway_peering" "test_insane_mode_not_set" {
+	transit_gateway_name1 = aviatrix_transit_gateway.test_transit_gateway_1.gw_name
+	transit_gateway_name2 = aviatrix_transit_gateway.test_transit_gateway_2.gw_name
+	enable_insane_mode_encryption_over_internet = true
+	tunnel_count = 4
+	# Note: insane_mode is NOT explicitly set here
+}
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_ACCOUNT_NUMBER2"), os.Getenv("AWS_ACCESS_KEY2"), os.Getenv("AWS_SECRET_KEY2"),
+		rName, vpcID1, region1, subnet1,
+		rName, vpcID2, region2, subnet2)
+}
+
+func testAccTransitGatewayPeeringConfigInsaneModeSet(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2 string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_account_1" {
+	account_name       = "tfa-%s-1"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_account" "test_account_2" {
+	account_name       = "tfa-%s-2"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_1" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test_account_1.account_name
+	gw_name      = "transit-%s-1"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_2" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test_account_2.account_name
+	gw_name      = "transit-%s-2"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway_peering" "test_insane_mode_set" {
+	transit_gateway_name1 = aviatrix_transit_gateway.test_transit_gateway_1.gw_name
+	transit_gateway_name2 = aviatrix_transit_gateway.test_transit_gateway_2.gw_name
+	enable_insane_mode_encryption_over_internet = true
+	tunnel_count = 4
+	insane_mode = true  # Explicitly set insane_mode
+}
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_ACCOUNT_NUMBER2"), os.Getenv("AWS_ACCESS_KEY2"), os.Getenv("AWS_SECRET_KEY2"),
+		rName, vpcID1, region1, subnet1,
+		rName, vpcID2, region2, subnet2)
+}

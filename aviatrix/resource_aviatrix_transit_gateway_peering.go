@@ -204,10 +204,8 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	if !ok {
 		return fmt.Errorf("jumbo_frame is required for edge gateway peering")
 	}
-	transitGatewayPeering.EnableInsaneMode, ok = d.Get("insane_mode").(bool)
-	if !ok {
-		return fmt.Errorf("insane_mode is required for edge gateway peering")
-	}
+	// insane_mode is optional for edge gateway peering
+	transitGatewayPeering.EnableInsaneMode = d.Get("insane_mode").(bool)
 
 	gateway1Details, err := getGatewayDetails(client, transitGatewayName1)
 	if err != nil {
@@ -346,10 +344,13 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("failed to get gateway2 details: %w", err)
 	}
 	gateway2CloudType := gateway2Details.CloudType
-	// Set insane mode only for the edge gateways
+	// Set insane mode only for the edge gateways and only if user explicitly set it
 	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) || goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
-			return fmt.Errorf("failed to set insane_mode: %w", err)
+		// Only set insane_mode in state if user explicitly provided it in configuration
+		if _, ok := d.GetOk("insane_mode"); ok {
+			if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
+				return fmt.Errorf("failed to set insane_mode: %w", err)
+			}
 		}
 	}
 
