@@ -15,7 +15,7 @@ type SpokeHaGateway struct {
 	Zone                  string `json:"zone"`
 	AvailabilityDomain    string `json:"availability_domain"`
 	FaultDomain           string `json:"fault_domain"`
-	BgpLanVpcId           string `json:"bpg_lan_vpc_id"`
+	BgpLanVpcId           string `json:"bgp_lan_vpc"`
 	BgpLanSubnet          string `json:"bgp_lan_subnet"`
 	Eip                   string `json:"eip,omitempty"`
 	InsaneMode            string `json:"insane_mode"`
