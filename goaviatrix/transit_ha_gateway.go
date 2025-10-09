@@ -30,5 +30,17 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
 	transitHaGateway.Async = true
 	err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
-	return "", err
+	if err != nil {
+		return "", err
+	}
+
+	// Determine the gateway name for the return value
+	gwName := transitHaGateway.GwName
+	if gwName == "" {
+		// When AutoGenHaGwName is "yes", the controller generates the name
+		// following the pattern: primary_gateway_name + "-hagw"
+		gwName = transitHaGateway.PrimaryGwName + "-hagw"
+	}
+
+	return gwName, nil
 }

@@ -26,6 +26,27 @@ func (tc *TestableClient) PostAsyncAPI(action string, i interface{}, checkFunc C
 	return tc.Client.PostAsyncAPI(action, i, checkFunc)
 }
 
+// Override CreateTransitHaGw to use the mock
+func (tc *TestableClient) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, error) {
+	transitHaGateway.CID = tc.Client.CID
+	transitHaGateway.Action = "create_multicloud_ha_gateway"
+	transitHaGateway.Async = true
+	err := tc.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+
+	// Determine the gateway name for the return value
+	gwName := transitHaGateway.GwName
+	if gwName == "" {
+		// When AutoGenHaGwName is "yes", the controller generates the name
+		// following the pattern: primary_gateway_name + "-hagw"
+		gwName = transitHaGateway.PrimaryGwName + "-hagw"
+	}
+
+	return gwName, nil
+}
+
 // MockClient implements MockAsyncAPIClient
 type MockClient struct {
 	// Store the last call for verification
@@ -62,10 +83,11 @@ func TestCreateTransitHaGw_Success(t *testing.T) {
 	}
 
 	// Call the function
-	_, err := testClient.CreateTransitHaGwWithMock(gateway)
+	gwName, err := testClient.CreateTransitHaGw(gateway)
 
 	// Verify the async API was called correctly
 	assert.NoError(t, err)
+	assert.Equal(t, "custom-ha-name", gwName, "Should return the provided gateway name")
 	assert.Equal(t, 1, mockAPI.CallCount, "PostAsyncAPI should be called exactly once")
 	assert.Equal(t, "create_multicloud_ha_gateway", mockAPI.LastAction)
 
@@ -98,7 +120,7 @@ func TestCreateTransitHaGw_Error(t *testing.T) {
 	}
 
 	// Call the function - should return error
-	_, err := testClient.CreateTransitHaGwWithMock(gateway)
+	_, err := testClient.CreateTransitHaGw(gateway)
 
 	// Verify error handling
 	assert.Error(t, err)
@@ -138,7 +160,7 @@ func TestCreateTransitHaGw_AsyncFlagAlwaysTrue(t *testing.T) {
 			}
 
 			// Call the function
-			_, err := testClient.CreateTransitHaGwWithMock(gateway)
+			_, err := testClient.CreateTransitHaGw(gateway)
 			assert.NoError(t, err)
 
 			// Verify Async flag is always true when calling API
@@ -164,7 +186,7 @@ func TestCreateTransitHaGw_CheckFuncPassed(t *testing.T) {
 	}
 
 	// Call the function
-	_, err := testClient.CreateTransitHaGwWithMock(gateway)
+	_, err := testClient.CreateTransitHaGw(gateway)
 	assert.NoError(t, err)
 
 	// Verify that a check function was passed (we can't easily test the exact function)
@@ -191,8 +213,9 @@ func TestCreateTransitHaGw_StructFieldsSet(t *testing.T) {
 	}
 
 	// Call the function
-	_, err := testClient.CreateTransitHaGwWithMock(gateway)
+	gwName, err := testClient.CreateTransitHaGw(gateway)
 	assert.NoError(t, err)
+	assert.Equal(t, "custom-ha-name", gwName, "Should return the provided gateway name")
 
 	// Verify all fields are preserved and required fields are set
 	calledGateway := mockAPI.LastInterface.(*TransitHaGateway)
@@ -207,16 +230,4 @@ func TestCreateTransitHaGw_StructFieldsSet(t *testing.T) {
 	assert.Equal(t, "t3.micro", calledGateway.GwSize)
 	assert.Equal(t, "subnet-12345", calledGateway.Subnet)
 	assert.Equal(t, "us-west-1", calledGateway.VpcRegion)
-}
-
-// Helper method to simulate CreateTransitHaGw with mocked PostAsyncAPI
-func (tc *TestableClient) CreateTransitHaGwWithMock(transitHaGateway *TransitHaGateway) (string, error) {
-	// This replicates the exact logic from the real CreateTransitHaGw function
-	transitHaGateway.CID = tc.Client.CID
-	transitHaGateway.Action = "create_multicloud_ha_gateway"
-	transitHaGateway.Async = true
-
-	// Use mocked PostAsyncAPI instead of real one
-	err := tc.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
-	return "", err
 }
