@@ -25,9 +25,9 @@ resource "aviatrix_k8s_config" "test" {
 
 The following arguments are supported:
 
-### Required
-* `enable_k8s` - (Optional) Whether to enable the K8s feature on an Aviatrix Controller. Valid values: true, false. Default value: false.
-* `enable_dcf_policies` - (Optional) Whether to enable DCF policies in K8s clusters. Can only be true if enable_k8s is also true. Valid values: true, false. Default value: false.
+### Optional
+* `enable_k8s` - Whether to enable the K8s feature on an Aviatrix Controller. Valid values: true, false. Default value: false.
+* `enable_dcf_policies` - Whether to enable DCF policies in K8s clusters. Can only be true if enable_k8s is also true. Valid values: true, false. Default value: false.
 
 ## Import
 

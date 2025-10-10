@@ -10,66 +10,15 @@ type K8sConfig struct {
 	EnableDcfPolicies bool `json:"enable_dcf_policies"`
 }
 
-func (c *Client) EnableK8s(ctx context.Context) error {
+func (c *Client) ToggleControllerFeature(ctx context.Context, feature string, enabled bool) error {
 	action := "enable_controller_feature"
+	if !enabled {
+		action = "disable_controller_feature"
+	}
 	form := map[string]string{
 		"CID":     c.CID,
 		"action":  action,
-		"feature": "k8s",
-	}
-
-	checkFunc := func(act, method, reason string, ret bool) error {
-		if !ret {
-			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
-		}
-		return nil
-	}
-
-	return c.PostAPIContext2(ctx, nil, action, form, checkFunc)
-}
-
-func (c *Client) DisableK8s(ctx context.Context) error {
-	action := "disable_controller_feature"
-	form := map[string]string{
-		"CID":     c.CID,
-		"action":  action,
-		"feature": "k8s",
-	}
-
-	checkFunc := func(act, method, reason string, ret bool) error {
-		if !ret {
-			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
-		}
-		return nil
-	}
-
-	return c.PostAPIContext2(ctx, nil, action, form, checkFunc)
-}
-
-func (c *Client) EnableK8sDcfPolicies(ctx context.Context) error {
-	action := "enable_controller_feature"
-	form := map[string]string{
-		"CID":     c.CID,
-		"action":  action,
-		"feature": "k8s_dcf_policies",
-	}
-
-	checkFunc := func(act, method, reason string, ret bool) error {
-		if !ret {
-			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
-		}
-		return nil
-	}
-
-	return c.PostAPIContext2(ctx, nil, action, form, checkFunc)
-}
-
-func (c *Client) DisableK8sDcfPolicies(ctx context.Context) error {
-	action := "disable_controller_feature"
-	form := map[string]string{
-		"CID":     c.CID,
-		"action":  action,
-		"feature": "k8s_dcf_policies",
+		"feature": feature,
 	}
 
 	checkFunc := func(act, method, reason string, ret bool) error {
