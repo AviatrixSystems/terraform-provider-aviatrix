@@ -10,10 +10,18 @@ type K8sConfig struct {
 	EnableDcfPolicies bool `json:"enable_dcf_policies"`
 }
 
+const (
+	FeatureK8s            = "k8s"
+	FeatureK8sDcfPolicies = "k8s_dcf_policies"
+
+	actionEnableControllerFeature  = "enable_controller_feature"
+	actionDisableControllerFeature = "disable_controller_feature"
+)
+
 func (c *Client) ToggleControllerFeature(ctx context.Context, feature string, enabled bool) error {
-	action := "enable_controller_feature"
+	action := actionEnableControllerFeature
 	if !enabled {
-		action = "disable_controller_feature"
+		action = actionDisableControllerFeature
 	}
 	form := map[string]string{
 		"CID":     c.CID,
@@ -39,7 +47,7 @@ func (c *Client) GetK8sStatus(ctx context.Context) (*K8sConfig, error) {
 	form := map[string]string{
 		"CID":     c.CID,
 		"action":  action,
-		"feature": "k8s",
+		"feature": FeatureK8s,
 	}
 
 	type ControllerSingleFeatureStatus struct {
@@ -60,7 +68,7 @@ func (c *Client) GetK8sStatus(ctx context.Context) (*K8sConfig, error) {
 	k8sConfig.EnableK8s = resp.Results.Enabled
 
 	// Get k8s_dcf_policies feature status
-	form["feature"] = "k8s_dcf_policies"
+	form["feature"] = FeatureK8sDcfPolicies
 	var dcfResp K8sConfigResp
 	err = c.PostAPIContext2(ctx, &dcfResp, action, form, BasicCheck)
 	if err != nil {

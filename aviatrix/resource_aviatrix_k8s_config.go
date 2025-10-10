@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	propertyEnableK8s         = "enable_k8s"
+	propertyEnableDcfPolicies = "enable_dcf_policies"
+)
+
 func resourceAviatrixK8sConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixK8sConfigCreate,
@@ -20,8 +25,8 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			enableK8s := d.Get("enable_k8s").(bool)
-			enableDcfPolicies := d.Get("enable_dcf_policies").(bool)
+			enableK8s := d.Get(propertyEnableK8s).(bool)
+			enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
 
 			if enableDcfPolicies && !enableK8s {
 				return errors.New("enable_dcf_policies can only be true when enable_k8s is also true")
@@ -29,13 +34,13 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
-			"enable_k8s": {
+			propertyEnableK8s: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Whether to enable K8s.",
 			},
-			"enable_dcf_policies": {
+			propertyEnableDcfPolicies: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -48,8 +53,8 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	enableK8s := d.Get("enable_k8s").(bool)
-	enableDcfPolicies := d.Get("enable_dcf_policies").(bool)
+	enableK8s := d.Get(propertyEnableK8s).(bool)
+	enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
 
 	if err := setK8sFeature(ctx, client, enableK8s); err != nil {
 		return err
@@ -64,7 +69,7 @@ func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func setK8sFeature(ctx context.Context, client *goaviatrix.Client, enable bool) diag.Diagnostics {
-	err := client.ToggleControllerFeature(ctx, "k8s", enable)
+	err := client.ToggleControllerFeature(ctx, goaviatrix.FeatureK8s, enable)
 	if err != nil {
 		return diag.Errorf("failed to set K8s feature: %s", err)
 	}
@@ -72,7 +77,7 @@ func setK8sFeature(ctx context.Context, client *goaviatrix.Client, enable bool) 
 }
 
 func setK8sDcfPoliciesFeature(ctx context.Context, client *goaviatrix.Client, enable bool) diag.Diagnostics {
-	err := client.ToggleControllerFeature(ctx, "k8s_dcf_policies", enable)
+	err := client.ToggleControllerFeature(ctx, goaviatrix.FeatureK8sDcfPolicies, enable)
 	if err != nil {
 		return diag.Errorf("failed to set K8s DCF policies feature: %s", err)
 	}
@@ -90,10 +95,10 @@ func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("failed to read K8s status: %s", err)
 	}
-	if err := d.Set("enable_k8s", k8sConfig.EnableK8s); err != nil {
+	if err := d.Set(propertyEnableK8s, k8sConfig.EnableK8s); err != nil {
 		return diag.Errorf("failed to set enable_k8s on terraform state: %s", err)
 	}
-	if err := d.Set("enable_dcf_policies", k8sConfig.EnableDcfPolicies); err != nil {
+	if err := d.Set(propertyEnableDcfPolicies, k8sConfig.EnableDcfPolicies); err != nil {
 		return diag.Errorf("failed to set enable_dcf_policies on terraform state: %s", err)
 	}
 
@@ -104,16 +109,16 @@ func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, 
 func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	enableK8s := d.Get("enable_k8s").(bool)
-	enableDcfPolicies := d.Get("enable_dcf_policies").(bool)
+	enableK8s := d.Get(propertyEnableK8s).(bool)
+	enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
 
-	if d.HasChange("enable_k8s") {
+	if d.HasChange(propertyEnableK8s) {
 		if err := setK8sFeature(ctx, client, enableK8s); err != nil {
 			return err
 		}
 	}
 
-	if d.HasChange("enable_dcf_policies") {
+	if d.HasChange(propertyEnableDcfPolicies) {
 		if err := setK8sDcfPoliciesFeature(ctx, client, enableDcfPolicies); err != nil {
 			return err
 		}
