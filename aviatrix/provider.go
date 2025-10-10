@@ -163,6 +163,7 @@ func Provider() *schema.Provider {
 			"aviatrix_global_vpc_excluded_instance":                           resourceAviatrixGlobalVpcExcludedInstance(),
 			"aviatrix_global_vpc_tagging_settings":                            resourceAviatrixGlobalVpcTaggingSettings(),
 			"aviatrix_kubernetes_cluster":                                     resourceAviatrixKubernetesCluster(),
+			"aviatrix_k8s_config":                                             resourceAviatrixK8sConfig(),
 			"aviatrix_link_hierarchy":                                         resourceAviatrixLinkHierarchy(),
 			"aviatrix_netflow_agent":                                          resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                          resourceAviatrixPeriodicPing(),
