@@ -93,11 +93,8 @@ func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 	k8sConfig, err := client.GetK8sStatus(ctx)
 	if err != nil {
-		// err will never be sth like that the resource was not found, all feature flags are always present
-		// and in doubt the controller will simply respond with unknown features disabled.
-		// However, the features "k8s" and "k8s_dcf_policies" are defined in
-		// cloudx-local/controller_feature/definitions.py:90 and :92.
-		// That means any error here is unexpected and a real exception.
+		// The API always exposes these feature flags. GetK8sStatus should not return "not found".
+		// If a feature is unknown, the controller reports it as disabled (enabled=false).
 		return diag.Errorf("failed to read K8s status: %s", err)
 	}
 	if err := d.Set(propertyEnableK8s, k8sConfig.EnableK8s); err != nil {
