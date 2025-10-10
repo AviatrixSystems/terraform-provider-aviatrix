@@ -24,7 +24,7 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 			enableK8s := d.Get(propertyEnableK8s).(bool)
 			enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
 
