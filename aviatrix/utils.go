@@ -559,3 +559,33 @@ func expandIntList(list []interface{}) []int {
 	}
 	return result
 }
+
+// setGatewayTags fetches and sets gateway tags in the Terraform state for AWS and Azure gateways.
+// It retrieves tags directly from the controller API to ensure state persistence during gateway launch.
+func setGatewayTags(d *schema.ResourceData, client *goaviatrix.Client, cloudType int, ignoreTagsConfig *goaviatrix.IgnoreTagsConfig) {
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return
+	}
+
+	gwName := d.Get("gw_name").(string)
+	tags := &goaviatrix.Tags{
+		ResourceType: "gw",
+		ResourceName: gwName,
+		CloudType:    cloudType,
+	}
+
+	// If we encounter errors fetching tags we will just log warnings as it will not cause the gateway launch to fail
+	// only a diff in state.
+	_, err := client.GetTags(tags)
+	if err != nil {
+		log.Printf("[WARN] Failed to get tags for gateway %s: %v", tags.ResourceName, err)
+		return
+	}
+
+	if len(tags.Tags) > 0 {
+		tagsMap := goaviatrix.KeyValueTags(tags.Tags).IgnoreConfig(ignoreTagsConfig)
+		if err := d.Set("tags", tagsMap); err != nil {
+			log.Printf("[WARN] Error setting tags for gateway %s: %v", tags.ResourceName, err)
+		}
+	}
+}
