@@ -266,13 +266,13 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 			log.Printf("[INFO] Enable Single AZ GW HA for spoke HA gateway: %#v", singleAZGateway)
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA for spoke HA gateway %s: %s", spokeHaGwName, err)
+				return fmt.Errorf("failed to enable single AZ GW HA for spoke HA gateway %s: %w", spokeHaGwName, err)
 			}
 		} else {
 			log.Printf("[INFO] Disable Single AZ GW HA for spoke HA gateway: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA for spoke HA gateway %s: %s", spokeHaGwName, err)
+				return fmt.Errorf("failed to disable single AZ GW HA for spoke HA gateway %s: %w", spokeHaGwName, err)
 			}
 		}
 	} else {
@@ -402,13 +402,13 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+				return fmt.Errorf("failed to enable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
 			}
 		} else {
 			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+				return fmt.Errorf("failed to disable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
 			}
 		}
 	}
