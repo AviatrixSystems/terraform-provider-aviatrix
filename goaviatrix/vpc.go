@@ -66,6 +66,7 @@ type SubnetInfo struct {
 	Cidr     string `json:"cidr,omitempty"`
 	Name     string `json:"name,omitempty"`
 	SubnetID string `json:"id,omitempty"`
+	IPv6Cidr string `json:"ipv6_cidr,omitempty"`
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {
