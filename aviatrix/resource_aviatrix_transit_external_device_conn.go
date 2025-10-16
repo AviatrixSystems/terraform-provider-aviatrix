@@ -1138,8 +1138,15 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		} else {
 			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-			if err := d.Set("disable_activemesh", conn.DisableActivemesh); err != nil {
-				return fmt.Errorf("error setting disable_activemesh: %w", err)
+			// Only set disable_activemesh in state if user explicitly provided it in configuration
+			// Use GetRawConfig to check if user explicitly set the field (ignores default values)
+			rawConfig := d.GetRawConfig()
+			if !rawConfig.IsNull() && rawConfig.IsKnown() {
+				if disableActivemeshValue := rawConfig.GetAttr("disable_activemesh"); disableActivemeshValue.IsKnown() && !disableActivemeshValue.IsNull() {
+					if err := d.Set("disable_activemesh", conn.DisableActivemesh); err != nil {
+						return fmt.Errorf("error setting disable_activemesh: %w", err)
+					}
+				}
 			}
 		}
 		if conn.ConnectionType == "bgp" {
