@@ -54,14 +54,11 @@ func (c *Client) GetDCFTrustBundleByID(ctx context.Context, bundleUUID string) (
 
 	var trustBundle DCFTrustBundle
 	err := c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
-
 	if err != nil {
 		return nil, err
 	}
-
 	// Set the UUID from the parameter for consistency
 	trustBundle.UUID = bundleUUID
-
 	return &trustBundle, nil
 }
 
