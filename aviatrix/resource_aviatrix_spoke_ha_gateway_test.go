@@ -31,6 +31,9 @@ func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
 	if skipGw == "yes" {
 		t.Log("Skipping AWS Spoke HA Gateway test as SKIP_SPOKE_HA_GATEWAY_AWS is set")
 	} else {
+		singleAzHaEnable := true
+		singleAzHaDisable := false
+
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -39,7 +42,7 @@ func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
 			CheckDestroy: testAccCheckSpokeHaGatewayDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccSpokeHaGatewayConfigAWS(rName),
+					Config: testAccSpokeHaGatewayConfigAWS(rName, nil),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeHaGatewayExists(resourceName, &gateway),
 						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-%s-hagw", rName)),
@@ -47,16 +50,40 @@ func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 					),
 				},
+				{
+					Config: testAccSpokeHaGatewayConfigAWS(rName, &singleAzHaEnable),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckSpokeHaGatewayExists(resourceName, &gateway),
+						resource.TestCheckResourceAttr(resourceName, "single_az_ha", "true"),
+					),
+				},
+				{
+					Config: testAccSpokeHaGatewayConfigAWS(rName, &singleAzHaDisable),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckSpokeHaGatewayExists(resourceName, &gateway),
+						resource.TestCheckResourceAttr(resourceName, "single_az_ha", "false"),
+					),
+				},
 			},
 		})
 	}
 }
 
-func testAccSpokeHaGatewayConfigAWS(rName string) string {
+func testAccSpokeHaGatewayConfigAWS(rName string, singleAzHa *bool) string {
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	if awsGwSize == "" {
 		awsGwSize = "t2.micro"
 	}
+
+	singleAzHaConfig := ""
+	if singleAzHa != nil {
+		if *singleAzHa {
+			singleAzHaConfig = "\n\tsingle_az_ha    = true"
+		} else {
+			singleAzHaConfig = "\n\tsingle_az_ha    = false"
+		}
+	}
+
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name       = "tfa-aws-%[1]s"
@@ -87,10 +114,10 @@ resource "aviatrix_spoke_ha_gateway" "test" {
 	primary_gw_name = aviatrix_spoke_gateway.test.gw_name
 	gw_name         = "tfg-aws-%[1]s-hagw"
 	gw_size         = "%[6]s"
-	subnet          = aviatrix_vpc.test.public_subnets[1].cidr
+	subnet          = aviatrix_vpc.test.public_subnets[1].cidr%[8]s
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
+		os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"), singleAzHaConfig)
 }
 
 func testAccCheckSpokeHaGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
