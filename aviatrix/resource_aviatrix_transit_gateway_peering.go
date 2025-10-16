@@ -349,9 +349,11 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		// Only set insane_mode in state if user explicitly provided it in configuration
 		// Use GetRawConfig to check if user explicitly set the field (ignores default values)
 		rawConfig := d.GetRawConfig()
-		if insaneModeValue := rawConfig.GetAttr("insane_mode"); insaneModeValue.IsKnown() && !insaneModeValue.IsNull() {
-			if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
-				return fmt.Errorf("failed to set insane_mode: %w", err)
+		if !rawConfig.IsNull() && rawConfig.IsKnown() {
+			if insaneModeValue := rawConfig.GetAttr("insane_mode"); insaneModeValue.IsKnown() && !insaneModeValue.IsNull() {
+				if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
+					return fmt.Errorf("failed to set insane_mode: %w", err)
+				}
 			}
 		}
 	}
