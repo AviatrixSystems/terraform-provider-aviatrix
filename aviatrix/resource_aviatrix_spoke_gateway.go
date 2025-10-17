@@ -1663,7 +1663,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("setting 'monitor_exclude_list' to state: %w", err)
 	}
 
-	setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
+	err = setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to set tags for spoke gateway %s: %v", gw.GwName, err)
+	}
 
 	var spokeBgpManualAdvertiseCidrs []string
 	if val, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {

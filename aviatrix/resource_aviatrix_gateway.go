@@ -1473,7 +1473,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("insane_mode_az", "")
 	}
 
-	setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
+	err = setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to set tags for gateway %s: %v", gw.GwName, err)
+	}
 
 	if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
 		d.Set("name_servers", gw.NameServers)
