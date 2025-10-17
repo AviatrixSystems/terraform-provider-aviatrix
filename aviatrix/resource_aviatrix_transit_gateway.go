@@ -958,6 +958,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disable",
+				Default:     "disable",
 			},
 		},
 	}
