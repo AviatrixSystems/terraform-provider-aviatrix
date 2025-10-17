@@ -395,6 +395,9 @@ The following arguments are supported:
 * `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
 * `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
 * `enable_ipv6` - (Optional) To enable IPv6 CIDR in Spoke Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
+* `ph2_encryption_policy` - (Optional) Phase 2 encryption policy. Config options are default/strong.
+* `ph2_pfs_policy` - (Optional) Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disabled.
+
 
 !> **WARNING:** Aviatrix released the Global VPC feature in Preview mode. Preview features are not safe for deployment in production environments.
 * `enable_global_vpc` - (Optional) Enable global VPC. Only supported for GCP spoke gateways. Valid values: true, false. Default value: false.
