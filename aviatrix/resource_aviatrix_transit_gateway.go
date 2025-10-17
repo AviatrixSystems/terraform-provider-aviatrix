@@ -2349,7 +2349,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		err = setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
 		if err != nil {
-			return fmt.Errorf("failed to set tags for transit gateway %s: %v", gw.GwName, err)
+			return fmt.Errorf("failed to set tags for transit gateway %s: %w", gw.GwName, err)
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {

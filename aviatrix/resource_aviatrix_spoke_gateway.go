@@ -1665,7 +1665,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	err = setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
 	if err != nil {
-		return fmt.Errorf("failed to set tags for spoke gateway %s: %v", gw.GwName, err)
+		return fmt.Errorf("failed to set tags for spoke gateway %s: %w", gw.GwName, err)
 	}
 
 	var spokeBgpManualAdvertiseCidrs []string
