@@ -230,6 +230,8 @@ type Gateway struct {
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
 	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
+	Ph2EncryptionPolicy             string                              `json:"ph2_encryption_policy,omitempty"`
+	Ph2PfsPolicy                    string                              `json:"ph2_pfs_policy,omitempty"`
 }
 
 type HaGateway struct {

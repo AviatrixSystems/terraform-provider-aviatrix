@@ -632,6 +632,17 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
 			},
+			"ph2_encryption_policy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase 2 encryption policy. Config options are default/strong.",
+				Default:     "default",
+			},
+			"ph2_pfs_policy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disable",
+			},
 		},
 	}
 }
@@ -650,6 +661,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		FaultDomain:          d.Get("fault_domain").(string),
 		ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
 		EnableGlobalVpc:      d.Get("enable_global_vpc").(bool),
+		Ph2EncryptionPolicy:  d.Get("ph2_encryption_policy").(string),
+		Ph2PfsPolicy:         d.Get("ph2_pfs_policy").(string),
 	}
 
 	if !d.Get("manage_ha_gateway").(bool) {
@@ -1486,6 +1499,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
 	d.Set("enable_ipv6", gw.EnableIPv6)
+	d.Set("ph2_encryption_policy", gateway.Ph2EncryptionPolicy)
+	d.Set("ph2_pfs_policy", gateway.Ph2PfsPolicy)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
@@ -1863,6 +1878,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			"ha_private_mode_subnet_zone", "ha_oob_availability_zone", "ha_software_version", "ha_image_version") {
 			return fmt.Errorf("'manage_ha_gateway' is set to false. Please set it to true, or use 'aviatrix_spoke_ha_gateway' to manage editing spoke ha gateway")
 		}
+	}
+
+	if d.HasChange("ph2_encryption_policy") {
+		return fmt.Errorf("updating ph2_encryption_policy is not allowed")
+	}
+	if d.HasChange("ph2_pfs_policy") {
+		return fmt.Errorf("updating ph2_pfs_policy is not allowed")
 	}
 
 	haGateway := &goaviatrix.Gateway{
