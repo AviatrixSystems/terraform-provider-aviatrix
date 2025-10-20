@@ -307,6 +307,10 @@ The following arguments are supported:
 * `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS China, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI, Azure, AzureGov, AzureChina, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS, AWSGov, AWS China, AWS Top Secret or AWS Secret if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
+### Insertion Gateway
+* `insertion_gateway` - (Optional) Enable Insertion Gateway mode. When enabled, the gateway will be created in a new subnet that will be automatically created. Only available for AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Cannot be enabled if `insane_mode` is enabled. Valid values: true, false. Default value: false.
+* `insertion_gateway_az` - (Optional) AZ of subnet being created for Insertion Gateway. Required if `insertion_gateway` is enabled. Example: "us-west-1a".
+
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently, only supports AWS(1) and Azure(8). Valid values: true, false.
 
@@ -465,6 +469,9 @@ $ terraform import aviatrix_spoke_gateway.test gw_name
 ## Notes
 ### insane_mode
 If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
+
+### insertion_gateway
+If `insertion_gateway` is enabled, you must specify a valid CIDR segment of the VPC for the `subnet` parameter. This will create a new subnet to be used for the gateway. The subnet will be created in the availability zone specified by `insertion_gateway_az`. This feature is only supported on AWS cloud types and cannot be used together with `insane_mode`.
 
 ### enable_snat
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.
