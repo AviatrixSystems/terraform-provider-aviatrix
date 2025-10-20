@@ -1,9 +1,7 @@
 name: Export provider public key
 on: {workflow_dispatch: {}}
-
 permissions:
   contents: read
-
 jobs:
   export-pubkey:
     runs-on: ubuntu-latest
