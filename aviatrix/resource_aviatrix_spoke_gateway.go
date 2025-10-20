@@ -1056,7 +1056,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	if insertionGateway {
 		if insertionGatewayAz == "" {
-			return fmt.Errorf("insertion_gateway_az needed if insertion_gateway is enabled.")
+			return fmt.Errorf("insertion_gateway_az needed if insertion_gateway is enabled")
 		}
 		// Append availability zone to subnet
 		var strs []string
