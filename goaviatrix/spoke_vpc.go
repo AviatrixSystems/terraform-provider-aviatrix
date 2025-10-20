@@ -52,6 +52,7 @@ type SpokeVpc struct {
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc"`
 	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
+	InsertionGateway             bool     `form:"insertion_gateway,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {

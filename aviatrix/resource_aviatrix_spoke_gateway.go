@@ -632,6 +632,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
 			},
+			"insertion_gateway": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable insertion gateway mode.",
+			},
+			"insertion_gateway_az": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
+				Description: "AZ of subnet being created for Insertion Gateway. Required if insertion_gateway is enabled.",
+			},
 		},
 	}
 }
@@ -1027,6 +1041,30 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.EnableIPv6 = true
 	}
 
+	insertionGateway := d.Get("insertion_gateway").(bool)
+	insertionGatewayAz := d.Get("insertion_gateway_az").(string)
+
+	// Validation: insertion_gateway and insane_mode cannot both be true
+	if insertionGateway && insaneMode {
+		return fmt.Errorf("insertion_gateway and insane_mode cannot both be enabled")
+	}
+
+	// Validation: insertion_gateway is only supported on AWS
+	if insertionGateway && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("insertion_gateway is only supported for AWS")
+	}
+
+	if insertionGateway {
+		if insertionGatewayAz == "" {
+			return fmt.Errorf("insertion_gateway_az needed if insertion_gateway is enabled.")
+		}
+		// Append availability zone to subnet
+		var strs []string
+		strs = append(strs, gateway.Subnet, insertionGatewayAz)
+		gateway.Subnet = strings.Join(strs, "~~")
+		gateway.InsertionGateway = true
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	d.SetId(gateway.GwName)
@@ -1121,6 +1159,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			}
 		} else if haAzureEipNameOk {
 			return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+		}
+
+		if insertionGateway {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				haStrs = append(haStrs, haSubnet, insertionGatewayAz)
+				haSubnet = strings.Join(haStrs, "~~")
+				spokeHaGw.Subnet = haSubnet
+			}
+			spokeHaGw.InsertionGateway = true
 		}
 
 		_, err := client.CreateSpokeHaGw(spokeHaGw)
@@ -1486,6 +1534,13 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
 	d.Set("enable_ipv6", gw.EnableIPv6)
+	d.Set("insertion_gateway", gw.InsertionGateway)
+
+	if gw.InsertionGateway && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("insertion_gateway_az", gw.GatewayZone)
+	} else {
+		d.Set("insertion_gateway_az", "")
+	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
@@ -2169,6 +2224,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				privateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
 				spokeHaGw.Subnet += "~~" + privateModeSubnetZone
 			}
+		}
+
+		insertionGateway := d.Get("insertion_gateway").(bool)
+		insertionGatewayAz := d.Get("insertion_gateway_az").(string)
+
+		if insertionGateway {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				haStrs = append(haStrs, spokeHaGw.Subnet, insertionGatewayAz)
+				spokeHaGw.Subnet = strings.Join(haStrs, "~~")
+			}
+			spokeHaGw.InsertionGateway = true
 		}
 
 		if newHaGwEnabled {
