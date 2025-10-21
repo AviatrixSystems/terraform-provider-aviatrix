@@ -309,7 +309,7 @@ The following arguments are supported:
 
 ### Insertion Gateway
 * `insertion_gateway` - (Optional) Enable Insertion Gateway mode. When enabled, the gateway will be created in a new subnet that will be automatically created. Changing this value requires Gateway replacement. Only available for AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Cannot be enabled if `insane_mode` is enabled. Valid values: true, false. Default value: false.
-* `insertion_gateway_az` - (Optional) AZ of subnet being created for Insertion Gateway. Must be in the same region as the Gateway. Changing this value requries Gateway replacement. Required if `insertion_gateway` is enabled. Example: "us-west-1a".
+* `insertion_gateway_az` - (Optional) AZ of subnet being created for Insertion Gateway. Must be in the same region as the Gateway. Changing this value requires Gateway replacement. Required if `insertion_gateway` is enabled. Example: "us-west-1a".
 
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently, only supports AWS(1) and Azure(8). Valid values: true, false.
