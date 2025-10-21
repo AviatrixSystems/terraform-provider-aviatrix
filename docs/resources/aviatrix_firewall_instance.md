@@ -82,338 +82,666 @@ Valid `firewall_image` values:
 
 **AWS**
 1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
-  - 10.1.3
-  - 10.1.1
-  - 10.1.0
-  - 10.0.9
-  - 10.0.8-h8
-  - 10.0.7
-  - 10.0.6
-  - 10.0.5
-  - 10.0.4
-  - 10.0.3
+  - 10.2.14
+  - 11.0.4-h6
+  - 11.1.2-h3
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.1.6-h10
+  - 11.1.6-h14
+  - 11.2.3-h3
+  - 11.2.5
 2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1 [VM-300]
-  - 9.1.2
-  - 9.1.0-h3
-  - 9.0.9.xfr
-  - 9.0.9-h1.xfr
-  - 9.0.6
-  - 9.0.5.xfr
-  - 9.0.3.xfr
-  - 9.0.1
-  - 8.1.15
-  - 8.1.9
+  - 8.1.25-h1
 3. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
-  - 10.1.3
-  - 10.1.1
-  - 10.1.0
-  - 10.0.9
-  - 10.0.8-h8
-  - 10.0.7
-  - 10.0.6
-  - 10.0.5
-  - 10.0.4
-  - 10.0.3
-4. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2 [VM-300]
-  - 9.0.9.xfr
-  - 9.0.9-h1.xfr
-  - 8.1.15
-5. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
-  - 10.1.3
-  - 10.1.1
-  - 10.1.0
-  - 10.0.9
-  - 10.0.8-h8
-  - 10.0.7
-  - 10.0.6
-  - 10.0.5
-  - 10.0.4
-  - 10.0.3
-6. Check Point CloudGuard IaaS Next-Gen Firewall w. Threat Prevention & SandBlast BYOL
-  - R81.10-335.940
-  - R81-392.938
-  - R81-392.917
-  - R81-392.897
-  - R81-392.840
-  - R81-392.836
-  - R81-392.788
-  - R81-392.753
-  - R81-392.718
-  - R80.40-294.936
-7. Check Point CloudGuard IaaS Next-Gen Firewall with Threat Prevention
-  - R81.10-335.986
-  - R81.10-335.940
-  - R81.10-335.883
-  - R81-392.983
-  - R81-392.938
-  - R81-392.917
-  - R81-392.897
-  - R81-392.840
-  - R81-392.836
-  - R81-392.788
-8. Check Point CloudGuard IaaS All-In-One
-  - R81.10-335.986
-  - R81.10-335.942
-  - R81.10-335.883
-  - R81-392.983
-  - R81-392.942
-  - R81-392.715
-  - R80.40-294.983
-  - R80.40-294.947
-  - R80.40-294.942
-  - R80.40-294.774
-9. Fortinet FortiGate Next-Generation Firewall
-  - (7.0.5)
-  - (7.0.3)
-  - (6.4.8)
-  - (6.4.7)
-10. Fortinet FortiGate (BYOL) Next-Generation Firewall
-  - (7.0.5)
-  - (7.0.3)
-  - (6.4.8)
-  - (6.4.7)
+  - 10.2.10-h14
+  - 10.2.14
+  - 11.0.4-h6
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.1.6-h10
+  - 11.1.6-h14
+  - 11.2.3-h3
+  - 11.2.5
+4. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
+  - 11.0.4-h6
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.1.6-h10
+  - 11.1.6-h14
+  - 11.2.3-h3
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
+5. CloudGuard Network Security with Threat Prevention & SandBlast BYOL
+  - R81-392.1729
+  - R81.10-335.1727
+  - R81.10-335.1788
+  - R81.10-335.1878
+  - R81.20-631.1753
+  - R81.20-631.1856
+  - R81.20-631.1857
+  - R82-777.1836
+  - R82-777.1869
+6. CloudGuard Network Security Next-Gen Firewall with Threat Prevention
+  - R81-392.1729
+  - R81.10-335.1727
+  - R81.10-335.1788
+  - R81.10-335.1878
+  - R81.20-631.1753
+  - R81.20-631.1856
+  - R81.20-631.1857
+  - R82-777.1836
+  - R82-777.1869
+7. CloudGuard Network Security All-In-One
+  - R81-392.1734
+  - R81.10-335.1725
+  - R81.10-335.1734
+  - R81.10-335.1878
+  - R81.20-634.1725
+  - R81.20-634.1734
+  - R81.20-634.1849
+  - R82-777.1735
+8. Fortinet FortiGate Next-Generation Firewall
+  - (6.4.15)
+  - (6.4.16)
+  - (7.0.17)
+  - (7.2.11)
+  - (7.2.12)
+  - (7.4.7)
+  - (7.4.8)
+  - (7.6.3)
+  - (7.6.4)
+9.  Fortinet FortiGate (BYOL) Next-Generation Firewall
+  - (6.4.15)
+  - (6.4.16)
+  - (7.0.17)
+  - (7.2.11)
+  - (7.2.12)
+  - (7.4.7)
+  - (7.4.8)
+  - (7.6.3)
+  - (7.6.4)
 
 **Azure**
 1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
-  - 9.1.0
-  - 9.0.9
   - 9.0.6
-  - 9.0.4
-  - 9.0.1
+  - 9.0.9
+  - 9.0.16
+  - 9.1.0
+  - 9.1.16
 2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
-  - 9.1.0
-  - 9.0.9
   - 9.0.6
-  - 9.0.4
-  - 9.0.1
+  - 9.0.9
+  - 9.0.16
+  - 9.1.0
+  - 9.1.16
 3. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
-  - 9.1.0
-  - 9.0.9
   - 9.0.6
-  - 9.0.4
-  - 9.0.1
+  - 9.0.9
+  - 9.0.16
+  - 9.1.0
+  - 9.1.16
 4. Palo Alto Networks VM-Series Flex Next-Generation Firewall Bundle 1
-  - 10.1.4
-  - 10.1.3
-  - 10.1.2
-  - 10.1.0
-  - 10.0.9
+  - 11.1.604
+  - 11.1.607
+  - 11.2.5
+  - 11.2.8
+  - 11.2.303
 5. Palo Alto Networks VM-Series Flex Next-Generation Firewall Bundle 2
-  - 10.1.4
-  - 10.1.3
-  - 10.1.2
-  - 10.1.0
-  - 10.0.9
+  - 11.1.604
+  - 11.1.607
+  - 11.2.5
+  - 11.2.8
+  - 11.2.303
 6. Palo Alto Networks VM-Series Flex Next-Generation Firewall (BYOL)
-  - 10.1.4
-  - 10.1.3
-  - 10.1.0
-  - 10.0.9
-  - 10.0.7
-7. Check Point CloudGuard IaaS Single Gateway R80.30 - Bring Your Own License
-  - 8030.900273.0978
-  - 8030.900273.0950
-  - 8030.900273.0907
-  - 8030.900273.0819
-  - 8030.900273.0801
-8. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTP)
-  - 8030.900273.0590
+  - 11.1.607
+  - 11.1.612
+  - 11.2.5
+  - 11.2.8
+  - 11.2.303
+7. Fortinet FortiGate (BYOL) Next-Generation Firewall
+  - 7.4.5
+  - 7.4.6
+  - 7.4.7
+  - 7.4.8
+  - 7.6.0
+8. Fortinet FortiGate (PAYG_2022) Next-Generation Firewall
+  - 7.2.2
+  - 7.2.3
+  - 7.2.4
+  - 7.2.5
+  - 7.4.0
+9. Fortinet FortiGate (PAYG_2023) Next-Generation Firewall
+  - 7.4.5
+  - 7.4.6
+  - 7.4.7
+  - 7.4.8
+  - 7.6.0
+10. Check Point CloudGuard IaaS Standalone (gateway + management)  R80.30 - Bring Your Own License
+  - 8030.900200.0523
+  - 8030.900200.0590
+  - 8030.900200.0779
+  - 8030.900200.0978
+11. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTP)
   - 8030.900273.0562
-9. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTX)
   - 8030.900273.0590
+12. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTX)
   - 8030.900273.0562
-10. Check Point CloudGuard IaaS Single Gateway R80.40 - Bring Your Own License
-  - 8040.900294.0978
-  - 8040.900294.0907
-  - 8040.900294.0801
-  - 8040.900294.0728
-  - 8040.900294.0682
-11. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTP)
-  - 8040.900294.0978
-  - 8040.900294.0907
-  - 8040.900294.0801
-  - 8040.900294.0728
-  - 8040.900294.0682
-12. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTX)
-  - 8040.900294.0978
-  - 8040.900294.0907
-  - 8040.900294.0801
-  - 8040.900294.0728
-  - 8040.900294.0682
-13. Check Point CloudGuard IaaS Standalone (gateway + management) R80.40 - Bring Your Own License
-  - 8040.900294.0978
-  - 8040.900294.0752
+  - 8030.900273.0590
+13. Check Point CloudGuard IaaS Standalone (gateway + management)  R80.40 - Bring Your Own License
   - 8040.900294.0586
-14. Fortinet FortiGate (BYOL) Next-Generation Firewall
-  - 7.0.4
-  - 7.0.3
-  - 7.0.2
-  - 7.0.1
-  - 7.0.0
-15. Fortinet FortiGate (PAYG) Next-Generation Firewall
-  - 6.0.4
-  - 6.0.3
-  - 6.0.02
-  - 5.6.6
-  - 5.6.5
-16. Fortinet FortiGate (PAYG_20190624) Next-Generation Firewall Latest Release
-  - 7.0.4
-  - 7.0.3
-  - 7.0.2
-  - 7.0.1
-  - 7.0.0
+  - 8040.900294.0752
+  - 8040.900294.0978
+  - 8040.900294.1108
+  - 8040.900294.1255
+  - 8040.900294.1266
+  - 8040.900294.1300
+  - 8040.900294.1335
+  - 8040.900294.1370
+  - 8040.900294.1383
+  - 8040.900294.1475
+  - 8040.900294.1526
+  - 8040.900294.1560
+14. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTP)
+  - 8040.900294.0593
+  - 8040.900294.0640
+  - 8040.900294.0682
+  - 8040.900294.0728
+  - 8040.900294.0801
+  - 8040.900294.0907
+  - 8040.900294.0978
+  - 8040.900294.1108
+  - 8040.900294.1234
+  - 8040.900294.1255
+  - 8040.900294.1266
+  - 8040.900294.1300
+  - 8040.900294.1331
+  - 8040.900294.1370
+  - 8040.900294.1383
+  - 8040.900294.1475
+  - 8040.900294.1498
+  - 8040.900294.1526
+  - 8040.900294.1564
+15. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTX)
+  - 8040.900294.0593
+  - 8040.900294.0640
+  - 8040.900294.0682
+  - 8040.900294.0728
+  - 8040.900294.0801
+  - 8040.900294.0907
+  - 8040.900294.0978
+  - 8040.900294.1108
+  - 8040.900294.1234
+  - 8040.900294.1255
+  - 8040.900294.1266
+  - 8040.900294.1300
+  - 8040.900294.1331
+  - 8040.900294.1370
+  - 8040.900294.1383
+  - 8040.900294.1475
+  - 8040.900294.1498
+  - 8040.900294.1526
+  - 8040.900294.1564
+16. Check Point CloudGuard IaaS Standalone (gateway + management)  R81 - Bring Your Own License
+  - 8100.900392.0710
+  - 8100.900392.0979
+  - 8100.900392.1108
+  - 8100.900392.1255
+  - 8100.900392.1266
+  - 8100.900392.1300
+  - 8100.900392.1335
+  - 8100.900392.1370
+  - 8100.900392.1383
+  - 8100.900392.1475
+  - 8100.900392.1526
+  - 8100.900392.1560
+  - 8100.900392.1616
+17. Check Point CloudGuard IaaS Single Gateway R81 - Pay As You Go (NGTP)
+  - 8100.900392.0710
+  - 8100.900392.0729
+  - 8100.900392.0751
+  - 8100.900392.0807
+  - 8100.900392.0906
+  - 8100.900392.0915
+  - 8100.900392.0979
+  - 8100.900392.1029
+  - 8100.900392.1108
+  - 8100.900392.1234
+  - 8100.900392.1255
+  - 8100.900392.1266
+  - 8100.900392.1300
+  - 8100.900392.1331
+  - 8100.900392.1370
+  - 8100.900392.1383
+  - 8100.900392.1475
+  - 8100.900392.1498
+  - 8100.900392.1526
+  - 8100.900392.1560
+  - 8100.900392.1616
+  - 8100.900392.1729
+18. Check Point CloudGuard IaaS Single Gateway R81 - Pay As You Go (NGTX)
+  - 8100.900392.0710
+  - 8100.900392.0729
+  - 8100.900392.0751
+  - 8100.900392.0807
+  - 8100.900392.0906
+  - 8100.900392.0915
+  - 8100.900392.0979
+  - 8100.900392.1029
+  - 8100.900392.1108
+  - 8100.900392.1234
+  - 8100.900392.1255
+  - 8100.900392.1266
+  - 8100.900392.1300
+  - 8100.900392.1331
+  - 8100.900392.1370
+  - 8100.900392.1383
+  - 8100.900392.1475
+  - 8100.900392.1498
+  - 8100.900392.1526
+  - 8100.900392.1560
+  - 8100.900392.1616
+  - 8100.900392.1729
+19. Check Point CloudGuard IaaS Standalone (gateway + management)  R81.10 - Bring Your Own License
+  - 8110.900335.0883
+  - 8110.900335.0979
+  - 8110.900335.1108
+  - 8110.900335.1226
+  - 8110.900335.1255
+  - 8110.900335.1266
+  - 8110.900335.1300
+  - 8110.900335.1335
+  - 8110.900335.1370
+  - 8110.900335.1383
+  - 8110.900335.1475
+  - 8110.900335.1526
+  - 8110.900335.1560
+  - 8110.900335.1612
+  - 8110.900335.1648
+  - 8110.900335.1681
+  - 8110.900335.1734
+  - 8110.900335.1878
+20. Check Point CloudGuard IaaS Single Gateway R81.10 - Pay As You Go (NGTP)
+  - 8110.900335.0883
+  - 8110.900335.0979
+  - 8110.900335.0985
+  - 8110.900335.1108
+  - 8110.900335.1234
+  - 8110.900335.1255
+  - 8110.900335.1266
+  - 8110.900335.1300
+  - 8110.900335.1331
+  - 8110.900335.1366
+  - 8110.900335.1370
+  - 8110.900335.1383
+  - 8110.900335.1475
+  - 8110.900335.1498
+  - 8110.900335.1526
+  - 8110.900335.1546
+  - 8110.900335.1560
+  - 8110.900335.1612
+  - 8110.900335.1648
+  - 8110.900335.1681
+  - 8110.900335.1709
+  - 8110.900335.1715
+  - 8110.900335.1727
+  - 8110.900335.1736
+  - 8110.900335.1788
+  - 8110.900335.1878
+  - 8110.900335.1895
+  - 8110.900335.1903
+21. Check Point CloudGuard IaaS Single Gateway R81.10 - Pay As You Go (NGTX)
+  - 8110.900335.0883
+  - 8110.900335.0979
+  - 8110.900335.0985
+  - 8110.900335.1108
+  - 8110.900335.1234
+  - 8110.900335.1255
+  - 8110.900335.1266
+  - 8110.900335.1300
+  - 8110.900335.1331
+  - 8110.900335.1366
+  - 8110.900335.1370
+  - 8110.900335.1383
+  - 8110.900335.1475
+  - 8110.900335.1498
+  - 8110.900335.1526
+  - 8110.900335.1546
+  - 8110.900335.1560
+  - 8110.900335.1612
+  - 8110.900335.1648
+  - 8110.900335.1681
+  - 8110.900335.1709
+  - 8110.900335.1715
+  - 8110.900335.1727
+  - 8110.900335.1736
+  - 8110.900335.1788
+  - 8110.900335.1878
+  - 8110.900335.1895
+  - 8110.900335.1903
+22. Check Point CloudGuard IaaS Standalone (gateway + management)  R81.20 - Bring Your Own License
+  - 8120.900631.01243
+  - 8120.900631.01266
+  - 8120.900631.01306
+  - 8120.900631.01335
+  - 8120.900631.01370
+  - 8120.900631.01383
+  - 8120.900631.01475
+  - 8120.900631.01526
+  - 8120.900631.01560
+  - 8120.900634.01599
+  - 8120.900634.01641
+  - 8120.900634.01723
+  - 8120.900634.01734
+  - 8120.900634.01849
+23. Check Point CloudGuard IaaS Single Gateway R81.20 - Pay As You Go (NGTP)
+  - 8120.900627.01193
+  - 8120.900631.01245
+  - 8120.900631.01266
+  - 8120.900631.01306
+  - 8120.900631.01331
+  - 8120.900631.01366
+  - 8120.900631.01370
+  - 8120.900631.01383
+  - 8120.900631.01475
+  - 8120.900631.01526
+  - 8120.900631.01544
+  - 8120.900631.01560
+  - 8120.900634.01611
+  - 8120.900634.01641
+  - 8120.920631.01669
+  - 8120.920631.01709
+  - 8120.920631.01716
+  - 8120.920631.01727
+  - 8120.920631.01731
+  - 8120.920631.01736
+  - 8120.920631.01753
+  - 8120.920631.01781
+  - 8120.920631.01849
+  - 8120.920631.01896
+  - 8120.920631.01903
+24. Check Point CloudGuard IaaS Single Gateway R81.20 - Pay As You Go (NGTX)
+  - 8120.900627.01193
+  - 8120.900631.01245
+  - 8120.900631.01266
+  - 8120.900631.01306
+  - 8120.900631.01331
+  - 8120.900631.01366
+  - 8120.900631.01370
+  - 8120.900631.01383
+  - 8120.900631.01475
+  - 8120.900631.01526
+  - 8120.900631.01544
+  - 8120.900631.01560
+  - 8120.900634.01611
+  - 8120.900634.01641
+  - 8120.920631.01669
+  - 8120.920631.01709
+  - 8120.920631.01716
+  - 8120.920631.01727
+  - 8120.920631.01731
+  - 8120.920631.01736
+  - 8120.920631.01753
+  - 8120.920631.01781
+  - 8120.920631.01849
+  - 8120.920631.01896
+  - 8120.920631.01903
+25. Check Point CloudGuard IaaS Standalone (gateway + management)  R82 - Bring Your Own License
+  - 8200.900777.1695
+  - 8200.900777.1734
+26. Check Point CloudGuard IaaS Single Gateway R82 - Pay As You Go (NGTP)
+  - 8200.777.1695
+  - 8200.900777.1715
+  - 8200.900777.1736
+  - 8200.900777.1832
+  - 8200.900777.1836
+  - 8200.900777.1869
+  - 8200.900777.1897
+  - 8200.900777.1903
+27. Check Point CloudGuard IaaS Single Gateway R82 - Pay As You Go (NGTX) 
+  - 8200.900777.1695
+  - 8200.900777.1715
+  - 8200.900777.1736
+  - 8200.900777.1832
+  - 8200.900777.1836
+  - 8200.900777.1869
+  - 8200.900777.1897
+  - 8200.900777.1903
 
 **GCP**
 1. Palo Alto Networks VM-Series Next-Generation Firewall BUNDLE1
-  - 9.0.9
-  - 8.1.15
-  - 9.1.2
-  - 9.0.4
-  - 8.1.9
-  - 9.0.1
-  - 814
-  - 810
+  - 8.1.25-h1
+  - 9.0.16-h5
 2. Palo Alto Networks VM-Series Next-Generation Firewall BUNDLE2
-  - 9.0.9
-  - 8.1.15
-  - 9.1.2
-  - 9.0.4
-  - 8.1.9
-  - 9.0.1
-  - 814
-  - 810
+  - 8.1.25-h1
+  - 9.0.16-h5
 3. Palo Alto Networks VM-Series Next-Generation Firewall BYOL
-  - 9.1.3
-  - 9.0.9
-  - 8.1.15
-  - 9.0.8
-  - 9.1.2
-  - 9.0.6
-  - 9.0.4
-  - 8.1.9
-  - 9.0.1
-  - 814
-4. Fortinet FortiGate Next-Generation Firewall
-  - 7.0.5
-  - 7.0.3
-  - 6.4.8
-  - 7.0.2
-  - 6.4.7
-  - 7.0.1
-  - 6.4.6
-  - 7.0.0
-  - 6.4.5
-  - 6.4.4
-5. Fortinet FortiGate Next-Generation Firewall (BYOL)
-  - 7.0.5
-  - 7.0.3
-  - 6.4.8
-  - 7.0.2
-  - 6.4.7
-  - 7.0.1
-  - 6.4.6
-  - 7.0.0
-  - 6.4.5
-  - 6.4.4
-6. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only)
-  - R80.40-294.688
-  - R80.40-294.904
-  - R81-344.139
-  - R81-351.146
-  - R81-392.710
-  - R81-392.751
-  - R81-392.906
-  - R81-392.915
-  - R81.10-335.883
-  - R81.10-335.985
-7. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only) (BYOL)
-  - R80.40-294.904
-  - R81-383.704
-  - R81-386.706
-  - R81-390.708
-  - R81-392.710
-  - R81-392.751
-  - R81-392.906
-  - R81-392.915
-  - R81.10-335.883
-  - R81.10-335.985
-8. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone)
-  - R80.40-294.127
-  - R80.40-294.587
-  - R80.40-294.735
-  - R80.40-294.759
-  - R81-392.758
-  - R81-392.957
-  - R81-394.735
-  - R81.10-335.883
-9. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone) (BYOL)
-  - R80.40-294.127
-  - R80.40-294.687
-  - R80.40-294.759
-  - R81-344.139
-  - R81-351.146
-  - R81-373.150
-  - R81-386.706
-  - R81-392.710
-  - R81-392.957
-  - R81.10-335.883
+  - 9.0.16-h5
+  - 8.1.25-h1
+4. Palo Alto Networks VM-Series Flex Next-Generation Firewall BUNDLE1
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.6
+5. Palo Alto Networks VM-Series Flex Next-Generation Firewall BUNDLE2
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.6
+6. Palo Alto Networks VM-Series Flex Next-Generation Firewall BUNDLE3
+  - 10.2.10-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.0.4-h6
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.3-h3
+  - 11.2.5
+  - 11.2.6
+7. Palo Alto Networks VM-Series Flex Next-Generation Firewall BYOL
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.6
+  - 11.2.8
+  - 12.1.2
+8. Fortinet FortiGate Next-Generation Firewall
+  - 6.4.1.6
+  - 7.0.1.7
+  - 7.2.1.1
+  - 7.2.1.2
+  - 7.4.7
+  - 7.4.8
+  - 7.6.2
+  - 7.6.3
+  - 7.6.4
+9.  Fortinet FortiGate Next-Generation Firewall (BYOL)
+  - 6.4.1.6
+  - 7.0.1.7
+  - 7.2.1.1
+  - 7.2.1.2
+  - 7.4.7
+  - 7.4.8
+  - 7.6.2
+  - 7.6.3
+  - 7.6.4
+10. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only)
+  - R80.40-294.991001526
+  - R80.40-294.991001555
+  - R80.40-294.991001560
+  - R80.40-294.991001564
+  - R81-392.991001498
+  - R81-392.991001526
+  - R81-392.991001555
+  - R81-392.991001560
+  - R81-392.991001616
+  - R81-392.991001729
+11. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only) (BYOL)
+  - R80.40-294.991001526
+  - R80.40-294.991001555
+  - R80.40-294.991001560
+  - R80.40-294.991001564
+  - R81-392.991001498
+  - R81-392.991001526
+  - R81-392.991001555
+  - R81-392.991001560
+  - R81-392.991001616
+  - R81-392.991001729
+12. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone)
+  - R80.40-294.991001475
+  - R80.40-294.991001526
+  - R80.40-294.991001555
+  - R80.40-294.991001560
+  - R81-392.991001383
+  - R81-392.991001475
+  - R81-392.991001526
+  - R81-392.991001555
+  - R81-392.991001560
+  - R81-392.991001616
+13. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone) (BYOL)
+  - R80.40-294.991001526
+  - R80.40-294.991001555
+  - R80.40-294.991001560
+  - R81-392.991001526
+  - R81-392.991001555
+  - R81-392.991001560
+  - R81-392.991001616
+  - R81.10-335.991001526
+  - R81.10-335.991001555
+  - R81.10-335.991001560
 
 **OCI**
 1. Palo Alto Networks VM-Series Bundle1 - 4 OCPUs
-  - PA-VM-10.0.9
-  - PA-VM-10.0.6
-  - PA-VM-10.1.0
-  - PA-VM-10.0.3
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
 2. Palo Alto Networks VM-Series Bundle1 - 8 OCPUs
-  - PA-VM-10.0.9
-  - PA-VM-10.0.6
-  - PA-VM-10.1.0
-  - PA-VM-10.0.3-012120210118
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
 3. Palo Alto Networks VM-Series Bundle2 - 4 OCPUs
-  - PA-VM-10.0.9
-  - PA-VM-10.0.6
-  - PA-VM-10.1.0
-  - PA-VM-10.0.3
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
 4. Palo Alto Networks VM-Series Bundle2 - 8 OCPUs
-  - PA-VM-10.0.9
-  - PA-VM-10.0.6
-  - PA-VM-10.1.0
-  - PA-VM-10.0.3
-5. Palo Alto Networks VM-Series Next Generation Firewall
-  - 10.0.9
-  - 10.1.3
-  - 10.0.6
-  - 10.1.0-latest
-  - 10.0.4
-  - 10.0.3
-  - 9.1.6
-  - 10.0.0
-  - 9.1.3-070120202138
-6. CloudGuard Next-Gen Firewall w\/ Threat Prevention - 4 OCPUs
-  - R80.40_rev1.3
-  - R81.10_rev1.1
-  - R81_rev1.2
-  - R81.10_rev1.0
-  - R81_rev1.1
-  - R81_rev1.0
-  - R80.40_rev1.2
-  - R80.40_rev1.1
-  - R80.40_rev1.0-042420202345
-7. CloudGuard Next-Gen Firewall w\/ Threat Prevention and SandBlast - 4 OCPUs
-  - R80.40_rev1.3
-  - R81_rev1.2
-  - R81.10_rev1.1
-  - R81.10_rev1.0
-  - R81_rev1.0
-  - R80.40_rev1.2
-8. CloudGuard Next-Gen Firewall with Threat Prevention and SandBlast - BYOL
-  - R80.40_rev1.4
-  - R81.10_rev1.1
-  - R81_rev1.2
-  - R80.40_rev1.3
-  - R81.10_rev1.0
-  - R81_rev1.1
-  - R80.30_rev_1.4
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
+5. Palo Alto Networks VM-Series Bundle3 - 4 OCPUs
+  - 10.2.10-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.0.4-h6
+  - 11.1.3
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.3-h3
+  - 11.2.5
+6. Palo Alto Networks VM-Series Bundle3 - 8 OCPUs
+  - 10.2.10-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.0.4-h6
+  - 11.1.3
+  - 11.1.4-h7
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.3-h3
+  - 11.2.5
+7. Palo Alto Networks VM-Series Next Generation Firewall
+  - 10.1.14-h6
+  - 10.1.14-h8
+  - 10.1.14-h9
+  - 10.2.10-h12
+  - 10.2.10-h14
+  - 11.1.4-h13
+  - 11.1.6-h7
+  - 11.2.5
+  - 11.2.8
+  - 12.1.2
+8. CloudGuard Next-Gen Firewall w/ Threat Prevention - 4 OCPUs
+  - R81.10_with_JHF_45
+  - R81.10_with_JHF_150
+  - R81.10_with_JHF_177
+  - R81.20_with_JHF_99
+  - R81.20_with_JHF_105_v2
+  - R81.20_JHF53
+  - R81.20_rev1.0
+  - R81_with_JHF_65
+  - R82_with_JHF_19
+  - R82_with_JHF_34
+9.  CloudGuard Next-Gen Firewall w/ Threat Prevention and SandBlast - 4 OCPUs
+  - R81.10_with_JHF_45
+  - R81.10_with_JHF_150
+  - R81.10_with_JHF_177
+  - R81.20_with_JHF_99
+  - R81.20_with_JHF_105_v2
+  - R81.20_JHF53
+  - R81.20_rev1.0
+  - R81_with_JHF_65
+  - R82_with_JHF_19
+  - R82_with_JHF_34
+10. CloudGuard Next-Gen Firewall with Threat Prevention and SandBlast - BYOL
+  - R81.10_with_JHF_150
+  - R81.10_with_JHF_177
+  - R81.10_with_JHF_45
+  - R81.20_JHF53
+  - R81.20_rev1.0
+  - R81.20_with_JHF_105_v2
+  - R81.20_with_JHF_99
+  - R81_with_JHF_65
+  - R82_with_JHF_19
+  - R82_with_JHF_34
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
