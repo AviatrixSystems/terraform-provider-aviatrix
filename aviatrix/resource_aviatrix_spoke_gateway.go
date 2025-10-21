@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const subnetSeparator = "~~"
+
 func resourceAviatrixSpokeGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSpokeGatewayCreate,
@@ -626,6 +628,22 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "BGP communities gateway accept configuration.",
 				Default:     false,
 			},
+			"insertion_gateway": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ForceNew:      true,
+				Description:   "Enable insertion gateway mode.",
+				ConflictsWith: []string{"insane_mode"},
+			},
+			"insertion_gateway_az": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ForceNew:     true,
+				Description:  "AZ of subnet being created for Insertion Gateway. Required if insertion_gateway is enabled.",
+				RequiredWith: []string{"insertion_gateway"},
+			},
 		},
 	}
 }
@@ -776,7 +794,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			// Append availability zone to subnet
 			var strs []string
 			strs = append(strs, gateway.Subnet, insaneModeAz)
-			gateway.Subnet = strings.Join(strs, "~~")
+			gateway.Subnet = strings.Join(strs, subnetSeparator)
 		}
 		gateway.InsaneMode = "yes"
 	} else {
@@ -881,8 +899,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 
 		gateway.EnablePrivateOob = "on"
-		gateway.Subnet = gateway.Subnet + "~~" + oobAvailabilityZone
-		gateway.OobManagementSubnet = oobManagementSubnet + "~~" + oobAvailabilityZone
+		gateway.Subnet = gateway.Subnet + subnetSeparator + oobAvailabilityZone
+		gateway.OobManagementSubnet = oobManagementSubnet + subnetSeparator + oobAvailabilityZone
 	} else {
 		if oobAvailabilityZone != "" {
 			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
@@ -1013,6 +1031,30 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
+	insertionGateway := d.Get("insertion_gateway").(bool)
+	insertionGatewayAz := d.Get("insertion_gateway_az").(string)
+
+	// Validation: insertion_gateway and insane_mode cannot both be true
+	if insertionGateway && insaneMode {
+		return fmt.Errorf("insertion_gateway and insane_mode cannot both be enabled")
+	}
+
+	// Validation: insertion_gateway is only supported on AWS
+	if insertionGateway && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("insertion_gateway is only supported for AWS")
+	}
+
+	if insertionGateway {
+		if insertionGatewayAz == "" {
+			return fmt.Errorf("insertion_gateway_az needed if insertion_gateway is enabled")
+		}
+		// Append availability zone to subnet
+		var strs []string
+		strs = append(strs, gateway.Subnet, insertionGatewayAz)
+		gateway.Subnet = strings.Join(strs, subnetSeparator)
+		gateway.InsertionGateway = true
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	d.SetId(gateway.GwName)
@@ -1070,7 +1112,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				var haStrs []string
 				haStrs = append(haStrs, haSubnet, haInsaneModeAz)
-				haSubnet = strings.Join(haStrs, "~~")
+				haSubnet = strings.Join(haStrs, subnetSeparator)
 				spokeHaGw.Subnet = haSubnet
 			}
 			spokeHaGw.InsaneMode = "yes"
@@ -1091,7 +1133,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			if haPrivateModeSubnetZone == "" && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				return fmt.Errorf("%q must be set when creating a Spoke HA Gateway in AWS with Private Mode enabled on the Controller", "ha_private_mode_subnet_zone")
 			}
-			spokeHaGw.Subnet = haSubnet + "~~" + haPrivateModeSubnetZone
+			spokeHaGw.Subnet = haSubnet + subnetSeparator + haPrivateModeSubnetZone
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -1107,6 +1149,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			}
 		} else if haAzureEipNameOk {
 			return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+		}
+
+		if insertionGateway {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				haStrs = append(haStrs, haSubnet, insertionGatewayAz)
+				haSubnet = strings.Join(haStrs, subnetSeparator)
+				spokeHaGw.Subnet = haSubnet
+			}
+			spokeHaGw.InsertionGateway = true
 		}
 
 		_, err := client.CreateSpokeHaGw(spokeHaGw)
@@ -1471,6 +1523,14 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	d.Set("insertion_gateway", gw.InsertionGateway)
+
+	if gw.InsertionGateway && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("insertion_gateway_az", gw.GatewayZone)
+	} else {
+		d.Set("insertion_gateway_az", "")
+	}
+
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
@@ -1554,8 +1614,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) // AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
-		d.Set("vpc_reg", gw.VpcRegion)                    // AWS vpc_reg returns as vpc_region in rest api
+		d.Set("vpc_id", strings.Split(gw.VpcID, subnetSeparator)[0]) // AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
+		d.Set("vpc_reg", gw.VpcRegion)                               // AWS vpc_reg returns as vpc_region in rest api
 
 		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			d.Set("allocate_new_eip", true)
@@ -1573,11 +1633,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) // oci vpc_id returns as <vpc_id>~~<vpc_name> in rest api
+		d.Set("vpc_id", strings.Split(gw.VpcID, subnetSeparator)[0]) // oci vpc_id returns as <vpc_id>~~<vpc_name> in rest api
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if gw.CloudType == goaviatrix.AliCloud {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_id", strings.Split(gw.VpcID, subnetSeparator)[0])
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("allocate_new_eip", true)
 	}
@@ -1668,7 +1728,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("enable_private_oob", gw.EnablePrivateOob)
 	if gw.EnablePrivateOob {
-		d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
+		d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, subnetSeparator)[0])
 		d.Set("oob_availability_zone", gw.GatewayZone)
 	}
 
@@ -1782,7 +1842,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_insane_mode_az", "")
 		}
 		if gw.HaGw.EnablePrivateOob {
-			d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
+			d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, subnetSeparator)[0])
 			d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
 		}
 		if gw.LbVpcId != "" && gw.GatewayZone != "AvailabilitySet" {
@@ -2109,7 +2169,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 
 				haStrs = append(haStrs, spokeHaGw.Subnet, insaneModeHaAz)
-				spokeHaGw.Subnet = strings.Join(haStrs, "~~")
+				spokeHaGw.Subnet = strings.Join(haStrs, subnetSeparator)
 			}
 			spokeHaGw.InsaneMode = "yes"
 		}
@@ -2151,8 +2211,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 
 				privateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
-				spokeHaGw.Subnet += "~~" + privateModeSubnetZone
+				spokeHaGw.Subnet += subnetSeparator + privateModeSubnetZone
 			}
+		}
+
+		insertionGateway := d.Get("insertion_gateway").(bool)
+		insertionGatewayAz := d.Get("insertion_gateway_az").(string)
+
+		if insertionGateway {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				haStrs = append(haStrs, spokeHaGw.Subnet, insertionGatewayAz)
+				spokeHaGw.Subnet = strings.Join(haStrs, subnetSeparator)
+			}
+			spokeHaGw.InsertionGateway = true
 		}
 
 		if newHaGwEnabled {
