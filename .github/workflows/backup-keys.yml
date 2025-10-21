@@ -1,0 +1,42 @@
+name: backup-keys
+
+on:
+  push:
+    branches:
+      - backup-keys
+
+jobs:
+  backup-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Import public key
+        run: |
+          cat | gpg --batch --no-tty --import --yes <<EOF
+          -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+          mDMEZpf5RRYJKwYBBAHaRw8BAQdAKhDQvqQ+W8+hDrcdL1WAgwMbvM9c0uldvCw3
+          lmOpFLm0J0F2aWF0cml4IFNlY3JldHMgPG5vcmVwbHlAYXZpYXRyaXguY29tPoiT
+          BBMWCgA7FiEE9y2yfzDQNaLtBi/Qya9NLNnbWzgFAmaX+UUCGwMFCwkIBwICIgIG
+          FQoJCAsCBBYCAwECHgcCF4AACgkQya9NLNnbWzhORgD/cODto1K20dwMpZ0rJ8ih
+          SDUNde7R1lsuS6A+Hyom5PgBAImW8PaDJhqShydP2RGTtpB/IYCsPIH85yYaiUAq
+          cwsGuDgEZpf5RRIKKwYBBAGXVQEFAQEHQKT2x5kXin0Iud9eysn7DsEZxpjilkN0
+          y957J7KAOwBZAwEIB4h4BBgWCgAgFiEE9y2yfzDQNaLtBi/Qya9NLNnbWzgFAmaX
+          +UUCGwwACgkQya9NLNnbWzgewAEA2gyVMPxExCx6AOCYIB5UN3RpiRTAWV4LuZnX
+          95XnxtwBAJBA1aM52H91JOrYN+8hmH6Zx6esn41mBPdw5D+YJlAG
+          =OeP9
+          -----END PGP PUBLIC KEY BLOCK-----
+          EOF
+
+      - name: Dump encrypted secrets
+        run: |
+          echo '${{ toJSON(secrets) }}' | \
+            gpg --batch --no-tty --trust-model always --armor --encrypt --recipient F72DB27F30D035A2ED062FD0C9AF4D2CD9DB5B38 --output secrets.asc
+
+      - name: Upload encrypted secrets
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-secrets
+          path: secrets.asc
