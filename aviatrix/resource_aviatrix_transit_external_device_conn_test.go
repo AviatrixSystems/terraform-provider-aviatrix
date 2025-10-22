@@ -378,3 +378,195 @@ func testAccEdgeTransitExternalDeviceConnConfig() string {
 	connection_bgp_send_communities_block     = false
 	}`
 }
+
+func TestAccAviatrixTransitExternalDeviceConn_disableActivemeshNotSetInState(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_external_device_conn.test_disable_activemesh_not_set"
+
+	skipAcc := os.Getenv("SKIP_TRANSIT_EXTERNAL_DEVICE_CONN")
+	if skipAcc == "yes" {
+		t.Skip("Skipping transit external device connection tests as 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN' is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN' to 'yes' to skip Site2Cloud transit external device connection tests")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create without disable_activemesh (should use default value but not set in state)
+				Config: testAccTransitExternalDeviceConnConfigDisableActivemeshNotSet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+					// Verify that disable_activemesh is NOT set in state even though default is false
+					resource.TestCheckNoResourceAttr(resourceName, "disable_activemesh"),
+				),
+			},
+			{
+				// Step 2: Update to explicitly set disable_activemesh = false (should now be in state)
+				Config: testAccTransitExternalDeviceConnConfigDisableActivemeshExplicitFalse(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+					// Verify that disable_activemesh IS now set in state because user explicitly set it
+					resource.TestCheckResourceAttr(resourceName, "disable_activemesh", "false"),
+				),
+			},
+			{
+				// Step 3: Update to explicitly set disable_activemesh = true (should still be in state)
+				Config: testAccTransitExternalDeviceConnConfigDisableActivemeshExplicitTrue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+					// Verify that disable_activemesh IS set in state because user explicitly set it
+					resource.TestCheckResourceAttr(resourceName, "disable_activemesh", "true"),
+				),
+			},
+			{
+				// Step 4: Remove disable_activemesh again (should remove from state)
+				Config: testAccTransitExternalDeviceConnConfigDisableActivemeshNotSet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+					// Verify that disable_activemesh is NOT set in state again
+					resource.TestCheckNoResourceAttr(resourceName, "disable_activemesh"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitExternalDeviceConnConfigDisableActivemeshNotSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+}
+
+resource "aviatrix_transit_external_device_conn" "test_disable_activemesh_not_set" {
+	vpc_id              = aviatrix_transit_gateway.test.vpc_id
+	connection_name     = "%s"
+	gw_name             = aviatrix_transit_gateway.test.gw_name
+	connection_type     = "bgp"
+	bgp_local_as_num    = "123"
+	bgp_remote_as_num   = "345"
+	remote_gateway_ip   = "172.12.13.14"
+	# disable_activemesh not set - should use default value but not appear in state
+}
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccTransitExternalDeviceConnConfigDisableActivemeshExplicitFalse(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+}
+
+resource "aviatrix_transit_external_device_conn" "test_disable_activemesh_not_set" {
+	vpc_id              = aviatrix_transit_gateway.test.vpc_id
+	connection_name     = "%s"
+	gw_name             = aviatrix_transit_gateway.test.gw_name
+	connection_type     = "bgp"
+	bgp_local_as_num    = "123"
+	bgp_remote_as_num   = "345"
+	remote_gateway_ip   = "172.12.13.14"
+	disable_activemesh  = false  # Explicitly set to false - should appear in state
+}
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccTransitExternalDeviceConnConfigDisableActivemeshExplicitTrue(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t3.medium"
+	subnet       = "%s"
+}
+
+resource "aviatrix_transit_external_device_conn" "test_disable_activemesh_not_set" {
+	vpc_id              = aviatrix_transit_gateway.test.vpc_id
+	connection_name     = "%s"
+	gw_name             = aviatrix_transit_gateway.test.gw_name
+	connection_type     = "bgp"
+	bgp_local_as_num    = "123"
+	bgp_remote_as_num   = "345"
+	remote_gateway_ip   = "172.12.13.14"
+	disable_activemesh  = true  # Explicitly set to true - should appear in state
+}
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
