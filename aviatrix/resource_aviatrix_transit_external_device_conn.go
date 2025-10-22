@@ -455,7 +455,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"disable_activemesh": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
