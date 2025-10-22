@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -75,7 +76,7 @@ func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceD
 
 	trustBundle, err := client.GetDCFTrustBundle(ctx, bundleID)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}

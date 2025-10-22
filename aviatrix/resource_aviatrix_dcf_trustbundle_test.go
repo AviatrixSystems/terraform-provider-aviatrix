@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -126,7 +127,7 @@ func testAccCheckDCFTrustBundleExists(n string) resource.TestCheckFunc {
 
 		trustBundle, err := client.GetDCFTrustBundle(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get DCF Trust Bundle status: %v", err)
+			return fmt.Errorf("failed to get DCF Trust Bundle status: %w", err)
 		}
 
 		if trustBundle.BundleID != rs.Primary.ID {
@@ -146,7 +147,7 @@ func testAccCheckDCFTrustBundleDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetDCFTrustBundle(context.Background(), rs.Primary.ID)
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("DCF Trust Bundle still exists when it should be destroyed")
 		}
 	}
