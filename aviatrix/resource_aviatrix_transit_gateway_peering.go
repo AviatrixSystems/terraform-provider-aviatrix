@@ -147,7 +147,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"insane_mode": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "Enable HPE mode for peering with Edge Transit",
 			},
 			"gateway1_logical_ifnames": {
@@ -169,8 +169,8 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"disable_activemesh": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
-				Computed:    true,
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
 		},
@@ -193,13 +193,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: transitGatewayName1,
 		TransitGatewayName2: transitGatewayName2,
-	}
-
-	// Handle disable_activemesh - use false as default if not provided
-	if disableActivemesh, ok := d.GetOk("disable_activemesh"); ok {
-		transitGatewayPeering.DisableActivemesh = disableActivemesh.(bool)
-	} else {
-		transitGatewayPeering.DisableActivemesh = false
+		DisableActivemesh:   d.Get("disable_activemesh").(bool),
 	}
 
 	transitGatewayPeering.EnableOverPrivateNetwork, ok = d.Get("enable_peering_over_private_network").(bool)
