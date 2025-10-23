@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 )
@@ -131,54 +130,6 @@ func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error
 		return webGroup, nil
 	}
 	return nil, ErrNotFound
-}
-
-func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error) {
-	endpoint := fmt.Sprintf("app-domains/%s", uuid)
-
-	type WebGroupMatchExpressionResult struct {
-		All map[string]string `json:"all"`
-	}
-	type WebGroupAnyResult struct {
-		Any []WebGroupMatchExpressionResult `json:"any"`
-	}
-	type WebGroupResult struct {
-		UUID     string            `json:"uuid"`
-		Name     string            `json:"name"`
-		Selector WebGroupAnyResult `json:"selector"`
-	}
-
-	type WebGroupResp struct {
-		WebGroups []WebGroupResult `json:"app_domains"`
-	}
-
-	g, err := c.appdomainCache.Get(ctx, c, uuid)
-	if err != nil {
-		return nil, err
-	}
-
-	selector := WebGroupAnyResult{}
-	if err := json.Unmarshal(g.Selector, &selector); err != nil {
-		return nil, err
-	}
-
-	webGroup := &WebGroup{
-		Name: g.Name,
-		UUID: g.UUID,
-	}
-
-	for _, filterResult := range selector.Any {
-		filterMap := filterResult.All
-
-		filter := &WebGroupMatchExpression{
-			SniFilter: filterMap["snifilter"],
-			UrlFilter: filterMap["urlfilter"],
-		}
-
-		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
-	}
-
-	return webGroup, nil
 }
 
 func (c *Client) UpdateWebGroup(ctx context.Context, webGroup *WebGroup, uuid string) error {
