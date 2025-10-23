@@ -78,7 +78,7 @@ func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
-			return nil
+			return diag.Errorf("DCF Trust Bundle not found: %s", err)
 		}
 		return diag.Errorf("failed to read DCF Trust Bundle: %s", err)
 	}
@@ -118,7 +118,7 @@ func resourceAviatrixDCFTrustBundleDelete(ctx context.Context, d *schema.Resourc
 
 	err := client.DeleteDCFTrustBundle(ctx, bundleID)
 	if err != nil {
-		return diag.Errorf("failed to delete DCF Trust Bundle: %v", err)
+		return diag.Errorf("failed to delete DCF Trust Bundle: %s", err)
 	}
 
 	return nil
