@@ -32,7 +32,7 @@ func TestAccAviatrixWebGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "test-web-group"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.urlfilter", "https://aviatrix.com/test"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.urlfilter", "aviatrix.com/test"),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ resource "aviatrix_web_group" "test" {
 
 	selector {
 		match_expressions {
-			urlfilter = "https://aviatrix.com/test"
+			urlfilter = "aviatrix.com/test"
 		}
 	}
 }
