@@ -2,7 +2,7 @@ package goaviatrix
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 )
 
@@ -19,6 +19,18 @@ type WebGroup struct {
 	Name     string
 	UUID     string
 	Selector WebGroupSelector
+}
+
+type WebGroupMatchExpressionResult struct {
+	All map[string]string `json:"all"`
+}
+type WebGroupAnyResult struct {
+	Any []WebGroupMatchExpressionResult `json:"any"`
+}
+type WebGroupResult struct {
+	UUID     string            `json:"uuid"`
+	Name     string            `json:"name"`
+	Selector WebGroupAnyResult `json:"selector"`
 }
 
 func webGroupFilterToMap(filter *WebGroupMatchExpression) map[string]string {
@@ -61,52 +73,63 @@ func (c *Client) CreateWebGroup(ctx context.Context, webGroup *WebGroup) (string
 	return c.appdomainCache.Create(ctx, c, form)
 }
 
+func (c *Client) GetWebGroupByName(ctx context.Context, name string) (*WebGroup, error) {
+	endpoint := fmt.Sprintf("app-domains/name/%s", name)
+
+	var data WebGroupResult
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	if data.Name == name {
+		webGroup := &WebGroup{
+			Name: data.Name,
+			UUID: data.UUID,
+		}
+
+		for _, filterResult := range data.Selector.Any {
+			filterMap := filterResult.All
+
+			filter := &WebGroupMatchExpression{
+				SniFilter: filterMap["snifilter"],
+				UrlFilter: filterMap["urlfilter"],
+			}
+
+			webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
+		}
+		return webGroup, nil
+	}
+	return nil, ErrNotFound
+}
+
 func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error) {
-	type WebGroupMatchExpressionResult struct {
-		All map[string]string `json:"all"`
-	}
+	endpoint := fmt.Sprintf("app-domains/%s", uuid)
 
-	type WebGroupAnyResult struct {
-		Any []WebGroupMatchExpressionResult `json:"any"`
-	}
-
-	type WebGroupResult struct {
-		UUID     string            `json:"uuid"`
-		Name     string            `json:"name"`
-		Selector WebGroupAnyResult `json:"selector"`
-	}
-
-	type WebGroupResp struct {
-		WebGroups []WebGroupResult `json:"app_domains"`
-	}
-
-	g, err := c.appdomainCache.Get(ctx, c, uuid)
+	var data WebGroupResult
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	selector := WebGroupAnyResult{}
-	if err := json.Unmarshal(g.Selector, &selector); err != nil {
-		return nil, err
-	}
-
-	webGroup := &WebGroup{
-		Name: g.Name,
-		UUID: g.UUID,
-	}
-
-	for _, filterResult := range selector.Any {
-		filterMap := filterResult.All
-
-		filter := &WebGroupMatchExpression{
-			SniFilter: filterMap["snifilter"],
-			UrlFilter: filterMap["urlfilter"],
+	if data.UUID == uuid {
+		webGroup := &WebGroup{
+			Name: data.Name,
+			UUID: data.UUID,
 		}
 
-		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
-	}
+		for _, filterResult := range data.Selector.Any {
+			filterMap := filterResult.All
 
-	return webGroup, nil
+			filter := &WebGroupMatchExpression{
+				SniFilter: filterMap["snifilter"],
+				UrlFilter: filterMap["urlfilter"],
+			}
+
+			webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
+		}
+		return webGroup, nil
+	}
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateWebGroup(ctx context.Context, webGroup *WebGroup, uuid string) error {
