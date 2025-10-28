@@ -229,6 +229,7 @@ type Gateway struct {
 	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
+	InsertionGateway                bool                                `json:"insertion_gateway,omitempty"`
 }
 
 type HaGateway struct {
