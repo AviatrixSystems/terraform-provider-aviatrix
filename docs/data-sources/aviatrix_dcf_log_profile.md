@@ -61,5 +61,5 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `profile_id` - (String) The unique identifier for the Log Profile which can be referenced in a DCF policy
-* `session_end` - (Boolean) Tells us if the logging of session end enabled.
-* `session_start` - (Boolean) Tells us if the logging of session start enabled.
+* `session_end` - (Boolean) Tells us if the logging of session end is enabled.
+* `session_start` - (Boolean) Tells us if the logging of session start is enabled.

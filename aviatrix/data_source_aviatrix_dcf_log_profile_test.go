@@ -17,12 +17,7 @@ func TestAccDataSourceAviatrixDcfLogProfile_basic(t *testing.T) {
 		t.Skip("Skipping Data Source DCF Log Profile test as SKIP_DATA_DCF_LOG_PROFILE is set")
 	}
 
-	// Check if test log profile name is provided
-	testLogProfileName := os.Getenv("TEST_DCF_LOG_PROFILE_NAME")
-	if testLogProfileName == "" {
-		t.Skip("Skipping Data Source DCF Log Profile test as TEST_DCF_LOG_PROFILE_NAME is not set. " +
-			"Please set TEST_DCF_LOG_PROFILE_NAME to the name of an existing DCF log profile in your test environment.")
-	}
+	testLogProfileName := "start/end"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
