@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"net/url"
 )
 
 type LogProfile struct {
@@ -13,6 +14,7 @@ type LogProfile struct {
 }
 
 func (c *Client) GetLogProfileByName(ctx context.Context, profileName string) (*LogProfile, error) {
+	profileName = url.QueryEscape(profileName)
 	endpoint := fmt.Sprintf("dcf/log-profile/name/%s", profileName)
 
 	var data LogProfile

@@ -8,7 +8,13 @@ description: |-
 
 # aviatrix_dcf_log_profile
 
-The **aviatrix_dcf_log_profile** data source provides details about a specific Distributed Cloud Firewall (DCF) log profile created by the Aviatrix Controller.
+The **aviatrix_dcf_log_profile** data source provides details about a specific Distributed Cloud Firewall (DCF) log profile.
+
+There are 3 system defined log_profiles that can be referenced:
+1. start - Log profile for logging session start only
+2. end - Log profile for logging session end only
+3. start/end - Log profile for logging session start and end
+
 
 ## Example Usage
 
@@ -16,6 +22,31 @@ The **aviatrix_dcf_log_profile** data source provides details about a specific D
 # Aviatrix DCF Log Profile Data Source
 data "aviatrix_dcf_log_profile" "example" {
   profile_name = "my-log-profile"
+}
+
+# Use the log profile ID in a DCF policy
+resource "aviatrix_dcf_mwp_policy_list" "example" {
+  name = "Example policy with custom log profile"
+  
+  policies {
+    name             = "policy-with-custom-logging"
+    action           = "PERMIT"
+    priority         = 1
+    protocol         = "TCP"
+    logging          = true
+    # Use the profile_id to refer to a log_profile here.
+    log_profile      = data.aviatrix_dcf_log_profile.example.profile_id
+    src_smart_groups = [
+      "f15c9890-c8c4-4c1a-a2b5-ef0ab34d2e30"
+    ]
+    dst_smart_groups = [
+      "82e50c85-82bf-4b3b-b9da-aaed34a3aa53"
+    ]
+    port_ranges {
+      lo = 80
+      hi = 80
+    }
+  }
 }
 ```
 
@@ -29,6 +60,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `profile_id` - (String) The unique identifier for the Log Profile.
-* `session_end` - (Boolean) Toggle to enable logging of session end.
-* `session_start` - (Boolean) Toggle to enable logging of session start.
+* `profile_id` - (String) The unique identifier for the Log Profile which can be referenced in a DCF policy
+* `session_end` - (Boolean) Tells us if the logging of session end enabled.
+* `session_start` - (Boolean) Tells us if the logging of session start enabled.
