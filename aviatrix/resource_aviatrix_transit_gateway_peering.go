@@ -147,7 +147,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"insane_mode": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "Enable HPE mode for peering with Edge Transit",
 			},
 			"gateway1_logical_ifnames": {
@@ -347,12 +347,8 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	// Set insane mode only for the edge gateways and only if user explicitly set it
 	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) || goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		// Only set insane_mode in state if user explicitly provided it in configuration
-		// Use GetRawConfig to check if user explicitly set the field (ignores default values)
-		rawConfig := d.GetRawConfig()
-		if insaneModeValue := rawConfig.GetAttr("insane_mode"); insaneModeValue.IsKnown() && !insaneModeValue.IsNull() {
-			if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
-				return fmt.Errorf("failed to set insane_mode: %w", err)
-			}
+		if err := d.Set("insane_mode", transitGatewayPeering.EnableInsaneMode); err != nil {
+			return fmt.Errorf("failed to set insane_mode: %w", err)
 		}
 	}
 
