@@ -43,7 +43,7 @@ func TestAccDataSourceAviatrixDcfLogProfile_basic(t *testing.T) {
 func testAccDataSourceAviatrixDcfLogProfileConfigBasic(profileName string) string {
 	return fmt.Sprintf(`
 data "aviatrix_dcf_log_profile" "test" {
-	profile_name = "%s"
+	profile_name = "%q"
 }
 	`, profileName)
 }
