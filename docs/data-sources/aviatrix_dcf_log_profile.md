@@ -27,7 +27,7 @@ data "aviatrix_dcf_log_profile" "example" {
 # Use the log profile ID in a DCF policy
 resource "aviatrix_dcf_mwp_policy_list" "example" {
   name = "Example policy with custom log profile"
-  
+
   policies {
     name             = "policy-with-custom-logging"
     action           = "PERMIT"
