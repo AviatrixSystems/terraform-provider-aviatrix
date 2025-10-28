@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"strings"
 	"time"
@@ -69,4 +71,55 @@ func (c *Client) UpdateDCFTrustBundle(ctx context.Context, bundleUUID string, tr
 func (c *Client) DeleteDCFTrustBundle(ctx context.Context, bundleUUID string) error {
 	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
+}
+
+func ValidateTrustbundle(i interface{}, k string) ([]string, []error) {
+	v, ok := i.(string)
+	if !ok {
+		return nil, []error{fmt.Errorf("expected type of %q to be string", k)}
+	}
+	certs, err := ParseCertificates([]byte(v))
+	if err != nil {
+		return nil, []error{err}
+	}
+	if len(certs) == 0 {
+		return nil, []error{fmt.Errorf("no certificates found in bundle")}
+	}
+	for _, cert := range certs {
+		if !cert.IsCA {
+			return nil, []error{fmt.Errorf("certificate %q is not a CA", cert.Subject.CommonName)}
+		}
+	}
+	return nil, nil
+}
+
+func ParseCertificates(remain []byte) ([]*x509.Certificate, error) {
+	return parseCertificatesNoBom(remain)
+}
+
+func parseCertificatesNoBom(remain []byte) ([]*x509.Certificate, error) {
+	var chain []*x509.Certificate
+
+	for {
+		var block *pem.Block
+
+		block, remain = pem.Decode(remain)
+		if block == nil {
+			break
+		}
+
+		// We ignore non-certificate PEM blocks because
+		// that's what (*CertPool).AppendCertsFromPEM()
+		// does.
+		if block.Type == "CERTIFICATE" {
+			cert, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse %q object: %w", block.Type, err)
+			}
+
+			chain = append(chain, cert)
+		}
+	}
+
+	return chain, nil
 }

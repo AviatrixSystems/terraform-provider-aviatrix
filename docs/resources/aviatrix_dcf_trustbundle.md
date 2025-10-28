@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_dcf_trustbundle
 
-The **aviatrix_dcf_trustbundle** resource handles the creation and management of DCF Trust Bundles for verifying origin certificates in Distributed Cloud Firewall Man-in-the-Middle (MITM) inspection. Available as of Provider R3.3.0+.
+The **aviatrix_dcf_trustbundle** resource handles the creation and management of DCF Trust Bundles for verifying origin certificates in Distributed Cloud Firewall Man-in-the-Middle (MITM) inspection.
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ The following arguments are supported:
 ### Required
 
 * `display_name` - (Required) The display name for the DCF trust bundle. This name is used to identify the trust bundle in the Aviatrix Controller.
-* `bundle_content` - (Required, Sensitive) The CA bundle content in PEM format. This should contain one or more X.509 certificates that will be used to verify origin certificates during DCF MITM inspection.
+* `bundle_content` - (Required, Sensitive) The CA bundle content in PEM format. This should contain one or more X.509 certificates separated by new lines, that will be used to verify origin certificates during DCF MITM inspection.
 
 ## Attribute Reference
 

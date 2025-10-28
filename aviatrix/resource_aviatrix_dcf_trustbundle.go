@@ -29,7 +29,7 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringIsNotWhiteSpace,
+				ValidateFunc: goaviatrix.ValidateTrustbundle,
 				Description:  "The CA bundle content in PEM format.",
 			},
 			"bundle_id": {
