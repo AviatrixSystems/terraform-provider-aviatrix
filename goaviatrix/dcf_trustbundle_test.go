@@ -216,7 +216,7 @@ func TestValidateTrustbundle(t *testing.T) {
 			if tt.expectError {
 				assert.NotEmpty(t, errs, "Expected validation errors but got none")
 				if len(errs) > 0 {
-					assert.Contains(t, errs[0].Error(), tt.errorMsg, 
+					assert.Contains(t, errs[0].Error(), tt.errorMsg,
 						"Error message should contain expected text")
 				}
 			} else {
@@ -225,4 +225,3 @@ func TestValidateTrustbundle(t *testing.T) {
 		})
 	}
 }
-
