@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"context"
 	"crypto/x509"
 	"encoding/pem"
@@ -94,6 +95,9 @@ func ValidateTrustbundle(i interface{}, k string) ([]string, []error) {
 }
 
 func ParseCertificates(remain []byte) ([]*x509.Certificate, error) {
+	// Remove UTF-8 BOM if present using standard library
+	utf8BOM := []byte{0xEF, 0xBB, 0xBF}
+	remain = bytes.TrimPrefix(remain, utf8BOM)
 	return parseCertificatesNoBom(remain)
 }
 
