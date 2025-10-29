@@ -20,7 +20,7 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 
 	resourceName := "aviatrix_edge_gateway_selfmanaged.test"
 	gwName := "edge-" + acctest.RandString(5)
-	siteId := "site-" + acctest.RandString(5)
+	siteID := "site-" + acctest.RandString(5)
 	path, _ := os.Getwd()
 
 	resource.Test(t, resource.TestCase{
@@ -31,11 +31,11 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEdgeGatewaySelfmanagedDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeGatewaySelfmanagedBasic(gwName, siteId, path),
+				Config: testAccEdgeGatewaySelfmanagedBasic(gwName, siteID, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "site_id", siteID),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "172.16.15.162/20"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "10.230.5.32/24"),
@@ -50,11 +50,11 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEdgeGatewaySelfmanagedUpdate(gwName, siteId, path),
+				Config: testAccEdgeGatewaySelfmanagedUpdate(gwName, siteID, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "site_id", siteID),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_encryption_cipher", "default"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_forward_secrecy", "disable"),
 				),
@@ -69,7 +69,7 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 	})
 }
 
-func testAccEdgeGatewaySelfmanagedBasic(gwName, siteId, path string) string {
+func testAccEdgeGatewaySelfmanagedBasic(gwName, siteID, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	gw_name                            = "%s"
@@ -110,10 +110,10 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		"10.230.5.0/24"
 	]
 }
-  `, gwName, siteId, path)
+  `, gwName, siteID, path)
 }
 
-func testAccEdgeGatewaySelfmanagedUpdate(gwName, siteId, path string) string {
+func testAccEdgeGatewaySelfmanagedUpdate(gwName, siteID, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	gw_name                            = "%s"
@@ -154,7 +154,7 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 		"10.230.5.0/24"
 	]
 }
-  `, gwName, siteId, path)
+  `, gwName, siteID, path)
 }
 
 func testAccCheckEdgeGatewaySelfmanagedExists(resourceName string) resource.TestCheckFunc {
@@ -204,7 +204,7 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_tunnelPolicies(t *testing.T) {
 
 	resourceName := "aviatrix_edge_gateway_selfmanaged.test_tunnel"
 	gwName := "edge-tunnel-" + acctest.RandString(5)
-	siteId := "site-tunnel-" + acctest.RandString(5)
+	siteID := "site-tunnel-" + acctest.RandString(5)
 	path, _ := os.Getwd()
 
 	resource.Test(t, resource.TestCase{
@@ -215,31 +215,31 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_tunnelPolicies(t *testing.T) {
 		CheckDestroy: testAccCheckEdgeGatewaySelfmanagedDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteId, path, "default", "disable"),
+				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteID, path, "default", "disable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "site_id", siteID),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_encryption_cipher", "default"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_forward_secrecy", "disable"),
 				),
 			},
 			{
-				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteId, path, "strong", "enable"),
+				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteID, path, "strong", "enable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "site_id", siteID),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_encryption_cipher", "strong"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_forward_secrecy", "enable"),
 				),
 			},
 			{
-				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteId, path, "default", "disable"),
+				Config: testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteID, path, "default", "disable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeGatewaySelfmanagedExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					resource.TestCheckResourceAttr(resourceName, "site_id", siteID),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_encryption_cipher", "default"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_forward_secrecy", "disable"),
 				),
@@ -248,7 +248,7 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_tunnelPolicies(t *testing.T) {
 	})
 }
 
-func testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteId, path, encCipher, forwardSecrecy string) string {
+func testAccEdgeGatewaySelfmanagedTunnelPoliciesConfig(gwName, siteID, path, encCipher, forwardSecrecy string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_gateway_selfmanaged" "test_tunnel" {
 	gw_name                            = "%s"
@@ -280,5 +280,5 @@ resource "aviatrix_edge_gateway_selfmanaged" "test_tunnel" {
 		gateway_ip  = "172.16.0.1"
 	}
 }
-  `, gwName, siteId, path, encCipher, forwardSecrecy)
+  `, gwName, siteID, path, encCipher, forwardSecrecy)
 }
