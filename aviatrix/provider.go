@@ -113,7 +113,6 @@ func Provider() *schema.Provider {
 			"aviatrix_dcf_ips_rule_feed":                                      resourceAviatrixDCFIpsRuleFeed(),
 			"aviatrix_dcf_ips_profile":                                        resourceAviatrixDCFIpsProfile(),
 			"aviatrix_dcf_ips_profile_vpc":                                    resourceAviatrixDCFIpsProfileVpc(),
-			"aviatrix_dcf_trustbundle":                                        resourceAviatrixDCFTrustBundle(),
 			"aviatrix_device_interface_config":                                resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_distributed_firewalling_config":                         resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":                      resourceAviatrixDistributedFirewallingIntraVpc(),
