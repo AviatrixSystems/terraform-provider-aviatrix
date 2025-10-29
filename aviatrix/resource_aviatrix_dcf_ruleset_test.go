@@ -31,12 +31,12 @@ func TestAccAviatriDcfRuleset_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDcfRulesetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-dcf-ruleset"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.name", "test-distributed-firewalling-policy"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.action", "PERMIT"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.priority", "0"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.src_smart_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policies.0.dst_smart_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.name", "test-distributed-firewalling-rule"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.action", "PERMIT"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.src_smart_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.dst_smart_groups.#", "1"),
 				),
 			},
 			{
@@ -70,8 +70,8 @@ resource "aviatrix_smart_group" "ad2" {
 
 resource "aviatrix_dcf_ruleset" "test" {
 	name = "test-dcf-ruleset"
-	policies {
-		name             = "test-distributed-firewalling-policy"
+	rules {
+		name             = "test-distributed-firewalling-rule"
 		action           = "PERMIT"
 		logging          = true
 		priority         = 0
