@@ -49,7 +49,6 @@ func (c *Client) GetDCFTrustBundle(ctx context.Context, bundleUUID string) (*Tru
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
 	}
-	
 
 	var trustBundle TrustBundle
 	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
