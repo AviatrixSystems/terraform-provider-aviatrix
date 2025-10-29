@@ -119,7 +119,7 @@ The following arguments are supported:
     * `decrypt_policy` - (Optional) Decryption options for the rule. Must be one of DECRYPT_UNSPECIFIED, DECRYPT_ALLOWED or DECRYPT_NOT_ALLOWED.
     * `exclude_sg_orchestration` - (Optional) If this flag is set to true, this rule will be ignored for SG orchestration. Valid values: true, false. Default: false.
     * `port_ranges` - (Optional) Set of port ranges for the rule. Cannot be used when `protocol` is "ICMP".
-      * `lo` - (Required) Lower bound for the range of ports. 
+      * `lo` - (Required) Lower bound for the range of ports.
       * `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the rule.
     * `watch` - (Optional) Whether to enforce the rule or only watch packets. If "true" packets are only watched. This allows you to observe if the traffic impacted by this rule causes any inadvertent issues (such as traffic being dropped). Type: Boolean.
     * `logging` - (Optional) Whether to enable logging for packets that match the rule. Type: Boolean.
