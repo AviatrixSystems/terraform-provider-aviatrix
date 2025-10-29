@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type WebGroupMatchExpression struct {
@@ -90,6 +91,9 @@ func (c *Client) GetWebGroupByName(ctx context.Context, name string) (*WebGroup,
 	var data WebGroupResult
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
+		if strings.Contains(err.Error(), "App domain not found") {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	if data.Name == name {
@@ -119,6 +123,9 @@ func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error
 	var data WebGroupResult
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
+		if strings.Contains(err.Error(), "App domain not found") {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
