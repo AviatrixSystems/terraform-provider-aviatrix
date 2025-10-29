@@ -114,6 +114,8 @@ The following arguments are supported:
   * `vrrp_virtual_ip` - (Optional) LAN sub-interface virtual IP.
   * `tag` - (Optional) Tag.
 * `included_advertised_spoke_routes` - (Optional) A list of CIDRs to be advertised to on-prem gateways as Included CIDR List. When configured, it will replace all advertised routes from this VPC.
+* `tunnel_encryption_cipher` - (Optional) Stronger encryption algorithms (AES-256-GCM-96) for tunnels. Config options are default/strong.
+* `tunnel_forward_secrecy` - (Optional) Perfect Forward Secrecy (PFS) for tunnels. Config Options are enable/disable.
 
 ## Attribute Reference
 

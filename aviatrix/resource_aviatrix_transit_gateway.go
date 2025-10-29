@@ -948,17 +948,19 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
 			},
-			"ph2_encryption_policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase 2 encryption policy. Config options are default/strong.",
-				Default:     "default",
+			"tunnel_encryption_cipher": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Stronger encryption algorithms (AES-256-GCM-96) for tunnels. Config options are default/strong.",
+				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
+				Default:      "default",
 			},
-			"ph2_pfs_policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disable",
-				Default:     "disable",
+			"tunnel_forward_secrecy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Perfect Forward Secrecy (PFS) for tunnels. Config Options are enable/disable",
+				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
+				Default:      "disable",
 			},
 		},
 	}
@@ -990,8 +992,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			FaultDomain:              d.Get("fault_domain").(string),
 			ApprovedLearnedCidrs:     getStringSet(d, "approved_learned_cidrs"),
 			Transit:                  true,
-			Ph2EncryptionPolicy:      d.Get("ph2_encryption_policy").(string),
-			Ph2PfsPolicy:             d.Get("ph2_pfs_policy").(string),
+			TunnelEncryptionCipher:   d.Get("tunnel_encryption_cipher").(string),
+			TunnelForwardSecrecy:     d.Get("tunnel_forward_secrecy").(string),
 		}
 
 		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
@@ -1951,8 +1953,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
 	d.Set("enable_ipv6", gw.EnableIPv6)
-	d.Set("ph2_encryption_policy", gateway.Ph2EncryptionPolicy)
-	d.Set("ph2_pfs_policy", gateway.Ph2PfsPolicy)
+	d.Set("tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
+	d.Set("tunnel_forward_secrecy", gw.TunnelForwardSecrecy)
 
 	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
 	// This will allow the AEP EAT gateways to be created before setting the communities.
@@ -2548,12 +2550,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haSubnet == "" && haZone != "" {
 			return fmt.Errorf("'ha_subnet' must be provided to enable HA on Azure, cannot enable HA with only 'ha_zone'")
 		}
-	}
-	if d.HasChange("ph2_encryption_policy") {
-		return fmt.Errorf("updating ph2_encryption_policy is not allowed")
-	}
-	if d.HasChange("ph2_pfs_policy") {
-		return fmt.Errorf("updating ph2_pfs_policy is not allowed")
 	}
 	if d.HasChange("allocate_new_eip") {
 		return fmt.Errorf("updating allocate_new_eip is not allowed")
@@ -3946,6 +3942,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
+		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_encryption_cipher must be a string")
+		}
+		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_forward_secrecy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return fmt.Errorf("could not set phase tunnel encryption cipher during transit gateway update: %w", err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixTransitGatewayRead(d, meta)
 }
@@ -4088,14 +4100,14 @@ func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 
 func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client, cloudType int) error {
 	gateway := &goaviatrix.TransitVpc{
-		CloudType:           d.Get("cloud_type").(int),
-		AccountName:         d.Get("account_name").(string),
-		GwName:              d.Get("gw_name").(string),
-		VpcID:               d.Get("vpc_id").(string),
-		VpcSize:             d.Get("gw_size").(string),
-		Transit:             true,
-		Ph2EncryptionPolicy: d.Get("ph2_encryption_policy").(string),
-		Ph2PfsPolicy:        d.Get("ph2_pfs_policy").(string),
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		GwName:                 d.Get("gw_name").(string),
+		VpcID:                  d.Get("vpc_id").(string),
+		VpcSize:                d.Get("gw_size").(string),
+		Transit:                true,
+		TunnelEncryptionCipher: d.Get("tunnel_encryption_cipher").(string),
+		TunnelForwardSecrecy:   d.Get("tunnel_forward_secrecy").(string),
 	}
 
 	// get the interface config details

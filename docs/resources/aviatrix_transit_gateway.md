@@ -510,8 +510,8 @@ The following arguments are supported:
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive packet CPU re-balancing on transit gateway. Valid values: true, false. Default value: false. Available in provider version R2.21.2+.
 * `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false. Available as of provider version R.2.22.1+.
 * `enable_ipv6` - (Optional) To enable IPv6 CIDR in Transit Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
-* `ph2_encryption_policy` - (Optional) Phase 2 encryption policy. Config options are default/strong.
-* `ph2_pfs_policy` - (Optional) Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disabled.
+* `tunnel_encryption_cipher` - (Optional) Stronger encryption algorithms (AES-256-GCM-96) for tunnels. Config options are default/strong.
+* `tunnel_forward_secrecy` - (Optional) Perfect Forward Secrecy (PFS) for tunnels. Config Options are enable/disable.
 
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.
 

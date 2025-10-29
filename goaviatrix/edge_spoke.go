@@ -57,8 +57,8 @@ type EdgeSpoke struct {
 	Vlan                               string                        `json:"vlan,omitempty"`
 	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
 	AdvertisedCidrList                 []string                      `json:"advertise_cidr_list,omitempty"`
-	Ph2EncryptionPolicy                string                        `json:"ph2_encryption_policy,omitempty"`
-	Ph2PfsPolicy                       string                        `json:"ph2_pfs_policy,omitempty"`
+	TunnelEncryptionCipher             string                        `json:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy               string                        `json:"ph2_pfs_policy,omitempty"`
 }
 
 type EdgeSpokeInterface struct {
@@ -125,8 +125,8 @@ type EdgeSpokeResp struct {
 	InterfaceList                      []*EdgeSpokeInterface         `json:"interfaces"`
 	CustomInterfaceMapping             map[string]CustomInterfaceMap `json:"custom_interface_mapping,omitempty"`
 	AdvertisedCidrList                 []string                      `json:"advertise_cidr_list,omitempty"`
-	Ph2EncryptionPolicy                string                        `form:"ph2_encryption_policy,omitempty"`
-	Ph2PfsPolicy                       string                        `form:"ph2_pfs_policy,omitempty"`
+	TunnelEncryptionCipher             string                        `form:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy               string                        `form:"ph2_pfs_policy,omitempty"`
 }
 
 type EdgeSpokeListResp struct {

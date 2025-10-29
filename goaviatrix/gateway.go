@@ -235,8 +235,8 @@ type Gateway struct {
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
 	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
 	InsertionGateway                bool                                `json:"insertion_gateway,omitempty"`
-	Ph2EncryptionPolicy             string                              `json:"ph2_encryption_policy,omitempty"`
-	Ph2PfsPolicy                    string                              `json:"ph2_pfs_policy,omitempty"`
+	TunnelEncryptionCipher          string                              `json:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy            string                              `json:"ph2_pfs_policy,omitempty"`
 }
 
 type HaGateway struct {
@@ -1495,7 +1495,7 @@ func (c *Client) DisableIPv6(gateway *Gateway) error {
 	return c.PostAPI(action, form, BasicCheck)
 }
 
-// sets the phase2 encryption and pfs policy for the specified gateway
+// SetGatewayPhase2Policy sets the phase2 encryption and pfs policy for the specified gateway.
 func (c *Client) SetGatewayPhase2Policy(gwName, encPolicy string, pfsPolicy string) error {
 	request := GatewayPhase2Policy{
 		Ph2EncryptionPolicy: encPolicy,

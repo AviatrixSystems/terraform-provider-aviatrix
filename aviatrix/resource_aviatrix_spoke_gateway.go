@@ -650,17 +650,19 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description:  "AZ of subnet being created for Insertion Gateway. Required if insertion_gateway is enabled.",
 				RequiredWith: []string{"insertion_gateway"},
 			},
-			"ph2_encryption_policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase 2 encryption policy. Config options are default/strong.",
-				Default:     "default",
+			"tunnel_encryption_cipher": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Stronger encryption algorithms (AES-256-GCM-96) for tunnels. Config options are default/strong.",
+				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
+				Default:      "default",
 			},
-			"ph2_pfs_policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disable",
-				Default:     "disable",
+			"tunnel_forward_secrecy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Perfect Forward Secrecy (PFS) for tunnels. Config Options are enable/disable",
+				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
+				Default:      "disable",
 			},
 		},
 	}
@@ -670,18 +672,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
-		CloudType:            d.Get("cloud_type").(int),
-		AccountName:          d.Get("account_name").(string),
-		GwName:               d.Get("gw_name").(string),
-		VpcSize:              d.Get("gw_size").(string),
-		Subnet:               d.Get("subnet").(string),
-		HASubnet:             d.Get("ha_subnet").(string),
-		AvailabilityDomain:   d.Get("availability_domain").(string),
-		FaultDomain:          d.Get("fault_domain").(string),
-		ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
-		EnableGlobalVpc:      d.Get("enable_global_vpc").(bool),
-		Ph2EncryptionPolicy:  d.Get("ph2_encryption_policy").(string),
-		Ph2PfsPolicy:         d.Get("ph2_pfs_policy").(string),
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		GwName:                 d.Get("gw_name").(string),
+		VpcSize:                d.Get("gw_size").(string),
+		Subnet:                 d.Get("subnet").(string),
+		HASubnet:               d.Get("ha_subnet").(string),
+		AvailabilityDomain:     d.Get("availability_domain").(string),
+		FaultDomain:            d.Get("fault_domain").(string),
+		ApprovedLearnedCidrs:   getStringSet(d, "approved_learned_cidrs"),
+		EnableGlobalVpc:        d.Get("enable_global_vpc").(bool),
+		TunnelEncryptionCipher: d.Get("tunnel_encryption_cipher").(string),
+		TunnelForwardSecrecy:   d.Get("tunnel_forward_secrecy").(string),
 	}
 
 	if !d.Get("manage_ha_gateway").(bool) {
@@ -1559,8 +1561,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	} else {
 		d.Set("insertion_gateway_az", "")
 	}
-	d.Set("ph2_encryption_policy", gateway.Ph2EncryptionPolicy)
-	d.Set("ph2_pfs_policy", gateway.Ph2PfsPolicy)
+	d.Set("tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
+	d.Set("tunnel_forward_secrecy", gw.TunnelForwardSecrecy)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
@@ -2838,19 +2840,19 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("ph2_encryption_policy") || d.HasChange("ph2_pfs_policy") {
-		encPolicy, ok := d.Get("ph2_encryption_policy").(string)
+	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
+		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
 		if !ok {
-			return fmt.Errorf("ph2_encryption_policy must be a string")
+			return fmt.Errorf("tunnel_encryption_cipher must be a string")
 		}
-		pfsPolicy, ok := d.Get("ph2_pfs_policy").(string)
+		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
 		if !ok {
-			return fmt.Errorf("ph2_pfs_policy must be a string")
+			return fmt.Errorf("tunnel_forward_secrecy must be a string")
 		}
 
 		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
 		if err != nil {
-			return fmt.Errorf("could not set phase 2 policies during spoke gateway update: %w", err)
+			return fmt.Errorf("could not set tunnel cipher settings during gateway update: %w", err)
 		}
 	}
 
