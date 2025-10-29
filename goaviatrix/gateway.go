@@ -230,6 +230,7 @@ type Gateway struct {
 	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
 	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
+	InsertionGateway                bool                                `json:"insertion_gateway,omitempty"`
 }
 
 type HaGateway struct {

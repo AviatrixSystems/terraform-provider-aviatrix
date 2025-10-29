@@ -23,6 +23,7 @@ type SpokeHaGateway struct {
 	TagJson               string `json:"tag_json"`
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
 	Async                 bool   `json:"async"`
+	InsertionGateway      bool   `json:"insertion_gateway,omitempty"`
 }
 
 type APIRespHaGw struct {

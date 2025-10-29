@@ -35,6 +35,21 @@ func preAwsSpokeGatewayCheck(t *testing.T, msgCommon string) string {
 	return ""
 }
 
+func preAwsSpokeGatewayInsertionCheck(t *testing.T, msgCommon string) string {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_REGION",
+		"AWS_AVAILABILITY_ZONE",
+		"AWS_INSERTION_SUBNET",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+	return ""
+}
+
 func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
@@ -99,6 +114,41 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 						resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
 						resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
+
+	skipAWSInsertion := os.Getenv("SKIP_SPOKE_GATEWAY_AWS_INSERTION")
+	if skipAWSInsertion == "yes" {
+		t.Log("Skipping AWS Spoke Gateway Insertion test as SKIP_SPOKE_GATEWAY_AWS_INSERTION is set")
+	} else if skipAWS != "yes" {
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAwsSpokeGatewayInsertionCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckSpokeGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSpokeGatewayConfigAWSInsertion(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckSpokeGatewayExists(resourceName, &gateway),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-insertion-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "insertion_gateway", "true"),
+						resource.TestCheckResourceAttr(resourceName, "insertion_gateway_az", os.Getenv("AWS_AVAILABILITY_ZONE")),
 					),
 				},
 				{
@@ -246,6 +296,35 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"))
+}
+
+func testAccSpokeGatewayConfigAWSInsertion(rName string) string {
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
+	cloud_type           = 1
+	account_name         = aviatrix_account.test_acc_aws.account_name
+	gw_name              = "tfg-aws-insertion-%[1]s"
+	vpc_id               = "%[5]s"
+	vpc_reg              = "%[6]s"
+	gw_size              = "%[7]s"
+	subnet               = "%[8]s"
+	insertion_gateway    = true
+	insertion_gateway_az = "%[9]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_INSERTION_SUBNET"), os.Getenv("AWS_AVAILABILITY_ZONE"))
 }
 
 func testAccSpokeGatewayConfigGCP(rName string) string {
