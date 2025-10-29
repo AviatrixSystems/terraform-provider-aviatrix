@@ -28,7 +28,6 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 			"bundle_content": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Sensitive:    true,
 				ValidateFunc: goaviatrix.ValidateTrustbundle,
 				Description:  "The CA bundle content in PEM format.",
 			},
