@@ -1,20 +1,20 @@
 ---
 subcategory: "Secured Networking"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_dcf_mwp_policy_list"
+page_title: "Aviatrix: aviatrix_dcf_ruleset"
 description: |-
-  Creates and manages an Aviatrix Distributed-firewalling MultiWriter (MWP) Policy List
+  Creates and manages an Aviatrix Distributed-firewalling Ruleset
 ---
 
-# aviatrix_dcf_mwp_policy_list
+# aviatrix_dcf_ruleset
 
-The **aviatrix_dcf_mwp_policy_list** resource handles the creation and management of Aviatrix Distributed-firewalling MultiWriter (MWP) Policies and Policy List.
+The **aviatrix_dcf_ruleset** resource handles the creation and management of Aviatrix Distributed-firewalling Policies and Ruleset.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Distributed Firewalling MultiWriter (MWP) Policy List
-resource "aviatrix_dcf_mwp_policy_list" "test" {
+# Create an Aviatrix Distributed Firewalling Ruleset
+resource "aviatrix_dcf_ruleset" "test" {
   name = "Test policy"
   policies {
     name             = "df-policy-1"
@@ -52,8 +52,8 @@ resource "aviatrix_dcf_mwp_policy_list" "test" {
 }
 ```
 ```hcl
-# Create an Aviatrix Distributed Firewalling MultiWriter (MWP) Policy List
-resource "aviatrix_dcf_mwp_policy_list" "test" {
+# Create an Aviatrix Distributed Firewalling Ruleset
+resource "aviatrix_dcf_ruleset" "test" {
   name = "Test policy"
 
   policies {
@@ -106,7 +106,7 @@ resource "aviatrix_dcf_mwp_policy_list" "test" {
 The following arguments are supported:
 
 ### Required
-* `name` - (Required) Name of the policy list
+* `name` - (Required) Name of the ruleset
 * `policies` - (Required) Set of policies.
     * `name` - (Required) Name of the policy.
     * `action` - (Required) Action for the policy. Must be one of PERMIT, DENY, DEEP_PACKET_INSPECTION_PERMIT or INTRUSION_DETECTION_PERMIT.
@@ -129,8 +129,8 @@ The following arguments are supported:
 
 ## Import
 
-**aviatrix_dcf_mwp_policy_list** can be imported using the controller IP, e.g. controller IP is : 10.11.12.13
+**aviatrix_dcf_ruleset** can be imported using the controller IP, e.g. controller IP is : 10.11.12.13
 
 ```
-$ terraform import aviatrix_dcf_mwp_policy_list.test <policy_list_uuid>
+$ terraform import aviatrix_dcf_ruleset.test <ruleset_uuid>
 ```

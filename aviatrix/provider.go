@@ -109,7 +109,7 @@ func Provider() *schema.Provider {
 			"aviatrix_copilot_simple_deployment":                              resourceAviatrixCopilotSimpleDeployment(),
 			"aviatrix_datadog_agent":                                          resourceAviatrixDatadogAgent(),
 			"aviatrix_dcf_mwp_policy_block":                                   resourceAviatrixDCFPolicyBlock(),
-			"aviatrix_dcf_mwp_policy_list":                                    resourceAviatrixDCFPolicyList(),
+			"aviatrix_dcf_ruleset":                                            resourceAviatrixDCFRuleset(),
 			"aviatrix_dcf_ips_rule_feed":                                      resourceAviatrixDCFIpsRuleFeed(),
 			"aviatrix_dcf_ips_profile":                                        resourceAviatrixDCFIpsProfile(),
 			"aviatrix_dcf_ips_profile_vpc":                                    resourceAviatrixDCFIpsProfileVpc(),

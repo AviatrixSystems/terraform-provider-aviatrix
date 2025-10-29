@@ -13,12 +13,12 @@ import (
 )
 
 //nolint:funlen
-func resourceAviatrixDCFPolicyList() *schema.Resource {
+func resourceAviatrixDCFRuleset() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixDCFPolicyListCreate,
-		ReadWithoutTimeout:   resourceAviatrixDCFPolicyListRead,
-		UpdateWithoutTimeout: resourceAviatrixDCFPolicyListUpdate,
-		DeleteWithoutTimeout: resourceAviatrixDCFPolicyListDelete,
+		CreateWithoutTimeout: resourceAviatrixDCFRulesetCreate,
+		ReadWithoutTimeout:   resourceAviatrixDCFRulesetRead,
+		UpdateWithoutTimeout: resourceAviatrixDCFRulesetUpdate,
+		DeleteWithoutTimeout: resourceAviatrixDCFRulesetDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -26,17 +26,17 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the policy list.",
+				Description: "Name of the ruleset.",
 			},
 			"system_resource": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "Whether the policy list is a system resource.",
+				Description: "Whether the ruleset is a system resource.",
 			},
 			"attach_to": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The attachment point to which the policy list is attached.",
+				Description: "The attachment point to which the ruleset is attached.",
 			},
 			"policies": {
 				Type:        schema.TypeSet,
@@ -175,24 +175,24 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 	}
 }
 
-func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
+func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
 	policyList := &goaviatrix.DCFPolicyList{}
 
 	name, ok := d.Get("name").(string)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList name must be of type string")
+		return nil, fmt.Errorf("Ruleset name must be of type string")
 	}
 	policyList.Name = name
 
 	attachTo, ok := d.Get("attach_to").(string)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList attach_to must be of type string")
+		return nil, fmt.Errorf("Ruleset attach_to must be of type string")
 	}
 	policyList.AttachTo = attachTo
 
 	policiesSet, ok := d.Get("policies").(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList policies must be of type *schema.Set")
+		return nil, fmt.Errorf("Ruleset policies must be of type *schema.Set")
 	}
 
 	for _, policyInterface := range policiesSet.List() {
@@ -361,20 +361,20 @@ func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]st
 	return smartGroups, nil
 }
 
-func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
 	}
 
-	policyList, err := marshalDCFPolicyListInput(d)
+	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF MWP Policy during create: %s", err)
+		return diag.Errorf("invalid inputs for DCF Ruleset during create: %s", err)
 	}
 
 	uuid, err := client.CreateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to create DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to create DCF Ruleset: %s", err)
 	}
 
 	d.SetId(uuid)
@@ -383,7 +383,7 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 }
 
 //nolint:funlen,cyclop
-func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
@@ -397,7 +397,7 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to read DCF Ruleset: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -443,11 +443,11 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err := d.Set("name", policyList.Name); err != nil {
-		return diag.Errorf("failed to set name during DCF MWP Policy List read: %s", err)
+		return diag.Errorf("failed to set name during DCF Ruleset read: %s", err)
 	}
 
 	if err := d.Set("policies", policies); err != nil {
-		return diag.Errorf("failed to set policies during DCF MWP Policy List read: %s", err)
+		return diag.Errorf("failed to set policies during DCF Ruleset read: %s", err)
 	}
 
 	d.SetId(policyList.UUID)
@@ -455,26 +455,26 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixDCFPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
 	}
 
-	policyList, err := marshalDCFPolicyListInput(d)
+	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF MWP Policy during update: %s", err)
+		return diag.Errorf("invalid inputs for DCF Ruleset during update: %s", err)
 	}
 
 	err = client.UpdateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to update DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to update DCF Ruleset: %s", err)
 	}
 
 	return nil
 }
 
-func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
@@ -484,7 +484,7 @@ func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.Resource
 
 	err := client.DeleteDCFPolicyList(ctx, uuid)
 	if err != nil {
-		return diag.Errorf("failed to delete DCF MWP Policy List: %v", err)
+		return diag.Errorf("failed to delete DCF Ruleset: %v", err)
 	}
 
 	return nil
