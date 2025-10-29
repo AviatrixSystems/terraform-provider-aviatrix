@@ -43,8 +43,8 @@ func TestAccAviatrixEdgeGatewaySelfmanaged_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.secondary_dns_server_ip", "9.9.9.9"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
-					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.0", "10.230.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.1", "10.230.5.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.0", "10.231.3.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.1", "10.232.5.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_encryption_cipher", "strong"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_forward_secrecy", "enable"),
 				),
@@ -106,8 +106,8 @@ resource "aviatrix_edge_gateway_selfmanaged" "test" {
 	}
 
 	included_advertised_spoke_routes = [
-		"10.230.3.0/24",
-		"10.230.5.0/24"
+		"10.231.3.0/24",
+		"10.232.5.0/24"
 	]
 }
   `, gwName, siteID, path)
