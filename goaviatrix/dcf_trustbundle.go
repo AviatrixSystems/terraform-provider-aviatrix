@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -44,10 +45,14 @@ func (c *Client) CreateDCFTrustBundle(ctx context.Context, trustBundle *TrustBun
 
 // GetDCFTrustBundle retrieves a DCF trust bundle by UUID
 func (c *Client) GetDCFTrustBundle(ctx context.Context, bundleUUID string) (*TrustBundle, error) {
-	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
+	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
+	
 
 	var trustBundle TrustBundle
-	err := c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
+	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			return nil, ErrNotFound
@@ -60,8 +65,11 @@ func (c *Client) GetDCFTrustBundle(ctx context.Context, bundleUUID string) (*Tru
 
 // UpdateDCFTrustBundle updates an existing DCF trust bundle
 func (c *Client) UpdateDCFTrustBundle(ctx context.Context, bundleUUID string, trustBundle *TrustBundleItemRequest) error {
-	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
-	err := c.PutAPIContext25(ctx, endpoint, trustBundle)
+	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
+	if err != nil {
+		return fmt.Errorf("failed to construct endpoint: %w", err)
+	}
+	err = c.PutAPIContext25(ctx, endpoint, trustBundle)
 	if err != nil {
 		return err
 	}
@@ -70,7 +78,10 @@ func (c *Client) UpdateDCFTrustBundle(ctx context.Context, bundleUUID string, tr
 
 // DeleteDCFTrustBundle deletes a DCF trust bundle by UUID
 func (c *Client) DeleteDCFTrustBundle(ctx context.Context, bundleUUID string) error {
-	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
+	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
+	if err != nil {
+		return fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
 
