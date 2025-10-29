@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"net/url"
 )
 
 // DCFTrustBundle represents a DCF trust bundle structure for GET responses
@@ -50,10 +51,13 @@ func (c *Client) CreateDCFTrustBundle(ctx context.Context, bundleContent, displa
 
 // GetDCFTrustBundleByID retrieves a DCF trust bundle by UUID
 func (c *Client) GetDCFTrustBundleByID(ctx context.Context, bundleUUID string) (*DCFTrustBundle, error) {
-	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
+	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 
 	var trustBundle DCFTrustBundle
-	err := c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
+	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +68,12 @@ func (c *Client) GetDCFTrustBundleByID(ctx context.Context, bundleUUID string) (
 
 // GetDCFTrustBundleByName retrieves a DCF trust bundle by name
 func (c *Client) GetDCFTrustBundleByName(ctx context.Context, bundleName string) (*DCFTrustBundle, error) {
-	endpoint := fmt.Sprintf("dcf/trustbundle/name/%s", bundleName)
+	endpoint, err := url.JoinPath("dcf/trustbundle/name", bundleName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 	var trustBundle DCFTrustBundle
-	err := c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
+	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +86,9 @@ func (c *Client) GetDCFTrustBundleByName(ctx context.Context, bundleName string)
 
 // DeleteDCFTrustBundle deletes a DCF trust bundle by UUID
 func (c *Client) DeleteDCFTrustBundle(ctx context.Context, bundleUUID string) error {
-	endpoint := fmt.Sprintf("dcf/trustbundle/%s", bundleUUID)
+	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
+	if err != nil {
+		return fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
