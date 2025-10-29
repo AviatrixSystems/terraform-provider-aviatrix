@@ -340,6 +340,18 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ph2_encryption_policy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase 2 encryption policy. Config options are default/strong.",
+				Default:     "default",
+			},
+			"ph2_pfs_policy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase 2 Perfect Forward Secrecy (PFS) policy. Config Options are enable/disable",
+				Default:     "disable",
+			},
 		},
 	}
 }
@@ -370,6 +382,8 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
+		Ph2EncryptionPolicy:                d.Get("ph2_encryption_policy").(string),
+		Ph2PfsPolicy:                       d.Get("ph2_pfs_policy").(string),
 	}
 
 	if err := populateInterfaces(d, edgeSpoke); err != nil {
@@ -584,6 +598,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
+	d.Set("ph2_encryption_policy", edgeSpoke.Ph2EncryptionPolicy)
+	d.Set("ph2_pfs_policy", edgeSpoke.Ph2PfsPolicy)
 
 	if edgeSpoke.ZtpFileType == "iso" || edgeSpoke.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeSpoke.ZtpFileType)
@@ -890,6 +906,22 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		if err != nil {
 			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT/VLAN interfaces, "+
 				"Edge active standby or Edge active standby preemptive during Edge as a Spoke update: %v", err)
+		}
+	}
+
+	if d.HasChange("ph2_encryption_policy") || d.HasChange("ph2_pfs_policy") {
+		encPolicy, ok := d.Get("ph2_encryption_policy").(string)
+		if !ok {
+			return diag.Errorf("ph2_encryption_policy must be a string")
+		}
+		pfsPolicy, ok := d.Get("ph2_pfs_policy").(string)
+		if !ok {
+			return diag.Errorf("ph2_pfs_policy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(edgeSpoke.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return diag.Errorf("could not set phase 2 policies during Edge Gateway Selfmanaged update: %v", err)
 		}
 	}
 

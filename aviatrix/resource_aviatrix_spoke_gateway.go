@@ -1881,13 +1881,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("ph2_encryption_policy") {
-		return fmt.Errorf("updating ph2_encryption_policy is not allowed")
-	}
-	if d.HasChange("ph2_pfs_policy") {
-		return fmt.Errorf("updating ph2_pfs_policy is not allowed")
-	}
-
 	haGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
@@ -2773,6 +2766,22 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if err != nil {
 				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
 			}
+		}
+	}
+
+	if d.HasChange("ph2_encryption_policy") || d.HasChange("ph2_pfs_policy") {
+		encPolicy, ok := d.Get("ph2_encryption_policy").(string)
+		if !ok {
+			return fmt.Errorf("ph2_encryption_policy must be a string")
+		}
+		pfsPolicy, ok := d.Get("ph2_pfs_policy").(string)
+		if !ok {
+			return fmt.Errorf("ph2_pfs_policy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return fmt.Errorf("could not set phase 2 policies during spoke gateway update: %w", err)
 		}
 	}
 

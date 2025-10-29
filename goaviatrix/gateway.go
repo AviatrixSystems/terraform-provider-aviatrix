@@ -16,6 +16,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	gatewayPhase2PolicyEndpoint = "ipsec-peering-policy"
+)
+
 // Gateway simple struct to hold gateway details
 type Gateway struct {
 	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
@@ -393,6 +397,12 @@ type FQDNGatwayInfo struct {
 	Instances      []string            `json:"instances"`
 	Interface      map[string][]string `json:"interfaces"`
 	ArmFqdnLanCidr map[string]string   `json:"arm_fqdn_lan_cidr"`
+}
+
+type GatewayPhase2Policy struct {
+	Ph2EncryptionPolicy string `json:"ph2_encryption_policy,omitempty"`
+	Ph2PfsPolicy        string `json:"ph2_pfs_policy,omitempty"`
+	GwGroupName         string `json:"gwgroup_name,omitempty"`
 }
 
 func (c *Client) CreateGateway(gateway *Gateway) error {
@@ -1482,4 +1492,21 @@ func (c *Client) DisableIPv6(gateway *Gateway) error {
 		"gateway_name": gateway.GwName,
 	}
 	return c.PostAPI(action, form, BasicCheck)
+}
+
+// sets the phase2 encryption and pfs policy for the specified gateway
+func (c *Client) SetGatewayPhase2Policy(gwName, encPolicy string, pfsPolicy string) error {
+
+	request := GatewayPhase2Policy{
+		Ph2EncryptionPolicy: encPolicy,
+		Ph2PfsPolicy:        pfsPolicy,
+	}
+	var response GatewayPhase2Policy
+	endpoint := fmt.Sprintf("%s/%s", gatewayPhase2PolicyEndpoint, gwName)
+	err := c.PostAPIContext25(context.Background(), &response, endpoint, request)
+	if err != nil {
+		return fmt.Errorf("failed to set gateway phase 2 policy: %w", err)
+	}
+
+	return nil
 }
