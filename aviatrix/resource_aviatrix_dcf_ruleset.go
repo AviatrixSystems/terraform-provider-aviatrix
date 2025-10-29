@@ -180,19 +180,19 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 
 	name, ok := d.Get("name").(string)
 	if !ok {
-		return nil, fmt.Errorf("Ruleset name must be of type string")
+		return nil, fmt.Errorf("ruleset name must be of type string")
 	}
 	policyList.Name = name
 
 	attachTo, ok := d.Get("attach_to").(string)
 	if !ok {
-		return nil, fmt.Errorf("Ruleset attach_to must be of type string")
+		return nil, fmt.Errorf("ruleset attach_to must be of type string")
 	}
 	policyList.AttachTo = attachTo
 
 	policiesSet, ok := d.Get("rules").(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("Ruleset rules must be of type *schema.Set")
+		return nil, fmt.Errorf("ruleset rules must be of type *schema.Set")
 	}
 
 	for _, policyInterface := range policiesSet.List() {
