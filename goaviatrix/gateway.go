@@ -1497,7 +1497,6 @@ func (c *Client) DisableIPv6(gateway *Gateway) error {
 
 // sets the phase2 encryption and pfs policy for the specified gateway
 func (c *Client) SetGatewayPhase2Policy(gwName, encPolicy string, pfsPolicy string) error {
-
 	request := GatewayPhase2Policy{
 		Ph2EncryptionPolicy: encPolicy,
 		Ph2PfsPolicy:        pfsPolicy,
