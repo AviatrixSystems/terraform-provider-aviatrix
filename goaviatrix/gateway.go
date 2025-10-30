@@ -400,10 +400,15 @@ type FQDNGatwayInfo struct {
 	ArmFqdnLanCidr map[string]string   `json:"arm_fqdn_lan_cidr"`
 }
 
-type GatewayPhase2Policy struct {
+type GatewayPhase2PolicyRequest struct {
 	Ph2EncryptionPolicy string `json:"ph2_encryption_policy,omitempty"`
 	Ph2PfsPolicy        string `json:"ph2_pfs_policy,omitempty"`
+}
+
+type GatewayPhase2PolicyResponse struct {
 	GwGroupName         string `json:"gwgroup_name,omitempty"`
+	Ph2EncryptionPolicy string `json:"ph2_encryption_policy,omitempty"`
+	Ph2PfsPolicy        string `json:"ph2_pfs_policy,omitempty"`
 }
 
 func (c *Client) CreateGateway(gateway *Gateway) error {
@@ -1497,11 +1502,11 @@ func (c *Client) DisableIPv6(gateway *Gateway) error {
 
 // SetGatewayPhase2Policy sets the phase2 encryption and pfs policy for the specified gateway.
 func (c *Client) SetGatewayPhase2Policy(gwName, encPolicy string, pfsPolicy string) error {
-	request := GatewayPhase2Policy{
+	request := GatewayPhase2PolicyRequest{
 		Ph2EncryptionPolicy: encPolicy,
 		Ph2PfsPolicy:        pfsPolicy,
 	}
-	var response GatewayPhase2Policy
+	var response GatewayPhase2PolicyResponse
 	endpoint := fmt.Sprintf("%s/%s", gatewayPhase2PolicyEndpoint, gwName)
 	err := c.PostAPIContext25(context.Background(), &response, endpoint, request)
 	if err != nil {
