@@ -942,6 +942,26 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "BGP communities gateway accept configuration.",
 				Default:     false,
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 for the gateway. Only supported for AWS (1), Azure (8).",
+			},
+			"tunnel_encryption_cipher": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).",
+				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
+				Default:      "default",
+			},
+			"tunnel_forward_secrecy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Perfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.",
+				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
+				Default:      "disable",
+			},
 		},
 	}
 }
@@ -972,6 +992,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			FaultDomain:              d.Get("fault_domain").(string),
 			ApprovedLearnedCidrs:     getStringSet(d, "approved_learned_cidrs"),
 			Transit:                  true,
+			TunnelEncryptionCipher:   d.Get("tunnel_encryption_cipher").(string),
+			TunnelForwardSecrecy:     d.Get("tunnel_forward_secrecy").(string),
 		}
 
 		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
@@ -1922,6 +1944,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_name", gw.AccountName)
 	d.Set("gw_name", gw.GwName)
 	d.Set("gw_size", gw.GwSize)
+	d.Set("enable_ipv6", gw.EnableIPv6)
+	d.Set("tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
+	d.Set("tunnel_forward_secrecy", gw.TunnelForwardSecrecy)
 
 	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
 	// This will allow the AEP EAT gateways to be created before setting the communities.
@@ -3895,6 +3920,36 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.HasChange("enable_ipv6") {
+		if d.Get("enable_ipv6").(bool) {
+			err := client.EnableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %w", err)
+			}
+		} else {
+			err := client.DisableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
+			}
+		}
+	}
+
+	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
+		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_encryption_cipher must be a string")
+		}
+		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_forward_secrecy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return fmt.Errorf("could not set phase tunnel encryption cipher during transit gateway update: %w", err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixTransitGatewayRead(d, meta)
 }
@@ -4037,12 +4092,14 @@ func deleteZtpFile(gatewayName, vpcID, ztpFileDownloadPath string) error {
 
 func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client, cloudType int) error {
 	gateway := &goaviatrix.TransitVpc{
-		CloudType:   d.Get("cloud_type").(int),
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
-		VpcID:       d.Get("vpc_id").(string),
-		VpcSize:     d.Get("gw_size").(string),
-		Transit:     true,
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		GwName:                 d.Get("gw_name").(string),
+		VpcID:                  d.Get("vpc_id").(string),
+		VpcSize:                d.Get("gw_size").(string),
+		Transit:                true,
+		TunnelEncryptionCipher: d.Get("tunnel_encryption_cipher").(string),
+		TunnelForwardSecrecy:   d.Get("tunnel_forward_secrecy").(string),
 	}
 
 	// get the interface config details

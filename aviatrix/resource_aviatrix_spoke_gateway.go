@@ -644,6 +644,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description:  "AZ of subnet being created for Insertion Gateway. Required if insertion_gateway is enabled.",
 				RequiredWith: []string{"insertion_gateway"},
 			},
+			"tunnel_encryption_cipher": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).",
+				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
+				Default:      "default",
+			},
+			"tunnel_forward_secrecy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Perfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.",
+				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
+				Default:      "disable",
+			},
 		},
 	}
 }
@@ -652,16 +666,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
-		CloudType:            d.Get("cloud_type").(int),
-		AccountName:          d.Get("account_name").(string),
-		GwName:               d.Get("gw_name").(string),
-		VpcSize:              d.Get("gw_size").(string),
-		Subnet:               d.Get("subnet").(string),
-		HASubnet:             d.Get("ha_subnet").(string),
-		AvailabilityDomain:   d.Get("availability_domain").(string),
-		FaultDomain:          d.Get("fault_domain").(string),
-		ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
-		EnableGlobalVpc:      d.Get("enable_global_vpc").(bool),
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		GwName:                 d.Get("gw_name").(string),
+		VpcSize:                d.Get("gw_size").(string),
+		Subnet:                 d.Get("subnet").(string),
+		HASubnet:               d.Get("ha_subnet").(string),
+		AvailabilityDomain:     d.Get("availability_domain").(string),
+		FaultDomain:            d.Get("fault_domain").(string),
+		ApprovedLearnedCidrs:   getStringSet(d, "approved_learned_cidrs"),
+		EnableGlobalVpc:        d.Get("enable_global_vpc").(bool),
+		TunnelEncryptionCipher: d.Get("tunnel_encryption_cipher").(string),
+		TunnelForwardSecrecy:   d.Get("tunnel_forward_secrecy").(string),
 	}
 
 	if !d.Get("manage_ha_gateway").(bool) {
@@ -1530,6 +1546,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	} else {
 		d.Set("insertion_gateway_az", "")
 	}
+	d.Set("tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
+	d.Set("tunnel_forward_secrecy", gw.TunnelForwardSecrecy)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
@@ -2790,6 +2808,36 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if err != nil {
 				return fmt.Errorf("could not disable global vpc during spoke gateway update: %w", err)
 			}
+		}
+	}
+
+	if d.HasChange("enable_ipv6") {
+		if d.Get("enable_ipv6").(bool) {
+			err := client.EnableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable IPv6 on spoke gateway when updating: %w", err)
+			}
+		} else {
+			err := client.DisableIPv6(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable IPv6 on spoke gateway when updating: %w", err)
+			}
+		}
+	}
+
+	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
+		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_encryption_cipher must be a string")
+		}
+		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
+		if !ok {
+			return fmt.Errorf("tunnel_forward_secrecy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return fmt.Errorf("could not set tunnel cipher settings during gateway update: %w", err)
 		}
 	}
 
