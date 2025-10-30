@@ -343,14 +343,14 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 			"tunnel_encryption_cipher": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Stronger encryption algorithms (AES-256-GCM-96) for tunnels. Config options are default/strong.",
+				Description:  "Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).",
 				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
 				Default:      "default",
 			},
 			"tunnel_forward_secrecy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Perfect Forward Secrecy (PFS) for tunnels. Config Options are enable/disable",
+				Description:  "Perfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.",
 				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
 				Default:      "disable",
 			},
