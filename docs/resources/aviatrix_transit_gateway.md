@@ -22,7 +22,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   vpc_reg                  = "us-east-1"
   gw_size                  = "t2.micro"
   subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
+  ha_subnet                = "10.1.1.0/24"
   ha_gw_size               = "t2.micro"
   tags                     = {
     name = "value"
@@ -403,6 +403,20 @@ resource "aviatrix_transit_gateway" "edge-transit-test" {
     }
 }
 ```
+```hcl
+# Create an Aviatrix IPv6 Transit Network Gateway
+resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
+  cloud_type               = 1
+  account_name             = "devops_aws"
+  gw_name                  = "transit"
+  vpc_id                   = "vpc-abcd1234"
+  vpc_reg                  = "us-east-1"
+  gw_size                  = "t2.micro"
+  subnet                   = "10.1.0.0/24"
+  connected_transit        = true
+  enable_ipv6 = true
+}
+```
 
 ## Argument Reference
 
@@ -495,6 +509,7 @@ The following arguments are supported:
 * `enable_multi_tier_transit` - (Optional) Enable Multi-tier Transit mode on transit gateway. When enabled, transit gateway will propagate routes it receives from its transit peering peer to other transit peering peers. `local_as_number` is required. Default value: false. Available as of provider version R2.19+.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive packet CPU re-balancing on transit gateway. Valid values: true, false. Default value: false. Available in provider version R2.21.2+.
 * `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false. Available as of provider version R.2.22.1+.
+* `enable_ipv6` - (Optional) To enable IPv6 CIDR in Transit Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
 
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.
 
