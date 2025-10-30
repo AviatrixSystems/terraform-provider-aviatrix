@@ -115,7 +115,7 @@ The following arguments are supported:
   * `tag` - (Optional) Tag.
 * `included_advertised_spoke_routes` - (Optional) A list of CIDRs to be advertised to on-prem gateways as Included CIDR List. When configured, it will replace all advertised routes from this VPC.
 * `tunnel_encryption_cipher` - (Optional) Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).
-* `tunnel_forward_secrecy` - (Optional) PPerfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.
+* `tunnel_forward_secrecy` - (Optional) Perfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.
 
 ## Attribute Reference
 
