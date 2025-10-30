@@ -719,7 +719,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
 				return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
 			}
-			if externalDeviceConn.EnableIpv6 && externalDeviceConn.ExternalDeviceBackupIPv6 == "" {
+			if externalDeviceConn.EnableIpv6 && externalDeviceConn.ExternalDeviceIPv6 != "" && externalDeviceConn.ExternalDeviceBackupIPv6 == "" {
 				return fmt.Errorf("ha is enabled and 'enable_ipv6' is true, please specify 'external_device_backup_ipv6'")
 			}
 		}
