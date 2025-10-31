@@ -6,6 +6,7 @@ import (
 )
 
 type DCFPolicyList struct {
+	AttachTo       string      `json:"attach_to,omitempty"`
 	Name           string      `json:"name"`
 	Policies       []DCFPolicy `json:"policies"`
 	SystemResource bool        `json:"system_resource,omitempty"`
@@ -29,6 +30,7 @@ type DCFPolicy struct {
 	UUID                   string         `json:"uuid,omitempty"`
 	Watch                  bool           `json:"watch,omitempty"`
 	WebGroups              []string       `json:"web_filters,omitempty"`
+	LogProfile             string         `json:"log_profile,omitempty"`
 }
 
 type DCFPortRange struct {

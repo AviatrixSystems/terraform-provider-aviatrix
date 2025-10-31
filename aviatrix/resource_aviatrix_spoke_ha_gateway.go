@@ -144,6 +144,11 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address of the spoke ha gateway created.",
 			},
+			"single_az_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set to true if this feature is desired.",
+			},
 		},
 	}
 }
@@ -246,6 +251,34 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("failed to create Aviatrix Spoke HA Gateway: %s", err)
 	}
 
+	// Handle single_az_ha setting after gateway creation
+	// Need to differentiate between: not set (inherit from primary) vs explicitly set false
+	// d.GetOk() doesn't seem to differentiate between explicit set to false vs not set at all
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.GetAttr("single_az_ha").IsNull() {
+		// User explicitly set single_az_ha in config
+		singleAZ := d.Get("single_az_ha").(bool)
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName: spokeHaGwName,
+		}
+
+		if singleAZ {
+			log.Printf("[INFO] Enable Single AZ GW HA for spoke HA gateway: %#v", singleAZGateway)
+			err := client.EnableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA for spoke HA gateway %s: %w", spokeHaGwName, err)
+			}
+		} else {
+			log.Printf("[INFO] Disable Single AZ GW HA for spoke HA gateway: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA for spoke HA gateway %s: %w", spokeHaGwName, err)
+			}
+		}
+	} else {
+		log.Printf("[INFO] single_az_ha not set - inheriting from primary gateway")
+	}
+
 	d.SetId(spokeHaGwName)
 	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
@@ -291,6 +324,7 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("public_ip", gw.PublicIP)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
+	d.Set("single_az_ha", gw.SingleAZ == "yes")
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("vpc_reg", gw.VpcRegion)
@@ -349,6 +383,33 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway %s: %s", gateway.GwName, err)
+		}
+	}
+
+	if d.HasChange("single_az_ha") {
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		singleAZ := d.Get("single_az_ha").(bool)
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
+		if singleAZ {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.EnableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
+			}
+		} else {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA for %s: %w", singleAZGateway.GwName, err)
+			}
 		}
 	}
 

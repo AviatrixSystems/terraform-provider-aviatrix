@@ -91,6 +91,16 @@ func resourceAviatrixEdgePlatformHa() *schema.Resource {
 							Optional:    true,
 							Description: "Tag.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 					},
 				},
 			},
@@ -132,6 +142,8 @@ func marshalEdgePlatformHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 			GatewayIp:    interface1["gateway_ip"].(string),
 			DnsPrimary:   interface1["dns_server_ip"].(string),
 			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			IPv6Addr:     interface1["ipv6_address"].(string),
+			GatewayIPv6:  interface1["gateway_ipv6"].(string),
 		}
 
 		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, interface2)
@@ -196,6 +208,8 @@ func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceD
 		if1["gateway_ip"] = if0.GatewayIp
 		if1["dns_server_ip"] = if0.DnsPrimary
 		if1["secondary_dns_server_ip"] = if0.DnsSecondary
+		if1["ipv6_address"] = if0.IPv6Addr
+		if1["gateway_ipv6"] = if0.GatewayIPv6
 
 		interfaces = append(interfaces, if1)
 	}

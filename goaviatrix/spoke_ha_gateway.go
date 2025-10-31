@@ -1,7 +1,5 @@
 package goaviatrix
 
-import "golang.org/x/net/context"
-
 type SpokeHaGateway struct {
 	Action                string `json:"action"`
 	CID                   string `json:"CID"`
@@ -24,6 +22,8 @@ type SpokeHaGateway struct {
 	TagList               string `json:"tag_string"`
 	TagJson               string `json:"tag_json"`
 	AutoGenHaGwName       string `json:"autogen_hagw_name"`
+	Async                 bool   `json:"async"`
+	InsertionGateway      bool   `json:"insertion_gateway,omitempty"`
 }
 
 type APIRespHaGw struct {
@@ -36,6 +36,22 @@ type APIRespHaGw struct {
 func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error) {
 	spokeHaGateway.CID = c.CID
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
+	spokeHaGateway.Async = true // Enable async mode
 
-	return c.PostAPIContext2HaGw(context.Background(), nil, spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	// Use async API internally but maintain the same external interface
+	err := c.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+
+	// Determine the gateway name for the return value
+	// This follows the same logic as the original synchronous implementation
+	gwName := spokeHaGateway.GwName
+	if gwName == "" {
+		// When AutoGenHaGwName is "yes", the controller generates the name
+		// following the pattern: primary_gateway_name + "-hagw"
+		gwName = spokeHaGateway.PrimaryGwName + "-hagw"
+	}
+
+	return gwName, nil
 }

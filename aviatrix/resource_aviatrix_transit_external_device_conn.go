@@ -459,7 +459,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"disable_activemesh": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
@@ -487,6 +487,33 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				Description: "Block advertisement of any BGP communities on this connection",
 			},
+			"enable_ipv6": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable IPv6 on this connection",
+			},
+			"external_device_ipv6": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "External device IPv6 address.",
+			},
+			"external_device_backup_ipv6": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup External device IPv6 address.",
+			},
+			"remote_lan_ipv6_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Remote LAN IPv6 address.",
+			},
 		},
 	}
 }
@@ -497,36 +524,40 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	var bgpSendCommunities *goaviatrix.BgpSendCommunities
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:                  d.Get("vpc_id").(string),
-		ConnectionName:         d.Get("connection_name").(string),
-		GwName:                 d.Get("gw_name").(string),
-		ConnectionType:         d.Get("connection_type").(string),
-		RemoteGatewayIP:        d.Get("remote_gateway_ip").(string),
-		RemoteSubnet:           d.Get("remote_subnet").(string),
-		PreSharedKey:           d.Get("pre_shared_key").(string),
-		LocalTunnelCidr:        d.Get("local_tunnel_cidr").(string),
-		RemoteTunnelCidr:       d.Get("remote_tunnel_cidr").(string),
-		Phase1Auth:             d.Get("phase_1_authentication").(string),
-		Phase1DhGroups:         d.Get("phase_1_dh_groups").(string),
-		Phase1Encryption:       d.Get("phase_1_encryption").(string),
-		Phase2Auth:             d.Get("phase_2_authentication").(string),
-		Phase2DhGroups:         d.Get("phase_2_dh_groups").(string),
-		Phase2Encryption:       d.Get("phase_2_encryption").(string),
-		BackupRemoteGatewayIP:  d.Get("backup_remote_gateway_ip").(string),
-		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
-		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
-		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
-		PeerVnetID:             d.Get("remote_vpc_name").(string),
-		RemoteLanIP:            d.Get("remote_lan_ip").(string),
-		LocalLanIP:             d.Get("local_lan_ip").(string),
-		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
-		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
-		BgpMd5Key:              d.Get("bgp_md5_key").(string),
-		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
-		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
-		EnableBgpMultihop:      d.Get("enable_bgp_multihop").(bool),
-		EnableEdgeUnderlay:     d.Get("enable_edge_underlay").(bool),
-		DisableActivemesh:      d.Get("disable_activemesh").(bool),
+		VpcID:                    d.Get("vpc_id").(string),
+		ConnectionName:           d.Get("connection_name").(string),
+		GwName:                   d.Get("gw_name").(string),
+		ConnectionType:           d.Get("connection_type").(string),
+		RemoteGatewayIP:          d.Get("remote_gateway_ip").(string),
+		RemoteSubnet:             d.Get("remote_subnet").(string),
+		PreSharedKey:             d.Get("pre_shared_key").(string),
+		LocalTunnelCidr:          d.Get("local_tunnel_cidr").(string),
+		RemoteTunnelCidr:         d.Get("remote_tunnel_cidr").(string),
+		Phase1Auth:               d.Get("phase_1_authentication").(string),
+		Phase1DhGroups:           d.Get("phase_1_dh_groups").(string),
+		Phase1Encryption:         d.Get("phase_1_encryption").(string),
+		Phase2Auth:               d.Get("phase_2_authentication").(string),
+		Phase2DhGroups:           d.Get("phase_2_dh_groups").(string),
+		Phase2Encryption:         d.Get("phase_2_encryption").(string),
+		BackupRemoteGatewayIP:    d.Get("backup_remote_gateway_ip").(string),
+		BackupPreSharedKey:       d.Get("backup_pre_shared_key").(string),
+		BackupLocalTunnelCidr:    d.Get("backup_local_tunnel_cidr").(string),
+		BackupRemoteTunnelCidr:   d.Get("backup_remote_tunnel_cidr").(string),
+		PeerVnetID:               d.Get("remote_vpc_name").(string),
+		RemoteLanIP:              d.Get("remote_lan_ip").(string),
+		LocalLanIP:               d.Get("local_lan_ip").(string),
+		BackupRemoteLanIP:        d.Get("backup_remote_lan_ip").(string),
+		BackupLocalLanIP:         d.Get("backup_local_lan_ip").(string),
+		BgpMd5Key:                d.Get("bgp_md5_key").(string),
+		BackupBgpMd5Key:          d.Get("backup_bgp_md5_key").(string),
+		EnableJumboFrame:         d.Get("enable_jumbo_frame").(bool),
+		EnableBgpMultihop:        d.Get("enable_bgp_multihop").(bool),
+		EnableEdgeUnderlay:       d.Get("enable_edge_underlay").(bool),
+		DisableActivemesh:        d.Get("disable_activemesh").(bool),
+		EnableIpv6:               d.Get("enable_ipv6").(bool),
+		ExternalDeviceIPv6:       d.Get("external_device_ipv6").(string),
+		ExternalDeviceBackupIPv6: d.Get("external_device_backup_ipv6").(string),
+		RemoteLanIPv6:            d.Get("remote_lan_ipv6_ip").(string),
 	}
 
 	sendComm, ok := d.Get("connection_bgp_send_communities").(string)
@@ -595,6 +626,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 	if externalDeviceConn.RemoteLanIP == "" && externalDeviceConn.TunnelProtocol == "LAN" {
 		return fmt.Errorf("'remote_lan_ip' is required when 'tunnel_protocol' = 'LAN'")
+	}
+	if externalDeviceConn.EnableIpv6 && externalDeviceConn.RemoteLanIPv6 == "" && externalDeviceConn.TunnelProtocol == "LAN" {
+		return fmt.Errorf("'remote_lan_ipv6_ip' is required when 'tunnel_protocol' = 'LAN'")
 	}
 	if externalDeviceConn.RemoteGatewayIP == "" && externalDeviceConn.TunnelProtocol != "LAN" {
 		return fmt.Errorf("'remote_gateway_ip' is required when 'tunnel_protocol' != 'LAN'")
@@ -684,6 +718,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			}
 			if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
 				return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
+			}
+			if externalDeviceConn.EnableIpv6 && externalDeviceConn.ExternalDeviceIPv6 != "" && externalDeviceConn.ExternalDeviceBackupIPv6 == "" {
+				return fmt.Errorf("ha is enabled and 'enable_ipv6' is true, please specify 'external_device_backup_ipv6'")
 			}
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
@@ -1083,6 +1120,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("enable_event_triggered_ha", conn.EventTriggeredHA)
 		d.Set("enable_jumbo_frame", conn.EnableJumboFrame)
 		d.Set("phase1_local_identifier", conn.Phase1LocalIdentifier)
+		d.Set("enable_ipv6", conn.EnableIpv6)
 
 		if conn.TunnelSrcIP != "" {
 			if err := d.Set("tunnel_src_ip", conn.TunnelSrcIP); err != nil {
@@ -1273,6 +1311,19 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		err = d.Set("connection_bgp_send_communities_block", conn.BgpSendCommunitiesBlock)
 		if err != nil {
 			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
+		}
+
+		if conn.EnableIpv6 {
+			if conn.TunnelProtocol == "LAN" {
+				d.Set("remote_lan_ipv6", conn.RemoteLanIPv6)
+			}
+
+			if conn.TunnelProtocol == "IPsec" || conn.TunnelProtocol == "GRE" {
+				d.Set("external_device_ipv6", conn.ExternalDeviceIPv6)
+				if conn.HAEnabled == "enabled" {
+					d.Set("external_device_backup_ipv6", conn.ExternalDeviceBackupIPv6)
+				}
+			}
 		}
 	}
 
