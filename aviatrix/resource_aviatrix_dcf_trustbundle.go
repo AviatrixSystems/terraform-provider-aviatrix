@@ -73,7 +73,7 @@ func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceD
 
 	bundleID := d.Id()
 
-	trustBundle, err := client.GetDCFTrustBundle(ctx, bundleID)
+	trustBundle, err := client.GetDCFTrustBundleByID(ctx, bundleID)
 	if err != nil {
 		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
