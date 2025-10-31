@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAviatrixDcfMwpAttachmentPoints() *schema.Resource {
+func dataSourceAviatrixDcfAttachmentPoints() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAviatrixDcfMwpAttachmentPointsRead,
+		ReadContext: dataSourceAviatrixDcfAttachmentPointsRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -27,7 +27,7 @@ func dataSourceAviatrixDcfMwpAttachmentPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDcfMwpAttachmentPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDcfAttachmentPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")

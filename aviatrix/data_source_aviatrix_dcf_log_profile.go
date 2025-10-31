@@ -20,7 +20,7 @@ func dataSourceAviatrixDcfLogProfile() *schema.Resource {
 			"profile_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The unique identifier for the Log Profile which can be referenced in a DCF policy.",
+				Description: "The unique identifier for the Log Profile which can be referenced in a DCF rule.",
 			},
 			"session_end": {
 				Type:        schema.TypeBool,

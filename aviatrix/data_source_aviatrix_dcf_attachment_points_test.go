@@ -9,25 +9,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAviatrixDcfMwpAttachmentPoints_basic(t *testing.T) {
-	resourceName := "data.aviatrix_dcf_mwp_attachment_point.test"
+func TestAccDataSourceAviatrixDcfAttachmentPoints_basic(t *testing.T) {
+	resourceName := "data.aviatrix_dcf_attachment_point.test"
 
-	skipAcc := os.Getenv("SKIP_DATA_DCF_MWP_ATTACHMENT_POINTS")
+	skipAcc := os.Getenv("SKIP_DATA_DCF_ATTACHMENT_POINTS")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Data Source DCF MWP Attachment Points test as SKIP_DATA_DCF_MWP_ATTACHMENT_POINTS is set")
+		t.Skip("Skipping Data Source DCF Attachment Points test as SKIP_DATA_DCF_ATTACHMENT_POINTS is set")
 	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			preAccountCheck(t, ". Set SKIP_DATA_DCF_MWP_ATTACHMENT_POINTS to yes to skip Data Source DCF MWP Attachment Points tests")
+			preAccountCheck(t, ". Set SKIP_DATA_DCF_ATTACHMENT_POINTS to yes to skip Data Source DCF Attachment Points tests")
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAviatrixDcfMwpAttachmentPointsConfigBasic(),
+				Config: testAccDataSourceAviatrixDcfAttachmentPointsConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAviatrixDcfMwpAttachmentPoints(resourceName),
+					testAccDataSourceAviatrixDcfAttachmentPoints(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_point_id"),
 				),
@@ -36,15 +36,15 @@ func TestAccDataSourceAviatrixDcfMwpAttachmentPoints_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAviatrixDcfMwpAttachmentPointsConfigBasic() string {
+func testAccDataSourceAviatrixDcfAttachmentPointsConfigBasic() string {
 	return `
-data "aviatrix_dcf_mwp_attachment_point" "test" {
+data "aviatrix_dcf_attachment_point" "test" {
 	name = "test-attachment-point"
 }
 	`
 }
 
-func testAccDataSourceAviatrixDcfMwpAttachmentPoints(name string) resource.TestCheckFunc {
+func testAccDataSourceAviatrixDcfAttachmentPoints(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {

@@ -13,12 +13,12 @@ import (
 )
 
 //nolint:funlen
-func resourceAviatrixDCFPolicyList() *schema.Resource {
+func resourceAviatrixDCFRuleset() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixDCFPolicyListCreate,
-		ReadWithoutTimeout:   resourceAviatrixDCFPolicyListRead,
-		UpdateWithoutTimeout: resourceAviatrixDCFPolicyListUpdate,
-		DeleteWithoutTimeout: resourceAviatrixDCFPolicyListDelete,
+		CreateWithoutTimeout: resourceAviatrixDCFRulesetCreate,
+		ReadWithoutTimeout:   resourceAviatrixDCFRulesetRead,
+		UpdateWithoutTimeout: resourceAviatrixDCFRulesetUpdate,
+		DeleteWithoutTimeout: resourceAviatrixDCFRulesetDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -26,22 +26,22 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the policy list.",
+				Description: "Name of the ruleset.",
 			},
 			"system_resource": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "Whether the policy list is a system resource.",
+				Description: "Whether the ruleset is a system resource.",
 			},
 			"attach_to": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The attachment point to which the policy list is attached.",
+				Description: "The attachment point to which the ruleset is attached.",
 			},
-			"policies": {
+			"rules": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "List of distributed-firewalling policies.",
+				Description: "List of distributed-firewalling rules.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
@@ -56,44 +56,44 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Optional:     true,
 							Default:      "DECRYPT_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"DECRYPT_UNSPECIFIED", "DECRYPT_ALLOWED", "DECRYPT_NOT_ALLOWED"}, false),
-							Description: "Decryption options for the policy. " +
+							Description: "Decryption options for the rule. " +
 								"Must be one of DECRYPT_UNSPECIFIED, DECRYPT_ALLOWED or DECRYPT_NOT_ALLOWED.",
 						},
 						"dst_smart_groups": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of destination Smart Group UUIDs for the policy.",
+							Description: "Set of destination Smart Group UUIDs for the rule.",
 						},
 						"exclude_sg_orchestration": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "If this flag is set to true, this policy will be ignored for SG orchestration.",
+							Description: "If this flag is set to true, this rule will be ignored for SG orchestration.",
 						},
 						"flow_app_requirement": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "APP_UNSPECIFIED",
 							ValidateFunc: validation.StringInSlice([]string{"APP_UNSPECIFIED", "TLS_REQUIRED", "NOT_TLS_REQUIRED"}, false),
-							Description: "Flow application requirement for the policy. " +
+							Description: "Flow application requirement for the rule. " +
 								"Must be one of APP_UNSPECIFIED, TLS_REQUIRED or NOT_TLS_REQUIRED.",
 						},
 						"logging": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "Whether to enable logging for the policy.",
+							Description: "Whether to enable logging for the rule.",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Name of the policy. Policy names must be unique.",
+							Description: "Name of the rule. Rule names must be unique.",
 						},
 						"port_ranges": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "List of port ranges for the policy.",
+							Description: "List of port ranges for the rule.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"lo": {
@@ -117,7 +117,7 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     0,
-							Description: "Priority level of the policy",
+							Description: "Priority level of the rule",
 						},
 						"protocol": {
 							Type:         schema.TypeString,
@@ -126,41 +126,41 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 							DiffSuppressFunc: func(_, oldProto, newProto string, _ *schema.ResourceData) bool {
 								return strings.EqualFold(oldProto, newProto)
 							},
-							Description: "Protocol for the policy to filter. " +
+							Description: "Protocol for the rule to filter. " +
 								"Must be one of ANY, ICMP, TCP or UDP.",
 						},
 						"src_smart_groups": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of source Smart Group UUIDs for the policy.",
+							Description: "Set of source Smart Group UUIDs for the rule.",
 						},
 						"tls_profile": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "TLS profile UUID for the policy.",
+							Description: "TLS profile UUID for the rule.",
 						},
 						"uuid": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "UUID of the policy.",
+							Description: "UUID of the rule.",
 						},
 						"watch": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "Whether to enable watch mode for the policy.",
+							Description: "Whether to enable watch mode for the rule.",
 						},
 						"web_groups": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of Web Group UUIDs for the policy.",
+							Description: "Set of Web Group UUIDs for the rule.",
 						},
 						"log_profile": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Log profile UUID for the policy.",
+							Description: "Log profile UUID for the rule.",
 							// The log profile UUID must be one of the predefined log profile UUIDs
 							// def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START
 							// def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END
@@ -175,24 +175,24 @@ func resourceAviatrixDCFPolicyList() *schema.Resource {
 	}
 }
 
-func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
+func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
 	policyList := &goaviatrix.DCFPolicyList{}
 
 	name, ok := d.Get("name").(string)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList name must be of type string")
+		return nil, fmt.Errorf("ruleset name must be of type string")
 	}
 	policyList.Name = name
 
 	attachTo, ok := d.Get("attach_to").(string)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList attach_to must be of type string")
+		return nil, fmt.Errorf("ruleset attach_to must be of type string")
 	}
 	policyList.AttachTo = attachTo
 
-	policiesSet, ok := d.Get("policies").(*schema.Set)
+	policiesSet, ok := d.Get("rules").(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("PolicyList policies must be of type *schema.Set")
+		return nil, fmt.Errorf("ruleset rules must be of type *schema.Set")
 	}
 
 	for _, policyInterface := range policiesSet.List() {
@@ -200,7 +200,7 @@ func marshalDCFPolicyListInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyLis
 
 		policyMap, ok := policyInterface.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("policies must be of type map[string]interface{}")
+			return nil, fmt.Errorf("rules must be of type map[string]interface{}")
 		}
 
 		policy, err := marshalPolicyInput(policyMap)
@@ -361,20 +361,20 @@ func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]st
 	return smartGroups, nil
 }
 
-func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
 	}
 
-	policyList, err := marshalDCFPolicyListInput(d)
+	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF MWP Policy during create: %s", err)
+		return diag.Errorf("invalid inputs for DCF Ruleset during create: %s", err)
 	}
 
 	uuid, err := client.CreateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to create DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to create DCF Ruleset: %s", err)
 	}
 
 	d.SetId(uuid)
@@ -383,7 +383,7 @@ func resourceAviatrixDCFPolicyListCreate(ctx context.Context, d *schema.Resource
 }
 
 //nolint:funlen,cyclop
-func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
@@ -397,7 +397,7 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to read DCF Ruleset: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -443,11 +443,11 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err := d.Set("name", policyList.Name); err != nil {
-		return diag.Errorf("failed to set name during DCF MWP Policy List read: %s", err)
+		return diag.Errorf("failed to set name during DCF Ruleset read: %s", err)
 	}
 
-	if err := d.Set("policies", policies); err != nil {
-		return diag.Errorf("failed to set policies during DCF MWP Policy List read: %s", err)
+	if err := d.Set("rules", policies); err != nil {
+		return diag.Errorf("failed to set rules during DCF Ruleset read: %s", err)
 	}
 
 	d.SetId(policyList.UUID)
@@ -455,26 +455,26 @@ func resourceAviatrixDCFPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixDCFPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
 	}
 
-	policyList, err := marshalDCFPolicyListInput(d)
+	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for DCF MWP Policy during update: %s", err)
+		return diag.Errorf("invalid inputs for DCF Ruleset during update: %s", err)
 	}
 
 	err = client.UpdateDCFPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to update DCF MWP Policy List: %s", err)
+		return diag.Errorf("failed to update DCF Ruleset: %s", err)
 	}
 
 	return nil
 }
 
-func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, ok := meta.(*goaviatrix.Client)
 	if !ok {
 		return diag.Errorf("client must be of type *goaviatrix.Client")
@@ -484,7 +484,7 @@ func resourceAviatrixDCFPolicyListDelete(ctx context.Context, d *schema.Resource
 
 	err := client.DeleteDCFPolicyList(ctx, uuid)
 	if err != nil {
-		return diag.Errorf("failed to delete DCF MWP Policy List: %v", err)
+		return diag.Errorf("failed to delete DCF Ruleset: %v", err)
 	}
 
 	return nil
