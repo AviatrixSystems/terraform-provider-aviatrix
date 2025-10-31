@@ -85,6 +85,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IsCIDR,
 				Description:  "Public Subnet Info.",
 			},
+			"subnet_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateIPv6CIDR,
+				Description:  "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
+			},
 			"zone": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -120,6 +127,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsCIDR,
 				Description:  "HA Subnet. Required if enabling HA for AWS/AWSGov/AWSChina/Azure/AzureChina/OCI/Alibaba Cloud. Optional if enabling HA for GCP.",
+			},
+			"ha_subnet_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateIPv6CIDR,
+				Description:  "IPv6 CIDR for the HA subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -1053,14 +1066,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
-	enableIpv6 := d.Get("enable_ipv6").(bool)
-	if enableIpv6 {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
-			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
-		}
-		gateway.EnableIPv6 = true
-	}
-
 	insertionGateway := d.Get("insertion_gateway").(bool)
 	insertionGatewayAz := d.Get("insertion_gateway_az").(string)
 
@@ -1083,6 +1088,25 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		strs = append(strs, gateway.Subnet, insertionGatewayAz)
 		gateway.Subnet = strings.Join(strs, subnetSeparator)
 		gateway.InsertionGateway = true
+	}
+
+	enableIpv6 := d.Get("enable_ipv6").(bool)
+	if enableIpv6 {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		}
+		gateway.EnableIPv6 = true
+
+		subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
+		if subnetIPv6Cidr == "" {
+			return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
+		}
+		gatewaySubnet := gateway.Subnet
+		// Trim any trailing '~' to normalize it first
+		gatewaySubnet = strings.TrimRight(gatewaySubnet, subnetSeparator)
+
+		// Append IPv6 subnet CIDR
+		gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
@@ -1189,6 +1213,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 				spokeHaGw.Subnet = haSubnet
 			}
 			spokeHaGw.InsertionGateway = true
+		}
+
+		enableIpv6 := d.Get("enable_ipv6").(bool)
+		if enableIpv6 {
+			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
+			if haSubnetIPv6Cidr == "" {
+				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
+			}
+
+			haSubnet := spokeHaGw.Subnet
+			haSubnetTrimmed := strings.TrimRight(haSubnet, subnetSeparator)
+			spokeHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
 		_, err := client.CreateSpokeHaGw(spokeHaGw)
@@ -1555,6 +1591,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
 	d.Set("enable_ipv6", gw.EnableIPv6)
 	d.Set("insertion_gateway", gw.InsertionGateway)
+	// set ipv6 subnet cidr if ipv6 is enabled on the gateway
+	if gw.EnableIPv6 {
+		d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
+	}
 
 	if gw.InsertionGateway && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("insertion_gateway_az", gw.GatewayZone)
@@ -1823,6 +1863,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_security_group_id", "")
 			d.Set("ha_software_version", "")
 			d.Set("ha_subnet", "")
+			d.Set("ha_subnet_ipv6_cidr", "")
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
@@ -1849,6 +1890,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			} else {
 				d.Set("ha_subnet", "")
 			}
+		}
+		if gw.EnableIPv6 {
+			d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
 		}
 
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
@@ -2258,6 +2302,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				spokeHaGw.Subnet = strings.Join(haStrs, subnetSeparator)
 			}
 			spokeHaGw.InsertionGateway = true
+		}
+
+		enableIpv6 := d.Get("enable_ipv6").(bool)
+		if enableIpv6 {
+			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
+			if haSubnetIPv6Cidr == "" {
+				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
+			}
+
+			haSubnet := spokeHaGw.Subnet
+			haSubnetTrimmed := strings.TrimRight(haSubnet, subnetSeparator)
+			spokeHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
 		if newHaGwEnabled {
