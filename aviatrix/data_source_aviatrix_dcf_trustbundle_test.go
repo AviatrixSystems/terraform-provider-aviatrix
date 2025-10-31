@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -39,37 +40,17 @@ func TestAccDataSourceAviatrixDcfTrustbundle_basic(t *testing.T) {
 }
 
 func testAccDataSourceAviatrixDcfTrustbundleConfigBasic() string {
-	return `
+	return fmt.Sprintf(`
 resource "aviatrix_dcf_trustbundle" "test_trustbundle" {
 	display_name    = "test-trustbundle-data-source"
-	bundle_content = <<EOF
------BEGIN CERTIFICATE-----
-MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
-BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
-aWRnaXRzIFB0eSBMdGQwHhcNMTMwODI3MjM1NzUwWhcNMTQwODI3MjM1NzUwWjBF
-MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
-ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
-CgKCAQEAwUdHPiQnY1MxrE6iPCtJ3cIw/XhKsjsKlswiynxOzN4tOW9LsAyCChJH
-2mx6kRYE5wD/T8Qk3SzZGw7Bcd8sCnvvODyC5XQwNMJkMu2YyLT6yl8DbV/gLIny
-LdM6EKVGM8zo7FKsD3ZmzY9JN+sLO4Pwy9w8AGU8C5aA/7MCwqJhYzUfKLQx9Yl6
-gcEw5VF8Ma8o72VexSdENQOSW/Gsc8QdpB3VxGhGrMsOXjOdaMdAStvGyLjK+2w3
-C4XeYEtFxXE9ctSP9OFGP8Ee4XltZDiIoIJ5vYBKCpqFrWsb3RwDjkZGdE8fW5yJ
-mHSI3f3HgP9vehtRfFmjZy0TItS8CQIDAQABMA0GCSqGSIb3DQEBBQUAA4IBAQC6
-SKqr5r8DlQl1K7BV9+j0iKp7vr19LQVoQQzcOgl7sBLlNJvQaZCvOmHf3ES3UhHZ
-4HqyFy8hRRi0sRluOSSdrBfOZYDgXdB3Hv+i9JBHrWKUtr9YG8a7z1VqCcqNKvrK
-TLLvw6YLJ7c4kVuQb2sFyMPS9j0RRQ/B7VoIWO5VsO0QU+CzICFCpwxcUKapF8YL
-OdPKuHUP9DhNXDJHSM5j+QWi8u9K9QVzKWi3g9XdKYmmjghtjlNoHgDeBmF7dMQJ
-5D8ZG7DQ2ZvQBGFVzZ9nf/JcaOO8IOBdXGFQg8sCHN5KgZaGt2GU8vxQPgzMklha
-0YJdD5hHuWfxG5N4o0S2
------END CERTIFICATE-----
-EOF
+	bundle_content = "%s"
 }
 
 data "aviatrix_dcf_trustbundle" "test" {
 	depends_on   = [aviatrix_dcf_trustbundle.test_trustbundle]
 	display_name = "test-trustbundle-data-source"
 }
-	`
+`, strings.ReplaceAll(testAccDataSourceCertificateContent(), "\n", "\\n"))
 }
 
 func testAccDataSourceAviatrixDcfTrustbundle(name string) resource.TestCheckFunc {
@@ -81,4 +62,27 @@ func testAccDataSourceAviatrixDcfTrustbundle(name string) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+func testAccDataSourceCertificateContent() string {
+	return `-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIuJruydjsw2hUwsqdnHnFx9k6Tpdp4xvN0dWQVmIUgX
+tc9RiOQTUM8IzG2wDz1oydw+RVF/TmRQ6EQfoQJynfKzKkCzR4LGLd4IySQsv0GB
+CbFy9K3VRIs57/m3NY+8R4Z8qFJutMSlV+gYBbXUz/+ibZb5l6j9jCFZ5CNczKx8
+iTiYXZ68GCDImLLJqTgCp8SysbyMVGLWwUNzbyBqEjxHqGB/Kryl9SEgvQS0hrLN
+FQfVdG2q7fM3lGeyx/HFfaOvgYMi
+-----END CERTIFICATE-----`
 }

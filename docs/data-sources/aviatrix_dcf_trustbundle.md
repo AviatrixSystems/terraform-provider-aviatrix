@@ -32,5 +32,5 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `bundle_id` - ID of the DCF Trust Bundle. This is typically used as `target_uuid` in DCF policies.
-* `bundle_content` - Content of the DCF Trust Bundle as a list of strings. Contains the certificate data.
+* `bundle_content` - Content of the DCF Trust Bundle as a string. Contains the certificate data.
 * `created_at` - Timestamp when the DCF Trust Bundle was created.

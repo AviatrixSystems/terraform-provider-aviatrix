@@ -2,6 +2,8 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,10 +25,9 @@ func dataSourceAviatrixDcfTrustbundle() *schema.Resource {
 				Description: "ID of the DCF Trust Bundle.",
 			},
 			"bundle_content": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeString,
 				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Content of the DCF Trust Bundle as a list of strings.",
+				Description: "Content of the DCF Trust Bundle as a string.",
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -50,24 +51,22 @@ func dataSourceAviatrixDcfTrustbundleRead(ctx context.Context, d *schema.Resourc
 
 	trustBundle, err := client.GetDCFTrustBundleByName(ctx, name)
 	if err != nil {
-		return diag.Errorf("could not get DCF trust bundle: %s", err)
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			d.SetId("")
+			return diag.Errorf("DCF Trust Bundle not found: %s", err)
+		}
+		return diag.Errorf("failed to read DCF Trust Bundle: %s", err)
 	}
 
-	// fmt.Printf("trustBundle ID: %s", trustBundle.BundleID)
-
-	if err := d.Set("bundle_id", trustBundle.BundleID); err != nil {
-		return diag.Errorf("could not set bundle_id: %s", err)
+	d.Set("bundle_id", trustBundle.BundleID)
+	d.Set("display_name", trustBundle.DisplayName)
+	if !trustBundle.CreatedAt.IsZero() {
+		d.Set("created_at", trustBundle.CreatedAt.Format("2006-01-02T15:04:05Z"))
+	} else {
+		d.Set("created_at", "")
 	}
-
-	if err := d.Set("bundle_content", trustBundle.BundleContent); err != nil {
-		return diag.Errorf("could not set bundle_content: %s", err)
-	}
-
-	if err := d.Set("created_at", trustBundle.CreatedAt); err != nil {
-		return diag.Errorf("could not set created_at: %s", err)
-	}
-
+	bundleContent := strings.TrimSpace(strings.Join(trustBundle.BundleContent, "\n"))
+	d.Set("bundle_content", bundleContent)
 	d.SetId(trustBundle.UUID)
-
 	return nil
 }

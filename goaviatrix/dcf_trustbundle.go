@@ -23,7 +23,7 @@ type DCFTrustBundle struct {
 	DisplayName   string    `json:"display_name"`
 	BundleContent []string  `json:"bundle_content"`
 	CreatedAt     time.Time `json:"created_at"`
-	UUID          string   `json:"uuid,omitempty"`
+	UUID          string    `json:"uuid,omitempty"`
 }
 
 // TrustBundleCreateResponse represents the response from creating/updating trust bundles
@@ -66,19 +66,19 @@ func (c *Client) GetDCFTrustBundleByID(ctx context.Context, bundleUUID string) (
 
 // GetDCFTrustBundleByName retrieves a DCF trust bundle by name
 func (c *Client) GetDCFTrustBundleByName(ctx context.Context, bundleName string) (*DCFTrustBundle, error) {
-    endpoint, err := url.JoinPath("dcf/trustbundle/name", bundleName)
-    if err != nil {
-        return nil, fmt.Errorf("failed to construct endpoint: %w", err)
-    }
-    var trustBundle DCFTrustBundle
-    err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
+	endpoint, err := url.JoinPath("dcf/trustbundle/name", bundleName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
+	var trustBundle DCFTrustBundle
+	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-    trustBundle.UUID = trustBundle.BundleID
+	trustBundle.UUID = trustBundle.BundleID
 	return &trustBundle, nil
 }
 
