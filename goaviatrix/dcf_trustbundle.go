@@ -17,12 +17,13 @@ type TrustBundleItemRequest struct {
 	DisplayName   string `json:"display_name"`
 }
 
-// TrustBundle represents the full trust bundle response from GET operations
-type TrustBundle struct {
+// DCFTrustBundle represents the full trust bundle response from GET operations
+type DCFTrustBundle struct {
 	BundleID      string    `json:"bundle_id"`
 	DisplayName   string    `json:"display_name"`
 	BundleContent []string  `json:"bundle_content"`
 	CreatedAt     time.Time `json:"created_at"`
+	UUID          string    `json:"uuid,omitempty"`
 }
 
 // TrustBundleCreateResponse represents the response from creating/updating trust bundles
@@ -44,13 +45,13 @@ func (c *Client) CreateDCFTrustBundle(ctx context.Context, trustBundle *TrustBun
 }
 
 // GetDCFTrustBundle retrieves a DCF trust bundle by UUID
-func (c *Client) GetDCFTrustBundle(ctx context.Context, bundleUUID string) (*TrustBundle, error) {
+func (c *Client) GetDCFTrustBundleByID(ctx context.Context, bundleUUID string) (*DCFTrustBundle, error) {
 	endpoint, err := url.JoinPath("dcf/trustbundle", bundleUUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
 	}
 
-	var trustBundle TrustBundle
+	var trustBundle DCFTrustBundle
 	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
@@ -58,7 +59,26 @@ func (c *Client) GetDCFTrustBundle(ctx context.Context, bundleUUID string) (*Tru
 		}
 		return nil, err
 	}
+	// Set the UUID from the parameter for consistency
+	trustBundle.UUID = bundleUUID
+	return &trustBundle, nil
+}
 
+// GetDCFTrustBundleByName retrieves a DCF trust bundle by name
+func (c *Client) GetDCFTrustBundleByName(ctx context.Context, bundleName string) (*DCFTrustBundle, error) {
+	endpoint, err := url.JoinPath("dcf/trustbundle/name", bundleName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
+	var trustBundle DCFTrustBundle
+	err = c.GetAPIContext25(ctx, &trustBundle, endpoint, nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	trustBundle.UUID = trustBundle.BundleID
 	return &trustBundle, nil
 }
 

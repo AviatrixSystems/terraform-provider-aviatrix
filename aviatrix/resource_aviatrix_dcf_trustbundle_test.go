@@ -178,7 +178,7 @@ func testAccCheckDCFTrustBundleExists(n string) resource.TestCheckFunc {
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-		trustBundle, err := client.GetDCFTrustBundle(context.Background(), rs.Primary.ID)
+		trustBundle, err := client.GetDCFTrustBundleByName(context.Background(), rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get DCF Trust Bundle status: %w", err)
 		}
@@ -199,7 +199,7 @@ func testAccCheckDCFTrustBundleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := client.GetDCFTrustBundle(context.Background(), rs.Primary.ID)
+		_, err := client.GetDCFTrustBundleByName(context.Background(), rs.Primary.ID)
 		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("DCF Trust Bundle still exists when it should be destroyed")
 		}
