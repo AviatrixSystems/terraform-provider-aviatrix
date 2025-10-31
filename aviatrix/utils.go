@@ -20,6 +20,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func validateIPv6CIDR(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %q to be string", k))
+		return warnings, errors
+	}
+
+	ip, _, err := net.ParseCIDR(v)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("expected %s to contain a valid IPv6 CIDR, got: %s (%v)", k, v, err))
+		return warnings, errors
+	}
+
+	// Reject IPv4 CIDRs
+	if ip.To4() != nil {
+		errors = append(errors, fmt.Errorf("expected %s to contain an IPv6 CIDR, got IPv4: %s", k, v))
+		return warnings, errors
+	}
+
+	return warnings, errors
+}
+
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone
 // parameters.
 func validateAzureAZ(i interface{}, k string) (warnings []string, errors []error) {

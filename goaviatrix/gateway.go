@@ -231,6 +231,7 @@ type Gateway struct {
 	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
 	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
 	InsertionGateway                bool                                `json:"insertion_gateway,omitempty"`
+	SubnetIPv6Cidr                  string                              `json:"gw_subnet_ipv6_cidr,omitempty"`
 }
 
 type HaGateway struct {
@@ -254,6 +255,7 @@ type HaGateway struct {
 	DeviceID                 string                 `json:"edge_csp_device_id,omitempty"`
 	Interfaces               []EdgeTransitInterface `json:"interfaces,omitempty"`
 	ManagementEgressIPPrefix string                 `json:"mgmt_egress_ip,omitempty"`
+	SubnetIPv6Cidr           string                 `json:"gw_subnet_ipv6_cidr,omitempty"`
 }
 
 type BackupLinkInfo struct {
