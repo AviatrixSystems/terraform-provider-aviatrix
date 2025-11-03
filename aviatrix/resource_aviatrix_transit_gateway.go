@@ -42,6 +42,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: resourceAviatrixTransitGatewayCustomizeDiff,
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAviatrixTransitGatewayMigrateState,
 
@@ -107,9 +109,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"subnet_ipv6_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
+				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
-				Description:  "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set.Currently only supported on Azure and AWS Cloud.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff when enable_ipv6 is false (field is not relevant)
+					return !d.Get("enable_ipv6").(bool)
+				},
+				Description: "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set.Currently only supported on Azure and AWS Cloud.",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
@@ -151,8 +157,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_subnet_ipv6_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
-				Description:  "IPv6 CIDR for the HA subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff when enable_ipv6 is false (field is not relevant)
+					return !d.Get("enable_ipv6").(bool)
+				},
+				Description: "IPv6 CIDR for the HA subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -977,6 +988,46 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAviatrixTransitGatewayCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// Handle IPv6 subnet CIDR changes with proper ForceNew logic
+
+	// Force recreation if subnet_ipv6_cidr changes while enable_ipv6 is true
+	if d.HasChange("subnet_ipv6_cidr") {
+		enableIpv6 := d.Get("enable_ipv6").(bool)
+		if enableIpv6 {
+			oldSubnet, newSubnet := d.GetChange("subnet_ipv6_cidr")
+			oldSubnetStr := oldSubnet.(string)
+			newSubnetStr := newSubnet.(string)
+
+			// If there was a subnet before and it's changing, force new resource
+			if oldSubnetStr != "" && oldSubnetStr != newSubnetStr {
+				if err := d.ForceNew("subnet_ipv6_cidr"); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Force recreation if ha_subnet_ipv6_cidr changes while enable_ipv6 is true
+	if d.HasChange("ha_subnet_ipv6_cidr") {
+		enableIpv6 := d.Get("enable_ipv6").(bool)
+		if enableIpv6 {
+			oldSubnet, newSubnet := d.GetChange("ha_subnet_ipv6_cidr")
+			oldSubnetStr := oldSubnet.(string)
+			newSubnetStr := newSubnet.(string)
+
+			// If there was a subnet before and it's changing, force new resource
+			if oldSubnetStr != "" && oldSubnetStr != newSubnetStr {
+				if err := d.ForceNew("ha_subnet_ipv6_cidr"); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
@@ -2167,6 +2218,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		// set ipv6 subnet cidr if ipv6 is enabled on the gateway
 		if gw.EnableIPv6 {
 			d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
+		} else {
+			d.Set("subnet_ipv6_cidr", "")
 		}
 
 		d.Set("local_as_number", gw.LocalASNumber)
@@ -2472,6 +2525,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.EnableIPv6 {
 			d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
+		} else {
+			d.Set("ha_subnet_ipv6_cidr", "")
 		}
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			d.Set("ha_subnet", gw.HaGw.VpcNet)
