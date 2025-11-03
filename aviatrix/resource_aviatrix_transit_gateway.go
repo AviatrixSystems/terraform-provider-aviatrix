@@ -1510,7 +1510,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
 
 			// Append IPv6 subnet CIDR
-			gateway.Subnet = gatewaySubnet + "~~" + subnetIPv6Cidr
+			gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
 
 		}
 
@@ -1609,7 +1609,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 				haSubnet = transitHaGw.Subnet
 				haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
-				transitHaGw.Subnet = haSubnetTrimmed + "~~" + haSubnetIPv6Cidr
+				transitHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 			}
 
 			haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -2874,7 +2874,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 			haSubnet := transitHaGw.Subnet
 			haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
-			transitHaGw.Subnet = haSubnetTrimmed + "~~" + haSubnetIPv6Cidr
+			transitHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
 		if (newHaGwEnabled || changeHaGw) && haGwSize == "" {
