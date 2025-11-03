@@ -2215,13 +2215,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
 
-		// set ipv6 subnet cidr if ipv6 is enabled on the gateway
-		if gw.EnableIPv6 {
-			d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
-		} else {
-			d.Set("subnet_ipv6_cidr", "")
-		}
-
+		d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
 		d.Set("local_as_number", gw.LocalASNumber)
 		d.Set("bgp_ecmp", gw.BgpEcmp)
 		d.Set("enable_active_standby", gw.EnableActiveStandby)
@@ -2523,11 +2517,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return nil
 		}
 
-		if gw.EnableIPv6 {
-			d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
-		} else {
-			d.Set("ha_subnet_ipv6_cidr", "")
-		}
+		d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			d.Set("ha_subnet", gw.HaGw.VpcNet)
 			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {

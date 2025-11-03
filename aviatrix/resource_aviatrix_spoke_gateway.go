@@ -1642,12 +1642,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
 	d.Set("enable_ipv6", gw.EnableIPv6)
 	d.Set("insertion_gateway", gw.InsertionGateway)
-	// set ipv6 subnet cidr if ipv6 is enabled on the gateway
-	if gw.EnableIPv6 {
-		d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
-	} else {
-		d.Set("subnet_ipv6_cidr", "")
-	}
+	d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
 
 	if gw.InsertionGateway && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("insertion_gateway_az", gw.GatewayZone)
@@ -1944,11 +1939,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				d.Set("ha_subnet", "")
 			}
 		}
-		if gw.EnableIPv6 {
-			d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
-		} else {
-			d.Set("ha_subnet_ipv6_cidr", "")
-		}
+		d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
 
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			if gw.HaGw.GatewayZone != "" {
