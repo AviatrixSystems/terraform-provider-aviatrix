@@ -994,11 +994,11 @@ func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.Re
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
 		return err
 	}
-	
+
 	if err := handleIPv6SubnetForceNew(d, "ha_subnet_ipv6_cidr"); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 

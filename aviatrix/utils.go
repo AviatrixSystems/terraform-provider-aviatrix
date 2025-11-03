@@ -29,7 +29,7 @@ func validateIPv6CIDR(i interface{}, k string) (warnings []string, errors []erro
 
 	ip, _, err := net.ParseCIDR(v)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("expected %s to contain a valid IPv6 CIDR, got: %s (%v)", k, v, err))
+		errors = append(errors, fmt.Errorf("expected %s to contain a valid IPv6 CIDR, got: %s (%w)", k, v, err))
 		return warnings, errors
 	}
 
