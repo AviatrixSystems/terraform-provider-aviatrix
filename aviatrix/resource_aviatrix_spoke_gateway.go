@@ -692,41 +692,28 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-	// Handle IPv6 subnet CIDR changes with proper ForceNew logic
-
-	// Force recreation if subnet_ipv6_cidr changes while enable_ipv6 is true
-	if d.HasChange("subnet_ipv6_cidr") {
-		enableIpv6 := d.Get("enable_ipv6").(bool)
-		if enableIpv6 {
-			oldSubnet, newSubnet := d.GetChange("subnet_ipv6_cidr")
-			oldSubnetStr := oldSubnet.(string)
-			newSubnetStr := newSubnet.(string)
-
-			// If there was a subnet before and it's changing, force new resource
-			if oldSubnetStr != "" && oldSubnetStr != newSubnetStr {
-				if err := d.ForceNew("subnet_ipv6_cidr"); err != nil {
-					return err
-				}
-			}
-		}
+func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
+	if !d.HasChange(fieldName) || !d.Get("enable_ipv6").(bool) {
+		return nil
 	}
 
-	// Force recreation if ha_subnet_ipv6_cidr changes while enable_ipv6 is true
-	if d.HasChange("ha_subnet_ipv6_cidr") {
-		enableIpv6 := d.Get("enable_ipv6").(bool)
-		if enableIpv6 {
-			oldSubnet, newSubnet := d.GetChange("ha_subnet_ipv6_cidr")
-			oldSubnetStr := oldSubnet.(string)
-			newSubnetStr := newSubnet.(string)
+	oldSubnet, newSubnet := d.GetChange(fieldName)
+	oldSubnetStr, newSubnetStr := oldSubnet.(string), newSubnet.(string)
 
-			// If there was a subnet before and it's changing, force new resource
-			if oldSubnetStr != "" && oldSubnetStr != newSubnetStr {
-				if err := d.ForceNew("ha_subnet_ipv6_cidr"); err != nil {
-					return err
-				}
-			}
-		}
+	if oldSubnetStr != "" && oldSubnetStr != newSubnetStr {
+		return d.ForceNew(fieldName)
+	}
+
+	return nil
+}
+
+func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
+		return err
+	}
+
+	if err := handleIPv6SubnetForceNew(d, "ha_subnet_ipv6_cidr"); err != nil {
+		return err
 	}
 
 	return nil
