@@ -1154,7 +1154,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		gatewaySubnet := gateway.Subnet
 		// Trim any trailing '~' to normalize it first
-		gatewaySubnet = strings.TrimRight(gatewaySubnet, subnetSeparator)
+		gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
 
 		// Append IPv6 subnet CIDR
 		gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
@@ -1274,7 +1274,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			}
 
 			haSubnet := spokeHaGw.Subnet
-			haSubnetTrimmed := strings.TrimRight(haSubnet, subnetSeparator)
+			haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
 			spokeHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
@@ -2358,7 +2358,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 
 			haSubnet := spokeHaGw.Subnet
-			haSubnetTrimmed := strings.TrimRight(haSubnet, subnetSeparator)
+			haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
 			spokeHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
