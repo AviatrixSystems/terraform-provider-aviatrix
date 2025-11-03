@@ -111,7 +111,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					// Suppress diff when enable_ipv6 is false (field is not relevant)
 					return !d.Get("enable_ipv6").(bool)
 				},
@@ -159,7 +159,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					// Suppress diff when enable_ipv6 is false (field is not relevant)
 					return !d.Get("enable_ipv6").(bool)
 				},
@@ -990,7 +990,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitGatewayCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 	// Handle IPv6 subnet CIDR changes with proper ForceNew logic
 
 	// Force recreation if subnet_ipv6_cidr changes while enable_ipv6 is true
