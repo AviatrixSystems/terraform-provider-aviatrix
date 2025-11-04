@@ -21,8 +21,16 @@ Last updated: R8.1.10 (8.1.10)
 - Supported Controller version: **8.2.0**
 
 ### Enhancements:
-1. Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
 
+1.  Added support for managing custom Intrusion Prevention System (IPS) rule feeds for Distributed Cloud Firewall (DCF). This resource allows users to upload and manage Suricata-compatible IPS rule files.
+**aviatrix_dcf_ips_rule_feed**
+
+2.  Added support for managing DCF IPS profiles. This resource enables users to define IPS profiles, associate custom and external rule feeds, and configure intrusion actions for different severity levels.
+**aviatrix_dcf_ips_profile**
+
+3.  Added support for assigning one or more DCF IPS profiles to a specific VPC. This resource allows users to manage the list of IPS profiles applied to a VPC for DCF protection, and supports clearing all profiles from a VPC. **aviatrix_dcf_ips_profile_vpc**
+
+4.  Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
 
 ## 8.1.10
 ### Notes:

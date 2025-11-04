@@ -52,6 +52,9 @@ type SpokeVpc struct {
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc"`
 	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
+	InsertionGateway             bool     `form:"insertion_gateway,omitempty"`
+	TunnelEncryptionCipher       string   `form:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy         string   `form:"ph2_pfs_policy,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {

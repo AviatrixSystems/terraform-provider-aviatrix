@@ -1,19 +1,19 @@
-# aviatrix_dcf_mwp_attachment_point
+# aviatrix_dcf_attachment_point
 
-Use this data source to get the attachment point ID for a DCF MWP attachment point when using it for attaching a policy list or block to an attachment point.
+Use this data source to get the attachment point ID for a DCF attachment point when using it for attaching a policy group or ruleset to an attachment point.
 
 ## Example Usage
 
 ```hcl
-data "aviatrix_dcf_mwp_attachment_point" "example" {
+data "aviatrix_dcf_attachment_point" "example" {
     name = "my-attachment-point"
 }
 
-resource "aviatrix_dcf_mwp_policy_block" "example" {
-    attach_to = data.aviatrix_dcf_mwp_attachment_point.example.id // Get the uuid using an aviatrix_dcf_mwp_attachment_point datasource
-    name = "example-policy-block"
+resource "aviatrix_dcf_policy_group" "example" {
+    attach_to = data.aviatrix_dcf_attachment_point.example.id // Get the uuid using an aviatrix_dcf_attachment_point datasource
+    name = "example-policy-group"
 
-    policy_block_reference {
+    policy_group_reference {
         priority    = 100
         target_uuid = "10002000-3000-4000-5000-600070008000"
     }

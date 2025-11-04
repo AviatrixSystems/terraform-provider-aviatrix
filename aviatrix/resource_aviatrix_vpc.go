@@ -132,6 +132,11 @@ func resourceAviatrixVpc() *schema.Resource {
 							Computed:    true,
 							Description: "Subnet ID.",
 						},
+						"ipv6_cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "IPv6 CIDR of the subnet.",
+						},
 					},
 				},
 			},
@@ -163,6 +168,11 @@ func resourceAviatrixVpc() *schema.Resource {
 							Computed:    true,
 							Description: "Subnet ID.",
 						},
+						"ipv6_cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "IPv6 CIDR of the subnet.",
+						},
 					},
 				},
 			},
@@ -186,6 +196,11 @@ func resourceAviatrixVpc() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Subnet ID.",
+						},
+						"ipv6_cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "IPv6 CIDR of the subnet.",
 						},
 					},
 				},
@@ -563,6 +578,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
 		subnetInfo["subnet_id"] = subnet.SubnetID
+		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
 
 		privateSubnets = append(privateSubnets, subnetInfo)
 	}
@@ -576,6 +592,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
 		subnetInfo["subnet_id"] = subnet.SubnetID
+		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
 
 		publicSubnets = append(publicSubnets, subnetInfo)
 	}
