@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"net/url"
 )
 
 type TLSProfile struct {
@@ -49,9 +50,12 @@ type TLSProfilesListResponse struct {
 }
 
 func (c *Client) GetTLSProfile(ctx context.Context, uuidStr string) (*TLSProfileWithID, error) {
-	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuidStr)
+	endpoint, err := url.JoinPath("dcf/tls-profile", uuidStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 	var tlsProfile TLSProfileWithID
-	err := c.GetAPIContext25(ctx, &tlsProfile, endpoint, nil)
+	err = c.GetAPIContext25(ctx, &tlsProfile, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +86,11 @@ func (c *Client) ListTLSProfiles(ctx context.Context) (*TLSProfilesListResponse,
 }
 
 func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *TLSProfile) error {
-	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
-	err := c.PutAPIContext25(ctx, endpoint, tlsProfile)
+	endpoint, err := url.JoinPath("dcf/tls-profile", uuid)
+	if err != nil {
+		return fmt.Errorf("failed to construct endpoint: %w", err)
+	}
+	err = c.PutAPIContext25(ctx, endpoint, tlsProfile)
 	if err != nil {
 		return err
 	}
@@ -91,6 +98,9 @@ func (c *Client) UpdateTLSProfile(ctx context.Context, uuid string, tlsProfile *
 }
 
 func (c *Client) DeleteTLSProfile(ctx context.Context, uuid string) error {
-	endpoint := fmt.Sprintf("dcf/tls-profile/%s", uuid)
+	endpoint, err := url.JoinPath("dcf/tls-profile", uuid)
+	if err != nil {
+		return fmt.Errorf("failed to construct endpoint: %w", err)
+	}
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }

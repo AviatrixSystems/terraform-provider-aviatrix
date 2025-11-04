@@ -59,7 +59,7 @@ The following arguments are supported:
 * `verify_sni` - (Required) Toggle to enable advanced SNI verification of client connections. Type: Boolean.
 
 ### Optional
-* `ca_bundle_id` - (Optional) UUID of the CA bundle that should be used for origin certificate validation. If not populated, the default bundle would be used.
+* `ca_bundle_id` - (Optional) UUID of the CA bundle that should be used for origin certificate validation. If not populated, the default bundle would be used. The aviatrix_dcf_trustbundle data source can be used to get the UUID from the bundle name.
 
 ### Computed
 * `uuid` - (Computed) The unique identifier for the TLS profile.
