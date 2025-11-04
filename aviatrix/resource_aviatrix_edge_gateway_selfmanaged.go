@@ -340,6 +340,20 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"tunnel_encryption_cipher": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).",
+				ValidateFunc: validation.StringInSlice([]string{"default", "strong"}, false),
+				Default:      "default",
+			},
+			"tunnel_forward_secrecy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Perfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.",
+				ValidateFunc: validation.StringInSlice([]string{"enable", "disable"}, false),
+				Default:      "disable",
+			},
 		},
 	}
 }
@@ -370,6 +384,8 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
+		TunnelEncryptionCipher:             d.Get("tunnel_encryption_cipher").(string),
+		TunnelForwardSecrecy:               d.Get("tunnel_forward_secrecy").(string),
 	}
 
 	if err := populateInterfaces(d, edgeSpoke); err != nil {
@@ -584,6 +600,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
+	d.Set("tunnel_encryption_cipher", edgeSpoke.TunnelEncryptionCipher)
+	d.Set("tunnel_forward_secrecy", edgeSpoke.TunnelForwardSecrecy)
 
 	if edgeSpoke.ZtpFileType == "iso" || edgeSpoke.ZtpFileType == "cloud-init" {
 		d.Set("ztp_file_type", edgeSpoke.ZtpFileType)
@@ -890,6 +908,22 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 		if err != nil {
 			return diag.Errorf("could not update management egress ip prefix list, WAN/LAN/MANAGEMENT/VLAN interfaces, "+
 				"Edge active standby or Edge active standby preemptive during Edge as a Spoke update: %v", err)
+		}
+	}
+
+	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
+		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
+		if !ok {
+			return diag.Errorf("tunnel_encryption_cipher must be a string")
+		}
+		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
+		if !ok {
+			return diag.Errorf("tunnel_forward_secrecy must be a string")
+		}
+
+		err := client.SetGatewayPhase2Policy(edgeSpoke.GwName, encPolicy, pfsPolicy)
+		if err != nil {
+			return diag.Errorf("could not set phase 2 policies during Edge Gateway Selfmanaged update: %v", err)
 		}
 	}
 

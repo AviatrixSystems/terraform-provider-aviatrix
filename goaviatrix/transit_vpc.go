@@ -78,6 +78,8 @@ type TransitVpc struct {
 	ManagementEgressIPPrefix     string              `json:"mgmt_egress_ip,omitempty"`
 	JumboFrame                   bool                `json:"jumbo_frame,omitempty"`
 	EnableIPv6                   bool                `json:"enable_ipv6,omitempty"`
+	TunnelEncryptionCipher       string              `form:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy         string              `form:"ph2_pfs_policy,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
