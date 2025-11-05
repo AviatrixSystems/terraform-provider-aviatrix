@@ -377,7 +377,9 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		buf.ReadFrom(resp.Body)
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
-			if strings.Contains(buf.String(), "502 Proxy Error") || strings.Contains(buf.String(), "503 Service Unavailable") {
+			// Only check for status codes after trying to parse JSON because we may get an error with a valid JSON body
+			// and that is a valid and actionable response...
+			if resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusServiceUnavailable {
 				time.Sleep(sleepDuration)
 				continue
 			}
