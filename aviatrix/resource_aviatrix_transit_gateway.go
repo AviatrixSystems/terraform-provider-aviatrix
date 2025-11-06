@@ -167,7 +167,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
 			"single_ip_snat": {
@@ -1451,7 +1451,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if !singleAZ {
 			singleAZGateway := &goaviatrix.Gateway{
 				GwName:   d.Get("gw_name").(string),
-				SingleAZ: "disabled",
+				SingleAZ: "no",
 			}
 
 			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
@@ -2859,9 +2859,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		singleAZ := d.Get("single_az_ha").(bool)
 		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
+			singleAZGateway.SingleAZ = "yes"
 		} else {
-			singleAZGateway.SingleAZ = "disabled"
+			singleAZGateway.SingleAZ = "no"
 		}
 
 		if singleAZ {
