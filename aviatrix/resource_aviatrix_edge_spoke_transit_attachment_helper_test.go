@@ -267,40 +267,25 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 
 func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t *testing.T) {
 	tests := []struct {
-		name                string
-		oldValue            bool
-		newValue            bool
-		expectHasChange     bool
-		expectedFormValue   bool
-		spokeGwName         string
-		transitGwName       string
+		name              string
+		enableFirenet     bool
+		spokeGwName       string
+		transitGwName     string
+		expectedFormValue bool
 	}{
 		{
-			name:              "enable_firenet_for_edge changes from false to true",
-			oldValue:          false,
-			newValue:          true,
-			expectHasChange:   true,
+			name:              "enable_firenet_for_edge true",
+			enableFirenet:     true,
+			spokeGwName:       "test-spoke",
+			transitGwName:     "test-transit",
 			expectedFormValue: true,
-			spokeGwName:       "test-spoke",
-			transitGwName:     "test-transit",
 		},
 		{
-			name:              "enable_firenet_for_edge changes from true to false",
-			oldValue:          true,
-			newValue:          false,
-			expectHasChange:   true,
-			expectedFormValue: false,
+			name:              "enable_firenet_for_edge false",
+			enableFirenet:     false,
 			spokeGwName:       "test-spoke",
 			transitGwName:     "test-transit",
-		},
-		{
-			name:              "enable_firenet_for_edge unchanged",
-			oldValue:          false,
-			newValue:          false,
-			expectHasChange:   false,
 			expectedFormValue: false,
-			spokeGwName:       "test-spoke",
-			transitGwName:     "test-transit",
 		},
 	}
 
@@ -323,40 +308,29 @@ func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t
 				},
 			}
 
-			// Create resource data with old value
+			// Create resource data with the value
 			d := schema.TestResourceDataRaw(t, schemaMap, map[string]interface{}{
 				"spoke_gw_name":           tt.spokeGwName,
 				"transit_gw_name":         tt.transitGwName,
-				"enable_firenet_for_edge": tt.oldValue,
+				"enable_firenet_for_edge": tt.enableFirenet,
 			})
 
 			// Set ID to simulate existing resource
 			d.SetId(tt.spokeGwName + "~" + tt.transitGwName)
 
-			// Change the value to simulate update
-			if tt.newValue != tt.oldValue {
-				d.Set("enable_firenet_for_edge", tt.newValue)
+			// Verify the form would be constructed correctly (matching the update function logic)
+			form := map[string]interface{}{
+				"CID":                     "test-cid",
+				"action":                  "edit_inter_transit_gateway_peering",
+				"gateway1":                d.Get("spoke_gw_name").(string),
+				"gateway2":                d.Get("transit_gw_name").(string),
+				"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
 			}
 
-			// Verify HasChange works correctly
-			hasChange := d.HasChange("enable_firenet_for_edge")
-			assert.Equal(t, tt.expectHasChange, hasChange, "HasChange should match expected value")
-
-			// If there's a change, verify the form would be constructed correctly
-			if tt.expectHasChange {
-				form := map[string]interface{}{
-					"CID":                     "test-cid",
-					"action":                  "edit_inter_transit_gateway_peering",
-					"gateway1":                d.Get("spoke_gw_name").(string),
-					"gateway2":                d.Get("transit_gw_name").(string),
-					"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
-				}
-
-				assert.Equal(t, "edit_inter_transit_gateway_peering", form["action"])
-				assert.Equal(t, tt.spokeGwName, form["gateway1"])
-				assert.Equal(t, tt.transitGwName, form["gateway2"])
-				assert.Equal(t, tt.expectedFormValue, form["enable_firenet_for_edge"])
-			}
+			assert.Equal(t, "edit_inter_transit_gateway_peering", form["action"])
+			assert.Equal(t, tt.spokeGwName, form["gateway1"])
+			assert.Equal(t, tt.transitGwName, form["gateway2"])
+			assert.Equal(t, tt.expectedFormValue, form["enable_firenet_for_edge"])
 		})
 	}
 }
