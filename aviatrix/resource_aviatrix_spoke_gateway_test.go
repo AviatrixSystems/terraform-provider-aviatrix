@@ -459,3 +459,400 @@ func testAccCheckSpokeGatewayDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// TestAccAviatrixSpokeGateway_ipv6AWS tests IPv6 CIDR fields for AWS spoke gateway
+func TestAccAviatrixSpokeGateway_ipv6AWS(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_gateway.test_spoke_gateway_ipv6"
+
+	msgCommon := ". Set SKIP_SPOKE_GATEWAY_IPV6 to yes to skip Spoke Gateway IPv6 tests"
+
+	skipGwIPv6 := os.Getenv("SKIP_SPOKE_GATEWAY_IPV6")
+	if skipGwIPv6 == "yes" {
+		t.Skip("Skipping Spoke Gateway IPv6 test as SKIP_SPOKE_GATEWAY_IPV6 is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsSpokeGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeGatewayConfigAWSIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAviatrixSpokeGateway_ipv6WithHA tests IPv6 CIDR fields with HA enabled
+func TestAccAviatrixSpokeGateway_ipv6WithHA(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_gateway.test_spoke_gateway_ipv6_ha"
+
+	msgCommon := ". Set SKIP_SPOKE_GATEWAY_IPV6 to yes to skip Spoke Gateway IPv6 tests"
+
+	skipGwIPv6 := os.Getenv("SKIP_SPOKE_GATEWAY_IPV6")
+	if skipGwIPv6 == "yes" {
+		t.Skip("Skipping Spoke Gateway IPv6 HA test as SKIP_SPOKE_GATEWAY_IPV6 is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsSpokeGatewayIPv6HACheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeGatewayConfigAWSIPv6WithHA(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-ipv6-ha-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+					resource.TestCheckResourceAttr(resourceName, "ha_subnet", os.Getenv("AWS_HA_SUBNET")),
+					resource.TestCheckResourceAttr(resourceName, "ha_subnet_ipv6_cidr", os.Getenv("AWS_HA_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAviatrixSpokeGateway_ipv6Azure tests IPv6 CIDR fields for Azure spoke gateway
+func TestAccAviatrixSpokeGateway_ipv6Azure(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_gateway.test_spoke_gateway_ipv6_azure"
+
+	msgCommon := ". Set SKIP_SPOKE_GATEWAY_IPV6_AZURE to yes to skip Azure Spoke Gateway IPv6 tests"
+
+	skipGwIPv6Azure := os.Getenv("SKIP_SPOKE_GATEWAY_IPV6_AZURE")
+	if skipGwIPv6Azure == "yes" {
+		t.Skip("Skipping Azure Spoke Gateway IPv6 test as SKIP_SPOKE_GATEWAY_IPV6_AZURE is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAzureSpokeGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeGatewayConfigAzureIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("AZURE_GW_SIZE")),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azure-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AZURE_VNET_ID")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AZURE_SUBNET")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AZURE_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AZURE_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+					"vpc_id",
+				},
+			},
+		},
+	})
+}
+
+func preAwsSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_SUBNET4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preAwsSpokeGatewayIPv6HACheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_SUBNET4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+		"AWS_HA_SUBNET",
+		"AWS_HA_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preAzureSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AZURE_VNET_ID",
+		"AZURE_SUBNET",
+		"AZURE_REGION",
+		"AZURE_GW_SIZE",
+		"AZURE_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func testAccSpokeGatewayConfigAWSIPv6(rName string) string {
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6" {
+	cloud_type        = 1
+	account_name      = aviatrix_account.test_acc_aws.account_name
+	gw_name           = "tfg-aws-ipv6-%[1]s"
+	vpc_id            = "%[5]s"
+	vpc_reg           = "%[6]s"
+	gw_size           = "%[7]s"
+	subnet            = "%[8]s"
+	enable_ipv6       = true
+	subnet_ipv6_cidr  = "%[9]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"))
+}
+
+func testAccSpokeGatewayConfigAWSIPv6WithHA(rName string) string {
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_ha" {
+	cloud_type           = 1
+	account_name         = aviatrix_account.test_acc_aws.account_name
+	gw_name              = "tfg-aws-ipv6-ha-%[1]s"
+	vpc_id               = "%[5]s"
+	vpc_reg              = "%[6]s"
+	gw_size              = "%[7]s"
+	subnet               = "%[8]s"
+	enable_ipv6          = true
+	subnet_ipv6_cidr     = "%[9]s"
+	ha_subnet            = "%[10]s"
+	ha_subnet_ipv6_cidr  = "%[11]s"
+	ha_gw_size           = "%[7]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"), os.Getenv("AWS_HA_SUBNET"), os.Getenv("AWS_HA_SUBNET_IPV6_CIDR"))
+}
+
+func testAccSpokeGatewayConfigAzureIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
+	cloud_type          = 8
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_azure" {
+	cloud_type       = 8
+	account_name     = aviatrix_account.test_acc_azure.account_name
+	gw_name          = "tfg-azure-ipv6-%[1]s"
+	vpc_id           = "%[6]s"
+	vpc_reg          = "%[7]s"
+	gw_size          = "%[8]s"
+	subnet           = "%[9]s"
+	enable_ipv6      = true
+	subnet_ipv6_cidr = "%[10]s"
+}
+	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
+		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"), os.Getenv("AZURE_SUBNET_IPV6_CIDR"))
+}
+
+// TestAccAviatrixSpokeGateway_ipv6WithInsaneMode tests IPv6 with Insane Mode enabled
+func TestAccAviatrixSpokeGateway_ipv6WithInsaneMode(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_gateway.test_spoke_gateway_ipv6_insane"
+
+	msgCommon := ". Set SKIP_SPOKE_GATEWAY_IPV6_INSANE_MODE to yes to skip Spoke Gateway IPv6 Insane Mode tests"
+
+	skipGwIPv6InsaneMode := os.Getenv("SKIP_SPOKE_GATEWAY_IPV6_INSANE_MODE")
+	if skipGwIPv6InsaneMode == "yes" {
+		t.Skip("Skipping Spoke Gateway IPv6 Insane Mode test as SKIP_SPOKE_GATEWAY_IPV6_INSANE_MODE is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsSpokeGatewayIPv6InsaneModeCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeGatewayConfigAWSIPv6WithInsaneMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-ipv6-insane-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode_az", os.Getenv("AWS_AVAILABILITY_ZONE")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+func preAwsSpokeGatewayIPv6InsaneModeCheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+		"AWS_AVAILABILITY_ZONE",
+		"AWS_INSANE_MODE_SUBNET",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func testAccSpokeGatewayConfigAWSIPv6WithInsaneMode(rName string) string {
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_insane" {
+	cloud_type        = 1
+	account_name      = aviatrix_account.test_acc_aws.account_name
+	gw_name           = "tfg-aws-ipv6-insane-%[1]s"
+	vpc_id            = "%[5]s"
+	vpc_reg           = "%[6]s"
+	gw_size           = "%[7]s"
+	subnet            = "%[8]s"
+	enable_ipv6       = true
+	subnet_ipv6_cidr  = "%[9]s"
+	insane_mode       = true
+	insane_mode_az    = "%[10]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_INSANE_MODE_SUBNET"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"), os.Getenv("AWS_AVAILABILITY_ZONE"))
+}

@@ -779,6 +779,403 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 	return nil
 }
 
+// TestAccAviatrixTransitGateway_ipv6AWS tests IPv6 CIDR fields for AWS transit gateway
+func TestAccAviatrixTransitGateway_ipv6AWS(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6 to yes to skip Transit Gateway IPv6 tests"
+
+	skipGwIPv6 := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6")
+	if skipGwIPv6 == "yes" {
+		t.Skip("Skipping Transit Gateway IPv6 test as SKIP_TRANSIT_GATEWAY_IPV6 is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsTransitGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigAWSIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-transit-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAviatrixTransitGateway_ipv6WithHA tests IPv6 CIDR fields with HA enabled
+func TestAccAviatrixTransitGateway_ipv6WithHA(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6_ha"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6 to yes to skip Transit Gateway IPv6 tests"
+
+	skipGwIPv6 := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6")
+	if skipGwIPv6 == "yes" {
+		t.Skip("Skipping Transit Gateway IPv6 HA test as SKIP_TRANSIT_GATEWAY_IPV6 is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsTransitGatewayIPv6HACheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigAWSIPv6WithHA(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-transit-ipv6-ha-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+					resource.TestCheckResourceAttr(resourceName, "ha_subnet", os.Getenv("AWS_HA_SUBNET")),
+					resource.TestCheckResourceAttr(resourceName, "ha_subnet_ipv6_cidr", os.Getenv("AWS_HA_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAviatrixTransitGateway_ipv6Azure tests IPv6 CIDR fields for Azure transit gateway
+func TestAccAviatrixTransitGateway_ipv6Azure(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6_azure"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6_AZURE to yes to skip Azure Transit Gateway IPv6 tests"
+
+	skipGwIPv6Azure := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6_AZURE")
+	if skipGwIPv6Azure == "yes" {
+		t.Skip("Skipping Azure Transit Gateway IPv6 test as SKIP_TRANSIT_GATEWAY_IPV6_AZURE is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAzureTransitGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigAzureIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-transit-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("AZURE_GW_SIZE")),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azure-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AZURE_VNET_ID")),
+					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AZURE_SUBNET")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AZURE_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AZURE_SUBNET_IPV6_CIDR")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+					"vpc_id",
+				},
+			},
+		},
+	})
+}
+
+func preAwsTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_SUBNET4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preAwsTransitGatewayIPv6HACheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_SUBNET4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+		"AWS_HA_SUBNET",
+		"AWS_HA_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preAzureTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AZURE_VNET_ID",
+		"AZURE_SUBNET",
+		"AZURE_REGION",
+		"AZURE_GW_SIZE",
+		"AZURE_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func testAccTransitGatewayConfigAWSIPv6(rName string) string {
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6" {
+	cloud_type        = 1
+	account_name      = aviatrix_account.test_acc_aws.account_name
+	gw_name           = "tfg-aws-transit-ipv6-%[1]s"
+	vpc_id            = "%[5]s"
+	vpc_reg           = "%[6]s"
+	gw_size           = "%[7]s"
+	subnet            = "%[8]s"
+	enable_ipv6       = true
+	subnet_ipv6_cidr  = "%[9]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"))
+}
+
+func testAccTransitGatewayConfigAWSIPv6WithHA(rName string) string {
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t2.micro"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_ha" {
+	cloud_type           = 1
+	account_name         = aviatrix_account.test_acc_aws.account_name
+	gw_name              = "tfg-aws-transit-ipv6-ha-%[1]s"
+	vpc_id               = "%[5]s"
+	vpc_reg              = "%[6]s"
+	gw_size              = "%[7]s"
+	subnet               = "%[8]s"
+	enable_ipv6          = true
+	subnet_ipv6_cidr     = "%[9]s"
+	ha_subnet            = "%[10]s"
+	ha_subnet_ipv6_cidr  = "%[11]s"
+	ha_gw_size           = "%[7]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"), os.Getenv("AWS_HA_SUBNET"), os.Getenv("AWS_HA_SUBNET_IPV6_CIDR"))
+}
+
+func testAccTransitGatewayConfigAzureIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
+	cloud_type          = 8
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_azure" {
+	cloud_type       = 8
+	account_name     = aviatrix_account.test_acc_azure.account_name
+	gw_name          = "tfg-azure-transit-ipv6-%[1]s"
+	vpc_id           = "%[6]s"
+	vpc_reg          = "%[7]s"
+	gw_size          = "%[8]s"
+	subnet           = "%[9]s"
+	enable_ipv6      = true
+	subnet_ipv6_cidr = "%[10]s"
+}
+	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
+		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"), os.Getenv("AZURE_SUBNET_IPV6_CIDR"))
+}
+
+// TestAccAviatrixTransitGateway_ipv6WithInsaneMode tests IPv6 with Insane Mode enabled
+func TestAccAviatrixTransitGateway_ipv6WithInsaneMode(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6_insane"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6_INSANE_MODE to yes to skip Transit Gateway IPv6 Insane Mode tests"
+
+	skipGwIPv6InsaneMode := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6_INSANE_MODE")
+	if skipGwIPv6InsaneMode == "yes" {
+		t.Skip("Skipping Transit Gateway IPv6 Insane Mode test as SKIP_TRANSIT_GATEWAY_IPV6_INSANE_MODE is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsTransitGatewayIPv6InsaneModeCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigAWSIPv6WithInsaneMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-transit-ipv6-insane-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ipv6_cidr", os.Getenv("AWS_SUBNET_IPV6_CIDR")),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode_az", os.Getenv("AWS_AVAILABILITY_ZONE")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+func preAwsTransitGatewayIPv6InsaneModeCheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_REGION",
+		"AWS_SUBNET_IPV6_CIDR",
+		"AWS_AVAILABILITY_ZONE",
+		"AWS_INSANE_MODE_SUBNET",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func testAccTransitGatewayConfigAWSIPv6WithInsaneMode(rName string) string {
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_insane" {
+	cloud_type        = 1
+	account_name      = aviatrix_account.test_acc_aws.account_name
+	gw_name           = "tfg-aws-transit-ipv6-insane-%[1]s"
+	vpc_id            = "%[5]s"
+	vpc_reg           = "%[6]s"
+	gw_size           = "%[7]s"
+	subnet            = "%[8]s"
+	enable_ipv6       = true
+	subnet_ipv6_cidr  = "%[9]s"
+	insane_mode       = true
+	insane_mode_az    = "%[10]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_INSANE_MODE_SUBNET"),
+		os.Getenv("AWS_SUBNET_IPV6_CIDR"), os.Getenv("AWS_AVAILABILITY_ZONE"))
+}
+
 func TestGetInterfaceMappingDetails(t *testing.T) {
 	tests := []struct {
 		name                  string
