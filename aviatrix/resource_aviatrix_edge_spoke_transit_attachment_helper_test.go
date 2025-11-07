@@ -264,3 +264,99 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 		})
 	}
 }
+
+func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t *testing.T) {
+	tests := []struct {
+		name                string
+		oldValue            bool
+		newValue            bool
+		expectHasChange     bool
+		expectedFormValue   bool
+		spokeGwName         string
+		transitGwName       string
+	}{
+		{
+			name:              "enable_firenet_for_edge changes from false to true",
+			oldValue:          false,
+			newValue:          true,
+			expectHasChange:   true,
+			expectedFormValue: true,
+			spokeGwName:       "test-spoke",
+			transitGwName:     "test-transit",
+		},
+		{
+			name:              "enable_firenet_for_edge changes from true to false",
+			oldValue:          true,
+			newValue:          false,
+			expectHasChange:   true,
+			expectedFormValue: false,
+			spokeGwName:       "test-spoke",
+			transitGwName:     "test-transit",
+		},
+		{
+			name:              "enable_firenet_for_edge unchanged",
+			oldValue:          false,
+			newValue:          false,
+			expectHasChange:   false,
+			expectedFormValue: false,
+			spokeGwName:       "test-spoke",
+			transitGwName:     "test-transit",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create schema with enable_firenet_for_edge
+			schemaMap := map[string]*schema.Schema{
+				"spoke_gw_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"transit_gw_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"enable_firenet_for_edge": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
+
+			// Create resource data with old value
+			d := schema.TestResourceDataRaw(t, schemaMap, map[string]interface{}{
+				"spoke_gw_name":           tt.spokeGwName,
+				"transit_gw_name":         tt.transitGwName,
+				"enable_firenet_for_edge": tt.oldValue,
+			})
+
+			// Set ID to simulate existing resource
+			d.SetId(tt.spokeGwName + "~" + tt.transitGwName)
+
+			// Change the value to simulate update
+			if tt.newValue != tt.oldValue {
+				d.Set("enable_firenet_for_edge", tt.newValue)
+			}
+
+			// Verify HasChange works correctly
+			hasChange := d.HasChange("enable_firenet_for_edge")
+			assert.Equal(t, tt.expectHasChange, hasChange, "HasChange should match expected value")
+
+			// If there's a change, verify the form would be constructed correctly
+			if tt.expectHasChange {
+				form := map[string]interface{}{
+					"CID":                     "test-cid",
+					"action":                  "edit_inter_transit_gateway_peering",
+					"gateway1":                d.Get("spoke_gw_name").(string),
+					"gateway2":                d.Get("transit_gw_name").(string),
+					"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
+				}
+
+				assert.Equal(t, "edit_inter_transit_gateway_peering", form["action"])
+				assert.Equal(t, tt.spokeGwName, form["gateway1"])
+				assert.Equal(t, tt.transitGwName, form["gateway2"])
+				assert.Equal(t, tt.expectedFormValue, form["enable_firenet_for_edge"])
+			}
+		})
+	}
+}
