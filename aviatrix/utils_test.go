@@ -223,6 +223,104 @@ func TestValidateCIDRRule(t *testing.T) {
 	}
 }
 
+func TestValidateIPv6CIDR(t *testing.T) {
+	testCases := []struct {
+		name          string
+		input         interface{}
+		key           string
+		expectedError bool
+		errorContains string
+	}{
+		// Valid IPv6 CIDR cases
+		{
+			name:          "valid IPv6 CIDR /64",
+			input:         "2001:db8::/64",
+			key:           "test_property",
+			expectedError: false,
+		},
+		{
+			name:          "valid IPv6 CIDR /128",
+			input:         "2001:db8::1/128",
+			key:           "test_property",
+			expectedError: false,
+		},
+		{
+			name:          "valid loopback IPv6 CIDR",
+			input:         "::1/128",
+			key:           "test_property",
+			expectedError: false,
+		},
+
+		// Invalid input type cases
+		{
+			name:          "non-string input",
+			input:         123,
+			key:           "test_property",
+			expectedError: true,
+			errorContains: "expected type of \"test_property\" to be string",
+		},
+
+		// Invalid CIDR format cases
+		{
+			name:          "invalid CIDR format - no prefix",
+			input:         "2001:db8::",
+			key:           "test_property",
+			expectedError: true,
+			errorContains: "expected test_property to contain a valid IPv6 CIDR",
+		},
+		{
+			name:          "invalid CIDR format - malformed IPv6",
+			input:         "2001:db8::xyz/64",
+			key:           "test_property",
+			expectedError: true,
+			errorContains: "expected test_property to contain a valid IPv6 CIDR",
+		},
+
+		// IPv4 CIDR cases (should be rejected)
+		{
+			name:          "IPv4 CIDR /24",
+			input:         "192.168.1.0/24",
+			key:           "test_property",
+			expectedError: true,
+			errorContains: "expected test_property to contain an IPv6 CIDR, got IPv4",
+		},
+		{
+			name:          "IPv4-mapped IPv6 address",
+			input:         "::ffff:192.168.1.1/128",
+			key:           "test_property",
+			expectedError: true,
+			errorContains: "expected test_property to contain an IPv6 CIDR, got IPv4",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			warnings, errors := validateIPv6CIDR(tc.input, tc.key)
+
+			// Warnings should always be empty in our implementation
+			assert.Empty(t, warnings, "Expected no warnings")
+
+			if tc.expectedError {
+				assert.NotEmpty(t, errors, "Expected validation errors, but got none")
+				if tc.errorContains != "" {
+					errorFound := false
+					for _, err := range errors {
+						if assert.Error(t, err) {
+							if contains(err.Error(), tc.errorContains) {
+								errorFound = true
+								break
+							}
+						}
+					}
+					assert.True(t, errorFound, "Expected error to contain '%s', but got errors: %v", tc.errorContains, errors)
+				}
+			} else {
+				assert.Empty(t, errors, "Expected no validation errors, but got: %v", errors)
+			}
+		})
+	}
+}
+
 // Helper function to check if a string contains another string
 func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
