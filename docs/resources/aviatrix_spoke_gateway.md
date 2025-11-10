@@ -264,6 +264,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   vpc_reg           = "us-west-1"
   gw_size           = "t2.micro"
   subnet            = "10.11.0.0/24"
+  subnet_ipv6_cidr  = "2600:1f16:11b3:4900::/64"
   enable_ipv6       = true
 }
 ```
@@ -292,6 +293,7 @@ The following arguments are supported:
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
 * `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS, AWSGov, AWSChina, Azure, AzureGov, AzureChina, OCI, Alibaba Cloud, AWS Top Secret or AWS Secret gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
+* `ha_subnet_ipv6_cidr` - (Optional/Computed) The IPv6 CIDR block of the subnet used to create the HA Spoke Gateway. This argument is supported only on AWS, Azure, AzureGov, and AWSGov. Required when creating a gateway with `enable_ipv6` set to true and HA is enabled. When enabling IPv6 on an existing gateway with HA, this value will be computed from the controller. Changing this value while IPv6 is enabled will force recreation of the gateway.
 * `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional for Azure. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For Azure, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for Azure gateways are in the form "az-n". Example: "az-2". Available for Azure as of provider version R2.17+.
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS, AzureGov, AWSGov, AWS Top Secret and AWS Secret if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
@@ -399,6 +401,7 @@ The following arguments are supported:
 * `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
 * `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
 * `enable_ipv6` - (Optional) To enable IPv6 CIDR in Spoke Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
+* `subnet_ipv6_cidr` - (Optional/Computed) The IPv6 CIDR block of the subnet used to create the Spoke Gateway. This argument is supported only on AWS, Azure, AzureGov, and AWSGov. Required when creating a gateway with `enable_ipv6` set to true. When enabling IPv6 on an existing gateway, this value will be computed from the controller. Changing this value while IPv6 is enabled will force recreation of the gateway.
 * `tunnel_encryption_cipher` - (Optional) Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).
 * `tunnel_forward_secrecy` - (Optional) PPerfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.
 
