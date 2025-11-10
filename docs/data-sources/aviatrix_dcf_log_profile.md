@@ -24,12 +24,12 @@ data "aviatrix_dcf_log_profile" "example" {
   profile_name = "my-log-profile"
 }
 
-# Use the log profile ID in a DCF policy
-resource "aviatrix_dcf_mwp_policy_list" "example" {
-  name = "Example policy with custom log profile"
+# Use the log profile ID in a DCF rule
+resource "aviatrix_dcf_ruleset" "example" {
+  name = "Example ruleset with custom log profile"
 
-  policies {
-    name             = "policy-with-custom-logging"
+  rules {
+    name             = "rule-with-custom-logging"
     action           = "PERMIT"
     priority         = 1
     protocol         = "TCP"
@@ -60,6 +60,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `profile_id` - (String) The unique identifier for the Log Profile which can be referenced in a DCF policy
+* `profile_id` - (String) The unique identifier for the Log Profile which can be referenced in a DCF Rule
 * `session_end` - (Boolean) Tells us if the logging of session end is enabled.
 * `session_start` - (Boolean) Tells us if the logging of session start is enabled.
