@@ -31,12 +31,17 @@ resource "aviatrix_dcf_tls_profile" "enforce" {
 ```
 
 ```hcl
-# Create an Aviatrix Distributed Firewalling TLS Profile with custom CA bundle
+# Use a data source to get the bundle UUID by its name
+data "aviatrix_dcf_trustbundle" "bundle_sample" {
+  display_name = "sample-bundle-1"
+}
+
+# Use the data source ID and Create an Aviatrix Distributed Firewalling TLS Profile with custom CA bundle
 resource "aviatrix_dcf_tls_profile" "with_ca_bundle" {
   display_name           = "ca-bundle-tls-profile"
   certificate_validation = "CERTIFICATE_VALIDATION_ENFORCE"
   verify_sni            = true
-  ca_bundle_id          = "f15c9890-c8c4-4c1a-a2b5-ef0ab34d2e30"
+  ca_bundle_id          = data.aviatrxi_dcf_trustbundle.bundle_sample.id
 }
 ```
 

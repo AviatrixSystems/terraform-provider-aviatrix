@@ -41,7 +41,7 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 			"ca_bundle_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used.",
+				Description: "UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used. The aviatrix_dcf_trustbundle data source can be used to get the UUID from the bundle name.",
 			},
 			"uuid": {
 				Type:        schema.TypeString,
