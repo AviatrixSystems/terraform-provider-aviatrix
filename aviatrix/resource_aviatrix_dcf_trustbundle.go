@@ -46,7 +46,7 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 	}
 }
 
-func suppressBundleContentDiff(k, old, new string, d *schema.ResourceData) bool {
+func suppressBundleContentDiff(k string, old string, new string, d *schema.ResourceData) bool {
 	// Normalize both values and compare
 	old = strings.TrimSpace(old)
 	new = strings.TrimSpace(new)
