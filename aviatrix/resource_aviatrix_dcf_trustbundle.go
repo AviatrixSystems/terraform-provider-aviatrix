@@ -26,10 +26,11 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 				Description:  "Display name for the DCF trust bundle.",
 			},
 			"bundle_content": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: goaviatrix.ValidateTrustbundle,
-				Description:  "The CA bundle content in PEM format.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     goaviatrix.ValidateTrustbundle,
+				DiffSuppressFunc: suppressBundleContentDiff,
+				Description:      "The CA bundle content in PEM format.",
 			},
 			"bundle_id": {
 				Type:        schema.TypeString,
@@ -43,6 +44,26 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 			},
 		},
 	}
+}
+
+func suppressBundleContentDiff(k, old, new string, d *schema.ResourceData) bool {
+	// Normalize both values and compare
+	old = strings.TrimSpace(old)
+	new = strings.TrimSpace(new)
+
+	old = strings.ReplaceAll(old, "\r", "")
+	new = strings.ReplaceAll(new, "\r", "")
+
+	old = strings.ReplaceAll(old, "\n", "")
+	new = strings.ReplaceAll(new, "\n", "")
+
+	old = strings.ReplaceAll(old, " ", "")
+	new = strings.ReplaceAll(new, " ", "")
+
+	old = strings.ReplaceAll(old, "\t", "")
+	new = strings.ReplaceAll(new, "\t", "")
+	// Suppress diff if normalized values are the same
+	return old == new
 }
 
 func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleItemRequest {
