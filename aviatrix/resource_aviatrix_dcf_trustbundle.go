@@ -46,24 +46,24 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 	}
 }
 
-func suppressBundleContentDiff(k string, old string, new string, d *schema.ResourceData) bool {
+func suppressBundleContentDiff(k string, oldContent string, newContent string, d *schema.ResourceData) bool {
 	// Normalize both values and compare
-	old = strings.TrimSpace(old)
-	new = strings.TrimSpace(new)
+	oldContent = strings.TrimSpace(oldContent)
+	newContent = strings.TrimSpace(newContent)
 
-	old = strings.ReplaceAll(old, "\r", "")
-	new = strings.ReplaceAll(new, "\r", "")
+	oldContent = strings.ReplaceAll(oldContent, "\r", "")
+	newContent = strings.ReplaceAll(newContent, "\r", "")
 
-	old = strings.ReplaceAll(old, "\n", "")
-	new = strings.ReplaceAll(new, "\n", "")
+	oldContent = strings.ReplaceAll(oldContent, "\n", "")
+	newContent = strings.ReplaceAll(newContent, "\n", "")
 
-	old = strings.ReplaceAll(old, " ", "")
-	new = strings.ReplaceAll(new, " ", "")
+	oldContent = strings.ReplaceAll(oldContent, " ", "")
+	newContent = strings.ReplaceAll(newContent, " ", "")
 
-	old = strings.ReplaceAll(old, "\t", "")
-	new = strings.ReplaceAll(new, "\t", "")
+	oldContent = strings.ReplaceAll(oldContent, "\t", "")
+	newContent = strings.ReplaceAll(newContent, "\t", "")
 	// Suppress diff if normalized values are the same
-	return old == new
+	return oldContent == newContent
 }
 
 func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleItemRequest {
