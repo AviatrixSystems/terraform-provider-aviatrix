@@ -991,11 +991,9 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 }
 
 func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	// Only force recreation for primary gateway's IPv6 CIDR changes
+	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
-		return err
-	}
-
-	if err := handleIPv6SubnetForceNew(d, "ha_subnet_ipv6_cidr"); err != nil {
 		return err
 	}
 
@@ -2719,7 +2717,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	newHaGwEnabled := false
-	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
+	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") || d.HasChange("ha_subnet_ipv6_cidr") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
 		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {

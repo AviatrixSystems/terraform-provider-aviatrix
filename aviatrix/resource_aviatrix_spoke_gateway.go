@@ -712,11 +712,9 @@ func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
 }
 
 func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	// Only force recreation for primary gateway's IPv6 CIDR changes
+	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
-		return err
-	}
-
-	if err := handleIPv6SubnetForceNew(d, "ha_subnet_ipv6_cidr"); err != nil {
 		return err
 	}
 
