@@ -17,8 +17,7 @@ The **aviatrix_dcf_ips_profile_vpc** resource allows you to manage the list of D
 resource "aviatrix_dcf_ips_profile_vpc" "example" {
   vpc_id = "vpc-0a1b2c3d4e5f67890"
   dcf_ips_profiles = [
-    aviatrix_dcf_ips_profile.profile1.uuid,
-    aviatrix_dcf_ips_profile.profile2.uuid
+    aviatrix_dcf_ips_profile.profile1.uuid
   ]
 }
 
@@ -38,7 +37,7 @@ The following arguments are supported:
 - `vpc_id` - (Required) The VPC ID to which DCF IPS Profiles will be assigned.
 The VPC must have a DCF-applied gateway and must be created before the `aviatrix_dcf_ips_profile_vpc` resource is defined. Type: String
 
-- `dcf_ips_profiles` - (Required) List of DCF IPS profile UUIDs to assign to the VPC. Use an empty list to clear all profiles. Type: List(String).
+- `dcf_ips_profiles` – (Required) List of DCF IPS profile UUIDs to assign to the VPC. Set to an empty list (`[]`) to remove all profiles. Only one IPS profile can be assigned per VPC on Controller version 8.2. Type: `list(string)`.
 
 ## Import
 

@@ -4,6 +4,7 @@ package aviatrix
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -63,6 +64,11 @@ func resourceAviatrixDCFIpsProfileVpcRead(ctx context.Context, d *schema.Resourc
 			d.SetId("")
 			return nil
 		}
+		// If VPC is not found, clear the resource from state, so TF can destroy this IPS profile assignment
+		if isVpcNotFoundError(err) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed to read DCF IPS profile VPC assignment: %v", err)
 	}
 
@@ -99,4 +105,12 @@ func resourceAviatrixDCFIpsProfileVpcDelete(ctx context.Context, d *schema.Resou
 
 	d.SetId("")
 	return nil
+}
+
+func isVpcNotFoundError(err error) bool {
+	// VPC was not found or it's deleted by user manually before IPS profile disassociation
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "VPC") && strings.Contains(err.Error(), "not found")
 }
