@@ -42,6 +42,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: resourceAviatrixTransitGatewayCustomizeDiff,
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAviatrixTransitGatewayMigrateState,
 
@@ -104,6 +106,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ValidateFunc: validateAzureAZ,
 				Description:  "Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
 			},
+			"subnet_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateIPv6CIDR,
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+					// Suppress diff when enable_ipv6 is false (field is not relevant)
+					return !d.Get("enable_ipv6").(bool)
+				},
+				Description: "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set.Currently only supported on Azure and AWS Cloud.",
+			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -140,6 +153,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ValidateFunc: validation.IsCIDR,
 				Description: "HA Subnet. Required for enabling HA for AWS/AWSGov/AWSChina/Azure/OCI/Alibaba Cloud. " +
 					"Optional for enabling HA for GCP gateway.",
+			},
+			"ha_subnet_ipv6_cidr": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateIPv6CIDR,
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+					// Suppress diff when enable_ipv6 is false (field is not relevant)
+					return !d.Get("enable_ipv6").(bool)
+				},
+				Description: "IPv6 CIDR for the HA subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -966,6 +990,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 	}
 }
 
+func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	// Only force recreation for primary gateway's IPv6 CIDR changes
+	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
+	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
@@ -1431,12 +1465,22 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		enableIpv6 := d.Get("enable_ipv6").(bool)
-		if enableIpv6 {
-			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+		if d.Get("enable_ipv6").(bool) {
+			if !IPv6SupportedOnCloudType(gateway.CloudType) {
 				return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
 			}
 			gateway.EnableIPv6 = true
+			subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
+			if subnetIPv6Cidr == "" {
+				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
+			}
+			gatewaySubnet := gateway.Subnet
+			// Trim any trailing '~' to normalize it first
+			gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
+
+			// Append IPv6 subnet CIDR
+			gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+
 		}
 
 		log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -1523,6 +1567,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("%q must be set when creating a Transit HA Gateway in AWS with Private Mode enabled on the Controller", "ha_private_mode_subnet_zone")
 				}
 				transitHaGw.Subnet = haSubnet + "~~" + haPrivateModeSubnetZone
+			}
+
+			if d.Get("enable_ipv6").(bool) {
+				haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
+				if haSubnetIPv6Cidr == "" {
+					return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
+				}
+
+				haSubnet = transitHaGw.Subnet
+				haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
+				transitHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 			}
 
 			haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -2041,6 +2096,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_security_group_id", "")
 			d.Set("ha_software_version", "")
 			d.Set("ha_subnet", "")
+			d.Set("ha_subnet_ipv6_cidr", "")
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
@@ -2126,6 +2182,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
+
+		d.Set("subnet_ipv6_cidr", gw.SubnetIPv6Cidr)
 		d.Set("local_as_number", gw.LocalASNumber)
 		d.Set("bgp_ecmp", gw.BgpEcmp)
 		d.Set("enable_active_standby", gw.EnableActiveStandby)
@@ -2420,11 +2478,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_security_group_id", "")
 			d.Set("ha_software_version", "")
 			d.Set("ha_subnet", "")
+			d.Set("ha_subnet_ipv6_cidr", "")
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
 			return nil
 		}
+
+		d.Set("ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			d.Set("ha_subnet", gw.HaGw.VpcNet)
 			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {
@@ -2656,7 +2717,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	newHaGwEnabled := false
-	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
+	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") || d.HasChange("ha_subnet_ipv6_cidr") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
 		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
@@ -2770,6 +2831,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				transitHaGw.Subnet = strings.Join(haStrs, "~~")
 			}
 			transitHaGw.InsaneMode = "yes"
+		}
+
+		if d.Get("enable_ipv6").(bool) {
+			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
+			if haSubnetIPv6Cidr == "" {
+				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
+			}
+
+			haSubnet := transitHaGw.Subnet
+			haSubnetTrimmed := strings.TrimRight(haSubnet, "~")
+			transitHaGw.Subnet = haSubnetTrimmed + subnetSeparator + haSubnetIPv6Cidr
 		}
 
 		if (newHaGwEnabled || changeHaGw) && haGwSize == "" {
