@@ -387,9 +387,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Handle IPv6 fields
-	enableIpv6 := d.Get("enable_ipv6").(bool)
-	if enableIpv6 {
-		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+	if d.Get("enable_ipv6").(bool) {
+		if !IPv6SupportedOnCloudType(vpc.CloudType) {
 			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8)")
 		}
 		vpc.EnableIpv6 = true
