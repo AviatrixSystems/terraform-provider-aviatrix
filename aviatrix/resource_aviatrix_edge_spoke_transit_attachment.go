@@ -422,6 +422,21 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 		}
 	}
 
+	if d.HasChange("enable_firenet_for_edge") {
+		form := map[string]interface{}{
+			"CID":                     client.CID,
+			"action":                  "edit_inter_transit_gateway_peering",
+			"gateway1":                spokeGwName,
+			"gateway2":                transitGwName,
+			"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
+		}
+
+		err := client.PostAPI("edit_inter_transit_gateway_peering", form, goaviatrix.BasicCheck)
+		if err != nil {
+			return diag.Errorf("could not update enable_firenet_for_edge for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
+		}
+	}
+
 	d.Partial(false)
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx, d, meta)
