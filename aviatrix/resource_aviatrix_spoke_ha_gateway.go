@@ -393,9 +393,9 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 
 		singleAZ := d.Get("single_az_ha").(bool)
 		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
+			singleAZGateway.SingleAZ = "yes"
 		} else {
-			singleAZGateway.SingleAZ = "disabled"
+			singleAZGateway.SingleAZ = "no"
 		}
 
 		if singleAZ {
