@@ -40,7 +40,7 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 			},
 			"rules": {
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Description: "List of distributed-firewalling rules.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
