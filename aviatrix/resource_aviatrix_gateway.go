@@ -1004,7 +1004,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if singleAZ && !d.Get("enable_public_subnet_filtering").(bool) {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
-			SingleAZ: "enabled",
+			SingleAZ: "yes",
 		}
 
 		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
@@ -1018,7 +1018,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		// Thus, if user set single_az_ha=false, we need to disable.
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
-			SingleAZ: "disabled",
+			SingleAZ: "no",
 		}
 		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
@@ -1724,9 +1724,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	singleAZ := d.Get("single_az_ha").(bool)
 	if singleAZ {
-		gateway.SingleAZ = "enabled"
+		gateway.SingleAZ = "yes"
 	} else {
-		gateway.SingleAZ = "disabled"
+		gateway.SingleAZ = "no"
 	}
 
 	peeringHaGateway := &goaviatrix.Gateway{
@@ -2220,9 +2220,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 		singleAZ := d.Get("single_az_ha").(bool)
 		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
+			singleAZGateway.SingleAZ = "yes"
 		} else {
-			singleAZGateway.SingleAZ = "disabled"
+			singleAZGateway.SingleAZ = "no"
 		}
 
 		if singleAZ {
