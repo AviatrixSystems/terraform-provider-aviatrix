@@ -60,12 +60,8 @@ func resourceAviatrixDCFIpsProfileVpcRead(ctx context.Context, d *schema.Resourc
 	vpcId := d.Id()
 	profileVpc, err := client.GetIpsProfileVpc(ctx, vpcId)
 	if err != nil {
-		if errors.Is(err, goaviatrix.ErrNotFound) {
-			d.SetId("")
-			return nil
-		}
-		// If VPC is not found, clear the resource from state, so TF can destroy this IPS profile assignment
-		if isVpcNotFoundError(err) {
+		if errors.Is(err, goaviatrix.ErrNotFound) || strings.Contains(err.Error(), "AVXERR-IPS-0003") {
+			// If VPC is not found, clear the resource from state, so TF can destroy this IPS profile assignment
 			d.SetId("")
 			return nil
 		}
@@ -105,12 +101,4 @@ func resourceAviatrixDCFIpsProfileVpcDelete(ctx context.Context, d *schema.Resou
 
 	d.SetId("")
 	return nil
-}
-
-func isVpcNotFoundError(err error) bool {
-	// VPC was not found or it's deleted by user manually before IPS profile disassociation
-	if err == nil {
-		return false
-	}
-	return strings.Contains(err.Error(), "VPC") && strings.Contains(err.Error(), "not found")
 }
