@@ -9,8 +9,28 @@ description: |-
 # aviatrix_dcf_ruleset
 
 The **aviatrix_dcf_ruleset** resource handles the creation and management of Aviatrix Distributed-firewalling Policies and Ruleset.
+Make sure to use one of the terraform attachment points to attach your terraform objects (rulesets/groups)
 
 ## Example Usage
+
+The two terraform attachment points are:
+- TERRAFORM_BEFORE_UI_MANAGED - Policies will be enforced before the policies mentioned in the UI
+- TERRAFORM_AFTER_UI_MANAGED - Policies will be enforced after the policies mentioned in the UI.
+
+The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
+
+Steps to attach a ruleset to one of the above attachment points:
+
+```hcl
+data "aviatrix_dcf_attachment_point" "tf_before_ui" {
+    name = "TERRAFORM_BEFORE_UI_MANAGED"
+}
+
+resource "aviatrix_dcf_ruleset" "base_ruleset" {
+    attach_to = data.aviatrix_dcf_attachment_point.tf_before_ui.id
+    name = "example-ruleset"
+}
+```
 
 ```hcl
 # Create an Aviatrix Distributed Firewalling Ruleset
@@ -107,7 +127,7 @@ The following arguments are supported:
 
 ### Required
 * `name` - (Required) Name of the ruleset
-* `rules` - (Required) Set of rules.
+* `rules` - (Optional) Set of rules.
     * `name` - (Required) Name of the rule.
     * `action` - (Required) Action for the rule. Must be one of PERMIT, DENY, DEEP_PACKET_INSPECTION_PERMIT or INTRUSION_DETECTION_PERMIT.
     * `priority` - (Optional)  Priority for the rule. Default: 0. Type: Integer.
