@@ -28,7 +28,7 @@ Last updated: R8.1.1 (8.1.1)
 2.  Added support for managing DCF IPS profiles. This resource enables users to define IPS profiles, associate custom and external rule feeds, and configure intrusion actions for different severity levels.
 **aviatrix_dcf_ips_profile**
 
-3.  Added support for assigning one or more DCF IPS profiles to a specific VPC. This resource allows users to manage the list of IPS profiles applied to a VPC for DCF protection, and supports clearing all profiles from a VPC. **aviatrix_dcf_ips_profile_vpc**
+3.  Added support for assigning one DCF IPS profile to a specific VPC. This resource allows users to assign a IPS profiles to a VPC for DCF intrusion analysis, and supports clearing all profiles from a VPC. **aviatrix_dcf_ips_profile_vpc**
 
 4.  Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
 
