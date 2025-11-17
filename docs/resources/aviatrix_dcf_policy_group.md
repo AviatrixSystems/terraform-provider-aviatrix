@@ -47,12 +47,12 @@ resource "aviatrix_dcf_policy_group" "base_policy_group" {
 
     policy_group_reference {
         priority    = 100
-        target_uuid = resource.aviatrix_dcf_policy_group.child_policy_group.id
+        target_uuid = aviatrix_dcf_policy_group.child_policy_group.id
     }
 
     ruleset_reference {
         priority    = 200
-        target_uuid = resource.aviatrix_dcf_ruleset.child_ruleset.id
+        target_uuid = aviatrix_dcf_ruleset.child_ruleset.id
     }
 
     # This will create a new attachment point if this doesn't exist. Once this is created
