@@ -6,8 +6,8 @@ Make sure to use one of the terraform attachment points to attach your terraform
 ## Example Usage
 
 The two terraform attachment points are:
-- TERRAFORM_BEFORE_UI_MANAGED - Policies will be enforced before the policies mentioned in the UI
-- TERRAFORM_AFTER_UI_MANAGED - Policies will be enforced after the policies mentioned in the UI.
+- TERRAFORM_BEFORE_UI_MANAGED - rules will be enforced before the rules mentioned in the UI
+- TERRAFORM_AFTER_UI_MANAGED - rules will be enforced after the rules mentioned in the UI.
 
 The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
 
@@ -24,26 +24,40 @@ resource "aviatrix_dcf_policy_group" "base_policy_group" {
 }
 ```
 
-Once you have the base policy, you can attach more objects to this, either using a ruleset/policy_group reference or attachment_points.
+Once you have the base policy group, you can attach more objects to this, either using a ruleset/policy_group reference or attachment_points.
 
 You can get IDs of other attachment points using the data source for attachment_points.
 
 ```hcl
+
+resource "aviatrix_dcf_ruleset" "child_ruleset" {
+    name = "child_ruleset"
+    # We can have rules here
+    rules = {}
+}
+
+resource "aviatrix_dcf_policy_group" "child_policy_group" {
+    name = "child-policy-group"
+
+}
+
 resource "aviatrix_dcf_policy_group" "base_policy_group" {
     attach_to = data.aviatrix_dcf_attachment_point.tf_before_ui.id
     name = "example-policy-group"
 
     policy_group_reference {
         priority    = 100
-        target_uuid = "10002000-3000-4000-5000-600070008000"
+        target_uuid = resource.aviatrix_dcf_policy_group.child_policy_group.id
     }
 
     ruleset_reference {
         priority    = 200
-        target_uuid = "10002000-3000-4000-5000-600070008001"
+        target_uuid = resource.aviatrix_dcf_ruleset.child_ruleset.id
     }
 
-    // This will create a new attachment point if this doesn't exist.
+    # This will create a new attachment point if this doesn't exist. Once this is created
+    # the ID of this attachment_point can be retrieved using the data source, and be used
+    # in attach_to field for another ruleset/policy_group to attach it here.
     attachment_point {
         name = "test"
         priority = 300
