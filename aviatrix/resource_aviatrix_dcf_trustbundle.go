@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"crypto/x509"
 	"errors"
 	"strings"
 
@@ -47,23 +48,19 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 }
 
 func suppressBundleContentDiff(_ string, oldContent string, newContent string, _ *schema.ResourceData) bool {
-	// Normalize both values and compare
-	oldContent = strings.TrimSpace(oldContent)
-	newContent = strings.TrimSpace(newContent)
+	oldCerts := x509.NewCertPool()
+	newCerts := x509.NewCertPool()
 
-	oldContent = strings.ReplaceAll(oldContent, "\r", "")
-	newContent = strings.ReplaceAll(newContent, "\r", "")
+	oldSuccess := oldCerts.AppendCertsFromPEM([]byte(oldContent))
+	newSuccess := newCerts.AppendCertsFromPEM([]byte(newContent))
 
-	oldContent = strings.ReplaceAll(oldContent, "\n", "")
-	newContent = strings.ReplaceAll(newContent, "\n", "")
+	// If either failed to parse certificates, fall back to string comparison
+	if !oldSuccess || !newSuccess {
+		return false
+	}
 
-	oldContent = strings.ReplaceAll(oldContent, " ", "")
-	newContent = strings.ReplaceAll(newContent, " ", "")
-
-	oldContent = strings.ReplaceAll(oldContent, "\t", "")
-	newContent = strings.ReplaceAll(newContent, "\t", "")
-	// Suppress diff if normalized values are the same
-	return oldContent == newContent
+	// If the certificates are the same, suppress the diff
+	return oldCerts.Equal(newCerts)
 }
 
 func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleItemRequest {
