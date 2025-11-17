@@ -26,6 +26,8 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		// CustomizeDiff handles custom diff logic during plan operations:
+		// - Forces resource recreation when IPv6 subnet fields change (if previously set and enable_ipv6 is true)
 		CustomizeDiff: resourceAviatrixSpokeGatewayCustomizeDiff,
 
 		SchemaVersion: 2,
@@ -92,8 +94,9 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
+				// DiffSuppressFunc ignores changes to this field when enable_ipv6 is false
+				// This prevents unnecessary diffs for a field that is not used in that configuration
 				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
-					// Suppress diff when enable_ipv6 is false (field is not relevant)
 					return !d.Get("enable_ipv6").(bool)
 				},
 				Description: "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
@@ -139,8 +142,9 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
+				// DiffSuppressFunc ignores changes to this field when enable_ipv6 is false
+				// This prevents unnecessary diffs for a field that is not used in that configuration
 				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
-					// Suppress diff when enable_ipv6 is false (field is not relevant)
 					return !d.Get("enable_ipv6").(bool)
 				},
 				Description: "IPv6 CIDR for the HA subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
@@ -166,7 +170,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
 			"manage_ha_gateway": {
@@ -708,11 +712,9 @@ func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
 }
 
 func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	// Only force recreation for primary gateway's IPv6 CIDR changes
+	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
-		return err
-	}
-
-	if err := handleIPv6SubnetForceNew(d, "ha_subnet_ipv6_cidr"); err != nil {
 		return err
 	}
 
@@ -1128,9 +1130,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.InsertionGateway = true
 	}
 
-	enableIpv6 := d.Get("enable_ipv6").(bool)
-	if enableIpv6 {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes) {
+	if d.Get("enable_ipv6").(bool) {
+		if !IPv6SupportedOnCloudType(gateway.CloudType) {
 			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
 		}
 		gateway.EnableIPv6 = true
@@ -1161,7 +1162,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if !singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
-			SingleAZ: "disabled",
+			SingleAZ: "no",
 		}
 
 		log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
@@ -1253,8 +1254,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			spokeHaGw.InsertionGateway = true
 		}
 
-		enableIpv6 := d.Get("enable_ipv6").(bool)
-		if enableIpv6 {
+		if d.Get("enable_ipv6").(bool) {
 			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
 			if haSubnetIPv6Cidr == "" {
 				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
@@ -2178,7 +2178,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	newHaGwEnabled := false
-	if manageHaGw && (d.HasChange("ha_subnet") && manageHaGw || d.HasChange("ha_zone") && manageHaGw || d.HasChange("ha_insane_mode_az") ||
+	if manageHaGw && (d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") || d.HasChange("ha_subnet_ipv6_cidr") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
 		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain")) {
@@ -2337,8 +2337,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			spokeHaGw.InsertionGateway = true
 		}
 
-		enableIpv6 := d.Get("enable_ipv6").(bool)
-		if enableIpv6 {
+		if d.Get("enable_ipv6").(bool) {
 			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
 			if haSubnetIPv6Cidr == "" {
 				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
@@ -2403,9 +2402,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		singleAZ := d.Get("single_az_ha").(bool)
 		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
+			singleAZGateway.SingleAZ = "yes"
 		} else {
-			singleAZGateway.SingleAZ = "disabled"
+			singleAZGateway.SingleAZ = "no"
 		}
 
 		if singleAZ {

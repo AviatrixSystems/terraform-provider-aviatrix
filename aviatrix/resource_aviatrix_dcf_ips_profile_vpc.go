@@ -4,6 +4,7 @@ package aviatrix
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -59,7 +60,8 @@ func resourceAviatrixDCFIpsProfileVpcRead(ctx context.Context, d *schema.Resourc
 	vpcId := d.Id()
 	profileVpc, err := client.GetIpsProfileVpc(ctx, vpcId)
 	if err != nil {
-		if errors.Is(err, goaviatrix.ErrNotFound) {
+		if errors.Is(err, goaviatrix.ErrNotFound) || strings.Contains(err.Error(), "AVXERR-IPS-0003") {
+			// If VPC is not found, clear the resource from state, so TF can destroy this IPS profile assignment
 			d.SetId("")
 			return nil
 		}
