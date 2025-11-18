@@ -14,8 +14,8 @@ Make sure to use one of the terraform attachment points to attach your terraform
 ## Example Usage
 
 The two terraform attachment points are:
-- TERRAFORM_BEFORE_UI_MANAGED - rules will be enforced before the rules mentioned in the UI
-- TERRAFORM_AFTER_UI_MANAGED - rules will be enforced after the policies mentioned in the UI.
+- TERRAFORM_BEFORE_UI_MANAGED - Rulesets will be created before the rulessets mentioned in the UI
+- TERRAFORM_AFTER_UI_MANAGED - Rulesets will be created after the rulesets mentioned in the UI.
 
 The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
 It is best to attach a policy_group to these above attachment_points, then place any ruleset in that policy_group, for easier management.
