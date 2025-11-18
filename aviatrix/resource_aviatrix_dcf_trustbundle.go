@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"crypto/x509"
 	"errors"
 	"strings"
 
@@ -26,10 +27,11 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 				Description:  "Display name for the DCF trust bundle.",
 			},
 			"bundle_content": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: goaviatrix.ValidateTrustbundle,
-				Description:  "The CA bundle content in PEM format.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     goaviatrix.ValidateTrustbundle,
+				DiffSuppressFunc: suppressBundleContentDiff,
+				Description:      "The CA bundle content in PEM format.",
 			},
 			"bundle_id": {
 				Type:        schema.TypeString,
@@ -43,6 +45,22 @@ func resourceAviatrixDCFTrustBundle() *schema.Resource {
 			},
 		},
 	}
+}
+
+func suppressBundleContentDiff(_ string, oldContent string, newContent string, _ *schema.ResourceData) bool {
+	oldCerts := x509.NewCertPool()
+	newCerts := x509.NewCertPool()
+
+	oldSuccess := oldCerts.AppendCertsFromPEM([]byte(oldContent))
+	newSuccess := newCerts.AppendCertsFromPEM([]byte(newContent))
+
+	// If either failed to parse certificates, fall back to string comparison
+	if !oldSuccess || !newSuccess {
+		return false
+	}
+
+	// If the certificates are the same, suppress the diff
+	return oldCerts.Equal(newCerts)
 }
 
 func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleItemRequest {
