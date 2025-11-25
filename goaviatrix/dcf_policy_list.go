@@ -58,8 +58,6 @@ func (c *Client) GetDCFPolicyList(ctx context.Context, uuid string) (*DCFPolicyL
 
 	if err != nil {
 		return nil, err
-	} else if len(policyList.Policies) == 0 {
-		return nil, ErrNotFound
 	}
 
 	return &policyList, nil
