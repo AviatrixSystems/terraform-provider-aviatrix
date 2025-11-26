@@ -20,13 +20,17 @@ The two terraform attachment points are:
 The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
 It is best to attach a policy_group to these above attachment_points, then place any ruleset in that policy_group, for easier management.
 
-Steps to attach a ruleset to one of the above attachment points:
+Note: We cannot attach 2 objects to these attachment points, only one object can be attached to each. If we want to build out a tree of multiple objects, we can attach a policy group to the above attachment points, and then create child attachment points as needed under this group.
 
+Steps to attach a ruleset to one of the above attachment points or any other attachment point:
+
+We need to get the attachment point ID based on its name (the name should be gloabally unique for each attachment point). In this example we will use the "TERRAFORM_BEFORE_UI_MANAGED" as the attachment point name to retrieve its ID and pass to the attach_to field in our ruleset.
 ```hcl
 data "aviatrix_dcf_attachment_point" "tf_before_ui" {
     name = "TERRAFORM_BEFORE_UI_MANAGED"
 }
 
+We can then retrieve the ID of the attachment point and attach the ruleset to it using the attach_to field.
 resource "aviatrix_dcf_ruleset" "base_ruleset" {
     # attach_to field can be used to attach to any other attachment_point in another policy_group
     attach_to = data.aviatrix_dcf_attachment_point.tf_before_ui.id
