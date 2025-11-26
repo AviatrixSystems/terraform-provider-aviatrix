@@ -194,8 +194,12 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	if !ok {
 		return nil, fmt.Errorf("ruleset rules must be of type *schema.Set")
 	}
-
-	for _, policyInterface := range policiesSet.List() {
+	policies := []interface{}{}
+	if policiesSet != nil {
+		policies = policiesSet.List()
+	}
+	policyList.Policies = []goaviatrix.DCFPolicy{}
+	for _, policyInterface := range policies {
 		var ok bool
 
 		policyMap, ok := policyInterface.(map[string]interface{})

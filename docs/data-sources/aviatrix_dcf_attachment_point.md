@@ -20,6 +20,13 @@ resource "aviatrix_dcf_policy_group" "example" {
 }
 ```
 
+Note:
+An Attachment Point in DCF Policies is like a reserved spot in the policy structure. It lets higher-level admins (like org admins) create a placeholder where lower-level teams (like department admins) can later add their own policy groups. This makes policy management modular and decentralized, so multiple people can contribute without conflicts.
+The order of creation doesn’t matter—an existing policy group can link to an attachment point even if that point hasn’t been created yet. This avoids race conditions.
+The names of these attachment points must be globally unique to the entire policy tree implementation.
+
+In short the AP( Attachment Point ) can act as a  filler for other teams: As an example "This particular slot is reserved for a specific team (e.g., the Marketing Department) to add their own detailed set of rules later."
+
 ## Argument Reference
 
 The following arguments are supported:
