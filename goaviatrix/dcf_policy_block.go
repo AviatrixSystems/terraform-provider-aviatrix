@@ -6,11 +6,12 @@ import (
 )
 
 type DCFPolicyBlock struct {
-	Name           string         `json:"name"`
-	SubPolicies    []DCFSubPolicy `json:"sub_policies"`
-	SystemResource bool           `json:"system_resource,omitempty"`
-	UUID           string         `json:"uuid,omitempty"`
-	AttachTo       string         `json:"attach_to,omitempty"`
+	Name           string                 `json:"name"`
+	SubPolicies    []DCFSubPolicy         `json:"sub_policies"`
+	SystemResource bool                   `json:"system_resource,omitempty"`
+	UUID           string                 `json:"uuid,omitempty"`
+	AttachTo       string                 `json:"attach_to,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type DCFSubPolicy struct {
@@ -39,6 +40,12 @@ func (c *Client) CreateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolic
 			}
 			sp.AttachmentPoint.UUID = attachmentPoint.AttachmentPointID
 		}
+	}
+
+	policyBlock.Metadata = map[string]interface{}{
+		"terraform": map[string]string{
+			"resource_type": "terraform-policy-block",
+		},
 	}
 
 	var data DCFPolicyBlock
