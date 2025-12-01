@@ -96,7 +96,7 @@ func testAccDistributedFirewallingDefaultActionRuleDestroy(s *terraform.State) e
 		}
 
 		// Check that the rule has been reset to defaults
-		if rule.Action != "PERMIT" && rule.Logging != false && rule.LogProfile != "" {
+		if rule.Action != "PERMIT" || rule.Logging != false || rule.LogProfile != "" {
 			return fmt.Errorf("distributed firewalling default action rule not reset to defaults: action=%s, logging=%t", rule.Action, rule.Logging)
 		}
 	}
