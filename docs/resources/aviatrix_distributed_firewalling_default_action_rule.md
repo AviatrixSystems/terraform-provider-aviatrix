@@ -56,7 +56,7 @@ The following arguments are supported:
 
 ### Optional
     * `log_profile` - (Optional) Logging profile UUID. There are 3 system defined log profiles that can be referenced using the `aviatrix_dcf_log_profile` data source:
-        1. `start` - Log profile for logging session start only
+        1. `start` - Log profile for logging session start only. If no log profile is provided, this will be used by default.
         2. `end` - Log profile for logging session end only
         3. `start/end` - Log profile for logging session start and end
 

@@ -139,8 +139,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Con
 		return diag.Errorf("failed to set 'logging': %v", err)
 	}
 
-	// Only update log_profile if the API returns a non-empty value
-	// This preserves the configured value if the API doesn't return it
+	// Only update log_profile if the API returns a non-empty value, it's empty by default
 	if defaultActionRule.LogProfile != "" {
 		if err := d.Set("log_profile", defaultActionRule.LogProfile); err != nil {
 			return diag.Errorf("failed to set 'log_profile': %v", err)
