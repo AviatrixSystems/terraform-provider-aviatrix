@@ -35,6 +35,11 @@ func resourceAviatrixDistributedFirewallingDefaultActionRule() *schema.Resource 
 				Required:    true,
 				Description: "Boolean value to enable or disable logging for the default action rule.",
 			},
+			"log_profile": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Logging profile UUID for the default action rule.",
+			},
 		},
 	}
 }
@@ -58,6 +63,10 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.C
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
 		Action:  action,
 		Logging: logging,
+	}
+
+	if logProfile, ok := d.GetOk("log_profile"); ok {
+		defaultActionRuleConfig.LogProfile = logProfile.(string)
 	}
 
 	if err := client.UpdateDistributedFirewallingDefaultActionRule(ctx, defaultActionRuleConfig); err != nil {
@@ -87,6 +96,10 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.C
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
 		Action:  action,
 		Logging: logging,
+	}
+
+	if logProfile, ok := d.GetOk("log_profile"); ok {
+		defaultActionRuleConfig.LogProfile = logProfile.(string)
 	}
 
 	if err := client.UpdateDistributedFirewallingDefaultActionRule(ctx, defaultActionRuleConfig); err != nil {
@@ -125,6 +138,10 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Con
 		return diag.Errorf("failed to set 'logging': %v", err)
 	}
 
+	if err := d.Set("log_profile", defaultActionRule.LogProfile); err != nil {
+		return diag.Errorf("failed to set 'log_profile': %v", err)
+	}
+
 	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
 	return nil
 }
@@ -136,8 +153,9 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleDelete(ctx context.C
 	}
 
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
-		Action:  "PERMIT",
-		Logging: false,
+		Action:     "PERMIT",
+		Logging:    false,
+		LogProfile: "",
 	}
 
 	if err := client.UpdateDistributedFirewallingDefaultActionRule(ctx, defaultActionRuleConfig); err != nil {

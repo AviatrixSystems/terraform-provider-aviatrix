@@ -24,6 +24,28 @@ resource "aviatrix_distributed_firewalling_default_action_rule" "test" {
 }
 ```
 
+```hcl
+# Create an Aviatrix Distributed Firewalling Default Action Rule with custom log profile
+data "aviatrix_dcf_log_profile" "all" {
+  profile_name = "start/end"
+}
+
+<!-- data "aviatrix_dcf_log_profile" "start" {
+  profile_name = "start"
+} -->
+
+<!-- data "aviatrix_dcf_log_profile" "end" {
+  profile_name = "end"
+} -->
+
+
+resource "aviatrix_distributed_firewalling_default_action_rule" "test_with_log_profile" {
+  action      = "DENY"
+  logging     = true
+  log_profile = data.aviatrix_dcf_log_profile.all.profile_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -31,6 +53,12 @@ The following arguments are supported:
 ### Required
     * `action` - (Required) Action for the rule. Must be one of PERMIT or DENY. Type: String.
     * `logging` - (Required) Whether to enable logging for packets that match the rule. Type: Boolean.
+
+### Optional
+    * `log_profile` - (Optional) Logging profile UUID. There are 3 system defined log profiles that can be referenced using the `aviatrix_dcf_log_profile` data source:
+        1. `start` - Log profile for logging session start only
+        2. `end` - Log profile for logging session end only
+        3. `start/end` - Log profile for logging session start and end
 
 ## Import
 
