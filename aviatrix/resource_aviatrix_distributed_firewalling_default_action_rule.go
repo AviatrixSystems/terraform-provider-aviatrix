@@ -38,6 +38,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRule() *schema.Resource 
 			"log_profile": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Logging profile UUID for the default action rule.",
 			},
 		},
@@ -138,8 +139,12 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Con
 		return diag.Errorf("failed to set 'logging': %v", err)
 	}
 
-	if err := d.Set("log_profile", defaultActionRule.LogProfile); err != nil {
-		return diag.Errorf("failed to set 'log_profile': %v", err)
+	// Only update log_profile if the API returns a non-empty value
+	// This preserves the configured value if the API doesn't return it
+	if defaultActionRule.LogProfile != "" {
+		if err := d.Set("log_profile", defaultActionRule.LogProfile); err != nil {
+			return diag.Errorf("failed to set 'log_profile': %v", err)
+		}
 	}
 
 	d.SetId(strings.ReplaceAll(client.ControllerIP, ".", "-"))
