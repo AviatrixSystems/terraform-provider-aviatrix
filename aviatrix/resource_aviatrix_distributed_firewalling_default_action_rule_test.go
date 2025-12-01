@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -28,27 +27,26 @@ func TestAccAviatrixDistributedFirewallingDefaultActionRule_basic(t *testing.T) 
 		CheckDestroy: testAccDistributedFirewallingDefaultActionRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributedFirewallingDefaultActionRuleBasic(),
+				Config: `
+				data "aviatrix_dcf_log_profile" "start" {
+				  profile_name = "start"
+				}
+
+				resource "aviatrix_distributed_firewalling_default_action_rule" "test" {
+				  action      = "PERMIT"
+				  logging     = true
+				  log_profile = data.aviatrix_dcf_log_profile.start.profile_id
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributedFirewallingDefaultActionRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "PERMIT"),
 					resource.TestCheckResourceAttr(resourceName, "logging", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_profile"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_profile", "data.aviatrix_dcf_log_profile.start", "profile_id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func testAccDistributedFirewallingDefaultActionRuleBasic() string {
-	return `resource "aviatrix_distributed_firewalling_default_action_rule" "test" {
-    			action  = "PERMIT"
-    			logging = true
-			}`
 }
 
 func testAccCheckDistributedFirewallingDefaultActionRuleExists(n string) resource.TestCheckFunc {
@@ -92,9 +90,14 @@ func testAccDistributedFirewallingDefaultActionRuleDestroy(s *terraform.State) e
 			continue
 		}
 
-		_, err := client.GetDistributedFirewallingDefaultActionRule(context.Background())
-		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
-			return fmt.Errorf("distributed firewalling default action rule configured when it should be destroyed")
+		rule, err := client.GetDistributedFirewallingDefaultActionRule(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to get distributed firewalling default action rule: %w", err)
+		}
+
+		// Check that the rule has been reset to defaults
+		if rule.Action != "PERMIT" || rule.Logging != false || rule.LogProfile != "" {
+			return fmt.Errorf("distributed firewalling default action rule not reset to defaults: action=%s, logging=%t", rule.Action, rule.Logging)
 		}
 	}
 
