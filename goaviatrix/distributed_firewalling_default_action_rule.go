@@ -8,8 +8,9 @@ import (
 const distributedFirewallingDefaultActionRuleEndpoint = "microseg/default-action-policy"
 
 type DistributedFirewallingDefaultActionRule struct {
-	Action  string `json:"action"`
-	Logging bool   `json:"logging"`
+	Action     string `json:"action"`
+	Logging    bool   `json:"logging"`
+	LogProfile string `json:"log_profile"`
 }
 
 func (c *Client) UpdateDistributedFirewallingDefaultActionRule(ctx context.Context, request *DistributedFirewallingDefaultActionRule) error {
@@ -25,8 +26,9 @@ func (c *Client) GetDistributedFirewallingDefaultActionRule(ctx context.Context)
 	}
 
 	result := &DistributedFirewallingDefaultActionRule{
-		Action:  response.Action,
-		Logging: response.Logging,
+		Action:     response.Action,
+		Logging:    response.Logging,
+		LogProfile: response.LogProfile,
 	}
 
 	return result, nil
