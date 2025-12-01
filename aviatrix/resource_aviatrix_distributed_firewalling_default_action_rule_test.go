@@ -92,7 +92,7 @@ func testAccDistributedFirewallingDefaultActionRuleDestroy(s *terraform.State) e
 
 		rule, err := client.GetDistributedFirewallingDefaultActionRule(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get distributed firewalling default action rule: %v", err)
+			return fmt.Errorf("failed to get distributed firewalling default action rule: %w", err)
 		}
 
 		// Check that the rule has been reset to defaults
