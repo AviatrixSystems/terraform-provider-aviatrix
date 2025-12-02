@@ -15,14 +15,16 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 ---
 
-``Last updated: R8.1.1 (8.1.1)``
+``Last updated: R8.2.0 (8.2.0)``
 
 ---
 
 
 | Terraform Version (v) | Aviatrix Provider Version (R) |   Supported Controller Version   |
 | :-------------------: | :---------------------------: | :------------------------------: |
-|          1.0          |             8.1.1             |       8.1.1                      |
+|          1.0          |             8.2.0             |       8.2.0                      |
+|          1.0          |             8.1.20            |       8.1.20                     |
+|          1.0          |             8.0.40            |       8.0.40                     |
 |          1.0          |             8.1.0             |       8.1.0                      |
 |          1.0          |             8.0.10            |       8.0.10                     |
 |          1.0          |             8.0.0             |       8.0.0-1000.2432            |
