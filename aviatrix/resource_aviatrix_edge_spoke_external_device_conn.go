@@ -244,29 +244,37 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote LAN IPv6 address.",
 			},
+			"backup_remote_lan_ipv6_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup Remote LAN IPv6 address.",
+			},
 		},
 	}
 }
 
 func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatrix.ExternalDeviceConn, error) {
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:              d.Get("site_id").(string),
-		ConnectionName:     d.Get("connection_name").(string),
-		GwName:             d.Get("gw_name").(string),
-		ConnectionType:     d.Get("connection_type").(string),
-		TunnelProtocol:     strings.ToUpper(d.Get("tunnel_protocol").(string)),
-		LocalLanIP:         d.Get("local_lan_ip").(string),
-		RemoteLanIP:        d.Get("remote_lan_ip").(string),
-		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
-		RemoteCloudType:    d.Get("remote_cloud_type").(string),
-		BackupLocalLanIP:   d.Get("backup_local_lan_ip").(string),
-		BackupRemoteLanIP:  d.Get("backup_remote_lan_ip").(string),
-		BgpMd5Key:          d.Get("bgp_md5_key").(string),
-		BackupBgpMd5Key:    d.Get("backup_bgp_md5_key").(string),
-		EnableBgpMultihop:  d.Get("enable_bgp_multihop").(bool),
-		EnableJumboFrame:   d.Get("enable_jumbo_frame").(bool),
-		EnableIpv6:         d.Get("enable_ipv6").(bool),
-		RemoteLanIPv6:      d.Get("remote_lan_ipv6_ip").(string),
+		VpcID:               d.Get("site_id").(string),
+		ConnectionName:      d.Get("connection_name").(string),
+		GwName:              d.Get("gw_name").(string),
+		ConnectionType:      d.Get("connection_type").(string),
+		TunnelProtocol:      strings.ToUpper(d.Get("tunnel_protocol").(string)),
+		LocalLanIP:          d.Get("local_lan_ip").(string),
+		RemoteLanIP:         d.Get("remote_lan_ip").(string),
+		EnableEdgeUnderlay:  d.Get("enable_edge_underlay").(bool),
+		RemoteCloudType:     d.Get("remote_cloud_type").(string),
+		BackupLocalLanIP:    d.Get("backup_local_lan_ip").(string),
+		BackupRemoteLanIP:   d.Get("backup_remote_lan_ip").(string),
+		BgpMd5Key:           d.Get("bgp_md5_key").(string),
+		BackupBgpMd5Key:     d.Get("backup_bgp_md5_key").(string),
+		EnableBgpMultihop:   d.Get("enable_bgp_multihop").(bool),
+		EnableJumboFrame:    d.Get("enable_jumbo_frame").(bool),
+		EnableIpv6:          d.Get("enable_ipv6").(bool),
+		RemoteLanIPv6:       d.Get("remote_lan_ipv6_ip").(string),
+		BackupRemoteLanIPv6: d.Get("backup_remote_lan_ipv6_ip").(string),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -334,10 +342,25 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 {
 			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
 		}
+		if externalDeviceConn.BackupRemoteLanIPv6 != "" {
+			return diag.Errorf("ha is not enabled, please set 'backup_remote_lan_ipv6_ip' to empty")
+		}
 	}
 
-	if externalDeviceConn.EnableIpv6 && externalDeviceConn.RemoteLanIPv6 == "" {
-		return diag.Errorf("'remote_lan_ipv6_ip' is required when 'enable_ipv6' is true")
+	if externalDeviceConn.EnableIpv6 {
+		if externalDeviceConn.RemoteLanIPv6 == "" {
+			return diag.Errorf("'remote_lan_ipv6_ip' is required when 'enable_ipv6' is true")
+		}
+		if externalDeviceConn.HAEnabled == "true" && externalDeviceConn.BackupRemoteLanIPv6 == "" {
+			return diag.Errorf("'backup_remote_lan_ipv6_ip' is required when 'enable_ipv6' is true and ha is enabled")
+		}
+	} else {
+		if externalDeviceConn.RemoteLanIPv6 != "" {
+			return diag.Errorf("IPv6 is not enabled, please set 'remote_lan_ipv6_ip' to empty")
+		}
+		if externalDeviceConn.BackupRemoteLanIPv6 != "" {
+			return diag.Errorf("IPv6 is not enabled, please set 'backup_remote_lan_ipv6_ip' to empty")
+		}
 	}
 
 	flag := false
@@ -511,7 +534,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
 	d.Set("remote_cloud_type", conn.RemoteCloudType)
 	d.Set("enable_ipv6", conn.EnableIpv6)
-	d.Set("remote_lan_ipv6_ip", conn.RemoteLanIPv6)
+	if conn.EnableIpv6 {
+		d.Set("remote_lan_ipv6_ip", conn.RemoteLanIPv6)
+	}
 
 	_ = d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 	if conn.BgpLocalAsNum != 0 {
@@ -546,6 +571,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 			}
 			d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
 			d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+			if conn.EnableIpv6 {
+				d.Set("backup_remote_lan_ipv6_ip", conn.BackupRemoteLanIPv6)
+			}
 		}
 	} else {
 		d.Set("ha_enabled", false)

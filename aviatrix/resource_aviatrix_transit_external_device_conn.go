@@ -514,6 +514,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote LAN IPv6 address.",
 			},
+			"backup_remote_lan_ipv6_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup Remote LAN IPv6 address.",
+			},
 		},
 	}
 }
@@ -558,6 +565,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		ExternalDeviceIPv6:       d.Get("external_device_ipv6").(string),
 		ExternalDeviceBackupIPv6: d.Get("external_device_backup_ipv6").(string),
 		RemoteLanIPv6:            d.Get("remote_lan_ipv6_ip").(string),
+		BackupRemoteLanIPv6:      d.Get("backup_remote_lan_ipv6_ip").(string),
 	}
 
 	sendComm, ok := d.Get("connection_bgp_send_communities").(string)
@@ -703,6 +711,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.TunnelProtocol == "LAN" {
 			if externalDeviceConn.BackupRemoteLanIP == "" {
 				return fmt.Errorf("ha is enabled and 'tunnel_protocol' = 'LAN', please specify 'backup_remote_lan_ip'")
+			}
+			if externalDeviceConn.EnableIpv6 && externalDeviceConn.BackupRemoteLanIPv6 == "" {
+				return fmt.Errorf("ha is enabled, 'tunnel_protocol' = 'LAN' and 'enable_ipv6' is true, please specify 'backup_remote_lan_ipv6_ip'")
 			}
 		} else {
 			if externalDeviceConn.BackupRemoteGatewayIP == "" {
