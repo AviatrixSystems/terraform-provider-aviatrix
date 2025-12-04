@@ -388,8 +388,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IPv6 fields
 	if d.Get("enable_ipv6").(bool) {
-		if !IPv6SupportedOnCloudType(vpc.CloudType) {
-			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		if err := IPv6SupportedOnCloudType(vpc.CloudType); err != nil {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is not supported, %v", err)
 		}
 		vpc.EnableIpv6 = true
 		log.Printf("[INFO] Enabling IPv6 in VPC: %#v", vpc)
