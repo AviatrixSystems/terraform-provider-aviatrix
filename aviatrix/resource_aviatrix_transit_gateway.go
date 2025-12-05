@@ -2423,9 +2423,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		d.Set("lan_interface_cidr", lanCidr)
 
-		err = setGatewayTags(d, client, gw.CloudType, ignoreTagsConfig)
-		if err != nil {
-			return fmt.Errorf("failed to set tags for transit gateway %s: %w", gw.GwName, err)
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
+			if err := d.Set("tags", tags); err != nil {
+				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
+			}
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
