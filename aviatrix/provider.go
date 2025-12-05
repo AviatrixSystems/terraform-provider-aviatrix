@@ -192,6 +192,7 @@ func Provider() *schema.Provider {
 			"aviatrix_spoke_gateway":                                          resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_ha_gateway":                                       resourceAviatrixSpokeHaGateway(),
 			"aviatrix_spoke_gateway_subnet_group":                             resourceAviatrixSpokeGatewaySubnetGroup(),
+			"aviatrix_spoke_group":                                            resourceAviatrixSpokeGroup(),
 			"aviatrix_spoke_external_device_conn":                             resourceAviatrixSpokeExternalDeviceConn(),
 			"aviatrix_spoke_transit_attachment":                               resourceAviatrixSpokeTransitAttachment(),
 			"aviatrix_sumologic_forwarder":                                    resourceAviatrixSumologicForwarder(),
