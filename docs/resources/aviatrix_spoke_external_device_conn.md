@@ -238,7 +238,7 @@ The following arguments are supported:
 * `external_device_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor. Only valid if gateway is IPv6 enabled.
 * `external_device_backup_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for HA gateway. Only valid if gateway is IPv6 enabled.
 * `remote_lan_ipv6_ip` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for BGP over LAN. Only valid if gateway is IPv6 enabled.
-* `backup_remote_lan_ipv6_ip` - (Optional) Backup Remote LAN IPv6 address. Required for IPv6 Enabled HA BGP over LAN connection.
+* `backup_remote_lan_ipv6_ip` - (Optional) Backup Remote LAN IPv6 address. Must be set when `enable_ipv6` is true and HA is enabled for BGP over LAN.
 
 -> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R3.1.0+, and a **spoke_external_device_conn** resource was originally created with a provider version <R3.1.0 with "private_ip" for `phase1_local_identifier`, you must paste "phase1_local_identifier = 'private_ip'" into the corresponding **spoke_external_device_conn** resource to avoid ‘terraform plan‘ from showing delta.
 
