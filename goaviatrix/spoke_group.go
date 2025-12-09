@@ -40,6 +40,8 @@ type SpokeGroup struct {
 
 	// BGP Configuration
 	EnableBgp                    bool     `form:"enable_bgp,omitempty" json:"enable_bgp,omitempty"`
+	LocalAsNumber                string   `form:"local_as_number,omitempty" json:"local_as_number,omitempty"`
+	PrependAsPath                []string `form:"prepend_as_path,omitempty" json:"prepend_as_path,omitempty"`
 	DisableRoutePropagation      bool     `form:"disable_route_propagation,omitempty" json:"disable_route_propagation,omitempty"`
 	SpokeBgpManualAdvertiseCidrs []string `form:"spoke_bgp_manual_advertise_cidrs,omitempty" json:"spoke_bgp_manual_advertise_cidrs,omitempty"`
 	EnablePreserveAsPath         bool     `form:"enable_preserve_as_path,omitempty" json:"enable_preserve_as_path,omitempty"`
