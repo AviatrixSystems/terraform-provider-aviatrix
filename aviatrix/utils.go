@@ -55,6 +55,22 @@ func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
 	return warnings, errors
 }
 
+func ValidateIPv6AccessType(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %q to be string", k))
+		return warnings, errors
+	}
+
+	validTypes := []string{"INTERNAL", "EXTERNAL"}
+	if !stringInSlice(strings.ToUpper(v), validTypes) {
+		errors = append(errors, fmt.Errorf("expected %s to be one of %v, got: %s", k, validTypes, v))
+		return warnings, errors
+	}
+
+	return warnings, errors
+}
+
 // IPv6SupportedOnCloudType checks if IPv6 is supported on the given cloud type.
 // IPv6 is currently only supported on AWS and Azure related cloud types.
 func IPv6SupportedOnCloudType(cloudType int) error {

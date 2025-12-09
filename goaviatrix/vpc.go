@@ -27,6 +27,7 @@ type Vpc struct {
 	PrivateModeSubnets     bool
 	EnableIpv6             bool   `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
 	VpcIpv6Cidr            string `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
+	Ipv6AccessType         string `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
 }
 
 type VpcEdit struct {
@@ -66,11 +67,12 @@ type AllVpcPoolVpcListResp struct {
 }
 
 type SubnetInfo struct {
-	Region   string `json:"region,omitempty"`
-	Cidr     string `json:"cidr,omitempty"`
-	Name     string `json:"name,omitempty"`
-	SubnetID string `json:"id,omitempty"`
-	IPv6Cidr string `json:"ipv6_cidr,omitempty"`
+	Region         string `json:"region,omitempty"`
+	Cidr           string `json:"cidr,omitempty"`
+	Name           string `json:"name,omitempty"`
+	SubnetID       string `json:"id,omitempty"`
+	IPv6Cidr       string `json:"ipv6_cidr,omitempty"`
+	IPv6AccessType string `json:"ipv6_access_type,omitempty"` // applicable to gcp only
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {
@@ -123,6 +125,15 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 
 	if vpc.EnableIpv6 && IsCloudType(vpc.CloudType, AzureArmRelatedCloudTypes) {
 		form["vpc_ipv6_cidr"] = vpc.VpcIpv6Cidr
+	}
+
+	if vpc.EnableIpv6 && IsCloudType(vpc.CloudType, GCPRelatedCloudTypes) {
+		if vpc.VpcIpv6Cidr != "" {
+			form["vpc_ipv6_cidr"] = vpc.VpcIpv6Cidr
+		}
+		if vpc.Ipv6AccessType != "" {
+			form["ipv6_access_type"] = vpc.Ipv6AccessType
+		}
 	}
 
 	return c.PostAPI(action, form, BasicCheck)
