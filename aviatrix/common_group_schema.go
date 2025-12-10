@@ -4,15 +4,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// SpokeGroupRequiredSchema returns the required schema attributes for spoke group resources.
+// GroupRequiredSchema returns the required schema attributes for group resources.
 // These can be reused by other resources that share the same required fields.
-func SpokeGroupRequiredSchema() map[string]*schema.Schema {
+func GroupRequiredSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"group_name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "Name of the spoke gateway group.",
+			Description: "Name of the gateway group.",
 		},
 		"cloud_type": {
 			Type:         schema.TypeInt,
@@ -25,7 +25,7 @@ func SpokeGroupRequiredSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "Gateway type for the spoke group.",
+			Description: "Gateway type for the group.",
 		},
 		"group_instance_size": {
 			Type:        schema.TypeString,
@@ -48,8 +48,8 @@ func SpokeGroupRequiredSchema() map[string]*schema.Schema {
 	}
 }
 
-// SpokeGroupComputedSchema returns the computed (read-only) schema attributes for spoke group resources.
-func SpokeGroupComputedSchema() map[string]*schema.Schema {
+// GroupComputedSchema returns the computed (read-only) schema attributes for group resources.
+func GroupComputedSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"gw_uuid_list": {
 			Type:        schema.TypeList,
@@ -80,8 +80,8 @@ func SpokeGroupComputedSchema() map[string]*schema.Schema {
 	}
 }
 
-// SpokeGroupAzureComputedSchema returns Azure-specific computed schema attributes.
-func SpokeGroupAzureComputedSchema() map[string]*schema.Schema {
+// GroupAzureComputedSchema returns Azure-specific computed schema attributes.
+func GroupAzureComputedSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"azure_eip_name_resource_group": {
 			Type:        schema.TypeString,

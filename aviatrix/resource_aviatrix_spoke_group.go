@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,12 +22,12 @@ func resourceAviatrixSpokeGroup() *schema.Resource {
 		},
 
 		Schema: MergeSchemaMaps(
-			// Required attributes from shared schema
-			SpokeGroupRequiredSchema(),
-			// Computed attributes from shared schema
-			SpokeGroupComputedSchema(),
-			// Azure computed attributes from shared schema
-			SpokeGroupAzureComputedSchema(),
+			// Required attributes from group schema
+			GroupRequiredSchema(),
+			// Computed attributes from group schema
+			GroupComputedSchema(),
+			// Azure computed attributes from group schema
+			GroupAzureComputedSchema(),
 			// Resource-specific optional attributes
 			spokeGroupOptionalSchema(),
 		),
@@ -44,12 +45,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: "List of customized CIDRs for the spoke group.",
-		},
-		"s2c_rx_balancing": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable S2C receive packet CPU re-balancing.",
 		},
 		"explicitly_created": {
 			Type:        schema.TypeBool,
@@ -102,16 +97,10 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 		// ============================================================================
 		// FEATURE FLAGS
 		// ============================================================================
-		"enable_group_hpe": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable High Performance Encryption (HPE) for the group.",
-		},
 		"enable_jumbo_frame": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable jumbo frame support.",
 		},
 		"enable_nat": {
@@ -187,7 +176,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable auto advertise S2C CIDRs.",
 		},
-		"bgp_ecmp": {
+		"enable_bgp_ecmp": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
@@ -244,7 +233,8 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Optional:     true,
 			ForceNew:     true,
 			ValidateFunc: validation.IntAtLeast(1),
-			Description:  "Number of BGP LAN interfaces. Only valid for Azure.",
+			Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
+				"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Default value: 1. ",
 		},
 
 		// Learned CIDR Approval
@@ -340,7 +330,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		spokeGroup.CustomizedCidrList = getStringList(d, "customized_cidr_list")
 		_ = v
 	}
-	spokeGroup.S2cRxBalancing = d.Get("s2c_rx_balancing").(bool)
 	spokeGroup.ExplicitlyCreated = d.Get("explicitly_created").(bool)
 
 	if v, ok := d.GetOk("subnet"); ok {
@@ -361,7 +350,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	spokeGroup.Edge = d.Get("edge").(bool)
 
 	// Feature Flags
-	spokeGroup.EnableGroupHpe = d.Get("enable_group_hpe").(bool)
 	spokeGroup.EnableJumboFrame = d.Get("enable_jumbo_frame").(bool)
 	spokeGroup.EnableNat = d.Get("enable_nat").(bool)
 	spokeGroup.EnableIPv6 = d.Get("enable_ipv6").(bool)
@@ -379,7 +367,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	spokeGroup.EnablePreserveAsPath = d.Get("enable_preserve_as_path").(bool)
 	spokeGroup.EnableAutoAdvertiseS2cCidrs = d.Get("enable_auto_advertise_s2c_cidrs").(bool)
-	spokeGroup.BgpEcmp = d.Get("bgp_ecmp").(bool)
+	spokeGroup.BgpEcmp = d.Get("enable_bgp_ecmp").(bool)
 
 	// BGP Timers
 	spokeGroup.BgpPollingTime = d.Get("bgp_polling_time").(int)
@@ -510,7 +498,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("customized_cidr_list", spokeGroup.CustomizedCidrList); err != nil {
 		return diag.Errorf("failed to set customized_cidr_list: %s", err)
 	}
-	d.Set("s2c_rx_balancing", spokeGroup.S2cRxBalancing)
 	d.Set("explicitly_created", spokeGroup.ExplicitlyCreated)
 	d.Set("subnet", spokeGroup.Subnet)
 	d.Set("vpc_region", spokeGroup.VpcRegion)
@@ -521,7 +508,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("edge", spokeGroup.Edge)
 
 	// Feature Flags
-	d.Set("enable_group_hpe", spokeGroup.EnableGroupHpe)
 	d.Set("enable_jumbo_frame", spokeGroup.EnableJumboFrame)
 	d.Set("enable_nat", spokeGroup.EnableNat)
 	d.Set("enable_ipv6", spokeGroup.EnableIPv6)
@@ -536,7 +522,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("enable_preserve_as_path", spokeGroup.EnablePreserveAsPath)
 	d.Set("enable_auto_advertise_s2c_cidrs", spokeGroup.EnableAutoAdvertiseS2cCidrs)
-	d.Set("bgp_ecmp", spokeGroup.BgpEcmp)
+	d.Set("enable_bgp_ecmp", spokeGroup.BgpEcmp)
 
 	// BGP Timers
 	d.Set("bgp_polling_time", spokeGroup.BgpPollingTime)
@@ -596,8 +582,12 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 	groupName := d.Get("group_name").(string)
-	spokeGroup := &goaviatrix.SpokeGroup{
-		GroupName: groupName,
+	spokeGateway := &goaviatrix.Gateway{
+		CloudType: d.Get("cloud_type").(int),
+		GwName:    d.Get("gw_name").(string),
+	}
+	spokeVpc := &goaviatrix.SpokeVpc{
+		GwName: d.Get("gw_name").(string),
 	}
 
 	log.Printf("[INFO] Updating Spoke Group: %s", groupName)
@@ -615,8 +605,8 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Gateway Size - API: edit_gw_config
 	// ============================================================================
 	if d.HasChange("group_instance_size") {
-		spokeGroup.GroupInstanceSize = d.Get("group_instance_size").(string)
-		err := client.UpdateSpokeGroup(ctx, spokeGroup)
+		spokeGateway.VpcSize = d.Get("group_instance_size").(string)
+		err := client.UpdateGateway(spokeGateway)
 		if err != nil {
 			return diag.Errorf("failed to update group_instance_size: %s", err)
 		}
@@ -625,21 +615,24 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// ============================================================================
 	// BGP Communities - API: set_gateway_accept/send_bgp_communities_override
 	// ============================================================================
+	commSendCurr, commAcceptCurr, err := client.GetGatewayBgpCommunities(spokeGateway.GwName) // update this to use primary gateway name
 	if d.HasChange("bgp_accept_communities") {
-		spokeGroup.BgpAcceptCommunities = d.Get("bgp_accept_communities").(bool)
-		err := client.UpdateSpokeGroup(ctx, spokeGroup)
-		if err != nil {
-			return diag.Errorf("failed to update bgp_accept_communities: %s", err)
+		acceptComm, ok := d.Get("bgp_accept_communities").(bool)
+		if ok && acceptComm != commAcceptCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesAccept(spokeGateway.GwName, acceptComm)
+			if err != nil {
+				return diag.Errorf("failed to update accept BGP communities for group %s: %s", spokeGateway.GwName, err)
+			}
 		}
 	}
 
 	if d.HasChange("bgp_send_communities") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:          groupName,
-			BgpSendCommunities: d.Get("bgp_send_communities").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update bgp_send_communities: %s", err)
+		sendComm, ok := d.Get("bgp_send_communities").(bool)
+		if ok && sendComm != commSendCurr || err != nil {
+			err := client.SetGatewayBgpCommunitiesSend(spokeGateway.GwName, sendComm)
+			if err != nil {
+				return diag.Errorf("failed to update send BGP communities for gateway %s: %s", spokeGateway.GwName, err)
+			}
 		}
 	}
 
@@ -647,12 +640,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// NAT (SNAT) - API: enable_snat / disable_snat
 	// ============================================================================
 	if d.HasChange("enable_nat") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName: groupName,
-			EnableNat: d.Get("enable_nat").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_nat: %s", err)
+		enableSNat := d.Get("enable_nat").(bool)
+		if enableSNat {
+			err := client.EnableSNat(spokeGateway)
+			if err != nil {
+				return diag.Errorf("failed to enable NAT for spoke group: %s", err)
+			}
+		} else {
+			err := client.DisableSNat(spokeGateway)
+			if err != nil {
+				return diag.Errorf("failed to enable NAT for spoke group: %s", err)
+			}
 		}
 	}
 
@@ -660,12 +658,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// VPC DNS Server - API: enable_vpc_dns_server / disable_vpc_dns_server
 	// ============================================================================
 	if d.HasChange("enable_vpc_dns_server") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:          groupName,
-			EnableVpcDnsServer: d.Get("enable_vpc_dns_server").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_vpc_dns_server: %s", err)
+		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+		if enableVpcDnsServer {
+			err := client.EnableVpcDnsServer(spokeGateway)
+			if err != nil {
+				return diag.Errorf("failed to enable VPC DNS Server for spoke group: %s", err)
+			}
+		} else {
+			err := client.DisableVpcDnsServer(spokeGateway)
+			if err != nil {
+				return diag.Errorf("failed to disable VPC DNS Server for spoke group: %s", err)
+			}
 		}
 	}
 
@@ -673,12 +676,10 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// BGP Polling Time - API: change_bgp_polling_time
 	// ============================================================================
 	if d.HasChange("bgp_polling_time") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:      groupName,
-			BgpPollingTime: d.Get("bgp_polling_time").(int),
-		})
+		bgpPollingTime := d.Get("bgp_polling_time").(int)
+		err := client.SetBgpPollingTimeSpoke(spokeVpc, bgpPollingTime)
 		if err != nil {
-			return diag.Errorf("failed to update bgp_polling_time: %s", err)
+			return diag.Errorf("could not update bgp polling time during spoke group update: %s", err)
 		}
 	}
 
@@ -686,12 +687,10 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// BGP Neighbor Status Polling Time - API: change_bgp_neighbor_status_polling_time
 	// ============================================================================
 	if d.HasChange("bgp_neighbor_status_polling_time") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                    groupName,
-			BgpNeighborStatusPollingTime: d.Get("bgp_neighbor_status_polling_time").(int),
-		})
+		bgpBfdPollingTime := d.Get("bgp_neighbor_status_polling_time").(int)
+		err := client.SetBgpBfdPollingTimeSpoke(spokeVpc, bgpBfdPollingTime)
 		if err != nil {
-			return diag.Errorf("failed to update bgp_neighbor_status_polling_time: %s", err)
+			return diag.Errorf("could not update bgp neighbor status polling time during spoke group update: %s", err)
 		}
 	}
 
@@ -699,51 +698,43 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// BGP Hold Time - API: change_bgp_hold_time
 	// ============================================================================
 	if d.HasChange("bgp_hold_time") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:   groupName,
-			BgpHoldTime: d.Get("bgp_hold_time").(int),
-		})
+		bgpHoldTime := d.Get("bgp_hold_time").(int)
+		err := client.ChangeBgpHoldTime(spokeGateway.GwName, bgpHoldTime)
 		if err != nil {
-			return diag.Errorf("failed to update bgp_hold_time: %s", err)
+			return diag.Errorf("could not change BGP Hold Time during spoke group update: %w", err)
 		}
 	}
 
 	// ============================================================================
 	// Local AS Number - API: edit_transit_local_as_number
-	// ============================================================================
-	if d.HasChange("local_as_number") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:     groupName,
-			LocalAsNumber: d.Get("local_as_number").(string),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update local_as_number: %s", err)
-		}
-	}
-
-	// ============================================================================
 	// Prepend AS Path - API: edit_aviatrix_transit_advanced_config
 	// ============================================================================
-	if d.HasChange("prepend_as_path") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:     groupName,
-			PrependAsPath: getStringList(d, "prepend_as_path"),
-		})
+	if d.HasChanges("local_as_number", "prepend_as_path") {
+		localAsNumber := d.Get("local_as_number").(string)
+		err := client.SetLocalASNumberSpoke(spokeVpc, localAsNumber)
 		if err != nil {
-			return diag.Errorf("failed to update prepend_as_path: %s", err)
+			return diag.Errorf("could not set local_as_number for spoke group: %w", err)
+		}
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
+			err = client.SetPrependASPathSpoke(spokeVpc, prependASPath)
+			if err != nil {
+				return diag.Errorf("could not set prepend_as_path for spoke group: %w", err)
+			}
 		}
 	}
 
 	// ============================================================================
 	// BGP ECMP - API: enable_bgp_ecmp / disable_bgp_ecmp
 	// ============================================================================
-	if d.HasChange("bgp_ecmp") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName: groupName,
-			BgpEcmp:   d.Get("bgp_ecmp").(bool),
-		})
+	if d.HasChange("enable_bgp_ecmp") {
+		enable_bgp_ecmp := d.Get("bgp_ecmp").(bool)
+		err := client.SetBgpEcmpSpoke(spokeVpc, enable_bgp_ecmp)
 		if err != nil {
-			return diag.Errorf("failed to update bgp_ecmp: %s", err)
+			return diag.Errorf("could not enable bgp ecmp during spoke group update: %w", err)
 		}
 	}
 
@@ -751,13 +742,23 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Active-Standby - API: enable_active_standby / disable_active_standby
 	// ============================================================================
 	if d.HasChange("enable_active_standby") || d.HasChange("enable_active_standby_preemptive") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                     groupName,
-			EnableActiveStandby:           d.Get("enable_active_standby").(bool),
-			EnableActiveStandbyPreemptive: d.Get("enable_active_standby_preemptive").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update active_standby: %s", err)
+		if d.Get("enable_active_standby").(bool) {
+			if d.Get("enable_active_standby_preemptive").(bool) {
+				if err := client.EnableActiveStandbyPreemptiveSpoke(spokeVpc); err != nil {
+					return diag.Errorf("could not enable Preemptive Mode for Active-Standby during spoke group update: %w", err)
+				}
+			} else {
+				if err := client.EnableActiveStandbySpoke(spokeVpc); err != nil {
+					return diag.Errorf("could not enable Active-Standby during spoke group update: %w", err)
+				}
+			}
+		} else {
+			if d.Get("enable_active_standby_preemptive").(bool) {
+				return diag.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
+			}
+			if err := client.DisableActiveStandbySpoke(spokeVpc); err != nil {
+				return diag.Errorf("could not disable Active-Standby during Spoke Gateway update: %w", err)
+			}
 		}
 	}
 
@@ -765,12 +766,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Jumbo Frame - API: enable_jumbo_frame / disable_jumbo_frame
 	// ============================================================================
 	if d.HasChange("enable_jumbo_frame") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:        groupName,
-			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_jumbo_frame: %s", err)
+		enableJumboFrame := d.Get("enable_jumbo_frame").(bool)
+		if enableJumboFrame {
+			err := client.EnableJumboFrame(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable jumbo frame during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableJumboFrame(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable jumbo frame during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -778,25 +784,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// GRO/GSO - API: enable_gro_gso / disable_gro_gso
 	// ============================================================================
 	if d.HasChange("enable_gro_gso") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:    groupName,
-			EnableGroGso: d.Get("enable_gro_gso").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_gro_gso: %s", err)
-		}
-	}
-
-	// ============================================================================
-	// S2C RX Balancing - API: enable_s2c_rx_balancing / disable_s2c_rx_balancing
-	// ============================================================================
-	if d.HasChange("s2c_rx_balancing") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:      groupName,
-			S2cRxBalancing: d.Get("s2c_rx_balancing").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update s2c_rx_balancing: %s", err)
+		enableGroGso := d.Get("enable_gro_gso").(bool)
+		if enableGroGso {
+			err := client.EnableGroGso(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable gro gso during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableGroGso(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable gro gso during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -804,12 +802,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// IPv6 - API: enable_ipv6 / disable_ipv6
 	// ============================================================================
 	if d.HasChange("enable_ipv6") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:  groupName,
-			EnableIPv6: d.Get("enable_ipv6").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_ipv6: %s", err)
+		enableIPv6 := d.Get("enable_ipv6").(bool)
+		if enableIPv6 {
+			err := client.EnableIPv6(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable ipv6 during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableIPv6(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable ipv6 during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -817,38 +820,52 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Preserve AS Path - API: enable_spoke_preserve_as_path / disable_spoke_preserve_as_path
 	// ============================================================================
 	if d.HasChange("enable_preserve_as_path") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:            groupName,
-			EnablePreserveAsPath: d.Get("enable_preserve_as_path").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_preserve_as_path: %s", err)
+		enableBgp := d.Get("enable_bgp").(bool)
+		enableSpokePreserveAsPath := d.Get("enable_preserve_as_path").(bool)
+		if enableSpokePreserveAsPath && !enableBgp {
+			return diag.Errorf("enable_preserve_as_path is not supported for Non-BGP spoke group during group update")
+		}
+		if !enableSpokePreserveAsPath {
+			err := client.DisableSpokePreserveAsPath(spokeVpc)
+			if err != nil {
+				return diag.Errorf("could not disable Preserve AS Path during spoke group update: %w", err)
+			}
+		} else {
+			err := client.EnableSpokePreserveAsPath(spokeVpc)
+			if err != nil {
+				return diag.Errorf("could not enable Preserve AS Path during spoke group update: %w", err)
+			}
 		}
 	}
 
 	// ============================================================================
 	// Learned CIDRs Approval - API: enable_bgp_gateway_cidr_approval / disable_bgp_gateway_cidr_approval
 	// ============================================================================
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if d.HasChange("enable_learned_cidrs_approval") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                  groupName,
-			EnableLearnedCidrsApproval: d.Get("enable_learned_cidrs_approval").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_learned_cidrs_approval: %s", err)
+		if learnedCidrsApproval {
+			spokeVpc.LearnedCidrsApproval = "on"
+			err := client.EnableSpokeLearnedCidrsApproval(spokeVpc)
+			if err != nil {
+				return diag.Errorf("failed to enable learned cidrs approval for spoke group: %s", err)
+			}
+		} else {
+			spokeVpc.LearnedCidrsApproval = "off"
+			err := client.DisableSpokeLearnedCidrsApproval(spokeVpc)
+			if err != nil {
+				return diag.Errorf("failed to disable learned cidrs approval for spoke group: %s", err)
+			}
 		}
 	}
 
 	// ============================================================================
 	// Approved Learned CIDRs - API: set_bgp_gateway_approved_cidr_rules
 	// ============================================================================
-	if d.HasChange("approved_learned_cidrs") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:            groupName,
-			ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
-		})
+	if learnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
+		spokeVpc.ApprovedLearnedCidrs = getStringSet(d, "approved_learned_cidrs")
+		err := client.UpdateSpokePendingApprovedCidrs(spokeVpc)
 		if err != nil {
-			return diag.Errorf("failed to update approved_learned_cidrs: %s", err)
+			return diag.Errorf("could not update approved CIDRs: %w", err)
 		}
 	}
 
@@ -856,12 +873,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Private VPC Default Route - API: enable_private_vpc_default_route / disable_private_vpc_default_route
 	// ============================================================================
 	if d.HasChange("enable_private_vpc_default_route") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                    groupName,
-			EnablePrivateVpcDefaultRoute: d.Get("enable_private_vpc_default_route").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_private_vpc_default_route: %s", err)
+		enablePrivateVpcDefaultRoute := d.Get("enable_private_vpc_default_route").(bool)
+		if enablePrivateVpcDefaultRoute {
+			err := client.EnablePrivateVpcDefaultRoute(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable private vpc default route during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisablePrivateVpcDefaultRoute(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable private vpc default route during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -869,12 +891,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Skip Public Route Table Update - API: enable_skip_public_route_table_update / disable_skip_public_route_table_update
 	// ============================================================================
 	if d.HasChange("enable_skip_public_route_table_update") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                        groupName,
-			EnableSkipPublicRouteTableUpdate: d.Get("enable_skip_public_route_table_update").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_skip_public_route_table_update: %s", err)
+		enable_skip_public_route_table_update := d.Get("enable_skip_public_route_table_update").(bool)
+		if enable_skip_public_route_table_update {
+			err := client.EnableSkipPublicRouteUpdate(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable skip public route update during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableSkipPublicRouteUpdate(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable skip public route update during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -882,12 +909,17 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Auto Advertise S2C CIDRs - API: enable_auto_advertise_s2c_cidrs / disable_auto_advertise_s2c_cidrs
 	// ============================================================================
 	if d.HasChange("enable_auto_advertise_s2c_cidrs") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                   groupName,
-			EnableAutoAdvertiseS2cCidrs: d.Get("enable_auto_advertise_s2c_cidrs").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_auto_advertise_s2c_cidrs: %s", err)
+		enable_auto_advertise_s2c_cidrs := d.Get("enable_auto_advertise_s2c_cidrs").(bool)
+		if enable_auto_advertise_s2c_cidrs {
+			err := client.EnableAutoAdvertiseS2CCidrs(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable auto advertise s2c cidrs during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableAutoAdvertiseS2CCidrs(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable auto advertise s2c cidrs during spoke group update: %w", err)
+			}
 		}
 	}
 
@@ -895,12 +927,14 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Spoke BGP Manual Advertise CIDRs - API: edit_aviatrix_spoke_advanced_config
 	// ============================================================================
 	if d.HasChange("spoke_bgp_manual_advertise_cidrs") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:                    groupName,
-			SpokeBgpManualAdvertiseCidrs: getStringList(d, "spoke_bgp_manual_advertise_cidrs"),
-		})
+		var spokeBgpManualSpokeAdvertiseCidrs []string
+		for _, v := range d.Get("spoke_bgp_manual_advertise_cidrs").([]interface{}) {
+			spokeBgpManualSpokeAdvertiseCidrs = append(spokeBgpManualSpokeAdvertiseCidrs, v.(string))
+		}
+		spokeVpc.BgpManualSpokeAdvertiseCidrs = strings.Join(spokeBgpManualSpokeAdvertiseCidrs, ",")
+		err := client.SetSpokeBgpManualAdvertisedNetworks(spokeVpc)
 		if err != nil {
-			return diag.Errorf("failed to update spoke_bgp_manual_advertise_cidrs: %s", err)
+			return diag.Errorf("failed to set spoke bgp manual advertise CIDRs during Spoke Gateway update: %s", err)
 		}
 	}
 
@@ -908,12 +942,21 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Route Propagation - API: enable_spoke_onprem_route_propagation / disable_spoke_onprem_route_propagation
 	// ============================================================================
 	if d.HasChange("disable_route_propagation") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:               groupName,
-			DisableRoutePropagation: d.Get("disable_route_propagation").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update disable_route_propagation: %s", err)
+		disableRoutePropagation := d.Get("disable_route_propagation").(bool)
+		enableBgp := d.Get("enable_bgp").(bool)
+		if disableRoutePropagation && !enableBgp {
+			return diag.Errorf("disable route propagation is not supported for Non-BGP Spoke during spoke group update")
+		}
+		if disableRoutePropagation {
+			err := client.DisableSpokeOnpremRoutePropagation(spokeVpc)
+			if err != nil {
+				return diag.Errorf("failed to disable route propagation for Spoke %s during spoke group update: %v", spokeVpc.GwName, err)
+			}
+		} else {
+			err := client.EnableSpokeOnpremRoutePropagation(spokeVpc)
+			if err != nil {
+				return diag.Errorf("failed to enable route propagation for Spoke %s during spoke group update: %v", spokeVpc.GwName, err)
+			}
 		}
 	}
 
@@ -921,53 +964,37 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Global VPC (GCP) - API: enable_global_vpc / disable_global_vpc
 	// ============================================================================
 	if d.HasChange("enable_global_vpc") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:       groupName,
-			EnableGlobalVpc: d.Get("enable_global_vpc").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_global_vpc: %s", err)
+		enableGlobalVpc := d.Get("enable_global_vpc").(bool)
+		if enableGlobalVpc {
+			err := client.EnableGlobalVpc(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not enable global vpc during spoke group update: %w", err)
+			}
+		} else {
+			err := client.DisableGlobalVpc(spokeGateway)
+			if err != nil {
+				return diag.Errorf("could not disable global vpc during spoke group update: %w", err)
+			}
 		}
 	}
 
 	// ============================================================================
 	// Encrypt Volume (AWS) - API: encrypt_gateway_volume
 	// ============================================================================
-	if d.HasChange("enable_encrypt_volume") && d.Get("enable_encrypt_volume").(bool) {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:           groupName,
-			EnableEncryptVolume: true,
-			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
-		})
+	if d.HasChange("enable_encrypt_volume") {
+		cloudType := d.Get("cloud_type").(int)
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return diag.Errorf("'enable_encrypt_volume' is only supported for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768) providers")
+		}
+		spokeGateway.CustomerManagedKeys = d.Get("customer_managed_keys").(string)
+		err := client.EnableEncryptVolume(spokeGateway)
 		if err != nil {
-			return diag.Errorf("failed to update enable_encrypt_volume: %s", err)
+			return diag.Errorf("failed to enable encrypt gateway volume for %s due to %s", spokeGateway.GwName, err)
 		}
 	}
 
-	// ============================================================================
-	// BGP LAN Interfaces Count - API: change_bgp_over_lan_intf_cnt
-	// ============================================================================
-	if d.HasChange("bgp_lan_interfaces_count") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:             groupName,
-			BgpLanInterfacesCount: d.Get("bgp_lan_interfaces_count").(int),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update bgp_lan_interfaces_count: %s", err)
-		}
-	}
-
-	// ============================================================================
-	// HPE (High Performance Encryption) - API: TBD
-	// ============================================================================
-	if d.HasChange("enable_group_hpe") {
-		err := client.UpdateSpokeGroup(ctx, &goaviatrix.SpokeGroup{
-			GroupName:      groupName,
-			EnableGroupHpe: d.Get("enable_group_hpe").(bool),
-		})
-		if err != nil {
-			return diag.Errorf("failed to update enable_group_hpe: %s", err)
-		}
+	if d.HasChange("customer_managed_keys") {
+		return diag.Errorf("updating customer_managed_keys only is not allowed")
 	}
 
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
