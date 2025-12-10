@@ -561,6 +561,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetInfo["subnet_id"] = subnet.SubnetID
 		}
+		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
 
 		var key string
 		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
