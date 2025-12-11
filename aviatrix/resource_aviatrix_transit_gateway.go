@@ -1470,16 +1470,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("error creating gateway: enable_ipv6 is not supported, %v", err)
 			}
 			gateway.EnableIPv6 = true
-			subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
-			if subnetIPv6Cidr == "" {
-				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
-			}
-			gatewaySubnet := gateway.Subnet
-			// Trim any trailing '~' to normalize it first
-			gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && insaneMode {
+				subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
+				if subnetIPv6Cidr == "" {
+					return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
+				}
+				gatewaySubnet := gateway.Subnet
+				// Trim any trailing '~' to normalize it first
+				gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
 
-			// Append IPv6 subnet CIDR
-			gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+				// Append IPv6 subnet CIDR
+				gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+			}
 
 		}
 

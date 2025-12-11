@@ -39,12 +39,6 @@ func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
 		return warnings, errors
 	}
 
-	// Ensure it's the network address, not a host address
-	if v != ipnet.String() {
-		errors = append(errors, fmt.Errorf("expected %s to contain a network CIDR, got host address: %s (expected %s)", k, v, ipnet.String()))
-		return warnings, errors
-	}
-
 	// Ensure the mask size is valid (bits > 0)
 	_, bits := ipnet.Mask.Size()
 	if bits == 0 {

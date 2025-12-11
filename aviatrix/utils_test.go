@@ -291,29 +291,6 @@ func TestValidateIPv6CIDR(t *testing.T) {
 			expectedError: true,
 			errorContains: "expected test_property to contain an IPv6 CIDR, got IPv4",
 		},
-
-		// Host address instead of network address (should be rejected)
-		{
-			name:          "host address in CIDR /64",
-			input:         "2001:db8::5/64",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
-		{
-			name:          "host address in CIDR /48",
-			input:         "2001:db8:1::1/48",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
-		{
-			name:          "non-zero host bits in CIDR",
-			input:         "fd00:1234:5678:abcd::/56",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
 	}
 
 	for _, tc := range testCases {
