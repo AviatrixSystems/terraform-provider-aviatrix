@@ -1676,7 +1676,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			log.Printf("[INFO] Enable VPC DNS Server: %#v", gwVpcDnsServer)
 
-			err := client.EnableVpcDnsServer(gwVpcDnsServer)
+			err := client.EnableVpcDNSServer(gwVpcDnsServer)
 			if err != nil {
 				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
 			}
@@ -3558,12 +3558,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
 		if enableVpcDnsServer {
-			err := client.EnableVpcDnsServer(gw)
+			err := client.EnableVpcDNSServer(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
 			}
 		} else {
-			err := client.DisableVpcDnsServer(gw)
+			err := client.DisableVpcDNSServer(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable VPC DNS Server: %s", err)
 			}
