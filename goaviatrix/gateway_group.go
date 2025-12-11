@@ -11,7 +11,7 @@ type GatewayGroup struct {
 	CID    string `form:"CID,omitempty"`
 
 	// Required
-	GroupName         string `form:"group_name,omitempty" json:"group_name,omitempty"`
+	GroupName         string `form:"name,omitempty" json:"name,omitempty"`
 	CloudType         int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	GwType            string `form:"gw_type,omitempty" json:"gw_type,omitempty"`
 	GroupInstanceSize string `form:"group_instance_size,omitempty" json:"group_instance_size,omitempty"`
@@ -25,27 +25,26 @@ type GatewayGroup struct {
 	Subnet                           string   `form:"subnet,omitempty" json:"subnet,omitempty"`
 	VpcRegion                        string   `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	Domain                           string   `form:"domain,omitempty" json:"domain,omitempty"`
-	IncludeCidr                      string   `form:"include_cidr,omitempty" json:"include_cidr,omitempty"`
-	EnablePrivateVpcDefaultRoute     bool     `form:"enable_private_vpc_default_route,omitempty" json:"enable_private_vpc_default_route,omitempty"`
-	EnableSkipPublicRouteTableUpdate bool     `form:"enable_skip_public_route_table_update,omitempty" json:"enable_skip_public_route_table_update,omitempty"`
+	IncludeCidr                      []string `form:"include_cidr,omitempty" json:"include_cidr,omitempty"`
+	EnablePrivateVpcDefaultRoute     bool     `form:"private_vpc_default_enabled,omitempty" json:"private_vpc_default_enabled,omitempty"`
+	EnableSkipPublicRouteTableUpdate bool     `form:"skip_public_vpc_update_enabled,omitempty" json:"skip_public_vpc_update_enabled,omitempty"` // part of the spoke config in group schema
 	Edge                             bool     `form:"edge,omitempty" json:"edge,omitempty"`
 
 	// Feature Flags
-	EnableGroupHpe     bool `form:"enable_group_hpe,omitempty" json:"enable_group_hpe,omitempty"`
-	EnableJumboFrame   bool `form:"enable_jumbo_frame,omitempty" json:"enable_jumbo_frame,omitempty"`
+	EnableJumboFrame   bool `form:"jumbo_frame,omitempty" json:"jumbo_frame,omitempty"`
 	EnableNat          bool `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	EnableIPv6         bool `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
-	EnableGroGso       bool `form:"enable_gro_gso,omitempty" json:"enable_gro_gso,omitempty"`
-	EnableVpcDNSServer bool `form:"enable_vpc_dns_server,omitempty" json:"enable_vpc_dns_server,omitempty"`
+	EnableGroGso       bool `form:"enable_gro_gso,omitempty" json:"enable_gro_gso,omitempty"` // remove this, set using a get call client.GetGroGsoStatus(gw)
+	EnableVpcDNSServer bool `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns_server,omitempty"`
 
 	// BGP Configuration
-	EnableBgp                    bool     `form:"enable_bgp,omitempty" json:"enable_bgp,omitempty"`
+	EnableBgp                    bool     `form:"bgp_enabled,omitempty" json:"bgp_enabled,omitempty"`
 	LocalAsNumber                string   `form:"local_as_number,omitempty" json:"local_as_number,omitempty"`
 	PrependAsPath                []string `form:"prepend_as_path,omitempty" json:"prepend_as_path,omitempty"`
 	DisableRoutePropagation      bool     `form:"disable_route_propagation,omitempty" json:"disable_route_propagation,omitempty"`
-	SpokeBgpManualAdvertiseCidrs []string `form:"spoke_bgp_manual_advertise_cidrs,omitempty" json:"spoke_bgp_manual_advertise_cidrs,omitempty"`
-	EnablePreserveAsPath         bool     `form:"enable_preserve_as_path,omitempty" json:"enable_preserve_as_path,omitempty"`
-	EnableAutoAdvertiseS2cCidrs  bool     `form:"enable_auto_advertise_s2c_cidrs,omitempty" json:"enable_auto_advertise_s2c_cidrs,omitempty"`
+	SpokeBgpManualAdvertiseCidrs []string `form:"bgp_manual_spoke_advertise_cidrs,omitempty" json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	EnablePreserveAsPath         bool     `form:"preserve_as_path,omitempty" json:"preserve_as_path,omitempty"`
+	EnableAutoAdvertiseS2cCidrs  bool     `form:"auto_advertise_s2c_cidrs,omitempty" json:"auto_advertise_s2c_cidrs,omitempty"`
 	BgpEcmp                      bool     `form:"bgp_ecmp,omitempty" json:"bgp_ecmp,omitempty"`
 
 	// BGP Timers
@@ -54,12 +53,12 @@ type GatewayGroup struct {
 	BgpHoldTime                  int `form:"bgp_hold_time,omitempty" json:"bgp_hold_time,omitempty"`
 
 	// BGP Communities
-	BgpSendCommunities   bool `form:"bgp_send_communities,omitempty" json:"bgp_send_communities,omitempty"`
-	BgpAcceptCommunities bool `form:"bgp_accept_communities,omitempty" json:"bgp_accept_communities,omitempty"`
+	BgpSendCommunities   bool `form:"bgp_send_communities,omitempty" json:"bgp_send_communities,omitempty"`     // remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
+	BgpAcceptCommunities bool `form:"bgp_accept_communities,omitempty" json:"bgp_accept_communities,omitempty"` // remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
 
 	// BGP over LAN
 	EnableBgpOverLan      bool `form:"enable_bgp_over_lan,omitempty" json:"enable_bgp_over_lan,omitempty"`
-	BgpLanInterfacesCount int  `form:"bgp_lan_interfaces_count,omitempty" json:"bgp_lan_interfaces_count,omitempty"`
+	BgpLanInterfacesCount int  `form:"bgp_over_lan_intf_cnt,omitempty" json:"bgp_over_lan_intf_cnt,omitempty"`
 
 	// Learned CIDR Approval
 	EnableLearnedCidrsApproval bool     `form:"enable_learned_cidrs_approval,omitempty" json:"enable_learned_cidrs_approval,omitempty"`
@@ -71,22 +70,22 @@ type GatewayGroup struct {
 	EnableActiveStandbyPreemptive bool `form:"enable_active_standby_preemptive,omitempty" json:"enable_active_standby_preemptive,omitempty"`
 
 	// AWS Specific
-	InsaneMode          bool   `form:"insane_mode,omitempty" json:"insane_mode,omitempty"`
-	InsaneModeAz        string `form:"insane_mode_az,omitempty" json:"insane_mode_az,omitempty"`
-	EnableEncryptVolume bool   `form:"enable_encrypt_volume,omitempty" json:"enable_encrypt_volume,omitempty"`
+	InsaneMode          bool   `form:"insane_mode,omitempty" json:"insane_mode,omitempty"` // rename is EnableGroupHpe
+	InsaneModeAz        string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
+	EnableEncryptVolume bool   `form:"gw_enc,omitempty" json:"gw_enc,omitempty"`
 	CustomerManagedKeys string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
 
 	// GCP Specific
-	EnableGlobalVpc bool `form:"enable_global_vpc,omitempty" json:"enable_global_vpc,omitempty"`
+	EnableGlobalVpc bool `form:"global_vpc,omitempty" json:"global_vpc,omitempty"`
 
 	// Computed (read-only)
 	GwUUIDList                []string `json:"gw_uuid_list,omitempty"`
 	VpcUUID                   string   `json:"vpc_uuid,omitempty"`
 	VendorName                string   `json:"vendor_name,omitempty"`
-	SoftwareVersion           string   `json:"software_version,omitempty"`
-	ImageVersion              string   `json:"image_version,omitempty"`
-	AzureEipNameResourceGroup string   `json:"azure_eip_name_resource_group,omitempty"`
-	BgpLanIPList              []string `json:"bgp_lan_ip_list,omitempty"`
+	SoftwareVersion           string   `json:"gw_software_version,omitempty"`
+	ImageVersion              string   `json:"gw_image_name,omitempty"`
+	AzureEipNameResourceGroup string   `json:"azure_eip_name_resource_group,omitempty"` // remove this, set using azureEip
+	BgpLanIPList              []string `json:"AzureBgpLanIpList,omitempty"`
 }
 
 // GatewayGroupResp represents the API response for get gateway group

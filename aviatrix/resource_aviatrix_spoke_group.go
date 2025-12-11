@@ -44,10 +44,10 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 		// OPTIONAL ATTRIBUTES - Basic Configuration
 		// ============================================================================
 		"customized_cidr_list": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "List of customized CIDRs for the spoke group.",
+			Description: "Set of customized CIDRs for the spoke group.",
 		},
 		"explicitly_created": {
 			Type:        schema.TypeBool,
@@ -74,8 +74,9 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Description: "Network domain for the spoke group.",
 		},
 		"include_cidr": {
-			Type:        schema.TypeString,
+			Type:        schema.TypeSet,
 			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: "Include CIDR for the spoke group.",
 		},
 		"enable_private_vpc_default_route": {
@@ -162,10 +163,10 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Description: "Disable route propagation to transit.",
 		},
 		"spoke_bgp_manual_advertise_cidrs": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "List of CIDRs to manually advertise via BGP.",
+			Description: "Set of CIDRs to manually advertise via BGP.",
 		},
 		"enable_preserve_as_path": {
 			Type:        schema.TypeBool,
@@ -331,7 +332,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Optional attributes
 	if v, ok := d.GetOk("customized_cidr_list"); ok {
-		spokeGroup.CustomizedCidrList = getStringList(d, "customized_cidr_list")
+		spokeGroup.CustomizedCidrList = getStringSet(d, "customized_cidr_list")
 		_ = v
 	}
 	spokeGroup.ExplicitlyCreated = d.Get("explicitly_created").(bool)
@@ -346,7 +347,8 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		spokeGroup.Domain = v.(string)
 	}
 	if v, ok := d.GetOk("include_cidr"); ok {
-		spokeGroup.IncludeCidr = v.(string)
+		spokeGroup.IncludeCidr = getStringSet(d, "include_cidr")
+		_ = v
 	}
 
 	spokeGroup.EnablePrivateVpcDefaultRoute = d.Get("enable_private_vpc_default_route").(bool)
@@ -365,7 +367,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	spokeGroup.DisableRoutePropagation = d.Get("disable_route_propagation").(bool)
 
 	if v, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {
-		spokeGroup.SpokeBgpManualAdvertiseCidrs = getStringList(d, "spoke_bgp_manual_advertise_cidrs")
+		spokeGroup.SpokeBgpManualAdvertiseCidrs = getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 		_ = v
 	}
 
@@ -471,7 +473,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
 }
 
-//nolint:funlen
+//nolint:cyclop,funlen
 func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
@@ -499,7 +501,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("vpc_id", spokeGroup.VpcID)
 	d.Set("account_name", spokeGroup.AccountName)
 
-	// Set optional attributes
 	if err := d.Set("customized_cidr_list", spokeGroup.CustomizedCidrList); err != nil {
 		return diag.Errorf("failed to set customized_cidr_list: %s", err)
 	}
@@ -507,7 +508,9 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("subnet", spokeGroup.Subnet)
 	d.Set("vpc_region", spokeGroup.VpcRegion)
 	d.Set("domain", spokeGroup.Domain)
-	d.Set("include_cidr", spokeGroup.IncludeCidr)
+	if err := d.Set("include_cidr", spokeGroup.IncludeCidr); err != nil {
+		return diag.Errorf("failed to set include_cidr: %s", err)
+	}
 	d.Set("enable_private_vpc_default_route", spokeGroup.EnablePrivateVpcDefaultRoute)
 	d.Set("enable_skip_public_route_table_update", spokeGroup.EnableSkipPublicRouteTableUpdate)
 	d.Set("edge", spokeGroup.Edge)
@@ -933,10 +936,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Spoke BGP Manual Advertise CIDRs - API: edit_aviatrix_spoke_advanced_config
 	// ============================================================================
 	if d.HasChange("spoke_bgp_manual_advertise_cidrs") {
-		var spokeBgpManualSpokeAdvertiseCidrs []string
-		for _, v := range d.Get("spoke_bgp_manual_advertise_cidrs").([]interface{}) {
-			spokeBgpManualSpokeAdvertiseCidrs = append(spokeBgpManualSpokeAdvertiseCidrs, v.(string))
-		}
+		spokeBgpManualSpokeAdvertiseCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 		spokeVpc.BgpManualSpokeAdvertiseCidrs = strings.Join(spokeBgpManualSpokeAdvertiseCidrs, ",")
 		err := client.SetSpokeBgpManualAdvertisedNetworks(spokeVpc)
 		if err != nil {
