@@ -36,7 +36,7 @@ type GatewayGroup struct {
 	EnableNat          bool `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	EnableIPv6         bool `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
 	EnableGroGso       bool `form:"enable_gro_gso,omitempty" json:"enable_gro_gso,omitempty"`
-	EnableVpcDnsServer bool `form:"enable_vpc_dns_server,omitempty" json:"enable_vpc_dns_server,omitempty"`
+	EnableVpcDNSServer bool `form:"enable_vpc_dns_server,omitempty" json:"enable_vpc_dns_server,omitempty"`
 
 	// BGP Configuration
 	EnableBgp                    bool     `form:"enable_bgp,omitempty" json:"enable_bgp,omitempty"`
@@ -80,13 +80,13 @@ type GatewayGroup struct {
 	EnableGlobalVpc bool `form:"enable_global_vpc,omitempty" json:"enable_global_vpc,omitempty"`
 
 	// Computed (read-only)
-	GwUuidList                []string `json:"gw_uuid_list,omitempty"`
-	VpcUuid                   string   `json:"vpc_uuid,omitempty"`
+	GwUUIDList                []string `json:"gw_uuid_list,omitempty"`
+	VpcUUID                   string   `json:"vpc_uuid,omitempty"`
 	VendorName                string   `json:"vendor_name,omitempty"`
 	SoftwareVersion           string   `json:"software_version,omitempty"`
 	ImageVersion              string   `json:"image_version,omitempty"`
 	AzureEipNameResourceGroup string   `json:"azure_eip_name_resource_group,omitempty"`
-	BgpLanIpList              []string `json:"bgp_lan_ip_list,omitempty"`
+	BgpLanIPList              []string `json:"bgp_lan_ip_list,omitempty"`
 }
 
 // GatewayGroupResp represents the API response for get gateway group

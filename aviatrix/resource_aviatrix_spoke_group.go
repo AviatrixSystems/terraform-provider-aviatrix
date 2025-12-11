@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
@@ -35,6 +36,8 @@ func resourceAviatrixSpokeGroup() *schema.Resource {
 }
 
 // spokeGroupOptionalSchema returns the optional schema attributes specific to spoke group resource.
+//
+//nolint:funlen
 func spokeGroupOptionalSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		// ============================================================================
@@ -313,6 +316,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 	}
 }
 
+//nolint:cyclop, funlen
 func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
@@ -354,7 +358,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	spokeGroup.EnableNat = d.Get("enable_nat").(bool)
 	spokeGroup.EnableIPv6 = d.Get("enable_ipv6").(bool)
 	spokeGroup.EnableGroGso = d.Get("enable_gro_gso").(bool)
-	spokeGroup.EnableVpcDnsServer = d.Get("enable_vpc_dns_server").(bool)
+	spokeGroup.EnableVpcDNSServer = d.Get("enable_vpc_dns_server").(bool)
 
 	// BGP Configuration
 	spokeGroup.EnableBgp = d.Get("enable_bgp").(bool)
@@ -467,6 +471,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
 }
 
+//nolint:funlen
 func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
@@ -479,7 +484,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	spokeGroup, err := client.GetGatewayGroup(ctx, groupName)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -512,7 +517,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("enable_nat", spokeGroup.EnableNat)
 	d.Set("enable_ipv6", spokeGroup.EnableIPv6)
 	d.Set("enable_gro_gso", spokeGroup.EnableGroGso)
-	d.Set("enable_vpc_dns_server", spokeGroup.EnableVpcDnsServer)
+	d.Set("enable_vpc_dns_server", spokeGroup.EnableVpcDNSServer)
 
 	// BGP Configuration
 	d.Set("enable_bgp", spokeGroup.EnableBgp)
@@ -561,17 +566,17 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("enable_global_vpc", spokeGroup.EnableGlobalVpc)
 
 	// Computed attributes
-	if err := d.Set("gw_uuid_list", spokeGroup.GwUuidList); err != nil {
+	if err := d.Set("gw_uuid_list", spokeGroup.GwUUIDList); err != nil {
 		return diag.Errorf("failed to set gw_uuid_list: %s", err)
 	}
-	d.Set("vpc_uuid", spokeGroup.VpcUuid)
+	d.Set("vpc_uuid", spokeGroup.VpcUUID)
 	d.Set("vendor_name", spokeGroup.VendorName)
 	d.Set("software_version", spokeGroup.SoftwareVersion)
 	d.Set("image_version", spokeGroup.ImageVersion)
 
 	// Azure Computed
 	d.Set("azure_eip_name_resource_group", spokeGroup.AzureEipNameResourceGroup)
-	if err := d.Set("bgp_lan_ip_list", spokeGroup.BgpLanIpList); err != nil {
+	if err := d.Set("bgp_lan_ip_list", spokeGroup.BgpLanIPList); err != nil {
 		return diag.Errorf("failed to set bgp_lan_ip_list: %s", err)
 	}
 
@@ -579,6 +584,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
+//nolint:cyclop,funlen
 func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 	groupName := d.Get("group_name").(string)
@@ -658,14 +664,14 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// VPC DNS Server - API: enable_vpc_dns_server / disable_vpc_dns_server
 	// ============================================================================
 	if d.HasChange("enable_vpc_dns_server") {
-		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
-		if enableVpcDnsServer {
-			err := client.EnableVpcDnsServer(spokeGateway)
+		enableVpcDNSServer := d.Get("enable_vpc_dns_server").(bool)
+		if enableVpcDNSServer {
+			err := client.EnableVpcDNSServer(spokeGateway)
 			if err != nil {
 				return diag.Errorf("failed to enable VPC DNS Server for spoke group: %s", err)
 			}
 		} else {
-			err := client.DisableVpcDnsServer(spokeGateway)
+			err := client.DisableVpcDNSServer(spokeGateway)
 			if err != nil {
 				return diag.Errorf("failed to disable VPC DNS Server for spoke group: %s", err)
 			}
@@ -731,8 +737,8 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// BGP ECMP - API: enable_bgp_ecmp / disable_bgp_ecmp
 	// ============================================================================
 	if d.HasChange("enable_bgp_ecmp") {
-		enable_bgp_ecmp := d.Get("bgp_ecmp").(bool)
-		err := client.SetBgpEcmpSpoke(spokeVpc, enable_bgp_ecmp)
+		enableBgpEcmp := d.Get("bgp_ecmp").(bool)
+		err := client.SetBgpEcmpSpoke(spokeVpc, enableBgpEcmp)
 		if err != nil {
 			return diag.Errorf("could not enable bgp ecmp during spoke group update: %s", err)
 		}
@@ -891,8 +897,8 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Skip Public Route Table Update - API: enable_skip_public_route_table_update / disable_skip_public_route_table_update
 	// ============================================================================
 	if d.HasChange("enable_skip_public_route_table_update") {
-		enable_skip_public_route_table_update := d.Get("enable_skip_public_route_table_update").(bool)
-		if enable_skip_public_route_table_update {
+		enableSkipPublicRouteTableUpdate := d.Get("enable_skip_public_route_table_update").(bool)
+		if enableSkipPublicRouteTableUpdate {
 			err := client.EnableSkipPublicRouteUpdate(spokeGateway)
 			if err != nil {
 				return diag.Errorf("could not enable skip public route update during spoke group update: %s", err)
@@ -909,8 +915,8 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Auto Advertise S2C CIDRs - API: enable_auto_advertise_s2c_cidrs / disable_auto_advertise_s2c_cidrs
 	// ============================================================================
 	if d.HasChange("enable_auto_advertise_s2c_cidrs") {
-		enable_auto_advertise_s2c_cidrs := d.Get("enable_auto_advertise_s2c_cidrs").(bool)
-		if enable_auto_advertise_s2c_cidrs {
+		enableAutoAdvertiseS2CCidrs := d.Get("enable_auto_advertise_s2c_cidrs").(bool)
+		if enableAutoAdvertiseS2CCidrs {
 			err := client.EnableAutoAdvertiseS2CCidrs(spokeGateway)
 			if err != nil {
 				return diag.Errorf("could not enable auto advertise s2c cidrs during spoke group update: %s", err)

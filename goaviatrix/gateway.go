@@ -764,7 +764,7 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
-func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
+func (c *Client) EnableVpcDNSServer(gateway *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "enable_vpc_dns_server",
@@ -774,7 +774,7 @@ func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
+func (c *Client) DisableVpcDNSServer(gateway *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "disable_vpc_dns_server",
