@@ -316,7 +316,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	spokeGroup := &goaviatrix.SpokeGroup{
+	spokeGroup := &goaviatrix.GatewayGroup{
 		GroupName:         d.Get("group_name").(string),
 		CloudType:         d.Get("cloud_type").(int),
 		GwType:            d.Get("gw_type").(string),
@@ -458,7 +458,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Creating Spoke Group: %#v", spokeGroup)
 
-	err := client.CreateSpokeGroup(ctx, spokeGroup)
+	err := client.CreateGatewayGroup(ctx, spokeGroup)
 	if err != nil {
 		return diag.Errorf("failed to create spoke group: %s", err)
 	}
@@ -477,7 +477,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Reading Spoke Group: %s", groupName)
 
-	spokeGroup, err := client.GetSpokeGroup(ctx, groupName)
+	spokeGroup, err := client.GetGatewayGroup(ctx, groupName)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -701,7 +701,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		bgpHoldTime := d.Get("bgp_hold_time").(int)
 		err := client.ChangeBgpHoldTime(spokeGateway.GwName, bgpHoldTime)
 		if err != nil {
-			return diag.Errorf("could not change BGP Hold Time during spoke group update: %w", err)
+			return diag.Errorf("could not change BGP Hold Time during spoke group update: %s", err)
 		}
 	}
 
@@ -713,7 +713,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		localAsNumber := d.Get("local_as_number").(string)
 		err := client.SetLocalASNumberSpoke(spokeVpc, localAsNumber)
 		if err != nil {
-			return diag.Errorf("could not set local_as_number for spoke group: %w", err)
+			return diag.Errorf("could not set local_as_number for spoke group: %s", err)
 		}
 		var prependASPath []string
 		for _, v := range d.Get("prepend_as_path").([]interface{}) {
@@ -722,7 +722,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
 			err = client.SetPrependASPathSpoke(spokeVpc, prependASPath)
 			if err != nil {
-				return diag.Errorf("could not set prepend_as_path for spoke group: %w", err)
+				return diag.Errorf("could not set prepend_as_path for spoke group: %s", err)
 			}
 		}
 	}
@@ -734,7 +734,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		enable_bgp_ecmp := d.Get("bgp_ecmp").(bool)
 		err := client.SetBgpEcmpSpoke(spokeVpc, enable_bgp_ecmp)
 		if err != nil {
-			return diag.Errorf("could not enable bgp ecmp during spoke group update: %w", err)
+			return diag.Errorf("could not enable bgp ecmp during spoke group update: %s", err)
 		}
 	}
 
@@ -745,11 +745,11 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if d.Get("enable_active_standby").(bool) {
 			if d.Get("enable_active_standby_preemptive").(bool) {
 				if err := client.EnableActiveStandbyPreemptiveSpoke(spokeVpc); err != nil {
-					return diag.Errorf("could not enable Preemptive Mode for Active-Standby during spoke group update: %w", err)
+					return diag.Errorf("could not enable Preemptive Mode for Active-Standby during spoke group update: %s", err)
 				}
 			} else {
 				if err := client.EnableActiveStandbySpoke(spokeVpc); err != nil {
-					return diag.Errorf("could not enable Active-Standby during spoke group update: %w", err)
+					return diag.Errorf("could not enable Active-Standby during spoke group update: %s", err)
 				}
 			}
 		} else {
@@ -757,7 +757,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 				return diag.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
 			}
 			if err := client.DisableActiveStandbySpoke(spokeVpc); err != nil {
-				return diag.Errorf("could not disable Active-Standby during Spoke Gateway update: %w", err)
+				return diag.Errorf("could not disable Active-Standby during Spoke Gateway update: %s", err)
 			}
 		}
 	}
@@ -770,12 +770,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enableJumboFrame {
 			err := client.EnableJumboFrame(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable jumbo frame during spoke group update: %w", err)
+				return diag.Errorf("could not enable jumbo frame during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable jumbo frame during spoke group update: %w", err)
+				return diag.Errorf("could not disable jumbo frame during spoke group update: %s", err)
 			}
 		}
 	}
@@ -788,12 +788,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enableGroGso {
 			err := client.EnableGroGso(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable gro gso during spoke group update: %w", err)
+				return diag.Errorf("could not enable gro gso during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableGroGso(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable gro gso during spoke group update: %w", err)
+				return diag.Errorf("could not disable gro gso during spoke group update: %s", err)
 			}
 		}
 	}
@@ -806,12 +806,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enableIPv6 {
 			err := client.EnableIPv6(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable ipv6 during spoke group update: %w", err)
+				return diag.Errorf("could not enable ipv6 during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableIPv6(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable ipv6 during spoke group update: %w", err)
+				return diag.Errorf("could not disable ipv6 during spoke group update: %s", err)
 			}
 		}
 	}
@@ -828,12 +828,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if !enableSpokePreserveAsPath {
 			err := client.DisableSpokePreserveAsPath(spokeVpc)
 			if err != nil {
-				return diag.Errorf("could not disable Preserve AS Path during spoke group update: %w", err)
+				return diag.Errorf("could not disable Preserve AS Path during spoke group update: %s", err)
 			}
 		} else {
 			err := client.EnableSpokePreserveAsPath(spokeVpc)
 			if err != nil {
-				return diag.Errorf("could not enable Preserve AS Path during spoke group update: %w", err)
+				return diag.Errorf("could not enable Preserve AS Path during spoke group update: %s", err)
 			}
 		}
 	}
@@ -865,7 +865,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		spokeVpc.ApprovedLearnedCidrs = getStringSet(d, "approved_learned_cidrs")
 		err := client.UpdateSpokePendingApprovedCidrs(spokeVpc)
 		if err != nil {
-			return diag.Errorf("could not update approved CIDRs: %w", err)
+			return diag.Errorf("could not update approved CIDRs: %s", err)
 		}
 	}
 
@@ -877,12 +877,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enablePrivateVpcDefaultRoute {
 			err := client.EnablePrivateVpcDefaultRoute(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable private vpc default route during spoke group update: %w", err)
+				return diag.Errorf("could not enable private vpc default route during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisablePrivateVpcDefaultRoute(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable private vpc default route during spoke group update: %w", err)
+				return diag.Errorf("could not disable private vpc default route during spoke group update: %s", err)
 			}
 		}
 	}
@@ -895,12 +895,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enable_skip_public_route_table_update {
 			err := client.EnableSkipPublicRouteUpdate(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable skip public route update during spoke group update: %w", err)
+				return diag.Errorf("could not enable skip public route update during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableSkipPublicRouteUpdate(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable skip public route update during spoke group update: %w", err)
+				return diag.Errorf("could not disable skip public route update during spoke group update: %s", err)
 			}
 		}
 	}
@@ -913,12 +913,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enable_auto_advertise_s2c_cidrs {
 			err := client.EnableAutoAdvertiseS2CCidrs(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable auto advertise s2c cidrs during spoke group update: %w", err)
+				return diag.Errorf("could not enable auto advertise s2c cidrs during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableAutoAdvertiseS2CCidrs(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable auto advertise s2c cidrs during spoke group update: %w", err)
+				return diag.Errorf("could not disable auto advertise s2c cidrs during spoke group update: %s", err)
 			}
 		}
 	}
@@ -968,12 +968,12 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		if enableGlobalVpc {
 			err := client.EnableGlobalVpc(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not enable global vpc during spoke group update: %w", err)
+				return diag.Errorf("could not enable global vpc during spoke group update: %s", err)
 			}
 		} else {
 			err := client.DisableGlobalVpc(spokeGateway)
 			if err != nil {
-				return diag.Errorf("could not disable global vpc during spoke group update: %w", err)
+				return diag.Errorf("could not disable global vpc during spoke group update: %s", err)
 			}
 		}
 	}
@@ -1007,7 +1007,7 @@ func resourceAviatrixSpokeGroupDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Deleting Spoke Group: %s", groupName)
 
-	err := client.DeleteSpokeGroup(ctx, groupName)
+	err := client.DeleteGatewayGroup(ctx, groupName)
 	if err != nil {
 		return diag.Errorf("failed to delete spoke group: %s", err)
 	}
