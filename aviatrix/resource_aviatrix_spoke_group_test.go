@@ -323,7 +323,7 @@ resource "aviatrix_spoke_group" "test" {
 	subnet              = "%[7]s"
 	vpc_region          = "%[8]s"
 	gw_name             = "tfg-spoke-group-gw-%[1]s"
-	
+
 	enable_nat          = true
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -351,7 +351,7 @@ resource "aviatrix_spoke_group" "test" {
 	subnet              = "%[7]s"
 	vpc_region          = "%[8]s"
 	gw_name             = "tfg-spoke-group-gw-%[1]s"
-	
+
 	enable_nat          = true
 	bgp_polling_time    = 30
 	bgp_hold_time       = 120
@@ -382,7 +382,7 @@ resource "aviatrix_spoke_group" "test" {
 	subnet              = "%[7]s"
 	vpc_region          = "%[8]s"
 	gw_name             = "tfg-spoke-group-gw-%[1]s"
-	
+
 	enable_nat                          = true
 	bgp_polling_time                    = 30
 	bgp_hold_time                       = 120
@@ -416,7 +416,7 @@ resource "aviatrix_spoke_group" "test" {
 	subnet              = "%s"
 	vpc_region          = "%s"
 	gw_name             = "tfg-spoke-group-gw-%s"
-	
+
 	enable_active_standby            = %t
 	enable_active_standby_preemptive = %t
 }
@@ -447,7 +447,7 @@ resource "aviatrix_spoke_group" "test" {
 	vpc_region          = "%s"
 	gw_name             = "tfg-spoke-group-gw-%s"
 	enable_bgp          = true
-	
+
 	enable_learned_cidrs_approval = %t
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
