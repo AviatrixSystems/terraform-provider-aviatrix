@@ -697,7 +697,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 }
 
 func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
-	if !d.HasChange(fieldName) || !d.Get("enable_ipv6").(bool) {
+	if !d.HasChange(fieldName) || !d.Get("enable_ipv6").(bool) || goaviatrix.IsCloudType(d.Get("cloud_type").(int), goaviatrix.GCPRelatedCloudTypes) || !d.Get("insane_mode").(bool) {
 		return nil
 	}
 
@@ -1131,21 +1131,23 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.Get("enable_ipv6").(bool) {
-		if !IPv6SupportedOnCloudType(gateway.CloudType) {
-			return fmt.Errorf("error creating gateway: enable_ipv6 is only supported for AWS (1), Azure (8)")
+		if err := IPv6SupportedOnCloudType(gateway.CloudType); err != nil {
+			return fmt.Errorf("error creating gateway: enable_ipv6 is not supported, %w", err)
 		}
 		gateway.EnableIPv6 = true
 
-		subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
-		if subnetIPv6Cidr == "" {
-			return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
-		}
-		gatewaySubnet := gateway.Subnet
-		// Trim any trailing '~' to normalize it first
-		gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && insaneMode {
+			subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
+			if subnetIPv6Cidr == "" {
+				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
+			}
+			gatewaySubnet := gateway.Subnet
+			// Trim any trailing '~' to normalize it first
+			gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
 
-		// Append IPv6 subnet CIDR
-		gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+			// Append IPv6 subnet CIDR
+			gateway.Subnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)

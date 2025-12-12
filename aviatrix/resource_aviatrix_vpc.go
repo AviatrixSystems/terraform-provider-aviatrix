@@ -137,6 +137,13 @@ func resourceAviatrixVpc() *schema.Resource {
 							Computed:    true,
 							Description: "IPv6 CIDR of the subnet.",
 						},
+						"ipv6_access_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: ValidateIPv6AccessType,
+							Description:  "IPv6 access type for the subnet: \"INTERNAL\" or \"EXTERNAL\". Only supported for GCP (4).",
+						},
 					},
 				},
 			},
@@ -244,14 +251,14 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8).",
+				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8), GCP (4).",
 			},
 			"vpc_ipv6_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8).",
+				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8). Optional for GCP (4).",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
 					ip, ipnet, err := net.ParseCIDR(v)
@@ -279,6 +286,14 @@ func resourceAviatrixVpc() *schema.Resource {
 
 					return
 				},
+			},
+			"ipv6_access_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: ValidateIPv6AccessType,
+				Default:      "EXTERNAL",
+				Description:  "IPv6 access type for the VPC: \"INTERNAL\" or \"EXTERNAL\". Only supported for GCP (4).",
 			},
 		},
 	}
@@ -360,6 +375,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
 	}
 
+	ipv6Enabled := d.Get("enable_ipv6").(bool)
+
 	if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		if _, ok := d.GetOk("subnets"); ok {
 			subnets := d.Get("subnets").([]interface{})
@@ -369,6 +386,14 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 					Name:   sub["name"].(string),
 					Region: sub["region"].(string),
 					Cidr:   sub["cidr"].(string),
+				}
+				if ipv6Enabled {
+					if ipv6Cidr, ok := sub["ipv6_cidr"]; ok {
+						subnetInfo.IPv6Cidr = ipv6Cidr.(string)
+					}
+					if ipv6AccessType, ok := sub["ipv6_access_type"]; ok {
+						subnetInfo.IPv6AccessType = ipv6AccessType.(string)
+					}
 				}
 				vpc.Subnets = append(vpc.Subnets, subnetInfo)
 			}
@@ -387,9 +412,9 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Handle IPv6 fields
-	if d.Get("enable_ipv6").(bool) {
-		if !IPv6SupportedOnCloudType(vpc.CloudType) {
-			return fmt.Errorf("error creating vpc: enable_ipv6 is only supported for AWS (1), Azure (8)")
+	if ipv6Enabled {
+		if err := IPv6SupportedOnCloudType(vpc.CloudType); err != nil {
+			return fmt.Errorf("error creating vpc: enable_ipv6 is not supported, %w", err)
 		}
 		vpc.EnableIpv6 = true
 		log.Printf("[INFO] Enabling IPv6 in VPC: %#v", vpc)
@@ -400,6 +425,15 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
 			} else {
 				return fmt.Errorf("error creating vpc: valid vpc_ipv6_cidr is required when enable_ipv6 is true for Azure")
+			}
+		}
+
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			if ipv6AccessType, ok := d.GetOk("ipv6_access_type"); ok {
+				vpc.Ipv6AccessType = ipv6AccessType.(string)
+			}
+			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
+				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
 			}
 		}
 	}
@@ -528,6 +562,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetInfo["subnet_id"] = subnet.SubnetID
 		}
+		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
+		subnetInfo["ipv6_access_type"] = subnet.IPv6AccessType
 
 		var key string
 		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
