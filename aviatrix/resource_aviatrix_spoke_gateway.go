@@ -1132,7 +1132,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	if d.Get("enable_ipv6").(bool) {
 		if err := IPv6SupportedOnCloudType(gateway.CloudType); err != nil {
-			return fmt.Errorf("error creating gateway: enable_ipv6 is not supported, %v", err)
+			return fmt.Errorf("error creating gateway: enable_ipv6 is not supported, %w", err)
 		}
 		gateway.EnableIPv6 = true
 

@@ -336,25 +336,3 @@ resource "aviatrix_vpc" "test_vpc_ipv6" {
 }
 	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"))
 }
-
-func testAccVpcConfigAWSIPv6(rName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_aws" {
-	account_name       = "tfa-aws-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
-}
-resource "aviatrix_vpc" "test_vpc_ipv6" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test_acc_aws.account_name
-	name         = "tfg-ipv6-%[1]s"
-	region       = "%[5]s"
-	cidr         = "10.0.0.0/16"
-	enable_ipv6  = true
-}
-	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_REGION"))
-}

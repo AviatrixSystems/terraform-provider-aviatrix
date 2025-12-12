@@ -940,26 +940,3 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_gcp" {
 	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }
-
-func testAccSpokeGatewayConfigGCPIPv6WithInsaneMode(rName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_gcp" {
-	account_name                        = "tfa-gcp-%s"
-	cloud_type                          = 4
-	gcloud_project_id                   = "%s"
-	gcloud_project_credentials_filepath = "%s"
-}
-resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_gcp_insane" {
-	cloud_type  = 4
-	account_name = aviatrix_account.test_acc_gcp.account_name
-	gw_name     = "tfg-gcp-ipv6-insane-%[1]s"
-	vpc_id      = "%[4]s"
-	vpc_reg     = "%[5]s"
-	gw_size     = "n1-highmem-4"
-	subnet      = "%[6]s"
-	enable_ipv6 = true
-	insane_mode = true
-}
-	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"),
-		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
-}
