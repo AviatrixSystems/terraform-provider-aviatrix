@@ -718,6 +718,8 @@ func preGCPSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
 	requiredEnvVars := []string{
 		"GCP_VPC_ID",
 		"GCP_ZONE",
+		"GCP_SUBNET",
+		"GCP_PROJECT_ID",
 		"GOOGLE_CREDENTIALS_FILEPATH",
 	}
 	for _, v := range requiredEnvVars {

@@ -66,12 +66,12 @@ func ValidateIPv6AccessType(i any, k string) (warnings []string, errors []error)
 }
 
 // IPv6SupportedOnCloudType checks if IPv6 is supported on the given cloud type.
-// IPv6 is currently only supported on AWS and Azure related cloud types.
+// IPv6 is currently only supported on AWS, Azure, and GCP related cloud types.
 func IPv6SupportedOnCloudType(cloudType int) error {
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
 		return nil
 	}
-	return fmt.Errorf("IPv6 is only supported for AWS (1), Azure (8), GCP(4)")
+	return fmt.Errorf("IPv6 is only supported for AWS (1), Azure (8), GCP (4)")
 }
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone

@@ -1085,8 +1085,10 @@ func preAzureTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
 
 func preGCPTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
 	requiredEnvVars := []string{
+		"GCP_PROJECT_ID",
 		"GCP_VPC_ID",
 		"GCP_ZONE",
+		"GCP_SUBNET",
 		"GOOGLE_CREDENTIALS_FILEPATH",
 	}
 	for _, v := range requiredEnvVars {

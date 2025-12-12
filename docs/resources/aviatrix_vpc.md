@@ -143,7 +143,7 @@ resource "aviatrix_vpc" "azure_vpc" {
 }
 ```
 ```hcl
-resource "aviatrix_vpc" "gcp__vpc" {
+resource "aviatrix_vpc" "gcp_vpc" {
   cloud_type   = 4
   account_name = "gcp"
   name         = "gcp-vpc"
@@ -151,15 +151,15 @@ resource "aviatrix_vpc" "gcp__vpc" {
     name   = "subnet-1"
     region = "us-west1"
     cidr   = "10.10.0.0/24"
-    ipv6_access_type ="EXTERNAL"
+    ipv6_access_type = "EXTERNAL"
   }
   subnets {
     name   = "subnet-2"
     region = "us-west2"
     cidr   = "10.11.0.0/24"
-    ipv6_access_type ="INTERNAL"
+    ipv6_access_type = "INTERNAL"
   }
-  ipv6_access_type ="INTERNAL"
+  ipv6_access_type = "INTERNAL"
   enable_ipv6  = true
 }
 

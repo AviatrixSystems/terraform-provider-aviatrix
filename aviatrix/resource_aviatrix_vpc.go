@@ -251,7 +251,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8), Gcp(4).",
+				Description: "Enable IPv6 for the VPC. Only supported for AWS (1), Azure (8), GCP (4).",
 			},
 			"vpc_ipv6_cidr": {
 				Type:        schema.TypeString,
@@ -562,6 +562,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subnetInfo["subnet_id"] = subnet.SubnetID
 		}
 		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
+		subnetInfo["ipv6_access_type"] = subnet.IPv6AccessType
 
 		var key string
 		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
