@@ -697,7 +697,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 }
 
 func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
-	if !d.HasChange(fieldName) || !d.Get("enable_ipv6").(bool) || goaviatrix.IsCloudType(d.Get("cloud_type").(int), goaviatrix.GCPRelatedCloudTypes) || !d.Get("insane_mode").(bool) {
+	if !d.HasChange(fieldName) || !d.Get("enable_ipv6").(bool) || goaviatrix.IsCloudType(d.Get("cloud_type").(int), goaviatrix.GCPRelatedCloudTypes) {
 		return nil
 	}
 
@@ -1136,10 +1136,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 		gateway.EnableIPv6 = true
 
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && insaneMode {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
 			if subnetIPv6Cidr == "" {
-				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true and insane_mode is enabled on AWS, Azure, AzureGov, or AWSGov cloud types")
+				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true and is enabled on %d", gateway.CloudType)
 			}
 			gatewaySubnet := gateway.Subnet
 			// Trim any trailing '~' to normalize it first
