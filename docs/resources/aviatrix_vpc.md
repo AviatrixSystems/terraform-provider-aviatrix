@@ -182,7 +182,7 @@ The following arguments are supported:
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `ipv6_access_type` - (Optional) Subnet Ipv6 access type: INTERNAL (ULA ipv6 address) or EXTERNAL (public ipv6 address).
-  * `ipv6_cidr` - (Optional) IPv6 cidr block (optional for ipv6). If not provided, The IPv6 CIDR is automatically assigned based on ipv6_access_type.
+  * `ipv6_cidr` - (Optional) IPv6 CIDR block for the subnet. If not provided, the IPv6 CIDR is automatically assigned based on ipv6_access_type.
 
 ### Advanced Options
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.

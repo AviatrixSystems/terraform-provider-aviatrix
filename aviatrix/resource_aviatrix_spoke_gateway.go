@@ -1139,7 +1139,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && insaneMode {
 			subnetIPv6Cidr := d.Get("subnet_ipv6_cidr").(string)
 			if subnetIPv6Cidr == "" {
-				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true")
+				return fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true and insane_mode is enabled on AWS, Azure, AzureGov, or AWSGov cloud types")
 			}
 			gatewaySubnet := gateway.Subnet
 			// Trim any trailing '~' to normalize it first

@@ -326,7 +326,7 @@ resource "aviatrix_vpc" "test_vpc_ipv6" {
 	name             = "tfg-ipv6-%[1]s"
 	enable_ipv6      = true
 	ipv6_access_type = "INTERNAL"
-	vpc_ipv6_cidr    = "2001:db8::/56"
+	vpc_ipv6_cidr    = "fd00::/56"
 	subnets {
 		name             = "us-east1-subnet-ipv6"
 		region           = "us-east1"
