@@ -1571,7 +1571,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				transitHaGw.Subnet = haSubnet + "~~" + haPrivateModeSubnetZone
 			}
 
-			if d.Get("enable_ipv6").(bool) {
+			if d.Get("enable_ipv6").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
 				if haSubnetIPv6Cidr == "" {
 					return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
@@ -2835,7 +2835,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitHaGw.InsaneMode = "yes"
 		}
 
-		if d.Get("enable_ipv6").(bool) {
+		if d.Get("enable_ipv6").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			haSubnetIPv6Cidr := d.Get("ha_subnet_ipv6_cidr").(string)
 			if haSubnetIPv6Cidr == "" {
 				return fmt.Errorf("error creating HA gateway: ha_subnet_ipv6_cidr must be set when enable_ipv6 is true")
