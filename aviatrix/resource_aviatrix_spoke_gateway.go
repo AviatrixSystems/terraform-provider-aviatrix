@@ -94,10 +94,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validateIPv6CIDR,
-				// DiffSuppressFunc ignores changes to this field when enable_ipv6 is false
+				// DiffSuppressFunc ignores changes to this field when enable_ipv6 is false or cloud_type is GCP
 				// This prevents unnecessary diffs for a field that is not used in that configuration
 				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
-					return !d.Get("enable_ipv6").(bool)
+					return !d.Get("enable_ipv6").(bool) || !goaviatrix.IsCloudType(d.Get("cloud_type").(int), goaviatrix.GCPRelatedCloudTypes)
 				},
 				Description: "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set. Currently only supported on Azure and AWS Cloud.",
 			},
