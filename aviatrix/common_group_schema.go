@@ -48,6 +48,40 @@ func GroupRequiredSchema() map[string]*schema.Schema {
 	}
 }
 
+func groupOptionalSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"customized_cidr_list": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Description: "Set of customized CIDRs for the spoke group.",
+		},
+		"explicitly_created": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Indicates if the group was explicitly created.",
+		},
+		"vpc_region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "Region of cloud provider. Required for CSP.",
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Network domain for the spoke group.",
+		},
+		"edge": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Indicates if this is an edge spoke group.",
+		},
+	}
+}
+
 // GroupComputedSchema returns the computed (read-only) schema attributes for group resources.
 func GroupComputedSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -66,33 +100,6 @@ func GroupComputedSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "Vendor name.",
-		},
-		"software_version": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Software version.",
-		},
-		"image_version": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Image version.",
-		},
-	}
-}
-
-// GroupAzureComputedSchema returns Azure-specific computed schema attributes.
-func GroupAzureComputedSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"azure_eip_name_resource_group": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Azure EIP name and resource group.",
-		},
-		"bgp_lan_ip_list": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "List of BGP LAN interface IPs. Only valid for Azure.",
 		},
 	}
 }

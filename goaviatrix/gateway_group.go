@@ -19,7 +19,7 @@ type GatewayGroup struct {
 	AccountName       string `form:"account_name,omitempty" json:"account_name,omitempty"`
 
 	// Optional
-	CustomizedCidrList               []string `form:"customized_cidr_list,omitempty" json:"customized_cidr_list,omitempty"`
+	CustomizedCidrList               []string `form:"customized_cidr_list,omitempty" json:"customized_cidr_list,omitempty"` //TODO: not a part of group DB schema
 	S2cRxBalancing                   bool     `form:"s2c_rx_balancing,omitempty" json:"s2c_rx_balancing,omitempty"`
 	ExplicitlyCreated                bool     `form:"explicitly_created,omitempty" json:"explicitly_created,omitempty"`
 	Subnet                           string   `form:"subnet,omitempty" json:"subnet,omitempty"`
@@ -31,10 +31,10 @@ type GatewayGroup struct {
 	Edge                             bool     `form:"edge,omitempty" json:"edge,omitempty"`
 
 	// Feature Flags
-	EnableJumboFrame   bool `form:"jumbo_frame,omitempty" json:"jumbo_frame,omitempty"`
-	EnableNat          bool `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
-	EnableIPv6         bool `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
-	EnableGroGso       bool `form:"enable_gro_gso,omitempty" json:"enable_gro_gso,omitempty"` // remove this, set using a get call client.GetGroGsoStatus(gw)
+	EnableJumboFrame   bool `form:"group_jumbo_frame,omitempty" json:"jumbo_frame,omitempty"`
+	EnableNat          bool `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	EnableIPv6         bool `form:"is_ipv6_enabled,omitempty" json:"enable_ipv6,omitempty"`
+	EnableGroGso       bool `form:"gro_gso,omitempty" json:"enable_gro_gso,omitempty"` //TODO: remove this, set using a get call client.GetGroGsoStatus(gw)
 	EnableVpcDNSServer bool `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns_server,omitempty"`
 
 	// BGP Configuration
@@ -53,8 +53,8 @@ type GatewayGroup struct {
 	BgpHoldTime                  int `form:"bgp_hold_time,omitempty" json:"bgp_hold_time,omitempty"`
 
 	// BGP Communities
-	BgpSendCommunities   bool `form:"bgp_send_communities,omitempty" json:"bgp_send_communities,omitempty"`     // remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
-	BgpAcceptCommunities bool `form:"bgp_accept_communities,omitempty" json:"bgp_accept_communities,omitempty"` // remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
+	BgpSendCommunities   bool `form:"bgp_send_communities,omitempty" json:"bgp_send_communities,omitempty"`     //TODO: remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
+	BgpAcceptCommunities bool `form:"bgp_accept_communities,omitempty" json:"bgp_accept_communities,omitempty"` //TODO: remove this, set using a get call client.GetGatewayBgpCommunities(gateway.GwName)
 
 	// BGP over LAN
 	EnableBgpOverLan      bool `form:"enable_bgp_over_lan,omitempty" json:"enable_bgp_over_lan,omitempty"`
@@ -66,11 +66,11 @@ type GatewayGroup struct {
 	ApprovedLearnedCidrs       []string `form:"approved_learned_cidrs,omitempty" json:"approved_learned_cidrs,omitempty"`
 
 	// Active-Standby
-	EnableActiveStandby           bool `form:"enable_active_standby,omitempty" json:"enable_active_standby,omitempty"`
-	EnableActiveStandbyPreemptive bool `form:"enable_active_standby_preemptive,omitempty" json:"enable_active_standby_preemptive,omitempty"`
+	EnableActiveStandby           bool `form:"active_standby,omitempty" json:"enable_active_standby,omitempty"`
+	EnableActiveStandbyPreemptive bool `form:"active_standby_preemptive,omitempty" json:"enable_active_standby_preemptive,omitempty"`
 
 	// AWS Specific
-	InsaneMode          bool   `form:"insane_mode,omitempty" json:"insane_mode,omitempty"` // rename is EnableGroupHpe
+	InsaneMode          bool   `form:"group_hpe_enabled,omitempty" json:"group_hpe_enabled,omitempty"` //TODO: rename is EnableGroupHpe
 	InsaneModeAz        string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
 	EnableEncryptVolume bool   `form:"gw_enc,omitempty" json:"gw_enc,omitempty"`
 	CustomerManagedKeys string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
@@ -84,8 +84,8 @@ type GatewayGroup struct {
 	VendorName                string   `json:"vendor_name,omitempty"`
 	SoftwareVersion           string   `json:"gw_software_version,omitempty"`
 	ImageVersion              string   `json:"gw_image_name,omitempty"`
-	AzureEipNameResourceGroup string   `json:"azure_eip_name_resource_group,omitempty"` // remove this, set using azureEip
-	BgpLanIPList              []string `json:"AzureBgpLanIpList,omitempty"`
+	AzureEipNameResourceGroup string   `json:"azure_eip_name_resource_group,omitempty"` //TODO: remove this, set using azureEip
+	BgpLanIPList              []string `json:"azure_bgp_lan_ip_list,omitempty"`         //TODO: not a part of group DB schema
 }
 
 // GatewayGroupResp represents the API response for get gateway group

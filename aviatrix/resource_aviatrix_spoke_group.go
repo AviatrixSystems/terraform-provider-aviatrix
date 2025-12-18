@@ -27,8 +27,8 @@ func resourceAviatrixSpokeGroup() *schema.Resource {
 			GroupRequiredSchema(),
 			// Computed attributes from group schema
 			GroupComputedSchema(),
-			// Azure computed attributes from group schema
-			GroupAzureComputedSchema(),
+			// Optional attributes from group schema
+			groupOptionalSchema(),
 			// Resource-specific optional attributes
 			spokeGroupOptionalSchema(),
 		),
@@ -43,36 +43,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 		// ============================================================================
 		// OPTIONAL ATTRIBUTES - Basic Configuration
 		// ============================================================================
-		"customized_cidr_list": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Set of customized CIDRs for the spoke group.",
-		},
-		"explicitly_created": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Indicates if the group was explicitly created.",
-		},
-		"subnet": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.IsCIDR,
-			Description:  "Subnet CIDR. Required for CSP.",
-		},
-		"vpc_region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Region of cloud provider. Required for CSP.",
-		},
-		"domain": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Network domain for the spoke group.",
-		},
 		"include_cidr": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -90,12 +60,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 			Description: "Skip public route table update. Only valid for AWS.",
-		},
-		"edge": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Indicates if this is an edge spoke group.",
 		},
 
 		// ============================================================================
@@ -119,13 +83,13 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable IPv6. Only valid for AWS and Azure.",
 		},
-		"enable_gro_gso": {
+		"enable_gro_gso": { // TODO: add it to schema
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
 			Description: "Enable GRO/GSO for the spoke group.",
 		},
-		"enable_vpc_dns_server": {
+		"enable_vpc_dns_server": { //TODO: add it to schema
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
@@ -232,14 +196,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Enable BGP over LAN. Only valid for Azure.",
 		},
-		"bgp_lan_interfaces_count": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.IntAtLeast(1),
-			Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
-				"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Default value: 1. ",
-		},
 
 		// Learned CIDR Approval
 		"enable_learned_cidrs_approval": {
@@ -286,24 +242,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Enable Insane Mode (HPE). Only valid for AWS.",
 		},
-		"insane_mode_az": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Availability zone for Insane Mode. Required when insane_mode is enabled for AWS.",
-		},
-		"enable_encrypt_volume": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable EBS volume encryption. Only valid for AWS.",
-		},
-		"customer_managed_keys": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Sensitive:   true,
-			Description: "Customer managed key ID for EBS volume encryption.",
-		},
 
 		// ============================================================================
 		// GCP SPECIFIC
@@ -336,10 +274,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		_ = v
 	}
 	spokeGroup.ExplicitlyCreated = d.Get("explicitly_created").(bool)
-
-	if v, ok := d.GetOk("subnet"); ok {
-		spokeGroup.Subnet = v.(string)
-	}
 	if v, ok := d.GetOk("vpc_region"); ok {
 		spokeGroup.VpcRegion = v.(string)
 	}
@@ -386,9 +320,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	// BGP over LAN
 	spokeGroup.EnableBgpOverLan = d.Get("enable_bgp_over_lan").(bool)
-	if v, ok := d.GetOk("bgp_lan_interfaces_count"); ok {
-		spokeGroup.BgpLanInterfacesCount = v.(int)
-	}
 
 	// Learned CIDR Approval
 	spokeGroup.EnableLearnedCidrsApproval = d.Get("enable_learned_cidrs_approval").(bool)
@@ -406,13 +337,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	// AWS Specific
 	spokeGroup.InsaneMode = d.Get("insane_mode").(bool)
-	if v, ok := d.GetOk("insane_mode_az"); ok {
-		spokeGroup.InsaneModeAz = v.(string)
-	}
-	spokeGroup.EnableEncryptVolume = d.Get("enable_encrypt_volume").(bool)
-	if v, ok := d.GetOk("customer_managed_keys"); ok {
-		spokeGroup.CustomerManagedKeys = v.(string)
-	}
 
 	// GCP Specific
 	spokeGroup.EnableGlobalVpc = d.Get("enable_global_vpc").(bool)
@@ -436,14 +360,6 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	if spokeGroup.InsaneMode && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return diag.Errorf("insane_mode is only valid for AWS related cloud types")
-	}
-
-	if spokeGroup.InsaneMode && goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) && spokeGroup.InsaneModeAz == "" {
-		return diag.Errorf("insane_mode_az is required when insane_mode is enabled for AWS")
-	}
-
-	if spokeGroup.EnableEncryptVolume && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		return diag.Errorf("enable_encrypt_volume is only valid for AWS related cloud types")
 	}
 
 	if spokeGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -505,7 +421,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("failed to set customized_cidr_list: %s", err)
 	}
 	d.Set("explicitly_created", spokeGroup.ExplicitlyCreated)
-	d.Set("subnet", spokeGroup.Subnet)
 	d.Set("vpc_region", spokeGroup.VpcRegion)
 	d.Set("domain", spokeGroup.Domain)
 	if err := d.Set("include_cidr", spokeGroup.IncludeCidr); err != nil {
@@ -543,7 +458,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	// BGP over LAN
 	d.Set("enable_bgp_over_lan", spokeGroup.EnableBgpOverLan)
-	d.Set("bgp_lan_interfaces_count", spokeGroup.BgpLanInterfacesCount)
 
 	// Learned CIDR Approval
 	d.Set("enable_learned_cidrs_approval", spokeGroup.EnableLearnedCidrsApproval)
@@ -558,12 +472,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	// AWS Specific
 	d.Set("insane_mode", spokeGroup.InsaneMode)
-	d.Set("insane_mode_az", spokeGroup.InsaneModeAz)
-	d.Set("enable_encrypt_volume", spokeGroup.EnableEncryptVolume)
-	// Note: customer_managed_keys is sensitive, only set if already in state
-	if _, ok := d.GetOk("customer_managed_keys"); ok {
-		d.Set("customer_managed_keys", spokeGroup.CustomerManagedKeys)
-	}
 
 	// GCP Specific
 	d.Set("enable_global_vpc", spokeGroup.EnableGlobalVpc)
@@ -573,15 +481,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("failed to set gw_uuid_list: %s", err)
 	}
 	d.Set("vpc_uuid", spokeGroup.VpcUUID)
-	d.Set("vendor_name", spokeGroup.VendorName)
-	d.Set("software_version", spokeGroup.SoftwareVersion)
-	d.Set("image_version", spokeGroup.ImageVersion)
-
-	// Azure Computed
-	d.Set("azure_eip_name_resource_group", spokeGroup.AzureEipNameResourceGroup)
-	if err := d.Set("bgp_lan_ip_list", spokeGroup.BgpLanIPList); err != nil {
-		return diag.Errorf("failed to set bgp_lan_ip_list: %s", err)
-	}
 
 	d.SetId(spokeGroup.GroupName)
 	return nil
@@ -982,25 +881,6 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 				return diag.Errorf("could not disable global vpc during spoke group update: %s", err)
 			}
 		}
-	}
-
-	// ============================================================================
-	// Encrypt Volume (AWS) - API: encrypt_gateway_volume
-	// ============================================================================
-	if d.HasChange("enable_encrypt_volume") {
-		cloudType := d.Get("cloud_type").(int)
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return diag.Errorf("'enable_encrypt_volume' is only supported for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768) providers")
-		}
-		spokeGateway.CustomerManagedKeys = d.Get("customer_managed_keys").(string)
-		err := client.EnableEncryptVolume(spokeGateway)
-		if err != nil {
-			return diag.Errorf("failed to enable encrypt gateway volume for %s due to %s", spokeGateway.GwName, err)
-		}
-	}
-
-	if d.HasChange("customer_managed_keys") {
-		return diag.Errorf("updating customer_managed_keys only is not allowed")
 	}
 
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
