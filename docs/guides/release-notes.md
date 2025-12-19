@@ -15,6 +15,57 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 Last updated: R8.0.30 (8.0.30)
 
 ---
+=======
+
+## 8.0.40
+### Notes:
+- Supported Controller version: **8.0.40**
+
+### Enhancements:
+| Enhancement | Description |
+| :--- | :--- |
+| AVX-54809 | Added a new **aviatrix_web_group** data source, allowing users to look up a WebGroup by name. |
+
+### Bug Fixes:
+| Issue | Description |
+| :--- | :--- |
+| AVX-65624 | Fixed an issue that caused the `aviatrix_smart_group` resource to report a diff on plan/apply when configured with the `azureips` group type. |
+| AVX-66693 | Fixed an issue where the `aviatrix_edge_megaport` resource applied correctly on the first run, but showed a diff on subsequent plan/apply runs |
+| AVX-67564 | Fixed an issue where tags on gateways, spokes, and transit gateways were applied correctly but not written to Terraform state, causing diffs on every plan/apply. |
+| AVX-67565 | Fixed an issue where enabling `enable_insane_mode_encryption_over_internet` caused insane_mode to be incorrectly set in state for non-Edge peerings, resulting in persistent diffs. |
+| AVX-68309 | Fixed an issue where `aviatrix_transit_external_device_conn` defaulted `disable_activemesh` to true in state when not set, causing unnecessary destroy-and-recreate on subsequent applies. |
+| AVX-68683 | Fixed an issue that caused spoke gateway deployments to fail when Terraform was configured to use a proxy server. |
+| AVX-69506 | Fixed an issue that caused transit gateway deployments to fail when Terraform was configured to use a proxy server. |
+
+### 8.2.0
+### Notes:
+- Supported Controller version: **8.2.0**
+
+### Enhancements:
+
+1.  Added support for managing custom Intrusion Prevention System (IPS) rule feeds for Distributed Cloud Firewall (DCF). This resource allows users to upload and manage Suricata-compatible IPS rule files.
+**aviatrix_dcf_ips_rule_feed**
+
+2.  Added support for managing DCF IPS profiles. This resource enables users to define IPS profiles, associate custom and external rule feeds, and configure intrusion actions for different severity levels.
+**aviatrix_dcf_ips_profile**
+
+3.  Added support for assigning one DCF IPS profile to a specific VPC. This resource allows users to assign a IPS profiles to a VPC for DCF intrusion analysis, and supports clearing all profiles from a VPC. **aviatrix_dcf_ips_profile_vpc**
+
+4.  Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
+
+## 8.1.10
+### Notes:
+- Supported Controller version: **8.1.10**
+
+### Enhancements:
+1. Allow downloading the cloud_init in ISO format by setting ``ztp_file_type = "ISO"``, in **aviatrix_transit_gateway**.
+2. Add the ability to set ``included_advertised_spoke_routes`` in **aviatrix_edge_platform** and **aviatrix_edge_gateway_selfmanaged** resources.
+
+### Bug Fixes:
+1. Increased the timeout for **aviatrix_transit_gateway_peering**, in order to prevent failures when creating a large amount of peerings.
+2. Fixed an issue where ``ha_enable`` was incorrectly set to true in certain scenarios within the **aviatrix_spoke_external_device_conn** resource.
+3. Fixed an issue where ``included_advertised_spoke_routes`` wasn't updated correctly when making changes in the **aviatrix_edge_megaport**, **aviatrix_edge_gateway_selfmanaged**, **aviatrix_edge_platform** and **aviatrix_edge_equinix** resources.
+
 ## 8.0.30
 ### Notes:
 - Supported Controller version: **8.0.30**
