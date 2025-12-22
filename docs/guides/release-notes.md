@@ -12,9 +12,53 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-Last updated: R8.1.20 (8.1.20)
+Last updated: R8.2.0 (8.2.0)
 
 ---
+## 8.2.0
+### Notes:
+- Supported Controller version: **8.2.0**
+
+### Enhancements:
+| Enhancement | Description |
+| :--- | :--- |
+| AVX-43334 | Added the **aviatrix_dcf_ips_profile**, **aviatrix_dcf_ips_rule_feed** and **aviatrix_dcf_ips_rule_feed** resources to allow for managing IPS in DCF. |
+| AVX-54809 | Added a new **aviatrix_web_group** data source, allowing users to look up a WebGroup by name. |
+| AVX-59906 | Added the `single_az_ha` argument to the **aviatrix_spoke_ha_gateway** resource. |
+| AVX-59958 | Added a new **aviatrix_dcf_policy_group** resource, allowing the enhanced management of DCF rules. |
+| AVX-62871 | Added the `underlay_cidr` argument to the **aviatrix_transit_gateway** resource, to allow configuration of the underlay CIDR to be used for BGP over LAN. |
+| AVX-66320 | Added the `log_profile` argument to the **aviatrix_distributed_firewalling_policy_list** resource. |
+| AVX-66118 | Added support for IPv6 on Site2Cloud, by adding the `enable_ipv6`, `remote_lan_ipv6_ip`, `external_device_ipv6` and `external_device_backup_ipv6` arguments to the **aviatrix_spoke_external_device_conn**, **aviatrix_transit_external_device_conn** and **aviatrix_edge_spoke_external_device_conn** resouces. |
+| AVX-68208 | Added the **aviatrix_rbac_group_user_membership** resource to manage multiple user memberships for an RBAC group, complementing **aviatrix_rbac_group_user_attachment** which handles only single-user membership. |
+| AVX-68228 | Added the `vpc_ipv6_cidr` argument to the **aviatrix_vpc** resource and the `enable_ipv6` argument to the **aviatrix_vpc**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** resources, to implement support for IPv6. |
+| AVX-68263 | Added the argument `enable_firenet_for_edge` to the **aviatrix_edge_spoke_transit_attachment** resource. This allows for propagating the default route to edge gateways. |
+| AVX-68273 | Added a new **aviatrix_dcf_ruleset** resource and **aviatrix_dcf_attachment_point** data source, allowing the enhanced management of DCF rules. |
+| AVX-68721 | Added the `subnet_ipv6_cidr` and `ha_subnet_ipv6_cidr` arguments to the **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** resources, to configure the IPv6 subnet. |
+| AVX-68863 | Added the `tunnel_encryption_cipher` and `tunnel_forward_secrecy` arguments to the **aviatrix_edge_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** resources, to enable stronger encryption ciphers. |
+| AVX-68895 | Added a new **aviatrix_dcf_log_profile** data source, allowing users to look up a DCF log profile by name. |
+| AVX-68914 | Added support for IPv6 on Edge by adding the `ipv6_address` and `gateway_ipv6` arguments to the **aviatrix_edge_gateway_selfmanaged**, **aviatrix_edge_gateway_selfmanaged_ha**, **aviatrix_edge_platform** and **aviatrix_edge_platform_ha** resources. |
+| AVX-68970 | Added a new **aviatrix_dcf_tls_profile** resource, to allow the creation and management of TLS inspection profiles for DCF. |
+| AVX-69413 | Added a new **aviatrix_dcf_trustbundle** data source, to users to look up a DCF trust bundle by `display_name`. |
+| AVX-69475 | Added a new **aviatrix_k8s_config** resource, to allow for the configuration of DCF k8s settings through Terraform. |
+| AVX-69599 | Added a new **aviatrix_dcf_trustbundle** resource, to allow the creation and management of DCF Trust Bundles for verifying origin certificates in Distributed Cloud Firewall Man-in-the-Middle (MITM) inspection. | 
+| AVX-69941 | Added `insertion_gateway` and `insertion_gateway_az` arguments on the **aviatrix_spoke_gateway** resource, allowing for deployment of insertion gateways. |
+| AVX-70078 | Added the `external_device_backup_ipv6` argument to the **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn** resources.
+
+
+### Bug Fixes:
+| Issue | Description |
+| :--- | :--- |
+| AVX-65624 | Fixed an issue that caused the `aviatrix_smart_group` resource to report a diff on plan/apply when configured with the `azureips` group type. |
+| AVX-66693 | Fixed an issue where the `aviatrix_edge_megaport` resource applied correctly on the first run, but showed a diff on subsequent plan/apply runs |
+| AVX-67564 | Fixed an issue where tags on gateways, spokes, and transit gateways were applied correctly but not written to Terraform state, causing diffs on every plan/apply. |
+| AVX-67565 | Fixed an issue where enabling `enable_insane_mode_encryption_over_internet` caused insane_mode to be incorrectly set in state for non-Edge peerings, resulting in persistent diffs. |
+| AVX-68278 | Fixed an issue where the resource `aviatrix_transit_gateway_peering` failed for self-managed edge gateways with error `missing option src_wan_interfaces`. |
+| AVX-68309 | Fixed an issue where `aviatrix_transit_external_device_conn` defaulted `disable_activemesh` to true in state when not set, causing unnecessary destroy-and-recreate on subsequent applies. |
+| AVX-68408 | Fixed an issue where updates to `included_advertised_spoke_routes` in the `aviatrix_edge_platform` resource were not applied. |
+| AVX-68683 | Fixed an issue that caused spoke gateway deployments to fail when Terraform was configured to use a proxy server. |
+| AVX-68853 | Fixed an issue where creating Edge as Transit (EaT) HA via the **aviatrix_transit_gateway** resource failed with a failed to parse cloud_init_transit as JSON error when enabling HA on the transit gateway. |
+| AVX-69506 | Fixed an issue that caused transit gateway deployments to fail when Terraform was configured to use a proxy server. |
+
 ## 8.1.20
 ### Notes:
 - Supported Controller version: **8.1.20**
