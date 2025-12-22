@@ -1,4 +1,3 @@
-=======
 ## 8.0.40 (Unreleased)
 ### Notes:
 - Supported Controller version: **8.0.40**
