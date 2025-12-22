@@ -56,22 +56,6 @@ Last updated: R8.1.20 (8.1.20)
 | AVX-68683 | Fixed an issue that caused spoke gateway deployments to fail when Terraform was configured to use a proxy server. |
 | AVX-69506 | Fixed an issue that caused transit gateway deployments to fail when Terraform was configured to use a proxy server. |
 
-### 8.2.0
-### Notes:
-- Supported Controller version: **8.2.0**
-
-### Enhancements:
-
-1.  Added support for managing custom Intrusion Prevention System (IPS) rule feeds for Distributed Cloud Firewall (DCF). This resource allows users to upload and manage Suricata-compatible IPS rule files.
-**aviatrix_dcf_ips_rule_feed**
-
-2.  Added support for managing DCF IPS profiles. This resource enables users to define IPS profiles, associate custom and external rule feeds, and configure intrusion actions for different severity levels.
-**aviatrix_dcf_ips_profile**
-
-3.  Added support for assigning one DCF IPS profile to a specific VPC. This resource allows users to assign a IPS profiles to a VPC for DCF intrusion analysis, and supports clearing all profiles from a VPC. **aviatrix_dcf_ips_profile_vpc**
-
-4.  Added **aviatrix_dcf_tls_profile** resource which would allow CRUD operations for DCF TLS Profile.
-
 ## 8.1.10
 ### Notes:
 - Supported Controller version: **8.1.10**
