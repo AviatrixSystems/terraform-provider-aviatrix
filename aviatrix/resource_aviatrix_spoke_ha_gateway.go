@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -303,7 +304,7 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}

@@ -1,5 +1,10 @@
 package goaviatrix
 
+import (
+	"fmt"
+	"log"
+)
+
 type SpokeHaGateway struct {
 	Action                string `json:"action"`
 	CID                   string `json:"CID"`
@@ -38,20 +43,23 @@ func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error)
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 	spokeHaGateway.Async = true // Enable async mode
 
-	// Use async API internally but maintain the same external interface
-	err := c.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	// Use PostAsyncAPIHaGw which captures ha_gw_name from the async response
+	haGwName, err := c.PostAsyncAPIHaGw(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 	if err != nil {
 		return "", err
 	}
 
-	// Determine the gateway name for the return value
-	// This follows the same logic as the original synchronous implementation
-	gwName := spokeHaGateway.GwName
-	if gwName == "" {
-		// When AutoGenHaGwName is "yes", the controller generates the name
-		// following the pattern: primary_gateway_name + "-hagw"
-		gwName = spokeHaGateway.PrimaryGwName + "-hagw"
+	// If async API returned the HA gateway name, use it
+	if haGwName != "" {
+		log.Printf("[INFO] HA gateway name from async response: %s", haGwName)
+		return haGwName, nil
 	}
 
-	return gwName, nil
+	// If user provided a specific HA gateway name, use it
+	if spokeHaGateway.GwName != "" {
+		log.Printf("[INFO] Using user-provided HA gateway name: %s", spokeHaGateway.GwName)
+		return spokeHaGateway.GwName, nil
+	}
+
+	return "", fmt.Errorf("HA gateway name not found")
 }
