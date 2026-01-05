@@ -28,7 +28,7 @@ Last updated: R8.2.0 (8.2.0)
 | AVX-59958 | Added a new **aviatrix_dcf_policy_group** resource, allowing the enhanced management of DCF rules. |
 | AVX-62871 | Added the `underlay_cidr` argument to the **aviatrix_transit_gateway** resource, to allow configuration of the underlay CIDR to be used for BGP over LAN. |
 | AVX-66320 | Added the `log_profile` argument to the **aviatrix_distributed_firewalling_policy_list** resource. |
-| AVX-66118 | Added support for IPv6 on Site2Cloud, by adding the `enable_ipv6`, `remote_lan_ipv6_ip`, `external_device_ipv6` and `external_device_backup_ipv6` arguments to the **aviatrix_spoke_external_device_conn**, **aviatrix_transit_external_device_conn** and **aviatrix_edge_spoke_external_device_conn** resouces. |
+| AVX-66118 | Added support for IPv6 on Site2Cloud, by adding the `enable_ipv6`, `remote_lan_ipv6_ip`, `external_device_ipv6` and `external_device_backup_ipv6` arguments to the **aviatrix_spoke_external_device_conn**, **aviatrix_transit_external_device_conn** and **aviatrix_edge_spoke_external_device_conn** resources. |
 | AVX-68208 | Added the **aviatrix_rbac_group_user_membership** resource to manage multiple user memberships for an RBAC group, complementing **aviatrix_rbac_group_user_attachment** which handles only single-user membership. |
 | AVX-68228 | Added the `vpc_ipv6_cidr` argument to the **aviatrix_vpc** resource and the `enable_ipv6` argument to the **aviatrix_vpc**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** resources, to implement support for IPv6. |
 | AVX-68263 | Added the argument `enable_firenet_for_edge` to the **aviatrix_edge_spoke_transit_attachment** resource. This allows for propagating the default route to edge gateways. |
@@ -40,7 +40,7 @@ Last updated: R8.2.0 (8.2.0)
 | AVX-68970 | Added a new **aviatrix_dcf_tls_profile** resource, to allow the creation and management of TLS inspection profiles for DCF. |
 | AVX-69413 | Added a new **aviatrix_dcf_trustbundle** data source, to users to look up a DCF trust bundle by `display_name`. |
 | AVX-69475 | Added a new **aviatrix_k8s_config** resource, to allow for the configuration of DCF k8s settings through Terraform. |
-| AVX-69599 | Added a new **aviatrix_dcf_trustbundle** resource, to allow the creation and management of DCF Trust Bundles for verifying origin certificates in Distributed Cloud Firewall Man-in-the-Middle (MITM) inspection. | 
+| AVX-69599 | Added a new **aviatrix_dcf_trustbundle** resource, to allow the creation and management of DCF Trust Bundles for verifying origin certificates in Distributed Cloud Firewall Man-in-the-Middle (MITM) inspection. |
 | AVX-69941 | Added `insertion_gateway` and `insertion_gateway_az` arguments on the **aviatrix_spoke_gateway** resource, allowing for deployment of insertion gateways. |
 | AVX-70078 | Added the `external_device_backup_ipv6` argument to the **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn** resources.
 

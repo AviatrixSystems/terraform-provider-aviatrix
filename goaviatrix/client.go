@@ -407,11 +407,12 @@ func (c *Client) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckA
 	return c.PostAsyncAPIContextHaGw(context.Background(), action, i, checkFunc)
 }
 
+//nolint:cyclop,funlen
 func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
 	log.Printf("[DEBUG] Post AsyncAPI HaGw %s: %v", action, i)
 	resp, err := c.PostContext(ctx, c.baseURL, i)
 	if err != nil {
-		return "", fmt.Errorf("HTTP POST %s failed: %v", action, err)
+		return "", fmt.Errorf("HTTP POST %s failed: %w", action, err)
 	}
 
 	// Response struct that includes ha_gw_name
@@ -428,7 +429,7 @@ func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i i
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
+		return "", fmt.Errorf("json decode %s failed: %w\n Body: %s", action, err, bodyString)
 	}
 	if !data.Return {
 		return "", fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
@@ -455,13 +456,14 @@ func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i i
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
+		resp.Body.Close()
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
 			if resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusServiceUnavailable {
 				time.Sleep(sleepDuration)
 				continue
 			}
-			return "", fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
+			return "", fmt.Errorf("decode check_task_status failed: %w\n Body: %s", err, buf.String())
 		}
 
 		// Capture ha_gw_name from polling response if present
