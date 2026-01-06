@@ -48,8 +48,8 @@ func (m *MockClientTransitHaGw) PostAsyncAPI(action string, i interface{}, check
 		for _, o := range opts {
 			o(cfg)
 		}
-		if cfg.onStartResponse != nil {
-			cfg.onStartResponse(m.SimulatedResponse)
+		if cfg.onResponse != nil {
+			cfg.onResponse(m.SimulatedResponse)
 		}
 	}
 
@@ -276,7 +276,7 @@ func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMock(transitHaGateway 
 
 		// Capture ha_gw_name from the async response using a hook
 		var haGwName string
-		hook := WithStartResponseHook(func(raw map[string]interface{}) {
+		hook := WithResponseHook(func(raw map[string]interface{}) {
 			if name, ok := raw["ha_gw_name"].(string); ok {
 				haGwName = name
 			}

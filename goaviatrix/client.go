@@ -328,27 +328,27 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
-// StartResponseHook is called with the raw response (both initial and poll responses),
+// ResponseHook is called with the raw response (both initial and poll responses),
 // allowing callers to extract custom fields like ha_gw_name.
-type StartResponseHook func(raw map[string]interface{})
+type ResponseHook func(raw map[string]interface{})
 
 // AsyncPollPayloadFunc returns the payload for polling task status.
 type AsyncPollPayloadFunc func(requestID string) interface{}
 
 // asyncCfg holds optional configuration for PostAsyncAPIContext.
 type asyncCfg struct {
-	onStartResponse StartResponseHook
-	pollPayload     AsyncPollPayloadFunc
+	onResponse  ResponseHook
+	pollPayload AsyncPollPayloadFunc
 }
 
 // AsyncOption configures async API behavior.
 type AsyncOption func(*asyncCfg)
 
-// WithStartResponseHook sets a hook to be called with the raw response.
+// WithResponseHook sets a hook to be called with the raw response.
 // The hook is called on both the initial response and each poll response,
 // allowing callers to extract custom fields like ha_gw_name whenever they appear.
-func WithStartResponseHook(h StartResponseHook) AsyncOption {
-	return func(c *asyncCfg) { c.onStartResponse = h }
+func WithResponseHook(h ResponseHook) AsyncOption {
+	return func(c *asyncCfg) { c.onResponse = h }
 }
 
 // WithPollPayload sets a custom function to generate the poll payload.
@@ -380,7 +380,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	log.Printf("[DEBUG] Post AsyncAPI %s: %v", action, i)
 	resp, err := c.PostContext(ctx, c.baseURL, i)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+		return fmt.Errorf("HTTP POST %s failed: %w", action, err)
 	}
 
 	buf := new(bytes.Buffer)
@@ -402,20 +402,20 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	}
 
 	// Call the start response hook if provided
-	if cfg.onStartResponse != nil {
+	if cfg.onResponse != nil {
 		var raw map[string]interface{}
 		if err := json.Unmarshal([]byte(bodyString), &raw); err == nil {
-			cfg.onStartResponse(raw)
+			cfg.onResponse(raw)
 		}
 	}
 
 	requestID := data.Result
-	form := cfg.pollPayload(requestID)
 
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
 	var j int
 	for ; j < maxPoll; j++ {
+		form := cfg.pollPayload(requestID)
 		resp, err = c.PostContext(ctx, c.baseURL, form)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
@@ -424,6 +424,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
+		resp.Body.Close()
 		pollBodyString := buf.String()
 		err = json.Unmarshal([]byte(pollBodyString), &data)
 		if err != nil {
@@ -437,10 +438,10 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 
 		// Call the hook on each poll response to capture fields like ha_gw_name
-		if cfg.onStartResponse != nil {
+		if cfg.onResponse != nil {
 			var raw map[string]interface{}
 			if err := json.Unmarshal([]byte(pollBodyString), &raw); err == nil {
-				cfg.onStartResponse(raw)
+				cfg.onResponse(raw)
 			}
 		}
 

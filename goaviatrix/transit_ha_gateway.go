@@ -67,7 +67,7 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 
 		// Capture ha_gw_name from the async response using a hook
 		var haGwName string
-		hook := WithStartResponseHook(func(raw map[string]interface{}) {
+		hook := WithResponseHook(func(raw map[string]interface{}) {
 			if name, ok := raw["ha_gw_name"].(string); ok {
 				haGwName = name
 			}
