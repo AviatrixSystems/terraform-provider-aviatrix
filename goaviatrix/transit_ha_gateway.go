@@ -64,7 +64,16 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 		}
 	} else {
 		transitHaGateway.Async = true
-		haGwName, err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
+
+		// Capture ha_gw_name from the async response using a hook
+		var haGwName string
+		hook := WithStartResponseHook(func(raw map[string]interface{}) {
+			if name, ok := raw["ha_gw_name"].(string); ok {
+				haGwName = name
+			}
+		})
+
+		err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck, hook)
 		if err != nil {
 			return "", err
 		}

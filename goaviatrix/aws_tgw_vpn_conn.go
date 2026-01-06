@@ -185,8 +185,7 @@ func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	awsTgwVpnConn.CID = c.CID
 	awsTgwVpnConn.Action = "detach_vpn_from_tgw"
 	awsTgwVpnConn.Async = true
-	_, err := c.PostAsyncAPI(awsTgwVpnConn.Action, awsTgwVpnConn, BasicCheck)
-	return err
+	return c.PostAsyncAPI(awsTgwVpnConn.Action, awsTgwVpnConn, BasicCheck)
 }
 
 func (c *Client) EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {

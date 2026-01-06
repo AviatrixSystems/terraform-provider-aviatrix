@@ -328,49 +328,86 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
-// PostAsyncAPI submits an async request and waits for completion.
-// Returns (ha_gw_name, error) - ha_gw_name is populated if the response contains it.
-func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
-	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc)
+// StartResponseHook is called with the raw start response, allowing callers to extract custom fields.
+type StartResponseHook func(raw map[string]interface{})
+
+// AsyncPollPayloadFunc returns the payload for polling task status.
+type AsyncPollPayloadFunc func(requestID string) interface{}
+
+// asyncCfg holds optional configuration for PostAsyncAPIContext.
+type asyncCfg struct {
+	onStartResponse StartResponseHook
+	pollPayload     AsyncPollPayloadFunc
 }
 
-//nolint:cyclop,funlen
-func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+// AsyncOption configures async API behavior.
+type AsyncOption func(*asyncCfg)
+
+// WithStartResponseHook sets a hook to be called with the raw start response.
+// This allows callers to extract custom fields like ha_gw_name.
+func WithStartResponseHook(h StartResponseHook) AsyncOption {
+	return func(c *asyncCfg) { c.onStartResponse = h }
+}
+
+// WithPollPayload sets a custom function to generate the poll payload.
+func WithPollPayload(f AsyncPollPayloadFunc) AsyncOption {
+	return func(c *asyncCfg) { c.pollPayload = f }
+}
+
+// PostAsyncAPI submits an async request and waits for completion.
+func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc, opts ...AsyncOption) error {
+	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc, opts...)
+}
+
+func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc, opts ...AsyncOption) error {
+	// Build config with defaults
+	cfg := asyncCfg{
+		pollPayload: func(requestID string) interface{} {
+			return map[string]string{
+				"action":     "check_task_status",
+				"CID":        c.CID,
+				"request_id": requestID,
+			}
+		},
+	}
+	for _, o := range opts {
+		o(&cfg)
+	}
+
 	log.Printf("[DEBUG] Post AsyncAPI %s: %v", action, i)
 	resp, err := c.PostContext(ctx, c.baseURL, i)
 	if err != nil {
-		return "", fmt.Errorf("HTTP POST %s failed: %w", action, err)
-	}
-
-	// Response struct that includes ha_gw_name for HA gateway creation
-	var data struct {
-		Return   bool   `json:"return"`
-		Result   string `json:"results"`
-		Reason   string `json:"reason"`
-		HaGwName string `json:"ha_gw_name"`
+		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
 	}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	resp.Body.Close()
 	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", fmt.Errorf("json decode %s failed: %w\n Body: %s", action, err, bodyString)
+
+	var data struct {
+		Return bool   `json:"return"`
+		Result string `json:"results"`
+		Reason string `json:"reason"`
+	}
+
+	if err = json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
 	}
 	if !data.Return {
-		return "", fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
 	}
 
-	// Capture ha_gw_name from initial response if present
-	haGwName := data.HaGwName
+	// Call the start response hook if provided
+	if cfg.onStartResponse != nil {
+		var raw map[string]interface{}
+		if err := json.Unmarshal([]byte(bodyString), &raw); err == nil {
+			cfg.onStartResponse(raw)
+		}
+	}
 
 	requestID := data.Result
-	form := map[string]string{
-		"action":     "check_task_status",
-		"CID":        c.CID,
-		"request_id": requestID,
-	}
+	form := cfg.pollPayload(requestID)
 
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
@@ -384,7 +421,6 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		resp.Body.Close()
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
 			// Only check for status codes after trying to parse JSON because we may get an error with a valid JSON body
@@ -393,17 +429,11 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 				time.Sleep(sleepDuration)
 				continue
 			}
-			return "", fmt.Errorf("decode check_task_status failed: %w\n Body: %s", err, buf.String())
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
-
-		// Capture ha_gw_name from polling response if present
-		if data.HaGwName != "" {
-			haGwName = data.HaGwName
-		}
-
 		if !data.Return {
 			if data.Reason != "" && data.Reason != "REQUEST_IN_PROGRESS" {
-				return "", fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
 			}
 
 			// Not done yet
@@ -412,13 +442,10 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 
 		// Async API is done, return result of checkFunc
-		if err := checkFunc(action, "Post", data.Result, data.Return); err != nil {
-			return "", err
-		}
-		return haGwName, nil
+		return checkFunc(action, "Post", data.Result, data.Return)
 	}
 	// Waited for too long and async API never finished
-	return "", fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
+	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }
 
 // checkAPIResp will decode the response and check for any errors with the provided checkFunc

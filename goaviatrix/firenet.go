@@ -187,8 +187,7 @@ func (c *Client) ConnectFireNetWithTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, Security
 		"async":       "true",
 	}
 
-	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
@@ -199,8 +198,7 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 		"async":  "true",
 	}
 
-	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditFireNetInspection(fireNet *FireNet) error {

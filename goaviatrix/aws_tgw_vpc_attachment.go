@@ -55,8 +55,7 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	if awsTgwVpcAttachment.RouteTables != "" {
 		form["route_table_list"] = awsTgwVpcAttachment.RouteTables
 	}
-	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
@@ -182,8 +181,7 @@ func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		"vpc_name": awsTgwVpcAttachment.VpcID,
 		"async":    "true",
 	}
-	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
@@ -193,8 +191,7 @@ func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 		"vpc_id": awsTgwVpcAttachment.VpcID,
 		"async":  "true",
 	}
-	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {

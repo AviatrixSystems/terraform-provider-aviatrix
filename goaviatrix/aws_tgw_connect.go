@@ -46,16 +46,14 @@ func (c *Client) AttachTGWConnectToTGW(ctx context.Context, connect *AwsTgwConne
 	connect.Action = "attach_tgw_connect_to_tgw"
 	connect.CID = c.CID
 	connect.Async = true
-	_, err := c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
-	return err
+	return c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
 }
 
 func (c *Client) DetachTGWConnectFromTGW(ctx context.Context, connect *AwsTgwConnect) error {
 	connect.Action = "detach_tgw_connect_from_tgw"
 	connect.CID = c.CID
 	connect.Async = true
-	_, err := c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
-	return err
+	return c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
 }
 
 func (c *Client) GetTGWConnect(ctx context.Context, connect *AwsTgwConnect) (*AwsTgwConnect, error) {

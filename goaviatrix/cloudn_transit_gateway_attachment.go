@@ -85,8 +85,7 @@ func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attac
 	cloudnNeighborJson, _ := json.Marshal(cloudnNeighbor)
 	attachment.CloudnNeighbor = "[" + string(cloudnNeighborJson) + "]"
 
-	_, err := c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
-	return err
+	return c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName string) (*CloudnTransitGatewayAttachmentResp, error) {
@@ -228,8 +227,7 @@ func (c *Client) DeleteDeviceAttachment(connectionName string) error {
 		"async":           "true",
 	}
 
-	_, err = c.PostAsyncAPI(form["action"], form, BasicCheck)
-	return err
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAPIContextCloudnTransitGatewayAttachment(ctx context.Context, v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
