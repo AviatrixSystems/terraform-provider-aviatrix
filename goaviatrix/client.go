@@ -328,7 +328,8 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
-// StartResponseHook is called with the raw start response, allowing callers to extract custom fields.
+// StartResponseHook is called with the raw response (both initial and poll responses),
+// allowing callers to extract custom fields like ha_gw_name.
 type StartResponseHook func(raw map[string]interface{})
 
 // AsyncPollPayloadFunc returns the payload for polling task status.
@@ -343,8 +344,9 @@ type asyncCfg struct {
 // AsyncOption configures async API behavior.
 type AsyncOption func(*asyncCfg)
 
-// WithStartResponseHook sets a hook to be called with the raw start response.
-// This allows callers to extract custom fields like ha_gw_name.
+// WithStartResponseHook sets a hook to be called with the raw response.
+// The hook is called on both the initial response and each poll response,
+// allowing callers to extract custom fields like ha_gw_name whenever they appear.
 func WithStartResponseHook(h StartResponseHook) AsyncOption {
 	return func(c *asyncCfg) { c.onStartResponse = h }
 }
@@ -359,6 +361,7 @@ func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIRe
 	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc, opts...)
 }
 
+//nolint:cyclop,funlen
 func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc, opts ...AsyncOption) error {
 	// Build config with defaults
 	cfg := asyncCfg{
@@ -421,7 +424,8 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		err = json.Unmarshal(buf.Bytes(), &data)
+		pollBodyString := buf.String()
+		err = json.Unmarshal([]byte(pollBodyString), &data)
 		if err != nil {
 			// Only check for status codes after trying to parse JSON because we may get an error with a valid JSON body
 			// and that is a valid and actionable response...
@@ -429,8 +433,17 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 				time.Sleep(sleepDuration)
 				continue
 			}
-			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, pollBodyString)
 		}
+
+		// Call the hook on each poll response to capture fields like ha_gw_name
+		if cfg.onStartResponse != nil {
+			var raw map[string]interface{}
+			if err := json.Unmarshal([]byte(pollBodyString), &raw); err == nil {
+				cfg.onStartResponse(raw)
+			}
+		}
+
 		if !data.Return {
 			if data.Reason != "" && data.Reason != "REQUEST_IN_PROGRESS" {
 				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
