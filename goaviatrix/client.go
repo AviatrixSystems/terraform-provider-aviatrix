@@ -433,7 +433,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 				time.Sleep(sleepDuration)
 				continue
 			}
-			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, pollBodyString)
+			return fmt.Errorf("decode check_task_status failed: %w\n Body: %s", err, pollBodyString)
 		}
 
 		// Call the hook on each poll response to capture fields like ha_gw_name
