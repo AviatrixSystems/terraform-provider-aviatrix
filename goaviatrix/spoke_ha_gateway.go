@@ -32,10 +32,10 @@ type SpokeHaGateway struct {
 }
 
 type APIRespHaGw struct {
-	Return   bool   `json:"return"`
-	Results  string `json:"results"`
-	Reason   string `json:"reason"`
-	HaGwName string `json:"ha_gw_name"`
+	Return  bool   `json:"return"`
+	Results string `json:"results"`
+	Reason  string `json:"reason"`
+	GwName  string `json:"gw_name"`
 }
 
 func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error) {
@@ -43,7 +43,7 @@ func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error)
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 	spokeHaGateway.Async = true // Enable async mode
 
-	// Use PostAsyncAPI which captures ha_gw_name from the async response
+	// Use PostAsyncAPI which captures gw_name from the async response
 	haGwName, err := c.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 	if err != nil {
 		return "", err

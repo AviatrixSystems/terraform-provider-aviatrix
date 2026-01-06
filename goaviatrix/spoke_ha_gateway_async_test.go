@@ -198,7 +198,7 @@ func (tc *TestableClientHaGw) CreateSpokeHaGwWithMock(spokeHaGateway *SpokeHaGat
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 	spokeHaGateway.Async = true // Enable async mode
 
-	// Use PostAsyncAPI which captures ha_gw_name from the async response
+	// Use PostAsyncAPI which captures gw_name from the async response
 	haGwName, err := tc.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 	if err != nil {
 		return "", err
