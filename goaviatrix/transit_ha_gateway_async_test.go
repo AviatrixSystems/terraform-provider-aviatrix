@@ -229,7 +229,7 @@ func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMock(transitHaGateway 
 	if !IsCloudType(transitHaGateway.CloudType, EdgeRelatedCloudTypes) {
 		transitHaGateway.Async = true // Enable async mode
 
-		// Use PostAsyncAPI which captures gw_name from the async response
+		// Use PostAsyncAPI which captures ha_gw_name from the async response
 		haGwName, err := tc.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
 		if err != nil {
 			return "", err

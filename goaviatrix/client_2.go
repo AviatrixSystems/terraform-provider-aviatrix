@@ -227,5 +227,5 @@ func checkAndReturnAPIResp2HaGw(resp *http.Response, v interface{}, method, acti
 		}
 	}
 
-	return data.GwName, nil
+	return data.HaGwName, nil
 }

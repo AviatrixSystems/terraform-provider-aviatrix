@@ -329,7 +329,7 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 }
 
 // PostAsyncAPI submits an async request and waits for completion.
-// Returns (gw_name, error) - gw_name is populated if the response contains it.
+// Returns (ha_gw_name, error) - ha_gw_name is populated if the response contains it.
 func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
 	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc)
 }
@@ -342,12 +342,12 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		return "", fmt.Errorf("HTTP POST %s failed: %w", action, err)
 	}
 
-	// Response struct that includes gw_name for HA gateway creation
+	// Response struct that includes ha_gw_name for HA gateway creation
 	var data struct {
-		Return bool   `json:"return"`
-		Result string `json:"results"`
-		Reason string `json:"reason"`
-		GwName string `json:"gw_name"`
+		Return   bool   `json:"return"`
+		Result   string `json:"results"`
+		Reason   string `json:"reason"`
+		HaGwName string `json:"ha_gw_name"`
 	}
 
 	buf := new(bytes.Buffer)
@@ -362,8 +362,8 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		return "", fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
 	}
 
-	// Capture gw_name from initial response if present
-	gwName := data.GwName
+	// Capture ha_gw_name from initial response if present
+	haGwName := data.HaGwName
 
 	requestID := data.Result
 	form := map[string]string{
@@ -396,9 +396,9 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 			return "", fmt.Errorf("decode check_task_status failed: %w\n Body: %s", err, buf.String())
 		}
 
-		// Capture gw_name from polling response if present
-		if data.GwName != "" {
-			gwName = data.GwName
+		// Capture ha_gw_name from polling response if present
+		if data.HaGwName != "" {
+			haGwName = data.HaGwName
 		}
 
 		if !data.Return {
@@ -415,7 +415,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		if err := checkFunc(action, "Post", data.Result, data.Return); err != nil {
 			return "", err
 		}
-		return gwName, nil
+		return haGwName, nil
 	}
 	// Waited for too long and async API never finished
 	return "", fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
