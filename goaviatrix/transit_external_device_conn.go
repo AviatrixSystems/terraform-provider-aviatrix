@@ -102,6 +102,7 @@ type ExternalDeviceConn struct {
 	ExternalDeviceIPv6       string `form:"external_device_ipv6,omitempty"`
 	ExternalDeviceBackupIPv6 string `form:"external_device_backup_ipv6,omitempty"`
 	RemoteLanIPv6            string `form:"remote_lan_ipv6_ip,omitempty"`
+	BackupRemoteLanIPv6      string `form:"backup_remote_lan_ipv6_ip,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -158,6 +159,7 @@ type EditExternalDeviceConnDetail struct {
 	ExternalLocalIPv6          string         `json:"bgp_local_ipv6,omitempty"`
 	ExternalBackupLocalIPv6    string         `json:"bgp_backup_local_ipv6,omitempty"`
 	RemoteLanIPv6              string         `json:"remote_lan_ipv6_ip,omitempty"`
+	BackupRemoteLanIPv6        string         `json:"backup_remote_lan_ipv6_ip,omitempty"`
 }
 
 type BgpBfdConfig struct {
@@ -722,6 +724,9 @@ func populateIPv6ConnectionInfo(externalDeviceConn *ExternalDeviceConn, external
 	}
 	if externalDeviceConn.TunnelProtocol == "LAN" {
 		externalDeviceConn.RemoteLanIPv6 = externalDeviceConnDetail.RemoteLanIPv6
+		if externalDeviceConnDetail.HAEnabled == "enabled" {
+			externalDeviceConn.BackupRemoteLanIPv6 = externalDeviceConnDetail.BackupRemoteLanIPv6
+		}
 	} else {
 		// for ipsec and gre tunnels
 		externalDeviceConn.ExternalDeviceIPv6 = externalDeviceConnDetail.ExternalDeviceIPv6

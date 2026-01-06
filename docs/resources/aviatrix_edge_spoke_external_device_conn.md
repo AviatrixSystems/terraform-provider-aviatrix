@@ -102,6 +102,7 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the external device connection. Requires Edge gateway to be jumbo frame enabled. Valid values: true, false. Default value: false.
 * `enable_ipv6` - (Optional) Enable IPv6 prefix learning for edge gateway.
 * `remote_lan_ipv6_ip` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for BGP over LAN. Only valid if gateway is IPv6 enabled.
+* `backup_remote_lan_ipv6_ip` - (Optional) Backup Remote LAN IPv6 address. Must be set when `enable_ipv6` is true and HA is enabled for BGP over LAN.
 
 ## Import
 

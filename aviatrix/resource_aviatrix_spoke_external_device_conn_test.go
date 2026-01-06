@@ -8,7 +8,9 @@ import (
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccAviatrixSpokeExternalDeviceConn_basic(t *testing.T) {
@@ -160,4 +162,53 @@ func testAccCheckSpokeExternalDeviceConnDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestSpokeExternalDeviceConnSchema_RemoteLanIPv6Fields(t *testing.T) {
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test remote_lan_ipv6_ip field exists and has correct properties
+	remoteLanIPv6Field, ok := schemaMap["remote_lan_ipv6_ip"]
+	assert.True(t, ok, "remote_lan_ipv6_ip field should exist in schema")
+	assert.Equal(t, schema.TypeString, remoteLanIPv6Field.Type)
+	assert.True(t, remoteLanIPv6Field.Optional, "remote_lan_ipv6_ip should be optional")
+	assert.True(t, remoteLanIPv6Field.Computed, "remote_lan_ipv6_ip should be computed")
+	assert.True(t, remoteLanIPv6Field.ForceNew, "remote_lan_ipv6_ip should be ForceNew")
+	assert.Contains(t, remoteLanIPv6Field.Description, "Remote LAN IPv6 address")
+
+	// Test backup_remote_lan_ipv6_ip field exists and has correct properties
+	backupRemoteLanIPv6Field, ok := schemaMap["backup_remote_lan_ipv6_ip"]
+	assert.True(t, ok, "backup_remote_lan_ipv6_ip field should exist in schema")
+	assert.Equal(t, schema.TypeString, backupRemoteLanIPv6Field.Type)
+	assert.True(t, backupRemoteLanIPv6Field.Optional, "backup_remote_lan_ipv6_ip should be optional")
+	assert.True(t, backupRemoteLanIPv6Field.Computed, "backup_remote_lan_ipv6_ip should be computed")
+	assert.True(t, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should be ForceNew")
+	assert.Contains(t, backupRemoteLanIPv6Field.Description, "Backup Remote LAN IPv6 address")
+}
+
+func TestSpokeExternalDeviceConnSchema_RemoteLanIPv6FieldsReference(t *testing.T) {
+	// Test that remote_lan_ipv6_ip follows the same pattern as remote_lan_ip
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	remoteLanIPField, ok := schemaMap["remote_lan_ip"]
+	assert.True(t, ok, "remote_lan_ip field should exist for reference")
+
+	remoteLanIPv6Field, ok := schemaMap["remote_lan_ipv6_ip"]
+	assert.True(t, ok, "remote_lan_ipv6_ip field should exist")
+
+	// Both should be TypeString
+	assert.Equal(t, remoteLanIPField.Type, remoteLanIPv6Field.Type, "remote_lan_ipv6_ip should have same type as remote_lan_ip")
+	assert.Equal(t, remoteLanIPField.ForceNew, remoteLanIPv6Field.ForceNew, "remote_lan_ipv6_ip should have same ForceNew as remote_lan_ip")
+
+	// Test backup fields follow same pattern
+	backupRemoteLanIPField, ok := schemaMap["backup_remote_lan_ip"]
+	assert.True(t, ok, "backup_remote_lan_ip field should exist for reference")
+
+	backupRemoteLanIPv6Field, ok := schemaMap["backup_remote_lan_ipv6_ip"]
+	assert.True(t, ok, "backup_remote_lan_ipv6_ip field should exist")
+
+	assert.Equal(t, backupRemoteLanIPField.Type, backupRemoteLanIPv6Field.Type, "backup_remote_lan_ipv6_ip should have same type as backup_remote_lan_ip")
+	assert.Equal(t, backupRemoteLanIPField.ForceNew, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should have same ForceNew as backup_remote_lan_ip")
 }

@@ -71,6 +71,7 @@ The following arguments are supported:
 * `gw_size` - (Optional) Size of the Spoke HA Gateway instance. If not set, controller will use the same value as primary gateway's. Example: AWS/AWSGov/AWSChina: "t2.large", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
 * `eip` - (Optional) If set, the set IP will be used for this gateway.
 * `azure_eip_name_resource_group` - (Optional) Name of public IP Address resource and its resource group in Azure to be assigned to the Spoke Gateway instance. Example: "IP_Name:Resource_Group_Name". Required if `eip` is set and `cloud_type` is Azure, AzureGov or AzureChina. Available as of provider version 3.0+.
+* `single_az_ha` - (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false. If not set, the value is derived from primary gateway during launch. After launch, the setting can be edited using this parameter.
 
 ## Attribute Reference
 

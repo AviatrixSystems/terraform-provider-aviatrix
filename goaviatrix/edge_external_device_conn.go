@@ -69,6 +69,7 @@ type EdgeExternalDeviceConn struct {
 	ExternalDeviceIPv6       string `form:"external_device_ipv6,omitempty"`
 	ExternalDeviceBackupIPv6 string `form:"external_device_backup_ipv6,omitempty"`
 	RemoteLanIPv6            string `form:"remote_lan_ipv6_ip,omitempty"`
+	BackupRemoteLanIPv6      string `form:"backup_remote_lan_ipv6_ip,omitempty"`
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {
