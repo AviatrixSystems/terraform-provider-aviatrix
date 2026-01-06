@@ -39,12 +39,6 @@ func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
 		return warnings, errors
 	}
 
-	// Ensure it's the network address, not a host address
-	if v != ipnet.String() {
-		errors = append(errors, fmt.Errorf("expected %s to contain a network CIDR, got host address: %s (expected %s)", k, v, ipnet.String()))
-		return warnings, errors
-	}
-
 	// Ensure the mask size is valid (bits > 0)
 	_, bits := ipnet.Mask.Size()
 	if bits == 0 {
@@ -55,10 +49,29 @@ func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
 	return warnings, errors
 }
 
+func ValidateIPv6AccessType(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %q to be string", k))
+		return warnings, errors
+	}
+
+	validTypes := []string{"INTERNAL", "EXTERNAL"}
+	if !stringInSlice(strings.ToUpper(v), validTypes) {
+		errors = append(errors, fmt.Errorf("expected %s to be one of %v, got: %s", k, validTypes, v))
+		return warnings, errors
+	}
+
+	return warnings, errors
+}
+
 // IPv6SupportedOnCloudType checks if IPv6 is supported on the given cloud type.
-// IPv6 is currently only supported on AWS and Azure related cloud types.
-func IPv6SupportedOnCloudType(cloudType int) bool {
-	return goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes)
+// IPv6 is currently only supported on AWS, Azure, and GCP related cloud types.
+func IPv6SupportedOnCloudType(cloudType int) error {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
+		return nil
+	}
+	return fmt.Errorf("IPv6 is only supported for AWS (1), Azure (8), GCP (4)")
 }
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone

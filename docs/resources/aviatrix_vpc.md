@@ -142,6 +142,28 @@ resource "aviatrix_vpc" "azure_vpc" {
   vpc_ipv6_cidr = "2607:c000:1234::/56"
 }
 ```
+```hcl
+resource "aviatrix_vpc" "gcp_vpc" {
+  cloud_type   = 4
+  account_name = "gcp"
+  name         = "gcp-vpc"
+  subnets {
+    name   = "subnet-1"
+    region = "us-west1"
+    cidr   = "10.10.0.0/24"
+    ipv6_access_type = "EXTERNAL"
+  }
+  subnets {
+    name   = "subnet-2"
+    region = "us-west2"
+    cidr   = "10.11.0.0/24"
+    ipv6_access_type = "INTERNAL"
+  }
+  ipv6_access_type = "INTERNAL"
+  enable_ipv6  = true
+}
+
+```
 
 ## Argument Reference
 
@@ -159,14 +181,17 @@ The following arguments are supported:
   * `region` - Region of this subnet.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
+  * `ipv6_access_type` - (Optional) Subnet Ipv6 access type: INTERNAL (ULA ipv6 address) or EXTERNAL (public ipv6 address).
+  * `ipv6_cidr` - (Optional) IPv6 CIDR block for the subnet. If not provided, the IPv6 CIDR is automatically assigned based on ipv6_access_type.
 
 ### Advanced Options
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
 * `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 * `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNet.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
-* `enable_ipv6` - (Optional) To enable IPv6 CIDR in VPC. Only AWS, Azure, AzureGov and AWSGov are supported.
-* `vpc_ipv6_cidr` - (Optional) To configure IPv6 CIDR in Azure VPC. Only Azure, AzureGov are supported. On AWS/AWSGov, the IPv6 CIDR is automatically assigned and this field is ignored.
+* `enable_ipv6` - (Optional) To enable IPv6 CIDR in VPC. Only AWS, Azure, AzureGov, AWSGov and GCP are supported.
+* `vpc_ipv6_cidr` - (Optional) To configure IPv6 CIDR in Azure VPC or GCP VPC (ULA). On Azure, only Azure, AzureGov are supported. On AWS/AWSGov, the IPv6 CIDR is automatically assigned and this field is ignored. On GCP, the IPv6 CIDR is automatically assigned if not provided.
+* `ipv6_access_type` - (Optional) On GCP, to configure VPC Ipv6 access type: INTERNAL (ULA ipv6 address) or EXTERNAL (public ipv6 address)
 
 ### Misc.
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov, AWSChina, and Alibaba Cloud are supported. Required to be false for other providers.** Valid values: true, false. Default: false.

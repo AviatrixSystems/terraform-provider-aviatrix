@@ -939,6 +939,105 @@ func TestAccAviatrixTransitGateway_ipv6Azure(t *testing.T) {
 	})
 }
 
+// TestAccAviatrixTransitGateway_ipv6GCP tests IPv6 for GCP transit gateway (no subnet_ipv6_cidr required)
+func TestAccAviatrixTransitGateway_ipv6GCP(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6_gcp"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6_GCP to yes to skip GCP Transit Gateway IPv6 tests"
+
+	skipGwIPv6GCP := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6_GCP")
+	if skipGwIPv6GCP == "yes" {
+		t.Skip("Skipping GCP Transit Gateway IPv6 test as SKIP_TRANSIT_GATEWAY_IPV6_GCP is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGCPTransitGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigGCPIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-gcp-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", "n1-standard-1"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					// For GCP, subnet_ipv6_cidr should be computed/optional, not required
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ipv6_cidr"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
+// TestAccAviatrixTransitGateway_ipv6GCPWithInsaneMode tests IPv6 with GCP and insane mode (no subnet_ipv6_cidr required)
+func TestAccAviatrixTransitGateway_ipv6GCPWithInsaneMode(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_gateway.test_transit_gateway_ipv6_gcp_insane"
+
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_IPV6_GCP to yes to skip GCP Transit Gateway IPv6 tests"
+
+	skipGwIPv6GCP := os.Getenv("SKIP_TRANSIT_GATEWAY_IPV6_GCP")
+	if skipGwIPv6GCP == "yes" {
+		t.Skip("Skipping GCP Transit Gateway IPv6 with insane mode test as SKIP_TRANSIT_GATEWAY_IPV6_GCP is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGCPTransitGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfigGCPIPv6WithInsaneMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-gcp-ipv6-insane-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", "n1-highmem-4"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode", "true"),
+					// For GCP, subnet_ipv6_cidr should not be required even with insane mode
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ipv6_cidr"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
 func preAwsTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
 	requiredEnvVars := []string{
 		"AWS_VPC_ID4",
@@ -976,6 +1075,21 @@ func preAzureTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
 		"AZURE_REGION",
 		"AZURE_GW_SIZE",
 		"AZURE_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preGCPTransitGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"GCP_PROJECT_ID",
+		"GCP_VPC_ID",
+		"GCP_ZONE",
+		"GCP_SUBNET",
+		"GOOGLE_CREDENTIALS_FILEPATH",
 	}
 	for _, v := range requiredEnvVars {
 		if os.Getenv(v) == "" {
@@ -2150,4 +2264,51 @@ func TestSortInterfacesByCustomOrder(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func testAccTransitGatewayConfigGCPIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_gcp" {
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_gcp" {
+	cloud_type       = 4
+	account_name     = aviatrix_account.test_acc_gcp.account_name
+	gw_name          = "tfg-gcp-ipv6-%[1]s"
+	vpc_id           = "%[4]s"
+	vpc_reg          = "%[5]s"
+	gw_size          = "n1-standard-1"
+	subnet           = "%[6]s"
+	enable_ipv6      = true
+	connected_transit = true
+}
+	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"),
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
+}
+
+func testAccTransitGatewayConfigGCPIPv6WithInsaneMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_gcp" {
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
+}
+resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_gcp_insane" {
+	cloud_type        = 4
+	account_name      = aviatrix_account.test_acc_gcp.account_name
+	gw_name           = "tfg-gcp-ipv6-insane-%[1]s"
+	vpc_id            = "%[4]s"
+	vpc_reg           = "%[5]s"
+	gw_size           = "n1-highmem-4"
+	subnet            = "%[6]s"
+	enable_ipv6       = true
+	connected_transit = true
+	insane_mode       = true
+}
+	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"),
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }

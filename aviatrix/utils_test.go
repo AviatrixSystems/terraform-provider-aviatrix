@@ -291,29 +291,6 @@ func TestValidateIPv6CIDR(t *testing.T) {
 			expectedError: true,
 			errorContains: "expected test_property to contain an IPv6 CIDR, got IPv4",
 		},
-
-		// Host address instead of network address (should be rejected)
-		{
-			name:          "host address in CIDR /64",
-			input:         "2001:db8::5/64",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
-		{
-			name:          "host address in CIDR /48",
-			input:         "2001:db8:1::1/48",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
-		{
-			name:          "non-zero host bits in CIDR",
-			input:         "fd00:1234:5678:abcd::/56",
-			key:           "test_property",
-			expectedError: true,
-			errorContains: "expected test_property to contain a network CIDR, got host address",
-		},
 	}
 
 	for _, tc := range testCases {
@@ -347,4 +324,79 @@ func TestValidateIPv6CIDR(t *testing.T) {
 // Helper function to check if a string contains another string
 func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+}
+
+// TestValidateIPv6AccessTypeFunction tests the ValidateIPv6AccessType function
+func TestValidateIPv6AccessTypeFunction(t *testing.T) {
+	testCases := []struct {
+		name          string
+		input         interface{}
+		key           string
+		expectedError bool
+		errorContains string
+	}{
+		{
+			name:          "valid INTERNAL access type",
+			input:         "INTERNAL",
+			key:           "ipv6_access_type",
+			expectedError: false,
+		},
+		{
+			name:          "valid EXTERNAL access type",
+			input:         "EXTERNAL",
+			key:           "ipv6_access_type",
+			expectedError: false,
+		},
+		{
+			name:          "valid lowercase internal",
+			input:         "internal",
+			key:           "ipv6_access_type",
+			expectedError: false,
+		},
+		{
+			name:          "non-string input",
+			input:         123,
+			key:           "ipv6_access_type",
+			expectedError: true,
+			errorContains: "expected type of \"ipv6_access_type\" to be string",
+		},
+		{
+			name:          "invalid access type",
+			input:         "PUBLIC",
+			key:           "ipv6_access_type",
+			expectedError: true,
+			errorContains: "expected ipv6_access_type to be one of [INTERNAL EXTERNAL], got: PUBLIC",
+		},
+		{
+			name:          "empty string",
+			input:         "",
+			key:           "ipv6_access_type",
+			expectedError: true,
+			errorContains: "expected ipv6_access_type to be one of [INTERNAL EXTERNAL], got: ",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			warnings, errors := ValidateIPv6AccessType(tc.input, tc.key)
+
+			assert.Empty(t, warnings)
+
+			if tc.expectedError {
+				assert.NotEmpty(t, errors)
+				if tc.errorContains != "" {
+					errorFound := false
+					for _, err := range errors {
+						if contains(err.Error(), tc.errorContains) {
+							errorFound = true
+							break
+						}
+					}
+					assert.True(t, errorFound, "Expected error containing '%s'", tc.errorContains)
+				}
+			} else {
+				assert.Empty(t, errors)
+			}
+		})
+	}
 }

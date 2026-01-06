@@ -415,7 +415,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   subnet                   = "10.1.0.0/24"
   connected_transit        = true
   enable_ipv6              = true
-  subnet_ipv6_cidr         = "2600:1f16:11b3:4800::/64"
+  subnet_ipv6_cidr  = "2600:1f16:11b3:4900::/64" // Not required for gcp.
 }
 ```
 
@@ -511,7 +511,7 @@ The following arguments are supported:
 * `enable_multi_tier_transit` - (Optional) Enable Multi-tier Transit mode on transit gateway. When enabled, transit gateway will propagate routes it receives from its transit peering peer to other transit peering peers. `local_as_number` is required. Default value: false. Available as of provider version R2.19+.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive packet CPU re-balancing on transit gateway. Valid values: true, false. Default value: false. Available in provider version R2.21.2+.
 * `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false. Available as of provider version R.2.22.1+.
-* `enable_ipv6` - (Optional) To enable IPv6 CIDR in Transit Gateway. Only AWS, Azure, AzureGov and AWSGov are supported.
+* `enable_ipv6` - (Optional) To enable IPv6 CIDR in Transit Gateway. Only AWS, Azure, AzureGov, AWSGov and GCP are supported.
 * `subnet_ipv6_cidr` - (Optional/Computed) The IPv6 CIDR block of the subnet used to create the Transit Gateway. This argument is supported only on AWS, Azure, AzureGov, and AWSGov. Required when creating a gateway with `enable_ipv6` set to true. When enabling IPv6 on an existing gateway, this value will be computed from the controller. Changing this value while IPv6 is enabled will force recreation of the gateway.
 * `tunnel_encryption_cipher` - (Optional) Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).
 * `tunnel_forward_secrecy` - (Optional) PPerfect Forward Secrecy (PFS) for gateway peering tunnels. Config Options are enable/disable.

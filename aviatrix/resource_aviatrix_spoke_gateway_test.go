@@ -620,6 +620,55 @@ func TestAccAviatrixSpokeGateway_ipv6Azure(t *testing.T) {
 	})
 }
 
+// TestAccAviatrixSpokeGateway_ipv6GCP tests IPv6 for GCP spoke gateway (no subnet_ipv6_cidr required)
+func TestAccAviatrixSpokeGateway_ipv6GCP(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_gateway.test_spoke_gateway_ipv6_gcp"
+
+	msgCommon := ". Set SKIP_SPOKE_GATEWAY_IPV6_GCP to yes to skip GCP Spoke Gateway IPv6 tests"
+
+	skipGwIPv6GCP := os.Getenv("SKIP_SPOKE_GATEWAY_IPV6_GCP")
+	if skipGwIPv6GCP == "yes" {
+		t.Skip("Skipping GCP Spoke Gateway IPv6 test as SKIP_SPOKE_GATEWAY_IPV6_GCP is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGCPSpokeGatewayIPv6Check(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeGatewayConfigGCPIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-gcp-ipv6-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", "n1-standard-1"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
+					resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+					// For GCP, subnet_ipv6_cidr should be computed/optional, not required
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ipv6_cidr"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gcloud_project_credentials_filepath",
+					"vnet_and_resource_group_names",
+				},
+			},
+		},
+	})
+}
+
 func preAwsSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
 	requiredEnvVars := []string{
 		"AWS_VPC_ID4",
@@ -657,6 +706,21 @@ func preAzureSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
 		"AZURE_REGION",
 		"AZURE_GW_SIZE",
 		"AZURE_SUBNET_IPV6_CIDR",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func preGCPSpokeGatewayIPv6Check(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"GCP_VPC_ID",
+		"GCP_ZONE",
+		"GCP_SUBNET",
+		"GCP_PROJECT_ID",
+		"GOOGLE_CREDENTIALS_FILEPATH",
 	}
 	for _, v := range requiredEnvVars {
 		if os.Getenv(v) == "" {
@@ -855,4 +919,26 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_insane" {
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_INSANE_MODE_SUBNET"),
 		os.Getenv("AWS_SUBNET_IPV6_CIDR"), os.Getenv("AWS_AVAILABILITY_ZONE"))
+}
+
+func testAccSpokeGatewayConfigGCPIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_gcp" {
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
+}
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_ipv6_gcp" {
+	cloud_type   = 4
+	account_name = aviatrix_account.test_acc_gcp.account_name
+	gw_name      = "tfg-gcp-ipv6-%[1]s"
+	vpc_id       = "%[4]s"
+	vpc_reg      = "%[5]s"
+	gw_size      = "n1-standard-1"
+	subnet       = "%[6]s"
+	enable_ipv6  = true
+}
+	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"),
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }

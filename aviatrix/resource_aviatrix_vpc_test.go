@@ -129,6 +129,74 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	}
 }
 
+func TestAccAviatrixVpcGCPIPv6(t *testing.T) {
+	var vpc goaviatrix.Vpc
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_vpc.test_vpc_ipv6"
+
+	skipAcc := os.Getenv("SKIP_VPC_IPV6")
+	if skipAcc == "yes" {
+		t.Skip("Skipping VPC IPv6 tests as 'SKIP_VPC_IPV6' is set")
+	}
+
+	// Test GCP IPv6 support with ipv6_access_type
+	skipGCP := os.Getenv("SKIP_VPC_IPV6_GCP")
+	if skipGCP != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_IPV6_GCP' to 'yes' to skip VPC IPv6 tests in GCP"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preVpcIPv6GCPCheck(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckVpcDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccVpcConfigGCPIPv6(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckVpcExists(resourceName, &vpc),
+						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-ipv6-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "cloud_type", "4"),
+						resource.TestCheckResourceAttr(resourceName, "enable_ipv6", "true"),
+						resource.TestCheckResourceAttr(resourceName, "ipv6_access_type", "INTERNAL"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.region", "us-east1"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.name", "us-east1-subnet-ipv6"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.cidr", "10.0.0.0/16"),
+						resource.TestCheckResourceAttr(resourceName, "subnets.0.ipv6_access_type", "EXTERNAL"),
+						resource.TestCheckResourceAttrSet(resourceName, "subnets.0.ipv6_cidr"),
+						resource.TestCheckResourceAttrSet(resourceName, "vpc_ipv6_cidr"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+					ImportStateVerifyIgnore: []string{
+						"gcloud_project_credentials_filepath",
+					},
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping VPC IPv6 tests in GCP as 'SKIP_VPC_IPV6_GCP' is set")
+	}
+}
+
+func preVpcIPv6GCPCheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"GCP_PROJECT_ID",
+		"GOOGLE_CREDENTIALS_FILEPATH",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
 func testAccVpcConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc" {
@@ -242,4 +310,29 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccVpcConfigGCPIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_gcp" {
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
+}
+resource "aviatrix_vpc" "test_vpc_ipv6" {
+	cloud_type       = 4
+	account_name     = aviatrix_account.test_acc_gcp.account_name
+	name             = "tfg-ipv6-%[1]s"
+	enable_ipv6      = true
+	ipv6_access_type = "INTERNAL"
+	vpc_ipv6_cidr    = "fd00::/56"
+	subnets {
+		name             = "us-east1-subnet-ipv6"
+		region           = "us-east1"
+		cidr             = "10.0.0.0/16"
+		ipv6_access_type = "EXTERNAL"
+	}
+}
+	`, rName, os.Getenv("GCP_PROJECT_ID"), os.Getenv("GOOGLE_CREDENTIALS_FILEPATH"))
 }
