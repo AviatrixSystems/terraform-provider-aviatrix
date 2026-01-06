@@ -222,7 +222,8 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 		"async":       "true",
 	}
 
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) GetFirewallInstanceImages(vpcId string) (*[]FirewallInstanceImage, error) {

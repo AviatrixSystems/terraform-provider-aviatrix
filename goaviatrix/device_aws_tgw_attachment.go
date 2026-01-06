@@ -26,7 +26,8 @@ func (c *Client) CreateDeviceAwsTgwAttachment(attachment *DeviceAwsTgwAttachment
 	attachment.Action = "attach_cloudwan_device_to_aws_tgw"
 	attachment.CID = c.CID
 	attachment.Async = true
-	return c.PostAsyncAPI(attachment.Action, attachment, BasicCheck)
+	_, err := c.PostAsyncAPI(attachment.Action, attachment, BasicCheck)
+	return err
 }
 
 func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment) (*DeviceAwsTgwAttachment, error) {

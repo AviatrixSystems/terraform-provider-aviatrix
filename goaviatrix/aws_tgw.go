@@ -157,7 +157,8 @@ func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
 	awsTgw.Async = true
-	return c.PostAsyncAPI(awsTgw.Action, awsTgw, BasicCheck)
+	_, err := c.PostAsyncAPI(awsTgw.Action, awsTgw, BasicCheck)
+	return err
 }
 
 func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
@@ -433,7 +434,8 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 		"route_domain_name": SecurityDomainName,
 		"async":             "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err = c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gateway, SecurityDomainName string) error {
@@ -457,7 +459,8 @@ func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gate
 		}
 		return nil
 	}
-	return c.PostAsyncAPI(form["action"], form, check)
+	_, err = c.PostAsyncAPI(form["action"], form, check)
+	return err
 }
 
 func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDomainName string) error {
@@ -486,7 +489,8 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 	if vpcSolo.CustomizedRoutes != "" {
 		form["route_table_list"] = vpcSolo.RouteTables
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
@@ -497,7 +501,8 @@ func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
 		"vpc_name": vpcID,
 		"async":    "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) GetTransitGwFromVpcID(awsTgw *AWSTgw, gateway *Gateway) (*Gateway, error) {

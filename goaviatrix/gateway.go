@@ -419,7 +419,8 @@ func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.Action = "connect_container"
 	gateway.Async = true
 
-	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	_, err := c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	return err
 }
 
 func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
@@ -437,7 +438,8 @@ func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
 		"tag":            "",
 		"async":          "true",
 	}
-	return c.PostAsyncAPI(data["action"], data, BasicCheck)
+	_, err := c.PostAsyncAPI(data["action"], data, BasicCheck)
+	return err
 }
 
 func (c *Client) DeletePublicSubnetFilteringGateway(gateway *Gateway) error {
@@ -458,7 +460,8 @@ func (c *Client) EnablePublicSubnetFilteringHAGateway(gateway *Gateway) error {
 		"route_table":    gateway.RouteTable,
 		"async":          "true",
 	}
-	return c.PostAsyncAPI(data["action"], data, BasicCheck)
+	_, err := c.PostAsyncAPI(data["action"], data, BasicCheck)
+	return err
 }
 
 type PublicSubnetFilteringGatewayDetails struct {
@@ -531,7 +534,8 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	gateway.Action = "create_peering_ha_gateway"
 	gateway.Async = true
 
-	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	_, err := c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	return err
 }
 
 func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
@@ -637,7 +641,8 @@ func (c *Client) UpdateGateway(gateway *Gateway) error {
 	gateway.Action = "edit_gw_config"
 	gateway.Async = true
 
-	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	_, err := c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
+	return err
 }
 
 func (c *Client) DeleteGateway(gateway *Gateway) error {
@@ -649,7 +654,8 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 		"async":      "true",
 	}
 
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) EnableSNat(gateway *Gateway) error {

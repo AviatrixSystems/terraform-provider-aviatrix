@@ -328,94 +328,21 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
-func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
+// PostAsyncAPI submits an async request and waits for completion.
+// Returns (ha_gw_name, error) - ha_gw_name is populated if the response contains it.
+func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
 	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc)
 }
 
-func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
-	log.Printf("[DEBUG] Post AsyncAPI %s: %v", action, i)
-	resp, err := c.PostContext(ctx, c.baseURL, i)
-	if err != nil {
-		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
-	}
-	var data struct {
-		Return bool   `json:"return"`
-		Result string `json:"results"`
-		Reason string `json:"reason"`
-	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	resp.Body.Close()
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
-	}
-	if !data.Return {
-		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
-	}
-
-	requestID := data.Result
-	form := map[string]string{
-		"action":     "check_task_status",
-		"CID":        c.CID,
-		"request_id": requestID,
-	}
-
-	const maxPoll = 360
-	sleepDuration := time.Second * 10
-	var j int
-	for ; j < maxPoll; j++ {
-		resp, err = c.PostContext(ctx, c.baseURL, form)
-		if err != nil {
-			// Could be transient HTTP error, e.g. EOF error
-			time.Sleep(sleepDuration)
-			continue
-		}
-		buf = new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		err = json.Unmarshal(buf.Bytes(), &data)
-		if err != nil {
-			// Only check for status codes after trying to parse JSON because we may get an error with a valid JSON body
-			// and that is a valid and actionable response...
-			if resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusServiceUnavailable {
-				time.Sleep(sleepDuration)
-				continue
-			}
-			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
-		}
-		if !data.Return {
-			if data.Reason != "" && data.Reason != "REQUEST_IN_PROGRESS" {
-				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
-			}
-
-			// Not done yet
-			time.Sleep(sleepDuration)
-			continue
-		}
-
-		// Async API is done, return result of checkFunc
-		return checkFunc(action, "Post", data.Result, data.Return)
-	}
-	// Waited for too long and async API never finished
-	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
-}
-
-// PostAsyncAPIHaGw is similar to PostAsyncAPI but also returns the ha_gw_name from the response
-func (c *Client) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
-	return c.PostAsyncAPIContextHaGw(context.Background(), action, i, checkFunc)
-}
-
 //nolint:cyclop,funlen
-func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
-	log.Printf("[DEBUG] Post AsyncAPI HaGw %s: %v", action, i)
+func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+	log.Printf("[DEBUG] Post AsyncAPI %s: %v", action, i)
 	resp, err := c.PostContext(ctx, c.baseURL, i)
 	if err != nil {
 		return "", fmt.Errorf("HTTP POST %s failed: %w", action, err)
 	}
 
-	// Response struct that includes ha_gw_name
+	// Response struct that includes ha_gw_name for HA gateway creation
 	var data struct {
 		Return   bool   `json:"return"`
 		Result   string `json:"results"`
@@ -451,6 +378,7 @@ func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i i
 	for ; j < maxPoll; j++ {
 		resp, err = c.PostContext(ctx, c.baseURL, form)
 		if err != nil {
+			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
 			continue
 		}
@@ -459,6 +387,8 @@ func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i i
 		resp.Body.Close()
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
+			// Only check for status codes after trying to parse JSON because we may get an error with a valid JSON body
+			// and that is a valid and actionable response...
 			if resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusServiceUnavailable {
 				time.Sleep(sleepDuration)
 				continue
@@ -475,17 +405,20 @@ func (c *Client) PostAsyncAPIContextHaGw(ctx context.Context, action string, i i
 			if data.Reason != "" && data.Reason != "REQUEST_IN_PROGRESS" {
 				return "", fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
 			}
+
+			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
 		}
 
-		// Async API is done
+		// Async API is done, return result of checkFunc
 		if err := checkFunc(action, "Post", data.Result, data.Return); err != nil {
 			return "", err
 		}
 		return haGwName, nil
 	}
-	return "", fmt.Errorf("waited %s but async API never finished", maxPoll*sleepDuration)
+	// Waited for too long and async API never finished
+	return "", fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }
 
 // checkAPIResp will decode the response and check for any errors with the provided checkFunc

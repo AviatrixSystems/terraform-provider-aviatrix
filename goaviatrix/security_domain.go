@@ -87,7 +87,8 @@ func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 	securityDomain.Action = "add_route_domain"
 	securityDomain.Async = true
 
-	return c.PostAsyncAPI(securityDomain.Action, securityDomain, BasicCheck)
+	_, err := c.PostAsyncAPI(securityDomain.Action, securityDomain, BasicCheck)
+	return err
 }
 
 func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, error) {

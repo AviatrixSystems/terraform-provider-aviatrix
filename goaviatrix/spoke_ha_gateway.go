@@ -43,8 +43,8 @@ func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error)
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 	spokeHaGateway.Async = true // Enable async mode
 
-	// Use PostAsyncAPIHaGw which captures ha_gw_name from the async response
-	haGwName, err := c.PostAsyncAPIHaGw(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	// Use PostAsyncAPI which captures ha_gw_name from the async response
+	haGwName, err := c.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 	if err != nil {
 		return "", err
 	}

@@ -27,7 +27,8 @@ func (c *Client) CreateAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "add_tgw_peering"
 	awsTgwPeering.Async = true
-	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	_, err := c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	return err
 }
 
 func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
@@ -67,7 +68,8 @@ func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "delete_tgw_peering"
 	awsTgwPeering.Async = true
-	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	_, err := c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	return err
 }
 
 func DiffSuppressFuncAwsTgwPeeringTgwName1(k, old, new string, d *schema.ResourceData) bool {

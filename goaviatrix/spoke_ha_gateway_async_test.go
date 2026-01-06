@@ -7,26 +7,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// MockAsyncAPIHaGwClient interface for testing async API calls that return ha_gw_name
-type MockAsyncAPIHaGwClient interface {
-	PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error)
+// MockAsyncAPIClient interface for testing async API calls that return (string, error)
+type MockAsyncAPIClient interface {
+	PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error)
 }
 
-// TestableClientHaGw wraps Client to allow mocking PostAsyncAPIHaGw
+// TestableClientHaGw wraps Client to allow mocking PostAsyncAPI
 type TestableClientHaGw struct {
 	*Client
-	MockAsyncAPIHaGw MockAsyncAPIHaGwClient
+	MockAsyncAPI MockAsyncAPIClient
 }
 
-// Override PostAsyncAPIHaGw to use the mock
-func (tc *TestableClientHaGw) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
-	if tc.MockAsyncAPIHaGw != nil {
-		return tc.MockAsyncAPIHaGw.PostAsyncAPIHaGw(action, i, checkFunc)
+// Override PostAsyncAPI to use the mock
+func (tc *TestableClientHaGw) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+	if tc.MockAsyncAPI != nil {
+		return tc.MockAsyncAPI.PostAsyncAPI(action, i, checkFunc)
 	}
-	return tc.Client.PostAsyncAPIHaGw(action, i, checkFunc)
+	return tc.Client.PostAsyncAPI(action, i, checkFunc)
 }
 
-// MockClientHaGw implements MockAsyncAPIHaGwClient
+// MockClientHaGw implements MockAsyncAPIClient
 type MockClientHaGw struct {
 	// Store the last call for verification
 	LastAction    string
@@ -38,7 +38,7 @@ type MockClientHaGw struct {
 	CallCount          int
 }
 
-func (m *MockClientHaGw) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+func (m *MockClientHaGw) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
 	m.CallCount++
 	m.LastAction = action
 	m.LastInterface = i
@@ -52,8 +52,8 @@ func TestCreateSpokeHaGw_AsyncAPIReturnsHaGwName(t *testing.T) {
 		ShouldReturnHaName: "aws-vpc-1-gw-1-1", // Simulates controller returning actual name
 	}
 	testClient := &TestableClientHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &SpokeHaGateway{
@@ -75,8 +75,8 @@ func TestCreateSpokeHaGw_UserProvidedName(t *testing.T) {
 		ShouldReturnHaName: "", // Async API doesn't return name
 	}
 	testClient := &TestableClientHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &SpokeHaGateway{
@@ -97,8 +97,8 @@ func TestCreateSpokeHaGw_AsyncAPIError(t *testing.T) {
 		ShouldReturnError: expectedError,
 	}
 	testClient := &TestableClientHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &SpokeHaGateway{
@@ -119,8 +119,8 @@ func TestCreateSpokeHaGw_NoNameReturned(t *testing.T) {
 		ShouldReturnHaName: "", // Async API doesn't return name
 	}
 	testClient := &TestableClientHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &SpokeHaGateway{
@@ -150,8 +150,8 @@ func TestCreateSpokeHaGw_AsyncFlagAlwaysTrue(t *testing.T) {
 				ShouldReturnHaName: "ha-gw-name",
 			}
 			testClient := &TestableClientHaGw{
-				Client:           &Client{CID: "test-cid"},
-				MockAsyncAPIHaGw: mockAPI,
+				Client:       &Client{CID: "test-cid"},
+				MockAsyncAPI: mockAPI,
 			}
 
 			gateway := &SpokeHaGateway{
@@ -175,8 +175,8 @@ func TestCreateSpokeHaGw_PriorityOrder(t *testing.T) {
 		ShouldReturnHaName: "async-returned-name", // Async API returns name
 	}
 	testClient := &TestableClientHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &SpokeHaGateway{
@@ -191,15 +191,15 @@ func TestCreateSpokeHaGw_PriorityOrder(t *testing.T) {
 	assert.Equal(t, "async-returned-name", gwName, "Async response should take priority over user-provided name")
 }
 
-// Helper method to simulate CreateSpokeHaGw with mocked PostAsyncAPIHaGw
+// Helper method to simulate CreateSpokeHaGw with mocked PostAsyncAPI
 func (tc *TestableClientHaGw) CreateSpokeHaGwWithMock(spokeHaGateway *SpokeHaGateway) (string, error) {
 	// This replicates the exact logic from the real CreateSpokeHaGw function
 	spokeHaGateway.CID = tc.Client.CID
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 	spokeHaGateway.Async = true // Enable async mode
 
-	// Use PostAsyncAPIHaGw which captures ha_gw_name from the async response
-	haGwName, err := tc.PostAsyncAPIHaGw(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	// Use PostAsyncAPI which captures ha_gw_name from the async response
+	haGwName, err := tc.PostAsyncAPI(spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 	if err != nil {
 		return "", err
 	}

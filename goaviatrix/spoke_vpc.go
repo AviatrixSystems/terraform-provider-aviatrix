@@ -104,7 +104,8 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.Action = "create_multicloud_primary_gateway"
 	spoke.Async = true
 
-	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
+	_, err := c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
+	return err
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
@@ -175,7 +176,8 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		return nil
 	}
 
-	return c.PostAsyncAPI(form["action"], form, checkFunc)
+	_, err := c.PostAsyncAPI(form["action"], form, checkFunc)
+	return err
 }
 
 func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {

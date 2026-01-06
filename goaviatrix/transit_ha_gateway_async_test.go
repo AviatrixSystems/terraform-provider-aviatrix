@@ -7,26 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// MockAsyncAPIHaGwClientTransit interface for testing async API calls that return ha_gw_name
-type MockAsyncAPIHaGwClientTransit interface {
-	PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error)
-}
-
-// TestableClientTransitHaGw wraps Client to allow mocking PostAsyncAPIHaGw for transit
+// TestableClientTransitHaGw wraps Client to allow mocking PostAsyncAPI for transit
 type TestableClientTransitHaGw struct {
 	*Client
-	MockAsyncAPIHaGw MockAsyncAPIHaGwClientTransit
+	MockAsyncAPI MockAsyncAPIClient
 }
 
-// Override PostAsyncAPIHaGw to use the mock
-func (tc *TestableClientTransitHaGw) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
-	if tc.MockAsyncAPIHaGw != nil {
-		return tc.MockAsyncAPIHaGw.PostAsyncAPIHaGw(action, i, checkFunc)
+// Override PostAsyncAPI to use the mock
+func (tc *TestableClientTransitHaGw) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+	if tc.MockAsyncAPI != nil {
+		return tc.MockAsyncAPI.PostAsyncAPI(action, i, checkFunc)
 	}
-	return tc.Client.PostAsyncAPIHaGw(action, i, checkFunc)
+	return tc.Client.PostAsyncAPI(action, i, checkFunc)
 }
 
-// MockClientTransitHaGw implements MockAsyncAPIHaGwClientTransit
+// MockClientTransitHaGw implements MockAsyncAPIClient
 type MockClientTransitHaGw struct {
 	// Store the last call for verification
 	LastAction    string
@@ -38,7 +33,7 @@ type MockClientTransitHaGw struct {
 	CallCount          int
 }
 
-func (m *MockClientTransitHaGw) PostAsyncAPIHaGw(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
+func (m *MockClientTransitHaGw) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) (string, error) {
 	m.CallCount++
 	m.LastAction = action
 	m.LastInterface = i
@@ -52,8 +47,8 @@ func TestCreateTransitHaGw_NonEdge_AsyncAPIReturnsHaGwName(t *testing.T) {
 		ShouldReturnHaName: "transit-gw-1-1", // Simulates controller returning actual name
 	}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -62,7 +57,7 @@ func TestCreateTransitHaGw_NonEdge_AsyncAPIReturnsHaGwName(t *testing.T) {
 		CloudType:     1,  // AWS (non-Edge)
 	}
 
-	gwName, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	gwName, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, mockAPI.CallCount)
@@ -76,8 +71,8 @@ func TestCreateTransitHaGw_NonEdge_UserProvidedName(t *testing.T) {
 		ShouldReturnHaName: "", // Async API doesn't return name
 	}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -86,7 +81,7 @@ func TestCreateTransitHaGw_NonEdge_UserProvidedName(t *testing.T) {
 		CloudType:     1,                 // AWS
 	}
 
-	gwName, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	gwName, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "my-custom-ha-gw", gwName, "Should use user-provided HA gateway name")
@@ -99,8 +94,8 @@ func TestCreateTransitHaGw_NonEdge_AsyncAPIError(t *testing.T) {
 		ShouldReturnError: expectedError,
 	}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -109,21 +104,21 @@ func TestCreateTransitHaGw_NonEdge_AsyncAPIError(t *testing.T) {
 		CloudType:     1, // AWS
 	}
 
-	_, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	_, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, 1, mockAPI.CallCount)
 }
 
-// TestCreateTransitHaGw_NonEdge_NoNameReturned tests error when no HA gateway name is available
+// TestCreateTransitHaGw_NonEdge_NoNameReturned tests when no HA gateway name is returned
 func TestCreateTransitHaGw_NonEdge_NoNameReturned(t *testing.T) {
 	mockAPI := &MockClientTransitHaGw{
 		ShouldReturnHaName: "", // Async API doesn't return name
 	}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -132,10 +127,11 @@ func TestCreateTransitHaGw_NonEdge_NoNameReturned(t *testing.T) {
 		CloudType:     1,  // AWS
 	}
 
-	_, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	gwName, err := testClient.CreateTransitHaGwWithMock(gateway)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "HA gateway name not found")
+	// Unlike spoke, transit returns empty string without error when no name is found
+	assert.NoError(t, err)
+	assert.Empty(t, gwName)
 }
 
 // TestCreateTransitHaGw_NonEdge_AsyncFlagAlwaysTrue tests that Async flag is always set to true for non-Edge types
@@ -157,8 +153,8 @@ func TestCreateTransitHaGw_NonEdge_AsyncFlagAlwaysTrue(t *testing.T) {
 				ShouldReturnHaName: "ha-gw-name",
 			}
 			testClient := &TestableClientTransitHaGw{
-				Client:           &Client{CID: "test-cid"},
-				MockAsyncAPIHaGw: mockAPI,
+				Client:       &Client{CID: "test-cid"},
+				MockAsyncAPI: mockAPI,
 			}
 
 			gateway := &TransitHaGateway{
@@ -168,7 +164,7 @@ func TestCreateTransitHaGw_NonEdge_AsyncFlagAlwaysTrue(t *testing.T) {
 				Async:         tt.initialAsync,
 			}
 
-			_, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+			_, err := testClient.CreateTransitHaGwWithMock(gateway)
 			assert.NoError(t, err)
 
 			calledGateway := mockAPI.LastInterface.(*TransitHaGateway)
@@ -183,8 +179,8 @@ func TestCreateTransitHaGw_NonEdge_PriorityOrder(t *testing.T) {
 		ShouldReturnHaName: "async-returned-name", // Async API returns name
 	}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -193,7 +189,7 @@ func TestCreateTransitHaGw_NonEdge_PriorityOrder(t *testing.T) {
 		CloudType:     1,                    // AWS
 	}
 
-	gwName, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	gwName, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	assert.NoError(t, err)
 	// Async response should take priority
@@ -204,8 +200,8 @@ func TestCreateTransitHaGw_NonEdge_PriorityOrder(t *testing.T) {
 func TestCreateTransitHaGw_EdgeCloudType_UsesContextAPI(t *testing.T) {
 	mockAPI := &MockClientTransitHaGw{}
 	testClient := &TestableClientTransitHaGw{
-		Client:           &Client{CID: "test-cid"},
-		MockAsyncAPIHaGw: mockAPI,
+		Client:       &Client{CID: "test-cid"},
+		MockAsyncAPI: mockAPI,
 	}
 
 	gateway := &TransitHaGateway{
@@ -214,17 +210,17 @@ func TestCreateTransitHaGw_EdgeCloudType_UsesContextAPI(t *testing.T) {
 		CloudType:     EDGEEQUINIX, // Edge cloud type
 	}
 
-	gwName, err := testClient.CreateTransitHaGwWithMockHaGw(gateway)
+	gwName, err := testClient.CreateTransitHaGwWithMock(gateway)
 
 	assert.NoError(t, err)
-	// PostAsyncAPIHaGw should NOT be called for Edge cloud types
-	assert.Equal(t, 0, mockAPI.CallCount, "PostAsyncAPIHaGw should not be called for Edge cloud types")
+	// PostAsyncAPI should NOT be called for Edge cloud types
+	assert.Equal(t, 0, mockAPI.CallCount, "PostAsyncAPI should not be called for Edge cloud types")
 	// For Edge types, the mock returns a placeholder response
 	assert.Equal(t, "mock-edge-response", gwName)
 }
 
-// Helper method to simulate CreateTransitHaGw with mocked PostAsyncAPIHaGw
-func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMockHaGw(transitHaGateway *TransitHaGateway) (string, error) {
+// Helper method to simulate CreateTransitHaGw with mocked PostAsyncAPI
+func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMock(transitHaGateway *TransitHaGateway) (string, error) {
 	// This replicates the logic from the real CreateTransitHaGw function
 	transitHaGateway.CID = tc.Client.CID
 	transitHaGateway.Action = "create_multicloud_ha_gateway"
@@ -233,8 +229,8 @@ func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMockHaGw(transitHaGate
 	if !IsCloudType(transitHaGateway.CloudType, EdgeRelatedCloudTypes) {
 		transitHaGateway.Async = true // Enable async mode
 
-		// Use PostAsyncAPIHaGw which captures ha_gw_name from the async response
-		haGwName, err := tc.PostAsyncAPIHaGw(transitHaGateway.Action, transitHaGateway, BasicCheck)
+		// Use PostAsyncAPI which captures ha_gw_name from the async response
+		haGwName, err := tc.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
 		if err != nil {
 			return "", err
 		}
@@ -249,7 +245,7 @@ func (tc *TestableClientTransitHaGw) CreateTransitHaGwWithMockHaGw(transitHaGate
 			return transitHaGateway.GwName, nil
 		}
 
-		return "", errors.New("HA gateway name not found")
+		return "", nil
 	}
 
 	// For Edge cloud types, we would normally call PostAPIContext2HaGw

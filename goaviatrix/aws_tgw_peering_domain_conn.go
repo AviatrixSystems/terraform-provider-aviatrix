@@ -37,7 +37,8 @@ func (c *Client) CreateDomainConn(domainConn *DomainConn) error {
 		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
 		"async":                         "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) GetDomainConn(domainConn *DomainConn) error {
@@ -79,7 +80,8 @@ func (c *Client) DeleteDomainConn(domainConn *DomainConn) error {
 		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
 		"async":                         "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func DiffSuppressFuncAwsTgwPeeringDomainConnTgwName1(k, old, new string, d *schema.ResourceData) bool {

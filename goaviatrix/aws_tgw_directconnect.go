@@ -40,7 +40,8 @@ func (c *Client) CreateAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConn
 	awsTgwDirectConnect.CID = c.CID
 	awsTgwDirectConnect.Action = "attach_direct_connect_to_tgw"
 	awsTgwDirectConnect.Async = true
-	return c.PostAsyncAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
+	_, err := c.PostAsyncAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
+	return err
 }
 
 func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) (*AwsTgwDirectConnect, error) {

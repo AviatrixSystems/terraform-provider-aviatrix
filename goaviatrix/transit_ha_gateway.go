@@ -64,8 +64,19 @@ func (c *Client) CreateTransitHaGw(transitHaGateway *TransitHaGateway) (string, 
 		}
 	} else {
 		transitHaGateway.Async = true
-		err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
-		return "", err
+		haGwName, err := c.PostAsyncAPI(transitHaGateway.Action, transitHaGateway, BasicCheck)
+		if err != nil {
+			return "", err
+		}
+		// If async API returned the HA gateway name, use it
+		if haGwName != "" {
+			return haGwName, nil
+		}
+		// If user provided a specific HA gateway name, use it
+		if transitHaGateway.GwName != "" {
+			return transitHaGateway.GwName, nil
+		}
+		return "", nil
 	}
 
 	// create the ZTP file for Equinix Edge transit gateway

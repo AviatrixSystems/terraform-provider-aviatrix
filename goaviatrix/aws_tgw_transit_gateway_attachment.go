@@ -48,7 +48,8 @@ func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		"gateway_name":      awsTgwTransitGwAttachment.TransitGatewayName,
 		"async":             "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	_, err := c.PostAsyncAPI(form["action"], form, BasicCheck)
+	return err
 }
 
 func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) (*AwsTgwTransitGwAttachment, error) {
@@ -86,5 +87,6 @@ func (c *Client) DeleteAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		}
 		return nil
 	}
-	return c.PostAsyncAPI(form["action"], form, check)
+	_, err := c.PostAsyncAPI(form["action"], form, check)
+	return err
 }
