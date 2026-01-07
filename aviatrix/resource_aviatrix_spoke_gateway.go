@@ -2434,7 +2434,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.EditPrivateRouteTableConfig(gateway, routeTables)
 		if err != nil {
-			return fmt.Errorf("could not edit private route table config: %v", err)
+			return fmt.Errorf("could not edit private route table config: %s", err)
 		}
 	}
 
