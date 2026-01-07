@@ -238,6 +238,7 @@ type Gateway struct {
 	SubnetIPv6Cidr                  string                              `json:"gw_subnet_ipv6_cidr,omitempty"`
 	TunnelEncryptionCipher          string                              `json:"ph2_encryption_policy,omitempty"`
 	TunnelForwardSecrecy            string                              `json:"ph2_pfs_policy,omitempty"`
+	PrivateRouteTableConfig         []string                            `json:"private_route_table_config,omitempty"`
 }
 
 type HaGateway struct {
@@ -496,6 +497,17 @@ func (c *Client) EditPublicSubnetFilteringRouteTableList(gateway *Gateway, route
 		"CID":          c.CID,
 		"gateway_name": gateway.GwName,
 		"route_table":  strings.Join(routeTables, ", "),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditPrivateRouteTableConfig(gateway *Gateway, routeTables []string) error {
+	log.Printf("[INFO] EditPrivateRouteTableConfig routeTables: %v", routeTables)
+	data := map[string]string{
+		"action":               "edit_private_route_tables",
+		"CID":                  c.CID,
+		"gateway_name":         gateway.GwName,
+		"private_route_tables": strings.Join(routeTables, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }

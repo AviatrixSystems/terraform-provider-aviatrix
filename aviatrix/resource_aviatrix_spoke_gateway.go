@@ -315,6 +315,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
+			"private_route_table_config": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "Private route table configuration.",
+			},
 			"spoke_bgp_manual_advertise_cidrs": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -1429,6 +1435,25 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if privateRouteTableConfig, ok := d.GetOk("private_route_table_config"); ok {
+		log.Printf("[INFO] resourceAviatrixSpokeGatewayCreate privateRouteTableConfig: %v", privateRouteTableConfig)
+		var routeTables []string
+		for _, v := range privateRouteTableConfig.(*schema.Set).List() {
+			routeTables = append(routeTables, v.(string))
+		}
+		if len(routeTables) > 0 {
+			gw := &goaviatrix.Gateway{
+				GwName: d.Get("gw_name").(string),
+			}
+			err := client.EditPrivateRouteTableConfig(gw, routeTables)
+			if err != nil {
+				return fmt.Errorf("could not set private route table config after spoke gateway creation: %w", err)
+			}
+		} else {
+			log.Printf("[INFO] resourceAviatrixSpokeGatewayUpdate privateRouteTableConfig is empty")
+		}
+	}
+
 	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
 		err := client.ModifyTunnelDetectionTime(d.Get("gw_name").(string), detectionTime.(int))
 		if err != nil {
@@ -1883,6 +1908,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Set("enable_gro_gso", enableGroGso)
 
+	if err := d.Set("private_route_table_config", gw.PrivateRouteTableConfig); err != nil {
+		return fmt.Errorf("could not set private_route_table_config into state: %v", err)
+	}
 	if d.Get("manage_ha_gateway").(bool) {
 		if gw.HaGw.GwSize == "" {
 			d.Set("ha_availability_domain", "")
@@ -2396,6 +2424,19 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
 	haEnabled := haSubnet != "" || haZone != ""
+
+	if d.HasChange("private_route_table_config") {
+		log.Printf("[INFO] resourceAviatrixSpokeGatewayUpdate has changed private_route_table_config")
+
+		var routeTables []string
+		for _, v := range d.Get("private_route_table_config").(*schema.Set).List() {
+			routeTables = append(routeTables, v.(string))
+		}
+		err := client.EditPrivateRouteTableConfig(gateway, routeTables)
+		if err != nil {
+			return fmt.Errorf("could not edit private route table config: %v", err)
+		}
+	}
 
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
