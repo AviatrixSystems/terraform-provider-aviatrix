@@ -1533,7 +1533,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := d.Set("private_route_table_config", gw.PrivateRouteTableConfig); err != nil {
-		return fmt.Errorf("resourceAviatrixGatewayRead could not set private_route_table_config into state: %v", err)
+		return fmt.Errorf("resourceAviatrixGatewayRead could not set private_route_table_config into state: %w", err)
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
