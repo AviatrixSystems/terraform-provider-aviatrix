@@ -1,0 +1,262 @@
+package aviatrix
+
+import (
+	"context"
+	"errors"
+	"log"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
+)
+
+func resourceAviatrixEdgePlatformHa() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceAviatrixEdgePlatformHaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgePlatformHaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgePlatformHaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgePlatformHaDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"primary_gw_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Primary gateway name.",
+			},
+			"device_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Edge NEO device ID.",
+			},
+			"interfaces": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "WAN/LAN/MANAGEMENT interfaces.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name.",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface type.",
+						},
+						"bandwidth": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "The rate of data can be moved through the interface, requires an integer value. Unit is in Mb/s.",
+							Deprecated:  "Bandwidth will be removed in a future release.",
+						},
+						"enable_dhcp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Enable DHCP.",
+						},
+						"wan_public_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "WAN interface public IP.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IP address.",
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IP.",
+						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
+						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
+					},
+				},
+			},
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"account_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Edge NEO account name.",
+			},
+		},
+	}
+}
+
+func marshalEdgePlatformHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
+	edgeNEOHa := &goaviatrix.EdgeNEOHa{
+		PrimaryGwName:            getString(d, "primary_gw_name"),
+		DeviceId:                 getString(d, "device_id"),
+		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
+	}
+
+	interfaces := getSet(d, "interfaces").List()
+	for _, interface0 := range interfaces {
+		interface1 := mustMap(interface0)
+
+		interface2 := &goaviatrix.EdgeNEOInterface{
+			IfName:       mustString(interface1["name"]),
+			Type:         mustString(interface1["type"]),
+			PublicIp:     mustString(interface1["wan_public_ip"]),
+			Tag:          mustString(interface1["tag"]),
+			Dhcp:         mustBool(interface1["enable_dhcp"]),
+			IpAddr:       mustString(interface1["ip_address"]),
+			GatewayIp:    mustString(interface1["gateway_ip"]),
+			DnsPrimary:   mustString(interface1["dns_server_ip"]),
+			DnsSecondary: mustString(interface1["secondary_dns_server_ip"]),
+			IPv6Addr:     mustString(interface1["ipv6_address"]),
+			GatewayIPv6:  mustString(interface1["gateway_ipv6"]),
+		}
+
+		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, interface2)
+	}
+
+	return edgeNEOHa
+}
+
+func resourceAviatrixEdgePlatformHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+
+	edgeNEOHa := marshalEdgePlatformHaInput(d)
+
+	edgeNEOHaName, err := client.CreateEdgeNEOHa(ctx, edgeNEOHa)
+	if err != nil {
+		return diag.Errorf("failed to create Edge Platform HA: %s", err)
+	}
+
+	d.SetId(edgeNEOHaName)
+	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
+}
+
+func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+
+	if getString(d, "primary_gw_name") == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
+		parts := strings.Split(id, "-hagw")
+		mustSet(d, "primary_gw_name", parts[0])
+		d.SetId(id)
+	}
+
+	edgeNEOHaResp, err := client.GetEdgeNEOHa(ctx, getString(d, "primary_gw_name")+"-hagw")
+	if err != nil {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("could not read Edge Platform HA: %v", err)
+	}
+	mustSet(d, "primary_gw_name", edgeNEOHaResp.PrimaryGwName)
+	mustSet(d, "device_id", edgeNEOHaResp.DeviceId)
+	mustSet(d, "account_name", edgeNEOHaResp.AccountName)
+
+	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
+		mustSet(d, "management_egress_ip_prefix_list", nil)
+	} else {
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
+	}
+
+	var interfaces []map[string]interface{}
+	for _, if0 := range edgeNEOHaResp.InterfaceList {
+		if1 := make(map[string]interface{})
+		if1["name"] = if0.IfName
+		if1["type"] = if0.Type
+		if1["wan_public_ip"] = if0.PublicIp
+		if1["tag"] = if0.Tag
+		if1["enable_dhcp"] = if0.Dhcp
+		if1["ip_address"] = if0.IpAddr
+		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DnsPrimary
+		if1["secondary_dns_server_ip"] = if0.DnsSecondary
+		if1["ipv6_address"] = if0.IPv6Addr
+		if1["gateway_ipv6"] = if0.GatewayIPv6
+
+		interfaces = append(interfaces, if1)
+	}
+
+	if err = d.Set("interfaces", interfaces); err != nil {
+		return diag.Errorf("failed to set interfaces: %s\n", err)
+	}
+
+	d.SetId(edgeNEOHaResp.GwName)
+	return nil
+}
+
+func resourceAviatrixEdgePlatformHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+
+	edgeNEOHa := marshalEdgePlatformHaInput(d)
+
+	d.Partial(true)
+
+	gatewayForEdgeNEOFunctions := &goaviatrix.EdgeNEO{
+		GwName: d.Id(),
+	}
+
+	if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
+		gatewayForEdgeNEOFunctions.InterfaceList = edgeNEOHa.InterfaceList
+		gatewayForEdgeNEOFunctions.ManagementEgressIpPrefix = edgeNEOHa.ManagementEgressIpPrefix
+
+		err := client.UpdateEdgeNEOHa(ctx, gatewayForEdgeNEOFunctions)
+		if err != nil {
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/VLAN interfaces during Edge Platform HA update: %v", err)
+		}
+	}
+
+	d.Partial(false)
+	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
+}
+
+func resourceAviatrixEdgePlatformHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+
+	accountName := getString(d, "account_name")
+
+	err := client.DeleteEdgeNEO(ctx, accountName, d.Id())
+	if err != nil {
+		return diag.Errorf("could not delete Edge Platform HA: %v", err)
+	}
+
+	return nil
+}
