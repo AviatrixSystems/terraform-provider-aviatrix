@@ -9,8 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: build
+  generate:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -28,6 +27,8 @@ jobs:
 
     - name: Commit changes
       run: |
+        git config --local user.email "github-actions@github.com"
+        git config --local user.name "GitHub Actions"
         git add go.mod go.sum
         git commit -m "Update go.mod and go.sum"
         git push
