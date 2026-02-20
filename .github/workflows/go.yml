@@ -6,13 +6,23 @@ on:
       - rc-*
 
 permissions:
-  contents: write
+  id-token: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
+    - name: Get TF Release Token
+      id: get_workflow_token_aviatrixsystems
+      uses: peter-murray/workflow-application-token-action@8e1ba3bf1619726336414f1014e37f17fbadf1db
+      with:
+        organization: AviatrixSystems
+        application_id: ${{ secrets.AVIATRIXDEV_SYSTEMS_TRIGGER_APP_ID }}
+        application_private_key: ${{ secrets.AVIATRIXDEV_SYSTEMS_TRIGGER_PRIVATE_KEY }}
+
     - uses: actions/checkout@v4
+      with:
+        token: ${{ steps.get_workflow_token_aviatrixsystems.outputs.token }}
 
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
