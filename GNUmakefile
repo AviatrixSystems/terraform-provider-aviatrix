@@ -49,12 +49,6 @@ imports:
 fmt:
 	gofmt -s -w $(GOFMT_FILES)
 
-fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
-
-errcheck:
-	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
-
 tools:
 	go get -u github.com/kardianos/govendor
 	go get -u github.com/alecthomas/gometalinter
@@ -89,4 +83,4 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck tools vendor-status test-compile website-lint website website-test
+.PHONY: build test testacc vet fmt tools vendor-status test-compile website-lint website website-test
