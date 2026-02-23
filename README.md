@@ -6,13 +6,16 @@ The [Terraform](https://terraform.io) provider for [Aviatrix](https://aviatrix.c
 
 ## Requirements
 -	Install [Terraform](https://www.terraform.io/downloads.html) 0.12.x/0.13.x/0.14.x/0.15.x (0.11.x or lower is incompatible)
--	Install [Go](https://golang.org/doc/install) 1.18+ (This will be used to build the provider plugin.)
+-	Install [Go](https://golang.org/doc/install) 1.25+ (This will be used to build the provider plugin.)
   - For those using an M1 Macbook, please install the darwin-**arm64** package instead of the darwin-amd64 package
-    - Use [this](https://go.dev/dl/go1.18.2.darwin-arm64.pkg) link for the darwin-arm package (1.18.2) (Latest as of 24 Feb 2023)
+    - Use [this](https://go.dev/dl/go1.25.7.darwin-arm64.pkg) link for the darwin-arm package (1.25.7) (Latest as of 19 Feb 2026)
     - You may find the latest download options [here](https://go.dev/dl/) otherwise
 -	Create a directory, `go/`, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit `~/.bash_profile` to setup the GOPATH environment variable
 
 ## Instructions
+
+This repository is mirrored from an internal repository. Any changes made directly to this repository will likely be overwritten. For guidance on how to contribute, see our [contribution documentation](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/CONTRIBUTING.md)
+
 ### 1. Clone our Aviatrix Terraform repository
 Clone repository to: `$GOPATH/src/github.com/AviatrixSystems/terraform-provider-aviatrix`
 
@@ -28,21 +31,6 @@ $ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 mkdir %GOPATH%\src\github.com\AviatrixSystems
 cd %GOPATH%\src\github.com\AviatrixSystems
 git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
-```
-
-#### Optional: Install `pre-commit`.
-See [here](https://pre-commit.com/#installation). TL;DR:
-```
-$> pip install pre-commit
-
-OR
-
-$> nix profile install nixpkgs#pre-commit
-```
-
-Then run:
-```
-pre-commit install
 ```
 
 ### 2. Enter the provider directory and build the provider
@@ -94,7 +82,7 @@ Check out the Git branch where the fix is, which corresponds to the Controller v
 # assuming current working directory is the local git repo
 
 $ git pull
-$ git checkout UserConnect-6.7
+$ git checkout rc-8.1.0
 $ make fmt
 $ make build13
 ```
