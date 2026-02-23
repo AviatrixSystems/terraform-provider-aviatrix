@@ -13,21 +13,17 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-
     - name: Get TF Release Token
-      id: get_tf_release_token
+      id: get_workflow_token_aviatrixsystems
       uses: peter-murray/workflow-application-token-action@8e1ba3bf1619726336414f1014e37f17fbadf1db
       with:
         organization: AviatrixSystems
         application_id: ${{ secrets.AVIATRIXDEV_SYSTEMS_TRIGGER_APP_ID }}
         application_private_key: ${{ secrets.AVIATRIXDEV_SYSTEMS_TRIGGER_PRIVATE_KEY }}
-    
-    - name: Config git url AviatrixPlatform
-      env:
-        AVIATRIX_SYSTEMS_TOKEN: ${{ steps.get_workflow_token_aviatrixsystems.outputs.token }}
-      run: |
-        git config --global url.https://git:${AVIATRIX_SYSTEMS_TOKEN}@github.com/AviatrixSystems/.insteadOf https://github.com/AviatrixSystems
+
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ steps.get_workflow_token_aviatrixsystems.outputs.token }}
 
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
@@ -41,8 +37,6 @@ jobs:
         go mod tidy
 
     - name: Commit changes
-      env:
-        GITHUB_TOKEN: ${{ steps.get_tf_release_token.outputs.token }}
       run: |
         git config --local user.email "github-actions@github.com"
         git config --local user.name "GitHub Actions"
