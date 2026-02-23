@@ -14,7 +14,7 @@ The [Terraform](https://terraform.io) provider for [Aviatrix](https://aviatrix.c
 
 ## Instructions
 
-This repository is mirrored from an internal repository. Any changes made directly to this repository will likely be overwritten. For guidance on how to contribute, see our [contribution documentation](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/CONTRIBUTING.md)
+This repository is mirrored from an internal repository. Any changes made directly to this repository will be overwritten. For guidance on how to contribute, see our [contribution documentation](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/CONTRIBUTING.md)
 
 ### 1. Clone our Aviatrix Terraform repository
 Clone repository to: `$GOPATH/src/github.com/AviatrixSystems/terraform-provider-aviatrix`
