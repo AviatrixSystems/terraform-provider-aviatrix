@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAwsTgwIntraDomainInspection_basic(t *testing.T) {
@@ -168,7 +170,7 @@ func testAccCheckAwsTgwIntraDomainInspectionExists(resourceName string, tgwName 
 			return fmt.Errorf("aws tgw intra domain inspection ID is not set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		intraDomainInspection := &goaviatrix.IntraDomainInspection{
 			TgwName:         tgwName,
@@ -176,11 +178,11 @@ func testAccCheckAwsTgwIntraDomainInspectionExists(resourceName string, tgwName 
 		}
 
 		err := client.GetIntraDomainInspectionStatus(context.Background(), intraDomainInspection)
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aws tgw intra domain inspection disabled")
 		}
 		if err != nil {
-			return fmt.Errorf("failed to get aws tgw intra domain inspection status: %v", err)
+			return fmt.Errorf("failed to get aws tgw intra domain inspection status: %w", err)
 		}
 
 		return nil
@@ -188,7 +190,7 @@ func testAccCheckAwsTgwIntraDomainInspectionExists(resourceName string, tgwName 
 }
 
 func testAccCheckAwsTgwIntraDomainInspectionDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_intra_domain_inspection" {

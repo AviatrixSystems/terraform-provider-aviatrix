@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixTransitGatewayPeering() *schema.Resource {
@@ -19,7 +21,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 		Update: resourceAviatrixTransitGatewayPeeringUpdate,
 		Delete: resourceAviatrixTransitGatewayPeeringDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,7 +105,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.Get("enable_peering_over_private_network").(bool)
+					return !getBool(d, "enable_peering_over_private_network")
 				},
 				Description: "(Optional) Advanced option. Enable peering with Single-Tunnel mode. Only appears and applies " +
 					"to when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
@@ -178,34 +180,24 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	flag := false
-	transitGatewayName1, ok := d.Get("transit_gateway_name1").(string)
-	if !ok {
-		return fmt.Errorf("transit_gateway_name1 is required")
-	}
+	transitGatewayName1 := getString(d, "transit_gateway_name1")
 
-	transitGatewayName2, ok := d.Get("transit_gateway_name2").(string)
-	if !ok {
-		return fmt.Errorf("transit_gateway_name2 is required")
-	}
+	transitGatewayName2 := getString(d, "transit_gateway_name2")
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: transitGatewayName1,
 		TransitGatewayName2: transitGatewayName2,
-		DisableActivemesh:   d.Get("disable_activemesh").(bool),
+		DisableActivemesh:   getBool(d, "disable_activemesh"),
 	}
 
-	transitGatewayPeering.EnableOverPrivateNetwork, ok = d.Get("enable_peering_over_private_network").(bool)
-	if !ok {
-		return fmt.Errorf("enable_peering_over_private_network is required for edge gateway peering")
-	}
-	transitGatewayPeering.EnableJumboFrame, ok = d.Get("jumbo_frame").(bool)
-	if !ok {
-		return fmt.Errorf("jumbo_frame is required for edge gateway peering")
-	}
+	transitGatewayPeering.EnableOverPrivateNetwork = getBool(d, "enable_peering_over_private_network")
+
+	transitGatewayPeering.EnableJumboFrame = getBool(d, "jumbo_frame")
+
 	// insane_mode is optional for edge gateway peering
-	transitGatewayPeering.EnableInsaneMode = d.Get("insane_mode").(bool)
+	transitGatewayPeering.EnableInsaneMode = getBool(d, "insane_mode")
 
 	gateway1Details, err := getGatewayDetails(client, transitGatewayName1)
 	if err != nil {
@@ -297,10 +289,10 @@ func resourceAviatrixTransitGatewayPeeringReadIfRequired(d *schema.ResourceData,
 }
 
 func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	transitGwName1 := d.Get("transit_gateway_name1").(string)
-	transitGwName2 := d.Get("transit_gateway_name2").(string)
+	transitGwName1 := getString(d, "transit_gateway_name1")
+	transitGwName2 := getString(d, "transit_gateway_name2")
 
 	if transitGwName1 == "" || transitGwName2 == "" {
 		id := d.Id()
@@ -309,23 +301,23 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid import id expected transit_gateway_name1~transit_gateway_name2")
 		}
-		d.Set("transit_gateway_name1", parts[0])
-		d.Set("transit_gateway_name2", parts[1])
+		mustSet(d, "transit_gateway_name1", parts[0])
+		mustSet(d, "transit_gateway_name2", parts[1])
 		d.SetId(id)
 	}
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
-		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
+		TransitGatewayName1: getString(d, "transit_gateway_name1"),
+		TransitGatewayName2: getString(d, "transit_gateway_name2"),
 	}
 
 	transitGatewayPeering, err := client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get transit peering details: %v", err)
+		return fmt.Errorf("could not get transit peering details: %w", err)
 	}
 
 	if err := d.Set("enable_peering_over_private_network", transitGatewayPeering.EnableOverPrivateNetwork); err != nil {
@@ -445,31 +437,31 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
-		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
+		TransitGatewayName1: getString(d, "transit_gateway_name1"),
+		TransitGatewayName2: getString(d, "transit_gateway_name2"),
 	}
 	if d.HasChange("gateway1_excluded_network_cidrs") || d.HasChange("gateway2_excluded_network_cidrs") ||
 		d.HasChange("gateway1_excluded_tgw_connections") || d.HasChange("gateway2_excluded_tgw_connections") {
 		var gw1Cidrs []string
-		for _, cidr := range d.Get("gateway1_excluded_network_cidrs").([]interface{}) {
-			gw1Cidrs = append(gw1Cidrs, cidr.(string))
+		for _, cidr := range getList(d, "gateway1_excluded_network_cidrs") {
+			gw1Cidrs = append(gw1Cidrs, mustString(cidr))
 		}
 		var gw2Cidrs []string
-		for _, cidr := range d.Get("gateway2_excluded_network_cidrs").([]interface{}) {
-			gw2Cidrs = append(gw2Cidrs, cidr.(string))
+		for _, cidr := range getList(d, "gateway2_excluded_network_cidrs") {
+			gw2Cidrs = append(gw2Cidrs, mustString(cidr))
 		}
 		var gw1Tgws []string
-		for _, tgw := range d.Get("gateway1_excluded_tgw_connections").([]interface{}) {
-			gw1Tgws = append(gw1Tgws, tgw.(string))
+		for _, tgw := range getList(d, "gateway1_excluded_tgw_connections") {
+			gw1Tgws = append(gw1Tgws, mustString(tgw))
 		}
 		var gw2Tgws []string
-		for _, tgw := range d.Get("gateway2_excluded_tgw_connections").([]interface{}) {
-			gw2Tgws = append(gw2Tgws, tgw.(string))
+		for _, tgw := range getList(d, "gateway2_excluded_tgw_connections") {
+			gw2Tgws = append(gw2Tgws, mustString(tgw))
 		}
 
 		transitGatewayPeering.Gateway1ExcludedCIDRs = strings.Join(gw1Cidrs, ",")
@@ -480,35 +472,35 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 		log.Printf("[INFO] Updating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
 		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Transit Gateway peering: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Transit Gateway peering: %w", err)
 		}
 	}
 
 	if d.HasChange("prepend_as_path1") {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path1").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path1") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 
 		err := client.EditTransitConnectionASPathPrepend(transitGatewayPeering, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not update prepend_as_path1: %v", err)
+			return fmt.Errorf("could not update prepend_as_path1: %w", err)
 		}
 
 	}
 
 	if d.HasChange("prepend_as_path2") {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path2").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path2") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 		transitGwPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1: d.Get("transit_gateway_name2").(string),
-			TransitGatewayName2: d.Get("transit_gateway_name1").(string),
+			TransitGatewayName1: getString(d, "transit_gateway_name2"),
+			TransitGatewayName2: getString(d, "transit_gateway_name1"),
 		}
 		err := client.EditTransitConnectionASPathPrepend(transitGwPeering, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not update prepend_as_path2: %v", err)
+			return fmt.Errorf("could not update prepend_as_path2: %w", err)
 		}
 
 	}
@@ -523,18 +515,18 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
-		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
+		TransitGatewayName1: getString(d, "transit_gateway_name1"),
+		TransitGatewayName2: getString(d, "transit_gateway_name2"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
 
 	err := client.DeleteTransitGatewayPeering(transitGatewayPeering)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Transit Gateway peering: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Transit Gateway peering: %w", err)
 	}
 
 	return nil

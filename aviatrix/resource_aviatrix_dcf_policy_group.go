@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 //nolint:funlen
@@ -111,16 +112,12 @@ func resourceAviatrixDCFPolicyGroup() *schema.Resource {
 func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBlock, error) {
 	policyBlock := &goaviatrix.DCFPolicyBlock{}
 
-	name, ok := d.Get("name").(string)
-	if !ok {
-		return nil, fmt.Errorf("PolicyBlock name must be of type string")
-	}
+	name := getString(d, "name")
+
 	policyBlock.Name = name
 
-	attachTo, ok := d.Get("attach_to").(string)
-	if !ok {
-		return nil, fmt.Errorf("PolicyBlock attach_to must be of type string")
-	}
+	attachTo := getString(d, "attach_to")
+
 	policyBlock.AttachTo = attachTo
 
 	policyBlocks, ok := d.Get("policy_group_reference").(*schema.Set)
@@ -192,10 +189,8 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 		subPolicy.AttachmentPoint = attachmentPoint
 		policyBlock.SubPolicies = append(policyBlock.SubPolicies, *subPolicy)
 	}
-	systemResource, ok := d.Get("system_resource").(bool)
-	if !ok {
-		return nil, fmt.Errorf("PolicyBlock system_resource must be of type bool")
-	}
+	systemResource := getBool(d, "system_resource")
+
 	policyBlock.SystemResource = systemResource
 
 	if len(policyBlock.SubPolicies) == 0 {
@@ -246,10 +241,7 @@ func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix
 }
 
 func resourceAviatrixDCFPolicyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
 	if err != nil {
@@ -267,10 +259,7 @@ func resourceAviatrixDCFPolicyGroupCreate(ctx context.Context, d *schema.Resourc
 
 //nolint:cyclop,funlen
 func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 
@@ -340,10 +329,7 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixDCFPolicyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
 	if err != nil {
@@ -359,10 +345,7 @@ func resourceAviatrixDCFPolicyGroupUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixDCFPolicyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 

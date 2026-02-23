@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAwsTgwTransitGatewayAttachment_basic(t *testing.T) {
@@ -130,7 +131,7 @@ func tesAccCheckAwsTgwTransitGatewayAttachmentExists(n string, awsTgwTransitGwAt
 			return fmt.Errorf("no AWS tgw transit gateway attachment ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundAwsTgwTransitGwAttachment := &goaviatrix.AwsTgwTransitGwAttachment{
 			TgwName: rs.Primary.Attributes["tgw_name"],
@@ -154,7 +155,7 @@ func tesAccCheckAwsTgwTransitGatewayAttachmentExists(n string, awsTgwTransitGwAt
 }
 
 func testAccCheckAwsTgwTransitGatewayAttachmentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_transit_gateway_attachment" {
@@ -167,7 +168,7 @@ func testAccCheckAwsTgwTransitGatewayAttachmentDestroy(s *terraform.State) error
 		}
 		_, err := client.GetAwsTgwTransitGwAttachment(foundAwsTgwTransitGwAttachment)
 		if err == nil {
-			return fmt.Errorf("aviatrix AWS tgw transit gateway attachment still exists: %s", err.Error())
+			return fmt.Errorf("aviatrix AWS tgw transit gateway attachment still exists")
 		}
 
 		return nil

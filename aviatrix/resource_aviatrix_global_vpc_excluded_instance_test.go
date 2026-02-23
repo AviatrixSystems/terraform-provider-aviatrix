@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixGlobalVpcExcludedInstance_basic(t *testing.T) {
@@ -83,10 +85,10 @@ func testAccCheckGlobalVpcExcludedInstanceExists(resourceName string) resource.T
 			return fmt.Errorf("global vpc excluded instance not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetGlobalVpcExcludedInstance(context.Background(), rs.Primary.Attributes["uuid"])
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("global vpc excluded instance not found")
 		}
 
@@ -95,7 +97,7 @@ func testAccCheckGlobalVpcExcludedInstanceExists(resourceName string) resource.T
 }
 
 func testAccCheckGlobalVpcExcludedInstanceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_global_vpc_excluded_instance" {
@@ -103,7 +105,7 @@ func testAccCheckGlobalVpcExcludedInstanceDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetGlobalVpcExcludedInstance(context.Background(), rs.Primary.Attributes["uuid"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("global vpc excluded instance still exists")
 		}
 	}

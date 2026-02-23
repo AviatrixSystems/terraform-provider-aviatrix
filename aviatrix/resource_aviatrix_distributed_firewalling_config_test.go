@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -60,7 +59,7 @@ func testAccDistributedFirewallingConfigExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("no distributed-firewalling config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("distributed-firewalling config ID not found")
@@ -71,7 +70,7 @@ func testAccDistributedFirewallingConfigExists(n string) resource.TestCheckFunc 
 }
 
 func testAccDistributedFirewallingConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_config" {

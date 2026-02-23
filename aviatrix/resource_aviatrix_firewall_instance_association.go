@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 const FQDNVendorType = "fqdn_gateway"
@@ -19,7 +21,7 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 		Read:   resourceAviatrixFirewallInstanceAssociationRead,
 		Delete: resourceAviatrixFirewallInstanceAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -89,19 +91,19 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 
 func marshalFirewallInstanceAssociationInput(d *schema.ResourceData) *goaviatrix.FirewallInstance {
 	return &goaviatrix.FirewallInstance{
-		VpcID:               d.Get("vpc_id").(string),
-		GwName:              d.Get("firenet_gw_name").(string),
-		InstanceID:          d.Get("instance_id").(string),
-		VendorType:          d.Get("vendor_type").(string),
-		FirewallName:        d.Get("firewall_name").(string),
-		LanInterface:        d.Get("lan_interface").(string),
-		ManagementInterface: d.Get("management_interface").(string),
-		EgressInterface:     d.Get("egress_interface").(string),
+		VpcID:               getString(d, "vpc_id"),
+		GwName:              getString(d, "firenet_gw_name"),
+		InstanceID:          getString(d, "instance_id"),
+		VendorType:          getString(d, "vendor_type"),
+		FirewallName:        getString(d, "firewall_name"),
+		LanInterface:        getString(d, "lan_interface"),
+		ManagementInterface: getString(d, "management_interface"),
+		EgressInterface:     getString(d, "egress_interface"),
 	}
 }
 
 func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
 
@@ -109,7 +111,7 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	if firewall.VendorType == FQDNVendorType {
 		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewall.InstanceID})
 		if err != nil {
-			return fmt.Errorf("could not find FQDN gateway before creating association: %v", err)
+			return fmt.Errorf("could not find FQDN gateway before creating association: %w", err)
 		}
 		cloudType = gw.CloudType
 	} else {
@@ -135,17 +137,17 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
 	d.SetId(id)
 	flag := false
-	defer resourceAviatrixFirewallInstanceAssociationReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixFirewallInstanceAssociationReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.AssociateFirewallWithFireNet(firewall)
 	if err != nil {
-		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %v", err)
+		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %w", err)
 	}
 
-	if d.Get("attached").(bool) {
+	if getBool(d, "attached") {
 		err = client.AttachFirewallToFireNet(firewall)
 		if err != nil {
-			return fmt.Errorf("failed to attach gateway and firewall/fqdn_gateway: %v", err)
+			return fmt.Errorf("failed to attach gateway and firewall/fqdn_gateway: %w", err)
 		}
 	}
 
@@ -161,11 +163,11 @@ func resourceAviatrixFirewallInstanceAssociationReadIfRequired(d *schema.Resourc
 }
 
 func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcID := d.Get("vpc_id").(string)
-	firenetGwName := d.Get("firenet_gw_name").(string)
-	instanceID := d.Get("instance_id").(string)
+	vpcID := getString(d, "vpc_id")
+	firenetGwName := getString(d, "firenet_gw_name")
+	instanceID := getString(d, "instance_id")
 	if vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
@@ -185,11 +187,11 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	}
 	fireNetDetail, err := client.GetFireNet(fireNet)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find FireNet: %s", err)
+		return fmt.Errorf("couldn't find FireNet: %w", err)
 	}
 
 	var instanceInfo *goaviatrix.FirewallInstanceInfo
@@ -203,26 +205,25 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 		d.SetId("")
 		return nil
 	}
-
-	d.Set("vpc_id", vpcID)
-	d.Set("firenet_gw_name", instanceInfo.GwName)
-	d.Set("instance_id", instanceInfo.InstanceID)
-	d.Set("attached", instanceInfo.Enabled)
+	mustSet(d, "vpc_id", vpcID)
+	mustSet(d, "firenet_gw_name", instanceInfo.GwName)
+	mustSet(d, "instance_id", instanceInfo.InstanceID)
+	mustSet(d, "attached", instanceInfo.Enabled)
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
-		d.Set("vendor_type", "fqdn_gateway")
-		d.Set("firewall_name", "")
-		d.Set("lan_interface", "")
-		d.Set("management_interface", "")
-		d.Set("egress_interface", "")
+		mustSet(d, "vendor_type", "fqdn_gateway")
+		mustSet(d, "firewall_name", "")
+		mustSet(d, "lan_interface", "")
+		mustSet(d, "management_interface", "")
+		mustSet(d, "egress_interface", "")
 	} else {
-		d.Set("vendor_type", "Generic")
-		d.Set("lan_interface", instanceInfo.LanInterface)
-		d.Set("management_interface", instanceInfo.ManagementInterface)
-		d.Set("egress_interface", instanceInfo.EgressInterface)
+		mustSet(d, "vendor_type", "Generic")
+		mustSet(d, "lan_interface", instanceInfo.LanInterface)
+		mustSet(d, "management_interface", instanceInfo.ManagementInterface)
+		mustSet(d, "egress_interface", instanceInfo.EgressInterface)
 		if fireNetDetail.CloudType != strconv.Itoa(goaviatrix.GCP) {
-			d.Set("firewall_name", instanceInfo.FirewallName)
+			mustSet(d, "firewall_name", instanceInfo.FirewallName)
 		} else {
-			d.Set("firewall_name", "")
+			mustSet(d, "firewall_name", "")
 		}
 	}
 
@@ -233,13 +234,13 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 }
 
 func resourceAviatrixFirewallInstanceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
 
 	err := client.DisassociateFirewallFromFireNet(firewall)
 	if err != nil {
-		return fmt.Errorf("failed to disassociate firewall %v from FireNet: %v", firewall.InstanceID, err)
+		return fmt.Errorf("failed to disassociate firewall %v from FireNet: %w", firewall.InstanceID, err)
 	}
 
 	return nil

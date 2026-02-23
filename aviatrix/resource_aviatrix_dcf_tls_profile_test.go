@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -133,10 +132,7 @@ func testAccCheckDcfTLSProfileExists(n string, t *testing.T) resource.TestCheckF
 			return fmt.Errorf("no DCF TLS Profile ID is set")
 		}
 
-		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-		}
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetTLSProfile(t.Context(), rs.Primary.ID)
 		if err != nil {
@@ -148,10 +144,7 @@ func testAccCheckDcfTLSProfileExists(n string, t *testing.T) resource.TestCheckF
 }
 
 func testAccCheckDcfTLSProfileDestroy(s *terraform.State) error {
-	client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-	if !ok {
-		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-	}
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

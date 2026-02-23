@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSpokeGatewaySubnetGroup_basic(t *testing.T) {
@@ -95,7 +97,7 @@ func testAccCheckSpokeGatewaySubnetGroupExists(resourceName string) resource.Tes
 			return fmt.Errorf("no spoke gateway subnet group ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 			SubnetGroupName: rs.Primary.Attributes["name"],
@@ -119,7 +121,7 @@ func testAccCheckSpokeGatewaySubnetGroupSubnetsMatch(resourceName string, input 
 			return fmt.Errorf("spoke gateway subnet group not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 			SubnetGroupName: rs.Primary.Attributes["name"],
@@ -138,7 +140,7 @@ func testAccCheckSpokeGatewaySubnetGroupSubnetsMatch(resourceName string, input 
 }
 
 func testAccCheckSpokeGatewaySubnetGroupDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_spoke_gateway_subnet_group" {
@@ -151,7 +153,7 @@ func testAccCheckSpokeGatewaySubnetGroupDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetSpokeGatewaySubnetGroup(context.Background(), spokeGatewaySubnetGroup)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("spoke gateway subnet group still exists")
 		}
 	}

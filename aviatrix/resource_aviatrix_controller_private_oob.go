@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixControllerPrivateOob() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixControllerPrivateOob() *schema.Resource {
 		Update: resourceAviatrixControllerPrivateOobUpdate,
 		Delete: resourceAviatrixControllerPrivateOobDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,15 +33,15 @@ func resourceAviatrixControllerPrivateOob() *schema.Resource {
 }
 
 func resourceAviatrixControllerPrivateOobCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enablePrivateOob := d.Get("enable_private_oob").(bool)
+	enablePrivateOob := getBool(d, "enable_private_oob")
 	if enablePrivateOob {
 		log.Printf("[INFO] Enabling Aviatrix controller private oob")
 
 		err := client.EnablePrivateOob()
 		if err != nil {
-			return fmt.Errorf("failed to enable Aviatrix controller private oob: %s", err)
+			return fmt.Errorf("failed to enable Aviatrix controller private oob: %w", err)
 		}
 	}
 
@@ -48,7 +50,7 @@ func resourceAviatrixControllerPrivateOobCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAviatrixControllerPrivateOobRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -56,34 +58,33 @@ func resourceAviatrixControllerPrivateOobRead(d *schema.ResourceData, meta inter
 
 	privateOobState, err := client.GetPrivateOobState()
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't get private oob state: %s", err)
+		return fmt.Errorf("couldn't get private oob state: %w", err)
 	}
-
-	d.Set("enable_private_oob", privateOobState)
+	mustSet(d, "enable_private_oob", privateOobState)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerPrivateOobUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Aviatrix controller private oob")
 
 	if d.HasChange("enable_private_oob") {
-		enablePrivateOob := d.Get("enable_private_oob").(bool)
+		enablePrivateOob := getBool(d, "enable_private_oob")
 		if enablePrivateOob {
 			err := client.EnablePrivateOob()
 			if err != nil {
-				return fmt.Errorf("failed to enable Aviatrix controller private oob: %s", err)
+				return fmt.Errorf("failed to enable Aviatrix controller private oob: %w", err)
 			}
 		} else {
 			err := client.DisablePrivateOob()
 			if err != nil {
-				return fmt.Errorf("failed to disable Aviatrix controller private oob: %s", err)
+				return fmt.Errorf("failed to disable Aviatrix controller private oob: %w", err)
 			}
 		}
 	}
@@ -92,11 +93,11 @@ func resourceAviatrixControllerPrivateOobUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAviatrixControllerPrivateOobDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DisablePrivateOob()
 	if err != nil {
-		return fmt.Errorf("failed to disable Aviatrix controller private oob: %s", err)
+		return fmt.Errorf("failed to disable Aviatrix controller private oob: %w", err)
 	}
 
 	return nil

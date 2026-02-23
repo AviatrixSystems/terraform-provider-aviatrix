@@ -4,7 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -23,11 +22,11 @@ func dataSourceAviatrixCallerIdentity() *schema.Resource {
 }
 
 func dataSourceAviatrixCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	log.Printf("[DEBUG] CID is '%s'", client.CID)
 
 	d.SetId(time.Now().UTC().String())
-	d.Set("cid", client.CID)
+	mustSet(d, "cid", client.CID)
 	return nil
 }

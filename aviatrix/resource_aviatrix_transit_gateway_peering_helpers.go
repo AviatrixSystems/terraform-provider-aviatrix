@@ -5,8 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 // reverse interface name translations from this "eth0": "wan.0" => "wan0": "eth0"
@@ -126,25 +127,13 @@ func setASPathPrepend(d *schema.ResourceData, client *goaviatrix.Client, prepend
 // getNonEATPeeringOptions gets the non-EAT peering options from the resource data.
 func getNonEATPeeringOptions(d *schema.ResourceData) (map[string]bool, error) {
 	transitPeering := make(map[string]bool)
-	enableMaxPerformance, err := getBooleanValue(d, "enable_max_performance")
-	if err != nil {
-		return nil, err
-	}
+	enableMaxPerformance := getBool(d, "enable_max_performance")
 	transitPeering["enable_max_performance"] = enableMaxPerformance
-	insaneMode, err := getBooleanValue(d, "enable_insane_mode_encryption_over_internet")
-	if err != nil {
-		return nil, err
-	}
+	insaneMode := getBool(d, "enable_insane_mode_encryption_over_internet")
 	transitPeering["insane_mode"] = insaneMode
-	peeringOverPrivate, err := getBooleanValue(d, "enable_peering_over_private_network")
-	if err != nil {
-		return nil, err
-	}
+	peeringOverPrivate := getBool(d, "enable_peering_over_private_network")
 	transitPeering["enable_peering_over_private_network"] = peeringOverPrivate
-	singleTunnelMode, err := getBooleanValue(d, "enable_single_tunnel_mode")
-	if err != nil {
-		return nil, err
-	}
+	singleTunnelMode := getBool(d, "enable_single_tunnel_mode")
 	transitPeering["enable_single_tunnel_mode"] = singleTunnelMode
 	return transitPeering, nil
 }
@@ -156,10 +145,8 @@ func setNonEATPeeringOptions(d *schema.ResourceData, transitGatewayPeering *goav
 	if err != nil {
 		return err
 	}
-	tunnelCount, ok := d.Get("tunnel_count").(int)
-	if !ok {
-		return fmt.Errorf("tunnel_count must be an integer")
-	}
+	tunnelCount := getInt(d, "tunnel_count")
+
 	if err := validateTunnelCount(transitPeering["insane_mode"], tunnelCount); err != nil {
 		return err
 	}
@@ -197,15 +184,6 @@ func validateTunnelCount(insaneMode bool, tunnelCount int) error {
 		return fmt.Errorf("tunnel_count is only valid when enable_insane_mode_encryption_over_internet is set to true and must be > 0")
 	}
 	return nil
-}
-
-// Helper function to get multiple boolean values and validate them
-func getBooleanValue(d *schema.ResourceData, key string) (bool, error) {
-	value, ok := d.Get(key).(bool)
-	if !ok {
-		return false, fmt.Errorf("%s is required and must be a boolean", key)
-	}
-	return value, nil
 }
 
 // setExcludedResources sets the excluded resources for the transit gateway peering.

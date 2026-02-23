@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -102,10 +101,7 @@ func testAccCheckDcfRulesetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF Ruleset ID is set")
 		}
 
-		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-		}
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetDCFPolicyList(context.Background(), rs.Primary.ID)
 		if err != nil {
@@ -117,10 +113,7 @@ func testAccCheckDcfRulesetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDcfRulesetDestroy(s *terraform.State) error {
-	client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-	if !ok {
-		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-	}
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_smart_group" {

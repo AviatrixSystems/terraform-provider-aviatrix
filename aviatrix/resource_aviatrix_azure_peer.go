@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAzurePeer() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixAzurePeer() *schema.Resource {
 		Read:   resourceAviatrixAzurePeerRead,
 		Delete: resourceAviatrixAzurePeerDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,26 +74,26 @@ func resourceAviatrixAzurePeer() *schema.Resource {
 }
 
 func resourceAviatrixAzurePeerCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	azurePeer := &goaviatrix.AzurePeer{
-		AccountName1: d.Get("account_name1").(string),
-		AccountName2: d.Get("account_name2").(string),
-		VNet1:        d.Get("vnet_name_resource_group1").(string),
-		VNet2:        d.Get("vnet_name_resource_group2").(string),
-		Region1:      d.Get("vnet_reg1").(string),
-		Region2:      d.Get("vnet_reg2").(string),
+		AccountName1: getString(d, "account_name1"),
+		AccountName2: getString(d, "account_name2"),
+		VNet1:        getString(d, "vnet_name_resource_group1"),
+		VNet2:        getString(d, "vnet_name_resource_group2"),
+		Region1:      getString(d, "vnet_reg1"),
+		Region2:      getString(d, "vnet_reg2"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Azure peer: %#v", azurePeer)
 
 	d.SetId(azurePeer.VNet1 + "~" + azurePeer.VNet2)
 	flag := false
-	defer resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateAzurePeer(azurePeer)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Azure Peer: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Azure Peer: %w", err)
 	}
 
 	return resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag)
@@ -106,41 +108,41 @@ func resourceAviatrixAzurePeerReadIfRequired(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vNet1 := d.Get("vnet_name_resource_group1").(string)
-	vNet2 := d.Get("vnet_name_resource_group2").(string)
+	vNet1 := getString(d, "vnet_name_resource_group1")
+	vNet2 := getString(d, "vnet_name_resource_group2")
 	if vNet1 == "" || vNet2 == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no Azure peer id received. Import Id is %s", id)
-		d.Set("vnet_name_resource_group1", strings.Split(id, "~")[0])
-		d.Set("vnet_name_resource_group2", strings.Split(id, "~")[1])
+		mustSet(d, "vnet_name_resource_group1", strings.Split(id, "~")[0])
+		mustSet(d, "vnet_name_resource_group2", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	azurePeer := &goaviatrix.AzurePeer{
-		VNet1: d.Get("vnet_name_resource_group1").(string),
-		VNet2: d.Get("vnet_name_resource_group2").(string),
+		VNet1: getString(d, "vnet_name_resource_group1"),
+		VNet2: getString(d, "vnet_name_resource_group2"),
 	}
 
 	azureP, err := client.GetAzurePeer(azurePeer)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Azure peer: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Azure peer: %w", err)
 	}
 
 	log.Printf("[TRACE] Reading azure peer: %#v", azureP)
 
 	if azureP != nil {
-		d.Set("vnet_name_resource_group1", azureP.VNet1)
-		d.Set("vnet_name_resource_group2", azureP.VNet2)
-		d.Set("account_name1", azureP.AccountName1)
-		d.Set("account_name2", azureP.AccountName2)
-		d.Set("vnet_reg1", azureP.Region1)
-		d.Set("vnet_reg2", azureP.Region2)
+		mustSet(d, "vnet_name_resource_group1", azureP.VNet1)
+		mustSet(d, "vnet_name_resource_group2", azureP.VNet2)
+		mustSet(d, "account_name1", azureP.AccountName1)
+		mustSet(d, "account_name2", azureP.AccountName2)
+		mustSet(d, "vnet_reg1", azureP.Region1)
+		mustSet(d, "vnet_reg2", azureP.Region2)
 
 		if err := d.Set("vnet_cidr1", azureP.VNetCidr1); err != nil {
 			log.Printf("[WARN] Error setting vnet_cidr1 for (%s): %s", d.Id(), err)
@@ -154,18 +156,18 @@ func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAviatrixAzurePeerDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	azurePeer := &goaviatrix.AzurePeer{
-		VNet1: d.Get("vnet_name_resource_group1").(string),
-		VNet2: d.Get("vnet_name_resource_group2").(string),
+		VNet1: getString(d, "vnet_name_resource_group1"),
+		VNet2: getString(d, "vnet_name_resource_group2"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix Azure peer: %#v", azurePeer)
 
 	err := client.DeleteAzurePeer(azurePeer)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Azure peer: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Azure peer: %w", err)
 	}
 
 	return nil

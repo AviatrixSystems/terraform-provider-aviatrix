@@ -1,10 +1,12 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixFireNet() *schema.Resource {
@@ -50,35 +52,34 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 }
 
 func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	fireNet := &goaviatrix.FireNet{
-		VpcID: d.Get("vpc_id").(string),
+		VpcID: getString(d, "vpc_id"),
 	}
 
 	fireNetDetail, err := client.GetFireNet(fireNet)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find FireNet: %s", err)
+		return fmt.Errorf("couldn't find FireNet: %w", err)
 	}
-
-	d.Set("vpc_id", fireNetDetail.VpcID)
-	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
-	d.Set("tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
-	d.Set("egress_static_cidrs", fireNetDetail.EgressStaticCidrs)
+	mustSet(d, "vpc_id", fireNetDetail.VpcID)
+	mustSet(d, "hashing_algorithm", fireNetDetail.HashingAlgorithm)
+	mustSet(d, "tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
+	mustSet(d, "egress_static_cidrs", fireNetDetail.EgressStaticCidrs)
 
 	if fireNetDetail.Inspection == "yes" {
-		d.Set("inspection_enabled", true)
+		mustSet(d, "inspection_enabled", true)
 	} else {
-		d.Set("inspection_enabled", false)
+		mustSet(d, "inspection_enabled", false)
 	}
 	if fireNetDetail.FirewallEgress == "yes" {
-		d.Set("egress_enabled", true)
+		mustSet(d, "egress_enabled", true)
 	} else {
-		d.Set("egress_enabled", false)
+		mustSet(d, "egress_enabled", false)
 	}
 
 	d.SetId(fireNetDetail.VpcID)

@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAccount() *schema.Resource {
@@ -19,7 +21,7 @@ func resourceAviatrixAccount() *schema.Resource {
 		UpdateWithoutTimeout: resourceAviatrixAccountUpdate,
 		DeleteWithoutTimeout: resourceAviatrixAccountDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -431,7 +433,7 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					groupNameOld, _ := d.GetChange("rbac_groups")
-					return len(groupNameOld.([]interface{})) != 0
+					return len(mustSlice(groupNameOld)) != 0
 				},
 				Description: "List of RBAC permission group names.",
 			},
@@ -440,73 +442,73 @@ func resourceAviatrixAccount() *schema.Resource {
 }
 
 func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	account := &goaviatrix.Account{
-		AccountName:                           d.Get("account_name").(string),
-		CloudType:                             d.Get("cloud_type").(int),
-		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsRoleApp:                            d.Get("aws_role_app").(string),
-		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
-		AwsGatewayRoleApp:                     d.Get("aws_gateway_role_app").(string),
-		AwsGatewayRoleEc2:                     d.Get("aws_gateway_role_ec2").(string),
-		AwsAccessKey:                          d.Get("aws_access_key").(string),
-		AwsSecretKey:                          d.Get("aws_secret_key").(string),
-		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
-		AwsgovRoleApp:                         d.Get("awsgov_role_app").(string),
-		AwsgovRoleEc2:                         d.Get("awsgov_role_ec2").(string),
-		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
-		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
-		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
-		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
-		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
-		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
-		ArmApplicationClientId:                d.Get("arm_application_id").(string),
-		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
-		AzuregovSubscriptionId:                d.Get("azuregov_subscription_id").(string),
-		AzuregovApplicationEndpoint:           d.Get("azuregov_directory_id").(string),
-		AzuregovApplicationClientId:           d.Get("azuregov_application_id").(string),
-		AzuregovApplicationClientSecret:       d.Get("azuregov_application_key").(string),
-		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
-		OciUserID:                             d.Get("oci_user_id").(string),
-		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
-		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
-		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
-		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
-		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
-		AwsChinaAccountNumber:                 d.Get("awschina_account_number").(string),
-		AwsChinaRoleApp:                       d.Get("awschina_role_app").(string),
-		AwsChinaRoleEc2:                       d.Get("awschina_role_ec2").(string),
-		AwsChinaAccessKey:                     d.Get("awschina_access_key").(string),
-		AwsChinaSecretKey:                     d.Get("awschina_secret_key").(string),
-		AzureChinaSubscriptionId:              d.Get("azurechina_subscription_id").(string),
-		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
-		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
-		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
+		AccountName:                           getString(d, "account_name"),
+		CloudType:                             getInt(d, "cloud_type"),
+		AwsAccountNumber:                      getString(d, "aws_account_number"),
+		AwsRoleApp:                            getString(d, "aws_role_app"),
+		AwsRoleEc2:                            getString(d, "aws_role_ec2"),
+		AwsGatewayRoleApp:                     getString(d, "aws_gateway_role_app"),
+		AwsGatewayRoleEc2:                     getString(d, "aws_gateway_role_ec2"),
+		AwsAccessKey:                          getString(d, "aws_access_key"),
+		AwsSecretKey:                          getString(d, "aws_secret_key"),
+		AwsgovAccountNumber:                   getString(d, "awsgov_account_number"),
+		AwsgovRoleApp:                         getString(d, "awsgov_role_app"),
+		AwsgovRoleEc2:                         getString(d, "awsgov_role_ec2"),
+		AwsgovAccessKey:                       getString(d, "awsgov_access_key"),
+		AwsgovSecretKey:                       getString(d, "awsgov_secret_key"),
+		GcloudProjectName:                     getString(d, "gcloud_project_id"),
+		GcloudProjectCredentialsFilepathLocal: getString(d, "gcloud_project_credentials_filepath"),
+		ArmSubscriptionId:                     getString(d, "arm_subscription_id"),
+		ArmApplicationEndpoint:                getString(d, "arm_directory_id"),
+		ArmApplicationClientId:                getString(d, "arm_application_id"),
+		ArmApplicationClientSecret:            getString(d, "arm_application_key"),
+		AzuregovSubscriptionId:                getString(d, "azuregov_subscription_id"),
+		AzuregovApplicationEndpoint:           getString(d, "azuregov_directory_id"),
+		AzuregovApplicationClientId:           getString(d, "azuregov_application_id"),
+		AzuregovApplicationClientSecret:       getString(d, "azuregov_application_key"),
+		OciTenancyID:                          getString(d, "oci_tenancy_id"),
+		OciUserID:                             getString(d, "oci_user_id"),
+		OciCompartmentID:                      getString(d, "oci_compartment_id"),
+		OciApiPrivateKeyFilePath:              getString(d, "oci_api_private_key_filepath"),
+		AlicloudAccountId:                     getString(d, "alicloud_account_id"),
+		AlicloudAccessKey:                     getString(d, "alicloud_access_key"),
+		AlicloudSecretKey:                     getString(d, "alicloud_secret_key"),
+		AwsChinaAccountNumber:                 getString(d, "awschina_account_number"),
+		AwsChinaRoleApp:                       getString(d, "awschina_role_app"),
+		AwsChinaRoleEc2:                       getString(d, "awschina_role_ec2"),
+		AwsChinaAccessKey:                     getString(d, "awschina_access_key"),
+		AwsChinaSecretKey:                     getString(d, "awschina_secret_key"),
+		AzureChinaSubscriptionId:              getString(d, "azurechina_subscription_id"),
+		AzureChinaApplicationEndpoint:         getString(d, "azurechina_directory_id"),
+		AzureChinaApplicationClientId:         getString(d, "azurechina_application_id"),
+		AzureChinaApplicationClientSecret:     getString(d, "azurechina_application_key"),
 	}
 
 	edgeAccount := &goaviatrix.EdgeAccount{
-		AccountName:        d.Get("account_name").(string),
-		CloudType:          d.Get("cloud_type").(int),
-		EdgeCSPUsername:    d.Get("edge_csp_username").(string),
-		EdgeCSPPassword:    d.Get("edge_csp_password").(string),
-		EdgeCSPApiEndpoint: d.Get("edge_csp_api_endpoint").(string),
+		AccountName:        getString(d, "account_name"),
+		CloudType:          getInt(d, "cloud_type"),
+		EdgeCSPUsername:    getString(d, "edge_csp_username"),
+		EdgeCSPPassword:    getString(d, "edge_csp_password"),
+		EdgeCSPApiEndpoint: getString(d, "edge_csp_api_endpoint"),
 	}
-	if d.Get("edge_zededa_username").(string) != "" && d.Get("edge_zededa_password").(string) != "" {
-		edgeAccount.EdgeCSPUsername = d.Get("edge_zededa_username").(string)
-		edgeAccount.EdgeCSPPassword = d.Get("edge_zededa_password").(string)
+	if getString(d, "edge_zededa_username") != "" && getString(d, "edge_zededa_password") != "" {
+		edgeAccount.EdgeCSPUsername = getString(d, "edge_zededa_username")
+		edgeAccount.EdgeCSPPassword = getString(d, "edge_zededa_password")
 	}
 
 	if _, ok := d.GetOk("rbac_groups"); ok {
-		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("rbac_groups").([]interface{})), ",")
+		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(getList(d, "rbac_groups")), ",")
 	}
 
-	awsIam := d.Get("aws_iam").(bool)
+	awsIam := getBool(d, "aws_iam")
 	account.AwsIam = strconv.FormatBool(awsIam)
 
-	awsGovIam := d.Get("awsgov_iam").(bool)
+	awsGovIam := getBool(d, "awsgov_iam")
 	account.AwsgovIam = strconv.FormatBool(awsGovIam)
 
-	awsChinaIam := d.Get("awschina_iam").(bool)
+	awsChinaIam := getBool(d, "awschina_iam")
 	account.AwsChinaIam = strconv.FormatBool(awsChinaIam)
 
 	_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
@@ -557,16 +559,17 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (getString(d, "edge_csp_username") != "" || getString(d, "edge_csp_password") != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_zededa_username").(string) != "" || d.Get("edge_zededa_password").(string) != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (getString(d, "edge_zededa_username") != "" || getString(d, "edge_zededa_password") != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'edge_zededa_username' and 'edge_zededa_password' can only be set when 'cloud_type' is Edge Zededa (65536)")
 	}
+
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGENEO) {
-		cspEndpoint, ok := d.Get("edge_csp_api_endpoint").(string)
-		if ok && cspEndpoint != "" {
-			return diag.Errorf("could not create Aviatrix Account: 'edge_csp_api_endpoint' can only be set when 'cloud_type' is Edge NEO/Platform (262144)")
+		cspEndpoint := getString(d, "edge_csp_api_endpoint")
+		if cspEndpoint != "" {
+			return diag.Errorf("couldn't create Aviatrix Account: 'edge_csp_api_endpoint' can only be set when 'cloud_type' is Edge NEO/Platform (262144)")
 		}
 	}
 
@@ -590,8 +593,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			if _, ok := d.GetOk("aws_role_ec2"); !ok {
 				account.AwsRoleEc2 = fmt.Sprintf("arn:aws:iam::%s:role/aviatrix-role-ec2", account.AwsAccountNumber)
 			}
-			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
-			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", getString(d, "aws_role_app"))
+			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", getString(d, "aws_role_ec2"))
 		} else {
 			if account.AwsRoleApp != "" || account.AwsRoleEc2 != "" {
 				return diag.Errorf("could not create Aviatrix Account: 'aws_role_app' and 'aws_role_ec2' can only be set when 'aws_iam' is true and 'cloud_type' is AWS (1)")
@@ -719,8 +722,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		//if edgeAccount.EdgeCSPPassword == "" {
 		//	return diag.Errorf("edge_csp_password is required to create an Aviatrix account for Edge CSP")
 		//}
-		if !((d.Get("edge_csp_username").(string) != "" && d.Get("edge_csp_password").(string) != "") ||
-			(d.Get("edge_zededa_username").(string) != "" && d.Get("edge_zededa_password").(string) != "")) {
+		if !((getString(d, "edge_csp_username") != "" && getString(d, "edge_csp_password") != "") ||
+			(getString(d, "edge_zededa_username") != "" && getString(d, "edge_zededa_password") != "")) {
 			return diag.Errorf("edge_csp_username and edge_csp_password are required to create an Aviatrix account for Edge CSP, " +
 				"edge_zededa_username and edge_zededa_password are required to create an Aviatrix account for Edge Zededa")
 		}
@@ -751,108 +754,112 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(goaviatrix.ClientInterface)
+	client, ok := meta.(goaviatrix.ClientInterface)
+	if !ok {
+		return diag.Errorf("internal error: meta is not a valid goaviatrix.ClientInterface")
+	}
 	var diags diag.Diagnostics
 
-	accountName := d.Get("account_name").(string)
+	accountName := getString(d, "account_name")
 	isImport := accountName == ""
 	if isImport {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
-		d.Set("account_name", id)
+		mustSet(d, "account_name", id)
 		d.SetId(id)
 	}
 
 	account := &goaviatrix.Account{
-		AccountName: d.Get("account_name").(string),
+		AccountName: getString(d, "account_name"),
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
 
 	acc, err := client.GetAccount(account)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("aviatrix Account: %s", err)
 	}
-
-	d.Set("account_name", acc.AccountName)
-	d.Set("cloud_type", acc.CloudType)
+	mustSet(d, "account_name", acc.AccountName)
+	mustSet(d, "cloud_type", acc.CloudType)
 	if acc.CloudType == goaviatrix.AWS {
-		d.Set("aws_account_number", acc.AwsAccountNumber)
+		mustSet(d, "aws_account_number", acc.AwsAccountNumber)
 		if acc.AwsRoleEc2 != "" {
-			// force default setting and save to .tfstate file
-			d.Set("aws_access_key", "")
-			d.Set("aws_secret_key", "")
-			d.Set("aws_iam", true)
-			d.Set("aws_role_app", acc.AwsRoleApp)
-			d.Set("aws_role_ec2", acc.AwsRoleEc2)
-			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+			mustSet(
+				// force default setting and save to .tfstate file
+				d, "aws_access_key", "")
+			mustSet(d, "aws_secret_key", "")
+			mustSet(d, "aws_iam", true)
+			mustSet(d, "aws_role_app", acc.AwsRoleApp)
+			mustSet(d, "aws_role_ec2", acc.AwsRoleEc2)
+			mustSet(d, "aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			mustSet(d, "aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 		} else {
-			d.Set("aws_iam", false)
+			mustSet(d, "aws_iam", false)
 		}
 	} else if acc.CloudType == goaviatrix.GCP {
-		d.Set("gcloud_project_id", acc.GcloudProjectName)
+		mustSet(d, "gcloud_project_id", acc.GcloudProjectName)
 	} else if acc.CloudType == goaviatrix.Azure {
-		d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+		mustSet(d, "arm_subscription_id", acc.ArmSubscriptionId)
 	} else if acc.CloudType == goaviatrix.AWSGov {
-		d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+		mustSet(d, "awsgov_account_number", acc.AwsgovAccountNumber)
 		if acc.AwsgovRoleEc2 != "" {
-			d.Set("awsgov_access_key", "")
-			d.Set("awsgov_secret_key", "")
-			d.Set("awsgov_iam", true)
-			d.Set("awsgov_role_app", acc.AwsgovRoleApp)
-			d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
-			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+			mustSet(d, "awsgov_access_key", "")
+			mustSet(d, "awsgov_secret_key", "")
+			mustSet(d, "awsgov_iam", true)
+			mustSet(d, "awsgov_role_app", acc.AwsgovRoleApp)
+			mustSet(d, "awsgov_role_ec2", acc.AwsgovRoleEc2)
+			mustSet(d, "aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			mustSet(d, "aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 		} else {
-			d.Set("awsgov_iam", false)
+			mustSet(d, "awsgov_iam", false)
 		}
 	} else if acc.CloudType == goaviatrix.AzureGov {
-		d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
+		mustSet(d, "azuregov_subscription_id", acc.AzuregovSubscriptionId)
 	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
-		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
+		mustSet(d, "awschina_account_number", acc.AwsChinaAccountNumber)
 		if acc.AwsChinaRoleEc2 != "" {
-			// Force access key and secret key to be empty
-			d.Set("awschina_access_key", "")
-			d.Set("awschina_secret_key", "")
-			d.Set("awschina_iam", true)
-			d.Set("awschina_role_app", acc.AwsChinaRoleApp)
-			d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
-			d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
-			d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+			mustSet(
+				// Force access key and secret key to be empty
+				d, "awschina_access_key", "")
+			mustSet(d, "awschina_secret_key", "")
+			mustSet(d, "awschina_iam", true)
+			mustSet(d, "awschina_role_app", acc.AwsChinaRoleApp)
+			mustSet(d, "awschina_role_ec2", acc.AwsChinaRoleEc2)
+			mustSet(d, "aws_gateway_role_app", acc.AwsGatewayRoleApp)
+			mustSet(d, "aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 		} else {
-			d.Set("awschina_iam", false)
+			mustSet(d, "awschina_iam", false)
 		}
 	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
-		d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
+		mustSet(d, "azurechina_subscription_id", acc.AzureChinaSubscriptionId)
 	} else if acc.CloudType == goaviatrix.AliCloud {
-		d.Set("alicloud_account_id", acc.AwsAccountNumber)
+		mustSet(d, "alicloud_account_id", acc.AwsAccountNumber)
 	} else if acc.CloudType == goaviatrix.EDGECSP {
-		if d.Get("edge_csp_password").(string) != "" {
-			d.Set("edge_csp_username", acc.EdgeCSPUsername)
-		} else if d.Get("edge_zededa_password").(string) != "" {
-			d.Set("edge_zededa_username", acc.EdgeCSPUsername)
+		if getString(d, "edge_csp_password") != "" {
+			mustSet(d, "edge_csp_username", acc.EdgeCSPUsername)
+		} else if getString(d, "edge_zededa_password") != "" {
+			mustSet(d, "edge_zededa_username", acc.EdgeCSPUsername)
 		} else {
-			// let user choose when importing CSP/Zededa account
-			d.Set("edge_csp_username", acc.EdgeCSPUsername)
-			d.Set("edge_zededa_username", acc.EdgeCSPUsername)
+			mustSet(
+				// let user choose when importing CSP/Zededa account
+				d, "edge_csp_username", acc.EdgeCSPUsername)
+			mustSet(d, "edge_zededa_username", acc.EdgeCSPUsername)
 		}
 		err := d.Set("edge_csp_api_endpoint", acc.EdgeCSPApiEndpoint)
 		if err != nil {
 			return diag.Errorf("Setting CSP API endpoint: %s", err)
 		}
 	}
-
-	d.Set("rbac_groups", acc.GroupNamesRead)
+	mustSet(d, "rbac_groups", acc.GroupNamesRead)
 	d.SetId(acc.AccountName)
 
 	// Don't check account audit during import. In terraform version 0.14.11 or earlier, returning diag.Warning during import
 	// will cause it to fail silently. It will not return an error, but the state file will not be updated after.
-	if d.Get("audit_account").(bool) && !isImport {
+	if getBool(d, "audit_account") && !isImport {
 		err = client.AuditAccount(ctx, account)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
@@ -867,70 +874,70 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	defer client.InvalidateCache()
 	account := &goaviatrix.Account{
-		AccountName:                           d.Get("account_name").(string),
-		CloudType:                             d.Get("cloud_type").(int),
-		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsRoleApp:                            d.Get("aws_role_app").(string),
-		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
-		AwsGatewayRoleApp:                     d.Get("aws_gateway_role_app").(string),
-		AwsGatewayRoleEc2:                     d.Get("aws_gateway_role_ec2").(string),
-		AwsAccessKey:                          d.Get("aws_access_key").(string),
-		AwsSecretKey:                          d.Get("aws_secret_key").(string),
-		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
-		AwsgovRoleApp:                         d.Get("awsgov_role_app").(string),
-		AwsgovRoleEc2:                         d.Get("awsgov_role_ec2").(string),
-		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
-		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
-		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
-		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
-		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
-		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
-		ArmApplicationClientId:                d.Get("arm_application_id").(string),
-		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
-		AzuregovSubscriptionId:                d.Get("azuregov_subscription_id").(string),
-		AzuregovApplicationEndpoint:           d.Get("azuregov_directory_id").(string),
-		AzuregovApplicationClientId:           d.Get("azuregov_application_id").(string),
-		AzuregovApplicationClientSecret:       d.Get("azuregov_application_key").(string),
-		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
-		OciUserID:                             d.Get("oci_user_id").(string),
-		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
-		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
-		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
-		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
-		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
-		AwsChinaAccountNumber:                 d.Get("awschina_account_number").(string),
-		AwsChinaRoleApp:                       d.Get("awschina_role_app").(string),
-		AwsChinaRoleEc2:                       d.Get("awschina_role_ec2").(string),
-		AwsChinaAccessKey:                     d.Get("awschina_access_key").(string),
-		AwsChinaSecretKey:                     d.Get("awschina_secret_key").(string),
-		AzureChinaSubscriptionId:              d.Get("azurechina_subscription_id").(string),
-		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
-		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
-		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
+		AccountName:                           getString(d, "account_name"),
+		CloudType:                             getInt(d, "cloud_type"),
+		AwsAccountNumber:                      getString(d, "aws_account_number"),
+		AwsRoleApp:                            getString(d, "aws_role_app"),
+		AwsRoleEc2:                            getString(d, "aws_role_ec2"),
+		AwsGatewayRoleApp:                     getString(d, "aws_gateway_role_app"),
+		AwsGatewayRoleEc2:                     getString(d, "aws_gateway_role_ec2"),
+		AwsAccessKey:                          getString(d, "aws_access_key"),
+		AwsSecretKey:                          getString(d, "aws_secret_key"),
+		AwsgovAccountNumber:                   getString(d, "awsgov_account_number"),
+		AwsgovRoleApp:                         getString(d, "awsgov_role_app"),
+		AwsgovRoleEc2:                         getString(d, "awsgov_role_ec2"),
+		AwsgovAccessKey:                       getString(d, "awsgov_access_key"),
+		AwsgovSecretKey:                       getString(d, "awsgov_secret_key"),
+		GcloudProjectName:                     getString(d, "gcloud_project_id"),
+		GcloudProjectCredentialsFilepathLocal: getString(d, "gcloud_project_credentials_filepath"),
+		ArmSubscriptionId:                     getString(d, "arm_subscription_id"),
+		ArmApplicationEndpoint:                getString(d, "arm_directory_id"),
+		ArmApplicationClientId:                getString(d, "arm_application_id"),
+		ArmApplicationClientSecret:            getString(d, "arm_application_key"),
+		AzuregovSubscriptionId:                getString(d, "azuregov_subscription_id"),
+		AzuregovApplicationEndpoint:           getString(d, "azuregov_directory_id"),
+		AzuregovApplicationClientId:           getString(d, "azuregov_application_id"),
+		AzuregovApplicationClientSecret:       getString(d, "azuregov_application_key"),
+		OciTenancyID:                          getString(d, "oci_tenancy_id"),
+		OciUserID:                             getString(d, "oci_user_id"),
+		OciCompartmentID:                      getString(d, "oci_compartment_id"),
+		OciApiPrivateKeyFilePath:              getString(d, "oci_api_private_key_filepath"),
+		AlicloudAccountId:                     getString(d, "alicloud_account_id"),
+		AlicloudAccessKey:                     getString(d, "alicloud_access_key"),
+		AlicloudSecretKey:                     getString(d, "alicloud_secret_key"),
+		AwsChinaAccountNumber:                 getString(d, "awschina_account_number"),
+		AwsChinaRoleApp:                       getString(d, "awschina_role_app"),
+		AwsChinaRoleEc2:                       getString(d, "awschina_role_ec2"),
+		AwsChinaAccessKey:                     getString(d, "awschina_access_key"),
+		AwsChinaSecretKey:                     getString(d, "awschina_secret_key"),
+		AzureChinaSubscriptionId:              getString(d, "azurechina_subscription_id"),
+		AzureChinaApplicationEndpoint:         getString(d, "azurechina_directory_id"),
+		AzureChinaApplicationClientId:         getString(d, "azurechina_application_id"),
+		AzureChinaApplicationClientSecret:     getString(d, "azurechina_application_key"),
 	}
 
 	edgeAccount := &goaviatrix.EdgeAccount{
-		AccountName:        d.Get("account_name").(string),
-		CloudType:          d.Get("cloud_type").(int),
-		EdgeCSPUsername:    d.Get("edge_csp_username").(string),
-		EdgeCSPPassword:    d.Get("edge_csp_password").(string),
-		EdgeCSPApiEndpoint: d.Get("edge_csp_api_endpoint").(string),
+		AccountName:        getString(d, "account_name"),
+		CloudType:          getInt(d, "cloud_type"),
+		EdgeCSPUsername:    getString(d, "edge_csp_username"),
+		EdgeCSPPassword:    getString(d, "edge_csp_password"),
+		EdgeCSPApiEndpoint: getString(d, "edge_csp_api_endpoint"),
 	}
-	if d.Get("edge_zededa_username").(string) != "" && d.Get("edge_zededa_password").(string) != "" {
-		edgeAccount.EdgeCSPUsername = d.Get("edge_zededa_username").(string)
-		edgeAccount.EdgeCSPPassword = d.Get("edge_zededa_password").(string)
+	if getString(d, "edge_zededa_username") != "" && getString(d, "edge_zededa_password") != "" {
+		edgeAccount.EdgeCSPUsername = getString(d, "edge_zededa_username")
+		edgeAccount.EdgeCSPPassword = getString(d, "edge_zededa_password")
 	}
 
-	awsIam := d.Get("aws_iam").(bool)
+	awsIam := getBool(d, "aws_iam")
 	account.AwsIam = strconv.FormatBool(awsIam)
 
-	awsGovIam := d.Get("awsgov_iam").(bool)
+	awsGovIam := getBool(d, "awsgov_iam")
 	account.AwsgovIam = strconv.FormatBool(awsGovIam)
 
-	awsChinaIam := d.Get("awschina_iam").(bool)
+	awsChinaIam := getBool(d, "awschina_iam")
 	account.AwsChinaIam = strconv.FormatBool(awsChinaIam)
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
@@ -989,10 +996,10 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (getString(d, "edge_csp_username") != "" || getString(d, "edge_csp_password") != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_zededa_username").(string) != "" || d.Get("edge_zededa_password").(string) != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (getString(d, "edge_zededa_username") != "" || getString(d, "edge_zededa_password") != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'edge_zededa_username' and 'edge_zededa_password' can only be set when 'cloud_type' is Edge Zededa (65536)")
 	}
 
@@ -1081,7 +1088,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 				return diag.Errorf("failed to update Edge CSP Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.EDGECSP {
 		if d.HasChange("edge_zededa_username") || d.HasChange("edge_zededa_password") {
 			err := client.UpdateEdgeAccount(edgeAccount)
 			if err != nil {
@@ -1095,9 +1101,12 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 
 // for now, deleting gcp account will not delete the credential file
 func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(goaviatrix.ClientInterface)
+	client, ok := meta.(goaviatrix.ClientInterface)
+	if !ok {
+		return diag.Errorf("internal error: meta is not a valid goaviatrix.ClientInterface")
+	}
 	account := &goaviatrix.Account{
-		AccountName: d.Get("account_name").(string),
+		AccountName: getString(d, "account_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix account: %#v", account)
@@ -1111,7 +1120,7 @@ func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, 
 
 // Validate account number string is 12 digits
 func validateAwsAccountNumber(val interface{}, key string) (warns []string, errs []error) {
-	v := val.(string)
+	v := mustString(val)
 	if len(v) != 12 {
 		errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
 	} else {

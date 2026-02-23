@@ -2,8 +2,8 @@
 
 # SetEnv takes two arguments, key and value
 SetEnv() {
-	echo "$1=$2"
-	export "$1"="$2"
+    echo "$1=$2"
+    export "$1"="$2"
 }
 
 SetEnv ARM_APPLICATION_ID "$(terraform output -raw ARM_APPLICATION_ID)"

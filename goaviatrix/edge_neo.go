@@ -28,7 +28,7 @@ type EdgeNEO struct {
 	PrependAsPathReturn                string   `json:"prepend_as_path,omitempty"`
 	IncludeCidrList                    []string `json:"include_cidr_list,omitempty"`
 	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval,omitempty"`
-	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty,omitempty"`
+	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty"`
 	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
 	EnablePreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
 	BgpPollingTime                     int      `json:"bgp_polling_time,omitempty"`

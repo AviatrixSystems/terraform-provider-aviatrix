@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFireNet_basic(t *testing.T) {
@@ -119,7 +121,7 @@ func testAccCheckFireNetExists(n string, fireNet *goaviatrix.FireNet) resource.T
 			return fmt.Errorf("no FireNet ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundFireNet := &goaviatrix.FireNet{
 			VpcID: rs.Primary.Attributes["vpc_id"],
@@ -127,7 +129,7 @@ func testAccCheckFireNetExists(n string, fireNet *goaviatrix.FireNet) resource.T
 
 		foundFireNet2, err := client.GetFireNet(foundFireNet)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("fireNet not found")
 			}
 			return err
@@ -142,7 +144,7 @@ func testAccCheckFireNetExists(n string, fireNet *goaviatrix.FireNet) resource.T
 }
 
 func testAccCheckFireNetDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_firenet" {
@@ -154,7 +156,7 @@ func testAccCheckFireNetDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetFireNet(foundFireNet)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("fireNet still exists")
 		}
 	}

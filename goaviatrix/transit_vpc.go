@@ -18,6 +18,7 @@ type TransitVpc struct {
 	Action                       string `form:"action,omitempty" json:"action,omitempty"`
 	CID                          string `form:"CID,omitempty" json:"CID,omitempty"`
 	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	GroupUUID                    string `form:"group_uuid,omitempty" json:"group_uuid,omitempty"`
 	DnsServer                    string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
 	GwName                       string `form:"gw_name,omitempty" json:"name,omitempty"`
 	GwSize                       string `form:"gw_size,omitempty"`
@@ -716,6 +717,17 @@ func (c *Client) EditTransitConnectionRemoteSubnet(vpcId, connName, remoteSubnet
 		"vpc_id":      vpcId,
 		"conn_name":   connName,
 		"remote_cidr": remoteSubnet,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditTransitConnectionLocalSubnet(vpcId, connName, localSubnet string) error {
+	data := map[string]string{
+		"action":            "edit_site2cloud_conn",
+		"CID":               c.CID,
+		"vpc_id":            vpcId,
+		"conn_name":         connName,
+		"cloud_subnet_cidr": localSubnet,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }

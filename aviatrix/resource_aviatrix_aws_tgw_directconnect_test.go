@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAwsTgwDirectConnect_basic(t *testing.T) {
@@ -121,7 +123,7 @@ func tesAccCheckAwsTgwDirectConnectExists(n string, awsTgwDirectConnect *goaviat
 			return fmt.Errorf("no AWS TGW DIRECTCONNECT ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundAwsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 			TgwName:     rs.Primary.Attributes["tgw_name"],
@@ -145,7 +147,7 @@ func tesAccCheckAwsTgwDirectConnectExists(n string, awsTgwDirectConnect *goaviat
 }
 
 func testAccCheckAwsTgwDirectConnectDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_directconnect" {
@@ -158,8 +160,8 @@ func testAccCheckAwsTgwDirectConnectDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetAwsTgwDirectConnect(foundAwsTgwDirectConnect)
-		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %v", err)
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
+			return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %w", err)
 		}
 	}
 

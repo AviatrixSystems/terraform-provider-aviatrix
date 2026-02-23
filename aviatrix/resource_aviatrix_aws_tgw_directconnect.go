@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 		Update: resourceAviatrixAWSTgwDirectConnectUpdate,
 		Delete: resourceAviatrixAWSTgwDirectConnectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,17 +62,17 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 }
 
 func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
-		TgwName:                  d.Get("tgw_name").(string),
-		DirectConnectAccountName: d.Get("directconnect_account_name").(string),
-		DxGatewayID:              d.Get("dx_gateway_id").(string),
-		AllowedPrefix:            d.Get("allowed_prefix").(string),
-		SecurityDomainName:       d.Get("network_domain_name").(string),
+		TgwName:                  getString(d, "tgw_name"),
+		DirectConnectAccountName: getString(d, "directconnect_account_name"),
+		DxGatewayID:              getString(d, "dx_gateway_id"),
+		AllowedPrefix:            getString(d, "allowed_prefix"),
+		SecurityDomainName:       getString(d, "network_domain_name"),
 	}
 
-	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	learnedCidrsApproval := getBool(d, "enable_learned_cidrs_approval")
 	if learnedCidrsApproval {
 		awsTgwDirectConnect.LearnedCidrsApproval = "yes"
 	} else {
@@ -79,11 +81,11 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(awsTgwDirectConnect.TgwName + "~" + awsTgwDirectConnect.DxGatewayID)
 	flag := false
-	defer resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connect: %s", err)
+		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connect: %w", err)
 	}
 
 	return resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag)
@@ -98,10 +100,10 @@ func resourceAviatrixAWSTgwDirectConnectReadIfRequired(d *schema.ResourceData, m
 }
 
 func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tgwName := d.Get("tgw_name").(string)
-	directConnectGatewayID := d.Get("dx_gateway_id").(string)
+	tgwName := getString(d, "tgw_name")
+	directConnectGatewayID := getString(d, "dx_gateway_id")
 
 	if tgwName == "" || directConnectGatewayID == "" {
 		id := d.Id()
@@ -109,36 +111,35 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 		if !strings.Contains(id, "~") {
 			log.Printf("[DEBUG] Import Id: %s is invalid", id)
 		}
-		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("dx_gateway_id", strings.Split(id, "~")[1])
+		mustSet(d, "tgw_name", strings.Split(id, "~")[0])
+		mustSet(d, "dx_gateway_id", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
-		TgwName:     d.Get("tgw_name").(string),
-		DxGatewayID: d.Get("dx_gateway_id").(string),
+		TgwName:     getString(d, "tgw_name"),
+		DxGatewayID: getString(d, "dx_gateway_id"),
 	}
 
 	directConnect, err := client.GetAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Aws Tgw Direct Connect: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Aws Tgw Direct Connect: %w", err)
 	}
 	log.Printf("[INFO] Found Aviatrix Aws Tgw Direct Connect: %#v", directConnect)
-
-	d.Set("tgw_name", directConnect.TgwName)
-	d.Set("directconnect_account_name", directConnect.DirectConnectAccountName)
-	d.Set("dx_gateway_id", directConnect.DxGatewayID)
-	d.Set("allowed_prefix", directConnect.AllowedPrefix)
-	d.Set("network_domain_name", directConnect.SecurityDomainName)
+	mustSet(d, "tgw_name", directConnect.TgwName)
+	mustSet(d, "directconnect_account_name", directConnect.DirectConnectAccountName)
+	mustSet(d, "dx_gateway_id", directConnect.DxGatewayID)
+	mustSet(d, "allowed_prefix", directConnect.AllowedPrefix)
+	mustSet(d, "network_domain_name", directConnect.SecurityDomainName)
 
 	if directConnect.LearnedCidrsApproval == "yes" {
-		d.Set("enable_learned_cidrs_approval", true)
+		mustSet(d, "enable_learned_cidrs_approval", true)
 	} else {
-		d.Set("enable_learned_cidrs_approval", false)
+		mustSet(d, "enable_learned_cidrs_approval", false)
 	}
 
 	d.SetId(directConnect.TgwName + "~" + directConnect.DxGatewayID)
@@ -146,37 +147,37 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
-		TgwName:       d.Get("tgw_name").(string),
-		DxGatewayName: d.Get("dx_gateway_id").(string),
+		TgwName:       getString(d, "tgw_name"),
+		DxGatewayName: getString(d, "dx_gateway_id"),
 	}
 
 	d.Partial(true)
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", awsTgwDirectConnect)
 	if ok := d.HasChange("allowed_prefix"); ok {
-		awsTgwDirectConnect.AllowedPrefix = d.Get("allowed_prefix").(string)
+		awsTgwDirectConnect.AllowedPrefix = getString(d, "allowed_prefix")
 		err := client.UpdateDirectConnAllowedPrefix(awsTgwDirectConnect)
 		if err != nil {
-			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %s", err)
+			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %w", err)
 		}
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
-		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		learnedCidrsApproval := getBool(d, "enable_learned_cidrs_approval")
 		if learnedCidrsApproval {
 			awsTgwDirectConnect.LearnedCidrsApproval = "yes"
 			err := client.EnableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect)
 			if err != nil {
-				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to enable learned cidrs approval: %w", err)
 			}
 		} else {
 			awsTgwDirectConnect.LearnedCidrsApproval = "no"
 			err := client.DisableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect)
 			if err != nil {
-				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to disable learned cidrs approval: %w", err)
 			}
 		}
 	}
@@ -186,17 +187,17 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixAWSTgwDirectConnectDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
-		TgwName:         d.Get("tgw_name").(string),
-		DirectConnectID: d.Get("dx_gateway_id").(string),
+		TgwName:         getString(d, "tgw_name"),
+		DirectConnectID: getString(d, "dx_gateway_id"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix AWS TGW Direct Connect: %#v", awsTgwDirectConnect)
 
 	err := client.DeleteAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %w", err)
 	}
 
 	return nil

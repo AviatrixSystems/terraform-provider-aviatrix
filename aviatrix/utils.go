@@ -1,7 +1,9 @@
 package aviatrix
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -13,11 +15,12 @@ import (
 
 	"github.com/hashicorp/go-version"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
@@ -43,6 +46,22 @@ func validateIPv6CIDR(i any, k string) (warnings []string, errors []error) {
 	_, bits := ipnet.Mask.Size()
 	if bits == 0 {
 		errors = append(errors, fmt.Errorf("expected %s to contain a valid network CIDR, got invalid mask size", k))
+		return warnings, errors
+	}
+
+	return warnings, errors
+}
+
+func validateCIDR(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %q to be string", k))
+		return warnings, errors
+	}
+
+	_, _, err := net.ParseCIDR(v)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("expected %s to contain a valid CIDR, got: %s (%w)", k, v, err))
 		return warnings, errors
 	}
 
@@ -94,6 +113,32 @@ func validateAzureAZ(i interface{}, k string) (warnings []string, errors []error
 // validateCloudType is a SchemaValidateFunc for Cloud Type parameters.
 func validateCloudType(i interface{}, k string) (warnings []string, errors []error) {
 	return validation.IntInSlice(goaviatrix.GetSupportedClouds())(i, k)
+}
+
+// validateSpokeGwType is a SchemaValidateFunc for Spoke Gateway Type parameters.
+// Accepts case-insensitive input, but normalizes to uppercase.
+func validateSpokeGwType(i interface{}, k string) (warnings []string, errors []error) {
+	validGwTypes := []string{"SPOKE", "EDGESPOKE", "STANDALONE"}
+	return validation.StringInSlice(validGwTypes, true)(i, k)
+}
+
+// validateTransitGwType is a SchemaValidateFunc for Transit Gateway Type parameters.
+// Accepts case-insensitive input, but normalizes to uppercase.
+func validateTransitGwType(i interface{}, k string) (warnings []string, errors []error) {
+	validGwTypes := []string{"TRANSIT", "EDGETRANSIT", "STANDALONE"}
+	return validation.StringInSlice(validGwTypes, true)(i, k)
+}
+
+// normalizeGwType normalizes gateway type to uppercase.
+func normalizeGwType(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	str, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return strings.ToUpper(str)
 }
 
 func DiffSuppressFuncString(k, old, new string, d *schema.ResourceData) bool {
@@ -150,8 +195,8 @@ func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fr
 // getStringList will convert a TypeList attribute to a slice of string
 func getStringList(d *schema.ResourceData, k string) []string {
 	var sl []string
-	for _, v := range d.Get(k).([]interface{}) {
-		sl = append(sl, v.(string))
+	for _, v := range getList(d, k) {
+		sl = append(sl, mustString(v))
 	}
 	return sl
 }
@@ -159,8 +204,8 @@ func getStringList(d *schema.ResourceData, k string) []string {
 // getStringSet will convert a TypeSet attribute to a slice of string
 func getStringSet(d *schema.ResourceData, k string) []string {
 	var sl []string
-	for _, v := range d.Get(k).(*schema.Set).List() {
-		sl = append(sl, v.(string))
+	for _, v := range getSet(d, k).List() {
+		sl = append(sl, mustString(v))
 	}
 	return sl
 }
@@ -188,7 +233,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		return nil, fmt.Errorf("adding tags is only supported for AWS (1), GCP (4), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 	}
-	tagsMap := tags.(map[string]interface{})
+	tagsMap := mustMap(tags)
 	tagsStrMap := make(map[string]string, len(tagsMap))
 	var matcher *regexp.Regexp
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -213,7 +258,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 func TagsMapToJson(tagsMap map[string]string) (string, error) {
 	bytes, err := json.Marshal(tagsMap)
 	if err != nil {
-		return "", fmt.Errorf("could not marshal tags to json: %v", err)
+		return "", fmt.Errorf("could not marshal tags to json: %w", err)
 	}
 	tagsMapStr := string(bytes)
 	// Return empty json dict when tagsMap is nil
@@ -244,7 +289,7 @@ func validateAzureEipNameResourceGroup(i interface{}, k string) (warnings []stri
 }
 
 func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bool {
-	cloudType := d.Get("cloud_type").(int)
+	cloudType := getInt(d, "cloud_type")
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		// If gateway vpc_id is in the new format (3 tuple) e.g. name:rg_name:guid
 		// and the vpc_id provided in the terraform file is in the old format (2 tuple)
@@ -262,7 +307,7 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 }
 
 func DiffSuppressFuncGCPVpcId(k, old, new string, d *schema.ResourceData) bool {
-	cloudType := d.Get("cloud_type").(int)
+	cloudType := getInt(d, "cloud_type")
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 		oldValue := strings.Split(old, "~-~")
 		newValue := strings.Split(new, "~-~")
@@ -278,7 +323,7 @@ func DiffSuppressFuncGCPVpcId(k, old, new string, d *schema.ResourceData) bool {
 
 func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bool {
 	connectionKey := strings.Replace(k, "interface", "connection", 1)
-	connection := d.Get(connectionKey).(string)
+	connection := getString(d, connectionKey)
 
 	// If this is a "connection" based NAT, check if the number of SNAT or DNAT
 	// policies have changed. If they have, we set the interface to the default
@@ -297,7 +342,7 @@ func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bo
 // and hi returned from the API is equal to lo,
 func DiffSuppressFuncDistributedFirewallingPolicyPortRangeHi(k, old, new string, d *schema.ResourceData) bool {
 	loKey := strings.Replace(k, "hi", "lo", 1)
-	lo := d.Get(loKey).(int)
+	lo := getInt(d, loKey)
 	return new == "0" && old == fmt.Sprintf("%d", lo)
 }
 
@@ -597,7 +642,7 @@ func expandStringList(list []interface{}) []string {
 	result := make([]string, 0, len(list))
 	for _, v := range list {
 		if v != nil {
-			result = append(result, v.(string))
+			result = append(result, mustString(v))
 		}
 	}
 	return result
@@ -608,8 +653,156 @@ func expandIntList(list []interface{}) []int {
 	result := make([]int, 0, len(list))
 	for _, v := range list {
 		if v != nil {
-			result = append(result, v.(int))
+			result = append(result, mustInt(v))
 		}
 	}
 	return result
+}
+
+func mustSet(d *schema.ResourceData, key string, val interface{}) {
+	if err := d.Set(key, val); err != nil {
+		panic(fmt.Errorf("schema error: failed to set %q. This is a provider bug, check your schema definition: %w", key, err))
+	}
+}
+
+// Getter allows helpers to work with both *schema.ResourceData and *schema.ResourceDiff
+type Getter interface {
+	Get(key string) interface{}
+}
+
+func getString(d Getter, key string) string {
+	v := d.Get(key)
+	s, ok := v.(string)
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected string", key, v))
+	}
+	return s
+}
+
+func getInt(d Getter, key string) int {
+	v := d.Get(key)
+	i, ok := v.(int)
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected int", key, v))
+	}
+	return i
+}
+
+func getBool(d Getter, key string) bool {
+	v := d.Get(key)
+	b, ok := v.(bool)
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected bool", key, v))
+	}
+	return b
+}
+
+func getFloat64(d Getter, key string) float64 {
+	v := d.Get(key)
+	f, ok := v.(float64)
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected float64", key, v))
+	}
+	return f
+}
+
+func getList(d Getter, key string) []interface{} {
+	v := d.Get(key)
+	l, ok := v.([]interface{})
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected []interface{}", key, v))
+	}
+	return l
+}
+
+func getSet(d Getter, key string) *schema.Set {
+	v := d.Get(key)
+	s, ok := v.(*schema.Set)
+	if !ok {
+		panic(fmt.Sprintf("internal error: key %q has type %T but expected *schema.Set", key, v))
+	}
+	return s
+}
+
+// mustString asserts that the given interface is a string.
+// Use this for type assertions outside of d.Get() context.
+func mustString(v interface{}) string {
+	s, ok := v.(string)
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected string but got %T", v))
+	}
+	return s
+}
+
+// mustInt asserts that the given interface is an int.
+func mustInt(v interface{}) int {
+	i, ok := v.(int)
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected int but got %T", v))
+	}
+	return i
+}
+
+// mustBool asserts that the given interface is a bool.
+func mustBool(v interface{}) bool {
+	b, ok := v.(bool)
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected bool but got %T", v))
+	}
+	return b
+}
+
+// mustMap asserts that the given interface is a map[string]interface{}.
+func mustMap(v interface{}) map[string]interface{} {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected map[string]interface{} but got %T", v))
+	}
+	return m
+}
+
+// mustSlice asserts that the given interface is a []interface{}.
+func mustSlice(v interface{}) []interface{} {
+	s, ok := v.([]interface{})
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected []interface{} but got %T", v))
+	}
+	return s
+}
+
+// mustSchemaSet asserts that the given interface is a *schema.Set.
+// Use this for type assertions outside of d.Get() context.
+func mustSchemaSet(v interface{}) *schema.Set {
+	s, ok := v.(*schema.Set)
+	if !ok {
+		panic(fmt.Sprintf("internal error: expected *schema.Set but got %T", v))
+	}
+	return s
+}
+
+// isTimeoutOrConnectionError returns true if the error indicates a timeout
+// or connection-level failure where the server may have completed the operation
+// despite the client not receiving a response.
+func isTimeoutOrConnectionError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Type-safe checks via errors.Is / errors.As
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	// String-based fallbacks for wrapped errors that may not preserve
+	// the original error type (e.g. from HTTP client or JSON decoding).
+	// This list is not exhaustive.
+	msg := err.Error()
+	return strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "context deadline exceeded") ||
+		strings.Contains(msg, "connection reset")
 }

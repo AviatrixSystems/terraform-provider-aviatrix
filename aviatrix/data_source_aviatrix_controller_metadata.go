@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixControllerMetadata() *schema.Resource {
@@ -40,21 +42,20 @@ func dataSourceAviatrixControllerMetadata() *schema.Resource {
 }
 
 func dataSourceAviatrixControllerMetadataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	controllerMetadata, err := client.GetControllerMetadata(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("couldn't get controller metadata: %s", err)
 	}
-
-	d.Set("region", controllerMetadata.Region)
-	d.Set("vpc_id", controllerMetadata.VpcId)
-	d.Set("instance_id", controllerMetadata.InstanceId)
-	d.Set("cloud_type", controllerMetadata.CloudType)
+	mustSet(d, "region", controllerMetadata.Region)
+	mustSet(d, "vpc_id", controllerMetadata.VpcId)
+	mustSet(d, "instance_id", controllerMetadata.InstanceId)
+	mustSet(d, "cloud_type", controllerMetadata.CloudType)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil

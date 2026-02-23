@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAWSTgw() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 		Update: resourceAviatrixAWSTgwUpdate,
 		Delete: resourceAviatrixAWSTgwDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		SchemaVersion: 3,
@@ -97,16 +99,16 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 }
 
 func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgw := &goaviatrix.AWSTgw{
-		Name:                    d.Get("tgw_name").(string),
-		AccountName:             d.Get("account_name").(string),
-		Region:                  d.Get("region").(string),
-		AwsSideAsNumber:         d.Get("aws_side_as_number").(string),
-		CloudType:               d.Get("cloud_type").(int),
-		EnableMulticast:         d.Get("enable_multicast").(bool),
-		InspectionMode:          d.Get("inspection_mode").(string),
+		Name:                    getString(d, "tgw_name"),
+		AccountName:             getString(d, "account_name"),
+		Region:                  getString(d, "region"),
+		AwsSideAsNumber:         getString(d, "aws_side_as_number"),
+		CloudType:               getInt(d, "cloud_type"),
+		EnableMulticast:         getBool(d, "enable_multicast"),
+		InspectionMode:          getString(d, "inspection_mode"),
 		NotCreateDefaultDomains: true,
 	}
 
@@ -131,20 +133,20 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 	err1 := client.CreateAWSTgw(awsTgw)
 	if err1 != nil {
-		return fmt.Errorf("failed to create AWS TGW: %s", err1)
+		return fmt.Errorf("failed to create AWS TGW: %w", err1)
 	}
 
 	if cidrs := getStringSet(d, "cidrs"); len(cidrs) != 0 {
 		err := client.UpdateTGWCidrs(awsTgw.Name, cidrs)
 		if err != nil {
-			return fmt.Errorf("could not update TGW CIDRs after creation: %v", err)
+			return fmt.Errorf("could not update TGW CIDRs after creation: %w", err)
 		}
 	}
 
 	if awsTgw.InspectionMode == "Connection-based" {
 		err := client.UpdateTGWInspectionMode(awsTgw.Name, awsTgw.InspectionMode)
 		if err != nil {
-			return fmt.Errorf("could not update TGW inspection mode after creation: %v", err)
+			return fmt.Errorf("could not update TGW inspection mode after creation: %w", err)
 		}
 	}
 
@@ -160,37 +162,39 @@ func resourceAviatrixAWSTgwReadIfRequired(d *schema.ResourceData, meta interface
 }
 
 func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tgwName := d.Get("tgw_name").(string)
+	tgwName := getString(d, "tgw_name")
 	if tgwName == "" {
-		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", id)
-		d.Set("tgw_name", id)
-		d.SetId(id)
+		tgwName = d.Id()
+		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", tgwName)
+		mustSet(d, "tgw_name", tgwName)
+		d.SetId(tgwName)
 	}
 
-	awsTgw := &goaviatrix.AWSTgw{
-		Name: d.Get("tgw_name").(string),
+	req := &goaviatrix.AWSTgw{
+		Name: tgwName,
 	}
-	awsTgw, err := client.ListTgwDetails(awsTgw)
+
+	resp, err := client.ListTgwDetails(req)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgw.Name, err)
+		return fmt.Errorf("couldn't find AWS TGW %s: %w", tgwName, err)
 	}
-	d.Set("account_name", awsTgw.AccountName)
-	d.Set("tgw_name", awsTgw.Name)
-	d.Set("region", awsTgw.Region)
-	d.Set("cloud_type", awsTgw.CloudType)
-	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
-	d.Set("enable_multicast", awsTgw.EnableMulticast)
-	d.Set("tgw_id", awsTgw.TgwId)
-	d.Set("inspection_mode", awsTgw.InspectionMode)
-	if err := d.Set("cidrs", awsTgw.CidrList); err != nil {
-		return fmt.Errorf("could not set aws_tgw.cidrs into state: %v", err)
+	mustSet(d, "account_name", resp.AccountName)
+	mustSet(d, "tgw_name", resp.Name)
+	mustSet(d, "region", resp.Region)
+	mustSet(d, "cloud_type", resp.CloudType)
+	mustSet(d, "aws_side_as_number", resp.AwsSideAsNumber)
+	mustSet(d, "enable_multicast", resp.EnableMulticast)
+	mustSet(d, "tgw_id", resp.TgwId)
+	mustSet(d, "inspection_mode", resp.InspectionMode)
+
+	if err := d.Set("cidrs", resp.CidrList); err != nil {
+		return fmt.Errorf("could not set aws_tgw.cidrs into state: %w", err)
 	}
 
 	return nil
@@ -199,11 +203,11 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating AWS TGW")
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	awsTgw := &goaviatrix.AWSTgw{
-		Name:        d.Get("tgw_name").(string),
-		AccountName: d.Get("account_name").(string),
-		Region:      d.Get("region").(string),
+		Name:        getString(d, "tgw_name"),
+		AccountName: getString(d, "account_name"),
+		Region:      getString(d, "region"),
 	}
 
 	d.Partial(true)
@@ -225,14 +229,14 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		cidrs := getStringSet(d, "cidrs")
 		err := client.UpdateTGWCidrs(awsTgw.Name, cidrs)
 		if err != nil {
-			return fmt.Errorf("could not update TGW CIDRs during update: %v", err)
+			return fmt.Errorf("could not update TGW CIDRs during update: %w", err)
 		}
 	}
 
 	if d.HasChange("inspection_mode") {
-		err := client.UpdateTGWInspectionMode(awsTgw.Name, d.Get("inspection_mode").(string))
+		err := client.UpdateTGWInspectionMode(awsTgw.Name, getString(d, "inspection_mode"))
 		if err != nil {
-			return fmt.Errorf("could not update TGW inspection mode during update: %v", err)
+			return fmt.Errorf("could not update TGW inspection mode during update: %w", err)
 		}
 	}
 
@@ -242,12 +246,12 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	awsTgw := &goaviatrix.AWSTgw{
-		Name:                      d.Get("tgw_name").(string),
-		AccountName:               d.Get("account_name").(string),
-		Region:                    d.Get("region").(string),
-		AwsSideAsNumber:           d.Get("aws_side_as_number").(string),
+		Name:                      getString(d, "tgw_name"),
+		AccountName:               getString(d, "account_name"),
+		Region:                    getString(d, "region"),
+		AwsSideAsNumber:           getString(d, "aws_side_as_number"),
 		AttachedAviatrixTransitGW: make([]string, 0),
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
 	}
@@ -256,11 +260,11 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.DeleteAWSTgw(awsTgw)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't destroy AWS TGW %s: %v", awsTgw.Name, err)
+		return fmt.Errorf("couldn't destroy AWS TGW %s: %w", awsTgw.Name, err)
 	}
 
 	return nil

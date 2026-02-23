@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
@@ -19,7 +21,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 		UpdateWithoutTimeout: resourceAviatrixEdgeSpokeTransitAttachmentUpdate,
 		DeleteWithoutTimeout: resourceAviatrixEdgeSpokeTransitAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -146,24 +148,24 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 
 func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.SpokeTransitAttachment {
 	edgeSpokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:              d.Get("spoke_gw_name").(string),
-		TransitGwName:            d.Get("transit_gw_name").(string),
-		EnableOverPrivateNetwork: d.Get("enable_over_private_network").(bool),
-		EnableJumboFrame:         d.Get("enable_jumbo_frame").(bool),
-		EnableFirenetForEdge:     d.Get("enable_firenet_for_edge").(bool),
-		EnableInsaneMode:         d.Get("enable_insane_mode").(bool),
-		InsaneModeTunnelNumber:   d.Get("insane_mode_tunnel_number").(int),
+		SpokeGwName:              getString(d, "spoke_gw_name"),
+		TransitGwName:            getString(d, "transit_gw_name"),
+		EnableOverPrivateNetwork: getBool(d, "enable_over_private_network"),
+		EnableJumboFrame:         getBool(d, "enable_jumbo_frame"),
+		EnableFirenetForEdge:     getBool(d, "enable_firenet_for_edge"),
+		EnableInsaneMode:         getBool(d, "enable_insane_mode"),
+		InsaneModeTunnelNumber:   getInt(d, "insane_mode_tunnel_number"),
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
 		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
-		DisableActivemesh:        d.Get("disable_activemesh").(bool),
+		DisableActivemesh:        getBool(d, "disable_activemesh"),
 	}
 
 	return edgeSpokeTransitAttachment
 }
 
 func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
 
@@ -199,12 +201,16 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	flag := false
 	defer resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 
-	numberOfRetries := d.Get("number_of_retries").(int)
-	retryInterval := d.Get("retry_interval").(int)
+	numberOfRetries := getInt(d, "number_of_retries")
+	retryInterval := getInt(d, "retry_interval")
 
 	for i := 0; ; i++ {
 		err := client.CreateSpokeTransitAttachment(ctx, attachment)
 		if err != nil {
+			if strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
+				// already joined, so we can break out of the loop
+				break
+			}
 			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
 				!strings.Contains(err.Error(), "try again") {
 				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
@@ -256,10 +262,10 @@ func resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx context.Contex
 }
 
 func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	spokeGwName := d.Get("spoke_gw_name").(string)
-	transitGwName := d.Get("transit_gw_name").(string)
+	spokeGwName := getString(d, "spoke_gw_name")
+	transitGwName := getString(d, "transit_gw_name")
 	if spokeGwName == "" || transitGwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no spoke_gw_name or transit_gw_name received. Import Id is %s", id)
@@ -268,8 +274,8 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		if len(parts) != 2 {
 			return diag.Errorf("import id is invalid, expecting spoke_gw_name~transit_gw_name, but received: %s", id)
 		}
-		d.Set("spoke_gw_name", parts[0])
-		d.Set("transit_gw_name", parts[1])
+		mustSet(d, "spoke_gw_name", parts[0])
+		mustSet(d, "transit_gw_name", parts[1])
 		spokeGwName = parts[0]
 		transitGwName = parts[1]
 	}
@@ -281,19 +287,18 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 
 	attachment, err := client.GetEdgeSpokeTransitAttachment(ctx, spokeTransitAttachment)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not find Edge as a Spoke transit attachment: %v", err)
 	}
-
-	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
-	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
-	d.Set("enable_firenet_for_edge", attachment.EnableFirenetForEdge)
-	d.Set("enable_insane_mode", attachment.EnableInsaneMode)
+	mustSet(d, "enable_over_private_network", attachment.EnableOverPrivateNetwork)
+	mustSet(d, "enable_jumbo_frame", attachment.EnableJumboFrame)
+	mustSet(d, "enable_firenet_for_edge", attachment.EnableFirenetForEdge)
+	mustSet(d, "enable_insane_mode", attachment.EnableInsaneMode)
 	if attachment.EnableInsaneMode {
-		d.Set("insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
+		mustSet(d, "insane_mode_tunnel_number", attachment.InsaneModeTunnelNumber)
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {
@@ -363,11 +368,11 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 }
 
 func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enableInsaneMode := d.Get("enable_insane_mode").(bool)
-	enableOverPrivateNetwork := d.Get("enable_over_private_network").(bool)
-	insaneModeTunnelNumber := d.Get("insane_mode_tunnel_number").(int)
+	enableInsaneMode := getBool(d, "enable_insane_mode")
+	enableOverPrivateNetwork := getBool(d, "enable_over_private_network")
+	insaneModeTunnelNumber := getInt(d, "insane_mode_tunnel_number")
 
 	if enableInsaneMode {
 		if enableOverPrivateNetwork && (insaneModeTunnelNumber < 0 || insaneModeTunnelNumber > 49) {
@@ -380,8 +385,8 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 
 	d.Partial(true)
 
-	spokeGwName := d.Get("spoke_gw_name").(string)
-	transitGwName := d.Get("transit_gw_name").(string)
+	spokeGwName := getString(d, "spoke_gw_name")
+	transitGwName := getString(d, "transit_gw_name")
 
 	if d.HasChange("spoke_prepend_as_path") {
 		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
@@ -428,7 +433,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 			"action":                  "edit_inter_transit_gateway_peering",
 			"gateway1":                spokeGwName,
 			"gateway2":                transitGwName,
-			"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
+			"enable_firenet_for_edge": getBool(d, "enable_firenet_for_edge"),
 		}
 
 		err := client.PostAPI("edit_inter_transit_gateway_peering", form, goaviatrix.BasicCheck)
@@ -443,11 +448,11 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 }
 
 func resourceAviatrixEdgeSpokeTransitAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	attachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   d.Get("spoke_gw_name").(string),
-		TransitGwName: d.Get("transit_gw_name").(string),
+		SpokeGwName:   getString(d, "spoke_gw_name"),
+		TransitGwName: getString(d, "transit_gw_name"),
 	}
 
 	if err := client.DeleteSpokeTransitAttachment(attachment); err != nil {

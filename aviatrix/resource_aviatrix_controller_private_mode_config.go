@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,9 +34,9 @@ func resourceAviatrixControllerPrivateModeConfig() *schema.Resource {
 }
 
 func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enablePrivateMode := d.Get("enable_private_mode").(bool)
+	enablePrivateMode := getBool(d, "enable_private_mode")
 	if !enablePrivateMode {
 		if _, ok := d.GetOk("copilot_instance_id"); ok {
 			return diag.Errorf("failed to create Controller Private Mode config: %q must be empty when %q is false", "copilot_instance_id", "enable_private_mode")
@@ -62,7 +61,7 @@ func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *s
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 
 	if _, ok := d.GetOk("copilot_instance_id"); ok {
-		copilotInstanceId := d.Get("copilot_instance_id").(string)
+		copilotInstanceId := getString(d, "copilot_instance_id")
 		err := client.UpdatePrivateModeCopilot(ctx, copilotInstanceId)
 		if err != nil {
 			return diag.Errorf("failed to set Copilot instance ID: %s", err)
@@ -81,7 +80,7 @@ func resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx context.Conte
 }
 
 func resourceAviatrixControllerPrivateModeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -91,18 +90,17 @@ func resourceAviatrixControllerPrivateModeConfigRead(ctx context.Context, d *sch
 	if err != nil {
 		return diag.Errorf("failed to read Controller Private Mode Config: %s", err)
 	}
-
-	d.Set("enable_private_mode", controllerPrivateModeConfig.EnablePrivateMode)
-	d.Set("copilot_instance_id", controllerPrivateModeConfig.CopilotInstanceID)
+	mustSet(d, "enable_private_mode", controllerPrivateModeConfig.EnablePrivateMode)
+	mustSet(d, "copilot_instance_id", controllerPrivateModeConfig.CopilotInstanceID)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enablePrivateMode := d.Get("enable_private_mode").(bool)
+	enablePrivateMode := getBool(d, "enable_private_mode")
 	if d.HasChanges("enable_private_mode", "copilot_instance_id") && !enablePrivateMode {
 		if _, ok := d.GetOk("copilot_instance_id"); ok {
 			return diag.Errorf("failed to update Controller Private Mode config: %q must be empty when %q is false", "copilot_instance_id", "enable_private_mode")
@@ -124,7 +122,7 @@ func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *s
 	}
 
 	if d.HasChange("copilot_instance_id") {
-		copilotInstanceId := d.Get("copilot_instance_id").(string)
+		copilotInstanceId := getString(d, "copilot_instance_id")
 		err := client.UpdatePrivateModeCopilot(ctx, copilotInstanceId)
 		if err != nil {
 			return diag.Errorf("failed to set Copilot instance ID during update: %s", err)
@@ -135,7 +133,7 @@ func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *s
 }
 
 func resourceAviatrixControllerPrivateModeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DisablePrivateMode(ctx)
 	if err != nil {

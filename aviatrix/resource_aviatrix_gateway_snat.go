@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixGatewaySNat() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 		Update: resourceAviatrixGatewaySNatUpdate,
 		Delete: resourceAviatrixGatewaySNatDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -246,35 +248,35 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 }
 
 func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
-		GatewayName: d.Get("gw_name").(string),
+		GatewayName: getString(d, "gw_name"),
 	}
 
-	if len(d.Get("snat_policy").([]interface{})) == 0 {
+	if len(getList(d, "snat_policy")) == 0 {
 		return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 	}
 	gateway.EnableNat = "yes"
 	gateway.SnatMode = "custom"
 
 	if _, ok := d.GetOk("snat_policy"); ok {
-		policies := d.Get("snat_policy").([]interface{})
+		policies := getList(d, "snat_policy")
 		for _, policy := range policies {
-			pl := policy.(map[string]interface{})
+			pl := mustMap(policy)
 			customPolicy := &goaviatrix.PolicyRule{
-				SrcIP:           pl["src_cidr"].(string),
-				SrcPort:         pl["src_port"].(string),
-				DstIP:           pl["dst_cidr"].(string),
-				DstPort:         pl["dst_port"].(string),
-				Protocol:        pl["protocol"].(string),
-				Interface:       pl["interface"].(string),
-				Connection:      pl["connection"].(string),
-				Mark:            pl["mark"].(string),
-				NewSrcIP:        pl["snat_ips"].(string),
-				NewSrcPort:      pl["snat_port"].(string),
-				ExcludeRTB:      pl["exclude_rtb"].(string),
-				ApplyRouteEntry: pl["apply_route_entry"].(bool),
+				SrcIP:           mustString(pl["src_cidr"]),
+				SrcPort:         mustString(pl["src_port"]),
+				DstIP:           mustString(pl["dst_cidr"]),
+				DstPort:         mustString(pl["dst_port"]),
+				Protocol:        mustString(pl["protocol"]),
+				Interface:       mustString(pl["interface"]),
+				Connection:      mustString(pl["connection"]),
+				Mark:            mustString(pl["mark"]),
+				NewSrcIP:        mustString(pl["snat_ips"]),
+				NewSrcPort:      mustString(pl["snat_port"]),
+				ExcludeRTB:      mustString(pl["exclude_rtb"]),
+				ApplyRouteEntry: mustBool(pl["apply_route_entry"]),
 			}
 			gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 		}
@@ -282,11 +284,11 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(gateway.GatewayName)
 	flag := false
-	defer resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.EnableCustomizedSNat(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %s", err)
+		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %w", err)
 	}
 
 	return resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
@@ -301,39 +303,39 @@ func resourceAviatrixGatewaySNatReadIfRequired(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
 	gateway := &goaviatrix.Gateway{
-		GwName: d.Get("gw_name").(string),
+		GwName: getString(d, "gw_name"),
 	}
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix gateway: %w", err)
 	}
 
-	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
+	log.Printf("[TRACE] reading gateway %s: %#v", getString(d, "gw_name"), gw)
 	if gw != nil {
-		d.Set("gw_name", gw.GwName)
+		mustSet(d, "gw_name", gw.GwName)
 
 		gwDetail, err := client.GetGatewayDetail(gateway)
 		if err != nil {
-			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %s", gw.GwName, err)
+			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %w", gw.GwName, err)
 		}
 		if gw.NatEnabled && gw.SnatMode == "customized" {
-			d.Set("snat_mode", "customized_snat")
+			mustSet(d, "snat_mode", "customized_snat")
 			var snatPolicy []map[string]interface{}
 			var connectionPolicy []map[string]interface{}
 			var interfacePolicy []map[string]interface{}
@@ -397,38 +399,38 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
+	log.Printf("[INFO] Updating Aviatrix gateway: %#v", getString(d, "gw_name"))
 
 	d.Partial(true)
 	gateway := &goaviatrix.Gateway{
-		GatewayName: d.Get("gw_name").(string),
+		GatewayName: getString(d, "gw_name"),
 	}
 
 	if d.HasChange("snat_policy") {
-		if len(d.Get("snat_policy").([]interface{})) == 0 {
+		if len(getList(d, "snat_policy")) == 0 {
 			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 		}
 
 		gateway.SnatMode = "custom"
 		if _, ok := d.GetOk("snat_policy"); ok {
-			policies := d.Get("snat_policy").([]interface{})
+			policies := getList(d, "snat_policy")
 			for _, policy := range policies {
-				pl := policy.(map[string]interface{})
+				pl := mustMap(policy)
 				customPolicy := &goaviatrix.PolicyRule{
-					SrcIP:           pl["src_cidr"].(string),
-					SrcPort:         pl["src_port"].(string),
-					DstIP:           pl["dst_cidr"].(string),
-					DstPort:         pl["dst_port"].(string),
-					Protocol:        pl["protocol"].(string),
-					Interface:       pl["interface"].(string),
-					Connection:      pl["connection"].(string),
-					Mark:            pl["mark"].(string),
-					NewSrcIP:        pl["snat_ips"].(string),
-					NewSrcPort:      pl["snat_port"].(string),
-					ExcludeRTB:      pl["exclude_rtb"].(string),
-					ApplyRouteEntry: pl["apply_route_entry"].(bool),
+					SrcIP:           mustString(pl["src_cidr"]),
+					SrcPort:         mustString(pl["src_port"]),
+					DstIP:           mustString(pl["dst_cidr"]),
+					DstPort:         mustString(pl["dst_port"]),
+					Protocol:        mustString(pl["protocol"]),
+					Interface:       mustString(pl["interface"]),
+					Connection:      mustString(pl["connection"]),
+					Mark:            mustString(pl["mark"]),
+					NewSrcIP:        mustString(pl["snat_ips"]),
+					NewSrcPort:      mustString(pl["snat_port"]),
+					ExcludeRTB:      mustString(pl["exclude_rtb"]),
+					ApplyRouteEntry: mustBool(pl["apply_route_entry"]),
 				}
 				gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 			}
@@ -436,7 +438,7 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 
 		err := client.EnableCustomizedSNat(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable SNAT of 'customized_snat': %s", err)
+			return fmt.Errorf("failed to enable SNAT of 'customized_snat': %w", err)
 		}
 	}
 
@@ -446,15 +448,15 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	gateway := &goaviatrix.Gateway{
-		GatewayName: d.Get("gw_name").(string),
+		GatewayName: getString(d, "gw_name"),
 		SnatMode:    "custom",
 	}
 
 	err := client.DisableCustomSNat(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to disable SNAT for Aviatrix gateway(name: %s) due to: %s", gateway.GatewayName, err)
+		return fmt.Errorf("failed to disable SNAT for Aviatrix gateway(name: %s) due to: %w", gateway.GatewayName, err)
 	}
 
 	return nil

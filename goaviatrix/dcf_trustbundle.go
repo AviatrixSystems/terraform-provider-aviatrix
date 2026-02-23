@@ -104,7 +104,7 @@ func (c *Client) DeleteDCFTrustBundle(ctx context.Context, bundleUUID string) er
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
 
-func ValidateTrustbundle(i interface{}, k string) ([]string, []error) {
+func ValidateCertificates(i interface{}, k string) ([]string, []error) {
 	v, ok := i.(string)
 	if !ok {
 		return nil, []error{fmt.Errorf("expected type of %q to be string", k)}

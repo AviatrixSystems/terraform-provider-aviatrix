@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixTransitGateway() *schema.Resource {
@@ -506,155 +508,152 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 }
 
 func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
-		GwName: d.Get("gw_name").(string),
+		GwName: getString(d, "gw_name"),
 	}
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %w", err)
 	}
 	if gw != nil {
-		d.Set("cloud_type", gw.CloudType)
-		d.Set("account_name", gw.AccountName)
-		d.Set("gw_name", gw.GwName)
-		d.Set("subnet", gw.VpcNet)
+		mustSet(d, "cloud_type", gw.CloudType)
+		mustSet(d, "account_name", gw.AccountName)
+		mustSet(d, "gw_name", gw.GwName)
+		mustSet(d, "subnet", gw.VpcNet)
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-			d.Set("vpc_reg", gw.VpcRegion)
+			mustSet(d, "vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			mustSet(d, "vpc_reg", gw.VpcRegion)
 			if gw.AllocateNewEipRead {
-				d.Set("allocate_new_eip", true)
+				mustSet(d, "allocate_new_eip", true)
 			} else {
-				d.Set("allocate_new_eip", false)
+				mustSet(d, "allocate_new_eip", false)
 			}
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("vpc_id", gw.VpcID)
-			d.Set("vpc_reg", gw.GatewayZone)
+			mustSet(d, "vpc_id", gw.VpcID)
+			mustSet(d, "vpc_reg", gw.GatewayZone)
 			if gw.AllocateNewEipRead {
-				d.Set("allocate_new_eip", true)
+				mustSet(d, "allocate_new_eip", true)
 			} else {
-				d.Set("allocate_new_eip", false)
+				mustSet(d, "allocate_new_eip", false)
 			}
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			d.Set("vpc_id", gw.VpcID)
-			d.Set("vpc_reg", gw.VpcRegion)
-			d.Set("allocate_new_eip", true)
+			mustSet(d, "vpc_id", gw.VpcID)
+			mustSet(d, "vpc_reg", gw.VpcRegion)
+			mustSet(d, "allocate_new_eip", true)
 		} else if gw.CloudType == goaviatrix.AliCloud {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-			d.Set("vpc_reg", gw.VpcRegion)
-			d.Set("allocate_new_eip", true)
+			mustSet(d, "vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			mustSet(d, "vpc_reg", gw.VpcRegion)
+			mustSet(d, "allocate_new_eip", true)
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			_, zoneIsSet := d.GetOk("zone")
 			if zoneIsSet && gw.GatewayZone != "AvailabilitySet" {
-				d.Set("zone", "az-"+gw.GatewayZone)
+				mustSet(d, "zone", "az-"+gw.GatewayZone)
 			}
 		}
-
-		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("public_ip", gw.PublicIP)
-		d.Set("gw_size", gw.GwSize)
-		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-		d.Set("security_group_id", gw.GwSecurityGroupID)
-		d.Set("private_ip", gw.PrivateIP)
-		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
-		d.Set("image_version", gw.ImageVersion)
-		d.Set("software_version", gw.SoftwareVersion)
-		d.Set("eip", gw.PublicIP)
-		d.Set("ha_eip", gw.HaGw.PublicIP)
-
-		d.Set("enable_private_oob", gw.EnablePrivateOob)
+		mustSet(d, "enable_encrypt_volume", gw.EnableEncryptVolume)
+		mustSet(d, "public_ip", gw.PublicIP)
+		mustSet(d, "gw_size", gw.GwSize)
+		mustSet(d, "cloud_instance_id", gw.CloudnGatewayInstID)
+		mustSet(d, "security_group_id", gw.GwSecurityGroupID)
+		mustSet(d, "private_ip", gw.PrivateIP)
+		mustSet(d, "enable_multi_tier_transit", gw.EnableMultitierTransit)
+		mustSet(d, "image_version", gw.ImageVersion)
+		mustSet(d, "software_version", gw.SoftwareVersion)
+		mustSet(d, "eip", gw.PublicIP)
+		mustSet(d, "ha_eip", gw.HaGw.PublicIP)
+		mustSet(d, "enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
-			d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
-			d.Set("oob_availability_zone", gw.GatewayZone)
+			mustSet(d, "oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
+			mustSet(d, "oob_availability_zone", gw.GatewayZone)
 		}
 
 		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
-			d.Set("single_ip_snat", true)
+			mustSet(d, "single_ip_snat", true)
 		} else {
-			d.Set("single_ip_snat", false)
+			mustSet(d, "single_ip_snat", false)
 		}
 
 		if gw.SingleAZ == "yes" {
-			d.Set("single_az_ha", true)
+			mustSet(d, "single_az_ha", true)
 		} else {
-			d.Set("single_az_ha", false)
+			mustSet(d, "single_az_ha", false)
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
+			mustSet(d, "enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
-			d.Set("enable_hybrid_connection", false)
+			mustSet(d, "enable_hybrid_connection", false)
 		}
 
 		if gw.ConnectedTransit == "yes" {
-			d.Set("connected_transit", true)
+			mustSet(d, "connected_transit", true)
 		} else {
-			d.Set("connected_transit", false)
+			mustSet(d, "connected_transit", false)
 		}
 
 		if gw.InsaneMode == "yes" {
-			d.Set("insane_mode", true)
+			mustSet(d, "insane_mode", true)
 			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				d.Set("insane_mode_az", gw.GatewayZone)
+				mustSet(d, "insane_mode_az", gw.GatewayZone)
 			} else {
-				d.Set("insane_mode_az", "")
+				mustSet(d, "insane_mode_az", "")
 			}
 		} else {
-			d.Set("insane_mode", false)
-			d.Set("insane_mode_az", "")
+			mustSet(d, "insane_mode", false)
+			mustSet(d, "insane_mode_az", "")
 		}
 
 		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
-			d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
+			mustSet(d, "customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 		} else {
-			d.Set("customized_spoke_vpc_routes", "")
+			mustSet(d, "customized_spoke_vpc_routes", "")
 		}
 		if len(gw.FilteredSpokeVpcRoutes) != 0 {
-			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
+			mustSet(d, "filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		} else {
-			d.Set("filtered_spoke_vpc_routes", "")
+			mustSet(d, "filtered_spoke_vpc_routes", "")
 		}
 		if len(gw.ExcludeCidrList) != 0 {
-			d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
+			mustSet(d, "excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
 		} else {
-			d.Set("excluded_advertised_spoke_routes", "")
+			mustSet(d, "excluded_advertised_spoke_routes", "")
 		}
 
 		gwDetail, err := client.GetGatewayDetail(gw)
 		if err != nil {
-			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
+			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %w", err)
 		}
-
-		d.Set("enable_firenet", gwDetail.EnableFireNet)
-		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
-		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
-		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
+		mustSet(d, "enable_firenet", gwDetail.EnableFireNet)
+		mustSet(d, "enable_transit_firenet", gwDetail.EnableTransitFireNet)
+		mustSet(d, "enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
+		mustSet(d, "customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
-			d.Set("enable_vpc_dns_server", true)
+			mustSet(d, "enable_vpc_dns_server", true)
 		} else {
-			d.Set("enable_vpc_dns_server", false)
+			mustSet(d, "enable_vpc_dns_server", false)
 		}
 
 		if gwDetail.EnableAdvertiseTransitCidr == "yes" {
-			d.Set("enable_advertise_transit_cidr", true)
+			mustSet(d, "enable_advertise_transit_cidr", true)
 		} else {
-			d.Set("enable_advertise_transit_cidr", false)
+			mustSet(d, "enable_advertise_transit_cidr", false)
 		}
 
 		if gwDetail.LearnedCidrsApproval == "yes" {
-			d.Set("enable_learned_cidrs_approval", true)
+			mustSet(d, "enable_learned_cidrs_approval", true)
 		} else {
-			d.Set("enable_learned_cidrs_approval", false)
+			mustSet(d, "enable_learned_cidrs_approval", false)
 		}
 
 		bgpMSAN := ""
@@ -665,12 +664,12 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 				bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
 			}
 		}
-		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+		mustSet(d, "bgp_manual_spoke_advertise_cidrs", bgpMSAN)
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			tags := &goaviatrix.Tags{
 				ResourceType: "gw",
-				ResourceName: d.Get("gw_name").(string),
+				ResourceName: getString(d, "gw_name"),
 				CloudType:    gw.CloudType,
 			}
 
@@ -686,94 +685,93 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-			d.Set("availability_domain", gw.GatewayZone)
-			d.Set("fault_domain", gw.FaultDomain)
+			mustSet(d, "availability_domain", gw.GatewayZone)
+			mustSet(d, "fault_domain", gw.FaultDomain)
 		}
 
 		haGateway := &goaviatrix.Gateway{
-			AccountName: d.Get("account_name").(string),
-			GwName:      d.Get("gw_name").(string) + "-hagw",
+			AccountName: getString(d, "account_name"),
+			GwName:      getString(d, "gw_name") + "-hagw",
 		}
 		haGw, _ := client.GetGateway(haGateway)
 		if haGw != nil {
 			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
-				d.Set("ha_subnet", haGw.VpcNet)
-				d.Set("ha_zone", "")
+				mustSet(d, "ha_subnet", haGw.VpcNet)
+				mustSet(d, "ha_zone", "")
 			} else if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-				d.Set("ha_zone", haGw.GatewayZone)
-				d.Set("ha_subnet", "")
+				mustSet(d, "ha_zone", haGw.GatewayZone)
+				mustSet(d, "ha_subnet", "")
 			}
-			d.Set("ha_public_ip", haGw.PublicIP)
-			d.Set("ha_gw_size", haGw.GwSize)
-			d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
-			d.Set("ha_gw_name", haGw.GwName)
-			d.Set("ha_private_ip", haGw.PrivateIP)
-			d.Set("ha_image_version", haGw.ImageVersion)
-			d.Set("ha_software_version", haGw.SoftwareVersion)
-			d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
+			mustSet(d, "ha_public_ip", haGw.PublicIP)
+			mustSet(d, "ha_gw_size", haGw.GwSize)
+			mustSet(d, "ha_cloud_instance_id", haGw.CloudnGatewayInstID)
+			mustSet(d, "ha_gw_name", haGw.GwName)
+			mustSet(d, "ha_private_ip", haGw.PrivateIP)
+			mustSet(d, "ha_image_version", haGw.ImageVersion)
+			mustSet(d, "ha_software_version", haGw.SoftwareVersion)
+			mustSet(d, "ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 
 			if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				d.Set("ha_insane_mode_az", haGw.GatewayZone)
+				mustSet(d, "ha_insane_mode_az", haGw.GatewayZone)
 			} else {
-				d.Set("ha_insane_mode_az", "")
+				mustSet(d, "ha_insane_mode_az", "")
 			}
 
 			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-				d.Set("ha_availability_domain", haGw.GatewayZone)
-				d.Set("ha_fault_domain", haGw.FaultDomain)
+				mustSet(d, "ha_availability_domain", haGw.GatewayZone)
+				mustSet(d, "ha_fault_domain", haGw.FaultDomain)
 			}
 
 			if haGw.EnablePrivateOob {
-				d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
-				d.Set("ha_oob_availability_zone", haGw.GatewayZone)
+				mustSet(d, "ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
+				mustSet(d, "ha_oob_availability_zone", haGw.GatewayZone)
 			}
 
 			if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 				azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
 				if len(azureEip) == 3 {
-					d.Set("ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+					mustSet(d, "ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
 				} else {
 					log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
 				}
 			}
 
 			lanCidr, err := client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
-			if err != nil && err != goaviatrix.ErrNotFound {
+			if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
 				log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
 			}
-			d.Set("ha_lan_interface_cidr", lanCidr)
+			mustSet(d, "ha_lan_interface_cidr", lanCidr)
 		}
-
-		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
-		d.Set("enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
-		d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
-		d.Set("enable_jumbo_frame", gw.JumboFrame)
-		d.Set("enable_private_oob", gw.EnablePrivateOob)
-		d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
-		d.Set("bgp_hold_time", gw.BgpHoldTime)
-		d.Set("local_as_number", gw.LocalASNumber)
-		d.Set("bgp_ecmp", gw.BgpEcmp)
-		d.Set("enable_segmentation", gw.EnableSegmentation)
-		d.Set("enable_active_standby", gw.EnableActiveStandby)
-		d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
-		d.Set("enable_transit_summarize_cidr_to_tgw", gw.EnableTransitSummarizeCidrToTgw)
+		mustSet(d, "tunnel_detection_time", gw.TunnelDetectionTime)
+		mustSet(d, "enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
+		mustSet(d, "learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
+		mustSet(d, "enable_jumbo_frame", gw.JumboFrame)
+		mustSet(d, "enable_private_oob", gw.EnablePrivateOob)
+		mustSet(d, "bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
+		mustSet(d, "bgp_hold_time", gw.BgpHoldTime)
+		mustSet(d, "local_as_number", gw.LocalASNumber)
+		mustSet(d, "bgp_ecmp", gw.BgpEcmp)
+		mustSet(d, "enable_segmentation", gw.EnableSegmentation)
+		mustSet(d, "enable_active_standby", gw.EnableActiveStandby)
+		mustSet(d, "enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
+		mustSet(d, "enable_transit_summarize_cidr_to_tgw", gw.EnableTransitSummarizeCidrToTgw)
 
 		if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
-			d.Set("lan_private_subnet", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
+			mustSet(d, "lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
+			mustSet(d, "lan_private_subnet", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
 		}
 
 		if gw.EnableLearnedCidrsApproval {
 			transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gw.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+				return fmt.Errorf("could not get advanced config for transit gateway: %w", err)
 			}
 
 			if err = d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs); err != nil {
-				return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
+				return fmt.Errorf("could not set approved_learned_cidrs into state: %w", err)
 			}
 		} else {
-			d.Set("approved_learned_cidrs", nil)
+			mustSet(d, "approved_learned_cidrs", nil)
 		}
 
 		var prependAsPath []string
@@ -784,15 +782,13 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		}
 		err = d.Set("prepend_as_path", prependAsPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
-
-		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+		mustSet(d, "enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
 		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %w", err)
 		}
-
-		d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
+		mustSet(d, "enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 			if len(gw.BgpLanInterfaces) != 0 {
 				var interfaces []map[string]interface{}
@@ -803,7 +799,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 					interfaces = append(interfaces, interfaceDict)
 				}
 				if err = d.Set("bgp_lan_interfaces", interfaces); err != nil {
-					return fmt.Errorf("could not set bgp_lan_interfaces into state: %v", err)
+					return fmt.Errorf("could not set bgp_lan_interfaces into state: %w", err)
 				}
 			}
 
@@ -816,63 +812,63 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 					haInterfaces = append(haInterfaces, interfaceDict)
 				}
 				if err = d.Set("ha_bgp_lan_interfaces", haInterfaces); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %w", err)
 				}
 			}
 
 			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gateway.GwName, err)
+				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %w", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.BgpLanIpList); err != nil {
-				return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
 			}
 			if len(bgpLanIpInfo.HaBgpLanIpList) != 0 {
 				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.HaBgpLanIpList); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_ip_list into tate: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_ip_list into tate: %w", err)
 				}
 			} else {
-				d.Set("ha_bgp_lan_ip_list", nil)
+				mustSet(d, "ha_bgp_lan_ip_list", nil)
 			}
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %v", gateway.GwName, err)
+				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %w", gateway.GwName, err)
 			}
 			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
-				return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+				return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
 			}
 			if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
 				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
-					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %v", err)
+					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %w", err)
 				}
 			} else {
-				d.Set("ha_bgp_lan_ip_list", nil)
+				mustSet(d, "ha_bgp_lan_ip_list", nil)
 			}
 		} else {
-			d.Set("bgp_lan_ip_list", nil)
-			d.Set("ha_bgp_lan_ip_list", nil)
+			mustSet(d, "bgp_lan_ip_list", nil)
+			mustSet(d, "ha_bgp_lan_ip_list", nil)
 		}
 
 		if gw.EnableSpotInstance {
-			d.Set("enable_spot_instance", true)
-			d.Set("spot_price", gw.SpotPrice)
+			mustSet(d, "enable_spot_instance", true)
+			mustSet(d, "spot_price", gw.SpotPrice)
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			azureEip := strings.Split(gw.ReuseEip, ":")
 			if len(azureEip) == 3 {
-				d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+				mustSet(d, "azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
 			} else {
 				log.Printf("[WARN] could not get Azure EIP name and resource group for the Transit Gateway %s", gw.GwName)
 			}
 		}
 
 		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
-		if err != nil && err != goaviatrix.ErrNotFound {
+		if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
 			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
 		}
-		d.Set("lan_interface_cidr", lanCidr)
+		mustSet(d, "lan_interface_cidr", lanCidr)
 	}
 
 	d.SetId(gateway.GwName)

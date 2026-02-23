@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
@@ -95,54 +97,54 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 }
 
 func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{
-		InstanceID: d.Get("instance_id").(string),
+		InstanceID: getString(d, "instance_id"),
 	}
 
 	fI, err := client.GetFirewallInstance(firewallInstance)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Firewall Instance: %s", err)
+		return fmt.Errorf("couldn't find Firewall Instance: %w", err)
 	}
 	if fI != nil {
 		if goaviatrix.VendorToCloudType(fI.CloudVendor) == goaviatrix.GCP {
-			d.Set("vpc_id", fI.FirenetVpc)
+			mustSet(d, "vpc_id", fI.FirenetVpc)
 		} else {
-			d.Set("vpc_id", fI.VpcID)
+			mustSet(d, "vpc_id", fI.VpcID)
 		}
-		d.Set("instance_id", fI.InstanceID)
+		mustSet(d, "instance_id", fI.InstanceID)
 
-		if d.Get("public_ip").(string) == "" {
-			d.Set("public_ip", fI.ManagementPublicIP)
+		if getString(d, "public_ip") == "" {
+			mustSet(d, "public_ip", fI.ManagementPublicIP)
 		}
 	}
 
 	vendorInfo := &goaviatrix.VendorInfo{
-		VpcID:          d.Get("vpc_id").(string),
-		InstanceID:     d.Get("instance_id").(string),
-		FirewallName:   d.Get("firewall_name").(string),
-		VendorType:     d.Get("vendor_type").(string),
-		Username:       d.Get("username").(string),
-		Password:       d.Get("password").(string),
-		ApiToken:       d.Get("api_token").(string),
-		PrivateKeyFile: d.Get("private_key_file").(string),
-		RouteTable:     d.Get("route_table").(string),
-		PublicIP:       d.Get("public_ip").(string),
-		Save:           d.Get("save").(bool),
-		Synchronize:    d.Get("synchronize").(bool),
+		VpcID:          getString(d, "vpc_id"),
+		InstanceID:     getString(d, "instance_id"),
+		FirewallName:   getString(d, "firewall_name"),
+		VendorType:     getString(d, "vendor_type"),
+		Username:       getString(d, "username"),
+		Password:       getString(d, "password"),
+		ApiToken:       getString(d, "api_token"),
+		PrivateKeyFile: getString(d, "private_key_file"),
+		RouteTable:     getString(d, "route_table"),
+		PublicIP:       getString(d, "public_ip"),
+		Save:           getBool(d, "save"),
+		Synchronize:    getBool(d, "synchronize"),
 	}
 
 	if vendorInfo.Save && vendorInfo.Synchronize {
 		return fmt.Errorf("can't do 'save' and 'synchronize' at the same time for vendor integration")
 	}
 
-	numberOfRetries := d.Get("number_of_retries").(int)
-	retryInterval := d.Get("retry_interval").(int)
+	numberOfRetries := getInt(d, "number_of_retries")
+	retryInterval := getInt(d, "retry_interval")
 
 	if vendorInfo.Save {
 		if vendorInfo.VendorType == "Fortinet FortiGate" {
@@ -185,7 +187,7 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
-				return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
+				return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %w", err)
 			}
 		}
 	}
@@ -201,7 +203,7 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
-				return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
+				return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %w", err)
 			}
 		}
 	}

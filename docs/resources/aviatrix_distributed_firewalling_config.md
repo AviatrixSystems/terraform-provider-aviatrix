@@ -8,6 +8,9 @@ description: |-
 
 # aviatrix_distributed_firewalling_config
 
+This resource is deprecated. Use aviatrix_config_feature instead.
+
+
 The **aviatrix_distributed_firewalling_config** resource allows management of an Aviatrix Distributed Firewalling configuration. This resource is available as of provider version R3.0+.
 
 ## Example Usage

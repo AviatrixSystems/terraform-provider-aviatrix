@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -10,8 +11,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 const (
@@ -33,7 +35,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 		Update: resourceAviatrixTransitExternalDeviceConnUpdate,
 		Delete: resourceAviatrixTransitExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -92,7 +94,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive.",
 				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"enable_bgp_lan_activemesh": {
@@ -123,6 +125,18 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
 				Description:      "Remote CIDRs joined as a string with ','. Required for a 'static' type connection.",
+			},
+			"local_subnet": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				Description:      "Local CIDRs joined as a string with ','. Optional for a 'static' type connection with proxy ID enabled",
+			},
+			"proxy_id_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable proxy ID for transit static route based external device connection.",
 			},
 			"direct_connect": {
 				Type:        schema.TypeBool,
@@ -491,6 +505,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Enable IPv6 on this connection",
 			},
 			"external_device_ipv6": {
@@ -526,73 +541,62 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 }
 
 func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	var bgpSendCommunities *goaviatrix.BgpSendCommunities
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:                    d.Get("vpc_id").(string),
-		ConnectionName:           d.Get("connection_name").(string),
-		GwName:                   d.Get("gw_name").(string),
-		ConnectionType:           d.Get("connection_type").(string),
-		RemoteGatewayIP:          d.Get("remote_gateway_ip").(string),
-		RemoteSubnet:             d.Get("remote_subnet").(string),
-		PreSharedKey:             d.Get("pre_shared_key").(string),
-		LocalTunnelCidr:          d.Get("local_tunnel_cidr").(string),
-		RemoteTunnelCidr:         d.Get("remote_tunnel_cidr").(string),
-		Phase1Auth:               d.Get("phase_1_authentication").(string),
-		Phase1DhGroups:           d.Get("phase_1_dh_groups").(string),
-		Phase1Encryption:         d.Get("phase_1_encryption").(string),
-		Phase2Auth:               d.Get("phase_2_authentication").(string),
-		Phase2DhGroups:           d.Get("phase_2_dh_groups").(string),
-		Phase2Encryption:         d.Get("phase_2_encryption").(string),
-		BackupRemoteGatewayIP:    d.Get("backup_remote_gateway_ip").(string),
-		BackupPreSharedKey:       d.Get("backup_pre_shared_key").(string),
-		BackupLocalTunnelCidr:    d.Get("backup_local_tunnel_cidr").(string),
-		BackupRemoteTunnelCidr:   d.Get("backup_remote_tunnel_cidr").(string),
-		PeerVnetID:               d.Get("remote_vpc_name").(string),
-		RemoteLanIP:              d.Get("remote_lan_ip").(string),
-		LocalLanIP:               d.Get("local_lan_ip").(string),
-		BackupRemoteLanIP:        d.Get("backup_remote_lan_ip").(string),
-		BackupLocalLanIP:         d.Get("backup_local_lan_ip").(string),
-		BgpMd5Key:                d.Get("bgp_md5_key").(string),
-		BackupBgpMd5Key:          d.Get("backup_bgp_md5_key").(string),
-		EnableJumboFrame:         d.Get("enable_jumbo_frame").(bool),
-		EnableBgpMultihop:        d.Get("enable_bgp_multihop").(bool),
-		EnableEdgeUnderlay:       d.Get("enable_edge_underlay").(bool),
-		DisableActivemesh:        d.Get("disable_activemesh").(bool),
-		EnableIpv6:               d.Get("enable_ipv6").(bool),
-		ExternalDeviceIPv6:       d.Get("external_device_ipv6").(string),
-		ExternalDeviceBackupIPv6: d.Get("external_device_backup_ipv6").(string),
-		RemoteLanIPv6:            d.Get("remote_lan_ipv6_ip").(string),
-		BackupRemoteLanIPv6:      d.Get("backup_remote_lan_ipv6_ip").(string),
+		VpcID:                    getString(d, "vpc_id"),
+		ConnectionName:           getString(d, "connection_name"),
+		GwName:                   getString(d, "gw_name"),
+		ConnectionType:           getString(d, "connection_type"),
+		RemoteGatewayIP:          getString(d, "remote_gateway_ip"),
+		RemoteSubnet:             getString(d, "remote_subnet"),
+		LocalSubnet:              getString(d, "local_subnet"),
+		PreSharedKey:             getString(d, "pre_shared_key"),
+		LocalTunnelCidr:          getString(d, "local_tunnel_cidr"),
+		RemoteTunnelCidr:         getString(d, "remote_tunnel_cidr"),
+		Phase1Auth:               getString(d, "phase_1_authentication"),
+		Phase1DhGroups:           getString(d, "phase_1_dh_groups"),
+		Phase1Encryption:         getString(d, "phase_1_encryption"),
+		Phase2Auth:               getString(d, "phase_2_authentication"),
+		Phase2DhGroups:           getString(d, "phase_2_dh_groups"),
+		Phase2Encryption:         getString(d, "phase_2_encryption"),
+		BackupRemoteGatewayIP:    getString(d, "backup_remote_gateway_ip"),
+		BackupPreSharedKey:       getString(d, "backup_pre_shared_key"),
+		BackupLocalTunnelCidr:    getString(d, "backup_local_tunnel_cidr"),
+		BackupRemoteTunnelCidr:   getString(d, "backup_remote_tunnel_cidr"),
+		PeerVnetID:               getString(d, "remote_vpc_name"),
+		RemoteLanIP:              getString(d, "remote_lan_ip"),
+		LocalLanIP:               getString(d, "local_lan_ip"),
+		BackupRemoteLanIP:        getString(d, "backup_remote_lan_ip"),
+		BackupLocalLanIP:         getString(d, "backup_local_lan_ip"),
+		BgpMd5Key:                getString(d, "bgp_md5_key"),
+		BackupBgpMd5Key:          getString(d, "backup_bgp_md5_key"),
+		EnableJumboFrame:         getBool(d, "enable_jumbo_frame"),
+		EnableBgpMultihop:        getBool(d, "enable_bgp_multihop"),
+		EnableEdgeUnderlay:       getBool(d, "enable_edge_underlay"),
+		DisableActivemesh:        getBool(d, "disable_activemesh"),
+		ProxyIdEnabled:           getBool(d, "proxy_id_enabled"),
+		EnableIpv6:               getBool(d, "enable_ipv6"),
+		ExternalDeviceIPv6:       getString(d, "external_device_ipv6"),
+		ExternalDeviceBackupIPv6: getString(d, "external_device_backup_ipv6"),
+		RemoteLanIPv6:            getString(d, "remote_lan_ipv6_ip"),
+		BackupRemoteLanIPv6:      getString(d, "backup_remote_lan_ipv6_ip"),
 	}
 
-	sendComm, ok := d.Get("connection_bgp_send_communities").(string)
-	if !ok {
-		return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
-	}
-	blockComm, ok := d.Get("connection_bgp_send_communities_block").(bool)
-	if !ok {
-		return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
-	}
+	sendComm := getString(d, "connection_bgp_send_communities")
+
+	blockComm := getBool(d, "connection_bgp_send_communities_block")
+
 	setPerConnCommunity := false
 	if sendComm != "" || blockComm {
-		connName, ok := d.Get("connection_name").(string)
+		connName := getString(d, "connection_name")
 		setPerConnCommunity = true
-		if !ok {
-			return fmt.Errorf("failed to assert connection_name as string")
-		}
 
-		gwName, ok := d.Get("gw_name").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert gw_name as string")
-		}
+		gwName := getString(d, "gw_name")
 
-		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
-		}
+		sendAdditive := getBool(d, "connection_bgp_send_communities_additive")
 
 		bgpSendCommunities = &goaviatrix.BgpSendCommunities{
 			ConnectionName:      connName,
@@ -611,7 +615,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("please set 'connection_name' to empty when 'enable_edge_underlay' is true")
 	}
 
-	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
+	tunnelProtocol := strings.ToUpper(getString(d, "tunnel_protocol"))
 	if tunnelProtocol == "IPSEC" {
 		externalDeviceConn.TunnelProtocol = "IPsec"
 	} else {
@@ -642,35 +646,35 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("'remote_gateway_ip' is required when 'tunnel_protocol' != 'LAN'")
 	}
 
-	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
+	bgpLocalAsNum, err := strconv.Atoi(getString(d, "bgp_local_as_num"))
 	if err == nil {
 		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNum
 	}
-	bgpRemoteAsNum, err := strconv.Atoi(d.Get("bgp_remote_as_num").(string))
+	bgpRemoteAsNum, err := strconv.Atoi(getString(d, "bgp_remote_as_num"))
 	if err == nil {
 		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNum
 	}
-	backupBgpLocalAsNum, err := strconv.Atoi(d.Get("backup_bgp_remote_as_num").(string))
+	backupBgpLocalAsNum, err := strconv.Atoi(getString(d, "backup_bgp_remote_as_num"))
 	if err == nil {
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
 	}
 
-	directConnect := d.Get("direct_connect").(bool)
+	directConnect := getBool(d, "direct_connect")
 	if directConnect {
 		externalDeviceConn.DirectConnect = "true"
 	}
 
-	haEnabled := d.Get("ha_enabled").(bool)
+	haEnabled := getBool(d, "ha_enabled")
 	if haEnabled {
 		externalDeviceConn.HAEnabled = "true"
 	}
 
-	backupDirectConnect := d.Get("backup_direct_connect").(bool)
+	backupDirectConnect := getBool(d, "backup_direct_connect")
 	if backupDirectConnect {
 		externalDeviceConn.BackupDirectConnect = "true"
 	}
 
-	enableEdgeSegmentation := d.Get("enable_edge_segmentation").(bool)
+	enableEdgeSegmentation := getBool(d, "enable_edge_segmentation")
 	if enableEdgeSegmentation {
 		externalDeviceConn.EnableEdgeSegmentation = "true"
 	}
@@ -681,7 +685,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("'bgp_local_as_num' and 'bgp_remote_as_num' are needed for connection type of 'bgp' not 'static'")
 	}
 
-	customAlgorithms := d.Get("custom_algorithms").(bool)
+	customAlgorithms := getBool(d, "custom_algorithms")
 	if customAlgorithms {
 		if externalDeviceConn.Phase1Auth == "" ||
 			externalDeviceConn.Phase2Auth == "" ||
@@ -756,7 +760,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	enableLearnedCIDRApproval := getBool(d, "enable_learned_cidrs_approval")
 	if externalDeviceConn.ConnectionType != "bgp" && enableLearnedCIDRApproval {
 		return fmt.Errorf("'connection_type' must be 'bgp' if 'enable_learned_cidrs_approval' is set to true")
 	}
@@ -770,7 +774,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("creating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
-	enableIkev2 := d.Get("enable_ikev2").(bool)
+	enableIkev2 := getBool(d, "enable_ikev2")
 	if enableIkev2 {
 		externalDeviceConn.EnableIkev2 = "true"
 	}
@@ -797,7 +801,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
+	phase1RemoteIdentifier := getList(d, "phase1_remote_identifier")
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 	if haEnabled && len(phase1RemoteIdentifier) != 0 && len(phase1RemoteIdentifier) != 2 {
 		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled")
@@ -811,7 +815,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	if d.Get("enable_bgp_lan_activemesh").(bool) {
+	if getBool(d, "enable_bgp_lan_activemesh") {
 		if externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN" {
 			return fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection with 'LAN' tunnel protocol")
 		}
@@ -856,13 +860,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	enableJumboFrame := d.Get("enable_jumbo_frame").(bool)
+	enableJumboFrame := getBool(d, "enable_jumbo_frame")
 	if enableJumboFrame {
 		if externalDeviceConn.ConnectionType != "bgp" {
 			return fmt.Errorf("jumbo frame is only supported on bgp connection")
 		}
 	}
-	if val, ok := d.Get("tunnel_src_ip").(string); ok && val != "" {
+	if val := getString(d, "tunnel_src_ip"); val != "" {
 		externalDeviceConn.TunnelSrcIP = val
 	}
 	if externalDeviceConn.PreSharedKey != "" {
@@ -874,7 +878,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	flag := false
-	defer resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	var edgeExternalDeviceConn goaviatrix.EdgeExternalDeviceConn
 	if externalDeviceConn.EnableEdgeUnderlay {
@@ -895,14 +899,14 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if err != nil {
 			if strings.Contains(err.Error(), "is not up") {
 				if try == maxTries {
-					return fmt.Errorf("couldn't create Aviatrix transit external device connection: %s", err)
+					return fmt.Errorf("couldn't create Aviatrix transit external device connection: %w", err)
 				}
 				time.Sleep(backoff)
 				// Double the backoff time after each failed try
 				backoff *= 2
 				continue
 			}
-			return fmt.Errorf("failed to create Aviatrix transit external device connection: %s", err)
+			return fmt.Errorf("failed to create Aviatrix transit external device connection: %w", err)
 		}
 		if setPerConnCommunity {
 			err = client.ConnectionBGPSendCommunities(bgpSendCommunities)
@@ -918,19 +922,14 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 
-	enableBFD, ok := d.Get("enable_bfd").(bool)
-	if !ok {
-		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
-	}
+	enableBFD := getBool(d, "enable_bfd")
 
-	if d.Get("connection_type").(string) != "bgp" && enableBFD {
+	if getString(d, "connection_type") != "bgp" && enableBFD {
 		return fmt.Errorf("BFD is only supported for BGP connection")
 	}
 	externalDeviceConn.EnableBfd = enableBFD
-	bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
-	if !ok {
-		return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-	}
+	bgp_bfd := getList(d, "bgp_bfd")
+
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
 		// set bgp bfd using the config details provided by the user
@@ -948,7 +947,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 		err := client.EditConnectionBgpBfd(externalDeviceConn)
 		if err != nil {
-			return fmt.Errorf("could not enable BGP BFD connection: %v", err)
+			return fmt.Errorf("could not enable BGP BFD connection: %w", err)
 		}
 	} else {
 		// if BFD is disabled and BGP BFD config is provided then throw an error
@@ -959,34 +958,34 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
 	if err != nil {
-		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+		return fmt.Errorf("could not get advanced config for transit gateway: %w", err)
 	}
-	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
+	if getBool(d, "switch_to_ha_standby_gateway") && !transitAdvancedConfig.ActiveStandbyEnabled {
 		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
 			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
 	}
 
-	if d.Get("switch_to_ha_standby_gateway").(bool) {
+	if getBool(d, "switch_to_ha_standby_gateway") {
 		if err := client.SwitchActiveTransitGateway(externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
-			return fmt.Errorf("could not switch active transit gateway to HA: %v", err)
+			return fmt.Errorf("could not switch active transit gateway to HA: %w", err)
 		}
 	}
 
-	if d.Get("enable_event_triggered_ha").(bool) {
+	if getBool(d, "enable_event_triggered_ha") {
 		if err := client.EnableSite2CloudEventTriggeredHA(externalDeviceConn.VpcID, externalDeviceConn.ConnectionName); err != nil {
-			return fmt.Errorf("could not enable event triggered HA for external device conn after create: %v", err)
+			return fmt.Errorf("could not enable event triggered HA for external device conn after create: %w", err)
 		}
 	}
 
 	if enableLearnedCIDRApproval {
 		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
 		if err != nil {
-			return fmt.Errorf("could not enable learned cidr approval: %v", err)
+			return fmt.Errorf("could not enable learned cidr approval: %w", err)
 		}
 		if len(approvedCidrs) > 0 {
 			err = client.UpdateTransitConnectionPendingApprovedCidrs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, approvedCidrs)
 			if err != nil {
-				return fmt.Errorf("could not update transit external device conn approved cidrs after creation: %v", err)
+				return fmt.Errorf("could not update transit external device conn approved cidrs after creation: %w", err)
 			}
 		}
 	}
@@ -994,7 +993,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if len(manualBGPCidrs) > 0 {
 		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
 		if err != nil {
-			return fmt.Errorf("could not edit manual advertised BGP cidrs: %v", err)
+			return fmt.Errorf("could not edit manual advertised BGP cidrs: %w", err)
 		}
 	}
 
@@ -1004,7 +1003,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if phase1RemoteIdentifier[0] == nil {
 			ph1RemoteId = "\"\""
 		} else {
-			ph1RemoteId = phase1RemoteIdentifier[0].(string)
+			ph1RemoteId = mustString(phase1RemoteIdentifier[0])
 		}
 
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
@@ -1016,7 +1015,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update phase 1 remote identifier: %w", err)
 		}
 	}
 
@@ -1024,9 +1023,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		var ph1RemoteId string
 
 		if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] != nil {
-			ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
+			ph1RemoteId = "\"\"" + "," + mustString(phase1RemoteIdentifier[1])
 		} else if phase1RemoteIdentifier[0] != nil && phase1RemoteIdentifier[1] == nil {
-			ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
+			ph1RemoteId = mustString(phase1RemoteIdentifier[0]) + "," + "\"\""
 		} else if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] == nil {
 			ph1RemoteId = "\"\", \"\""
 		} else {
@@ -1042,32 +1041,32 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update phase 1 remote identifier: %w", err)
 		}
 	}
 
 	if _, ok := d.GetOk("prepend_as_path"); ok {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 
 		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %w", err)
 		}
 	}
 
 	if phase1LocalIdentifier, ok := d.GetOk("phase1_local_identifier"); ok {
 		s2c := &goaviatrix.EditSite2Cloud{
-			VpcID:    d.Get("vpc_id").(string),
-			ConnName: d.Get("connection_name").(string),
+			VpcID:    getString(d, "vpc_id"),
+			ConnName: getString(d, "connection_name"),
 		}
 		if phase1LocalIdentifier == "private_ip" {
 			s2c.Phase1LocalIdentifier = "private_ip"
 			err = client.EditSite2CloudPhase1LocalIdentifier(s2c)
 			if err != nil {
-				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %v", s2c.ConnName, err)
+				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %w", s2c.ConnName, err)
 			}
 		}
 	}
@@ -1084,10 +1083,10 @@ func resourceAviatrixTransitExternalDeviceConnReadIfRequired(d *schema.ResourceD
 }
 
 func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	connectionName := d.Get("connection_name").(string)
-	vpcID := d.Get("vpc_id").(string)
+	connectionName := getString(d, "connection_name")
+	vpcID := getString(d, "vpc_id")
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
@@ -1095,15 +1094,15 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if len(parts) != 2 {
 			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
 		}
-		d.Set("connection_name", parts[0])
-		d.Set("vpc_id", parts[1])
+		mustSet(d, "connection_name", parts[0])
+		mustSet(d, "vpc_id", parts[1])
 		d.SetId(id)
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("vpc_id").(string),
-		ConnectionName: d.Get("connection_name").(string),
-		GwName:         d.Get("gw_name").(string),
+		VpcID:          getString(d, "vpc_id"),
+		ConnectionName: getString(d, "connection_name"),
+		GwName:         getString(d, "gw_name"),
 	}
 
 	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
@@ -1112,26 +1111,26 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
-	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
+	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", getString(d, "connection_name"), externalDeviceConn)
 
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix external device conn: %s, %#v", err, externalDeviceConn)
+		return fmt.Errorf("couldn't find Aviatrix external device conn: %w, %#v", err, externalDeviceConn)
 	}
 
 	if conn != nil {
-		d.Set("vpc_id", conn.VpcID)
-		d.Set("connection_name", conn.ConnectionName)
-		d.Set("gw_name", conn.GwName)
-		d.Set("connection_type", conn.ConnectionType)
-		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
-		d.Set("enable_event_triggered_ha", conn.EventTriggeredHA)
-		d.Set("enable_jumbo_frame", conn.EnableJumboFrame)
-		d.Set("phase1_local_identifier", conn.Phase1LocalIdentifier)
-		d.Set("enable_ipv6", conn.EnableIpv6)
+		mustSet(d, "vpc_id", conn.VpcID)
+		mustSet(d, "connection_name", conn.ConnectionName)
+		mustSet(d, "gw_name", conn.GwName)
+		mustSet(d, "connection_type", conn.ConnectionType)
+		mustSet(d, "remote_tunnel_cidr", conn.RemoteTunnelCidr)
+		mustSet(d, "enable_event_triggered_ha", conn.EventTriggeredHA)
+		mustSet(d, "enable_jumbo_frame", conn.EnableJumboFrame)
+		mustSet(d, "phase1_local_identifier", conn.Phase1LocalIdentifier)
+		mustSet(d, "enable_ipv6", conn.EnableIpv6)
 
 		if conn.TunnelSrcIP != "" {
 			if err := d.Set("tunnel_src_ip", conn.TunnelSrcIP); err != nil {
@@ -1140,80 +1139,80 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		}
 
 		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_lan_ip", conn.RemoteLanIP)
-			d.Set("local_lan_ip", conn.LocalLanIP)
-			d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
+			mustSet(d, "remote_lan_ip", conn.RemoteLanIP)
+			mustSet(d, "local_lan_ip", conn.LocalLanIP)
+			mustSet(d, "enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 			if err := d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay); err != nil {
 				return fmt.Errorf("error setting enable_edge_underlay: %w", err)
 			}
 		} else {
-			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
-			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+			mustSet(d, "remote_gateway_ip", conn.RemoteGatewayIP)
+			mustSet(d, "local_tunnel_cidr", conn.LocalTunnelCidr)
 			if err := d.Set("disable_activemesh", conn.DisableActivemesh); err != nil {
 				return fmt.Errorf("error setting disable_activemesh: %w", err)
 			}
 		}
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {
-				d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
+				mustSet(d, "bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
 			}
 			if conn.BgpRemoteAsNum != 0 {
-				d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
+				mustSet(d, "bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 			}
 			if conn.BackupBgpRemoteAsNum != 0 {
-				d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
+				mustSet(d, "backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
 			}
 		} else {
-			d.Set("remote_subnet", conn.RemoteSubnet)
+			mustSet(d, "remote_subnet", conn.RemoteSubnet)
 		}
+		mustSet(d, "local_subnet", conn.LocalSubnet)
 		if conn.DirectConnect == "enabled" {
-			d.Set("direct_connect", true)
+			mustSet(d, "direct_connect", true)
 		} else {
-			d.Set("direct_connect", false)
+			mustSet(d, "direct_connect", false)
 		}
 
 		if conn.CustomAlgorithms {
-			d.Set("custom_algorithms", true)
-			d.Set("phase_1_authentication", conn.Phase1Auth)
-			d.Set("phase_2_authentication", conn.Phase2Auth)
-			d.Set("phase_1_dh_groups", conn.Phase1DhGroups)
-			d.Set("phase_2_dh_groups", conn.Phase2DhGroups)
-			d.Set("phase_1_encryption", conn.Phase1Encryption)
-			d.Set("phase_2_encryption", conn.Phase2Encryption)
+			mustSet(d, "custom_algorithms", true)
+			mustSet(d, "phase_1_authentication", conn.Phase1Auth)
+			mustSet(d, "phase_2_authentication", conn.Phase2Auth)
+			mustSet(d, "phase_1_dh_groups", conn.Phase1DhGroups)
+			mustSet(d, "phase_2_dh_groups", conn.Phase2DhGroups)
+			mustSet(d, "phase_1_encryption", conn.Phase1Encryption)
+			mustSet(d, "phase_2_encryption", conn.Phase2Encryption)
 		} else {
-			d.Set("custom_algorithms", false)
+			mustSet(d, "custom_algorithms", false)
 		}
 
 		if conn.HAEnabled == "enabled" {
-			d.Set("ha_enabled", true)
-
-			d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
+			mustSet(d, "ha_enabled", true)
+			mustSet(d, "backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
 			if conn.TunnelProtocol == "LAN" {
-				d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
-				d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+				mustSet(d, "backup_remote_lan_ip", conn.BackupRemoteLanIP)
+				mustSet(d, "backup_local_lan_ip", conn.BackupLocalLanIP)
 			} else {
-				d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-				d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
+				mustSet(d, "backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
+				mustSet(d, "backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
 			}
 			if conn.BackupDirectConnect == "enabled" {
-				d.Set("backup_direct_connect", true)
+				mustSet(d, "backup_direct_connect", true)
 			} else {
-				d.Set("backup_direct_connect", false)
+				mustSet(d, "backup_direct_connect", false)
 			}
 		} else {
-			d.Set("ha_enabled", false)
-			d.Set("backup_direct_connect", false)
+			mustSet(d, "ha_enabled", false)
+			mustSet(d, "backup_direct_connect", false)
 		}
 
 		if conn.EnableEdgeSegmentation == "enabled" {
-			d.Set("enable_edge_segmentation", true)
+			mustSet(d, "enable_edge_segmentation", true)
 		} else {
-			d.Set("enable_edge_segmentation", false)
+			mustSet(d, "enable_edge_segmentation", false)
 		}
 
 		transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
 		if err != nil {
-			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+			return fmt.Errorf("could not get advanced config for transit gateway: %w", err)
 		}
 
 		activeGatewayType := "Primary"
@@ -1223,36 +1222,36 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			}
 			activeGatewayType = v.ActiveGatewayType
 		}
-		d.Set("switch_to_ha_standby_gateway", activeGatewayType == "HA")
+		mustSet(d, "switch_to_ha_standby_gateway", activeGatewayType == "HA")
 
 		for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
 			if v.ConnName == externalDeviceConn.ConnectionName {
-				d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
+				mustSet(d, "enable_learned_cidrs_approval", v.EnabledApproval == "yes")
 				err := d.Set("approved_cidrs", v.ApprovedLearnedCidrs)
 				if err != nil {
-					return fmt.Errorf("could not set 'approved_cidrs' in state: %v", err)
+					return fmt.Errorf("could not set 'approved_cidrs' in state: %w", err)
 				}
 				break
 			}
 		}
 		if len(transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo) == 0 {
-			d.Set("enable_learned_cidrs_approval", false)
-			d.Set("approved_cidrs", nil)
+			mustSet(d, "enable_learned_cidrs_approval", false)
+			mustSet(d, "approved_cidrs", nil)
 		}
 
 		if conn.EnableIkev2 == "enabled" {
-			d.Set("enable_ikev2", true)
+			mustSet(d, "enable_ikev2", true)
 		} else {
-			d.Set("enable_ikev2", false)
+			mustSet(d, "enable_ikev2", false)
 		}
 
 		if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
-			return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
+			return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %w", err)
 		}
 		if conn.TunnelProtocol == "" {
-			d.Set("tunnel_protocol", "IPsec")
+			mustSet(d, "tunnel_protocol", "IPsec")
 		} else {
-			d.Set("tunnel_protocol", conn.TunnelProtocol)
+			mustSet(d, "tunnel_protocol", conn.TunnelProtocol)
 		}
 		if conn.TunnelProtocol == "LAN" {
 			err = d.Set("remote_vpc_name", conn.PeerVnetID)
@@ -1267,16 +1266,14 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				ph1RemoteId[i] = strings.TrimSpace(v)
 			}
 
-			haEnabled := d.Get("ha_enabled").(bool)
+			haEnabled := getBool(d, "ha_enabled")
 
 			if haEnabled && len(ph1RemoteId) == 1 && ph1RemoteId[0] == "" {
 				ph1RemoteId = append(ph1RemoteId, "")
 			}
-
-			d.Set("phase1_remote_identifier", ph1RemoteId)
+			mustSet(d, "phase1_remote_identifier", ph1RemoteId)
 		}
-
-		d.Set("enable_bfd", conn.EnableBfd)
+		mustSet(d, "enable_bfd", conn.EnableBfd)
 		if conn.EnableBfd {
 			var bgpBfdConfig []map[string]interface{}
 			bfd := conn.BgpBfdConfig
@@ -1291,8 +1288,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				bfdMap["multiplier"] = bfd.Multiplier
 			}
 			bgpBfdConfig = append(bgpBfdConfig, bfdMap)
-
-			d.Set("bgp_bfd", bgpBfdConfig)
+			mustSet(d, "bgp_bfd", bgpBfdConfig)
 		}
 
 		if conn.PrependAsPath != "" {
@@ -1303,7 +1299,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 			err = d.Set("prepend_as_path", prependAsPath)
 			if err != nil {
-				return fmt.Errorf("could not set value for prepend_as_path: %v", err)
+				return fmt.Errorf("could not set value for prepend_as_path: %w", err)
 			}
 		}
 		err = d.Set("enable_bgp_multihop", conn.EnableBgpMultihop)
@@ -1324,15 +1320,17 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			return fmt.Errorf("could not set value for connection_bgp_send_communities: %w", err)
 		}
 
+		mustSet(d, "proxy_id_enabled", conn.ProxyIdEnabled)
+
 		if conn.EnableIpv6 {
 			if conn.TunnelProtocol == "LAN" {
-				d.Set("remote_lan_ipv6", conn.RemoteLanIPv6)
+				mustSet(d, "remote_lan_ipv6", conn.RemoteLanIPv6)
 			}
 
 			if conn.TunnelProtocol == "IPsec" || conn.TunnelProtocol == "GRE" {
-				d.Set("external_device_ipv6", conn.ExternalDeviceIPv6)
+				mustSet(d, "external_device_ipv6", conn.ExternalDeviceIPv6)
 				if conn.HAEnabled == "enabled" {
-					d.Set("external_device_backup_ipv6", conn.ExternalDeviceBackupIPv6)
+					mustSet(d, "external_device_backup_ipv6", conn.ExternalDeviceBackupIPv6)
 				}
 			}
 		}
@@ -1343,44 +1341,44 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 }
 
 func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	d.Partial(true)
 
 	approvedCidrs := getStringSet(d, "approved_cidrs")
-	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	enableLearnedCIDRApproval := getBool(d, "enable_learned_cidrs_approval")
 	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
 		return fmt.Errorf("updating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
-	gwName := d.Get("gw_name").(string)
-	connName := d.Get("connection_name").(string)
-	connType := d.Get("connection_type").(string)
+	gwName := getString(d, "gw_name")
+	connName := getString(d, "connection_name")
+	connType := getString(d, "connection_type")
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
 	if err != nil {
-		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+		return fmt.Errorf("could not get advanced config for transit gateway: %w", err)
 	}
-	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
+	if getBool(d, "switch_to_ha_standby_gateway") && !transitAdvancedConfig.ActiveStandbyEnabled {
 		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
 			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
 	}
 
 	if d.HasChange("switch_to_ha_standby_gateway") {
 		if err := client.SwitchActiveTransitGateway(gwName, connName); err != nil {
-			return fmt.Errorf("could not switch active transit gateway: %v", err)
+			return fmt.Errorf("could not switch active transit gateway: %w", err)
 		}
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
-		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		enableLearnedCIDRApproval := getBool(d, "enable_learned_cidrs_approval")
 		if enableLearnedCIDRApproval {
 			err = client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
-				return fmt.Errorf("could not enable learned cidr approval: %v", err)
+				return fmt.Errorf("could not enable learned cidr approval: %w", err)
 			}
 		} else {
 			err = client.DisableTransitConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
-				return fmt.Errorf("could not disable learned cidr approval: %v", err)
+				return fmt.Errorf("could not disable learned cidr approval: %w", err)
 			}
 		}
 	}
@@ -1389,33 +1387,33 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
 		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
 		if err != nil {
-			return fmt.Errorf("could not edit manual advertise manual cidrs: %v", err)
+			return fmt.Errorf("could not edit manual advertise manual cidrs: %w", err)
 		}
 	}
 
 	if d.HasChange("enable_event_triggered_ha") {
-		vpcID := d.Get("vpc_id").(string)
-		if d.Get("enable_event_triggered_ha").(bool) {
+		vpcID := getString(d, "vpc_id")
+		if getBool(d, "enable_event_triggered_ha") {
 			err := client.EnableSite2CloudEventTriggeredHA(vpcID, connName)
 			if err != nil {
-				return fmt.Errorf("could not enable event triggered HA for external device conn during update: %v", err)
+				return fmt.Errorf("could not enable event triggered HA for external device conn during update: %w", err)
 			}
 		} else {
 			err := client.DisableSite2CloudEventTriggeredHA(vpcID, connName)
 			if err != nil {
-				return fmt.Errorf("could not disable event triggered HA for external device conn during update: %v", err)
+				return fmt.Errorf("could not disable event triggered HA for external device conn during update: %w", err)
 			}
 		}
 	}
 
 	if d.HasChange("enable_jumbo_frame") {
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-			VpcID:            d.Get("vpc_id").(string),
-			ConnectionName:   d.Get("connection_name").(string),
-			GwName:           d.Get("gw_name").(string),
-			ConnectionType:   d.Get("connection_type").(string),
-			TunnelProtocol:   d.Get("tunnel_protocol").(string),
-			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
+			VpcID:            getString(d, "vpc_id"),
+			ConnectionName:   getString(d, "connection_name"),
+			GwName:           getString(d, "gw_name"),
+			ConnectionType:   getString(d, "connection_type"),
+			TunnelProtocol:   getString(d, "tunnel_protocol"),
+			EnableJumboFrame: getBool(d, "enable_jumbo_frame"),
 		}
 		if externalDeviceConn.EnableJumboFrame {
 			if externalDeviceConn.ConnectionType != "bgp" {
@@ -1434,19 +1432,19 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	if d.HasChange("approved_cidrs") {
 		err := client.UpdateTransitConnectionPendingApprovedCidrs(gwName, connName, approvedCidrs)
 		if err != nil {
-			return fmt.Errorf("could not update transit external device conn learned cidrs during update: %v", err)
+			return fmt.Errorf("could not update transit external device conn learned cidrs during update: %w", err)
 		}
 	}
 
 	if d.HasChange("phase1_remote_identifier") {
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
 			GwName:   gwName,
-			VpcID:    d.Get("vpc_id").(string),
+			VpcID:    getString(d, "vpc_id"),
 			ConnName: connName,
 		}
 
-		haEnabled := d.Get("ha_enabled").(bool)
-		phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
+		haEnabled := getBool(d, "ha_enabled")
+		phase1RemoteIdentifier := getList(d, "phase1_remote_identifier")
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 		if haEnabled && len(phase1RemoteIdentifier) != 2 {
 			return fmt.Errorf("please either set two phase 1 remote IDs, when HA is enabled")
@@ -1457,19 +1455,19 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		var ph1RemoteId string
 
 		if len(phase1RemoteIdentifier) == 1 {
-			if phase1RemoteIdentifier[0].(string) == "" {
+			if mustString(phase1RemoteIdentifier[0]) == "" {
 				ph1RemoteId = "\"\""
 			} else {
-				ph1RemoteId = phase1RemoteIdentifier[0].(string)
+				ph1RemoteId = mustString(phase1RemoteIdentifier[0])
 			}
 		}
 
 		if len(phase1RemoteIdentifier) == 2 {
-			if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) != "" {
-				ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
-			} else if phase1RemoteIdentifier[0].(string) != "" && phase1RemoteIdentifier[1].(string) == "" {
-				ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
-			} else if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) == "" {
+			if mustString(phase1RemoteIdentifier[0]) == "" && mustString(phase1RemoteIdentifier[1]) != "" {
+				ph1RemoteId = "\"\"" + "," + mustString(phase1RemoteIdentifier[1])
+			} else if mustString(phase1RemoteIdentifier[0]) != "" && mustString(phase1RemoteIdentifier[1]) == "" {
+				ph1RemoteId = mustString(phase1RemoteIdentifier[0]) + "," + "\"\""
+			} else if mustString(phase1RemoteIdentifier[0]) == "" && mustString(phase1RemoteIdentifier[1]) == "" {
 				ph1RemoteId = "\"\", \"\""
 			} else {
 				ph1RemoteId = strings.Join(ph1RemoteIdList, ",")
@@ -1480,7 +1478,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 
 		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update phase 1 remote identifier: %w", err)
 		}
 	}
 
@@ -1488,54 +1486,65 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			ConnectionName: connName,
 			GwName:         gwName,
-			ConnectionType: d.Get("connection_type").(string),
+			ConnectionType: getString(d, "connection_type"),
 		}
 		if externalDeviceConn.ConnectionType != "bgp" {
 			return fmt.Errorf("'prepend_as_path' only supports 'bgp' connection. Can't update 'prepend_as_path' for '%s' connection", externalDeviceConn.ConnectionType)
 		}
 
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not update prepend_as_path: %v", err)
+			return fmt.Errorf("could not update prepend_as_path: %w", err)
 		}
 	}
 
 	if d.HasChange("remote_subnet") {
-		vpcID := d.Get("vpc_id").(string)
-		remoteSubnet := d.Get("remote_subnet").(string)
+		vpcID := getString(d, "vpc_id")
+		remoteSubnet := getString(d, "remote_subnet")
 		err = client.EditTransitConnectionRemoteSubnet(vpcID, connName, remoteSubnet)
 		if err != nil {
-			return fmt.Errorf("could not update transit external device conn remote subnet: %v", err)
+			return fmt.Errorf("could not update transit external device conn remote subnet: %w", err)
+		}
+	}
+
+	if d.HasChange("local_subnet") {
+		vpcID := getString(d, "vpc_id")
+		localSubnet := getString(d, "local_subnet")
+		err = client.EditTransitConnectionLocalSubnet(vpcID, connName, localSubnet)
+		if err != nil {
+			return fmt.Errorf("could not update transit external device conn local subnet: %w", err)
 		}
 	}
 
 	if d.HasChange("bgp_md5_key") {
-		if d.Get("connection_type").(string) != "bgp" {
+		if getString(d, "connection_type") != "bgp" {
 			return fmt.Errorf("can't update BGP MD5 authentication key since it is only supported for BGP connection")
 		}
 
 		oldKey, newKey := d.GetChange("bgp_md5_key")
-		oldKeyList := strings.Split(oldKey.(string), ",")
-		newKeyList := strings.Split(newKey.(string), ",")
+		oldKeyStr := mustString(oldKey)
+		newKeyStr := mustString(newKey)
+		oldKeyList := strings.Split(oldKeyStr, ",")
+		newKeyList := strings.Split(newKeyStr, ",")
 		var bgpRemoteIp []string
-		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
-			bgpRemoteIp = strings.Split(d.Get("remote_lan_ip").(string), ",")
+		if strings.ToUpper(getString(d, "tunnel_protocol")) == "LAN" {
+			bgpRemoteIp = strings.Split(getString(d, "remote_lan_ip"), ",")
 		} else {
-			bgpRemoteIp = strings.Split(d.Get("remote_tunnel_cidr").(string), ",")
+			bgpRemoteIp = strings.Split(getString(d, "remote_tunnel_cidr"), ",")
 		}
-		if newKey.(string) != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection: %s", d.Get("connection_name").(string))
+		if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIp) {
+			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection: %s", getString(d, "connection_name"))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
-			if newKey.(string) != "" {
+			if newKeyStr != "" {
 				bgpMd5Key = newKeyList[i]
 			}
-			if newKey.(string) != "" && oldKey.(string) != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
+			if newKeyStr != "" && oldKeyStr != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
 				continue
 			}
 			editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
@@ -1546,36 +1555,32 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			}
 			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
-				return fmt.Errorf("failed to update BGP MD5 authentication key: %v", err)
+				return fmt.Errorf("failed to update BGP MD5 authentication key: %w", err)
 			}
 		}
 	}
 
-	enableBfd, ok := d.Get("enable_bfd").(bool)
-	if !ok {
-		return fmt.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
-	}
+	enableBfd := getBool(d, "enable_bfd")
+
 	if connType != "bgp" && enableBfd {
 		return fmt.Errorf("cannot enable BFD for non-BGP connection")
 	}
 	// get the BGP BFD config
-	bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
-	if !ok {
-		return fmt.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-	}
+	bgpBfdConfig := getList(d, "bgp_bfd")
+
 	if d.HasChanges("enable_bfd", "bgp_bfd") {
 		// bgp bfd is enabled
 		if enableBfd {
 			bgpBfd := goaviatrix.GetUpdatedBgpBfdConfig(bgpBfdConfig)
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-				GwName:         d.Get("gw_name").(string),
-				ConnectionName: d.Get("connection_name").(string),
+				GwName:         getString(d, "gw_name"),
+				ConnectionName: getString(d, "connection_name"),
 				EnableBfd:      enableBfd,
 				BgpBfdConfig:   bgpBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
-				return fmt.Errorf("could not update BGP BFD config: %v", err)
+				return fmt.Errorf("could not update BGP BFD config: %w", err)
 			}
 		} else {
 			// bgp bfd is disabled
@@ -1583,22 +1588,20 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
 			}
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-				GwName:         d.Get("gw_name").(string),
-				ConnectionName: d.Get("connection_name").(string),
+				GwName:         getString(d, "gw_name"),
+				ConnectionName: getString(d, "connection_name"),
 				EnableBfd:      enableBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
 			if err != nil {
-				return fmt.Errorf("could not disable BGP BFD config: %v", err)
+				return fmt.Errorf("could not disable BGP BFD config: %w", err)
 			}
 		}
 	}
 
 	if d.HasChanges("enable_bgp_multihop") {
-		enableMultihop, ok := d.Get("enable_bgp_multihop").(bool)
-		if !ok {
-			return fmt.Errorf("Can't make bool from enable_bgp_multihop value: '%v'", d.Get("enable_bgp_multihop"))
-		}
+		enableMultihop := getBool(d, "enable_bgp_multihop")
+
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			GwName:            gwName,
 			ConnectionName:    connName,
@@ -1610,31 +1613,33 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	}
 
 	if d.HasChange("backup_bgp_md5_key") {
-		if d.Get("connection_type").(string) != "bgp" {
+		if getString(d, "connection_type") != "bgp" {
 			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is only supported for BGP connection")
 		}
-		if !d.Get("ha_enabled").(bool) {
+		if !getBool(d, "ha_enabled") {
 			return fmt.Errorf("can't update BGP backup MD5 authentication key since ha is not enabled")
 		}
 
 		oldKey, newKey := d.GetChange("backup_bgp_md5_key")
-		oldKeyList := strings.Split(oldKey.(string), ",")
-		newKeyList := strings.Split(newKey.(string), ",")
+		oldKeyStr := mustString(oldKey)
+		newKeyStr := mustString(newKey)
+		oldKeyList := strings.Split(oldKeyStr, ",")
+		newKeyList := strings.Split(newKeyStr, ",")
 		var bgpRemoteIp []string
-		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
-			bgpRemoteIp = strings.Split(d.Get("backup_remote_lan_ip").(string), ",")
+		if strings.ToUpper(getString(d, "tunnel_protocol")) == "LAN" {
+			bgpRemoteIp = strings.Split(getString(d, "backup_remote_lan_ip"), ",")
 		} else {
-			bgpRemoteIp = strings.Split(d.Get("backup_remote_tunnel_cidr").(string), ",")
+			bgpRemoteIp = strings.Split(getString(d, "backup_remote_tunnel_cidr"), ",")
 		}
-		if newKey.(string) != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", d.Get("connection_name").(string))
+		if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIp) {
+			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", getString(d, "connection_name"))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
-			if newKey.(string) != "" {
+			if newKeyStr != "" {
 				bgpMd5Key = newKeyList[i]
 			}
-			if newKey.(string) != "" && oldKey.(string) != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
+			if newKeyStr != "" && oldKeyStr != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
 				continue
 			}
 			editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
@@ -1645,20 +1650,20 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			}
 			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
-				return fmt.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
+				return fmt.Errorf("failed to update backup BGP MD5 authentication key: %w", err)
 			}
 		}
 	}
 
 	if d.HasChange("phase1_local_identifier") {
 		s2c := &goaviatrix.EditSite2Cloud{
-			VpcID:                 d.Get("vpc_id").(string),
-			ConnName:              d.Get("connection_name").(string),
-			Phase1LocalIdentifier: d.Get("phase1_local_identifier").(string),
+			VpcID:                 getString(d, "vpc_id"),
+			ConnName:              getString(d, "connection_name"),
+			Phase1LocalIdentifier: getString(d, "phase1_local_identifier"),
 		}
 		err := client.EditSite2CloudPhase1LocalIdentifier(s2c)
 		if err != nil {
-			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %v", s2c.ConnName, err)
+			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %w", s2c.ConnName, err)
 		}
 	}
 
@@ -1666,20 +1671,11 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		// Detect whether the user wants to change the set of BGP communities sent on a given connection
 		// if so, update the connection with the new set of communities, either additively or as a replacement
 		// or block the communities entirely, depending on the user's choice
-		sendComm, ok := d.Get("connection_bgp_send_communities").(string)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_bgp_send_communities as string")
-		}
+		sendComm := getString(d, "connection_bgp_send_communities")
 
-		sendAdditive, ok := d.Get("connection_bgp_send_communities_additive").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_bgp_send_communities_additive as bool")
-		}
+		sendAdditive := getBool(d, "connection_bgp_send_communities_additive")
 
-		sendBlock, ok := d.Get("connection_bgp_send_communities_block").(bool)
-		if !ok {
-			return fmt.Errorf("failed to assert connection_bgp_send_communities_block as bool")
-		}
+		sendBlock := getBool(d, "connection_bgp_send_communities_block")
 
 		bgpSendCommunities := &goaviatrix.BgpSendCommunities{
 			ConnectionName:      connName,
@@ -1693,33 +1689,41 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange("proxy_id_enabled") {
+		editSite2cloud := &goaviatrix.EditSite2Cloud{
+			VpcID:    getString(d, "vpc_id"),
+			ConnName: connName,
+		}
+		if getBool(d, "proxy_id_enabled") {
+			editSite2cloud.ProxyIdEnabled = "true"
+		} else {
+			editSite2cloud.ProxyIdEnabled = "false"
+		}
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update proxy_id_enabled: %w", err)
+		}
+	}
+
 	d.Partial(false)
 
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
 func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:              d.Get("vpc_id").(string),
-		ConnectionName:     d.Get("connection_name").(string),
-		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
+		VpcID:              getString(d, "vpc_id"),
+		ConnectionName:     getString(d, "connection_name"),
+		EnableEdgeUnderlay: getBool(d, "enable_edge_underlay"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix external device connection: %#v", externalDeviceConn)
 	if externalDeviceConn.EnableEdgeUnderlay {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
-		if val, ok := d.Get("local_lan_ip").(string); ok {
-			edgeExternalDeviceConn.LocalLanIP = val
-		} else {
-			return fmt.Errorf("failed to get 'local_lan_ip' as string")
-		}
-		if gwName, ok := d.Get("gw_name").(string); ok {
-			edgeExternalDeviceConn.GwName = gwName
-		} else {
-			return fmt.Errorf("failed to get 'gw_name' as string")
-		}
+		edgeExternalDeviceConn.LocalLanIP = getString(d, "local_lan_ip")
+		edgeExternalDeviceConn.GwName = getString(d, "gw_name")
 		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
 		if err != nil {
 			return fmt.Errorf("failed to delete Aviatrix external device connection: %w", err)

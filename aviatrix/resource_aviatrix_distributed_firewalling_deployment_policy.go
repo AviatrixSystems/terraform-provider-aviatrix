@@ -5,9 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
@@ -44,14 +45,10 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
-	setDefaults, ok := d.Get("set_defaults").(bool)
-	if !ok {
-		return diag.Errorf("failed to assert 'set_defaults' as bool")
-	}
+	client := mustClient(meta)
+
+	setDefaults := getBool(d, "set_defaults")
+
 	providers, ok := d.Get("providers").(*schema.Set)
 	if !ok {
 		return diag.Errorf("failed to assert 'providers' as array of strings")
@@ -100,11 +97,7 @@ func validateDeploymentPolicyInput(providers *schema.Set, setDefaults bool) (dia
 }
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	if d.Id() != strings.ReplaceAll(client.ControllerIP, ".", "-") {
 		return diag.Errorf("ID: %s does not match controller IP %q: please provide correct ID for importing", d.Id(), client.ControllerIP)
@@ -132,10 +125,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Cont
 }
 
 func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	// These dummy values are required but will be ignored by the API when SetDefaults=true
 	dummyProviders := []string{

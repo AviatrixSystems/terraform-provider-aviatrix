@@ -52,6 +52,7 @@ type ExternalDeviceConn struct {
 	BgpSendCommunitiesBlock    bool   `json:"conn_bgp_send_communities_block,omitempty"`
 	RemoteGatewayIP            string `form:"external_device_ip_address,omitempty"`
 	RemoteSubnet               string `form:"remote_subnet,omitempty"`
+	LocalSubnet                string `form:"local_subnet,omitempty"`
 	DirectConnect              string `form:"direct_connect,omitempty"`
 	PreSharedKey               string `form:"pre_shared_key,omitempty"`
 	LocalTunnelCidr            string `form:"local_tunnel_ip,omitempty"`
@@ -97,6 +98,7 @@ type ExternalDeviceConn struct {
 	// breaks that.
 	EnableBgpMultihop        bool   `form:"enable_bgp_multihop"`
 	DisableActivemesh        bool   `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
+	ProxyIdEnabled           bool   `form:"proxy_id_enabled,omitempty"`
 	TunnelSrcIP              string `form:"local_device_ip,omitempty"`
 	EnableIpv6               bool   `form:"ipv6_enabled,omitempty"`
 	ExternalDeviceIPv6       string `form:"external_device_ipv6,omitempty"`
@@ -118,6 +120,7 @@ type EditExternalDeviceConnDetail struct {
 	EnableBgpLanActiveMesh     bool          `json:"bgp_lan_activemesh,omitempty"`
 	RemoteGatewayIP            string        `json:"peer_ip,omitempty"`
 	RemoteSubnet               string        `json:"remote_cidr,omitempty"`
+	LocalSubnet                string        `json:"local_cidr,omitempty"`
 	DirectConnect              bool          `json:"direct_connect_primary,omitempty"`
 	LocalTunnelCidr            string        `json:"bgp_local_ip,omitempty"`
 	RemoteTunnelCidr           string        `json:"bgp_remote_ip,omitempty"`
@@ -151,6 +154,7 @@ type EditExternalDeviceConnDetail struct {
 	EnableBfd                  bool           `json:"bgp_bfd_enabled,omitempty"`
 	EnableBgpMultihop          bool           `json:"bgp_multihop_enabled,omitempty"`
 	DisableActivemesh          bool           `json:"disable_activemesh,omitempty"`
+	ProxyIdEnabled             bool           `json:"proxy_id_enabled,omitempty"`
 	TunnelSrcIP                string         `json:"local_device_ip,omitempty"`
 	TunnelType                 string         `json:"tunnel_type,omitempty"`
 	EnableIpv6                 bool           `json:"ipv6_enabled,omitempty"`
@@ -291,14 +295,35 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 		return false
 	}
 
-	ip := d.Get("remote_gateway_ip").(string)
+	ip, ok := d.Get("remote_gateway_ip").(string)
+	if !ok {
+		return false
+	}
 	ipList := strings.Split(ip, ",")
-	haip := d.Get("backup_remote_gateway_ip").(string)
-	o, n := d.GetChange("phase1_remote_identifier")
-	haEnabled := d.Get("ha_enabled").(bool)
 
-	ph1RemoteIdListOld := ExpandStringList(o.([]interface{}))
-	ph1RemoteIdListNew := ExpandStringList(n.([]interface{}))
+	haip, ok := d.Get("backup_remote_gateway_ip").(string)
+	if !ok {
+		return false
+	}
+
+	o, n := d.GetChange("phase1_remote_identifier")
+
+	haEnabled, ok := d.Get("ha_enabled").(bool)
+	if !ok {
+		return false
+	}
+
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
+
+	ph1RemoteIdListOld := ExpandStringList(oList)
+	ph1RemoteIdListNew := ExpandStringList(nList)
 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 		if haEnabled {
@@ -355,16 +380,21 @@ func CreateBgpBfdConfig(bfd map[string]interface{}) BgpBfdConfig {
 
 func GetUpdatedBgpBfdConfig(bgpBfdConfig []interface{}) BgpBfdConfig {
 	var bgpBfd BgpBfdConfig
+
 	if len(bgpBfdConfig) > 0 {
 		// get the user provided bgp bfd config
 		for _, v := range bgpBfdConfig {
-			bfdConfig := v.(map[string]interface{})
+			bfdConfig, ok := v.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			bgpBfd = CreateBgpBfdConfig(bfdConfig)
 		}
-	} else if len(bgpBfdConfig) == 0 {
+	} else {
 		// use default bgp bfd config
 		bgpBfd = defaultBfdConfig
 	}
+
 	return bgpBfd
 }
 
@@ -539,6 +569,7 @@ func populateConnectionTypeInfo(externalDeviceConn *ExternalDeviceConn, external
 		externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
 		externalDeviceConn.ConnectionType = "static"
 	}
+	externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalSubnet
 }
 
 // populateAlgorithmInfo populates encryption algorithm information
@@ -714,6 +745,7 @@ func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, ex
 		externalDeviceConn.BgpBfdConfig.Multiplier = externalDeviceConnDetail.BgpBfdConfig["multiplier"]
 	}
 	externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
+	externalDeviceConn.ProxyIdEnabled = externalDeviceConnDetail.ProxyIdEnabled
 }
 
 // populateIPv6ConnectionInfo populates IPv6 related connection information

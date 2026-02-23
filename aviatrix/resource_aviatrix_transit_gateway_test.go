@@ -10,11 +10,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 var interfaces = []interface{}{
@@ -738,7 +739,7 @@ func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) res
 			return fmt.Errorf("no transit gateway ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundGateway := &goaviatrix.Gateway{
 			GwName:      rs.Primary.Attributes["gw_name"],
@@ -758,7 +759,7 @@ func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) res
 }
 
 func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_transit_vpc" {
@@ -1650,7 +1651,7 @@ func TestSetEipMapDetails(t *testing.T) {
 			result, err := setEipMapDetails(tt.eipMap, tt.ifNameTranslation)
 
 			if tt.expectedErr != "" {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)
 			} else {
 				assert.NoError(t, err)

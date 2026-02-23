@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -60,11 +59,11 @@ func testAccCheckControllerEmailExceptionNotificationExists(n string) resource.T
 			return fmt.Errorf("controller email exception notification config ID is not set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetEmailExceptionNotificationStatus(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get email exception notification config status: %v", err)
+			return fmt.Errorf("failed to get email exception notification config status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -76,7 +75,7 @@ func testAccCheckControllerEmailExceptionNotificationExists(n string) resource.T
 }
 
 func testAccCheckControllerEmailExceptionNotificationConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_email_exception_notification_config" {

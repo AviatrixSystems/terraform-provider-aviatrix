@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -148,13 +147,20 @@ func (c *Client) DisableRemoteSyslog(idx int) error {
 	return c.PostAPI(params["action"], params, BasicCheck)
 }
 
-func (c *Client) GetAPIRemoteSyslog(v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+func (c *Client) GetAPIRemoteSyslog(
+	v interface{},
+	action string,
+	d map[string]string,
+	checkFunc CheckAPIResponseFunc,
+) error {
 	Url, err := c.urlEncode(d)
 	if err != nil {
-		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+		return fmt.Errorf("could not url encode values for action %q: %w", action, err)
 	}
 
-	try, maxTries, backoff := 0, 5, 500*time.Millisecond
+	try, maxTries := 0, 5
+	backoff := 500 * time.Millisecond
+
 	var resp *http.Response
 	for {
 		try++
@@ -163,28 +169,41 @@ func (c *Client) GetAPIRemoteSyslog(v interface{}, action string, d map[string]s
 			break
 		}
 
-		if try == maxTries {
-			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
 		}
+
+		if try == maxTries {
+			return fmt.Errorf("HTTP Get %s failed: %w", action, err)
+		}
+
 		time.Sleep(backoff)
-		// Double the backoff time after each failed try
 		backoff *= 2
 	}
 
+	if resp == nil || resp.Body == nil {
+		return fmt.Errorf("HTTP Get %s returned nil response/body", action)
+	}
+	defer resp.Body.Close()
+
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return fmt.Errorf("read response body failed for %s: %w", action, err)
+	}
+
+	bodyBytes := buf.Bytes()
 	bodyString := buf.String()
+
 	var data APIResp
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&data); err != nil {
+		return fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 	}
 	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
 		return err
 	}
 
-	err = myUnmarshal(buf.Bytes(), &v)
-	if err != nil {
-		return fmt.Errorf("json unmarshal failed: %v\n Body: %s", err, buf.String())
+	if err := myUnmarshal(bodyBytes, v); err != nil {
+		return fmt.Errorf("json unmarshal failed: %w\n Body: %s", err, bodyString)
 	}
 
 	return nil

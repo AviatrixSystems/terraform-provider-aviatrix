@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAWSTgwPeeringDomainConn_basic(t *testing.T) {
@@ -161,7 +163,7 @@ func tesAccCheckAWSTgwPeeringDomainConnExists(n string, domainConn *goaviatrix.D
 			return fmt.Errorf("no aviatrix AWS tgw peering domain connection ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		foundDomainConn := &goaviatrix.DomainConn{
 			TgwName1:    rs.Primary.Attributes["tgw_name1"],
 			DomainName1: rs.Primary.Attributes["domain_name1"],
@@ -170,7 +172,7 @@ func tesAccCheckAWSTgwPeeringDomainConnExists(n string, domainConn *goaviatrix.D
 		}
 		err := client.GetDomainConn(foundDomainConn)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("no aviatrix AWS tgw peering domain connection is found")
 			}
 			return err
@@ -182,7 +184,7 @@ func tesAccCheckAWSTgwPeeringDomainConnExists(n string, domainConn *goaviatrix.D
 }
 
 func testAccCheckAWSTgwPeeringDomainConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_peering_domain_conn" {
@@ -197,7 +199,7 @@ func testAccCheckAWSTgwPeeringDomainConnDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetDomainConn(foundDomainConn)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix AWS tgw peering domain connection still exists")
 		}
 	}

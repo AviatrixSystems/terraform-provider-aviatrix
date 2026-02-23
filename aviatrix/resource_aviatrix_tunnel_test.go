@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preGateway2Check(t *testing.T, msgCommon string) {
@@ -126,7 +128,7 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 			return fmt.Errorf("no aviatrix tunnel ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundTunnel := &goaviatrix.Tunnel{
 			VpcName1: rs.Primary.Attributes["gw_name1"],
@@ -150,7 +152,7 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 }
 
 func testAccCheckTunnelDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_tunnel" {
@@ -163,7 +165,7 @@ func testAccCheckTunnelDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetTunnel(foundTunnel)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix tunnel still exists")
 		}
 	}

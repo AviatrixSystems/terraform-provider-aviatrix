@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixControllerAccessAllowListConfig_basic(t *testing.T) {
@@ -64,7 +66,7 @@ func testAccCheckControllerAccessAllowListConfigExists(n string) resource.TestCh
 			return fmt.Errorf("no controller access allow list config ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("controller access allow list config ID not found")
@@ -75,7 +77,7 @@ func testAccCheckControllerAccessAllowListConfigExists(n string) resource.TestCh
 }
 
 func testAccCheckControllerAccessAllowListConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_access_allow_list_config" {
@@ -83,7 +85,7 @@ func testAccCheckControllerAccessAllowListConfigDestroy(s *terraform.State) erro
 		}
 
 		_, err := client.GetControllerAccessAllowList(context.Background())
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("controller access allow list config still exists")
 		}
 	}

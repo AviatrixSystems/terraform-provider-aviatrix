@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -60,10 +59,7 @@ func testAccCheckDistributedFirewallingDefaultActionRuleExists(n string) resourc
 		}
 
 		meta := testAccProviderVersionValidation.Meta()
-		client, ok := meta.(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
-		}
+		client := mustClient(meta)
 
 		_, err := client.GetDistributedFirewallingDefaultActionRule(context.Background())
 		if err != nil {
@@ -80,10 +76,7 @@ func testAccCheckDistributedFirewallingDefaultActionRuleExists(n string) resourc
 
 func testAccDistributedFirewallingDefaultActionRuleDestroy(s *terraform.State) error {
 	meta := testAccProviderVersionValidation.Meta()
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return fmt.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_default_action_rule" {

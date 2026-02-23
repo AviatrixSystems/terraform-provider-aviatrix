@@ -2,11 +2,13 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
@@ -52,25 +54,25 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 func marshalControllerAccessAllowListConfigInput(d *schema.ResourceData) *goaviatrix.AllowList {
 	var allowList goaviatrix.AllowList
 
-	al := d.Get("allow_list").(*schema.Set).List()
+	al := getSet(d, "allow_list").List()
 	for _, v0 := range al {
-		v1 := v0.(map[string]interface{})
+		v1 := mustMap(v0)
 
 		ai := goaviatrix.AllowIp{
-			IpAddress:   v1["ip_address"].(string),
-			Description: v1["description"].(string),
+			IpAddress:   mustString(v1["ip_address"]),
+			Description: mustString(v1["description"]),
 		}
 
 		allowList.AllowList = append(allowList.AllowList, ai)
 	}
 
-	allowList.Enforce = d.Get("enable_enforce").(bool)
+	allowList.Enforce = getBool(d, "enable_enforce")
 
 	return &allowList
 }
 
 func resourceAviatrixControllerAccessAllowListConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	allowList := marshalControllerAccessAllowListConfigInput(d)
 
@@ -95,7 +97,7 @@ func resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx context.C
 }
 
 func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -103,14 +105,13 @@ func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d 
 
 	allowList, err := client.GetControllerAccessAllowList(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read controller access allow list config: %s", err)
 	}
-
-	d.Set("enable_enforce", allowList.Enforce)
+	mustSet(d, "enable_enforce", allowList.Enforce)
 
 	var al []interface{}
 
@@ -131,7 +132,7 @@ func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d 
 }
 
 func resourceAviatrixControllerAccessAllowListConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChanges("allow_list", "enable_enforce") {
@@ -148,7 +149,7 @@ func resourceAviatrixControllerAccessAllowListConfigUpdate(ctx context.Context, 
 }
 
 func resourceAviatrixControllerAccessAllowListConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteControllerAccessAllowList(ctx)
 	if err != nil {

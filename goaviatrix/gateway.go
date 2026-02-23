@@ -87,6 +87,7 @@ type Gateway struct {
 	Expiration                      string            `form:"expiration,omitempty" json:"expiration,omitempty"`
 	GatewayZone                     string            `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
 	GwName                          string            `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GroupName                       string            `form:"group_name,omitempty" json:"group_name,omitempty"`
 	GwSecurityGroupID               string            `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
 	GwSize                          string            `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID                      string            `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
@@ -238,6 +239,7 @@ type Gateway struct {
 	SubnetIPv6Cidr                  string                              `json:"gw_subnet_ipv6_cidr,omitempty"`
 	TunnelEncryptionCipher          string                              `json:"ph2_encryption_policy,omitempty"`
 	TunnelForwardSecrecy            string                              `json:"ph2_pfs_policy,omitempty"`
+	PrivateRouteTableConfig         []string                            `json:"private_route_table_config,omitempty"`
 }
 
 type HaGateway struct {
@@ -293,6 +295,7 @@ type GatewayDetail struct {
 	AccountName                  string        `form:"account_name,omitempty" json:"account_name,omitempty"`
 	Action                       string        `form:"action,omitempty"`
 	GwName                       string        `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GroupName                    string        `form:"group_name,omitempty" json:"group_name,omitempty"`
 	DMZEnabled                   bool          `json:"dmz_enabled,omitempty"`
 	EnableAdvertiseTransitCidr   string        `json:"advertise_transit_cidr,omitempty"`
 	BgpManualSpokeAdvertiseCidrs []string      `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
@@ -496,6 +499,17 @@ func (c *Client) EditPublicSubnetFilteringRouteTableList(gateway *Gateway, route
 		"CID":          c.CID,
 		"gateway_name": gateway.GwName,
 		"route_table":  strings.Join(routeTables, ", "),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditPrivateRouteTableConfig(gateway *Gateway, routeTables []string) error {
+	log.Printf("[INFO] EditPrivateRouteTableConfig routeTables: %v", routeTables)
+	data := map[string]string{
+		"action":               "edit_private_route_tables",
+		"CID":                  c.CID,
+		"gateway_name":         gateway.GwName,
+		"private_route_tables": strings.Join(routeTables, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
@@ -764,7 +778,7 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
-func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
+func (c *Client) EnableVpcDNSServer(gateway *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "enable_vpc_dns_server",
@@ -774,7 +788,7 @@ func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
-func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
+func (c *Client) DisableVpcDNSServer(gateway *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "disable_vpc_dns_server",
@@ -1325,49 +1339,65 @@ func (c *Client) SetRxQueueSize(gateway *Gateway) error {
 }
 
 func DiffSuppressFuncGatewaySNat(k, old, new string, d *schema.ResourceData) bool {
-	connectionPolicy := d.Get("connection_policy").([]interface{})
-	var connectionPolicyOld []map[string]interface{}
-
+	// connection_policy
+	raw := d.Get("connection_policy")
+	connectionPolicy, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+	connectionPolicyOld := make([]map[string]interface{}, 0, len(connectionPolicy))
 	for _, policy := range connectionPolicy {
-		pl := policy.(map[string]interface{})
-
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		connectionPolicyOld = append(connectionPolicyOld, pl)
 	}
 
-	interfacePolicy := d.Get("interface_policy").([]interface{})
-	var interfacePolicyOld []map[string]interface{}
-
+	// interface_policy
+	raw = d.Get("interface_policy")
+	interfacePolicy, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+	interfacePolicyOld := make([]map[string]interface{}, 0, len(interfacePolicy))
 	for _, policy := range interfacePolicy {
-		pl := policy.(map[string]interface{})
-
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		interfacePolicyOld = append(interfacePolicyOld, pl)
 	}
 
-	snatPolicies := d.Get("snat_policy").([]interface{})
-	var connectionPolicyNew []map[string]interface{}
-	var interfacePolicyNew []map[string]interface{}
+	// snat_policy
+	raw = d.Get("snat_policy")
+	snatPolicies, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+
+	connectionPolicyNew := make([]map[string]interface{}, 0)
+	interfacePolicyNew := make([]map[string]interface{}, 0)
 
 	for _, policy := range snatPolicies {
-		pl := policy.(map[string]interface{})
-		customPolicy := PolicyRule{
-			SrcIP:           pl["src_cidr"].(string),
-			SrcPort:         pl["src_port"].(string),
-			DstIP:           pl["dst_cidr"].(string),
-			DstPort:         pl["dst_port"].(string),
-			Protocol:        pl["protocol"].(string),
-			Interface:       pl["interface"].(string),
-			Connection:      pl["connection"].(string),
-			Mark:            pl["mark"].(string),
-			NewSrcIP:        pl["snat_ips"].(string),
-			NewSrcPort:      pl["snat_port"].(string),
-			ExcludeRTB:      pl["exclude_rtb"].(string),
-			ApplyRouteEntry: pl["apply_route_entry"].(bool),
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
 		}
 
-		if customPolicy.Connection != "None" {
+		conn, ok := pl["connection"].(string)
+		if !ok {
+			return false
+		}
+		iface, ok := pl["interface"].(string)
+		if !ok {
+			return false
+		}
+
+		if conn != "None" {
 			connectionPolicyNew = append(connectionPolicyNew, pl)
 		}
-		if customPolicy.Interface != "" {
+		if iface != "" {
 			interfacePolicyNew = append(interfacePolicyNew, pl)
 		}
 	}
@@ -1377,49 +1407,65 @@ func DiffSuppressFuncGatewaySNat(k, old, new string, d *schema.ResourceData) boo
 }
 
 func DiffSuppressFuncGatewayDNat(k, old, new string, d *schema.ResourceData) bool {
-	connectionPolicy := d.Get("connection_policy").([]interface{})
-	var connectionPolicyOld []map[string]interface{}
-
+	// connection_policy
+	raw := d.Get("connection_policy")
+	connectionPolicy, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+	connectionPolicyOld := make([]map[string]interface{}, 0, len(connectionPolicy))
 	for _, policy := range connectionPolicy {
-		pl := policy.(map[string]interface{})
-
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		connectionPolicyOld = append(connectionPolicyOld, pl)
 	}
 
-	interfacePolicy := d.Get("interface_policy").([]interface{})
-	var interfacePolicyOld []map[string]interface{}
-
+	// interface_policy
+	raw = d.Get("interface_policy")
+	interfacePolicy, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+	interfacePolicyOld := make([]map[string]interface{}, 0, len(interfacePolicy))
 	for _, policy := range interfacePolicy {
-		pl := policy.(map[string]interface{})
-
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		interfacePolicyOld = append(interfacePolicyOld, pl)
 	}
 
-	dnatPolicies := d.Get("dnat_policy").([]interface{})
-	var connectionPolicyNew []map[string]interface{}
-	var interfacePolicyNew []map[string]interface{}
+	// dnat_policy
+	raw = d.Get("dnat_policy")
+	dnatPolicies, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+
+	connectionPolicyNew := make([]map[string]interface{}, 0)
+	interfacePolicyNew := make([]map[string]interface{}, 0)
 
 	for _, policy := range dnatPolicies {
-		pl := policy.(map[string]interface{})
-		customPolicy := PolicyRule{
-			SrcIP:           pl["src_cidr"].(string),
-			SrcPort:         pl["src_port"].(string),
-			DstIP:           pl["dst_cidr"].(string),
-			DstPort:         pl["dst_port"].(string),
-			Protocol:        pl["protocol"].(string),
-			Interface:       pl["interface"].(string),
-			Connection:      pl["connection"].(string),
-			Mark:            pl["mark"].(string),
-			NewDstIP:        pl["dnat_ips"].(string),
-			NewDstPort:      pl["dnat_port"].(string),
-			ExcludeRTB:      pl["exclude_rtb"].(string),
-			ApplyRouteEntry: pl["apply_route_entry"].(bool),
+		pl, ok := policy.(map[string]interface{})
+		if !ok {
+			return false
 		}
 
-		if customPolicy.Connection != "None" {
+		conn, ok := pl["connection"].(string)
+		if !ok {
+			return false
+		}
+		iface, ok := pl["interface"].(string)
+		if !ok {
+			return false
+		}
+
+		if conn != "None" {
 			connectionPolicyNew = append(connectionPolicyNew, pl)
 		}
-		if customPolicy.Interface != "" {
+		if iface != "" {
 			interfacePolicyNew = append(interfacePolicyNew, pl)
 		}
 	}
@@ -1429,15 +1475,17 @@ func DiffSuppressFuncGatewayDNat(k, old, new string, d *schema.ResourceData) boo
 }
 
 func (c *Client) ChangeBgpOverLanIntfCnt(gateway *Gateway) error {
+	const action = "change_bgp_over_lan_intf_cnt"
+
 	form := map[string]interface{}{
 		"CID":                   c.CID,
-		"action":                "change_bgp_over_lan_intf_cnt",
+		"action":                action,
 		"gw_name":               gateway.GwName,
 		"bgp_over_lan":          "enable",
 		"bgp_over_lan_intf_cnt": gateway.BgpLanInterfacesCount,
 	}
 
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
+	return c.PostAPIContext2(context.Background(), nil, action, form, BasicCheck)
 }
 
 func (c *Client) EnableGroGso(gateway *Gateway) error {

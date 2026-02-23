@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -89,7 +88,7 @@ func dataSourceAviatrixNetworkDomains() *schema.Resource {
 }
 
 func dataSourceAviatrixNetworkDomainsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	domainList, err := client.GetAllNetworkDomains(ctx)
 	if err != nil {

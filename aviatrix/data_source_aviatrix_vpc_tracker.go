@@ -3,9 +3,10 @@ package aviatrix
 import (
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixVpcTracker() *schema.Resource {
@@ -113,10 +114,10 @@ func dataSourceAviatrixVpcTracker() *schema.Resource {
 }
 
 func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	vpcTracker, err := client.GetVpcTracker()
 	if err != nil {
-		return fmt.Errorf("could not get vpc list: %s", err)
+		return fmt.Errorf("could not get vpc list: %w", err)
 	}
 	vpcTracker = filterVpcTrackerResult(d, vpcTracker)
 
@@ -135,13 +136,13 @@ func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) 
 	}
 	err = d.Set("vpc_list", vpcList)
 	if err != nil {
-		return fmt.Errorf("could not set vpc list: %s", err)
+		return fmt.Errorf("could not set vpc list: %w", err)
 	}
 
-	ct := d.Get("cloud_type").(int)
-	cidr := d.Get("cidr").(string)
-	reg := d.Get("region").(string)
-	an := d.Get("account_name").(string)
+	ct := getInt(d, "cloud_type")
+	cidr := getString(d, "cidr")
+	reg := getString(d, "region")
+	an := getString(d, "account_name")
 	// Generate a unique id based on the user inputs
 	d.SetId(fmt.Sprintf("vpc_tracker~%d~%s~%s~%s", ct, cidr, reg, an))
 
@@ -149,10 +150,10 @@ func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func filterVpcTrackerResult(d *schema.ResourceData, vpcList []*goaviatrix.VpcTracker) []*goaviatrix.VpcTracker {
-	cloudType := d.Get("cloud_type").(int)
-	cidr := d.Get("cidr").(string)
-	region := d.Get("region").(string)
-	accountName := d.Get("account_name").(string)
+	cloudType := getInt(d, "cloud_type")
+	cidr := getString(d, "cidr")
+	region := getString(d, "region")
+	accountName := getString(d, "account_name")
 
 	var filteredList []*goaviatrix.VpcTracker
 	for _, vpc := range vpcList {

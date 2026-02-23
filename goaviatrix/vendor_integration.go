@@ -4,6 +4,11 @@ import (
 	"context"
 )
 
+const (
+	FirewallManagerConfigModeDefault = "DEFAULT"
+	FirewallManagerConfigModeAdvance = "ADVANCE"
+)
+
 type VendorInfo struct {
 	CID            string `form:"CID,omitempty"`
 	Action         string `form:"action,omitempty"`
@@ -20,21 +25,27 @@ type VendorInfo struct {
 	Save           bool
 	Synchronize    bool `form:"sync,omitempty"`
 }
-
+type FirewallTemplateConfig struct {
+	Template      string `json:"template,omitempty"`
+	TemplateStack string `json:"template_stack,omitempty"`
+	RouteTable    string `json:"route_table,omitempty"`
+}
 type FirewallManager struct {
-	CID           string
-	Action        string
-	VpcID         string
-	GatewayName   string
-	VendorType    string
-	PublicIP      string
-	Username      string
-	Password      string
-	Template      string
-	TemplateStack string
-	RouteTable    string
-	Save          bool
-	Synchronize   bool
+	CID                    string                            `json:"CID,omitempty"`
+	Action                 string                            `json:"action,omitempty"`
+	VpcID                  string                            `json:"vpc_id,omitempty"`
+	GatewayName            string                            `json:"gw_name,omitempty"`
+	VendorType             string                            `json:"firewall_vendor,omitempty"`
+	PublicIP               string                            `json:"public_ip,omitempty"`
+	Username               string                            `json:"user,omitempty"`
+	Password               string                            `json:"password,omitempty"`
+	Template               string                            `json:"template,omitempty"`
+	TemplateStack          string                            `json:"template_stack,omitempty"`
+	RouteTable             string                            `json:"route_table,omitempty"`
+	FirewallTemplateConfig map[string]FirewallTemplateConfig `json:"firewall_template_config,omitempty"`
+	ConfigMode             string                            `json:"config_mode,omitempty"`
+	Save                   bool                              `json:"save,omitempty"`
+	Synchronize            bool                              `json:"sync,omitempty"`
 }
 
 func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {
@@ -68,21 +79,10 @@ func (c *Client) ShowFireNetFirewallVendorConfig(vendorInfo *VendorInfo) error {
 }
 
 func (c *Client) EditFireNetFirewallManagerVendorInfo(ctx context.Context, firewallManager *FirewallManager) error {
-	params := map[string]string{
-		"action":          "edit_firenet_firewall_manager_vendor_info",
-		"CID":             c.CID,
-		"vpc_id":          firewallManager.VpcID,
-		"gw_name":         firewallManager.GatewayName,
-		"firewall_vendor": firewallManager.VendorType,
-		"public_ip":       firewallManager.PublicIP,
-		"user":            firewallManager.Username,
-		"password":        firewallManager.Password,
-		"template":        firewallManager.Template,
-		"template_stack":  firewallManager.TemplateStack,
-		"route_table":     firewallManager.RouteTable,
-	}
+	firewallManager.CID = c.CID
+	firewallManager.Action = "edit_firenet_firewall_manager_vendor_info"
 
-	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, firewallManager.Action, firewallManager, BasicCheck)
 }
 
 func (c *Client) SyncFireNetFirewallManagerVendorConfig(ctx context.Context, firewallManager *FirewallManager) error {

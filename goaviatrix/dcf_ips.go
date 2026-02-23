@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	ipsRuleFeedsEndpoint  = "dcf/ips-rule-feeds"
-	ipsProfilesEndpoint   = "dcf/ips-profiles"
-	ipsProfileVpcEndpoint = "dcf/ips-profile-vpc"
+	ipsRuleFeedsEndpoint      = "dcf/ips-rule-feeds"
+	ipsProfilesEndpoint       = "dcf/ips-profiles"
+	ipsProfileVpcEndpoint     = "dcf/ips-profile-vpc"
+	defaultIpsProfileEndpoint = "dcf/default-ips-profile"
 )
 
 // IpsRuleFeed represents an IPS rule feed
@@ -68,6 +69,16 @@ type IpsProfileVpc struct {
 // IpsProfileVpcRequest represents the request to set DCF IPS profiles for a VPC
 type IpsProfileVpcRequest struct {
 	DcfIpsProfiles []string `json:"dcf_ips_profiles"`
+}
+
+// DefaultIpsProfileResponse represents the response for default IPS profile operations
+type DefaultIpsProfileResponse struct {
+	DefaultIpsProfile []string `json:"default_ips_profile"`
+}
+
+// DefaultIpsProfileRequest represents the request to set default IPS profile
+type DefaultIpsProfileRequest struct {
+	DefaultIpsProfile []string `json:"default_ips_profile"`
 }
 
 // IPS Rule Feed methods
@@ -200,4 +211,29 @@ func (c *Client) SetIpsProfileVpc(ctx context.Context, vpcId string, profiles []
 
 	// Get updated VPC profile configuration
 	return c.GetIpsProfileVpc(ctx, vpcId)
+}
+
+// Default IPS Profile methods
+
+func (c *Client) GetDefaultIpsProfile(ctx context.Context) (*DefaultIpsProfileResponse, error) {
+	var response DefaultIpsProfileResponse
+
+	err := c.GetAPIContext25(ctx, &response, defaultIpsProfileEndpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default IPS profile: %w", err)
+	}
+
+	return &response, nil
+}
+
+func (c *Client) SetDefaultIpsProfile(ctx context.Context, profiles []string) (*DefaultIpsProfileResponse, error) {
+	request := DefaultIpsProfileRequest{
+		DefaultIpsProfile: profiles,
+	}
+
+	if err := c.PutAPIContext25(ctx, defaultIpsProfileEndpoint, request); err != nil {
+		return nil, fmt.Errorf("failed to set default IPS profile: %w", err)
+	}
+
+	return c.GetDefaultIpsProfile(ctx)
 }

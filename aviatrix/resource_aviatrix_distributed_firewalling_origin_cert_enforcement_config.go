@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig() *schema.Resource {
@@ -34,10 +36,10 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig() *schema
 }
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	enforcementLevel := &goaviatrix.EnforcementLevel{
-		Level: d.Get("enforcement_level").(string),
+		Level: getString(d, "enforcement_level"),
 	}
 
 	flag := false
@@ -61,7 +63,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigReadIfRequ
 }
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -69,7 +71,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx c
 
 	enforcementLevel, err := client.GetEnforcementLevel(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -77,11 +79,11 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx c
 	}
 
 	if enforcementLevel.Level == "ENFORCED" {
-		d.Set("enforcement_level", "Strict")
+		mustSet(d, "enforcement_level", "Strict")
 	} else if enforcementLevel.Level == "DISABLED" {
-		d.Set("enforcement_level", "Ignore")
+		mustSet(d, "enforcement_level", "Ignore")
 	} else {
-		d.Set("enforcement_level", "Permissive")
+		mustSet(d, "enforcement_level", "Permissive")
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -89,12 +91,12 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx c
 }
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChange("enforcement_level") {
 		enforcementLevel := &goaviatrix.EnforcementLevel{
-			Level: d.Get("enforcement_level").(string),
+			Level: getString(d, "enforcement_level"),
 		}
 
 		err := client.UpdateEnforcementLevel(ctx, enforcementLevel)
@@ -108,7 +110,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx
 }
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteEnforcementLevel(ctx)
 	if err != nil {

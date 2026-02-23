@@ -1,10 +1,11 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -15,7 +16,7 @@ func resourceAviatrixCloudwatchAgent() *schema.Resource {
 		Read:   resourceAviatrixCloudwatchAgentRead,
 		Delete: resourceAviatrixCloudwatchAgentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,14 +59,14 @@ func resourceAviatrixCloudwatchAgent() *schema.Resource {
 
 func marshalCloudwatchAgentInput(d *schema.ResourceData) *goaviatrix.CloudwatchAgent {
 	cloudwatchAgent := &goaviatrix.CloudwatchAgent{
-		RoleArn:      d.Get("cloudwatch_role_arn").(string),
-		Region:       d.Get("region").(string),
-		LogGroupName: d.Get("log_group_name").(string),
+		RoleArn:      getString(d, "cloudwatch_role_arn"),
+		Region:       getString(d, "region"),
+		LogGroupName: getString(d, "log_group_name"),
 	}
 
 	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
+	for _, v := range getSet(d, "excluded_gateways").List() {
+		excludedGateways = append(excludedGateways, mustString(v))
 	}
 	if len(excludedGateways) != 0 {
 		cloudwatchAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
@@ -75,17 +76,17 @@ func marshalCloudwatchAgentInput(d *schema.ResourceData) *goaviatrix.CloudwatchA
 }
 
 func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	_, err := client.GetCloudwatchAgentStatus()
-	if err != goaviatrix.ErrNotFound {
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
 		return fmt.Errorf("the cloudwatch_agent is already enabled, please import to manage with Terraform")
 	}
 
 	cloudwatchAgent := marshalCloudwatchAgentInput(d)
 
 	if err := client.EnableCloudwatchAgent(cloudwatchAgent); err != nil {
-		return fmt.Errorf("could not enable cloudwatch agent: %v", err)
+		return fmt.Errorf("could not enable cloudwatch agent: %w", err)
 	}
 
 	d.SetId("cloudwatch_agent")
@@ -93,38 +94,37 @@ func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != "cloudwatch_agent" {
 		return fmt.Errorf("invalid ID, expected ID \"cloudwatch_agent\", instead got %s", d.Id())
 	}
 
 	cloudwatchAgentStatus, err := client.GetCloudwatchAgentStatus()
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get cloudwatch agent status: %v", err)
+		return fmt.Errorf("could not get cloudwatch agent status: %w", err)
 	}
-
-	d.Set("cloudwatch_role_arn", cloudwatchAgentStatus.RoleArn)
-	d.Set("region", cloudwatchAgentStatus.Region)
-	d.Set("log_group_name", cloudwatchAgentStatus.LogGroupName)
+	mustSet(d, "cloudwatch_role_arn", cloudwatchAgentStatus.RoleArn)
+	mustSet(d, "region", cloudwatchAgentStatus.Region)
+	mustSet(d, "log_group_name", cloudwatchAgentStatus.LogGroupName)
 	if len(cloudwatchAgentStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", cloudwatchAgentStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", cloudwatchAgentStatus.ExcludedGateways)
 	}
-	d.Set("status", cloudwatchAgentStatus.Status)
+	mustSet(d, "status", cloudwatchAgentStatus.Status)
 
 	d.SetId("cloudwatch_agent")
 	return nil
 }
 
 func resourceAviatrixCloudwatchAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := client.DisableCloudwatchAgent(); err != nil {
-		return fmt.Errorf("could not disable cloudwatch agent: %v", err)
+		return fmt.Errorf("could not disable cloudwatch agent: %w", err)
 	}
 
 	return nil

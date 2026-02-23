@@ -1,11 +1,14 @@
 package aviatrix
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestValidateIdentifierValue(t *testing.T) {
@@ -632,21 +635,25 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result, err := buildEdgeSpokeVlan(test.input)
+			var result *goaviatrix.EdgeSpokeVlan
+			var err error
+
+			// Catch the panic and turn it into an error so we can compare it
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("%v", r)
+					}
+				}()
+				result, err = buildEdgeSpokeVlan(test.input)
+			}()
 
 			if test.expectErr {
-				if err == nil {
-					t.Errorf("expected an error but got none")
-				} else if err.Error() != test.expectedError {
-					t.Errorf("expected error: %s, got: %s", test.expectedError, err.Error())
-				}
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "invalid type")
 			} else {
-				if err != nil {
-					t.Errorf("did not expect an error but got: %s", err)
-				}
-				if !reflect.DeepEqual(result, test.expected) {
-					t.Errorf("expected result: %+v, got: %+v", test.expected, result)
-				}
+				assert.NoError(t, err)
+				assert.Equal(t, test.expected, result)
 			}
 		})
 	}
@@ -693,7 +700,7 @@ func TestPopulateCustomInterfaceMapping(t *testing.T) {
 			input: map[string]interface{}{
 				"custom_interface_mapping": []interface{}{},
 			},
-			expected:  map[string]goaviatrix.CustomInterfaceMap{},
+			expected:  nil,
 			expectErr: false,
 		},
 	}
@@ -724,7 +731,17 @@ func TestPopulateCustomInterfaceMapping(t *testing.T) {
 			}, test.input)
 
 			edgeSpoke := &goaviatrix.EdgeSpoke{}
-			err := populateCustomInterfaceMapping(d, edgeSpoke)
+
+			var err error
+
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("%v", r)
+					}
+				}()
+				err = populateCustomInterfaceMapping(d, edgeSpoke)
+			}()
 
 			if test.expectErr {
 				if err == nil {

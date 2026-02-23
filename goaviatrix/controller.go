@@ -1,11 +1,12 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -292,35 +293,68 @@ func (c *Client) GetGatewayCount(ctx context.Context) (int, error) {
 func (c *Client) GetSleepTime(ctx context.Context) (time.Duration, error) {
 	gatewayCount, err := c.GetGatewayCount(ctx)
 	if err != nil {
-		return -1, fmt.Errorf("could not get gateway count: %v", err)
+		return -1, fmt.Errorf("could not get gateway count: %w", err)
 	}
 	return time.Duration(20 * int(math.Ceil(float64(gatewayCount)/15.0))), nil
 }
 
-func (c *Client) PostAsyncAPIContextSetCertDomain(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
-	resp, err := c.PostContext(ctx, c.baseURL, i)
-	if err != nil {
-		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+func (c *Client) PostAsyncAPIContextSetCertDomain(
+	ctx context.Context,
+	action string,
+	i interface{},
+	checkFunc CheckAPIResponseFunc,
+) error {
+	const maxBody = 256 << 10 // 256 KiB
+
+	readAndClose := func(resp *http.Response) ([]byte, error) {
+		if resp == nil || resp.Body == nil {
+			return nil, fmt.Errorf("nil http response/body")
+		}
+		defer resp.Body.Close()
+
+		b, err := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
+		if err != nil {
+			return nil, err
+		}
+		if len(b) > maxBody {
+			b = b[:maxBody]
+		}
+		return b, nil
 	}
-	var data struct {
+
+	// Kickoff request
+	r, err := c.PostContext(ctx, c.baseURL, i)
+	if err != nil {
+		// Close response from this failed attempt, if any.
+		if r != nil && r.Body != nil {
+			_ = r.Body.Close()
+		}
+		return fmt.Errorf("HTTP POST %s failed: %w", action, err)
+	}
+	resp := r
+
+	body, err := readAndClose(resp)
+	if err != nil {
+		return fmt.Errorf("read response body for %s failed: %w", action, err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("HTTP POST %s returned %s\nBody: %s", action, resp.Status, string(body))
+	}
+
+	var kickoff struct {
 		Return bool   `json:"return"`
 		Result string `json:"results"`
 		Reason string `json:"reason"`
 	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	resp.Body.Close()
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
+	if err := json.Unmarshal(body, &kickoff); err != nil {
+		return fmt.Errorf("json Decode %s failed: %w\nBody: %s", action, err, string(body))
 	}
-	if !data.Return {
-		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
+	if !kickoff.Return {
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, kickoff.Reason)
 	}
 
-	requestID := data.Result
+	requestID := kickoff.Result
 	form := map[string]string{
 		"action":     "check_task_status",
 		"CID":        c.CID,
@@ -328,38 +362,62 @@ func (c *Client) PostAsyncAPIContextSetCertDomain(ctx context.Context, action st
 	}
 
 	const maxPoll = 360
-	sleepDuration := time.Second * 10
-	var j int
-	for ; j < maxPoll; j++ {
-		resp, err = c.PostContext(ctx, c.baseURL, form)
+	sleepDuration := 10 * time.Second
+
+	for j := 0; j < maxPoll; j++ {
+		r, err := c.PostContext(ctx, c.baseURL, form)
 		if err != nil {
-			// Could be transient HTTP error, e.g. EOF error
-			time.Sleep(sleepDuration)
-			continue
+			// Could be transient HTTP error, e.g. EOF.
+			// Also avoid leaking response from this failed attempt.
+			if r != nil && r.Body != nil {
+				_ = r.Body.Close()
+			}
+
+			select {
+			case <-time.After(sleepDuration):
+				continue
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
-		buf = new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		var data struct {
+		resp = r
+
+		body, err = readAndClose(resp)
+		if err != nil {
+			return fmt.Errorf("read check_task_status body failed: %w", err)
+		}
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return fmt.Errorf("check_task_status returned %s\nBody: %s", resp.Status, string(body))
+		}
+
+		var status struct {
 			Return bool   `json:"return"`
 			Reason string `json:"reason"`
 		}
-		err = json.Unmarshal(buf.Bytes(), &data)
-		if err != nil {
-			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
+		if err := json.Unmarshal(body, &status); err != nil {
+			return fmt.Errorf("decode check_task_status failed: %w\nBody: %s", err, string(body))
 		}
-		if !data.Return {
-			if data.Reason != "REQUEST_IN_PROGRESS" {
-				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+
+		if !status.Return {
+			if status.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", action, status.Reason)
 			}
 
 			// Not done yet
-			time.Sleep(sleepDuration)
-			continue
+			select {
+			case <-time.After(sleepDuration):
+				continue
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 
-		// Async API is done, return result of checkFunc
-		return checkFunc(action, "Post", "", data.Return)
+		return checkFunc(action, "Post", "", status.Return)
 	}
-	// Waited for too long and async API never finished
-	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
+
+	return fmt.Errorf(
+		"waited %s but upgrade never finished. Please manually verify the upgrade status",
+		time.Duration(maxPoll)*sleepDuration,
+	)
 }

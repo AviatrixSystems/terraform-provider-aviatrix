@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeSpoke_basic(t *testing.T) {
@@ -102,7 +104,7 @@ func testAccCheckEdgeSpokeExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("no edge as a spoke id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		edgeSpoke, err := client.GetEdgeSpoke(context.Background(), rs.Primary.Attributes["gw_name"])
 		if err != nil {
@@ -116,7 +118,7 @@ func testAccCheckEdgeSpokeExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckEdgeSpokeDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_spoke" {
@@ -124,7 +126,7 @@ func testAccCheckEdgeSpokeDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeSpoke(context.Background(), rs.Primary.Attributes["gw_name"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge as a spoke still exists")
 		}
 	}

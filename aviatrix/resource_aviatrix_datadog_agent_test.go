@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixDatadogAgent_basic(t *testing.T) {
@@ -60,10 +62,10 @@ func testAccCheckDatadogAgentExists(resourceName string) resource.TestCheckFunc 
 			return fmt.Errorf("datadog agent not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetDatadogAgentStatus()
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("datadog agent not found")
 		}
 
@@ -73,7 +75,7 @@ func testAccCheckDatadogAgentExists(resourceName string) resource.TestCheckFunc 
 
 func testAccCheckDatadogAgentExcludedGatewaysMatch(input []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		resp, _ := client.GetDatadogAgentStatus()
 		if !goaviatrix.Equivalent(resp.ExcludedGateways, input) {
@@ -84,7 +86,7 @@ func testAccCheckDatadogAgentExcludedGatewaysMatch(input []string) resource.Test
 }
 
 func testAccCheckDatadogAgentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_datadog_agent" {
@@ -92,7 +94,7 @@ func testAccCheckDatadogAgentDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetDatadogAgentStatus()
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("datadog_agent still exists")
 		}
 	}

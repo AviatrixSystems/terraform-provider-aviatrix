@@ -165,7 +165,7 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 					var asnInt int
 					err = json.Unmarshal(allAwsTgwVpnConn[i].OnpremASNRaw, &asnInt)
 					if err != nil {
-						return nil, fmt.Errorf("json decode list_all_tgw_attachments aws_side_asn field failed: aws_side_asn = %s: %v", string(allAwsTgwVpnConn[i].OnpremASNRaw), err)
+						return nil, fmt.Errorf("json decode list_all_tgw_attachments aws_side_asn field failed: aws_side_asn = %s: %w", string(allAwsTgwVpnConn[i].OnpremASNRaw), err)
 					}
 					asnString = strconv.Itoa(asnInt)
 				}

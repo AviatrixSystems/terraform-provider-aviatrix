@@ -86,30 +86,146 @@ func DiffSuppressFuncAwsTgwPeeringDomainConnTgwName1(k, old, new string, d *sche
 	tgwName2Old, _ := d.GetChange("tgw_name2")
 	domainName1Old, _ := d.GetChange("domain_name1")
 	domainName2Old, _ := d.GetChange("domain_name2")
-	return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string) &&
-		d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
+
+	tgw2Cur, ok := d.Get("tgw_name2").(string)
+	if !ok {
+		return false
+	}
+	tgw2Old, ok := tgwName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	dn1Cur, ok := d.Get("domain_name1").(string)
+	if !ok {
+		return false
+	}
+	dn2Cur, ok := d.Get("domain_name2").(string)
+	if !ok {
+		return false
+	}
+	dn1Old, ok := domainName1Old.(string)
+	if !ok {
+		return false
+	}
+	dn2Old, ok := domainName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == tgw2Cur &&
+		new == tgw2Old &&
+		dn1Cur == dn2Old &&
+		dn2Cur == dn1Old
 }
 
 func DiffSuppressFuncAwsTgwPeeringDomainConnTgwName2(k, old, new string, d *schema.ResourceData) bool {
 	tgwName1Old, _ := d.GetChange("tgw_name1")
 	domainName1Old, _ := d.GetChange("domain_name1")
 	domainName2Old, _ := d.GetChange("domain_name2")
-	return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string) &&
-		d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
+
+	tgw1Cur, ok := d.Get("tgw_name1").(string)
+	if !ok {
+		return false
+	}
+	tgw1Old, ok := tgwName1Old.(string)
+	if !ok {
+		return false
+	}
+
+	dn1Cur, ok := d.Get("domain_name1").(string)
+	if !ok {
+		return false
+	}
+	dn2Cur, ok := d.Get("domain_name2").(string)
+	if !ok {
+		return false
+	}
+	dn1Old, ok := domainName1Old.(string)
+	if !ok {
+		return false
+	}
+	dn2Old, ok := domainName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == tgw1Cur &&
+		new == tgw1Old &&
+		dn1Cur == dn2Old &&
+		dn2Cur == dn1Old
 }
 
 func DiffSuppressFuncAwsTgwPeeringDomainConnDomainName1(k, old, new string, d *schema.ResourceData) bool {
 	tgwName1Old, _ := d.GetChange("tgw_name1")
 	tgwName2Old, _ := d.GetChange("tgw_name2")
 	domainName2Old, _ := d.GetChange("domain_name2")
-	return old == d.Get("domain_name2").(string) && new == domainName2Old.(string) &&
-		d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
+
+	dn2Cur, ok := d.Get("domain_name2").(string)
+	if !ok {
+		return false
+	}
+	dn2Old, ok := domainName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	tgw1Cur, ok := d.Get("tgw_name1").(string)
+	if !ok {
+		return false
+	}
+	tgw2Cur, ok := d.Get("tgw_name2").(string)
+	if !ok {
+		return false
+	}
+	tgw1Old, ok := tgwName1Old.(string)
+	if !ok {
+		return false
+	}
+	tgw2Old, ok := tgwName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == dn2Cur &&
+		new == dn2Old &&
+		tgw1Cur == tgw2Old &&
+		tgw2Cur == tgw1Old
 }
 
 func DiffSuppressFuncAwsTgwPeeringDomainConnDomainName2(k, old, new string, d *schema.ResourceData) bool {
 	tgwName1Old, _ := d.GetChange("tgw_name1")
 	tgwName2Old, _ := d.GetChange("tgw_name2")
 	domainName1Old, _ := d.GetChange("domain_name1")
-	return old == d.Get("domain_name1").(string) && new == domainName1Old.(string) &&
-		d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
+
+	dn1Cur, ok := d.Get("domain_name1").(string)
+	if !ok {
+		return false
+	}
+	dn1Old, ok := domainName1Old.(string)
+	if !ok {
+		return false
+	}
+
+	tgw1Cur, ok := d.Get("tgw_name1").(string)
+	if !ok {
+		return false
+	}
+	tgw2Cur, ok := d.Get("tgw_name2").(string)
+	if !ok {
+		return false
+	}
+	tgw1Old, ok := tgwName1Old.(string)
+	if !ok {
+		return false
+	}
+	tgw2Old, ok := tgwName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == dn1Cur &&
+		new == dn1Old &&
+		tgw1Cur == tgw2Old &&
+		tgw2Cur == tgw1Old
 }

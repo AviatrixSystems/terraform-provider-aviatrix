@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFQDNPassThrough_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func testAccCheckFQDNPassThroughExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no fqdn_pass_through ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		gw := &goaviatrix.Gateway{GwName: rs.Primary.Attributes["gw_name"]}
 
@@ -139,7 +140,7 @@ func testAccCheckFQDNPassThroughExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckFQDNPassThroughDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_fqdn_pass_through" {

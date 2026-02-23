@@ -64,7 +64,7 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 
 	maxAsLimit, err := strconv.Atoi(resp.Results.BgpMaxAsLimit)
 	if err != nil {
-		return 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
+		return 0, fmt.Errorf("error converting max_as_limit to int: %w", err)
 	}
 	if maxAsLimit < 1 || maxAsLimit > 254 {
 		return 0, fmt.Errorf("rest API show_bgp_max_as_limit returned invalid value for max_as_limit: %d. It must be an integer in the range of [1-254]", maxAsLimit)

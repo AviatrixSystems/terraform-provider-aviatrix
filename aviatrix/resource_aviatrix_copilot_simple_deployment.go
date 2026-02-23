@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixCopilotSimpleDeployment() *schema.Resource {
@@ -93,22 +95,22 @@ func resourceAviatrixCopilotSimpleDeployment() *schema.Resource {
 
 func marshalCopilotSimpleDeploymentInput(d *schema.ResourceData) *goaviatrix.CopilotSimpleDeployment {
 	copilotSimpleDeployment := &goaviatrix.CopilotSimpleDeployment{
-		CloudType:                        d.Get("cloud_type").(int),
-		AccountName:                      d.Get("account_name").(string),
-		Region:                           d.Get("region").(string),
-		VpcId:                            d.Get("vpc_id").(string),
-		Subnet:                           d.Get("subnet").(string),
-		ControllerServiceAccountUsername: d.Get("controller_service_account_username").(string),
-		ControllerServiceAccountPassword: d.Get("controller_service_account_password").(string),
-		InstanceSize:                     d.Get("instance_size").(string),
-		DataVolumeSize:                   d.Get("data_volume_size").(int),
+		CloudType:                        getInt(d, "cloud_type"),
+		AccountName:                      getString(d, "account_name"),
+		Region:                           getString(d, "region"),
+		VpcId:                            getString(d, "vpc_id"),
+		Subnet:                           getString(d, "subnet"),
+		ControllerServiceAccountUsername: getString(d, "controller_service_account_username"),
+		ControllerServiceAccountPassword: getString(d, "controller_service_account_password"),
+		InstanceSize:                     getString(d, "instance_size"),
+		DataVolumeSize:                   getInt(d, "data_volume_size"),
 	}
 
 	return copilotSimpleDeployment
 }
 
 func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilotSimpleDeployment := marshalCopilotSimpleDeploymentInput(d)
 
@@ -123,11 +125,11 @@ func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schem
 	for i := 0; ; i++ {
 		copilotAssociationStatus, err := client.GetCopilotAssociationStatus(ctx)
 
-		if err != nil && err != goaviatrix.ErrNotFound {
+		if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
 			return diag.Errorf("could not get copilot association status: %v", err)
 		}
 
-		if err != goaviatrix.ErrNotFound && copilotAssociationStatus.Status {
+		if !errors.Is(err, goaviatrix.ErrNotFound) && copilotAssociationStatus.Status {
 			break
 		}
 
@@ -150,26 +152,25 @@ func resourceAviatrixCopilotSimpleDeploymentReadIfRequired(ctx context.Context, 
 }
 
 func resourceAviatrixCopilotSimpleDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilotAssociationStatus, err := client.GetCopilotAssociationStatus(ctx)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not get copilot association status: %v", err)
 	}
-
-	d.Set("private_ip", copilotAssociationStatus.IP)
-	d.Set("public_ip", copilotAssociationStatus.PublicIp)
+	mustSet(d, "private_ip", copilotAssociationStatus.IP)
+	mustSet(d, "public_ip", copilotAssociationStatus.PublicIp)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixCopilotSimpleDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteCopilotSimple(ctx)
 	if err != nil {

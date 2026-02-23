@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -64,11 +63,11 @@ func testAccCheckControllerCertDomainConfigExists(n string) resource.TestCheckFu
 			return fmt.Errorf("controller cert domain config ID is not set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetCertDomain(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get cert domain config status: %v", err)
+			return fmt.Errorf("failed to get cert domain config status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -80,7 +79,7 @@ func testAccCheckControllerCertDomainConfigExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckControllerCertDomainConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_cert_domain_config" {

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 const (
@@ -318,7 +318,7 @@ func testAccCheckAviatrixKubernetesClusterDestroy(name string) func(state *terra
 		if resource.Primary == nil || len(resource.Primary.ID) == 0 {
 			return fmt.Errorf("No ID is set")
 		}
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
@@ -343,7 +343,7 @@ func testAccCheckAviatrixKubernetesClusterExists(name string, expected goaviatri
 			return fmt.Errorf("No ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 

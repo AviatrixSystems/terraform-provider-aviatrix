@@ -186,7 +186,10 @@ func TestCreateTransitHaGw_NonEdge_AsyncFlagAlwaysTrue(t *testing.T) {
 			_, err := testClient.CreateTransitHaGwWithMock(gateway)
 			assert.NoError(t, err)
 
-			calledGateway := mockAPI.LastInterface.(*TransitHaGateway)
+			calledGateway, ok := mockAPI.LastInterface.(*TransitHaGateway)
+			if !ok {
+				t.Fatalf("LastInterface expected *TransitHaGateway, got %T", mockAPI.LastInterface)
+			}
 			assert.True(t, calledGateway.Async, "Async flag should always be true when calling API")
 		})
 	}

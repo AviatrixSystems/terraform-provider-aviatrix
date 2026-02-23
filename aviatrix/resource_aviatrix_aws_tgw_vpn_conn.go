@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,8 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
@@ -20,7 +22,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 		Update: resourceAviatrixAwsTgwVpnConnUpdate,
 		Delete: resourceAviatrixAwsTgwVpnConnDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -170,25 +172,25 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 }
 
 func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName:          d.Get("tgw_name").(string),
-		ConnName:         d.Get("connection_name").(string),
-		PublicIP:         d.Get("public_ip").(string),
-		RouteDomainName:  d.Get("route_domain_name").(string),
-		InsideIpCIDRTun1: d.Get("inside_ip_cidr_tun_1").(string),
-		InsideIpCIDRTun2: d.Get("inside_ip_cidr_tun_2").(string),
-		PreSharedKeyTun1: d.Get("pre_shared_key_tun_1").(string),
-		PreSharedKeyTun2: d.Get("pre_shared_key_tun_2").(string),
+		TgwName:          getString(d, "tgw_name"),
+		ConnName:         getString(d, "connection_name"),
+		PublicIP:         getString(d, "public_ip"),
+		RouteDomainName:  getString(d, "route_domain_name"),
+		InsideIpCIDRTun1: getString(d, "inside_ip_cidr_tun_1"),
+		InsideIpCIDRTun2: getString(d, "inside_ip_cidr_tun_2"),
+		PreSharedKeyTun1: getString(d, "pre_shared_key_tun_1"),
+		PreSharedKeyTun2: getString(d, "pre_shared_key_tun_2"),
 	}
-	if d.Get("enable_global_acceleration").(bool) {
+	if getBool(d, "enable_global_acceleration") {
 		awsTgwVpnConn.EnableAcceleration = "yes"
 	}
 
-	connectionType := d.Get("connection_type").(string)
-	remoteAsn := d.Get("remote_as_number").(string)
-	remoteCIDR := d.Get("remote_cidr").(string)
+	connectionType := getString(d, "connection_type")
+	remoteAsn := getString(d, "remote_as_number")
+	remoteCIDR := getString(d, "remote_cidr")
 	if connectionType == "dynamic" && remoteAsn == "" {
 		return fmt.Errorf("please specify 'remote_as_number' to create a BGP VPN connection")
 	} else if connectionType == "dynamic" && remoteCIDR != "" {
@@ -206,7 +208,7 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 		awsTgwVpnConn.RemoteCIDR = remoteCIDR
 	}
 
-	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	learnedCidrsApproval := getBool(d, "enable_learned_cidrs_approval")
 	if learnedCidrsApproval {
 		if connectionType == "static" {
 			return fmt.Errorf("learned cidrs approval is supported for a BGP VPN connection, not for a static connection")
@@ -220,7 +222,7 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 
 	vpnID, err := client.CreateAwsTgwVpnConn(awsTgwVpnConn)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix AWS TGW VPN Connection: %s", err)
+		return fmt.Errorf("failed to create Aviatrix AWS TGW VPN Connection: %w", err)
 	}
 
 	d.SetId(awsTgwVpnConn.TgwName + "~" + vpnID)
@@ -228,10 +230,10 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tgwName := d.Get("tgw_name").(string)
-	vpnID := d.Get("vpn_id").(string)
+	tgwName := getString(d, "tgw_name")
+	vpnID := getString(d, "vpn_id")
 
 	if tgwName == "" || vpnID == "" {
 		id := d.Id()
@@ -241,48 +243,46 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 		if !strings.Contains(id, "~") {
 			log.Printf("[DEBUG] Import Id: %s is invalid", id)
 		}
-
-		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("vpn_id", strings.Split(id, "~")[1])
+		mustSet(d, "tgw_name", strings.Split(id, "~")[0])
+		mustSet(d, "vpn_id", strings.Split(id, "~")[1])
 
 		d.SetId(id)
 	}
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName: d.Get("tgw_name").(string),
-		VpnID:   d.Get("vpn_id").(string),
+		TgwName: getString(d, "tgw_name"),
+		VpnID:   getString(d, "vpn_id"),
 	}
 
 	vpnConn, err := client.GetAwsTgwVpnConn(awsTgwVpnConn)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix AWS TGW VPN Connection: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix AWS TGW VPN Connection: %w", err)
 	}
 	log.Printf("[INFO] Found Aviatrix AWS TGW VPN Connection: %#v", vpnConn)
-
-	d.Set("tgw_name", vpnConn.TgwName)
-	d.Set("route_domain_name", vpnConn.RouteDomainName)
-	d.Set("connection_name", vpnConn.ConnName)
-	d.Set("public_ip", vpnConn.PublicIP)
-	d.Set("remote_as_number", vpnConn.OnpremASN)
-	d.Set("remote_cidr", vpnConn.RemoteCIDR)
+	mustSet(d, "tgw_name", vpnConn.TgwName)
+	mustSet(d, "route_domain_name", vpnConn.RouteDomainName)
+	mustSet(d, "connection_name", vpnConn.ConnName)
+	mustSet(d, "public_ip", vpnConn.PublicIP)
+	mustSet(d, "remote_as_number", vpnConn.OnpremASN)
+	mustSet(d, "remote_cidr", vpnConn.RemoteCIDR)
 	if vpnConn.OnpremASN != "" && vpnConn.RemoteCIDR == "" {
-		d.Set("connection_type", "dynamic")
+		mustSet(d, "connection_type", "dynamic")
 	} else if vpnConn.OnpremASN == "" && vpnConn.RemoteCIDR != "" {
-		d.Set("connection_type", "static")
+		mustSet(d, "connection_type", "static")
 	}
-	d.Set("vpn_id", vpnConn.VpnID)
-	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
-	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
-	d.Set("enable_learned_cidrs_approval", vpnConn.LearnedCidrsApproval == "yes")
-	d.Set("enable_global_acceleration", vpnConn.EnableAcceleration == "yes")
+	mustSet(d, "vpn_id", vpnConn.VpnID)
+	mustSet(d, "inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
+	mustSet(d, "inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
+	mustSet(d, "enable_learned_cidrs_approval", vpnConn.LearnedCidrsApproval == "yes")
+	mustSet(d, "enable_global_acceleration", vpnConn.EnableAcceleration == "yes")
 
 	AllVpnTunnelData, err := client.GetAwsTgwVpnTunnelData(vpnConn)
 	if err != nil {
-		return fmt.Errorf("couldn't get Aviatrix AWS TGW VPN Connection tunnel information: %s", err)
+		return fmt.Errorf("couldn't get Aviatrix AWS TGW VPN Connection tunnel information: %w", err)
 	}
 
 	var vpnTunnelData []map[string]interface{}
@@ -300,40 +300,39 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 		count++
 		vpnTunnelData = append(vpnTunnelData, vtd)
 	}
-
-	d.Set("vpn_tunnel_data", vpnTunnelData)
+	mustSet(d, "vpn_tunnel_data", vpnTunnelData)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 	return nil
 }
 
 func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName: d.Get("tgw_name").(string),
-		VpnID:   d.Get("vpn_id").(string),
+		TgwName: getString(d, "tgw_name"),
+		VpnID:   getString(d, "vpn_id"),
 	}
 
 	d.Partial(true)
 	log.Printf("[INFO] Updating Aviatrix aws tgw vpn connection: %#v", awsTgwVpnConn)
 
 	if d.HasChange("enable_learned_cidrs_approval") {
-		if d.Get("connection_type").(string) == "static" {
+		if getString(d, "connection_type") == "static" {
 			return fmt.Errorf("learned cidrs approval is supported for a BGP VPN connection, not for a static connection")
 		}
-		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		learnedCidrsApproval := getBool(d, "enable_learned_cidrs_approval")
 		if learnedCidrsApproval {
 			awsTgwVpnConn.LearnedCidrsApproval = "yes"
 			err := client.EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn)
 			if err != nil {
-				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to enable learned cidrs approval: %w", err)
 			}
 		} else {
 			awsTgwVpnConn.LearnedCidrsApproval = "no"
 			err := client.DisableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn)
 			if err != nil {
-				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				return fmt.Errorf("failed to disable learned cidrs approval: %w", err)
 			}
 		}
 	}
@@ -344,10 +343,10 @@ func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName: d.Get("tgw_name").(string),
-		VpnID:   d.Get("vpn_id").(string),
+		TgwName: getString(d, "tgw_name"),
+		VpnID:   getString(d, "vpn_id"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix aws_tgw_vpn_conn: %#v", awsTgwVpnConn)
@@ -361,7 +360,7 @@ func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		return fmt.Errorf("failed to delete Aviatrix AwsTgwVpnConn: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix AwsTgwVpnConn: %w", err)
 	}
 
 	return nil

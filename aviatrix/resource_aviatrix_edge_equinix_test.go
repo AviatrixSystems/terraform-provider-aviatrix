@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeEquinix_basic(t *testing.T) {
@@ -41,6 +43,7 @@ func TestAccAviatrixEdgeEquinix_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
 					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ipv6_address", "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4001/64"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
 					resource.TestCheckResourceAttr(resourceName, "included_advertised_spoke_routes.0", "10.230.3.0/24"),
@@ -84,6 +87,7 @@ resource "aviatrix_edge_equinix" "test" {
 		name       = "eth1"
 		type       = "LAN"
 		ip_address = "10.230.3.32/24"
+		ipv6_address = "2600:1f1c:c7d:6c00:6ce2:d09:c5a8:4001/64"
 	}
 
 	interfaces {
@@ -112,7 +116,7 @@ func testAccCheckEdgeEquinixExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("no edge equinix id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		edgeSpoke, err := client.GetEdgeEquinix(context.Background(), rs.Primary.Attributes["gw_name"])
 		if err != nil {
@@ -126,7 +130,7 @@ func testAccCheckEdgeEquinixExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckEdgeEquinixDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_equinix" {
@@ -134,7 +138,7 @@ func testAccCheckEdgeEquinixDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeEquinix(context.Background(), rs.Primary.Attributes["gw_name"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge equinix still exists")
 		}
 	}

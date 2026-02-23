@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestValidateAwsAccountNumber(t *testing.T) {
@@ -61,7 +62,7 @@ func TestResourceAviatrixAccountDelete_CallsDeleteAccount(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]interface{}{
 		"account_name": "unit_test_account",
 	})
-	res := resourceAviatrixAccountDelete(nil, d, client)
+	res := resourceAviatrixAccountDelete(context.TODO(), d, client)
 
 	assert.Empty(t, res)
 }
@@ -77,7 +78,7 @@ func TestResourceAviatrixAccountDelete_WhenDeleteAccountFails(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]interface{}{
 		"account_name": "unit_test_account",
 	})
-	res := resourceAviatrixAccountDelete(nil, d, client)
+	res := resourceAviatrixAccountDelete(context.TODO(), d, client)
 
 	assert.Equal(t, diag.Errorf("failed to delete Aviatrix Account: controller API failure"), res)
 }
@@ -104,7 +105,7 @@ func TestResourceAviatrixAccountRead_AccountWithAudit(t *testing.T) {
 		"account_name":  "unit_test_account",
 		"audit_account": true,
 	})
-	res := resourceAviatrixAccountRead(nil, d, client)
+	res := resourceAviatrixAccountRead(context.TODO(), d, client)
 
 	assert.Equal(t, "unit_test_account", d.Get("account_name"))
 	assert.Equal(t, 1, d.Get("cloud_type"))

@@ -5,9 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 const (
@@ -17,6 +18,7 @@ const (
 
 func resourceAviatrixK8sConfig() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated. Use aviatrix_config_feature instead.",
 		CreateWithoutTimeout: resourceAviatrixK8sConfigCreate,
 		ReadWithoutTimeout:   resourceAviatrixK8sConfigRead,
 		UpdateWithoutTimeout: resourceAviatrixK8sConfigUpdate,
@@ -25,8 +27,8 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-			enableK8s := d.Get(propertyEnableK8s).(bool)
-			enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
+			enableK8s := getBool(d, propertyEnableK8s)
+			enableDcfPolicies := getBool(d, propertyEnableDcfPolicies)
 
 			if enableDcfPolicies && !enableK8s {
 				return errors.New("enable_dcf_policies can only be true when enable_k8s is also true")
@@ -51,10 +53,10 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 }
 
 func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enableK8s := d.Get(propertyEnableK8s).(bool)
-	enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
+	enableK8s := getBool(d, propertyEnableK8s)
+	enableDcfPolicies := getBool(d, propertyEnableDcfPolicies)
 
 	if err := setK8sFeature(ctx, client, enableK8s); err != nil {
 		return err
@@ -85,7 +87,7 @@ func setK8sDcfPoliciesFeature(ctx context.Context, client *goaviatrix.Client, en
 }
 
 func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -109,10 +111,10 @@ func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enableK8s := d.Get(propertyEnableK8s).(bool)
-	enableDcfPolicies := d.Get(propertyEnableDcfPolicies).(bool)
+	enableK8s := getBool(d, propertyEnableK8s)
+	enableDcfPolicies := getBool(d, propertyEnableDcfPolicies)
 
 	if d.HasChange(propertyEnableK8s) {
 		if err := setK8sFeature(ctx, client, enableK8s); err != nil {
@@ -130,7 +132,7 @@ func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAviatrixK8sConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := setK8sDcfPoliciesFeature(ctx, client, false); err != nil {
 		return err

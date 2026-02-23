@@ -6,10 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixCloudnTransitGatewayAttachment_basic(t *testing.T) {
@@ -71,7 +72,7 @@ func testAccCheckCloudnTransitGatewayAttachmentExists(n string) resource.TestChe
 			return fmt.Errorf("no cloudn_transit_gateway_attachment ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		attachment := &goaviatrix.CloudnTransitGatewayAttachment{
 			ConnectionName: rs.Primary.Attributes["connection_name"],
@@ -90,7 +91,7 @@ func testAccCheckCloudnTransitGatewayAttachmentExists(n string) resource.TestChe
 }
 
 func testAccCheckCloudnTransitGatewayAttachmentDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_cloudn_transit_gateway_attachment" {

@@ -3,7 +3,7 @@ import subprocess
 
 
 def main():
-    """ Main function """
+    """Main function"""
     ver_start = "1.0."
     out = subprocess.check_output("git log", shell=True)
     lines = out.split("\n")
@@ -34,7 +34,13 @@ def main():
         del group_new[0]
         del group_new[0]
 
-        group_new = ["", "## " + version + " (" + date + ")", "", "CHANGES", ""] + group_new
+        group_new = [
+            "",
+            "## " + version + " (" + date + ")",
+            "",
+            "CHANGES",
+            "",
+        ] + group_new
         groups[index] = group_new
     final = ""
     for group in groups:

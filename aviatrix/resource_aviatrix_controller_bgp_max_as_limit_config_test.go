@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixControllerBgpMaxAsLimitConfig_basic(t *testing.T) {
@@ -60,11 +62,11 @@ func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestChec
 			return fmt.Errorf("no controller bgp max as limit config ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get controller bgp max as limit config status: %v", err)
+			return fmt.Errorf("failed to get controller bgp max as limit config status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -76,7 +78,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestChec
 }
 
 func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_bgp_max_as_limit_config" {
@@ -84,7 +86,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error 
 		}
 
 		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("controller bgp max as limit configured when it should be destroyed")
 		}
 	}

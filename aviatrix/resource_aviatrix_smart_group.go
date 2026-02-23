@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 // dns1123FmtRe is a regular expression that matches dns label names according to rfc 1123.
@@ -158,29 +160,29 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 
 func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, error) {
 	smartGroup := &goaviatrix.SmartGroup{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 
-	for _, selectorInterface := range d.Get("selector.0.match_expressions").([]interface{}) {
+	for _, selectorInterface := range getList(d, "selector.0.match_expressions") {
 		if selectorInterface == nil {
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
-		selectorInfo := selectorInterface.(map[string]interface{})
+		selectorInfo := mustMap(selectorInterface)
 		filter := goaviatrix.NewSmartGroupMatchExpression(selectorInfo)
 		if goaviatrix.MapContains(selectorInfo, goaviatrix.ExternalKey) {
 			// build a map out of the external arguments
 			if extArgsMap, ok := selectorInfo[goaviatrix.ExtArgsPrefix]; ok {
 				extArgs := make(map[string]string)
-				for key, value := range extArgsMap.(map[string]interface{}) {
-					extArgs[key] = value.(string)
+				for key, value := range mustMap(extArgsMap) {
+					extArgs[key] = mustString(value)
 				}
 				filter.ExtArgs = extArgs
 			}
 		}
 		if tagsMap, ok := selectorInfo[goaviatrix.TagsPrefix]; ok {
 			tags := make(map[string]string)
-			for key, value := range tagsMap.(map[string]interface{}) {
-				tags[key] = value.(string)
+			for key, value := range mustMap(tagsMap) {
+				tags[key] = mustString(value)
 			}
 			filter.Tags = tags
 		}
@@ -191,7 +193,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 }
 
 func resourceAviatrixSmartGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	smartGroup, err := marshalSmartGroupInput(d)
 	if err != nil {
@@ -218,21 +220,20 @@ func resourceAviatrixSmartGroupReadIfRequired(ctx context.Context, d *schema.Res
 }
 
 func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	smartGroup, err := client.GetSmartGroup(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read Smart Group: %s", err)
 	}
-
-	d.Set("name", smartGroup.Name)
+	mustSet(d, "name", smartGroup.Name)
 
 	var expressions []interface{}
 
@@ -254,7 +255,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -275,7 +276,7 @@ func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAviatrixSmartGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteSmartGroup(ctx, uuid)

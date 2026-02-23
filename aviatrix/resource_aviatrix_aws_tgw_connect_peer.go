@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwConnectPeer() *schema.Resource {
@@ -86,19 +88,19 @@ func resourceAviatrixAwsTgwConnectPeer() *schema.Resource {
 
 func marshalAwsTgwConnectPeerInput(d *schema.ResourceData) *goaviatrix.AwsTgwConnectPeer {
 	return &goaviatrix.AwsTgwConnectPeer{
-		TgwName:             d.Get("tgw_name").(string),
-		ConnectAttachmentID: d.Get("connect_attachment_id").(string),
-		ConnectionName:      d.Get("connection_name").(string),
-		ConnectPeerName:     d.Get("connect_peer_name").(string),
-		PeerGreAddress:      d.Get("peer_gre_address").(string),
-		PeerASNumber:        d.Get("peer_as_number").(string),
+		TgwName:             getString(d, "tgw_name"),
+		ConnectAttachmentID: getString(d, "connect_attachment_id"),
+		ConnectionName:      getString(d, "connection_name"),
+		ConnectPeerName:     getString(d, "connect_peer_name"),
+		PeerGreAddress:      getString(d, "peer_gre_address"),
+		PeerASNumber:        getString(d, "peer_as_number"),
 		InsideIPCidrs:       getStringSet(d, "bgp_inside_cidrs"),
-		TgwGreAddress:       d.Get("tgw_gre_address").(string),
+		TgwGreAddress:       getString(d, "tgw_gre_address"),
 	}
 }
 
 func resourceAviatrixAwsTgwConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	peer := marshalAwsTgwConnectPeerInput(d)
 	d.SetId(peer.ID())
@@ -121,11 +123,11 @@ func resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx context.Context, d *sch
 }
 
 func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	connectionName := d.Get("connection_name").(string)
-	tgwName := d.Get("tgw_name").(string)
-	connectPeerName := d.Get("connect_peer_name").(string)
+	connectionName := getString(d, "connection_name")
+	tgwName := getString(d, "tgw_name")
+	connectPeerName := getString(d, "connect_peer_name")
 	if connectionName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no aws_tgw_connect_peer connection_name received. Import Id is %s", id)
@@ -145,34 +147,33 @@ func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.Resour
 		ConnectPeerName: connectPeerName,
 	}
 	peer, err := client.GetTGWConnectPeer(ctx, peer)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not find aws_tgw_connect_peer: %v", err)
 	}
-
-	d.Set("tgw_name", peer.TgwName)
-	d.Set("connection_name", peer.ConnectionName)
-	d.Set("connect_peer_name", peer.ConnectPeerName)
-	d.Set("connect_attachment_id", peer.ConnectAttachmentID)
-	d.Set("peer_as_number", peer.PeerASNumber)
-	d.Set("peer_gre_address", peer.PeerGreAddress)
+	mustSet(d, "tgw_name", peer.TgwName)
+	mustSet(d, "connection_name", peer.ConnectionName)
+	mustSet(d, "connect_peer_name", peer.ConnectPeerName)
+	mustSet(d, "connect_attachment_id", peer.ConnectAttachmentID)
+	mustSet(d, "peer_as_number", peer.PeerASNumber)
+	mustSet(d, "peer_gre_address", peer.PeerGreAddress)
 	if err := d.Set("bgp_inside_cidrs", peer.InsideIPCidrs); err != nil {
 		return diag.Errorf("could not set 'bgp_inside_cidrs' into state: %v", err)
 	}
-	d.Set("tgw_gre_address", peer.TgwGreAddress)
-	d.Set("connect_peer_id", peer.ConnectPeerID)
+	mustSet(d, "tgw_gre_address", peer.TgwGreAddress)
+	mustSet(d, "connect_peer_id", peer.ConnectPeerID)
 	d.SetId(peer.ID())
 	return nil
 }
 
 func resourceAviatrixAwsTgwConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	peer := marshalAwsTgwConnectPeerInput(d)
-	peer.ConnectPeerID = d.Get("connect_peer_id").(string)
+	peer.ConnectPeerID = getString(d, "connect_peer_id")
 	if err := client.DeleteTGWConnectPeer(ctx, peer); err != nil {
 		return diag.Errorf("could not delete aws tgw connect peer: %v", err)
 	}

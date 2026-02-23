@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeEquinixHa() *schema.Resource {
@@ -80,6 +82,16 @@ func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 						"dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -117,25 +129,39 @@ func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 
 func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa {
 	edgeEquinixHa := &goaviatrix.EdgeEquinixHa{
-		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
+		PrimaryGwName:            getString(d, "primary_gw_name"),
+		ZtpFileDownloadPath:      getString(d, "ztp_file_download_path"),
 		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+		interface1 := mustMap(interface0)
 
 		interface2 := &goaviatrix.EdgeEquinixInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			IfName:       mustString(interface1["name"]),
+			Type:         mustString(interface1["type"]),
+			PublicIp:     mustString(interface1["wan_public_ip"]),
+			Tag:          mustString(interface1["tag"]),
+			Dhcp:         mustBool(interface1["enable_dhcp"]),
+			IpAddr:       mustString(interface1["ip_address"]),
+			GatewayIp:    mustString(interface1["gateway_ip"]),
+			DnsPrimary:   mustString(interface1["dns_server_ip"]),
+			DnsSecondary: mustString(interface1["secondary_dns_server_ip"]),
+		}
+		if v, ok := interface1["ipv6_address"]; ok && v != nil {
+			ip := mustString(v)
+			if ip != "" {
+				interface2.IPv6Addr = ip
+
+				// gateway_ipv6 only makes sense if ipv6_address is set
+				if gwv, ok := interface1["gateway_ipv6"]; ok && gwv != nil {
+					gw := mustString(gwv)
+					if gw != "" {
+						interface2.GatewayIPv6IP = gw
+					}
+				}
+			}
 		}
 
 		edgeEquinixHa.InterfaceList = append(edgeEquinixHa.InterfaceList, interface2)
@@ -145,7 +171,7 @@ func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa
 }
 
 func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
 
@@ -159,32 +185,31 @@ func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if d.Get("primary_gw_name").(string) == "" {
+	if getString(d, "primary_gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
-		d.Set("primary_gw_name", parts[0])
+		mustSet(d, "primary_gw_name", parts[0])
 		d.SetId(id)
 	}
 
-	edgeEquinixHaResp, err := client.GetEdgeEquinixHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeEquinixHaResp, err := client.GetEdgeEquinixHa(ctx, getString(d, "primary_gw_name")+"-hagw")
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Equinix HA: %v", err)
 	}
-
-	d.Set("primary_gw_name", edgeEquinixHaResp.PrimaryGwName)
-	d.Set("account_name", edgeEquinixHaResp.AccountName)
+	mustSet(d, "primary_gw_name", edgeEquinixHaResp.PrimaryGwName)
+	mustSet(d, "account_name", edgeEquinixHaResp.AccountName)
 
 	if edgeEquinixHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeEquinixHaResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeEquinixHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -212,7 +237,7 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
 
@@ -237,10 +262,10 @@ func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixEdgeEquinixHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
-	accountName := d.Get("account_name").(string)
+	accountName := getString(d, "account_name")
 
 	err := client.DeleteEdgeEquinix(ctx, accountName, d.Id())
 	if err != nil {

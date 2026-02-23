@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -12,8 +13,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
@@ -88,7 +90,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Description:  "Tunnel Protocol. Valid value: 'LAN'. Default value: 'LAN'. Case insensitive.",
 				ValidateFunc: validation.StringInSlice([]string{"LAN"}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.ToUpper(old) == strings.ToUpper(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"enable_bgp_lan_activemesh": {
@@ -235,6 +237,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Enable IPv6 on this connection",
 			},
 			"remote_lan_ipv6_ip": {
@@ -257,50 +260,48 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 
 func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatrix.ExternalDeviceConn, error) {
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:               d.Get("site_id").(string),
-		ConnectionName:      d.Get("connection_name").(string),
-		GwName:              d.Get("gw_name").(string),
-		ConnectionType:      d.Get("connection_type").(string),
-		TunnelProtocol:      strings.ToUpper(d.Get("tunnel_protocol").(string)),
-		LocalLanIP:          d.Get("local_lan_ip").(string),
-		RemoteLanIP:         d.Get("remote_lan_ip").(string),
-		EnableEdgeUnderlay:  d.Get("enable_edge_underlay").(bool),
-		RemoteCloudType:     d.Get("remote_cloud_type").(string),
-		BackupLocalLanIP:    d.Get("backup_local_lan_ip").(string),
-		BackupRemoteLanIP:   d.Get("backup_remote_lan_ip").(string),
-		BgpMd5Key:           d.Get("bgp_md5_key").(string),
-		BackupBgpMd5Key:     d.Get("backup_bgp_md5_key").(string),
-		EnableBgpMultihop:   d.Get("enable_bgp_multihop").(bool),
-		EnableJumboFrame:    d.Get("enable_jumbo_frame").(bool),
-		EnableIpv6:          d.Get("enable_ipv6").(bool),
-		RemoteLanIPv6:       d.Get("remote_lan_ipv6_ip").(string),
-		BackupRemoteLanIPv6: d.Get("backup_remote_lan_ipv6_ip").(string),
+		VpcID:               getString(d, "site_id"),
+		ConnectionName:      getString(d, "connection_name"),
+		GwName:              getString(d, "gw_name"),
+		ConnectionType:      getString(d, "connection_type"),
+		TunnelProtocol:      strings.ToUpper(getString(d, "tunnel_protocol")),
+		LocalLanIP:          getString(d, "local_lan_ip"),
+		RemoteLanIP:         getString(d, "remote_lan_ip"),
+		EnableEdgeUnderlay:  getBool(d, "enable_edge_underlay"),
+		RemoteCloudType:     getString(d, "remote_cloud_type"),
+		BackupLocalLanIP:    getString(d, "backup_local_lan_ip"),
+		BackupRemoteLanIP:   getString(d, "backup_remote_lan_ip"),
+		BgpMd5Key:           getString(d, "bgp_md5_key"),
+		BackupBgpMd5Key:     getString(d, "backup_bgp_md5_key"),
+		EnableBgpMultihop:   getBool(d, "enable_bgp_multihop"),
+		EnableJumboFrame:    getBool(d, "enable_jumbo_frame"),
+		EnableIpv6:          getBool(d, "enable_ipv6"),
+		RemoteLanIPv6:       getString(d, "remote_lan_ipv6_ip"),
+		BackupRemoteLanIPv6: getString(d, "backup_remote_lan_ipv6_ip"),
 	}
 
-	haEnabled := d.Get("ha_enabled").(bool)
+	haEnabled := getBool(d, "ha_enabled")
 	if haEnabled {
 		externalDeviceConn.HAEnabled = "true"
 	}
 
-	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
+	bgpLocalAsNum, err := strconv.Atoi(getString(d, "bgp_local_as_num"))
 	if err == nil {
 		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNum
 	}
 
-	bgpRemoteAsNum, err := strconv.Atoi(d.Get("bgp_remote_as_num").(string))
+	bgpRemoteAsNum, err := strconv.Atoi(getString(d, "bgp_remote_as_num"))
 	if err == nil {
 		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNum
 	}
 
-	backupBgpLocalAsNum, err := strconv.Atoi(d.Get("backup_bgp_remote_as_num").(string))
+	backupBgpLocalAsNum, err := strconv.Atoi(getString(d, "backup_bgp_remote_as_num"))
 	if err == nil {
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
 	}
 
-	enableBgpLanActiveMesh, ok := d.Get("enable_bgp_lan_activemesh").(bool)
-	if !ok {
-		return nil, fmt.Errorf("expected enable_bgp_lan_activemesh to be a boolean, but got %T", d.Get("enable_bgp_lan_activemesh"))
-	}
+	enableBgpLanActiveMesh := getBool(d, "enable_bgp_lan_activemesh")
+
 	if enableBgpLanActiveMesh &&
 		(externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return nil, fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection " +
@@ -312,7 +313,7 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
 	if err != nil {
@@ -366,8 +367,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	flag := false
 	defer resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 
-	numberOfRetries := d.Get("number_of_retries").(int)
-	retryInterval := d.Get("retry_interval").(int)
+	numberOfRetries := getInt(d, "number_of_retries")
+	retryInterval := getInt(d, "retry_interval")
 
 	var edgeExternalDeviceConn goaviatrix.EdgeExternalDeviceConn
 	if externalDeviceConn.EnableEdgeUnderlay {
@@ -398,15 +399,11 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
-	enableBFD, ok := d.Get("enable_bfd").(bool)
-	if !ok {
-		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
-	}
+	enableBFD := getBool(d, "enable_bfd")
+
 	externalDeviceConn.EnableBfd = enableBFD
-	bgp_bfd, ok := d.Get("bgp_bfd").([]interface{})
-	if !ok {
-		return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-	}
+	bgp_bfd := getList(d, "bgp_bfd")
+
 	// set the bgp bfd config details only if the user has enabled BFD
 	if enableBFD {
 		// set bgp bfd using the config details provided by the user
@@ -439,8 +436,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 
 	if _, ok := d.GetOk("prepend_as_path"); ok {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 
 		err = client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
@@ -474,13 +471,11 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Conte
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	connectionName, ok := d.Get("connection_name").(string)
-	if !ok {
-		return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
-	}
-	vpcID := d.Get("site_id").(string)
+	connectionName := getString(d, "connection_name")
+
+	vpcID := getString(d, "site_id")
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'site_id' received. Import Id is %s", id)
@@ -488,16 +483,16 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		if len(parts) != 3 {
 			return diag.Errorf("expected import ID in the form 'connection_name~site_id~gw_name' instead got %q", id)
 		}
-		d.Set("connection_name", parts[0])
-		d.Set("site_id", parts[1])
-		d.Set("gw_name", parts[2])
+		mustSet(d, "connection_name", parts[0])
+		mustSet(d, "site_id", parts[1])
+		mustSet(d, "gw_name", parts[2])
 		d.SetId(id)
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("site_id").(string),
-		ConnectionName: d.Get("connection_name").(string),
-		GwName:         d.Get("gw_name").(string),
+		VpcID:          getString(d, "site_id"),
+		ConnectionName: getString(d, "connection_name"),
+		GwName:         getString(d, "gw_name"),
 	}
 
 	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
@@ -507,7 +502,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -523,29 +518,28 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 		conn.LocalLanIP = conn.BackupLocalLanIP
 		conn.RemoteLanIP = conn.BackupRemoteLanIP
 	}
-
-	d.Set("site_id", conn.VpcID)
-	d.Set("connection_name", conn.ConnectionName)
-	d.Set("gw_name", conn.GwName)
-	d.Set("connection_type", conn.ConnectionType)
-	d.Set("tunnel_protocol", conn.TunnelProtocol)
-	d.Set("local_lan_ip", conn.LocalLanIP)
-	d.Set("remote_lan_ip", conn.RemoteLanIP)
-	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
-	d.Set("remote_cloud_type", conn.RemoteCloudType)
-	d.Set("enable_ipv6", conn.EnableIpv6)
+	mustSet(d, "site_id", conn.VpcID)
+	mustSet(d, "connection_name", conn.ConnectionName)
+	mustSet(d, "gw_name", conn.GwName)
+	mustSet(d, "connection_type", conn.ConnectionType)
+	mustSet(d, "tunnel_protocol", conn.TunnelProtocol)
+	mustSet(d, "local_lan_ip", conn.LocalLanIP)
+	mustSet(d, "remote_lan_ip", conn.RemoteLanIP)
+	mustSet(d, "enable_edge_underlay", conn.EnableEdgeUnderlay)
+	mustSet(d, "remote_cloud_type", conn.RemoteCloudType)
+	mustSet(d, "enable_ipv6", conn.EnableIpv6)
 	if conn.EnableIpv6 {
-		d.Set("remote_lan_ipv6_ip", conn.RemoteLanIPv6)
+		mustSet(d, "remote_lan_ipv6_ip", conn.RemoteLanIPv6)
 	}
 
 	_ = d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 	if conn.BgpLocalAsNum != 0 {
-		d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
+		mustSet(d, "bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
 	}
 	if conn.BgpRemoteAsNum != 0 {
-		d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
+		mustSet(d, "bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	}
-	d.Set("enable_bfd", conn.EnableBfd)
+	mustSet(d, "enable_bfd", conn.EnableBfd)
 	if conn.EnableBfd {
 		var bgpBfdConfig []map[string]interface{}
 		bfd := conn.BgpBfdConfig
@@ -560,23 +554,23 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 			bfdMap["multiplier"] = bfd.Multiplier
 		}
 		bgpBfdConfig = append(bgpBfdConfig, bfdMap)
-		d.Set("bgp_bfd", bgpBfdConfig)
+		mustSet(d, "bgp_bfd", bgpBfdConfig)
 	}
 
 	if conn.HAEnabled == "enabled" {
 		if !conn.EnableEdgeUnderlay {
-			d.Set("ha_enabled", true)
+			mustSet(d, "ha_enabled", true)
 			if conn.BackupBgpRemoteAsNum != 0 {
-				d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
+				mustSet(d, "backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
 			}
-			d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
-			d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+			mustSet(d, "backup_remote_lan_ip", conn.BackupRemoteLanIP)
+			mustSet(d, "backup_local_lan_ip", conn.BackupLocalLanIP)
 			if conn.EnableIpv6 {
-				d.Set("backup_remote_lan_ipv6_ip", conn.BackupRemoteLanIPv6)
+				mustSet(d, "backup_remote_lan_ipv6_ip", conn.BackupRemoteLanIPv6)
 			}
 		}
 	} else {
-		d.Set("ha_enabled", false)
+		mustSet(d, "ha_enabled", false)
 	}
 
 	if conn.PrependAsPath != "" {
@@ -607,7 +601,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	d.Partial(true)
 
 	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
@@ -617,8 +611,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 
 	if d.HasChange("prepend_as_path") {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
+		for _, v := range getList(d, "prepend_as_path") {
+			prependASPath = append(prependASPath, mustString(v))
 		}
 		err := client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
@@ -626,22 +620,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		}
 	}
 
-	enableBfd, ok := d.Get("enable_bfd").(bool)
-	if !ok {
-		return diag.Errorf("expected enable_bfd to be a boolean, but got %T", d.Get("enable_bfd"))
-	}
+	enableBfd := getBool(d, "enable_bfd")
+
 	// get the BGP BFD config
-	bgpBfdConfig, ok := d.Get("bgp_bfd").([]interface{})
-	if !ok {
-		return diag.Errorf("expected bgp_bfd to be a list of maps, but got %T", d.Get("bgp_bfd"))
-	}
+	bgpBfdConfig := getList(d, "bgp_bfd")
+
 	if d.HasChanges("enable_bfd", "bgp_bfd") {
 		// bgp bfd is enabled
 		if enableBfd {
 			bgpBfd := goaviatrix.GetUpdatedBgpBfdConfig(bgpBfdConfig)
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-				GwName:         d.Get("gw_name").(string),
-				ConnectionName: d.Get("connection_name").(string),
+				GwName:         getString(d, "gw_name"),
+				ConnectionName: getString(d, "connection_name"),
 				EnableBfd:      enableBfd,
 				BgpBfdConfig:   bgpBfd,
 			}
@@ -655,8 +645,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 				return diag.Errorf("bgp_bfd config can't be set when BFD is disabled")
 			}
 			externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-				GwName:         d.Get("gw_name").(string),
-				ConnectionName: d.Get("connection_name").(string),
+				GwName:         getString(d, "gw_name"),
+				ConnectionName: getString(d, "connection_name"),
 				EnableBfd:      enableBfd,
 			}
 			err := client.EditConnectionBgpBfd(externalDeviceConn)
@@ -675,16 +665,12 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	if externalDeviceConn.EnableEdgeUnderlay && d.HasChanges("bgp_md5_key", "backup_bgp_md5_key") {
 		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
 
-		bgpMD5Key, ok := d.Get("bgp_md5_key").(string)
-		if !ok {
-			return diag.Errorf("invalid value for 'bgp_md5_key': expected a string, but got a %T (value: %v)", bgpMD5Key, bgpMD5Key)
-		}
+		bgpMD5Key := getString(d, "bgp_md5_key")
+
 		edgeExternalDeviceConn.BgpMd5Key = bgpMD5Key
 
-		backupBGPMD5Key, ok := d.Get("backup_bgp_md5_key").(string)
-		if !ok {
-			return diag.Errorf("invalid value for 'backup_bgp_md5_key': expected a string, but got a %T (value: %v)", backupBGPMD5Key, backupBGPMD5Key)
-		}
+		backupBGPMD5Key := getString(d, "backup_bgp_md5_key")
+
 		edgeExternalDeviceConn.BackupBgpMd5Key = backupBGPMD5Key
 
 		edgeExternalDeviceConn.BgpMd5KeyChanged = true
@@ -704,30 +690,18 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	}
 
 	if d.HasChange("enable_jumbo_frame") {
-		vpcID, ok := d.Get("site_id").(string)
-		if !ok {
-			return diag.Errorf("expected site_id to be a string, but got %T", d.Get("site_id"))
-		}
-		connectionName, ok := d.Get("connection_name").(string)
-		if !ok {
-			return diag.Errorf("expected connection_name to be a string, but got %T", d.Get("connection_name"))
-		}
-		gwName, ok := d.Get("gw_name").(string)
-		if !ok {
-			return diag.Errorf("expected gw_name to be a string, but got %T", d.Get("gw_name"))
-		}
-		connectionType, ok := d.Get("connection_type").(string)
-		if !ok {
-			return diag.Errorf("expected connection_type to be a string, but got %T", d.Get("connection_type"))
-		}
-		tunnelProtocol, ok := d.Get("tunnel_protocol").(string)
-		if !ok {
-			return diag.Errorf("expected tunnel_protocol to be a string, but got %T", d.Get("tunnel_protocol"))
-		}
-		enableJumboFrame, ok := d.Get("enable_jumbo_frame").(bool)
-		if !ok {
-			return diag.Errorf("expected enable_jumbo_frame to be a boolean, but got %T", d.Get("enable_jumbo_frame"))
-		}
+		vpcID := getString(d, "site_id")
+
+		connectionName := getString(d, "connection_name")
+
+		gwName := getString(d, "gw_name")
+
+		connectionType := getString(d, "connection_type")
+
+		tunnelProtocol := getString(d, "tunnel_protocol")
+
+		enableJumboFrame := getBool(d, "enable_jumbo_frame")
+
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:            vpcID,
 			ConnectionName:   connectionName,
@@ -754,7 +728,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
 	if err != nil {

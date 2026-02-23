@@ -6,9 +6,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDCFIpsProfileVpc() *schema.Resource {
@@ -40,10 +41,10 @@ func resourceAviatrixDCFIpsProfileVpc() *schema.Resource {
 }
 
 func resourceAviatrixDCFIpsProfileVpcCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcId := d.Get("vpc_id").(string)
-	profiles := expandStringList(d.Get("dcf_ips_profiles").(*schema.Set).List())
+	vpcId := getString(d, "vpc_id")
+	profiles := expandStringList(getSet(d, "dcf_ips_profiles").List())
 
 	_, err := client.SetIpsProfileVpc(ctx, vpcId, profiles)
 	if err != nil {
@@ -55,7 +56,7 @@ func resourceAviatrixDCFIpsProfileVpcCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixDCFIpsProfileVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpcId := d.Id()
 	profileVpc, err := client.GetIpsProfileVpc(ctx, vpcId)
@@ -67,18 +68,17 @@ func resourceAviatrixDCFIpsProfileVpcRead(ctx context.Context, d *schema.Resourc
 		}
 		return diag.Errorf("failed to read DCF IPS profile VPC assignment: %v", err)
 	}
-
-	d.Set("vpc_id", profileVpc.VpcId)
-	d.Set("dcf_ips_profiles", profileVpc.DcfIpsProfiles)
+	mustSet(d, "vpc_id", profileVpc.VpcId)
+	mustSet(d, "dcf_ips_profiles", profileVpc.DcfIpsProfiles)
 
 	return nil
 }
 
 func resourceAviatrixDCFIpsProfileVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpcId := d.Id()
-	profiles := expandStringList(d.Get("dcf_ips_profiles").(*schema.Set).List())
+	profiles := expandStringList(getSet(d, "dcf_ips_profiles").List())
 
 	_, err := client.SetIpsProfileVpc(ctx, vpcId, profiles)
 	if err != nil {
@@ -89,7 +89,7 @@ func resourceAviatrixDCFIpsProfileVpcUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixDCFIpsProfileVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpcId := d.Id()
 

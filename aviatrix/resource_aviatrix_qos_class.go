@@ -2,10 +2,12 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixQosClass() *schema.Resource {
@@ -40,15 +42,15 @@ func resourceAviatrixQosClass() *schema.Resource {
 
 func marshalQosClassInput(d *schema.ResourceData) *goaviatrix.QosClass {
 	qosClass := &goaviatrix.QosClass{
-		Name:     d.Get("name").(string),
-		Priority: d.Get("priority").(int),
+		Name:     getString(d, "name"),
+		Priority: getInt(d, "priority"),
 	}
 
 	return qosClass
 }
 
 func resourceAviatrixQosClassCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	qosClass := marshalQosClassInput(d)
 
@@ -73,28 +75,27 @@ func resourceAviatrixQosClassReadIfRequired(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixQosClassRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	qosClass, err := client.GetQosClass(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read qos class %s", err)
 	}
-
-	d.Set("name", qosClass.Name)
-	d.Set("priority", qosClass.Priority)
+	mustSet(d, "name", qosClass.Name)
+	mustSet(d, "priority", qosClass.Priority)
 
 	return nil
 }
 
 func resourceAviatrixQosClassUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -112,7 +113,7 @@ func resourceAviatrixQosClassUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAviatrixQosClassDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteQosClass(ctx, uuid)

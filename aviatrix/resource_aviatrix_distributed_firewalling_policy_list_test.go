@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixDistributedFirewallingPolicyList_basic(t *testing.T) {
@@ -100,11 +102,11 @@ func testAccCheckDistributedFirewallingPolicyListExists(n string) resource.TestC
 			return fmt.Errorf("no Distributed-firewalling Policy List ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetDistributedFirewallingPolicyList(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get Distributed-firewalling Policy List status: %v", err)
+			return fmt.Errorf("failed to get Distributed-firewalling Policy List status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -116,7 +118,7 @@ func testAccCheckDistributedFirewallingPolicyListExists(n string) resource.TestC
 }
 
 func testAccDistributedFirewallingPolicyListDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_smart_group" {
@@ -124,7 +126,7 @@ func testAccDistributedFirewallingPolicyListDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetDistributedFirewallingPolicyList(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("distributed-firewalling policy list configured when it should be destroyed")
 		}
 	}

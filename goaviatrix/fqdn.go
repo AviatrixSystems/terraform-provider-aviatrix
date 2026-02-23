@@ -168,24 +168,59 @@ func (c *Client) ListFQDNTags() ([]*FQDN, error) {
 	}
 
 	var data map[string]interface{}
-
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
-	if err != nil {
+	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
 		return nil, err
 	}
 
 	tags := make([]*FQDN, 0)
-	if val, ok := data["results"]; ok {
-		for tag, data := range val.(map[string]interface{}) {
-			tagData := data.(map[string]interface{})
-			fqdn := &FQDN{
-				FQDNTag:    tag,
-				FQDNMode:   tagData["wbmode"].(string),
-				FQDNStatus: tagData["state"].(string),
-			}
-			tags = append(tags, fqdn)
-		}
+
+	val, ok := data["results"]
+	if !ok || val == nil {
+		return tags, nil
 	}
+
+	results, ok := val.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("results expected map[string]interface{}, got %T", val)
+	}
+
+	for tag, v := range results {
+		tagData, ok := v.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("results[%q] expected map[string]interface{}, got %T", tag, v)
+		}
+
+		wbmodeRaw, exists := tagData["wbmode"]
+		if !exists {
+			return nil, fmt.Errorf("results[%q].wbmode missing", tag)
+		}
+		if wbmodeRaw == nil {
+			return nil, fmt.Errorf("results[%q].wbmode nil", tag)
+		}
+		wbmode, ok := wbmodeRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("results[%q].wbmode expected string, got %T", tag, wbmodeRaw)
+		}
+
+		stateRaw, exists := tagData["state"]
+		if !exists {
+			return nil, fmt.Errorf("results[%q].state missing", tag)
+		}
+		if stateRaw == nil {
+			return nil, fmt.Errorf("results[%q].state nil", tag)
+		}
+		state, ok := stateRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("results[%q].state expected string, got %T", tag, stateRaw)
+		}
+
+		tags = append(tags, &FQDN{
+			FQDNTag:    tag,
+			FQDNMode:   wbmode,
+			FQDNStatus: state,
+		})
+	}
+
 	return tags, nil
 }
 
@@ -220,15 +255,78 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 		return nil, err
 	}
 
-	names := data["results"].([]interface{})
+	raw, exists := data["results"]
+	if !exists {
+		return nil, fmt.Errorf("results missing")
+	}
+	if raw == nil {
+		return nil, fmt.Errorf("results nil")
+	}
+	names, ok := raw.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("results expected []interface{}, got %T", raw)
+	}
 	for _, domain := range names {
-		dn := domain.(map[string]interface{})
-		fqdnFilter := Filters{
-			FQDN:     dn["fqdn"].(string),
-			Protocol: dn["proto"].(string),
-			Port:     dn["port"].(string),
-			Verdict:  dn["verdict"].(string),
+		dn, ok := domain.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("domain entry expected map[string]interface{}, got %T", domain)
 		}
+
+		fqdnRaw, exists := dn["fqdn"]
+		if !exists {
+			return nil, fmt.Errorf("domain entry fqdn missing")
+		}
+		if fqdnRaw == nil {
+			return nil, fmt.Errorf("domain entry fqdn nil")
+		}
+		fqdnStr, ok := fqdnRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("domain entry fqdn expected string, got %T", fqdnRaw)
+		}
+
+		protoRaw, exists := dn["proto"]
+		if !exists {
+			return nil, fmt.Errorf("domain entry proto missing")
+		}
+		if protoRaw == nil {
+			return nil, fmt.Errorf("domain entry proto nil")
+		}
+		protoStr, ok := protoRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("domain entry proto expected string, got %T", protoRaw)
+		}
+
+		portRaw, exists := dn["port"]
+		if !exists {
+			return nil, fmt.Errorf("domain entry port missing")
+		}
+		if portRaw == nil {
+			return nil, fmt.Errorf("domain entry port nil")
+		}
+		portStr, ok := portRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("domain entry port expected string, got %T", portRaw)
+		}
+
+		verdictRaw, exists := dn["verdict"]
+		if !exists {
+			return nil, fmt.Errorf("domain entry verdict missing")
+		}
+		if verdictRaw == nil {
+			return nil, fmt.Errorf("domain entry verdict nil")
+		}
+		verdictStr, ok := verdictRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("domain entry verdict expected string, got %T", verdictRaw)
+		}
+
+		fqdnFilter := Filters{
+			FQDN:     fqdnStr,
+			Protocol: protoStr,
+			Port:     portStr,
+			Verdict:  verdictStr,
+		}
+
 		fqdn.DomainList = append(fqdn.DomainList, &fqdnFilter)
 	}
 
@@ -370,7 +468,7 @@ func (c *Client) DisableFQDNPassThrough(gw *Gateway) error {
 func (c *Client) AddFQDNTagRule(fqdn *FQDN) error {
 	policies, err := json.Marshal(fqdn.DomainList)
 	if err != nil {
-		return fmt.Errorf("could not marshal fqdn domain: %v", err)
+		return fmt.Errorf("could not marshal fqdn domain: %w", err)
 	}
 
 	form := map[string]string{
@@ -386,7 +484,7 @@ func (c *Client) AddFQDNTagRule(fqdn *FQDN) error {
 func (c *Client) GetFQDNTagRule(fqdn *FQDN) (*FQDN, error) {
 	foundFQDN, err := c.ListDomains(&FQDN{FQDNTag: fqdn.FQDNTag})
 	if err != nil {
-		return nil, fmt.Errorf("could not list fqdn domains: %v", err)
+		return nil, fmt.Errorf("could not list fqdn domains: %w", err)
 	}
 	domain := fqdn.DomainList[0]
 	found := false
@@ -405,7 +503,7 @@ func (c *Client) GetFQDNTagRule(fqdn *FQDN) (*FQDN, error) {
 func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
 	policies, err := json.Marshal(fqdn.DomainList)
 	if err != nil {
-		return fmt.Errorf("could not marshal fqdn domain: %v", err)
+		return fmt.Errorf("could not marshal fqdn domain: %w", err)
 	}
 
 	form := map[string]string{
@@ -611,7 +709,14 @@ func (c *Client) GetFQDNCacheGlobalStatus(ctx context.Context) (*string, error) 
 		return nil, err
 	}
 
-	result := data["results"].(string)
+	raw, ok := data["results"]
+	if !ok || raw == nil {
+		return nil, fmt.Errorf("results missing")
+	}
+	result, ok := raw.(string)
+	if !ok {
+		return nil, fmt.Errorf("results expected string, got %T", raw)
+	}
 	return &result, nil
 }
 
@@ -627,7 +732,14 @@ func (c *Client) GetFQDNExactMatchStatus(ctx context.Context) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := data["results"].(string)
+	raw, ok := data["results"]
+	if !ok || raw == nil {
+		return nil, fmt.Errorf("results missing")
+	}
+	result, ok := raw.(string)
+	if !ok {
+		return nil, fmt.Errorf("results expected string, got %T", raw)
+	}
 	return &result, nil
 }
 
@@ -643,7 +755,14 @@ func (c *Client) GetFQDNExceptionRuleStatus(ctx context.Context) (*string, error
 	if err != nil {
 		return nil, err
 	}
-	result := data["results"].(string)
+	raw, ok := data["results"]
+	if !ok || raw == nil {
+		return nil, fmt.Errorf("results missing")
+	}
+	result, ok := raw.(string)
+	if !ok {
+		return nil, fmt.Errorf("results expected string, got %T", raw)
+	}
 	return &result, nil
 }
 

@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func prePrivateModeCheck(t *testing.T, msgEnd string) {
@@ -94,7 +96,7 @@ func testAccAviatrixPrivateModeLbExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no private mode load balancer ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		vpcId := rs.Primary.ID
 		_, err := client.GetPrivateModeLoadBalancer(context.Background(), vpcId)
@@ -107,7 +109,7 @@ func testAccAviatrixPrivateModeLbExists(n string) resource.TestCheckFunc {
 }
 
 func testAccAviatrixPrivateModeLbDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_private_mode_lb" {
@@ -117,10 +119,10 @@ func testAccAviatrixPrivateModeLbDestroy(s *terraform.State) error {
 		vpcId := rs.Primary.ID
 		_, err := client.GetPrivateModeLoadBalancer(context.Background(), vpcId)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return nil
 			}
-			return fmt.Errorf("error getting Private Mode load balancer after destroy: %s", err)
+			return fmt.Errorf("error getting Private Mode load balancer after destroy: %w", err)
 		}
 		return fmt.Errorf("failed to destroy Private Mode load balancer")
 	}

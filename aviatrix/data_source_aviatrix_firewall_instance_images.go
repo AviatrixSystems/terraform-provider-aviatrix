@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -49,13 +48,13 @@ func dataSourceAviatrixFirewallInstanceImages() *schema.Resource {
 }
 
 func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcId := d.Get("vpc_id").(string)
+	vpcId := getString(d, "vpc_id")
 
 	firewallInstanceImages, err := client.GetFirewallInstanceImages(vpcId)
 	if err != nil {
-		return fmt.Errorf("couldn't get firewall instance images: %s", err)
+		return fmt.Errorf("couldn't get firewall instance images: %w", err)
 	}
 
 	var images []map[string]interface{}
@@ -76,7 +75,7 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	}
 
 	if err = d.Set("firewall_images", images); err != nil {
-		return fmt.Errorf("couldn't set firewall_images: %s", err)
+		return fmt.Errorf("couldn't set firewall_images: %w", err)
 	}
 
 	d.SetId(vpcId)

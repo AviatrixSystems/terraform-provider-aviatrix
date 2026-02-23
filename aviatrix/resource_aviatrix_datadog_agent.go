@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDatadogAgent() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 		Read:   resourceAviatrixDatadogAgentRead,
 		Delete: resourceAviatrixDatadogAgentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,14 +64,14 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 
 func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
 	datadogAgent := &goaviatrix.DatadogAgent{
-		ApiKey:      d.Get("api_key").(string),
-		Site:        d.Get("site").(string),
-		MetricsOnly: d.Get("metrics_only").(bool),
+		ApiKey:      getString(d, "api_key"),
+		Site:        getString(d, "site"),
+		MetricsOnly: getBool(d, "metrics_only"),
 	}
 
 	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
+	for _, v := range getSet(d, "excluded_gateways").List() {
+		excludedGateways = append(excludedGateways, mustString(v))
 	}
 	if len(excludedGateways) != 0 {
 		datadogAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
@@ -79,17 +81,17 @@ func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
 }
 
 func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	_, err := client.GetDatadogAgentStatus()
-	if err != goaviatrix.ErrNotFound {
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
 		return fmt.Errorf("the datadog_agent is already enabled, please import to manage with Terraform")
 	}
 
 	datadogAgent := marshalDatadogAgentInput(d)
 
 	if err := client.EnableDatadogAgent(datadogAgent); err != nil {
-		return fmt.Errorf("could not enable datadog agent: %v KEY IS %s", err, d.Get("api_key"))
+		return fmt.Errorf("could not enable datadog agent: %w KEY IS %s", err, d.Get("api_key"))
 	}
 
 	d.SetId("datadog_agent")
@@ -97,37 +99,36 @@ func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != "datadog_agent" {
 		return fmt.Errorf("invalid ID, expected ID \"datadog_agent\", instead got %s", d.Id())
 	}
 
 	datadogAgentStatus, err := client.GetDatadogAgentStatus()
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get remote syslog status: %v", err)
+		return fmt.Errorf("could not get remote syslog status: %w", err)
 	}
-
-	d.Set("site", datadogAgentStatus.Site)
+	mustSet(d, "site", datadogAgentStatus.Site)
 	if len(datadogAgentStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", datadogAgentStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", datadogAgentStatus.ExcludedGateways)
 	}
-	d.Set("metrics_only", datadogAgentStatus.MetricsOnly)
-	d.Set("status", datadogAgentStatus.Status)
+	mustSet(d, "metrics_only", datadogAgentStatus.MetricsOnly)
+	mustSet(d, "status", datadogAgentStatus.Status)
 
 	d.SetId("datadog_agent")
 	return nil
 }
 
 func resourceAviatrixDatadogAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := client.DisableDatadogAgent(); err != nil {
-		return fmt.Errorf("could not disable datadog agent: %v", err)
+		return fmt.Errorf("could not disable datadog agent: %w", err)
 	}
 
 	return nil

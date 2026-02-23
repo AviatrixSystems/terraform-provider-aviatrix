@@ -65,6 +65,10 @@ func (c *Client) CreateSpokeTransitAttachment(ctx context.Context, spokeTransitA
 }
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
+	return c.GetSpokeTransitAttachmentContext(context.Background(), spokeTransitAttachment)
+}
+
+func (c *Client) GetSpokeTransitAttachmentContext(ctx context.Context, spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "get_gateway_info",
@@ -84,21 +88,30 @@ func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitA
 
 	var data GatewayDetailApiResp
 
-	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	err := c.GetAPIContext(ctx, &data, form["action"], form, checkFunc)
 	if err != nil {
 		return nil, err
 	}
 
+	// take care TransitGwName can be either the gateway name or the group name
+	transitGrpName := spokeTransitAttachment.TransitGwName
+	transitGw, err := c.GetGateway(&Gateway{GwName: spokeTransitAttachment.TransitGwName})
+	if err == nil {
+		transitGrpName = transitGw.GroupName
+	}
+
 	if data.Results.GwName == spokeTransitAttachment.SpokeGwName {
-		if data.Results.TransitGwName == spokeTransitAttachment.TransitGwName || data.Results.EgressTransitGwName == spokeTransitAttachment.TransitGwName {
+		if data.Results.TransitGwName == spokeTransitAttachment.TransitGwName ||
+			data.Results.EgressTransitGwName == spokeTransitAttachment.TransitGwName ||
+			data.Results.TransitGwName == transitGrpName || data.Results.EgressTransitGwName == transitGrpName {
 			spokeTransitAttachment.RouteTables = strings.Join(data.Results.RouteTables, ",")
 			spokeTransitAttachment.SpokeBgpEnabled = data.Results.BgpEnabled
 			return spokeTransitAttachment, nil
 		}
 	}
 
-	log.Errorf("Couldn't find Aviatrix gateway %s", spokeTransitAttachment.SpokeGwName)
-	return nil, ErrNotFound
+	log.Errorf("Couldn't find spoke transit attachment %s to transit %s", spokeTransitAttachment.SpokeGwName, transitGrpName)
+	return nil, fmt.Errorf("couldn't find attachment spoke %s to transit %s", spokeTransitAttachment.SpokeGwName, transitGrpName)
 }
 
 func (c *Client) DeleteSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
@@ -172,8 +185,18 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 
 func DiffSuppressFuncEdgeSpokeTransitAttachmentEdgeWanInterfaces(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("edge_wan_interfaces")
-	edgeWanInterfacesOld := ExpandStringList(o.(*schema.Set).List())
-	edgeWanInterfacesNew := ExpandStringList(n.(*schema.Set).List())
+
+	oSet, ok := o.(*schema.Set)
+	if !ok {
+		return false
+	}
+	nSet, ok := n.(*schema.Set)
+	if !ok {
+		return false
+	}
+
+	edgeWanInterfacesOld := ExpandStringList(oSet.List())
+	edgeWanInterfacesNew := ExpandStringList(nSet.List())
 
 	defaultWanInterfaces := getStringSet(d, "default_edge_wan_interfaces")
 

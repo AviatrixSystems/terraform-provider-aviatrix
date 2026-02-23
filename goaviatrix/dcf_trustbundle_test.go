@@ -126,7 +126,7 @@ INVALID_CERTIFICATE_DATA
 // UTF-8 BOM bytes
 var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
 
-func TestValidateTrustbundle(t *testing.T) {
+func TestValidateCertificates(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       interface{}
@@ -211,7 +211,7 @@ func TestValidateTrustbundle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, errs := ValidateTrustbundle(tt.input, "test")
+			_, errs := ValidateCertificates(tt.input, "test")
 
 			if tt.expectError {
 				assert.NotEmpty(t, errs, "Expected validation errors but got none")

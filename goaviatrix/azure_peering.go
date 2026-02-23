@@ -31,43 +31,83 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 		"CID":    c.CID,
 		"action": "list_arm_peer_vnet_pairs",
 	}
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
-	if err != nil {
+
+	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
 		return nil, err
 	}
-	if val, ok := data["results"]; ok {
-		pairList := val.([]interface{})
-		for i := range pairList {
-			if pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == azurePeer.VNet1 &&
-				pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == azurePeer.VNet2 {
-				azurePeer := &AzurePeer{
-					VNet1:        pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string),
-					VNet2:        pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string),
-					AccountName1: pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["account_name"].(string),
-					AccountName2: pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["account_name"].(string),
-					Region1:      pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["region"].(string),
-					Region2:      pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["region"].(string),
-				}
 
-				vnetCidrList1 := pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_cidr"].([]interface{})
-				var vnetCidr1 []string
-				for i := range vnetCidrList1 {
-					vnetCidr1 = append(vnetCidr1, vnetCidrList1[i].(string))
-				}
-				azurePeer.VNetCidr1 = vnetCidr1
+	val, ok := data["results"]
+	if !ok || val == nil {
+		return nil, ErrNotFound
+	}
 
-				vnetCidrList2 := pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_cidr"].([]interface{})
-				var vnetCidr2 []string
-				for i := range vnetCidrList2 {
-					vnetCidr2 = append(vnetCidr2, vnetCidrList2[i].(string))
-				}
-				azurePeer.VNetCidr2 = vnetCidr2
+	pairList, ok := val.([]interface{})
+	if !ok {
+		return nil, ErrNotFound
+	}
 
-				return azurePeer, nil
-			}
+	for _, item := range pairList {
+		pair, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		requester, ok := pair["requester"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		accepter, ok := pair["accepter"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		reqVPC, ok := requester["vpc_id"].(string)
+		if !ok {
+			continue
+		}
+		accVPC, ok := accepter["vpc_id"].(string)
+		if !ok {
+			continue
+		}
+
+		if reqVPC != azurePeer.VNet1 || accVPC != azurePeer.VNet2 {
+			continue
+		}
+
+		out := &AzurePeer{
+			VNet1:        reqVPC,
+			VNet2:        accVPC,
+			AccountName1: stringOrEmpty(requester["account_name"]),
+			AccountName2: stringOrEmpty(accepter["account_name"]),
+			Region1:      stringOrEmpty(requester["region"]),
+			Region2:      stringOrEmpty(accepter["region"]),
+			VNetCidr1:    toStringSlice(requester["vpc_cidr"]),
+			VNetCidr2:    toStringSlice(accepter["vpc_cidr"]),
+		}
+
+		return out, nil
+	}
+
+	return nil, ErrNotFound
+}
+
+func stringOrEmpty(v interface{}) string {
+	s, _ := v.(string)
+	return s
+}
+
+func toStringSlice(v interface{}) []string {
+	list, ok := v.([]interface{})
+	if !ok || len(list) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(list))
+	for _, x := range list {
+		if s, ok := x.(string); ok {
+			out = append(out, s)
 		}
 	}
-	return nil, ErrNotFound
+	return out
 }
 
 func (c *Client) DeleteAzurePeer(azurePeer *AzurePeer) error {

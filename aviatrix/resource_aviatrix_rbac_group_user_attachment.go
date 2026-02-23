@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixRbacGroupUserAttachment() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixRbacGroupUserAttachment() *schema.Resource {
 		Read:   resourceAviatrixRbacGroupUserAttachmentRead,
 		Delete: resourceAviatrixRbacGroupUserAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,22 +38,22 @@ func resourceAviatrixRbacGroupUserAttachment() *schema.Resource {
 }
 
 func resourceAviatrixRbacGroupUserAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupUserAttachment{
-		GroupName: d.Get("group_name").(string),
-		UserName:  d.Get("user_name").(string),
+		GroupName: getString(d, "group_name"),
+		UserName:  getString(d, "user_name"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix RBAC permission group user attachment: %#v", attachment)
 
 	d.SetId(attachment.GroupName + "~" + attachment.UserName)
 	flag := false
-	defer resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateRbacGroupUserAttachment(attachment)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix RBAC permission group user attachment: %s", err)
+		return fmt.Errorf("failed to create Aviatrix RBAC permission group user attachment: %w", err)
 	}
 
 	log.Printf("[DEBUG] Aviatrix RBAC permission group user attachment created")
@@ -68,36 +70,36 @@ func resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d *schema.ResourceDat
 }
 
 func resourceAviatrixRbacGroupUserAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	groupName := d.Get("group_name").(string)
-	userName := d.Get("user_name").(string)
+	groupName := getString(d, "group_name")
+	userName := getString(d, "user_name")
 	if groupName == "" || userName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no group name or account user name received. Import Id is %s", id)
-		d.Set("group_name", strings.Split(id, "~")[0])
-		d.Set("user_name", strings.Split(id, "~")[1])
+		mustSet(d, "group_name", strings.Split(id, "~")[0])
+		mustSet(d, "user_name", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	attachment := &goaviatrix.RbacGroupUserAttachment{
-		GroupName: d.Get("group_name").(string),
-		UserName:  d.Get("user_name").(string),
+		GroupName: getString(d, "group_name"),
+		UserName:  getString(d, "user_name"),
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix RBAC permission group user attachment: %#v", attachment)
 
 	userAttachment, err := client.GetRbacGroupUserAttachment(attachment)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix RBAC permission group user attachment: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix RBAC permission group user attachment: %w", err)
 	}
 	if userAttachment != nil {
-		d.Set("group_name", userAttachment.GroupName)
-		d.Set("user_name", userAttachment.UserName)
+		mustSet(d, "group_name", userAttachment.GroupName)
+		mustSet(d, "user_name", userAttachment.UserName)
 		d.SetId(userAttachment.GroupName + "~" + userAttachment.UserName)
 	}
 
@@ -105,18 +107,18 @@ func resourceAviatrixRbacGroupUserAttachmentRead(d *schema.ResourceData, meta in
 }
 
 func resourceAviatrixRbacGroupUserAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupUserAttachment{
-		GroupName: d.Get("group_name").(string),
-		UserName:  d.Get("user_name").(string),
+		GroupName: getString(d, "group_name"),
+		UserName:  getString(d, "user_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix RBAC permission group user attachment: %#v", attachment)
 
 	err := client.DeleteRbacGroupUserAttachment(attachment)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix RBAC permission group user attachment: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix RBAC permission group user attachment: %w", err)
 	}
 
 	return nil

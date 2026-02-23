@@ -28,7 +28,7 @@ func ExpandStringList(configured []interface{}) []string {
 	for _, v := range configured {
 		val, ok := v.(string)
 		if ok && val != "" {
-			vs = append(vs, v.(string))
+			vs = append(vs, val)
 		}
 	}
 	return vs
@@ -279,9 +279,20 @@ func ValidateRtbId(val interface{}, key string) (warns []string, errs []error) {
 
 // getStringSet will convert a TypeSet attribute to a slice of string
 func getStringSet(d *schema.ResourceData, k string) []string {
-	var sl []string
-	for _, v := range d.Get(k).(*schema.Set).List() {
-		sl = append(sl, v.(string))
+	raw := d.Get(k)
+
+	set, ok := raw.(*schema.Set)
+	if !ok || set == nil {
+		return nil
+	}
+
+	sl := make([]string, 0, set.Len())
+	for _, v := range set.List() {
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		sl = append(sl, s)
 	}
 	return sl
 }

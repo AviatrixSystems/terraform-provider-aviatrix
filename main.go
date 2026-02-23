@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+
+	"aviatrix.com/terraform-provider-aviatrix/aviatrix"
 )
 
 func main() {

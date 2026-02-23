@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSLAClass_basic(t *testing.T) {
@@ -65,10 +67,10 @@ func testAccCheckSLAClassExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("sla class not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetSLAClass(context.Background(), rs.Primary.Attributes["uuid"])
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("sla class not found")
 		}
 
@@ -77,7 +79,7 @@ func testAccCheckSLAClassExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckSLAClassDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_sla_class" {
@@ -85,7 +87,7 @@ func testAccCheckSLAClassDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetSLAClass(context.Background(), rs.Primary.Attributes["uuid"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("sla class still exists")
 		}
 	}

@@ -1,45 +1,45 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
-
-	"golang.org/x/net/context"
 )
 
 type TransitHaGateway struct {
-	Action                    string `json:"action"`
-	CID                       string `json:"CID"`
-	AccountName               string `json:"account_name"`
-	CloudType                 int    `json:"cloud_type"`
-	VpcID                     string `json:"vpc_id,omitempty"`
-	VNetNameResourceGroup     string `json:"vnet_and_resource_group_names"`
-	PrimaryGwName             string `json:"primary_gw_name"`
-	GwName                    string `json:"ha_gw_name"`
-	GwSize                    string `json:"gw_size"`
-	Subnet                    string `json:"gw_subnet"`
-	VpcRegion                 string `json:"region"`
-	Zone                      string `json:"zone"`
-	AvailabilityDomain        string `json:"availability_domain"`
-	FaultDomain               string `json:"fault_domain"`
-	BgpLanVpcID               string `json:"bgp_lan_vpc"`
-	BgpLanSubnet              string `json:"bgp_lan_specify_subnet"`
-	Eip                       string `json:"eip,omitempty"`
-	InsaneMode                string `json:"insane_mode"`
-	TagList                   string `json:"tag_string"`
-	TagJSON                   string `json:"tag_json"`
-	AutoGenHaGwName           string `json:"autogen_hagw_name"`
+	Action                    string `form:"action" json:"action"`
+	CID                       string `form:"CID" json:"CID"`
+	AccountName               string `form:"account_name,omitempty" json:"account_name"`
+	CloudType                 int    `form:"cloud_type,omitempty" json:"cloud_type"`
+	GroupUUID                 string `form:"group_uuid,omitempty" json:"group_uuid,omitempty"`
+	VpcID                     string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VNetNameResourceGroup     string `form:"vnet_and_resource_group_names,omitempty" json:"vnet_and_resource_group_names"`
+	PrimaryGwName             string `form:"primary_gw_name,omitempty" json:"primary_gw_name,omitempty"`
+	GwName                    string `form:"ha_gw_name,omitempty" json:"ha_gw_name"`
+	GwSize                    string `form:"gw_size,omitempty" json:"gw_size"`
+	Subnet                    string `form:"gw_subnet,omitempty" json:"gw_subnet"`
+	VpcRegion                 string `form:"region,omitempty" json:"region"`
+	Zone                      string `form:"zone,omitempty" json:"zone"`
+	AvailabilityDomain        string `form:"availability_domain,omitempty" json:"availability_domain"`
+	FaultDomain               string `form:"fault_domain,omitempty" json:"fault_domain"`
+	BgpLanVpcID               string `form:"bgp_lan_vpc,omitempty" json:"bgp_lan_vpc"`
+	BgpLanSubnet              string `form:"bgp_lan_specify_subnet,omitempty" json:"bgp_lan_specify_subnet"`
+	Eip                       string `form:"eip,omitempty" json:"eip,omitempty"`
+	InsaneMode                string `form:"insane_mode,omitempty" json:"insane_mode"`
+	TagList                   string `form:"tag_string,omitempty" json:"tag_string"`
+	TagJSON                   string `form:"tag_json,omitempty" json:"tag_json"`
+	AutoGenHaGwName           string `form:"autogen_hagw_name,omitempty" json:"autogen_hagw_name"`
 	BackupLinkList            []BackupLinkInterface
-	BackupLinkConfig          string `json:"backup_link_config,omitempty"`
-	InterfaceMapping          string `json:"interface_mapping,omitempty"`
-	Interfaces                string `json:"interfaces,omitempty"`
-	DeviceID                  string `json:"device_id,omitempty"`
-	ZtpFileDownloadPath       string `json:"-"`
-	ZtpFileType               string `json:"ztp_file_type,omitempty"`
-	GatewayRegistrationMethod string `json:"gw_registration_method,omitempty"`
-	ManagementEgressIPPrefix  string `json:"mgmt_egress_ip,omitempty"`
-	Async                     bool   `json:"async,omitempty"`
+	BackupLinkConfig          string `form:"backup_link_config,omitempty" json:"backup_link_config,omitempty"`
+	InterfaceMapping          string `form:"interface_mapping,omitempty" json:"interface_mapping,omitempty"`
+	Interfaces                string `form:"interfaces,omitempty" json:"interfaces,omitempty"`
+	DeviceID                  string `form:"device_id,omitempty" json:"device_id,omitempty"`
+	ZtpFileDownloadPath       string `form:"-" json:"-"`
+	ZtpFileType               string `form:"ztp_file_type,omitempty" json:"ztp_file_type,omitempty"`
+	GatewayRegistrationMethod string `form:"gw_registration_method,omitempty" json:"gw_registration_method,omitempty"`
+	ManagementEgressIPPrefix  string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip,omitempty"`
+	Async                     bool   `form:"async,omitempty" json:"async,omitempty"`
 }
 
 type BackupLinkInterface struct {

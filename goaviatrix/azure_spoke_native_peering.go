@@ -5,12 +5,13 @@ import (
 )
 
 type AzureSpokeNativePeering struct {
-	CID                string `form:"CID,omitempty"`
-	Action             string `form:"action,omitempty"`
-	TransitGatewayName string `form:"transit_gateway_name,omitempty"`
-	SpokeAccountName   string `form:"account_name,omitempty"`
-	SpokeRegion        string `form:"region,omitempty"`
-	SpokeVpcID         string `form:"vpc_id,omitempty"`
+	CID                     string   `form:"CID,omitempty"`
+	Action                  string   `form:"action,omitempty"`
+	TransitGatewayName      string   `form:"transit_gateway_name,omitempty"`
+	SpokeAccountName        string   `form:"account_name,omitempty"`
+	SpokeRegion             string   `form:"region,omitempty"`
+	SpokeVpcID              string   `form:"vpc_id,omitempty"`
+	PrivateRouteTableConfig []string `form:"private_route_table_config,omitempty"`
 }
 
 type AzureSpokeNativePeeringAPIResp struct {
@@ -20,10 +21,11 @@ type AzureSpokeNativePeeringAPIResp struct {
 }
 
 type AzureSpokeNativePeeringEdit struct {
-	AccountName string `json:"account_original_name"`
-	Name        string `json:"name"`
-	Region      string `json:"region"`
-	VpcID       string `json:"vpc_id"`
+	AccountName             string   `json:"account_original_name"`
+	Name                    string   `json:"name"`
+	Region                  string   `json:"region"`
+	VpcID                   string   `json:"vpc_id"`
+	PrivateRouteTableConfig []string `json:"private_route_table_config"`
 }
 
 func (c *Client) CreateAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
@@ -59,6 +61,7 @@ func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeN
 			continue
 		}
 		azureSpokeNativePeering.SpokeRegion = peeringList[i].Region
+		azureSpokeNativePeering.PrivateRouteTableConfig = peeringList[i].PrivateRouteTableConfig
 		return azureSpokeNativePeering, nil
 	}
 	return nil, ErrNotFound

@@ -2,10 +2,12 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixQosPolicyList() *schema.Resource {
@@ -58,17 +60,17 @@ func resourceAviatrixQosPolicyList() *schema.Resource {
 func marshalQosPolicyListInput(d *schema.ResourceData) *goaviatrix.QosPolicyList {
 	var qosPolicyList goaviatrix.QosPolicyList
 
-	policies := d.Get("policies").([]interface{})
+	policies := getList(d, "policies")
 	for _, v0 := range policies {
-		v1 := v0.(map[string]interface{})
+		v1 := mustMap(v0)
 
 		v2 := goaviatrix.QosPolicy{
-			Name:         v1["name"].(string),
-			QosClassUuid: v1["qos_class_uuid"].(string),
+			Name:         mustString(v1["name"]),
+			QosClassUuid: mustString(v1["qos_class_uuid"]),
 		}
 
-		for _, ss := range v1["dscp_values"].([]interface{}) {
-			v2.DscpValues = append(v2.DscpValues, ss.(string))
+		for _, ss := range mustSlice(v1["dscp_values"]) {
+			v2.DscpValues = append(v2.DscpValues, mustString(ss))
 		}
 
 		qosPolicyList.Policies = append(qosPolicyList.Policies, v2)
@@ -78,7 +80,7 @@ func marshalQosPolicyListInput(d *schema.ResourceData) *goaviatrix.QosPolicyList
 }
 
 func resourceAviatrixQosPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	qosPolicyList := marshalQosPolicyListInput(d)
 
@@ -103,11 +105,11 @@ func resourceAviatrixQosPolicyListReadIfRequired(ctx context.Context, d *schema.
 }
 
 func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	qosPolicyResp, err := client.GetQosPolicyList(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -136,7 +138,7 @@ func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChanges("policies") {
@@ -153,7 +155,7 @@ func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixQosPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteQosPolicyList(ctx)
 	if err != nil {

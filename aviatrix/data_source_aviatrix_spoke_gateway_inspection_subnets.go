@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,14 +29,14 @@ func dataSourceAviatrixSpokeGatewayInspectionSubnets() *schema.Resource {
 }
 
 func dataSourceAviatrixSpokeGatewayInspectionSubnetsRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 	subnetsForInspection, err := client.GetSubnetsForInspection(gwName)
 	if err != nil {
-		return fmt.Errorf("couldn't get subnets for inspection for gateway %s: %s", gwName, err)
+		return fmt.Errorf("couldn't get subnets for inspection for gateway %s: %w", gwName, err)
 	}
-	d.Set("subnets_for_inspection", subnetsForInspection)
+	mustSet(d, "subnets_for_inspection", subnetsForInspection)
 
 	d.SetId(gwName)
 	return nil

@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixWebGroup_basic(t *testing.T) {
@@ -68,11 +70,11 @@ func testAccCheckWebGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no Web Group ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		webGroup, err := client.GetWebGroup(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get Web Group status: %v", err)
+			return fmt.Errorf("failed to get Web Group status: %w", err)
 		}
 
 		if webGroup.UUID != rs.Primary.ID {
@@ -84,7 +86,7 @@ func testAccCheckWebGroupExists(n string) resource.TestCheckFunc {
 }
 
 func testAccWebGroupDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_web_group" {
@@ -92,7 +94,7 @@ func testAccWebGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetWebGroup(context.Background(), rs.Primary.ID)
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("web group configured when it should be destroyed")
 		}
 	}

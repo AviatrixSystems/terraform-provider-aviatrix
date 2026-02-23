@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFirewallPolicy() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixFirewallPolicy() *schema.Resource {
 		Read:   resourceAviatrixFirewallPolicyRead,
 		Delete: resourceAviatrixFirewallPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,35 +95,35 @@ func getFirewallPolicyID(fw *goaviatrix.Firewall) string {
 
 func marshalFirewallPolicyInput(d *schema.ResourceData) *goaviatrix.Firewall {
 	logEnabled := "on"
-	if !d.Get("log_enabled").(bool) {
+	if !getBool(d, "log_enabled") {
 		logEnabled = "off"
 	}
 
 	return &goaviatrix.Firewall{
-		GwName: d.Get("gw_name").(string),
+		GwName: getString(d, "gw_name"),
 		PolicyList: []*goaviatrix.Policy{
 			{
-				SrcIP:       d.Get("src_ip").(string),
-				DstIP:       d.Get("dst_ip").(string),
-				Protocol:    d.Get("protocol").(string),
-				Port:        d.Get("port").(string),
-				Action:      d.Get("action").(string),
+				SrcIP:       getString(d, "src_ip"),
+				DstIP:       getString(d, "dst_ip"),
+				Protocol:    getString(d, "protocol"),
+				Port:        getString(d, "port"),
+				Action:      getString(d, "action"),
 				LogEnabled:  logEnabled,
-				Description: d.Get("description").(string),
-				Position:    d.Get("position").(int),
+				Description: getString(d, "description"),
+				Position:    getInt(d, "position"),
 			},
 		},
 	}
 }
 
 func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	fw := marshalFirewallPolicyInput(d)
 
 	d.SetId(getFirewallPolicyID(fw))
 	flag := false
-	defer resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 	if fw.PolicyList[0].Position == 0 {
 		if err := client.AddFirewallPolicy(fw); err != nil {
 			return err
@@ -144,19 +146,19 @@ func resourceAviatrixFirewallPolicyReadIfRequired(d *schema.ResourceData, meta i
 }
 
 func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
-	srcIP := d.Get("src_ip").(string)
-	dstIP := d.Get("dst_ip").(string)
-	protocol := d.Get("protocol").(string)
-	port := d.Get("port").(string)
-	action := d.Get("action").(string)
+	gwName := getString(d, "gw_name")
+	srcIP := getString(d, "src_ip")
+	dstIP := getString(d, "dst_ip")
+	protocol := getString(d, "protocol")
+	port := getString(d, "port")
+	action := getString(d, "action")
 	logEnabled := "on"
-	if !d.Get("log_enabled").(bool) {
+	if !getBool(d, "log_enabled") {
 		logEnabled = "off"
 	}
-	description := d.Get("description").(string)
+	description := getString(d, "description")
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no firewall_policy received. Import Id is %s", id)
@@ -188,33 +190,29 @@ func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}
 
 	fw, err := client.GetFirewallPolicy(fw)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 	id := getFirewallPolicyID(fw)
-	if err != nil {
-		return fmt.Errorf("could not find firewall_policy %s: %v", id, err)
-	}
-
-	d.Set("gw_name", fw.GwName)
-	d.Set("src_ip", fw.PolicyList[0].SrcIP)
-	d.Set("dst_ip", fw.PolicyList[0].DstIP)
-	d.Set("protocol", fw.PolicyList[0].Protocol)
-	d.Set("port", fw.PolicyList[0].Port)
-	d.Set("action", fw.PolicyList[0].Action)
-	d.Set("log_enabled", fw.PolicyList[0].LogEnabled == "on")
-	d.Set("description", fw.PolicyList[0].Description)
-	d.Set("position", fw.PolicyList[0].Position)
+	mustSet(d, "gw_name", fw.GwName)
+	mustSet(d, "src_ip", fw.PolicyList[0].SrcIP)
+	mustSet(d, "dst_ip", fw.PolicyList[0].DstIP)
+	mustSet(d, "protocol", fw.PolicyList[0].Protocol)
+	mustSet(d, "port", fw.PolicyList[0].Port)
+	mustSet(d, "action", fw.PolicyList[0].Action)
+	mustSet(d, "log_enabled", fw.PolicyList[0].LogEnabled == "on")
+	mustSet(d, "description", fw.PolicyList[0].Description)
+	mustSet(d, "position", fw.PolicyList[0].Position)
 
 	d.SetId(id)
 	return nil
 }
 
 func resourceAviatrixFirewallPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	fw := marshalFirewallPolicyInput(d)
 

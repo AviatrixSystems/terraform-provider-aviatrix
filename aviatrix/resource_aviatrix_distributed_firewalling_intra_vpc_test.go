@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,9 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixDistributedFirewallingIntraVpc_basic(t *testing.T) {
@@ -124,11 +126,11 @@ func testAccCheckDistributedFirewallingIntraVpcExists(n string) resource.TestChe
 			return fmt.Errorf("no Distributed-firewalling Intra VPC ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetDistributedFirewallingIntraVpc(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get Distributed-firewalling Policy List status: %v", err)
+			return fmt.Errorf("failed to get Distributed-firewalling Policy List status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -140,7 +142,7 @@ func testAccCheckDistributedFirewallingIntraVpcExists(n string) resource.TestChe
 }
 
 func testAccDistributedFirewallingIntraVpcDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_intra_vpc" {
@@ -148,7 +150,7 @@ func testAccDistributedFirewallingIntraVpcDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetDistributedFirewallingIntraVpc(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("distributed-firewalling intra vpc configured when it should be destroyed")
 		}
 	}

@@ -1,16 +1,18 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
@@ -151,7 +153,7 @@ func testAccCheckEdgeSpokeExternalDeviceConnExists(resourceName string) resource
 			return fmt.Errorf("no edge as a spoke external device conn ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["site_id"],
@@ -178,7 +180,7 @@ func testAccCheckEdgeSpokeExternalDeviceConnExists(resourceName string) resource
 }
 
 func testAccCheckEdgeSpokeExternalDeviceConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_spoke_external_device_conn" {
@@ -197,7 +199,7 @@ func testAccCheckEdgeSpokeExternalDeviceConnDestroy(s *terraform.State) error {
 		}
 
 		_, err = client.GetExternalDeviceConnDetail(externalDeviceConn, localGateway)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge as a spoke external device conn still exists %s", err.Error())
 		}
 	}
@@ -252,4 +254,17 @@ func TestEdgeSpokeExternalDeviceConnSchema_RemoteLanIPv6FieldsReference(t *testi
 
 	assert.Equal(t, backupRemoteLanIPField.Type, backupRemoteLanIPv6Field.Type, "backup_remote_lan_ipv6_ip should have same type as backup_remote_lan_ip")
 	assert.Equal(t, backupRemoteLanIPField.ForceNew, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should have same ForceNew as backup_remote_lan_ip")
+}
+
+func TestEdgeSpokeExternalDeviceConnSchema_EnableIPv6ForceNew(t *testing.T) {
+	resource := resourceAviatrixEdgeSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test enable_ipv6 field exists and has correct properties
+	enableIPv6Field, ok := schemaMap["enable_ipv6"]
+	assert.True(t, ok, "enable_ipv6 field should exist in schema")
+	assert.Equal(t, schema.TypeBool, enableIPv6Field.Type)
+	assert.True(t, enableIPv6Field.Optional, "enable_ipv6 should be optional")
+	assert.True(t, enableIPv6Field.ForceNew, "enable_ipv6 should be ForceNew")
+	assert.Contains(t, enableIPv6Field.Description, "Enable IPv6")
 }

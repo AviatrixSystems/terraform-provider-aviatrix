@@ -1,15 +1,17 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
@@ -70,10 +72,10 @@ func testAccCheckRemoteSyslogExists(resourceName string, index int) resource.Tes
 			return fmt.Errorf("remote syslog not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetRemoteSyslogStatus(index)
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("remote syslog %d not found", index)
 		}
 
@@ -83,7 +85,7 @@ func testAccCheckRemoteSyslogExists(resourceName string, index int) resource.Tes
 
 func testAccCheckRemoteSyslogExcludedGatewaysMatch(index int, input []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		resp, _ := client.GetRemoteSyslogStatus(index)
 		if !goaviatrix.Equivalent(resp.ExcludedGateways, input) {
@@ -94,7 +96,7 @@ func testAccCheckRemoteSyslogExcludedGatewaysMatch(index int, input []string) re
 }
 
 func testAccCheckRemoteSyslogDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_remote_syslog" {
@@ -103,7 +105,7 @@ func testAccCheckRemoteSyslogDestroy(s *terraform.State) error {
 		idx, _ := strconv.Atoi(rs.Primary.Attributes["index"])
 
 		_, err := client.GetRemoteSyslogStatus(idx)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("remote_syslog still exists")
 		}
 	}

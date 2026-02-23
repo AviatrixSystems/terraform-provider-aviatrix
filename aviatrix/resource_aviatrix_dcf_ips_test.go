@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -145,6 +144,37 @@ func TestAccAviatrixDCFIpsProfileVpc_basic(t *testing.T) {
 					testAccCheckDCFIpsProfileVpcExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", vpcId),
 					resource.TestCheckResourceAttr(resourceName, "dcf_ips_profiles.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAviatrixDCFDefaultIpsProfile_basic(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_DCF_DEFAULT_IPS_PROFILE")
+	if skipAcc == "yes" {
+		t.Skip("Skipping DCF Default IPS Profile test as SKIP_DCF_DEFAULT_IPS_PROFILE is set")
+	}
+
+	resourceName := "aviatrix_dcf_default_ips_profile.test"
+	profileName := "tf-test-default-profile-" + acctest.RandString(8)
+	feedName := "tf-test-default-feed-" + acctest.RandString(8)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProvidersVersionValidation,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDCFDefaultIpsProfileBasic(profileName, feedName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_ips_profile.#", "1"),
 				),
 			},
 			{
@@ -329,6 +359,39 @@ resource "aviatrix_dcf_ips_profile_vpc" "test" {
 `, feedName, profileName, profileName, vpcId)
 }
 
+func testAccDCFDefaultIpsProfileBasic(profileName, feedName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_dcf_ips_rule_feed" "test_feed" {
+	feed_name    = "%s"
+	file_content = <<EOF
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 1"; flow:established,to_server; tls.cert_subject; content:"test-domain.com"; classtype:trojan-activity; sid:2000001; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET MALWARE Test Rule 2"; flow:established,to_server; http.host; content:"test-c2.example.com"; classtype:trojan-activity; sid:2000002; rev:1;)
+EOF
+}
+
+resource "aviatrix_dcf_ips_profile" "test" {
+	profile_name = "%s"
+
+	rule_feeds {
+		custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
+		external_feeds_ids = ["suricata-rules"]
+		ignored_sids       = [100001, 100002]
+	}
+
+	intrusion_actions = {
+		informational = "alert"
+		minor         = "alert"
+		major         = "alert_and_drop"
+		critical      = "alert_and_drop"
+	}
+}
+
+resource "aviatrix_dcf_default_ips_profile" "test" {
+	default_ips_profile = [aviatrix_dcf_ips_profile.test.uuid]
+}
+`, feedName, profileName)
+}
+
 // Check functions
 
 func testAccCheckDCFIpsRuleFeedExists(n string) resource.TestCheckFunc {
@@ -341,7 +404,7 @@ func testAccCheckDCFIpsRuleFeedExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF IPS rule feed ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 		_, err := client.GetIpsRuleFeed(context.Background(), rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get DCF IPS rule feed: %w", err)
@@ -361,7 +424,7 @@ func testAccCheckDCFIpsProfileExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF IPS profile ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 		_, err := client.GetIpsProfile(context.Background(), rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get DCF IPS profile: %w", err)
@@ -381,7 +444,7 @@ func testAccCheckDCFIpsProfileVpcExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF IPS profile VPC ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 		_, err := client.GetIpsProfileVpc(context.Background(), rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get DCF IPS profile VPC: %w", err)
@@ -394,7 +457,7 @@ func testAccCheckDCFIpsProfileVpcExists(n string) resource.TestCheckFunc {
 // Destroy check functions
 
 func testAccDCFIpsRuleFeedDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_ips_rule_feed" {
@@ -411,7 +474,7 @@ func testAccDCFIpsRuleFeedDestroy(s *terraform.State) error {
 }
 
 func testAccDCFIpsProfileDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_ips_profile" {
@@ -428,7 +491,7 @@ func testAccDCFIpsProfileDestroy(s *terraform.State) error {
 }
 
 func testAccDCFIpsProfileVpcDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_ips_profile_vpc" {

@@ -1,16 +1,18 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSpokeExternalDeviceConn_basic(t *testing.T) {
@@ -50,6 +52,56 @@ func TestAccAviatrixSpokeExternalDeviceConn_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities", "444:444"),
 					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_additive", "true"),
 					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_block", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAviatrixSpokeExternalDeviceConn_proxyId(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_external_device_conn.test_proxy_id"
+
+	skipAcc := os.Getenv("SKIP_SPOKE_EXTERNAL_DEVICE_CONN")
+	if skipAcc == "yes" {
+		t.Skip("Skipping spoke external device connection tests as 'SKIP_SPOKE_EXTERNAL_DEVICE_CONN' is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_SPOKE_EXTERNAL_DEVICE_CONN' to 'yes' to skip Site2Cloud spoke external device connection tests")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeExternalDeviceConnConfigProxyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", fmt.Sprintf("%s-proxy-id", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "static"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.15"),
+					resource.TestCheckResourceAttr(resourceName, "remote_subnet", "192.168.1.0/24,192.168.2.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "local_subnet", "10.0.0.0/16,10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_id_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccSpokeExternalDeviceConnConfigProxyIdUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "local_subnet", "10.0.0.0/16,10.1.0.0/16,10.2.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_id_enabled", "false"),
 				),
 			},
 			{
@@ -113,7 +165,7 @@ func testAccCheckSpokeExternalDeviceConnExists(n string, externalDeviceConn *goa
 			return fmt.Errorf("no spoke external device connection ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundExternalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["vpc_id"],
@@ -138,7 +190,7 @@ func testAccCheckSpokeExternalDeviceConnExists(n string, externalDeviceConn *goa
 }
 
 func testAccCheckSpokeExternalDeviceConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_spoke_external_device_conn" {
@@ -156,7 +208,7 @@ func testAccCheckSpokeExternalDeviceConnDestroy(s *terraform.State) error {
 		}
 
 		_, err = client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("site2cloud still exists: %w", err)
 		}
 	}
@@ -211,4 +263,133 @@ func TestSpokeExternalDeviceConnSchema_RemoteLanIPv6FieldsReference(t *testing.T
 
 	assert.Equal(t, backupRemoteLanIPField.Type, backupRemoteLanIPv6Field.Type, "backup_remote_lan_ipv6_ip should have same type as backup_remote_lan_ip")
 	assert.Equal(t, backupRemoteLanIPField.ForceNew, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should have same ForceNew as backup_remote_lan_ip")
+}
+
+func TestSpokeExternalDeviceConnSchema_EnableIPv6ForceNew(t *testing.T) {
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test enable_ipv6 field exists and has correct properties
+	enableIPv6Field, ok := schemaMap["enable_ipv6"]
+	assert.True(t, ok, "enable_ipv6 field should exist in schema")
+	assert.Equal(t, schema.TypeBool, enableIPv6Field.Type)
+	assert.True(t, enableIPv6Field.Optional, "enable_ipv6 should be optional")
+	assert.True(t, enableIPv6Field.ForceNew, "enable_ipv6 should be ForceNew")
+	assert.Contains(t, enableIPv6Field.Description, "Enable IPv6")
+}
+
+func TestSpokeExternalDeviceConnSchema_LocalSubnetField(t *testing.T) {
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test local_subnet field exists and has correct properties
+	localSubnetField, ok := schemaMap["local_subnet"]
+	assert.True(t, ok, "local_subnet field should exist in schema")
+	assert.Equal(t, schema.TypeString, localSubnetField.Type, "local_subnet should be TypeString")
+	assert.True(t, localSubnetField.Optional, "local_subnet should be optional")
+	assert.NotNil(t, localSubnetField.DiffSuppressFunc, "local_subnet should have DiffSuppressFunc")
+	assert.Contains(t, localSubnetField.Description, "Local CIDRs", "local_subnet description should mention Local CIDRs")
+}
+
+func TestSpokeExternalDeviceConnSchema_ProxyIdEnabledField(t *testing.T) {
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test proxy_id_enabled field exists and has correct properties
+	proxyIdEnabledField, ok := schemaMap["proxy_id_enabled"]
+	assert.True(t, ok, "proxy_id_enabled field should exist in schema")
+	assert.Equal(t, schema.TypeBool, proxyIdEnabledField.Type, "proxy_id_enabled should be TypeBool")
+	assert.True(t, proxyIdEnabledField.Optional, "proxy_id_enabled should be optional")
+	assert.Equal(t, false, proxyIdEnabledField.Default, "proxy_id_enabled should have default value false")
+	assert.Contains(t, proxyIdEnabledField.Description, "proxy ID", "proxy_id_enabled description should mention proxy ID")
+}
+
+func TestSpokeExternalDeviceConnSchema_LocalSubnetAndProxyIdComparison(t *testing.T) {
+	// Test that local_subnet and proxy_id_enabled follow similar patterns to remote_subnet
+	resource := resourceAviatrixSpokeExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	remoteSubnetField, ok := schemaMap["remote_subnet"]
+	assert.True(t, ok, "remote_subnet field should exist for reference")
+
+	localSubnetField, ok := schemaMap["local_subnet"]
+	assert.True(t, ok, "local_subnet field should exist")
+
+	// Both subnet fields should be TypeString and Optional
+	assert.Equal(t, remoteSubnetField.Type, localSubnetField.Type, "local_subnet should have same type as remote_subnet")
+	assert.Equal(t, remoteSubnetField.Optional, localSubnetField.Optional, "local_subnet should have same Optional as remote_subnet")
+
+	// local_subnet should have DiffSuppressFunc (for handling comma-separated CIDRs with spaces)
+	assert.NotNil(t, localSubnetField.DiffSuppressFunc, "local_subnet should have DiffSuppressFunc")
+
+	// Test proxy_id_enabled exists and is boolean
+	proxyIdEnabledField, ok := schemaMap["proxy_id_enabled"]
+	assert.True(t, ok, "proxy_id_enabled field should exist")
+	assert.Equal(t, schema.TypeBool, proxyIdEnabledField.Type, "proxy_id_enabled should be TypeBool")
+}
+
+func testAccSpokeExternalDeviceConnConfigProxyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_spoke_external_device_conn" "test_proxy_id" {
+	vpc_id            = aviatrix_spoke_gateway.test.vpc_id
+	connection_name   = "%s-proxy-id"
+	gw_name           = aviatrix_spoke_gateway.test.gw_name
+	connection_type   = "static"
+	remote_gateway_ip = "172.12.13.15"
+	remote_subnet     = "192.168.1.0/24,192.168.2.0/24"
+	local_subnet      = "10.0.0.0/16,10.1.0.0/16"
+	proxy_id_enabled  = true
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccSpokeExternalDeviceConnConfigProxyIdUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_spoke_external_device_conn" "test_proxy_id" {
+	vpc_id            = aviatrix_spoke_gateway.test.vpc_id
+	connection_name   = "%s-proxy-id"
+	gw_name           = aviatrix_spoke_gateway.test.gw_name
+	connection_type   = "static"
+	remote_gateway_ip = "172.12.13.15"
+	remote_subnet     = "192.168.1.0/24,192.168.2.0/24"
+	local_subnet      = "10.0.0.0/16,10.1.0.0/16,10.2.0.0/16"
+	proxy_id_enabled  = false
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
 }

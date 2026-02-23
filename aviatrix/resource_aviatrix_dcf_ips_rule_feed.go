@@ -5,9 +5,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDCFIpsRuleFeed() *schema.Resource {
@@ -56,11 +57,11 @@ func resourceAviatrixDCFIpsRuleFeed() *schema.Resource {
 // IPS Rule Feed CRUD operations
 
 func resourceAviatrixDCFIpsRuleFeedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	ruleFeed := &goaviatrix.IpsRuleFeed{
-		FeedName:    d.Get("feed_name").(string),
-		FileContent: d.Get("file_content").(string),
+		FeedName:    getString(d, "feed_name"),
+		FileContent: getString(d, "file_content"),
 	}
 
 	response, err := client.CreateIpsRuleFeed(ctx, ruleFeed)
@@ -73,7 +74,7 @@ func resourceAviatrixDCFIpsRuleFeedCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	ruleFeed, err := client.GetIpsRuleFeed(ctx, d.Id())
 	if err != nil {
@@ -83,11 +84,10 @@ func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceD
 		}
 		return diag.Errorf("failed to read IPS rule feed: %v", err)
 	}
-
-	d.Set("uuid", ruleFeed.UUID)
-	d.Set("feed_name", ruleFeed.FeedName)
-	d.Set("content_hash", ruleFeed.ContentHash)
-	d.Set("ips_rules", ruleFeed.IpsRules)
+	mustSet(d, "uuid", ruleFeed.UUID)
+	mustSet(d, "feed_name", ruleFeed.FeedName)
+	mustSet(d, "content_hash", ruleFeed.ContentHash)
+	mustSet(d, "ips_rules", ruleFeed.IpsRules)
 
 	return nil
 }
@@ -97,11 +97,11 @@ func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.Resourc
 		return resourceAviatrixDCFIpsRuleFeedRead(ctx, d, meta)
 	}
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	ruleFeed := &goaviatrix.IpsRuleFeed{
-		FeedName:    d.Get("feed_name").(string),
-		FileContent: d.Get("file_content").(string),
+		FeedName:    getString(d, "feed_name"),
+		FileContent: getString(d, "file_content"),
 	}
 
 	_, err := client.UpdateIpsRuleFeed(ctx, d.Id(), ruleFeed)
@@ -113,7 +113,7 @@ func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixDCFIpsRuleFeedDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteIpsRuleFeed(ctx, d.Id())
 	if err != nil {

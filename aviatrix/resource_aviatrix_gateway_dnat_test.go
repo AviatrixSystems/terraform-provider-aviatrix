@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
@@ -193,7 +195,7 @@ func testAccCheckGatewayDNatExists(n string, gateway *goaviatrix.Gateway) resour
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no 'aviatrix_gateway_dnat' ID is set")
 		}
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundGateway := &goaviatrix.Gateway{
 			GwName: rs.Primary.Attributes["gw_name"],
@@ -205,7 +207,7 @@ func testAccCheckGatewayDNatExists(n string, gateway *goaviatrix.Gateway) resour
 		}
 		gwDetail, err := client.GetGatewayDetail(foundGateway)
 		if err != nil {
-			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %s", foundGateway.GwName, err)
+			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %w", foundGateway.GwName, err)
 		}
 		if len(gwDetail.DnatPolicy) == 0 {
 			return fmt.Errorf("resource 'aviatrix_gateway_dnat' not found")
@@ -217,7 +219,7 @@ func testAccCheckGatewayDNatExists(n string, gateway *goaviatrix.Gateway) resour
 }
 
 func testAccCheckGatewayDNatDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_gateway_dnat" {
@@ -229,7 +231,7 @@ func testAccCheckGatewayDNatDestroy(s *terraform.State) error {
 
 		_, err := client.GetGateway(foundGateway)
 		if err != nil {
-			if err != goaviatrix.ErrNotFound {
+			if !errors.Is(err, goaviatrix.ErrNotFound) {
 				return err
 			}
 		} else {

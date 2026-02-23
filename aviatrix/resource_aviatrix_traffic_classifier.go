@@ -2,10 +2,12 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixTrafficClassifier() *schema.Resource {
@@ -116,33 +118,33 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 func marshalTrafficClassifierInput(d *schema.ResourceData) *goaviatrix.PolicyList {
 	var policyList goaviatrix.PolicyList
 
-	policies := d.Get("policies").([]interface{})
+	policies := getList(d, "policies")
 	for _, v0 := range policies {
-		v1 := v0.(map[string]interface{})
+		v1 := mustMap(v0)
 
 		if2 := goaviatrix.TCPolicy{
-			Name:          v1["name"].(string),
-			Protocol:      v1["protocol"].(string),
-			LinkHierarchy: v1["link_hierarchy_uuid"].(string),
-			SlaClass:      v1["sla_class_uuid"].(string),
-			Logging:       v1["enable_logging"].(bool),
-			RouteType:     v1["route_type"].(string),
+			Name:          mustString(v1["name"]),
+			Protocol:      mustString(v1["protocol"]),
+			LinkHierarchy: mustString(v1["link_hierarchy_uuid"]),
+			SlaClass:      mustString(v1["sla_class_uuid"]),
+			Logging:       mustBool(v1["enable_logging"]),
+			RouteType:     mustString(v1["route_type"]),
 		}
 
-		for _, ss := range v1["source_smart_group_uuids"].([]interface{}) {
-			if2.SrcSgs = append(if2.SrcSgs, ss.(string))
+		for _, ss := range mustSlice(v1["source_smart_group_uuids"]) {
+			if2.SrcSgs = append(if2.SrcSgs, mustString(ss))
 		}
 
-		for _, ds := range v1["destination_smart_group_uuids"].([]interface{}) {
-			if2.DstSgs = append(if2.DstSgs, ds.(string))
+		for _, ds := range mustSlice(v1["destination_smart_group_uuids"]) {
+			if2.DstSgs = append(if2.DstSgs, mustString(ds))
 		}
 
-		for _, v2 := range v1["port_ranges"].(*schema.Set).List() {
-			v3 := v2.(map[string]interface{})
+		for _, v2 := range mustSchemaSet(v1["port_ranges"]).List() {
+			v3 := mustMap(v2)
 
 			pr := goaviatrix.PortRange{
-				Lo: v3["low"].(int),
-				Hi: v3["high"].(int),
+				Lo: mustInt(v3["low"]),
+				Hi: mustInt(v3["high"]),
 			}
 
 			if2.PortRanges = append(if2.PortRanges, pr)
@@ -155,7 +157,7 @@ func marshalTrafficClassifierInput(d *schema.ResourceData) *goaviatrix.PolicyLis
 }
 
 func resourceAviatrixTrafficClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	policyList := marshalTrafficClassifierInput(d)
 
@@ -180,11 +182,11 @@ func resourceAviatrixTrafficClassifierReadIfRequired(ctx context.Context, d *sch
 }
 
 func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	tcResp, err := client.GetTrafficClassifier(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -230,7 +232,7 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceAviatrixTrafficClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteTrafficClassifier(ctx)
 	if err != nil {

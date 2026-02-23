@@ -2,10 +2,12 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixGlobalVpcExcludedInstance() *schema.Resource {
@@ -45,16 +47,16 @@ func resourceAviatrixGlobalVpcExcludedInstance() *schema.Resource {
 
 func marshalGlobalVpcExcludedInstanceInput(d *schema.ResourceData) *goaviatrix.GlobalVpcExcludedInstance {
 	globalVpcExcludedInstance := &goaviatrix.GlobalVpcExcludedInstance{
-		AccountName:  d.Get("account_name").(string),
-		InstanceName: d.Get("instance_name").(string),
-		Region:       d.Get("region").(string),
+		AccountName:  getString(d, "account_name"),
+		InstanceName: getString(d, "instance_name"),
+		Region:       getString(d, "region"),
 	}
 
 	return globalVpcExcludedInstance
 }
 
 func resourceAviatrixGlobalVpcExcludedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	globalVpcExcludedInstance := marshalGlobalVpcExcludedInstanceInput(d)
 
@@ -79,29 +81,28 @@ func resourceAviatrixGlobalVpcExcludedInstanceReadIfRequired(ctx context.Context
 }
 
 func resourceAviatrixGlobalVpcExcludedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	globalVpcExcludedInstance, err := client.GetGlobalVpcExcludedInstance(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read global vpc excluded instance: %s", err)
 	}
-
-	d.Set("account_name", globalVpcExcludedInstance.AccountName)
-	d.Set("instance_name", globalVpcExcludedInstance.InstanceName)
-	d.Set("region", globalVpcExcludedInstance.Region)
+	mustSet(d, "account_name", globalVpcExcludedInstance.AccountName)
+	mustSet(d, "instance_name", globalVpcExcludedInstance.InstanceName)
+	mustSet(d, "region", globalVpcExcludedInstance.Region)
 
 	return nil
 }
 
 func resourceAviatrixGlobalVpcExcludedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -119,7 +120,7 @@ func resourceAviatrixGlobalVpcExcludedInstanceUpdate(ctx context.Context, d *sch
 }
 
 func resourceAviatrixGlobalVpcExcludedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteGlobalVpcExcludedInstance(ctx, uuid)

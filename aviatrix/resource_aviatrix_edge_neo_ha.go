@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeNEOHa() *schema.Resource {
@@ -115,25 +117,25 @@ func resourceAviatrixEdgeNEOHa() *schema.Resource {
 
 func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	edgeNEOHa := &goaviatrix.EdgeNEOHa{
-		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		DeviceId:                 d.Get("device_id").(string),
+		PrimaryGwName:            getString(d, "primary_gw_name"),
+		DeviceId:                 getString(d, "device_id"),
 		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+		interface1 := mustMap(interface0)
 
 		interface2 := &goaviatrix.EdgeNEOInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			IfName:       mustString(interface1["name"]),
+			Type:         mustString(interface1["type"]),
+			PublicIp:     mustString(interface1["wan_public_ip"]),
+			Tag:          mustString(interface1["tag"]),
+			Dhcp:         mustBool(interface1["enable_dhcp"]),
+			IpAddr:       mustString(interface1["ip_address"]),
+			GatewayIp:    mustString(interface1["gateway_ip"]),
+			DnsPrimary:   mustString(interface1["dns_server_ip"]),
+			DnsSecondary: mustString(interface1["secondary_dns_server_ip"]),
 		}
 
 		edgeNEOHa.InterfaceList = append(edgeNEOHa.InterfaceList, interface2)
@@ -143,7 +145,7 @@ func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 }
 
 func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgeNEOHaInput(d)
 
@@ -157,33 +159,32 @@ func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if d.Get("primary_gw_name").(string) == "" {
+	if getString(d, "primary_gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
-		d.Set("primary_gw_name", parts[0])
+		mustSet(d, "primary_gw_name", parts[0])
 		d.SetId(id)
 	}
 
-	edgeNEOHaResp, err := client.GetEdgeNEOHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeNEOHaResp, err := client.GetEdgeNEOHa(ctx, getString(d, "primary_gw_name")+"-hagw")
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge NEO HA: %v", err)
 	}
-
-	d.Set("primary_gw_name", edgeNEOHaResp.PrimaryGwName)
-	d.Set("device_id", edgeNEOHaResp.DeviceId)
-	d.Set("account_name", edgeNEOHaResp.AccountName)
+	mustSet(d, "primary_gw_name", edgeNEOHaResp.PrimaryGwName)
+	mustSet(d, "device_id", edgeNEOHaResp.DeviceId)
+	mustSet(d, "account_name", edgeNEOHaResp.AccountName)
 
 	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -211,7 +212,7 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgeNEOHaInput(d)
 
@@ -236,9 +237,9 @@ func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAviatrixEdgeNEOHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
+	accountName := getString(d, "account_name")
 
 	err := client.DeleteEdgeNEO(ctx, accountName, d.Id())
 	if err != nil {

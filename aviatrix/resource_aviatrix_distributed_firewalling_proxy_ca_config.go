@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingProxyCaConfigRead,
 		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,11 +65,11 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 }
 
 func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	proxyCaConfig := &goaviatrix.ProxyCaConfig{
-		CaCert: d.Get("ca_cert").(string),
-		CaKey:  d.Get("ca_key").(string),
+		CaCert: getString(d, "ca_cert"),
+		CaKey:  getString(d, "ca_key"),
 	}
 
 	if err := client.SetNewCertificate(ctx, proxyCaConfig); err != nil {
@@ -79,7 +81,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Conte
 }
 
 func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -87,21 +89,21 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context
 
 	proxyCaConfig, err := client.GetCaCertificate(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read Distributed-firewalling proxy ca cert config: %s", err)
 	}
-	d.Set("ca_cert", proxyCaConfig.CaCert)
+	mustSet(d, "ca_cert", proxyCaConfig.CaCert)
 
 	proxyCaCertInstance, err := client.GetMetaCaCertificate(ctx)
 	if err == nil {
-		d.Set("common_name", proxyCaCertInstance.CommonName)
-		d.Set("expiration_time", proxyCaCertInstance.ExpirationDate)
-		d.Set("issuer_name", proxyCaCertInstance.Issuer)
-		d.Set("unique_serial", proxyCaCertInstance.SerialNumber)
-		d.Set("upload_info", proxyCaCertInstance.UploadInfo)
+		mustSet(d, "common_name", proxyCaCertInstance.CommonName)
+		mustSet(d, "expiration_time", proxyCaCertInstance.ExpirationDate)
+		mustSet(d, "issuer_name", proxyCaCertInstance.Issuer)
+		mustSet(d, "unique_serial", proxyCaCertInstance.SerialNumber)
+		mustSet(d, "upload_info", proxyCaCertInstance.UploadInfo)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -109,7 +111,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context
 }
 
 func resourceAviatrixDistributedFirewallingProxyCaConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteCaCertificate(ctx)
 	if err != nil {

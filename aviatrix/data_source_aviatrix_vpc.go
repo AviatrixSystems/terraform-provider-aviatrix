@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixVpc() *schema.Resource {
@@ -184,59 +186,58 @@ func dataSourceAviatrixVpc() *schema.Resource {
 }
 
 func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 
 	vC, err := client.GetVpc(vpc)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find VPC: %s", err)
+		return fmt.Errorf("couldn't find VPC: %w", err)
 	}
-
-	d.Set("cloud_type", vC.CloudType)
-	d.Set("account_name", vC.AccountName)
-	d.Set("region", vC.Region)
-	d.Set("name", vC.Name)
-	d.Set("cidr", vC.Cidr)
+	mustSet(d, "cloud_type", vC.CloudType)
+	mustSet(d, "account_name", vC.AccountName)
+	mustSet(d, "region", vC.Region)
+	mustSet(d, "name", vC.Name)
+	mustSet(d, "cidr", vC.Cidr)
 	if vC.SubnetSize != 0 {
-		d.Set("subnet_size", vC.SubnetSize)
+		mustSet(d, "subnet_size", vC.SubnetSize)
 	}
 	if vC.NumOfSubnetPairs != 0 {
-		d.Set("num_of_subnet_pairs", vC.NumOfSubnetPairs)
+		mustSet(d, "num_of_subnet_pairs", vC.NumOfSubnetPairs)
 	}
 	if vC.AviatrixTransitVpc == "yes" {
-		d.Set("aviatrix_transit_vpc", true)
+		mustSet(d, "aviatrix_transit_vpc", true)
 	} else {
-		d.Set("aviatrix_transit_vpc", false)
+		mustSet(d, "aviatrix_transit_vpc", false)
 	}
 
 	if vC.AviatrixFireNetVpc == "yes" {
-		d.Set("aviatrix_firenet_vpc", true)
+		mustSet(d, "aviatrix_firenet_vpc", true)
 	} else {
-		d.Set("aviatrix_firenet_vpc", false)
+		mustSet(d, "aviatrix_firenet_vpc", false)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
+		mustSet(d, "vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 	} else {
-		d.Set("vpc_id", vC.VpcID)
+		mustSet(d, "vpc_id", vC.VpcID)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		account := &goaviatrix.Account{
-			AccountName: d.Get("account_name").(string),
+			AccountName: getString(d, "account_name"),
 		}
 
 		acc, err := client.GetAccount(account)
 		if err != nil {
-			if err != goaviatrix.ErrNotFound {
-				return fmt.Errorf("aviatrix Account: %s", err)
+			if !errors.Is(err, goaviatrix.ErrNotFound) {
+				return fmt.Errorf("aviatrix Account: %w", err)
 			}
 		}
 
@@ -250,8 +251,8 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
-		d.Set("resource_group", resourceGroup)
-		d.Set("azure_vnet_resource_id", azureVnetResourceId)
+		mustSet(d, "resource_group", resourceGroup)
+		mustSet(d, "azure_vnet_resource_id", azureVnetResourceId)
 	}
 
 	var subnetList []map[string]string
@@ -304,7 +305,7 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("could not get vpc route table ids: %v", err)
+			return fmt.Errorf("could not get vpc route table ids: %w", err)
 		}
 
 		if err := d.Set("route_tables", rtbs); err != nil {
@@ -315,15 +316,15 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		availabilityDomains, err := client.ListOciVpcAvailabilityDomains(vC)
 		if err != nil {
-			return fmt.Errorf("could not get OCI availability domains: %v", err)
+			return fmt.Errorf("could not get OCI availability domains: %w", err)
 		}
-		d.Set("availability_domains", availabilityDomains)
+		mustSet(d, "availability_domains", availabilityDomains)
 
 		faultDomains, err := client.ListOciVpcFaultDomains(vC)
 		if err != nil {
-			return fmt.Errorf("could not get OCI fault domains: %v", err)
+			return fmt.Errorf("could not get OCI fault domains: %w", err)
 		}
-		d.Set("fault_domains", faultDomains)
+		mustSet(d, "fault_domains", faultDomains)
 	}
 
 	d.SetId(vC.Name)

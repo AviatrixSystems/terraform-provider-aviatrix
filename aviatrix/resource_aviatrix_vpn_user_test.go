@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixVPNUser_basic(t *testing.T) {
@@ -99,7 +101,7 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 			return fmt.Errorf("no VPN User ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundVPNUser := &goaviatrix.VPNUser{
 			UserEmail: rs.Primary.Attributes["user_email"],
@@ -122,7 +124,7 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 }
 
 func testAccCheckVPNUserDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_vpn_user" {
@@ -137,7 +139,7 @@ func testAccCheckVPNUserDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetVPNUser(foundVPNUser)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("VPN User still exists")
 		}
 	}

@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixCentralizedTransitFireNet() *schema.Resource {
@@ -39,15 +41,15 @@ func resourceAviatrixCentralizedTransitFireNet() *schema.Resource {
 
 func marshalCentralizedTransitFireNetInput(d *schema.ResourceData) *goaviatrix.CentralizedTransitFirenet {
 	centralizedTransitFirenet := &goaviatrix.CentralizedTransitFirenet{
-		PrimaryGwName:   d.Get("primary_firenet_gw_name").(string),
-		SecondaryGwName: d.Get("secondary_firenet_gw_name").(string),
+		PrimaryGwName:   getString(d, "primary_firenet_gw_name"),
+		SecondaryGwName: getString(d, "secondary_firenet_gw_name"),
 	}
 
 	return centralizedTransitFirenet
 }
 
 func resourceAviatrixCentralizedTransitFireNetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	centralizedTransitFirenet := marshalCentralizedTransitFireNetInput(d)
 
@@ -88,14 +90,14 @@ func resourceAviatrixCentralizedTransitFireNetReadIfRequired(ctx context.Context
 }
 
 func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("primary_firenet_gw_name").(string) == "" || d.Get("secondary_firenet_gw_name").(string) == "" {
+	if getString(d, "primary_firenet_gw_name") == "" || getString(d, "secondary_firenet_gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no primary or secondary gateway name received. Import Id is %s", id)
-		d.Set("primary_firenet_gw_name", strings.Split(id, "~")[0])
-		d.Set("secondary_firenet_gw_name", strings.Split(id, "~")[1])
+		mustSet(d, "primary_firenet_gw_name", strings.Split(id, "~")[0])
+		mustSet(d, "secondary_firenet_gw_name", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
@@ -103,7 +105,7 @@ func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schem
 
 	err := client.GetCentralizedTransitFireNet(ctx, centralizedTransitFirenet)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -115,7 +117,7 @@ func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schem
 }
 
 func resourceAviatrixCentralizedTransitFireNetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	centralizedFirenet := marshalCentralizedTransitFireNetInput(d)
 

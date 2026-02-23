@@ -5,9 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixDcfTrustbundle() *schema.Resource {
@@ -39,12 +40,10 @@ func dataSourceAviatrixDcfTrustbundle() *schema.Resource {
 }
 
 func dataSourceAviatrixDcfTrustbundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	name, ok := d.Get("display_name").(string)
-	if !ok {
-		return diag.Errorf("display_name must be of type string")
-	}
+	name := getString(d, "display_name")
+
 	if name == "" {
 		return diag.Errorf("display_name must be specified")
 	}
@@ -57,16 +56,15 @@ func dataSourceAviatrixDcfTrustbundleRead(ctx context.Context, d *schema.Resourc
 		}
 		return diag.Errorf("failed to read DCF Trust Bundle: %s", err)
 	}
-
-	d.Set("bundle_id", trustBundle.BundleID)
-	d.Set("display_name", trustBundle.DisplayName)
+	mustSet(d, "bundle_id", trustBundle.BundleID)
+	mustSet(d, "display_name", trustBundle.DisplayName)
 	if !trustBundle.CreatedAt.IsZero() {
-		d.Set("created_at", trustBundle.CreatedAt.Format("2006-01-02T15:04:05Z"))
+		mustSet(d, "created_at", trustBundle.CreatedAt.Format("2006-01-02T15:04:05Z"))
 	} else {
-		d.Set("created_at", "")
+		mustSet(d, "created_at", "")
 	}
 	bundleContent := strings.TrimSpace(strings.Join(trustBundle.BundleContent, "\n"))
-	d.Set("bundle_content", bundleContent)
+	mustSet(d, "bundle_content", bundleContent)
 	d.SetId(trustBundle.UUID)
 	return nil
 }

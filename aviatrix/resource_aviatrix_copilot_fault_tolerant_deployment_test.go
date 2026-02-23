@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixCopilotFaultTolerantDeployment_basic(t *testing.T) {
@@ -87,11 +89,11 @@ func testAccCheckCopilotFaultTolerantDeploymentExists(resourceName string) resou
 			return fmt.Errorf("no copilot id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetCopilotAssociationStatus(context.Background())
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("could not find copilot")
 			}
 			return err
@@ -102,7 +104,7 @@ func testAccCheckCopilotFaultTolerantDeploymentExists(resourceName string) resou
 }
 
 func testAccCheckCopilotFaultTolerantDeploymentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_copilot_fault_tolerant_deployment" {
@@ -110,7 +112,7 @@ func testAccCheckCopilotFaultTolerantDeploymentDestroy(s *terraform.State) error
 		}
 
 		_, err := client.GetCopilotAssociationStatus(context.Background())
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("copilot still exists")
 		}
 	}

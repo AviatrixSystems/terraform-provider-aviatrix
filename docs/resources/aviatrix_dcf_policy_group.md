@@ -1,3 +1,11 @@
+---
+subcategory: "Secured Networking"
+layout: "aviatrix"
+page_title: "Aviatrix: aviatrix_dcf_policy_group"
+description: |-
+  Creates and manages an Aviatrix Distributed-firewalling Policy Group
+---
+
 # aviatrix_dcf_policy_group
 
 The **aviatrix_dcf_policy_group** resource manages DCF policy group configuration in the Aviatrix Controller.

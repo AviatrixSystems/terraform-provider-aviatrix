@@ -3,8 +3,9 @@ package aviatrix
 import (
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixVPNCertDownload() *schema.Resource {
@@ -14,7 +15,7 @@ func resourceAviatrixVPNCertDownload() *schema.Resource {
 		Update: resourceAviatrixVPNCertDownloadCreate,
 		Delete: resourceAviatrixVPNCertDownloadDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -37,12 +38,12 @@ func resourceAviatrixVPNCertDownload() *schema.Resource {
 }
 
 func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	downloadEnabled := d.Get("download_enabled").(bool)
+	downloadEnabled := getBool(d, "download_enabled")
 	var endpoints []string
-	for _, endpoint := range d.Get("saml_endpoints").(*schema.Set).List() {
-		endpoints = append(endpoints, endpoint.(string))
+	for _, endpoint := range getSet(d, "saml_endpoints").List() {
+		endpoints = append(endpoints, mustString(endpoint))
 	}
 	if downloadEnabled {
 		var vpnCertDownload goaviatrix.VPNCertDownload
@@ -55,7 +56,7 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 
 		err := client.EnableVPNCertDownload(&vpnCertDownload)
 		if err != nil {
-			return fmt.Errorf("enabling VPN Certificate Download failed due to : %v", err)
+			return fmt.Errorf("enabling VPN Certificate Download failed due to : %w", err)
 		}
 	} else {
 		if len(endpoints) != 0 {
@@ -63,7 +64,7 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 		}
 		err := client.DisableVPNCertDownload()
 		if err != nil {
-			return fmt.Errorf("Disabling VPN Certificate Download failed due to : %v", err)
+			return fmt.Errorf("disabling VPN Certificate Download failed: %w", err)
 		}
 	}
 	d.SetId("vpn_cert_download")
@@ -71,23 +72,23 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	vpnCertDownloadStatus, err := client.GetVPNCertDownloadStatus()
 	if err != nil {
-		return fmt.Errorf("retrieving VPN Certificate Download status failed due to : %v", err)
+		return fmt.Errorf("retrieving VPN Certificate Download status failed due to : %w", err)
 	}
 	d.SetId("vpn_cert_download")
-	d.Set("download_enabled", vpnCertDownloadStatus.Results.Status)
-	d.Set("saml_endpoints", vpnCertDownloadStatus.Results.SAMLEndpointList)
+	mustSet(d, "download_enabled", vpnCertDownloadStatus.Results.Status)
+	mustSet(d, "saml_endpoints", vpnCertDownloadStatus.Results.SAMLEndpointList)
 	return nil
 }
 
 // for now, deleting gcp account will not delete the credential file
 func resourceAviatrixVPNCertDownloadDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	err := client.DisableVPNCertDownload()
 	if err != nil {
-		return fmt.Errorf("disabling VPN Certificate Download failed due to : %v", err)
+		return fmt.Errorf("disabling VPN Certificate Download failed due to : %w", err)
 	}
 	return nil
 }

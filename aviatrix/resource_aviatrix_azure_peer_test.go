@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preAzurePeerCheck(t *testing.T, msgCommon string) {
@@ -106,7 +108,7 @@ func tesAccCheckAzurePeerExists(n string, azurePeer *goaviatrix.AzurePeer) resou
 			return fmt.Errorf("no Azure peer ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundPeer := &goaviatrix.AzurePeer{
 			VNet1: rs.Primary.Attributes["vnet_name_resource_group1"],
@@ -130,7 +132,7 @@ func tesAccCheckAzurePeerExists(n string, azurePeer *goaviatrix.AzurePeer) resou
 }
 
 func testAccCheckAzurePeerDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_azure_peer" {
@@ -143,7 +145,7 @@ func testAccCheckAzurePeerDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetAzurePeer(foundPeer)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("azure peer still exists")
 		}
 	}

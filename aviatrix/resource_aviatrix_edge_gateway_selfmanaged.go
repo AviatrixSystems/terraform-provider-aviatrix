@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
@@ -360,32 +362,32 @@ func resourceAviatrixEdgeGatewaySelfmanaged() *schema.Resource {
 
 func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.EdgeSpoke, error) {
 	edgeSpoke := &goaviatrix.EdgeSpoke{
-		GwName:                             d.Get("gw_name").(string),
-		SiteId:                             d.Get("site_id").(string),
+		GwName:                             getString(d, "gw_name"),
+		SiteId:                             getString(d, "site_id"),
 		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
-		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DnsServerIp:                        d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
-		ZtpFileType:                        d.Get("ztp_file_type").(string),
-		ZtpFileDownloadPath:                d.Get("ztp_file_download_path").(string),
-		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
-		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
-		LocalAsNumber:                      d.Get("local_as_number").(string),
+		EnableManagementOverPrivateNetwork: getBool(d, "enable_management_over_private_network"),
+		DnsServerIp:                        getString(d, "dns_server_ip"),
+		SecondaryDnsServerIp:               getString(d, "secondary_dns_server_ip"),
+		ZtpFileType:                        getString(d, "ztp_file_type"),
+		ZtpFileDownloadPath:                getString(d, "ztp_file_download_path"),
+		EnableEdgeActiveStandby:            getBool(d, "enable_edge_active_standby"),
+		EnableEdgeActiveStandbyPreemptive:  getBool(d, "enable_edge_active_standby_preemptive"),
+		LocalAsNumber:                      getString(d, "local_as_number"),
 		PrependAsPath:                      getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		EnableLearnedCidrsApproval:         getBool(d, "enable_learned_cidrs_approval"),
 		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_neighbor_status_polling_time").(int),
-		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
-		Latitude:                           d.Get("latitude").(string),
-		Longitude:                          d.Get("longitude").(string),
-		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		TunnelEncryptionCipher:             d.Get("tunnel_encryption_cipher").(string),
-		TunnelForwardSecrecy:               d.Get("tunnel_forward_secrecy").(string),
+		EnablePreserveAsPath:               getBool(d, "enable_preserve_as_path"),
+		BgpPollingTime:                     getInt(d, "bgp_polling_time"),
+		BgpBfdPollingTime:                  getInt(d, "bgp_neighbor_status_polling_time"),
+		BgpHoldTime:                        getInt(d, "bgp_hold_time"),
+		EnableEdgeTransitiveRouting:        getBool(d, "enable_edge_transitive_routing"),
+		EnableJumboFrame:                   getBool(d, "enable_jumbo_frame"),
+		Latitude:                           getString(d, "latitude"),
+		Longitude:                          getString(d, "longitude"),
+		RxQueueSize:                        getString(d, "rx_queue_size"),
+		TunnelEncryptionCipher:             getString(d, "tunnel_encryption_cipher"),
+		TunnelForwardSecrecy:               getString(d, "tunnel_forward_secrecy"),
 	}
 
 	if err := populateInterfaces(d, edgeSpoke); err != nil {
@@ -400,7 +402,7 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
@@ -539,11 +541,8 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	}
 
 	if edgeSpoke.RxQueueSize != "" {
-		gatewayForGatewayFunctions.RxQueueSize = edgeSpoke.RxQueueSize
-		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
-		if err != nil {
-			return diag.Errorf("could not set rx queue size after Edge Gateway Selfmanaged creation: %v", err)
-		}
+		return diag.Errorf("'rx_queue_size' cannot be set during gateway creation. " +
+			"Please create the gateway first, then set 'rx_queue_size' in a subsequent 'terraform apply'")
 	}
 
 	if edgeSpoke.EnableEdgeActiveStandby || edgeSpoke.EnableEdgeActiveStandbyPreemptive {
@@ -571,50 +570,49 @@ func resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx context.Context, d
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("gw_name").(string) == "" {
+	if getString(d, "gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
-	edgeSpoke, err := client.GetEdgeSpoke(ctx, d.Get("gw_name").(string))
+	edgeSpoke, err := client.GetEdgeSpoke(ctx, getString(d, "gw_name"))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Gateway Selfmanaged: %v", err)
 	}
-
-	d.Set("gw_name", edgeSpoke.GwName)
-	d.Set("site_id", edgeSpoke.SiteId)
-	d.Set("enable_management_over_private_network", edgeSpoke.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeSpoke.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeSpoke.SecondaryDnsServerIp)
-	d.Set("local_as_number", edgeSpoke.LocalAsNumber)
-	d.Set("prepend_as_path", edgeSpoke.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
-	d.Set("tunnel_encryption_cipher", edgeSpoke.TunnelEncryptionCipher)
-	d.Set("tunnel_forward_secrecy", edgeSpoke.TunnelForwardSecrecy)
+	mustSet(d, "gw_name", edgeSpoke.GwName)
+	mustSet(d, "site_id", edgeSpoke.SiteId)
+	mustSet(d, "enable_management_over_private_network", edgeSpoke.EnableManagementOverPrivateNetwork)
+	mustSet(d, "dns_server_ip", edgeSpoke.DnsServerIp)
+	mustSet(d, "secondary_dns_server_ip", edgeSpoke.SecondaryDnsServerIp)
+	mustSet(d, "local_as_number", edgeSpoke.LocalAsNumber)
+	mustSet(d, "prepend_as_path", edgeSpoke.PrependAsPath)
+	mustSet(d, "enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
+	mustSet(d, "enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
+	mustSet(d, "enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
+	mustSet(d, "tunnel_encryption_cipher", edgeSpoke.TunnelEncryptionCipher)
+	mustSet(d, "tunnel_forward_secrecy", edgeSpoke.TunnelForwardSecrecy)
 
 	if edgeSpoke.ZtpFileType == "iso" || edgeSpoke.ZtpFileType == "cloud-init" {
-		d.Set("ztp_file_type", edgeSpoke.ZtpFileType)
+		mustSet(d, "ztp_file_type", edgeSpoke.ZtpFileType)
 	}
 
 	if edgeSpoke.ZtpFileType == "cloud_init" {
-		d.Set("ztp_file_type", "cloud-init")
+		mustSet(d, "ztp_file_type", "cloud-init")
 	}
 
 	if edgeSpoke.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
 	}
 
 	if len(edgeSpoke.AdvertisedCidrList) > 0 {
@@ -632,33 +630,31 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 			return diag.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
-		d.Set("approved_learned_cidrs", nil)
+		mustSet(d, "approved_learned_cidrs", nil)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeSpoke.SpokeBgpManualAdvertisedCidrs)) != 0 ||
 		len(goaviatrix.Difference(edgeSpoke.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeSpoke.SpokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", edgeSpoke.SpokeBgpManualAdvertisedCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
-
-	d.Set("enable_preserve_as_path", edgeSpoke.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeSpoke.BgpPollingTime)
-	d.Set("bgp_neighbor_status_polling_time", edgeSpoke.BgpBfdPollingTime)
-	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
+	mustSet(d, "enable_preserve_as_path", edgeSpoke.EnablePreserveAsPath)
+	mustSet(d, "bgp_polling_time", edgeSpoke.BgpPollingTime)
+	mustSet(d, "bgp_neighbor_status_polling_time", edgeSpoke.BgpBfdPollingTime)
+	mustSet(d, "bgp_hold_time", edgeSpoke.BgpHoldTime)
+	mustSet(d, "enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
+	mustSet(d, "enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
 	if edgeSpoke.Latitude != 0 || edgeSpoke.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeSpoke.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeSpoke.Longitude))
+		mustSet(d, "latitude", fmt.Sprintf("%.6f", edgeSpoke.Latitude))
+		mustSet(d, "longitude", fmt.Sprintf("%.6f", edgeSpoke.Longitude))
 	} else {
-		d.Set("latitude", "")
-		d.Set("longitude", "")
+		mustSet(d, "latitude", "")
+		mustSet(d, "longitude", "")
 	}
-
-	d.Set("rx_queue_size", edgeSpoke.RxQueueSize)
-	d.Set("state", edgeSpoke.State)
+	mustSet(d, "rx_queue_size", edgeSpoke.RxQueueSize)
+	mustSet(d, "state", edgeSpoke.State)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
@@ -717,7 +713,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeSpoke, err := marshalEdgeGatewaySelfmanagedInput(d)
@@ -912,14 +908,9 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("tunnel_encryption_cipher") || d.HasChange("tunnel_forward_secrecy") {
-		encPolicy, ok := d.Get("tunnel_encryption_cipher").(string)
-		if !ok {
-			return diag.Errorf("tunnel_encryption_cipher must be a string")
-		}
-		pfsPolicy, ok := d.Get("tunnel_forward_secrecy").(string)
-		if !ok {
-			return diag.Errorf("tunnel_forward_secrecy must be a string")
-		}
+		encPolicy := getString(d, "tunnel_encryption_cipher")
+
+		pfsPolicy := getString(d, "tunnel_forward_secrecy")
 
 		err := client.SetGatewayPhase2Policy(edgeSpoke.GwName, encPolicy, pfsPolicy)
 		if err != nil {
@@ -933,13 +924,13 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
-	siteId := d.Get("site_id").(string)
+	gwName := getString(d, "gw_name")
+	siteId := getString(d, "site_id")
 
-	ztpFileDownloadPath := d.Get("ztp_file_download_path").(string)
-	ztpFileType := d.Get("ztp_file_type").(string)
+	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
+	ztpFileType := getString(d, "ztp_file_type")
 
 	err := client.DeleteEdgeSpoke(ctx, gwName)
 	if err != nil {

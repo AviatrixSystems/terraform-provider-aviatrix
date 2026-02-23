@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixCentralizedTransitFireNet_basic(t *testing.T) {
@@ -124,7 +126,7 @@ func testAccCheckCentralizedTransitFireNetExists(resourceName string) resource.T
 			return fmt.Errorf("no centralized transit firenet id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		centralizedTransitFirenet := &goaviatrix.CentralizedTransitFirenet{
 			PrimaryGwName:   rs.Primary.Attributes["primary_firenet_gw_name"],
@@ -133,10 +135,10 @@ func testAccCheckCentralizedTransitFireNetExists(resourceName string) resource.T
 
 		err := client.GetCentralizedTransitFireNet(context.Background(), centralizedTransitFirenet)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("centralized transit firenet does not exist")
 			}
-			return fmt.Errorf("could not get centralized transit firenet due to: %v", err)
+			return fmt.Errorf("could not get centralized transit firenet due to: %w", err)
 		}
 
 		if rs.Primary.ID != centralizedTransitFirenet.PrimaryGwName+"~"+centralizedTransitFirenet.SecondaryGwName {
@@ -148,7 +150,7 @@ func testAccCheckCentralizedTransitFireNetExists(resourceName string) resource.T
 }
 
 func testAccCheckCentralizedTransitFireNetDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_centralized_transit_firenet" {
@@ -161,7 +163,7 @@ func testAccCheckCentralizedTransitFireNetDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetCentralizedTransitFireNet(context.Background(), centralizedTransitFirenet)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("centralized transit firenet still exists")
 		}
 	}

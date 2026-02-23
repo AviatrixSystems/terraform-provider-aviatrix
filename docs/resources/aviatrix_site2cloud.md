@@ -144,6 +144,7 @@ The following arguments are supported:
 
 * `phase1_local_identifier` - (Optional) Phase 1 local identifier. By default, gateway’s public IP is configured as the Local Identifier. Available as of provider version R3.1.0+.
 * `phase1_remote_identifier` - (Optional) List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "abcd"] when HA is enabled. Available as of provider version R2.19+.
+* `proxy_id_enabled` - (Optional) Enable/disable proxy ID for the S2C connection. Defailt value: false. Valid values: true or false. When enabled, local and remote CIDRs are used to configure precise traffic-selectors for static route based S2C connections.
 
 ## Attribute Reference
 

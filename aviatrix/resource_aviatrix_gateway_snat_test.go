@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
@@ -197,7 +199,7 @@ func testAccCheckGatewaySNatExists(n string, gateway *goaviatrix.Gateway) resour
 			return fmt.Errorf("no aviatrix_gateway_snat ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundGateway := &goaviatrix.Gateway{
 			GwName: rs.Primary.Attributes["gw_name"],
@@ -217,7 +219,7 @@ func testAccCheckGatewaySNatExists(n string, gateway *goaviatrix.Gateway) resour
 }
 
 func testAccCheckGatewaySNatDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_gateway_snat" {
@@ -228,7 +230,7 @@ func testAccCheckGatewaySNatDestroy(s *terraform.State) error {
 		}
 
 		gw, err := client.GetGateway(foundGateway)
-		if err != nil && err != goaviatrix.ErrNotFound {
+		if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
 			return err
 		} else if err == nil && gw.SnatMode == "customized" {
 			return fmt.Errorf("resource 'aviatrix_gateway_snat' still exists")

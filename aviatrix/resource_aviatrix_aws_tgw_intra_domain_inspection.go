@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwIntraDomainInspection() *schema.Resource {
@@ -44,14 +46,14 @@ func resourceAviatrixAwsTgwIntraDomainInspection() *schema.Resource {
 
 func marshalAwsTgwIntraDomainInspectionInput(d *schema.ResourceData) *goaviatrix.IntraDomainInspection {
 	return &goaviatrix.IntraDomainInspection{
-		TgwName:            d.Get("tgw_name").(string),
-		RouteDomainName:    d.Get("route_domain_name").(string),
-		FirewallDomainName: d.Get("firewall_domain_name").(string),
+		TgwName:            getString(d, "tgw_name"),
+		RouteDomainName:    getString(d, "route_domain_name"),
+		FirewallDomainName: getString(d, "firewall_domain_name"),
 	}
 }
 
 func resourceAviatrixAwsTgwIntraDomainInspectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	intraDomainInspection := marshalAwsTgwIntraDomainInspectionInput(d)
 
@@ -65,7 +67,7 @@ func resourceAviatrixAwsTgwIntraDomainInspectionCreate(ctx context.Context, d *s
 }
 
 func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Get("tgw_name") == "" {
 		id := d.Id()
@@ -82,9 +84,8 @@ func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *sch
 		if tgwName == "" || routeDomainName == "" {
 			return diag.Errorf("tgw_name or route_domain_name cannot be empty")
 		}
-
-		d.Set("tgw_name", tgwName)
-		d.Set("route_domain_name", routeDomainName)
+		mustSet(d, "tgw_name", tgwName)
+		mustSet(d, "route_domain_name", routeDomainName)
 
 		d.SetId(tgwName + "~" + routeDomainName)
 	}
@@ -92,22 +93,21 @@ func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *sch
 	intraDomainInspection := marshalAwsTgwIntraDomainInspectionInput(d)
 
 	err := client.GetIntraDomainInspectionStatus(ctx, intraDomainInspection)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not get intra domain inspection status: %v", err)
 	}
-
-	d.Set("firewall_domain_name", intraDomainInspection.FirewallDomainName)
+	mustSet(d, "firewall_domain_name", intraDomainInspection.FirewallDomainName)
 
 	d.SetId(intraDomainInspection.TgwName + "~" + intraDomainInspection.RouteDomainName)
 	return nil
 }
 
 func resourceAviatrixAwsTgwIntraDomainInspectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	intraDomainInspection := marshalAwsTgwIntraDomainInspectionInput(d)
 

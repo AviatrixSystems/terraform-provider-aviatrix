@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDCFTLSProfile() *schema.Resource {
@@ -55,25 +56,19 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, error) {
 	tlsProfile := &goaviatrix.TLSProfile{}
 
-	displayName, ok := d.Get("display_name").(string)
-	if !ok {
-		return nil, fmt.Errorf("display_name must be of type string")
-	}
+	displayName := getString(d, "display_name")
+
 	tlsProfile.DisplayName = displayName
 
-	certificateValidation, ok := d.Get("certificate_validation").(string)
-	if !ok {
-		return nil, fmt.Errorf("certificate_validation must be of type string")
-	}
+	certificateValidation := getString(d, "certificate_validation")
+
 	tlsProfile.CertificateValidation = certificateValidation
 
-	verifySni, ok := d.Get("verify_sni").(bool)
-	if !ok {
-		return nil, fmt.Errorf("verify_sni must be of type bool")
-	}
+	verifySni := getBool(d, "verify_sni")
+
 	tlsProfile.VerifySni = verifySni
 
-	if caBundleID, ok := d.Get("ca_bundle_id").(string); ok && caBundleID != "" {
+	if caBundleID := getString(d, "ca_bundle_id"); caBundleID != "" {
 		if _, err := uuid.Parse(caBundleID); err != nil {
 			return nil, fmt.Errorf("ca_bundle_id must be a valid UUID: %w", err)
 		}
@@ -84,10 +79,7 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 }
 
 func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	tlsProfile, err := marshalDCFTLSProfileInput(d)
 	if err != nil {
@@ -99,15 +91,12 @@ func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("failed to create DCF TLS Profile: %s", err)
 	}
 	d.SetId(uuid)
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 	return nil
 }
 
 func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 
@@ -146,10 +135,7 @@ func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	tlsProfile, err := marshalDCFTLSProfileInput(d)
 	if err != nil {
@@ -166,10 +152,7 @@ func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixDCFTLSProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 

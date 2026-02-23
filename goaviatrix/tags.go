@@ -30,19 +30,18 @@ type IgnoreTagsConfig struct {
 
 type KeyValueTags map[string]string
 
-func NewIgnoreTags(i interface{}) KeyValueTags {
-	switch value := i.(type) {
-	case []interface{}:
-		kvtm := make(KeyValueTags, len(value))
+func NewIgnoreTags(i any) KeyValueTags {
+	kvtm := make(KeyValueTags)
 
+	if value, ok := i.([]interface{}); ok {
 		for _, v := range value {
-			kvtm[v.(string)] = ""
+			if s, ok := v.(string); ok {
+				kvtm[s] = ""
+			}
 		}
-
-		return kvtm
-	default:
-		return make(KeyValueTags)
 	}
+
+	return kvtm
 }
 
 func (tags KeyValueTags) IgnoreConfig(config *IgnoreTagsConfig) KeyValueTags {

@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSumologicForwarder() *schema.Resource {
@@ -14,7 +16,7 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 		Read:   resourceAviatrixSumologicForwarderRead,
 		Delete: resourceAviatrixSumologicForwarderDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -66,10 +68,10 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 }
 
 func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	_, err := client.GetSumologicForwarderStatus()
-	if err != goaviatrix.ErrNotFound {
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
 		return fmt.Errorf("the sumologic_forwarder is already enabled, please import to manage with Terraform")
 	} else {
 		return fmt.Errorf("the support for sumologic forwarder is deprecated")
@@ -77,38 +79,37 @@ func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != "sumologic_forwarder" {
 		return fmt.Errorf("invalid ID, expected ID \"sumologic_forwarder\", instead got %s", d.Id())
 	}
 
 	sumologicForwarderStatus, err := client.GetSumologicForwarderStatus()
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get sumologic forwarder status: %v", err)
+		return fmt.Errorf("could not get sumologic forwarder status: %w", err)
 	}
-
-	d.Set("access_id", sumologicForwarderStatus.AccessID)
-	d.Set("source_category", sumologicForwarderStatus.SourceCategory)
-	d.Set("custom_configuration", sumologicForwarderStatus.CustomConfig)
+	mustSet(d, "access_id", sumologicForwarderStatus.AccessID)
+	mustSet(d, "source_category", sumologicForwarderStatus.SourceCategory)
+	mustSet(d, "custom_configuration", sumologicForwarderStatus.CustomConfig)
 	if len(sumologicForwarderStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", sumologicForwarderStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", sumologicForwarderStatus.ExcludedGateways)
 	}
-	d.Set("status", sumologicForwarderStatus.Status)
+	mustSet(d, "status", sumologicForwarderStatus.Status)
 
 	d.SetId("sumologic_forwarder")
 	return nil
 }
 
 func resourceAviatrixSumologicForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := client.DisableSumologicForwarder(); err != nil {
-		return fmt.Errorf("could not disable sumologic forwarder: %v", err)
+		return fmt.Errorf("could not disable sumologic forwarder: %w", err)
 	}
 
 	return nil

@@ -22,7 +22,7 @@ func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
 	}
 	if err := isVersionSupported(currentVersion, supportedVersions); err != nil {
 		return fmt.Errorf(
-			"current Terraform version does not support controller version: %s, Please see %s for a list of compatible controller versions.",
+			"current Terraform version does not support controller version: %s, Please see %s for a list of compatible controller versions",
 			currentVersion, helpURL,
 		)
 	}

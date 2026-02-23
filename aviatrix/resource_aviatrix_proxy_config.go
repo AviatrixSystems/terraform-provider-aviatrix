@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixProxyConfig() *schema.Resource {
@@ -14,7 +16,7 @@ func resourceAviatrixProxyConfig() *schema.Resource {
 		Read:   resourceAviatrixProxyConfigRead,
 		Delete: resourceAviatrixProxyConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,11 +43,11 @@ func resourceAviatrixProxyConfig() *schema.Resource {
 }
 
 func resourceAviatrixProxyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	proxy := marshalProxyConfigInput(d)
 	if err := client.CreateProxyConfig(proxy); err != nil {
-		return fmt.Errorf("could not config proxy: %v", err)
+		return fmt.Errorf("could not config proxy: %w", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -53,7 +55,7 @@ func resourceAviatrixProxyConfigCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -61,17 +63,16 @@ func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) e
 
 	proxy, err := client.GetProxyConfig()
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't get proxy configuration: %s", err)
+		return fmt.Errorf("couldn't get proxy configuration: %w", err)
 	}
-
-	d.Set("http_proxy", proxy.HttpProxy)
-	d.Set("https_proxy", proxy.HttpsProxy)
+	mustSet(d, "http_proxy", proxy.HttpProxy)
+	mustSet(d, "https_proxy", proxy.HttpsProxy)
 	if proxy.ProxyCaCertificate != "" {
-		d.Set("proxy_ca_certificate", proxy.ProxyCaCertificate)
+		mustSet(d, "proxy_ca_certificate", proxy.ProxyCaCertificate)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -79,7 +80,7 @@ func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixProxyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteProxyConfig()
 	if err != nil {
@@ -91,8 +92,8 @@ func resourceAviatrixProxyConfigDelete(d *schema.ResourceData, meta interface{})
 
 func marshalProxyConfigInput(d *schema.ResourceData) *goaviatrix.ProxyConfig {
 	return &goaviatrix.ProxyConfig{
-		HttpProxy:          d.Get("http_proxy").(string),
-		HttpsProxy:         d.Get("https_proxy").(string),
-		ProxyCaCertificate: d.Get("proxy_ca_certificate").(string),
+		HttpProxy:          getString(d, "http_proxy"),
+		HttpsProxy:         getString(d, "https_proxy"),
+		ProxyCaCertificate: getString(d, "proxy_ca_certificate"),
 	}
 }

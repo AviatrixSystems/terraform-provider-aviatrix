@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 const defaultAwsGuardDutyScanningInterval = 60
@@ -22,7 +23,7 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 		Update: resourceAviatrixControllerConfigUpdate,
 		Delete: resourceAviatrixControllerConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -185,15 +186,15 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	flag := false
-	defer resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	log.Printf("[INFO] Configuring Aviatrix controller : %#v", d)
 
-	fqdnExceptionRule := d.Get("fqdn_exception_rule").(bool)
+	fqdnExceptionRule := getBool(d, "fqdn_exception_rule")
 	if fqdnExceptionRule {
 		curStatus, _ := client.GetExceptionRuleStatus()
 		if curStatus {
@@ -210,17 +211,17 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("failed to configure controller exception rule: %s", err)
+		return fmt.Errorf("failed to configure controller exception rule: %w", err)
 	}
 
-	backupConfiguration := d.Get("backup_configuration").(bool)
-	backupCloudType := d.Get("backup_cloud_type").(int)
-	backupAccountName := d.Get("backup_account_name").(string)
-	backupBucketName := d.Get("backup_bucket_name").(string)
-	backupStorageName := d.Get("backup_storage_name").(string)
-	backupContainerName := d.Get("backup_container_name").(string)
-	backupRegion := d.Get("backup_region").(string)
-	multipleBackups := d.Get("multiple_backups").(bool)
+	backupConfiguration := getBool(d, "backup_configuration")
+	backupCloudType := getInt(d, "backup_cloud_type")
+	backupAccountName := getString(d, "backup_account_name")
+	backupBucketName := getString(d, "backup_bucket_name")
+	backupStorageName := getString(d, "backup_storage_name")
+	backupContainerName := getString(d, "backup_container_name")
+	backupRegion := getString(d, "backup_region")
+	multipleBackups := getBool(d, "multiple_backups")
 
 	if backupConfiguration {
 		err = validateBackupConfig(d)
@@ -242,7 +243,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 
 		err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 		if err != nil {
-			return fmt.Errorf("failed to enable backup configuration: %s", err)
+			return fmt.Errorf("failed to enable backup configuration: %w", err)
 		}
 	} else {
 		if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
@@ -253,38 +254,38 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+	enableVpcDnsServer := getBool(d, "enable_vpc_dns_server")
 	err = client.SetControllerVpcDnsServer(enableVpcDnsServer)
 	if err != nil {
-		return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+		return fmt.Errorf("could not toggle controller vpc dns server: %w", err)
 	}
 
 	if _, useFilePath := d.GetOk("ca_certificate_file_path"); useFilePath {
 		certConfig := &goaviatrix.HTTPSCertConfig{
-			CACertificateFilePath:     d.Get("ca_certificate_file_path").(string),
-			ServerCertificateFilePath: d.Get("server_public_certificate_file_path").(string),
-			ServerPrivateKeyFilePath:  d.Get("server_private_key_file_path").(string),
+			CACertificateFilePath:     getString(d, "ca_certificate_file_path"),
+			ServerCertificateFilePath: getString(d, "server_public_certificate_file_path"),
+			ServerPrivateKeyFilePath:  getString(d, "server_private_key_file_path"),
 		}
 		err = client.ImportNewHTTPSCerts(certConfig)
 		if err != nil {
-			return fmt.Errorf("could not import HTTPS certs: %v", err)
+			return fmt.Errorf("could not import HTTPS certs: %w", err)
 		}
 	} else if _, useFileContent := d.GetOk("ca_certificate_file"); useFileContent {
 		certConfig := &goaviatrix.HTTPSCertConfig{
-			CACertificateFile:     d.Get("ca_certificate_file").(string),
-			ServerCertificateFile: d.Get("server_public_certificate_file").(string),
-			ServerPrivateKeyFile:  d.Get("server_private_key_file").(string),
+			CACertificateFile:     getString(d, "ca_certificate_file"),
+			ServerCertificateFile: getString(d, "server_public_certificate_file"),
+			ServerPrivateKeyFile:  getString(d, "server_private_key_file"),
 		}
 		err = client.ImportNewHTTPSCerts(certConfig)
 		if err != nil {
-			return fmt.Errorf("could not import HTTPS certs: %v", err)
+			return fmt.Errorf("could not import HTTPS certs: %w", err)
 		}
 	}
 
-	scanningInterval := d.Get("aws_guard_duty_scanning_interval")
-	err = client.UpdateAwsGuardDutyPollInterval(scanningInterval.(int))
+	scanningInterval := getInt(d, "aws_guard_duty_scanning_interval")
+	err = client.UpdateAwsGuardDutyPollInterval(scanningInterval)
 	if err != nil {
-		return fmt.Errorf("could not update scanning interval: %v", err)
+		return fmt.Errorf("could not update scanning interval: %w", err)
 	}
 
 	return resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag)
@@ -299,18 +300,18 @@ func resourceAviatrixControllerConfigReadIfRequired(d *schema.ResourceData, meta
 }
 
 func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	log.Printf("[INFO] Getting controller %s configuration", d.Id())
 
 	res, err := client.GetExceptionRuleStatus()
 	if err != nil {
-		return fmt.Errorf("could not read Aviatrix Controller Exception Rule Status: %s", err)
+		return fmt.Errorf("could not read Aviatrix Controller Exception Rule Status: %w", err)
 	}
 	if res {
-		d.Set("fqdn_exception_rule", true)
+		mustSet(d, "fqdn_exception_rule", true)
 	} else {
-		d.Set("fqdn_exception_rule", false)
+		mustSet(d, "fqdn_exception_rule", false)
 	}
 
 	var versionInfo *goaviatrix.VersionInfo
@@ -320,7 +321,7 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		versionInfo, err = client.GetVersionInfo()
 		if err != nil {
 			if try == maxTries {
-				return fmt.Errorf("unable to read Controller version information: %s", err)
+				return fmt.Errorf("unable to read Controller version information: %w", err)
 			}
 			time.Sleep(backoff)
 			// Double the backoff time after each failed try
@@ -329,71 +330,69 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		}
 		break
 	}
-
-	d.Set("version", versionInfo.Current)
-	d.Set("previous_version", versionInfo.Previous)
+	mustSet(d, "version", versionInfo.Current)
+	mustSet(d, "previous_version", versionInfo.Previous)
 
 	cloudnBackupConfig, err := client.GetCloudnBackupConfig()
 	if err != nil {
-		return fmt.Errorf("unable to read current controller cloudn backup config: %s", err)
+		return fmt.Errorf("unable to read current controller cloudn backup config: %w", err)
 	}
 	if cloudnBackupConfig != nil && cloudnBackupConfig.BackupConfiguration == "yes" {
-		d.Set("backup_configuration", true)
-		d.Set("backup_cloud_type", cloudnBackupConfig.BackupCloudType)
-		d.Set("backup_account_name", cloudnBackupConfig.BackupAccountName)
-		d.Set("backup_bucket_name", cloudnBackupConfig.BackupBucketName)
-		d.Set("backup_storage_name", cloudnBackupConfig.BackupStorageName)
-		d.Set("backup_container_name", cloudnBackupConfig.BackupContainerName)
-		d.Set("backup_region", cloudnBackupConfig.BackupRegion)
+		mustSet(d, "backup_configuration", true)
+		mustSet(d, "backup_cloud_type", cloudnBackupConfig.BackupCloudType)
+		mustSet(d, "backup_account_name", cloudnBackupConfig.BackupAccountName)
+		mustSet(d, "backup_bucket_name", cloudnBackupConfig.BackupBucketName)
+		mustSet(d, "backup_storage_name", cloudnBackupConfig.BackupStorageName)
+		mustSet(d, "backup_container_name", cloudnBackupConfig.BackupContainerName)
+		mustSet(d, "backup_region", cloudnBackupConfig.BackupRegion)
 		if cloudnBackupConfig.MultipleBackups == "yes" {
-			d.Set("multiple_backups", true)
+			mustSet(d, "multiple_backups", true)
 		} else {
-			d.Set("multiple_backups", false)
+			mustSet(d, "multiple_backups", false)
 		}
 	} else {
-		d.Set("backup_cloud_type", 0)
-		d.Set("backup_configuration", false)
-		d.Set("multiple_backups", false)
+		mustSet(d, "backup_cloud_type", 0)
+		mustSet(d, "backup_configuration", false)
+		mustSet(d, "multiple_backups", false)
 	}
 
 	vpcDnsServerEnabled, err := client.GetControllerVpcDnsServerStatus()
 	if err != nil {
-		return fmt.Errorf("could not get controller vpc dns server status: %v", err)
+		return fmt.Errorf("could not get controller vpc dns server status: %w", err)
 	}
-
-	d.Set("enable_vpc_dns_server", vpcDnsServerEnabled)
+	mustSet(d, "enable_vpc_dns_server", vpcDnsServerEnabled)
 
 	httpsCertsImported, err := client.GetHTTPSCertsStatus()
 	if err != nil {
-		return fmt.Errorf("could not get HTTPS Certificate status: %v", err)
+		return fmt.Errorf("could not get HTTPS Certificate status: %w", err)
 	}
 	if !httpsCertsImported {
-		d.Set("ca_certificate_file_path", "")
-		d.Set("server_public_certificate_file_path", "")
-		d.Set("server_private_key_file_path", "")
-		d.Set("ca_certificate_file", "")
-		d.Set("server_public_certificate_file", "")
-		d.Set("server_private_key_file", "")
+		mustSet(d, "ca_certificate_file_path", "")
+		mustSet(d, "server_public_certificate_file_path", "")
+		mustSet(d, "server_private_key_file_path", "")
+		mustSet(d, "ca_certificate_file", "")
+		mustSet(d, "server_public_certificate_file", "")
+		mustSet(d, "server_private_key_file", "")
 	}
 
 	guardDuty, err := client.GetAwsGuardDuty()
 	if err != nil {
-		return fmt.Errorf("could not get aws guard duty scanning interval: %v", err)
+		return fmt.Errorf("could not get aws guard duty scanning interval: %w", err)
 	}
-	d.Set("aws_guard_duty_scanning_interval", guardDuty.ScanningInterval)
+	mustSet(d, "aws_guard_duty_scanning_interval", guardDuty.ScanningInterval)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Controller configuration: %#v", d)
 	d.Partial(true)
 
 	if d.HasChange("fqdn_exception_rule") {
-		fqdnExceptionRule := d.Get("fqdn_exception_rule").(bool)
+		fqdnExceptionRule := getBool(d, "fqdn_exception_rule")
 		if fqdnExceptionRule {
 			err := client.EnableExceptionRule()
 			if err != nil {
@@ -409,14 +408,14 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	backupConfiguration := d.Get("backup_configuration").(bool)
-	backupCloudType := d.Get("backup_cloud_type").(int)
-	backupAccountName := d.Get("backup_account_name").(string)
-	backupBucketName := d.Get("backup_bucket_name").(string)
-	backupStorageName := d.Get("backup_storage_name").(string)
-	backupContainerName := d.Get("backup_container_name").(string)
-	backupRegion := d.Get("backup_region").(string)
-	multipleBackups := d.Get("multiple_backups").(bool)
+	backupConfiguration := getBool(d, "backup_configuration")
+	backupCloudType := getInt(d, "backup_cloud_type")
+	backupAccountName := getString(d, "backup_account_name")
+	backupBucketName := getString(d, "backup_bucket_name")
+	backupStorageName := getString(d, "backup_storage_name")
+	backupContainerName := getString(d, "backup_container_name")
+	backupRegion := getString(d, "backup_region")
+	multipleBackups := getBool(d, "multiple_backups")
 
 	if d.HasChange("backup_configuration") {
 		if backupConfiguration {
@@ -439,7 +438,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 			err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 			if err != nil {
-				return fmt.Errorf("failed to enable backup configuration: %s", err)
+				return fmt.Errorf("failed to enable backup configuration: %w", err)
 			}
 		} else {
 			if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
@@ -451,7 +450,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 			err := client.DisableCloudnBackupConfig()
 			if err != nil {
-				return fmt.Errorf("failed to disable backup configuration: %s", err)
+				return fmt.Errorf("failed to disable backup configuration: %w", err)
 			}
 		}
 	} else {
@@ -468,7 +467,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 				err = client.DisableCloudnBackupConfig()
 				if err != nil {
-					return fmt.Errorf("failed to disable backup configuration: %s", err)
+					return fmt.Errorf("failed to disable backup configuration: %w", err)
 				}
 
 				cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
@@ -485,7 +484,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 				err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 				if err != nil {
-					return fmt.Errorf("failed to enable backup configuration: %s", err)
+					return fmt.Errorf("failed to enable backup configuration: %w", err)
 				}
 			} else {
 				if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
@@ -499,10 +498,10 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("enable_vpc_dns_server") {
-		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+		enableVpcDnsServer := getBool(d, "enable_vpc_dns_server")
 		err := client.SetControllerVpcDnsServer(enableVpcDnsServer)
 		if err != nil {
-			return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+			return fmt.Errorf("could not toggle controller vpc dns server: %w", err)
 		}
 	}
 
@@ -510,34 +509,34 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		d.HasChange("ca_certificate_file") || d.HasChange("server_public_certificate_file") || d.HasChange("server_private_key_file") {
 		if _, useFilePath := d.GetOk("ca_certificate_file_path"); useFilePath {
 			certConfig := &goaviatrix.HTTPSCertConfig{
-				CACertificateFilePath:     d.Get("ca_certificate_file_path").(string),
-				ServerCertificateFilePath: d.Get("server_public_certificate_file_path").(string),
-				ServerPrivateKeyFilePath:  d.Get("server_private_key_file_path").(string),
+				CACertificateFilePath:     getString(d, "ca_certificate_file_path"),
+				ServerCertificateFilePath: getString(d, "server_public_certificate_file_path"),
+				ServerPrivateKeyFilePath:  getString(d, "server_private_key_file_path"),
 			}
 
 			err := client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
-				return fmt.Errorf("could not import new HTTPS certs: %v", err)
+				return fmt.Errorf("could not import new HTTPS certs: %w", err)
 			}
 		} else if _, useFileContent := d.GetOk("ca_certificate_file"); useFileContent {
 			certConfig := &goaviatrix.HTTPSCertConfig{
-				CACertificateFile:     d.Get("ca_certificate_file").(string),
-				ServerCertificateFile: d.Get("server_public_certificate_file").(string),
-				ServerPrivateKeyFile:  d.Get("server_private_key_file").(string),
+				CACertificateFile:     getString(d, "ca_certificate_file"),
+				ServerCertificateFile: getString(d, "server_public_certificate_file"),
+				ServerPrivateKeyFile:  getString(d, "server_private_key_file"),
 			}
 
 			err := client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
-				return fmt.Errorf("could not import new HTTPS certs: %v", err)
+				return fmt.Errorf("could not import new HTTPS certs: %w", err)
 			}
 		}
 	}
 
 	if d.HasChange("aws_guard_duty_scanning_interval") {
-		scanningInterval := d.Get("aws_guard_duty_scanning_interval").(int)
+		scanningInterval := getInt(d, "aws_guard_duty_scanning_interval")
 		err := client.UpdateAwsGuardDutyPollInterval(scanningInterval)
 		if err != nil {
-			return fmt.Errorf("could not update scanning interval: %v", err)
+			return fmt.Errorf("could not update scanning interval: %w", err)
 		}
 	}
 
@@ -546,9 +545,8 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-
-	d.Set("fqdn_exception_rule", true)
+	client := mustClient(meta)
+	mustSet(d, "fqdn_exception_rule", true)
 	curStatusException, _ := client.GetExceptionRuleStatus()
 	if !curStatusException {
 		err := client.EnableExceptionRule()
@@ -557,8 +555,7 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 			return err
 		}
 	}
-
-	d.Set("backup_configuration", false)
+	mustSet(d, "backup_configuration", false)
 	cloudnBackupConfig, _ := client.GetCloudnBackupConfig()
 	if cloudnBackupConfig.BackupConfiguration == "yes" {
 		err := client.DisableCloudnBackupConfig()
@@ -570,29 +567,29 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 
 	err := client.SetControllerVpcDnsServer(false)
 	if err != nil {
-		return fmt.Errorf("could not disable controller vpc dns server: %v", err)
+		return fmt.Errorf("could not disable controller vpc dns server: %w", err)
 	}
 
 	err = client.DisableImportedHTTPSCerts()
 	if err != nil {
-		return fmt.Errorf("could not disable imported certs: %v", err)
+		return fmt.Errorf("could not disable imported certs: %w", err)
 	}
 
 	err = client.UpdateAwsGuardDutyPollInterval(defaultAwsGuardDutyScanningInterval)
 	if err != nil {
-		return fmt.Errorf("could not update scanning interval: %v", err)
+		return fmt.Errorf("could not update scanning interval: %w", err)
 	}
 
 	return nil
 }
 
 func validateBackupConfig(d *schema.ResourceData) error {
-	backupCloudType := d.Get("backup_cloud_type").(int)
-	backupAccountName := d.Get("backup_account_name").(string)
-	backupBucketName := d.Get("backup_bucket_name").(string)
-	backupStorageName := d.Get("backup_storage_name").(string)
-	backupContainerName := d.Get("backup_container_name").(string)
-	backupRegion := d.Get("backup_region").(string)
+	backupCloudType := getInt(d, "backup_cloud_type")
+	backupAccountName := getString(d, "backup_account_name")
+	backupBucketName := getString(d, "backup_bucket_name")
+	backupStorageName := getString(d, "backup_storage_name")
+	backupContainerName := getString(d, "backup_container_name")
+	backupRegion := getString(d, "backup_region")
 
 	if backupCloudType == 0 || backupAccountName == "" {
 		return fmt.Errorf("please specify 'backup_cloud_type' and 'backup_account_name'" +

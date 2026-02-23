@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgePlatform_basic(t *testing.T) {
@@ -120,7 +122,7 @@ func testAccCheckEdgePlatformExists(resourceName string) resource.TestCheckFunc 
 			return fmt.Errorf("no edge platform id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		edgeSpoke, err := client.GetEdgeNEO(context.Background(), rs.Primary.Attributes["gw_name"])
 		if err != nil {
@@ -134,7 +136,7 @@ func testAccCheckEdgePlatformExists(resourceName string) resource.TestCheckFunc 
 }
 
 func testAccCheckEdgePlatformDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_platform" {
@@ -142,7 +144,7 @@ func testAccCheckEdgePlatformDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeNEO(context.Background(), rs.Primary.Attributes["gw_name"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge platform still exists")
 		}
 	}

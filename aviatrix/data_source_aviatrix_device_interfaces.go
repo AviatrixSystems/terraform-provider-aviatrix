@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -41,13 +40,13 @@ func dataSourceAviatrixDeviceInterfaces() *schema.Resource {
 }
 
 func dataSourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	deviceName := d.Get("device_name").(string)
+	deviceName := getString(d, "device_name")
 
 	deviceWanInterfaces, err := client.GetDeviceInterfaces(deviceName)
 	if err != nil {
-		return fmt.Errorf("couldn't get device wan interfaces: %s", err)
+		return fmt.Errorf("couldn't get device wan interfaces: %w", err)
 	}
 
 	var wanInterfaces []map[string]interface{}
@@ -59,7 +58,7 @@ func dataSourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta in
 	}
 
 	if err = d.Set("wan_interfaces", wanInterfaces); err != nil {
-		return fmt.Errorf("couldn't set wan_interfaces: %s", err)
+		return fmt.Errorf("couldn't set wan_interfaces: %w", err)
 	}
 
 	d.SetId(deviceName)

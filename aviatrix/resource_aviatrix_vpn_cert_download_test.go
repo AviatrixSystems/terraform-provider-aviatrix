@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -78,7 +77,7 @@ func tesAccCheckVPNCertDownloadExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no aviatrix VPN Cert Download Resource ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		vpnCertDownloadStatus, err := client.GetVPNCertDownloadStatus()
 		if err != nil {
@@ -92,7 +91,7 @@ func tesAccCheckVPNCertDownloadExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckVPNCertDownloadDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_vpn_cert_download" {

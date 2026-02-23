@@ -178,6 +178,8 @@ The following arguments are supported:
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
+* `local_subnet` - (Optional) Local CIDRs joined as a string with ','. Optional config when proxy ID is enabled.
+* `proxy_id_enabled` - (Optional) Enable proxy ID for transit external device connection. Valid values: true, false. Default: false. When enabled, local and remote CIDRs are used to configure precise traffic-selectors for static route based S2C connections.
 
 ~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". For Controller version 6.4 or earlier, it must be in the format "<vnet-name>:<resource-group-name>".
 
@@ -244,7 +246,7 @@ The following arguments are supported:
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires transit to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R2.22.2+.
-* `enable_ipv6` - (Optional) Enable IPv6 prefix learning over IPv4 neighbor. Only valid if gateway is IPv6 enabled.
+* `enable_ipv6` - (Optional) Enable IPv6 prefix learning over IPv4 neighbor. Only valid if gateway is IPv6 enabled. Changing this value will force recreation of the resource.
 * `external_device_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor. Only valid if gateway is IPv6 enabled.
 * `external_device_backup_ipv6` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for HA gateway. Only valid if gateway is IPv6 enabled.
 * `remote_lan_ipv6_ip` - (Optional) Enable IPv6 prefix learning over IPv6 neighbor for BGP over LAN. Only valid if gateway is IPv6 enabled.

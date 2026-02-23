@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 var customMappedAttributeNames = []string{
@@ -29,7 +31,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 		Update: resourceAviatrixSite2CloudUpdate,
 		Delete: resourceAviatrixSite2CloudDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		SchemaVersion: 1,
@@ -418,40 +420,46 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
 				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including empty string.",
 			},
+			"proxy_id_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable proxy ID for site2cloud connection.",
+			},
 		},
 	}
 }
 
 func getCSVFromStringList(d *schema.ResourceData, attributeName string) string {
-	s := d.Get(attributeName).([]interface{})
+	s := getList(d, attributeName)
 	expandedList := goaviatrix.ExpandStringList(s)
 	return strings.Join(expandedList, ",")
 }
 
 func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	s2c := &goaviatrix.Site2Cloud{
-		GwName:                        d.Get("primary_cloud_gateway_name").(string),
-		BackupGwName:                  d.Get("backup_gateway_name").(string),
-		VpcID:                         d.Get("vpc_id").(string),
-		TunnelName:                    d.Get("connection_name").(string),
-		ConnType:                      d.Get("connection_type").(string),
-		AuthType:                      d.Get("auth_type").(string),
-		TunnelType:                    d.Get("tunnel_type").(string),
-		CaCertTagName:                 d.Get("ca_cert_tag_name").(string),
-		RemoteIdentifier:              d.Get("remote_identifier").(string),
-		RemoteGwType:                  d.Get("remote_gateway_type").(string),
-		RemoteGwIP:                    d.Get("remote_gateway_ip").(string),
-		RemoteGwIP2:                   d.Get("backup_remote_gateway_ip").(string),
-		PreSharedKey:                  d.Get("pre_shared_key").(string),
-		BackupPreSharedKey:            d.Get("backup_pre_shared_key").(string),
-		BackupRemoteIdentifier:        d.Get("backup_remote_identifier").(string),
-		RemoteSubnet:                  d.Get("remote_subnet_cidr").(string),
-		LocalSubnet:                   d.Get("local_subnet_cidr").(string),
-		RemoteSubnetVirtual:           d.Get("remote_subnet_virtual").(string),
-		LocalSubnetVirtual:            d.Get("local_subnet_virtual").(string),
-		CustomMap:                     d.Get("custom_mapped").(bool),
+		GwName:                        getString(d, "primary_cloud_gateway_name"),
+		BackupGwName:                  getString(d, "backup_gateway_name"),
+		VpcID:                         getString(d, "vpc_id"),
+		TunnelName:                    getString(d, "connection_name"),
+		ConnType:                      getString(d, "connection_type"),
+		AuthType:                      getString(d, "auth_type"),
+		TunnelType:                    getString(d, "tunnel_type"),
+		CaCertTagName:                 getString(d, "ca_cert_tag_name"),
+		RemoteIdentifier:              getString(d, "remote_identifier"),
+		RemoteGwType:                  getString(d, "remote_gateway_type"),
+		RemoteGwIP:                    getString(d, "remote_gateway_ip"),
+		RemoteGwIP2:                   getString(d, "backup_remote_gateway_ip"),
+		PreSharedKey:                  getString(d, "pre_shared_key"),
+		BackupPreSharedKey:            getString(d, "backup_pre_shared_key"),
+		BackupRemoteIdentifier:        getString(d, "backup_remote_identifier"),
+		RemoteSubnet:                  getString(d, "remote_subnet_cidr"),
+		LocalSubnet:                   getString(d, "local_subnet_cidr"),
+		RemoteSubnetVirtual:           getString(d, "remote_subnet_virtual"),
+		LocalSubnetVirtual:            getString(d, "local_subnet_virtual"),
+		CustomMap:                     getBool(d, "custom_mapped"),
 		RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
 		RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
 		RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
@@ -460,13 +468,15 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		LocalSourceVirtualCIDRs:       getCSVFromStringList(d, "local_source_virtual_cidrs"),
 		LocalDestinationRealCIDRs:     getCSVFromStringList(d, "local_destination_real_cidrs"),
 		LocalDestinationVirtualCIDRs:  getCSVFromStringList(d, "local_destination_virtual_cidrs"),
-		LocalTunnelIp:                 d.Get("local_tunnel_ip").(string),
-		RemoteTunnelIp:                d.Get("remote_tunnel_ip").(string),
-		BackupLocalTunnelIp:           d.Get("backup_local_tunnel_ip").(string),
-		BackupRemoteTunnelIp:          d.Get("backup_remote_tunnel_ip").(string),
+		LocalTunnelIp:                 getString(d, "local_tunnel_ip"),
+		RemoteTunnelIp:                getString(d, "remote_tunnel_ip"),
+		BackupLocalTunnelIp:           getString(d, "backup_local_tunnel_ip"),
+		BackupRemoteTunnelIp:          getString(d, "backup_remote_tunnel_ip"),
 	}
 
-	haEnabled := d.Get("ha_enabled").(bool)
+	s2c.ProxyIdEnabled = getBool(d, "proxy_id_enabled")
+
+	haEnabled := getBool(d, "ha_enabled")
 	if s2c.AuthType == "Cert" {
 		if s2c.CaCertTagName == "" || s2c.RemoteIdentifier == "" {
 			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
@@ -481,7 +491,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	singleIpHA := d.Get("enable_single_ip_ha").(bool)
+	singleIpHA := getBool(d, "enable_single_ip_ha")
 	if haEnabled {
 		s2c.HAEnabled = "yes"
 		// 22021: Remote GW IP is not required when singleIPHA is enabled as only 1 tunnel is created
@@ -509,7 +519,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	activeActive := d.Get("enable_active_active").(bool)
+	activeActive := getBool(d, "enable_active_active")
 	if activeActive && !haEnabled {
 		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 	}
@@ -524,10 +534,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("couldn't find Aviatrix Gateway %s", s2c.GwName)
 		} else {
-			return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s: %w", s2c.GwName, err)
 		}
 	}
 
@@ -596,14 +606,14 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initiated CIDRs be provided")
 	}
 
-	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
-	s2c.Phase1DhGroups = d.Get("phase_1_dh_groups").(string)
-	s2c.Phase1Encryption = d.Get("phase_1_encryption").(string)
-	s2c.Phase2Auth = d.Get("phase_2_authentication").(string)
-	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
-	s2c.Phase2Encryption = d.Get("phase_2_encryption").(string)
+	s2c.Phase1Auth = getString(d, "phase_1_authentication")
+	s2c.Phase1DhGroups = getString(d, "phase_1_dh_groups")
+	s2c.Phase1Encryption = getString(d, "phase_1_encryption")
+	s2c.Phase2Auth = getString(d, "phase_2_authentication")
+	s2c.Phase2DhGroups = getString(d, "phase_2_dh_groups")
+	s2c.Phase2Encryption = getString(d, "phase_2_encryption")
 
-	customAlgorithms := d.Get("custom_algorithms").(bool)
+	customAlgorithms := getBool(d, "custom_algorithms")
 	if customAlgorithms {
 		if s2c.Phase1Auth == "" ||
 			s2c.Phase2Auth == "" ||
@@ -654,21 +664,21 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	enableIKEv2 := d.Get("enable_ikev2").(bool)
+	enableIKEv2 := getBool(d, "enable_ikev2")
 	if enableIKEv2 {
 		s2c.EnableIKEv2 = "true"
 	}
 
-	privateRouteEncryption := d.Get("private_route_encryption").(bool)
+	privateRouteEncryption := getBool(d, "private_route_encryption")
 	var routeTableList []string
-	rTList := d.Get("route_table_list").([]interface{})
+	rTList := getList(d, "route_table_list")
 	for i := range rTList {
-		routeTableList = append(routeTableList, rTList[i].(string))
+		routeTableList = append(routeTableList, mustString(rTList[i]))
 	}
-	remoteGwLatitude := d.Get("remote_gateway_latitude").(float64)
-	remoteGwLongitude := d.Get("remote_gateway_longitude").(float64)
-	backupRemoteGwLatitude := d.Get("backup_remote_gateway_latitude").(float64)
-	backupRemoteGwLongitude := d.Get("backup_remote_gateway_longitude").(float64)
+	remoteGwLatitude := getFloat64(d, "remote_gateway_latitude")
+	remoteGwLongitude := getFloat64(d, "remote_gateway_longitude")
+	backupRemoteGwLatitude := getFloat64(d, "backup_remote_gateway_latitude")
+	backupRemoteGwLongitude := getFloat64(d, "backup_remote_gateway_longitude")
 
 	if privateRouteEncryption && len(routeTableList) == 0 {
 		return fmt.Errorf("private_route_encryption is enabled, route_table_list cannot be empty")
@@ -698,7 +708,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	sslServerPool := d.Get("ssl_server_pool").(string)
+	sslServerPool := getString(d, "ssl_server_pool")
 
 	if s2c.TunnelType == "udp" && sslServerPool != "" {
 		return fmt.Errorf("ssl_server_pool only supports tunnel type 'tcp'")
@@ -716,7 +726,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
+	phase1RemoteIdentifier := getList(d, "phase1_remote_identifier")
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 	if haEnabled && !singleIpHA && len(phase1RemoteIdentifier) != 0 && len(phase1RemoteIdentifier) != 2 {
 		if !(s2c.RemoteGwIP != "" && s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP == s2c.RemoteGwIP2 && len(phase1RemoteIdentifier) == 1) {
@@ -730,47 +740,47 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
 	flag := false
-	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err = client.CreateSite2Cloud(s2c)
 	if err != nil {
-		return fmt.Errorf("failed Site2Cloud create: %s", err)
+		return fmt.Errorf("failed Site2Cloud create: %w", err)
 	}
 
-	enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
+	enableDeadPeerDetection := getBool(d, "enable_dead_peer_detection")
 	if !enableDeadPeerDetection {
 		err := client.DisableDeadPeerDetection(s2c)
 		if err != nil {
-			return fmt.Errorf("failed to disable dead peer detection: %s", err)
+			return fmt.Errorf("failed to disable dead peer detection: %w", err)
 		}
 	}
 
 	if activeActive {
 		err := client.EnableSite2cloudActiveActive(s2c)
 		if err != nil {
-			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %w", s2c.TunnelName, err)
 		}
 	} else {
 		if gw.TransitVpc == "no" && s2c.ConnType == "unmapped" && s2c.TunnelType == "route" && haEnabled {
 			err := client.DisableSite2cloudActiveActive(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %w", s2c.TunnelName, err)
 			}
 		}
 	}
 
-	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+	forwardToTransit := getBool(d, "forward_traffic_to_transit")
 	if forwardToTransit {
 		err := client.EnableSpokeMappedSite2CloudForwarding(s2c)
 		if err != nil {
-			return fmt.Errorf("failed to enable traffic forwarding to transit: %v", err)
+			return fmt.Errorf("failed to enable traffic forwarding to transit: %w", err)
 		}
 	}
 
-	if d.Get("enable_event_triggered_ha").(bool) {
+	if getBool(d, "enable_event_triggered_ha") {
 		err := client.EnableSite2CloudEventTriggeredHA(s2c.VpcID, s2c.TunnelName)
 		if err != nil {
-			return fmt.Errorf("could not enable event triggered HA for site2cloud after creation: %v", err)
+			return fmt.Errorf("could not enable event triggered HA for site2cloud after creation: %w", err)
 		}
 	}
 
@@ -780,7 +790,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if phase1RemoteIdentifier[0] == nil {
 			ph1RemoteId = "\"\""
 		} else {
-			ph1RemoteId = phase1RemoteIdentifier[0].(string)
+			ph1RemoteId = mustString(phase1RemoteIdentifier[0])
 		}
 
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
@@ -792,7 +802,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %w", err)
 		}
 	}
 
@@ -800,9 +810,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		var ph1RemoteId string
 
 		if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] != nil {
-			ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
+			ph1RemoteId = "\"\"" + "," + mustString(phase1RemoteIdentifier[1])
 		} else if phase1RemoteIdentifier[0] != nil && phase1RemoteIdentifier[1] == nil {
-			ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
+			ph1RemoteId = mustString(phase1RemoteIdentifier[0]) + "," + "\"\""
 		} else if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] == nil {
 			ph1RemoteId = "\"\", \"\""
 		} else {
@@ -818,20 +828,20 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %w", err)
 		}
 	}
 
 	if phase1LocalIdentifier, ok := d.GetOk("phase1_local_identifier"); ok {
 		s2c := &goaviatrix.EditSite2Cloud{
-			VpcID:    d.Get("vpc_id").(string),
-			ConnName: d.Get("connection_name").(string),
+			VpcID:    getString(d, "vpc_id"),
+			ConnName: getString(d, "connection_name"),
 		}
 		if phase1LocalIdentifier == "private_ip" {
 			s2c.Phase1LocalIdentifier = "private_ip"
 			err = client.EditSite2CloudPhase1LocalIdentifier(s2c)
 			if err != nil {
-				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %v", s2c.ConnName, err)
+				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %w", s2c.ConnName, err)
 			}
 		}
 	}
@@ -848,10 +858,10 @@ func resourceAviatrixSite2CloudReadIfRequired(d *schema.ResourceData, meta inter
 }
 
 func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tunnelName := d.Get("connection_name").(string)
-	vpcID := d.Get("vpc_id").(string)
+	tunnelName := getString(d, "connection_name")
+	vpcID := getString(d, "vpc_id")
 	if tunnelName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no tunnel name or vpc id names received. Import Id is %s", id)
@@ -859,153 +869,152 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 			return fmt.Errorf("invalid import ID format")
 		}
-		d.Set("connection_name", parts[0])
-		d.Set("vpc_id", parts[1])
+		mustSet(d, "connection_name", parts[0])
+		mustSet(d, "vpc_id", parts[1])
 		d.SetId(id)
 	}
 
 	site2cloud := &goaviatrix.Site2Cloud{
-		TunnelName: d.Get("connection_name").(string),
-		VpcID:      d.Get("vpc_id").(string),
+		TunnelName: getString(d, "connection_name"),
+		VpcID:      getString(d, "vpc_id"),
 	}
 	s2c, err := client.GetSite2CloudConnDetail(site2cloud)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
+		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %w, %#v", err, s2c)
 	}
 
 	if s2c != nil {
-		d.Set("vpc_id", s2c.VpcID)
-		d.Set("remote_gateway_type", s2c.RemoteGwType)
-		d.Set("tunnel_type", s2c.TunnelType)
+		mustSet(d, "vpc_id", s2c.VpcID)
+		mustSet(d, "remote_gateway_type", s2c.RemoteGwType)
+		mustSet(d, "tunnel_type", s2c.TunnelType)
 		if s2c.AuthType == "pubkey" {
-			d.Set("auth_type", "Cert")
-			d.Set("ca_cert_tag_name", s2c.CaCertTagName)
-			d.Set("remote_identifier", s2c.RemoteIdentifier)
+			mustSet(d, "auth_type", "Cert")
+			mustSet(d, "ca_cert_tag_name", s2c.CaCertTagName)
+			mustSet(d, "remote_identifier", s2c.RemoteIdentifier)
 			if s2c.HAEnabled == "enabled" {
-				d.Set("backup_remote_identifier", s2c.BackupRemoteIdentifier)
+				mustSet(d, "backup_remote_identifier", s2c.BackupRemoteIdentifier)
 			}
 		} else {
-			d.Set("auth_type", "PSK")
+			mustSet(d, "auth_type", "PSK")
 		}
-		d.Set("local_subnet_cidr", s2c.LocalSubnet)
-		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
+		mustSet(d, "local_subnet_cidr", s2c.LocalSubnet)
+		mustSet(d, "remote_subnet_cidr", s2c.RemoteSubnet)
 		if s2c.HAEnabled == "enabled" {
-			d.Set("ha_enabled", true)
+			mustSet(d, "ha_enabled", true)
 		} else {
-			d.Set("ha_enabled", false)
+			mustSet(d, "ha_enabled", false)
 		}
-
-		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-		d.Set("primary_cloud_gateway_name", s2c.GwName)
-		d.Set("local_tunnel_ip", s2c.LocalTunnelIp)
-		d.Set("remote_tunnel_ip", s2c.RemoteTunnelIp)
-		d.Set("phase1_local_identifier", s2c.Phase1LocalIdentifier)
+		mustSet(d, "remote_gateway_ip", s2c.RemoteGwIP)
+		mustSet(d, "primary_cloud_gateway_name", s2c.GwName)
+		mustSet(d, "local_tunnel_ip", s2c.LocalTunnelIp)
+		mustSet(d, "remote_tunnel_ip", s2c.RemoteTunnelIp)
+		mustSet(d, "phase1_local_identifier", s2c.Phase1LocalIdentifier)
 
 		if s2c.HAEnabled == "enabled" {
-			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
-			d.Set("backup_gateway_name", s2c.BackupGwName)
-			d.Set("backup_local_tunnel_ip", s2c.BackupLocalTunnelIp)
-			d.Set("backup_remote_tunnel_ip", s2c.BackupRemoteTunnelIp)
+			mustSet(d, "backup_remote_gateway_ip", s2c.RemoteGwIP2)
+			mustSet(d, "backup_gateway_name", s2c.BackupGwName)
+			mustSet(d, "backup_local_tunnel_ip", s2c.BackupLocalTunnelIp)
+			mustSet(d, "backup_remote_tunnel_ip", s2c.BackupRemoteTunnelIp)
 		}
 
 		// Custom Mapped is a sub-type of Mapped
 		if s2c.ConnType == "custom_mapped" {
-			d.Set("custom_mapped", true)
+			mustSet(d, "custom_mapped", true)
 			s2c.ConnType = "mapped"
 		} else {
-			d.Set("custom_mapped", false)
+			mustSet(d, "custom_mapped", false)
 		}
-		d.Set("connection_type", s2c.ConnType)
+		mustSet(d, "connection_type", s2c.ConnType)
 		if s2c.ConnType == "mapped" {
-			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
-			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
+			mustSet(d, "remote_subnet_virtual", s2c.RemoteSubnetVirtual)
+			mustSet(d, "local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
 
 		if s2c.CustomAlgorithms {
-			d.Set("custom_algorithms", true)
-			d.Set("phase_1_authentication", s2c.Phase1Auth)
-			d.Set("phase_2_authentication", s2c.Phase2Auth)
-			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
-			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
-			d.Set("phase_1_encryption", s2c.Phase1Encryption)
-			d.Set("phase_2_encryption", s2c.Phase2Encryption)
+			mustSet(d, "custom_algorithms", true)
+			mustSet(d, "phase_1_authentication", s2c.Phase1Auth)
+			mustSet(d, "phase_2_authentication", s2c.Phase2Auth)
+			mustSet(d, "phase_1_dh_groups", s2c.Phase1DhGroups)
+			mustSet(d, "phase_2_dh_groups", s2c.Phase2DhGroups)
+			mustSet(d, "phase_1_encryption", s2c.Phase1Encryption)
+			mustSet(d, "phase_2_encryption", s2c.Phase2Encryption)
 		} else {
-			d.Set("custom_algorithms", false)
+			mustSet(d, "custom_algorithms", false)
 		}
 
 		if s2c.PrivateRouteEncryption == "true" {
-			d.Set("private_route_encryption", true)
+			mustSet(d, "private_route_encryption", true)
 			if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
 				log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
 			}
-			d.Set("remote_gateway_latitude", s2c.RemoteGwLatitude)
-			d.Set("remote_gateway_longitude", s2c.RemoteGwLongitude)
+			mustSet(d, "remote_gateway_latitude", s2c.RemoteGwLatitude)
+			mustSet(d, "remote_gateway_longitude", s2c.RemoteGwLongitude)
 			if s2c.HAEnabled == "enabled" {
-				d.Set("backup_remote_gateway_latitude", s2c.BackupRemoteGwLatitude)
-				d.Set("backup_remote_gateway_longitude", s2c.BackupRemoteGwLongitude)
+				mustSet(d, "backup_remote_gateway_latitude", s2c.BackupRemoteGwLatitude)
+				mustSet(d, "backup_remote_gateway_longitude", s2c.BackupRemoteGwLongitude)
 			}
 		} else {
-			d.Set("private_route_encryption", false)
+			mustSet(d, "private_route_encryption", false)
 		}
 
 		if s2c.SslServerPool != "" {
-			d.Set("ssl_server_pool", s2c.SslServerPool)
+			mustSet(d, "ssl_server_pool", s2c.SslServerPool)
 		}
-
-		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
-		d.Set("enable_active_active", s2c.EnableActiveActive)
-		d.Set("forward_traffic_to_transit", s2c.ForwardToTransit)
-		d.Set("enable_event_triggered_ha", s2c.EventTriggeredHA)
-		d.Set("enable_single_ip_ha", s2c.EnableSingleIpHA)
+		mustSet(d, "enable_dead_peer_detection", s2c.DeadPeerDetection)
+		mustSet(d, "enable_active_active", s2c.EnableActiveActive)
+		mustSet(d, "forward_traffic_to_transit", s2c.ForwardToTransit)
+		mustSet(d, "enable_event_triggered_ha", s2c.EventTriggeredHA)
+		mustSet(d, "enable_single_ip_ha", s2c.EnableSingleIpHA)
+		mustSet(d, "proxy_id_enabled", s2c.ProxyIdEnabled)
 
 		if s2c.EnableIKEv2 == "true" {
-			d.Set("enable_ikev2", true)
+			mustSet(d, "enable_ikev2", true)
 		} else {
-			d.Set("enable_ikev2", false)
+			mustSet(d, "enable_ikev2", false)
 		}
 
 		if s2c.RemoteSourceRealCIDRs != "" {
 			if err := d.Set("remote_source_real_cidrs", strings.Split(s2c.RemoteSourceRealCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'remote_source_real_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'remote_source_real_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.RemoteSourceVirtualCIDRs != "" {
 			if err := d.Set("remote_source_virtual_cidrs", strings.Split(s2c.RemoteSourceVirtualCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'remote_source_virtual_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'remote_source_virtual_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.RemoteDestinationRealCIDRs != "" {
 			if err := d.Set("remote_destination_real_cidrs", strings.Split(s2c.RemoteDestinationRealCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'remote_destination_real_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'remote_destination_real_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.RemoteDestinationVirtualCIDRs != "" {
 			if err := d.Set("remote_destination_virtual_cidrs", strings.Split(s2c.RemoteDestinationVirtualCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'remote_destination_virtual_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'remote_destination_virtual_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.LocalSourceRealCIDRs != "" {
 			if err := d.Set("local_source_real_cidrs", strings.Split(s2c.LocalSourceRealCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'local_source_real_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'local_source_real_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.LocalSourceVirtualCIDRs != "" {
 			if err := d.Set("local_source_virtual_cidrs", strings.Split(s2c.LocalSourceVirtualCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'local_source_virtual_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'local_source_virtual_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.LocalDestinationRealCIDRs != "" {
 			if err := d.Set("local_destination_real_cidrs", strings.Split(s2c.LocalDestinationRealCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'local_destination_real_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'local_destination_real_cidrs' to state: %w", err)
 			}
 		}
 		if s2c.LocalDestinationVirtualCIDRs != "" {
 			if err := d.Set("local_destination_virtual_cidrs", strings.Split(s2c.LocalDestinationVirtualCIDRs, ",")); err != nil {
-				return fmt.Errorf("could not write 'local_destination_virtual_cidrs' to state: %v", err)
+				return fmt.Errorf("could not write 'local_destination_virtual_cidrs' to state: %w", err)
 			}
 		}
 
@@ -1014,179 +1023,178 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			ph1RemoteId[i] = strings.TrimSpace(v)
 		}
 
-		haEnabled := d.Get("ha_enabled").(bool)
-		singleIpHA := d.Get("enable_single_ip_ha").(bool)
-		ip := d.Get("remote_gateway_ip").(string)
-		haIp := d.Get("backup_remote_gateway_ip").(string)
+		haEnabled := getBool(d, "ha_enabled")
+		singleIpHA := getBool(d, "enable_single_ip_ha")
+		ip := getString(d, "remote_gateway_ip")
+		haIp := getString(d, "backup_remote_gateway_ip")
 
 		if haEnabled && !singleIpHA && !(ip != "" && haIp != "" && ip == haIp) && len(ph1RemoteId) == 1 && ph1RemoteId[0] == "" {
 			ph1RemoteId = append(ph1RemoteId, "")
 		}
-
-		d.Set("phase1_remote_identifier", ph1RemoteId)
+		mustSet(d, "phase1_remote_identifier", ph1RemoteId)
 	}
 
-	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
-	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
+	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", getString(d, "connection_name"), site2cloud)
+	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", getString(d, "connection_type"))
 
 	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
 	return nil
 }
 
 func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	editSite2cloud := &goaviatrix.EditSite2Cloud{
-		GwName:   d.Get("primary_cloud_gateway_name").(string),
-		VpcID:    d.Get("vpc_id").(string),
-		ConnName: d.Get("connection_name").(string),
+		GwName:   getString(d, "primary_cloud_gateway_name"),
+		VpcID:    getString(d, "vpc_id"),
+		ConnName: getString(d, "connection_name"),
 	}
 
 	d.Partial(true)
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 
 	if d.HasChange("local_subnet_cidr") {
-		if d.Get("custom_mapped").(bool) && d.Get("local_subnet_cidr").(string) != "" {
+		if getBool(d, "custom_mapped") && getString(d, "local_subnet_cidr") != "" {
 			return fmt.Errorf("'local_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
-		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
-		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
+		editSite2cloud.CloudSubnetCidr = getString(d, "local_subnet_cidr")
+		editSite2cloud.CloudSubnetVirtual = getString(d, "local_subnet_virtual")
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %w", err)
 		}
 	}
 
 	if d.HasChange("local_subnet_virtual") {
-		if d.Get("custom_mapped").(bool) && d.Get("local_subnet_virtual").(string) != "" {
+		if getBool(d, "custom_mapped") && getString(d, "local_subnet_virtual") != "" {
 			return fmt.Errorf("'local_subnet_virtual' is not valid when 'custom_mapped' is enabled")
 		}
-		if d.Get("connection_type").(string) == "mapped" && d.Get("local_subnet_virtual").(string) == "" {
+		if getString(d, "connection_type") == "mapped" && getString(d, "local_subnet_virtual") == "" {
 			return fmt.Errorf("'local_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
 		}
-		if d.Get("connection_type").(string) == "unmapped" && d.Get("local_subnet_virtual").(string) != "" {
+		if getString(d, "connection_type") == "unmapped" && getString(d, "local_subnet_virtual") != "" {
 			return fmt.Errorf("'local_subnet_virtual' should be empty for connection type: ummapped")
 		}
-		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
-		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
+		editSite2cloud.CloudSubnetCidr = getString(d, "local_subnet_cidr")
+		editSite2cloud.CloudSubnetVirtual = getString(d, "local_subnet_virtual")
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud local_subnet_virtual: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud local_subnet_virtual: %w", err)
 		}
 	}
 
 	if d.HasChange("remote_subnet_cidr") {
-		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_cidr").(string) != "" {
+		if getBool(d, "custom_mapped") && getString(d, "remote_subnet_cidr") != "" {
 			return fmt.Errorf("'remote_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
-		editSite2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
-		editSite2cloud.RemoteSubnetVirtual = d.Get("remote_subnet_virtual").(string)
+		editSite2cloud.RemoteSubnet = getString(d, "remote_subnet_cidr")
+		editSite2cloud.RemoteSubnetVirtual = getString(d, "remote_subnet_virtual")
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %w", err)
 		}
 	}
 
 	if d.HasChange("remote_subnet_virtual") {
-		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_virtual").(string) != "" {
+		if getBool(d, "custom_mapped") && getString(d, "remote_subnet_virtual") != "" {
 			return fmt.Errorf("'remote_subnet_virtual' is not valid when 'custom_mapped' is enabled")
 		}
-		if d.Get("connection_type").(string) == "mapped" && d.Get("remote_subnet_virtual").(string) == "" {
+		if getString(d, "connection_type") == "mapped" && getString(d, "remote_subnet_virtual") == "" {
 			return fmt.Errorf("'remote_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
 		}
-		if d.Get("connection_type").(string) == "unmapped" && d.Get("remote_subnet_virtual").(string) != "" {
+		if getString(d, "connection_type") == "unmapped" && getString(d, "remote_subnet_virtual") != "" {
 			return fmt.Errorf("'remote_subnet_virtual' should be empty for connection type: ummapped")
 		}
-		editSite2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
-		editSite2cloud.RemoteSubnetVirtual = d.Get("remote_subnet_virtual").(string)
+		editSite2cloud.RemoteSubnet = getString(d, "remote_subnet_cidr")
+		editSite2cloud.RemoteSubnetVirtual = getString(d, "remote_subnet_virtual")
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud remote_subnet_virtual: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud remote_subnet_virtual: %w", err)
 		}
 	}
 
 	if d.HasChange("enable_dead_peer_detection") {
 		s2c := &goaviatrix.Site2Cloud{
-			VpcID:      d.Get("vpc_id").(string),
-			TunnelName: d.Get("connection_name").(string),
+			VpcID:      getString(d, "vpc_id"),
+			TunnelName: getString(d, "connection_name"),
 		}
-		enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
+		enableDeadPeerDetection := getBool(d, "enable_dead_peer_detection")
 		if enableDeadPeerDetection {
 			err := client.EnableDeadPeerDetection(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to enable deed peer detection: %s", err)
+				return fmt.Errorf("failed to enable deed peer detection: %w", err)
 			}
 		} else {
 			err := client.DisableDeadPeerDetection(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to disable deed peer detection: %s", err)
+				return fmt.Errorf("failed to disable deed peer detection: %w", err)
 			}
 		}
 	}
 
 	if d.HasChange("enable_active_active") {
 		s2c := &goaviatrix.Site2Cloud{
-			VpcID:      d.Get("vpc_id").(string),
-			TunnelName: d.Get("connection_name").(string),
+			VpcID:      getString(d, "vpc_id"),
+			TunnelName: getString(d, "connection_name"),
 		}
-		activeActive := d.Get("enable_active_active").(bool)
+		activeActive := getBool(d, "enable_active_active")
 		if activeActive {
-			if haEnabled := d.Get("ha_enabled").(bool); !haEnabled {
+			if haEnabled := getBool(d, "ha_enabled"); !haEnabled {
 				return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 			}
 			err := client.EnableSite2cloudActiveActive(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+				return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %w", s2c.TunnelName, err)
 			}
 		} else {
 			err := client.DisableSite2cloudActiveActive(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %w", s2c.TunnelName, err)
 			}
 		}
 	}
 
 	if d.HasChange("forward_traffic_to_transit") {
 		s2c := &goaviatrix.Site2Cloud{
-			VpcID:      d.Get("vpc_id").(string),
-			TunnelName: d.Get("connection_name").(string),
+			VpcID:      getString(d, "vpc_id"),
+			TunnelName: getString(d, "connection_name"),
 		}
-		forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+		forwardToTransit := getBool(d, "forward_traffic_to_transit")
 		if forwardToTransit {
 			err := client.EnableSpokeMappedSite2CloudForwarding(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to enable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
+				return fmt.Errorf("failed to enable traffic forwarding to transit for site2cloud: %s: %w", s2c.TunnelName, err)
 			}
 		} else {
 			err := client.DisableSpokeMappedSite2CloudForwarding(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to disable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
+				return fmt.Errorf("failed to disable traffic forwarding to transit for site2cloud: %s: %w", s2c.TunnelName, err)
 			}
 		}
 	}
 
 	if d.HasChange("enable_event_triggered_ha") {
-		if d.Get("enable_event_triggered_ha").(bool) {
+		if getBool(d, "enable_event_triggered_ha") {
 			err := client.EnableSite2CloudEventTriggeredHA(editSite2cloud.VpcID, editSite2cloud.ConnName)
 			if err != nil {
-				return fmt.Errorf("could not enable event triggered HA for site2cloud during update: %v", err)
+				return fmt.Errorf("could not enable event triggered HA for site2cloud during update: %w", err)
 			}
 		} else {
 			err := client.DisableSite2CloudEventTriggeredHA(editSite2cloud.VpcID, editSite2cloud.ConnName)
 			if err != nil {
-				return fmt.Errorf("could not disable event triggered HA for site2cloud during update: %v", err)
+				return fmt.Errorf("could not disable event triggered HA for site2cloud during update: %w", err)
 			}
 		}
 	}
 
 	if d.HasChanges(customMappedAttributeNames...) {
-		if !d.Get("custom_mapped").(bool) {
+		if !getBool(d, "custom_mapped") {
 			return fmt.Errorf("attributes %v are not valid when 'custom_mapped' is disabled", customMappedAttributeNames)
 		}
 		s2c := &goaviatrix.EditSite2Cloud{
-			GwName:                        d.Get("primary_cloud_gateway_name").(string),
-			VpcID:                         d.Get("vpc_id").(string),
-			ConnName:                      d.Get("connection_name").(string),
+			GwName:                        getString(d, "primary_cloud_gateway_name"),
+			VpcID:                         getString(d, "vpc_id"),
+			ConnName:                      getString(d, "connection_name"),
 			RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
 			RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
 			RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
@@ -1203,16 +1211,16 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		err := client.UpdateSite2Cloud(s2c)
 		if err != nil {
-			return fmt.Errorf("could not update site2cloud connection Remote or Local CIDRs: %v", err)
+			return fmt.Errorf("could not update site2cloud connection Remote or Local CIDRs: %w", err)
 		}
 	}
 
 	if d.HasChange("phase1_remote_identifier") {
-		haEnabled := d.Get("ha_enabled").(bool)
-		singleIpHA := d.Get("enable_single_ip_ha").(bool)
-		ip := d.Get("remote_gateway_ip").(string)
-		haIp := d.Get("backup_remote_gateway_ip").(string)
-		phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
+		haEnabled := getBool(d, "ha_enabled")
+		singleIpHA := getBool(d, "enable_single_ip_ha")
+		ip := getString(d, "remote_gateway_ip")
+		haIp := getString(d, "backup_remote_gateway_ip")
+		phase1RemoteIdentifier := getList(d, "phase1_remote_identifier")
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 
 		if haEnabled && !singleIpHA && len(phase1RemoteIdentifier) != 2 {
@@ -1226,19 +1234,19 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		var ph1RemoteId string
 
 		if len(phase1RemoteIdentifier) == 1 {
-			if phase1RemoteIdentifier[0].(string) == "" {
+			if mustString(phase1RemoteIdentifier[0]) == "" {
 				ph1RemoteId = "\"\""
 			} else {
-				ph1RemoteId = phase1RemoteIdentifier[0].(string)
+				ph1RemoteId = mustString(phase1RemoteIdentifier[0])
 			}
 		}
 
 		if len(phase1RemoteIdentifier) == 2 {
-			if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) != "" {
-				ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
-			} else if phase1RemoteIdentifier[0].(string) != "" && phase1RemoteIdentifier[1].(string) == "" {
-				ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
-			} else if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) == "" {
+			if mustString(phase1RemoteIdentifier[0]) == "" && mustString(phase1RemoteIdentifier[1]) != "" {
+				ph1RemoteId = "\"\"" + "," + mustString(phase1RemoteIdentifier[1])
+			} else if mustString(phase1RemoteIdentifier[0]) != "" && mustString(phase1RemoteIdentifier[1]) == "" {
+				ph1RemoteId = mustString(phase1RemoteIdentifier[0]) + "," + "\"\""
+			} else if mustString(phase1RemoteIdentifier[0]) == "" && mustString(phase1RemoteIdentifier[1]) == "" {
 				ph1RemoteId = "\"\", \"\""
 			} else {
 				ph1RemoteId = strings.Join(ph1RemoteIdList, ",")
@@ -1248,15 +1256,15 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		editSite2cloud.Phase1RemoteIdentifier = ph1RemoteId
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %w", err)
 		}
 	}
 
 	if d.HasChanges("remote_identifier", "backup_remote_identifier") {
-		haEnabled := d.Get("ha_enabled").(bool)
-		authType := d.Get("auth_type").(string)
-		remoteIdentifier := d.Get("remote_identifier").(string)
-		backupRemoteIdentifier := d.Get("backup_remote_identifier").(string)
+		haEnabled := getBool(d, "ha_enabled")
+		authType := getString(d, "auth_type")
+		remoteIdentifier := getString(d, "remote_identifier")
+		backupRemoteIdentifier := getString(d, "backup_remote_identifier")
 
 		if authType == "Cert" {
 			if remoteIdentifier == "" {
@@ -1272,39 +1280,55 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if d.HasChanges("remote_identifier") {
 			s2c := &goaviatrix.EditSite2Cloud{
-				VpcID:            d.Get("vpc_id").(string),
-				ConnName:         d.Get("connection_name").(string),
+				VpcID:            getString(d, "vpc_id"),
+				ConnName:         getString(d, "connection_name"),
 				RemoteIdentifier: remoteIdentifier,
 			}
 
 			err := client.UpdateSite2Cloud(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to update remote identifier: %s", err)
+				return fmt.Errorf("failed to update remote identifier: %w", err)
 			}
 		}
 		if d.HasChanges("backup_remote_identifier") {
 			s2c := &goaviatrix.EditSite2Cloud{
-				VpcID:                  d.Get("vpc_id").(string),
-				ConnName:               d.Get("connection_name").(string),
+				VpcID:                  getString(d, "vpc_id"),
+				ConnName:               getString(d, "connection_name"),
 				BackupRemoteIdentifier: backupRemoteIdentifier,
 			}
 
 			err := client.UpdateSite2Cloud(s2c)
 			if err != nil {
-				return fmt.Errorf("failed to update backup remote identifier: %s", err)
+				return fmt.Errorf("failed to update backup remote identifier: %w", err)
 			}
 		}
 	}
 
 	if d.HasChange("phase1_local_identifier") {
 		s2c := &goaviatrix.EditSite2Cloud{
-			VpcID:                 d.Get("vpc_id").(string),
-			ConnName:              d.Get("connection_name").(string),
-			Phase1LocalIdentifier: d.Get("phase1_local_identifier").(string),
+			VpcID:                 getString(d, "vpc_id"),
+			ConnName:              getString(d, "connection_name"),
+			Phase1LocalIdentifier: getString(d, "phase1_local_identifier"),
 		}
 		err := client.EditSite2CloudPhase1LocalIdentifier(s2c)
 		if err != nil {
-			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %v", s2c.ConnName, err)
+			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %w", s2c.ConnName, err)
+		}
+	}
+
+	if d.HasChange("proxy_id_enabled") {
+		s2c := &goaviatrix.EditSite2Cloud{
+			VpcID:    getString(d, "vpc_id"),
+			ConnName: getString(d, "connection_name"),
+		}
+		if getBool(d, "proxy_id_enabled") {
+			s2c.ProxyIdEnabled = "true"
+		} else {
+			s2c.ProxyIdEnabled = "false"
+		}
+		err := client.UpdateSite2Cloud(s2c)
+		if err != nil {
+			return fmt.Errorf("failed to update proxy_id_enabled: %w", err)
 		}
 	}
 
@@ -1314,16 +1338,16 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	s2c := &goaviatrix.Site2Cloud{
-		VpcID:      d.Get("vpc_id").(string),
-		TunnelName: d.Get("connection_name").(string),
+		VpcID:      getString(d, "vpc_id"),
+		TunnelName: getString(d, "connection_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix s2c: %#v", s2c)
 
-	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+	forwardToTransit := getBool(d, "forward_traffic_to_transit")
 	if forwardToTransit {
 		err := client.DisableSpokeMappedSite2CloudForwarding(s2c)
 		if err != nil {
@@ -1333,7 +1357,7 @@ func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) 
 
 	err := client.DeleteSite2Cloud(s2c)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Site2Cloud: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Site2Cloud: %w", err)
 	}
 
 	return nil

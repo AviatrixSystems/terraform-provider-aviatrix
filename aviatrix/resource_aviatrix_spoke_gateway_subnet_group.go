@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSpokeGatewaySubnetGroup() *schema.Resource {
@@ -48,13 +50,13 @@ func resourceAviatrixSpokeGatewaySubnetGroup() *schema.Resource {
 
 func marshalSpokeGatewaySubnetGroupInput(d *schema.ResourceData) *goaviatrix.SpokeGatewaySubnetGroup {
 	var subnets []string
-	for _, subnet := range d.Get("subnets").(*schema.Set).List() {
-		subnets = append(subnets, subnet.(string))
+	for _, subnet := range getSet(d, "subnets").List() {
+		subnets = append(subnets, mustString(subnet))
 	}
 
 	spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
-		SubnetGroupName: d.Get("name").(string),
-		GatewayName:     d.Get("gw_name").(string),
+		SubnetGroupName: getString(d, "name"),
+		GatewayName:     getString(d, "gw_name"),
 		SubnetList:      subnets,
 	}
 
@@ -62,7 +64,7 @@ func marshalSpokeGatewaySubnetGroupInput(d *schema.ResourceData) *goaviatrix.Spo
 }
 
 func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
 
@@ -92,9 +94,9 @@ func resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx context.Context, 
 }
 
 func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	name := d.Get("name").(string)
+	name := getString(d, "name")
 
 	if name == "" {
 		id := d.Id()
@@ -103,13 +105,13 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 		if len(parts) != 2 {
 			return diag.Errorf("invalid ID, expected ID gw_name~name, instead got %s", d.Id())
 		}
-		d.Set("gw_name", parts[0])
-		d.Set("name", parts[1])
+		mustSet(d, "gw_name", parts[0])
+		mustSet(d, "name", parts[1])
 		d.SetId(id)
 	}
 
-	name = d.Get("name").(string)
-	spokeGatewayName := d.Get("gw_name").(string)
+	name = getString(d, "name")
+	spokeGatewayName := getString(d, "gw_name")
 
 	spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 		GatewayName:     spokeGatewayName,
@@ -118,7 +120,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 
 	err := client.GetSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -137,7 +139,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schem
 	flag := false
 	defer resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("subnets") {
 		spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
@@ -151,7 +153,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schem
 }
 
 func resourceAviatrixSpokeGatewaySubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
 

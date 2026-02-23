@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preVGWConnCheck(t *testing.T, msgCommon string) {
@@ -111,7 +113,7 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 			return fmt.Errorf("no VGW connection ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundVGWConn := &goaviatrix.VGWConn{
 			ConnName:      rs.Primary.Attributes["conn_name"],
@@ -137,7 +139,7 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 }
 
 func testAccCheckVGWConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_vgw_conn" {
@@ -155,7 +157,7 @@ func testAccCheckVGWConnDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetVGWConnDetail(foundVGWConn)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("vgw connection still exists")
 		}
 	}
