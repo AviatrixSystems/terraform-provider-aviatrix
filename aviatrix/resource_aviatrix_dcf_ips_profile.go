@@ -5,10 +5,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDCFIpsProfile() *schema.Resource {
@@ -97,12 +98,12 @@ func validateIntrusionActionsKeys(val interface{}, _ string) (warns []string, er
 // IPS Profile CRUD operations
 
 func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	profile := &goaviatrix.IpsProfile{
-		ProfileName:      d.Get("profile_name").(string),
-		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").(*schema.Set).List()),
-		IntrusionActions: expandIntrusionActions(d.Get("intrusion_actions").(map[string]interface{})),
+		ProfileName:      getString(d, "profile_name"),
+		RuleFeeds:        expandRuleFeeds(getSet(d, "rule_feeds").List()),
+		IntrusionActions: expandIntrusionActions(mustMap(d.Get("intrusion_actions"))),
 	}
 
 	response, err := client.CreateIpsProfile(ctx, profile)
@@ -115,7 +116,7 @@ func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixDCFIpsProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	profile, err := client.GetIpsProfile(ctx, d.Id())
 	if err != nil {
@@ -125,22 +126,21 @@ func resourceAviatrixDCFIpsProfileRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.Errorf("failed to read IPS profile: %v", err)
 	}
-
-	d.Set("uuid", profile.UUID)
-	d.Set("profile_name", profile.ProfileName)
-	d.Set("rule_feeds", flattenRuleFeeds(profile.RuleFeeds))
-	d.Set("intrusion_actions", profile.IntrusionActions)
+	mustSet(d, "uuid", profile.UUID)
+	mustSet(d, "profile_name", profile.ProfileName)
+	mustSet(d, "rule_feeds", flattenRuleFeeds(profile.RuleFeeds))
+	mustSet(d, "intrusion_actions", profile.IntrusionActions)
 
 	return nil
 }
 
 func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	profile := &goaviatrix.IpsProfile{
-		ProfileName:      d.Get("profile_name").(string),
-		RuleFeeds:        expandRuleFeeds(d.Get("rule_feeds").(*schema.Set).List()),
-		IntrusionActions: expandIntrusionActions(d.Get("intrusion_actions").(map[string]interface{})),
+		ProfileName:      getString(d, "profile_name"),
+		RuleFeeds:        expandRuleFeeds(getSet(d, "rule_feeds").List()),
+		IntrusionActions: expandIntrusionActions(mustMap(d.Get("intrusion_actions"))),
 	}
 
 	_, err := client.UpdateIpsProfile(ctx, d.Id(), profile)
@@ -152,7 +152,7 @@ func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixDCFIpsProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteIpsProfile(ctx, d.Id())
 	if err != nil {
@@ -173,21 +173,21 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 		}
 	}
 
-	ruleFeedsMap := ruleFeeds[0].(map[string]interface{})
+	ruleFeedsMap := mustMap(ruleFeeds[0])
 
 	var customFeedsIds []string
 	if v, ok := ruleFeedsMap["custom_feeds_ids"]; ok && v != nil {
-		customFeedsIds = expandStringList(v.(*schema.Set).List())
+		customFeedsIds = expandStringList(mustSchemaSet(v).List())
 	}
 
 	var externalFeedsIds []string
 	if v, ok := ruleFeedsMap["external_feeds_ids"]; ok && v != nil {
-		externalFeedsIds = expandStringList(v.(*schema.Set).List())
+		externalFeedsIds = expandStringList(mustSchemaSet(v).List())
 	}
 
 	var ignoredSids []int
 	if v, ok := ruleFeedsMap["ignored_sids"]; ok && v != nil {
-		ignoredSids = expandIntList(v.(*schema.Set).List())
+		ignoredSids = expandIntList(mustSchemaSet(v).List())
 	}
 
 	return goaviatrix.IpsRuleFeeds{
@@ -210,7 +210,7 @@ func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []interface{} {
 func expandIntrusionActions(actions map[string]interface{}) map[string]string {
 	result := make(map[string]string)
 	for k, v := range actions {
-		result[k] = v.(string)
+		result[k] = mustString(v)
 	}
 	return result
 }

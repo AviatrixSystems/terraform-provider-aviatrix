@@ -2,7 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -37,7 +37,7 @@ func TestListAccountsCallCount(t *testing.T) {
 	// Create a mock response with the correct JSON structure.
 	mockResponse := &http.Response{
 		StatusCode: http.StatusOK,
-		Body: ioutil.NopCloser(bytes.NewBufferString(`
+		Body: io.NopCloser(bytes.NewBufferString(`
 		{
 			"return": true,
 			"results": {

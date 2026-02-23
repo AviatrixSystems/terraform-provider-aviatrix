@@ -106,11 +106,20 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 	controllerPrivateModeConfig.CopilotInstanceID = resp.Results.Contents.CopilotResourceId
 
 	for k, v := range resp.Results.Contents.ProxyInfo {
-		proxyInfo := v.(map[string]interface{})
-		proxyType, ok := proxyInfo["proxy_type"]
-		if !ok || proxyType.(string) != "http_proxy" {
+		proxyInfo, ok := v.(map[string]interface{})
+		if !ok {
 			continue
 		}
+
+		proxyTypeVal, ok := proxyInfo["proxy_type"]
+		if !ok {
+			continue
+		}
+		proxyType, ok := proxyTypeVal.(string)
+		if !ok || proxyType != "http_proxy" {
+			continue
+		}
+
 		controllerPrivateModeConfig.Proxies = append(controllerPrivateModeConfig.Proxies, k)
 	}
 
@@ -144,20 +153,32 @@ func (c *Client) GetPrivateModeProxies(ctx context.Context, lbVpcId string) ([]*
 
 	var privateModeProxies []*PrivateModeMulticloudProxy
 	for _, v := range resp.Results.Contents.ProxyInfo {
-		proxyInfo := v.(map[string]interface{})
-		lbVpcIdsInterface, ok := proxyInfo["lb_vpc_ids"]
+		proxyInfo, ok := v.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		lbVpcIds := ExpandStringList(lbVpcIdsInterface.([]interface{}))
+		lbVpcIdsInterface, ok := proxyInfo["lb_vpc_ids"]
+		if !ok || lbVpcIdsInterface == nil {
+			continue
+		}
+
+		lbVpcIdsRaw, ok := lbVpcIdsInterface.([]interface{})
+		if !ok {
+			continue
+		}
+		lbVpcIds := ExpandStringList(lbVpcIdsRaw)
 
 		if Contains(lbVpcIds, lbVpcId) {
-			privateModeProxy := &PrivateModeMulticloudProxy{
-				InstanceId: proxyInfo["resource_id"].(string),
-				VpcId:      lbVpcId,
+			instanceID, ok := proxyInfo["resource_id"].(string)
+			if !ok {
+				continue
 			}
-			privateModeProxies = append(privateModeProxies, privateModeProxy)
+
+			privateModeProxies = append(privateModeProxies, &PrivateModeMulticloudProxy{
+				InstanceId: instanceID,
+				VpcId:      lbVpcId,
+			})
 		}
 	}
 

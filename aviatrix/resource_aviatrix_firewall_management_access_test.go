@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
@@ -182,7 +184,7 @@ func testAccCheckFirewallManagementAccessExists(n string, firewallManagementAcce
 			return fmt.Errorf("no firewall management access ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundFirewallManagementAccess := &goaviatrix.FirewallManagementAccess{
 			TransitFireNetGatewayName: rs.Primary.Attributes["transit_firenet_gateway_name"],
@@ -199,7 +201,7 @@ func testAccCheckFirewallManagementAccessExists(n string, firewallManagementAcce
 }
 
 func testAccCheckFirewallManagementAccessDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_firewall_management_access" {
@@ -211,7 +213,7 @@ func testAccCheckFirewallManagementAccessDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetFirewallManagementAccess(foundFirewallManagementAccess)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("firewall management access still exists")
 		}
 	}

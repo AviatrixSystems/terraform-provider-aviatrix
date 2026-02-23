@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeEquinixHa_basic(t *testing.T) {
@@ -122,7 +124,7 @@ func testAccCheckEdgeEquinixHaExists(resourceName string) resource.TestCheckFunc
 			return fmt.Errorf("no edge equinix ha id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		edgeEquinixHa, err := client.GetEdgeEquinixHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != nil {
@@ -136,7 +138,7 @@ func testAccCheckEdgeEquinixHaExists(resourceName string) resource.TestCheckFunc
 }
 
 func testAccCheckEdgeEquinixHaDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_equinix_ha" {
@@ -144,7 +146,7 @@ func testAccCheckEdgeEquinixHaDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeEquinixHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge equinix ha still exists")
 		}
 	}

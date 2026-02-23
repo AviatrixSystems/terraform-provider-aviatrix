@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preSamlEndpointCheck(t *testing.T, msgCommon string) {
@@ -83,7 +85,7 @@ func tesAccCheckSamlEndpointExists(n string, samlEndpoint *goaviatrix.SamlEndpoi
 			return fmt.Errorf("no aviatrix Saml Endpoint ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundSamlEndpoint := &goaviatrix.SamlEndpoint{
 			EndPointName: rs.Primary.Attributes["endpoint_name"],
@@ -104,7 +106,7 @@ func tesAccCheckSamlEndpointExists(n string, samlEndpoint *goaviatrix.SamlEndpoi
 }
 
 func testAccCheckSamlEndpointDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_saml_endpoint" {
@@ -116,7 +118,7 @@ func testAccCheckSamlEndpointDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetSamlEndpoint(foundSamlEndpoint)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix Saml Endpoint still exists")
 		}
 	}

@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSamlEndpoint() *schema.Resource {
@@ -18,7 +20,7 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 		Delete: resourceAviatrixSamlEndpointDelete,
 		Update: resourceAviatrixSamlEndpointUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -95,7 +97,7 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 }
 
 func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	samlEndpoint, err := GetAviatrixSamlEndpointInput(d)
 	if err != nil {
@@ -104,11 +106,11 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(samlEndpoint.EndPointName)
 	flag := false
-	defer resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err = client.CreateSamlEndpoint(samlEndpoint)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %s", err)
+		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %w", err)
 	}
 
 	return resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag)
@@ -123,54 +125,52 @@ func resourceAviatrixSamlEndpointReadIfRequired(d *schema.ResourceData, meta int
 }
 
 func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	endpointName := d.Get("endpoint_name").(string)
+	endpointName := getString(d, "endpoint_name")
 
 	if endpointName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no SAML endpoint names received. Import Id is %s", id)
-		d.Set("endpoint_name", id)
+		mustSet(d, "endpoint_name", id)
 		d.SetId(id)
 	}
 
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName: d.Get("endpoint_name").(string),
+		EndPointName: getString(d, "endpoint_name"),
 	}
 
 	saml, err := client.GetSamlEndpoint(samlEndpoint)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix SAML Endpoint: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix SAML Endpoint: %w", err)
 	}
 
 	log.Printf("[INFO] Found Aviatrix SAML Endpoint: %#v", saml)
-
-	d.Set("endpoint_name", saml.EndPointName)
-	d.Set("idp_metadata_type", saml.IdpMetadataType)
+	mustSet(d, "endpoint_name", saml.EndPointName)
+	mustSet(d, "idp_metadata_type", saml.IdpMetadataType)
 	if saml.IdpMetadataType == "URL" {
-		d.Set("idp_metadata_url", saml.IdpMetadataURL)
+		mustSet(d, "idp_metadata_url", saml.IdpMetadataURL)
 	} else {
-		d.Set("idp_metadata", saml.IdpMetadata)
+		mustSet(d, "idp_metadata", saml.IdpMetadata)
 	}
-	d.Set("custom_entity_id", saml.CustomEntityId)
-	d.Set("sign_authn_requests", saml.SignAuthnRequests)
+	mustSet(d, "custom_entity_id", saml.CustomEntityId)
+	mustSet(d, "sign_authn_requests", saml.SignAuthnRequests)
 	if saml.MsgTemplateType == "Default" {
-		d.Set("custom_saml_request_template", "")
+		mustSet(d, "custom_saml_request_template", "")
 	} else {
-		d.Set("custom_saml_request_template", saml.MsgTemplate)
+		mustSet(d, "custom_saml_request_template", saml.MsgTemplate)
 	}
-
-	d.Set("controller_login", saml.ControllerLogin)
-	d.Set("access_set_by", saml.AccessSetBy)
+	mustSet(d, "controller_login", saml.ControllerLogin)
+	mustSet(d, "access_set_by", saml.AccessSetBy)
 
 	if saml.ControllerLogin {
 		var rbacGroups []string
-		for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
-			rbacGroups = append(rbacGroups, rbacGroup.(string))
+		for _, rbacGroup := range getList(d, "rbac_groups") {
+			rbacGroups = append(rbacGroups, mustString(rbacGroup))
 		}
 		rbacGroupsRead := saml.RbacGroupsRead
 		if len(goaviatrix.Difference(rbacGroups, rbacGroupsRead)) == 0 && len(goaviatrix.Difference(rbacGroupsRead, rbacGroups)) == 0 {
@@ -183,7 +183,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	} else {
-		d.Set("rbac_groups", []string{})
+		mustSet(d, "rbac_groups", []string{})
 	}
 
 	d.SetId(saml.EndPointName)
@@ -191,7 +191,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	samlEndpoint, err := GetAviatrixSamlEndpointInput(d)
 	if err != nil {
@@ -199,7 +199,7 @@ func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}
 	}
 	err = client.EditSamlEndpoint(samlEndpoint)
 	if err != nil {
-		return fmt.Errorf("failed to edit Aviatrix SAML endpoint: %s", err)
+		return fmt.Errorf("failed to edit Aviatrix SAML endpoint: %w", err)
 	}
 
 	d.SetId(samlEndpoint.EndPointName)
@@ -207,19 +207,19 @@ func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAviatrixSamlEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName: d.Get("endpoint_name").(string),
+		EndPointName: getString(d, "endpoint_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix SAML Endpoint: %#v", samlEndpoint)
 
-	samlEndpoint.EndPointName = d.Get("endpoint_name").(string)
+	samlEndpoint.EndPointName = getString(d, "endpoint_name")
 
 	err := client.DeleteSamlEndpoint(samlEndpoint)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix SAML Endpoint: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix SAML Endpoint: %w", err)
 	}
 
 	return nil
@@ -227,31 +227,31 @@ func resourceAviatrixSamlEndpointDelete(d *schema.ResourceData, meta interface{}
 
 func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpoint, error) {
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName:      d.Get("endpoint_name").(string),
-		IdpMetadataType:   d.Get("idp_metadata_type").(string),
-		IdpMetadata:       d.Get("idp_metadata").(string),
-		MsgTemplate:       d.Get("custom_saml_request_template").(string),
-		AccessSetBy:       d.Get("access_set_by").(string),
+		EndPointName:      getString(d, "endpoint_name"),
+		IdpMetadataType:   getString(d, "idp_metadata_type"),
+		IdpMetadata:       getString(d, "idp_metadata"),
+		MsgTemplate:       getString(d, "custom_saml_request_template"),
+		AccessSetBy:       getString(d, "access_set_by"),
 		SignAuthnRequests: "no",
 	}
 	if samlEndpoint.IdpMetadataType == "URL" {
 		if samlEndpoint.IdpMetadata != "" {
 			return nil, fmt.Errorf("'idp_metadata' must be empty for 'idp_metadata_type' 'URL'")
 		}
-		samlEndpoint.IdpMetadata = d.Get("idp_metadata_url").(string)
-	} else if d.Get("idp_metadata_url").(string) != "" {
+		samlEndpoint.IdpMetadata = getString(d, "idp_metadata_url")
+	} else if getString(d, "idp_metadata_url") != "" {
 		return nil, fmt.Errorf("'idp_metadata_url' must be empty for 'idp_metadata_type' 'Text'")
 	}
 
-	if d.Get("sign_authn_requests").(bool) {
+	if getBool(d, "sign_authn_requests") {
 		samlEndpoint.SignAuthnRequests = "yes"
 	}
-	if d.Get("controller_login").(bool) {
+	if getBool(d, "controller_login") {
 		samlEndpoint.ControllerLogin = "yes"
 	} else {
 		samlEndpoint.ControllerLogin = "no"
 	}
-	customEntityID := d.Get("custom_entity_id").(string)
+	customEntityID := getString(d, "custom_entity_id")
 	if customEntityID == "" {
 		samlEndpoint.EntityIdType = "Hostname"
 	} else {
@@ -264,8 +264,8 @@ func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpo
 	}
 
 	var rbacGroups []string
-	for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
-		rbacGroups = append(rbacGroups, rbacGroup.(string))
+	for _, rbacGroup := range getList(d, "rbac_groups") {
+		rbacGroups = append(rbacGroups, mustString(rbacGroup))
 	}
 	samlEndpoint.RbacGroups = strings.Join(rbacGroups, ",")
 	if samlEndpoint.ControllerLogin != "yes" && (samlEndpoint.AccessSetBy != "controller" || samlEndpoint.RbacGroups != "") {

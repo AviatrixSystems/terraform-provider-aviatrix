@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFirewallInstance_basic(t *testing.T) {
@@ -102,7 +104,7 @@ func testAccCheckFirewallInstanceExists(n string, firewallInstance *goaviatrix.F
 			return fmt.Errorf("no firewall instance ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundFirewallInstance := &goaviatrix.FirewallInstance{
 			InstanceID: rs.Primary.Attributes["instance_id"],
@@ -110,7 +112,7 @@ func testAccCheckFirewallInstanceExists(n string, firewallInstance *goaviatrix.F
 
 		foundFirewallInstance2, err := client.GetFirewallInstance(foundFirewallInstance)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("firewall instance not found")
 			}
 			return err
@@ -125,7 +127,7 @@ func testAccCheckFirewallInstanceExists(n string, firewallInstance *goaviatrix.F
 }
 
 func testAccCheckFirewallInstanceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_firewall_instance" {
@@ -137,7 +139,7 @@ func testAccCheckFirewallInstanceDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetFirewallInstance(foundFirewallInstance)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("firewall instance still exists")
 		}
 	}

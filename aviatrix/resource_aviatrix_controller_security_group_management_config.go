@@ -6,7 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -36,10 +35,10 @@ func resourceAviatrixControllerSecurityGroupManagementConfig() *schema.Resource 
 }
 
 func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	account := d.Get("account_name").(string)
-	enableSecurityGroupManagement := d.Get("enable_security_group_management").(bool)
+	account := getString(d, "account_name")
+	enableSecurityGroupManagement := getBool(d, "enable_security_group_management")
 
 	if enableSecurityGroupManagement {
 		if account == "" {
@@ -51,7 +50,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 		} else {
 			err := client.EnableSecurityGroupManagement(account)
 			if err != nil {
-				return fmt.Errorf("failed to enable controller Security Group Management: %s", err)
+				return fmt.Errorf("failed to enable controller Security Group Management: %w", err)
 			}
 		}
 	} else {
@@ -64,7 +63,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 		} else {
 			err := client.DisableSecurityGroupManagement()
 			if err != nil {
-				return fmt.Errorf("failed to disable controller Security Group Management: %s", err)
+				return fmt.Errorf("failed to disable controller Security Group Management: %w", err)
 			}
 		}
 	}
@@ -74,15 +73,15 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 }
 
 func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	sgm, err := client.GetSecurityGroupManagementStatus()
 	if err != nil {
-		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %s", err)
+		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %w", err)
 	}
 	if sgm != nil {
-		d.Set("enable_security_group_management", sgm.State == "Enabled")
-		d.Set("account_name", sgm.AccountName)
+		mustSet(d, "enable_security_group_management", sgm.State == "Enabled")
+		mustSet(d, "account_name", sgm.AccountName)
 	} else {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
 	}
@@ -92,22 +91,20 @@ func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.Resou
 }
 
 func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("account_name") || d.HasChange("enable_security_group_management") {
 		oldAccount, newAccount := d.GetChange("account_name")
-		securityGroupManagement := d.Get("enable_security_group_management").(bool)
+		securityGroupManagement := getBool(d, "enable_security_group_management")
 
-		if oldAccount.(string) != "" && newAccount.(string) != "" && securityGroupManagement {
+		if mustString(oldAccount) != "" && mustString(newAccount) != "" && securityGroupManagement {
 			err := client.DisableSecurityGroupManagement()
 			if err != nil {
-				if err != nil {
-					return fmt.Errorf("failed to disable Security Group Management on controller %s: %s", d.Id(), err)
-				}
+				return fmt.Errorf("failed to disable Security Group Management on controller %s: %w", d.Id(), err)
 			}
-			err = client.EnableSecurityGroupManagement(newAccount.(string))
+			err = client.EnableSecurityGroupManagement(mustString(newAccount))
 			if err != nil {
-				return fmt.Errorf("failed to enable Security Group Management on controller %s: %s", d.Id(), err)
+				return fmt.Errorf("failed to enable Security Group Management on controller %s: %w", d.Id(), err)
 			}
 		} else {
 			return resourceAviatrixControllerSecurityGroupManagementConfigCreate(d, meta)

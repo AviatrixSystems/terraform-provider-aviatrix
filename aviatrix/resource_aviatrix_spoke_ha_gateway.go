@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSpokeHaGateway() *schema.Resource {
@@ -19,7 +19,7 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 		Update: resourceAviatrixSpokeHaGatewayUpdate,
 		Delete: resourceAviatrixSpokeHaGatewayDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -155,32 +155,32 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 }
 
 func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	gateway := &goaviatrix.SpokeHaGateway{
-		PrimaryGwName:      d.Get("primary_gw_name").(string),
-		GwName:             d.Get("gw_name").(string),
-		GwSize:             d.Get("gw_size").(string),
-		Subnet:             d.Get("subnet").(string),
-		Zone:               d.Get("zone").(string),
-		AvailabilityDomain: d.Get("availability_domain").(string),
-		FaultDomain:        d.Get("fault_domain").(string),
-		Eip:                d.Get("eip").(string),
+		PrimaryGwName:      getString(d, "primary_gw_name"),
+		GwName:             getString(d, "gw_name"),
+		GwSize:             getString(d, "gw_size"),
+		Subnet:             getString(d, "subnet"),
+		Zone:               getString(d, "zone"),
+		AvailabilityDomain: getString(d, "availability_domain"),
+		FaultDomain:        getString(d, "fault_domain"),
+		Eip:                getString(d, "eip"),
 	}
 
 	primaryGw := &goaviatrix.Gateway{
-		GwName: d.Get("primary_gw_name").(string),
+		GwName: getString(d, "primary_gw_name"),
 	}
 	gw, err := client.GetGateway(primaryGw)
 	if err != nil {
-		return fmt.Errorf("couldn't retrieve Aviatrix primary spoke gateway in spoke ha gateway creation: %s", err)
+		return fmt.Errorf("couldn't retrieve Aviatrix primary spoke gateway in spoke ha gateway creation: %w", err)
 	}
 
 	if gateway.GwName == "" {
 		gateway.AutoGenHaGwName = "yes"
 	}
 
-	if d.Get("insane_mode").(bool) {
+	if getBool(d, "insane_mode") {
 		gateway.InsaneMode = "yes"
 	} else {
 		gateway.InsaneMode = "no"
@@ -204,7 +204,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 			if !azureEipNameOk {
 				return fmt.Errorf("'azure_eip_name_resource_group' must be set when 'eip' is set for Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
-			gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), gateway.Eip)
+			gateway.Eip = fmt.Sprintf("%s:%s", mustString(azureEipName), gateway.Eip)
 		}
 	} else {
 		if azureEipNameOk {
@@ -237,7 +237,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			insaneModeAz := d.Get("insane_mode_az").(string)
+			insaneModeAz := getString(d, "insane_mode_az")
 			if insaneModeAz == "" {
 				return fmt.Errorf("'insane_mode_az' is required if insane_mode is enabled for AWS (1), AWSGov (256), AWS China (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 			}
@@ -249,7 +249,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 
 	spokeHaGwName, err := client.CreateSpokeHaGw(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Spoke HA Gateway: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Spoke HA Gateway: %w", err)
 	}
 
 	// Handle single_az_ha setting after gateway creation
@@ -258,7 +258,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 	rawConfig := d.GetRawConfig()
 	if !rawConfig.GetAttr("single_az_ha").IsNull() {
 		// User explicitly set single_az_ha in config
-		singleAZ := d.Get("single_az_ha").(bool)
+		singleAZ := getBool(d, "single_az_ha")
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: spokeHaGwName,
 		}
@@ -285,21 +285,21 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	var isImport bool
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 	if gwName == "" {
 		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
 	gateway := &goaviatrix.Gateway{
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
+		AccountName: getString(d, "account_name"),
+		GwName:      getString(d, "gw_name"),
 	}
 
 	gw, err := client.GetGateway(gateway)
@@ -308,91 +308,90 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Spoke Gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Spoke Gateway: %w", err)
 	}
 
-	log.Printf("[TRACE] reading spoke gateway %s: %#v", d.Get("gw_name").(string), gw)
-
-	d.Set("primary_gw_name", gw.PrimaryGwName)
-	d.Set("eip", gw.PublicIP)
-	d.Set("subnet", gw.VpcNet)
-	d.Set("gw_size", gw.GwSize)
-	d.Set("cloud_type", gw.CloudType)
-	d.Set("account_name", gw.AccountName)
-	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-	d.Set("security_group_id", gw.GwSecurityGroupID)
-	d.Set("private_ip", gw.PrivateIP)
-	d.Set("public_ip", gw.PublicIP)
-	d.Set("image_version", gw.ImageVersion)
-	d.Set("software_version", gw.SoftwareVersion)
-	d.Set("single_az_ha", gw.SingleAZ == "yes")
+	log.Printf("[TRACE] reading spoke gateway %s: %#v", getString(d, "gw_name"), gw)
+	mustSet(d, "primary_gw_name", gw.PrimaryGwName)
+	mustSet(d, "eip", gw.PublicIP)
+	mustSet(d, "subnet", gw.VpcNet)
+	mustSet(d, "gw_size", gw.GwSize)
+	mustSet(d, "cloud_type", gw.CloudType)
+	mustSet(d, "account_name", gw.AccountName)
+	mustSet(d, "cloud_instance_id", gw.CloudnGatewayInstID)
+	mustSet(d, "security_group_id", gw.GwSecurityGroupID)
+	mustSet(d, "private_ip", gw.PrivateIP)
+	mustSet(d, "public_ip", gw.PublicIP)
+	mustSet(d, "image_version", gw.ImageVersion)
+	mustSet(d, "software_version", gw.SoftwareVersion)
+	mustSet(d, "single_az_ha", gw.SingleAZ == "yes")
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("vpc_reg", gw.VpcRegion)
+		mustSet(d, "vpc_reg", gw.VpcRegion)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("zone", gw.GatewayZone)
+		mustSet(d, "zone", gw.GatewayZone)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		d.Set("vpc_reg", gw.VpcRegion)
+		mustSet(d, "vpc_reg", gw.VpcRegion)
 		_, zoneIsSet := d.GetOk("zone")
 		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+gw.GatewayZone)
+			mustSet(d, "zone", "az-"+gw.GatewayZone)
 		}
 		azureEip := strings.Split(gw.ReuseEip, ":")
 		if len(azureEip) == 3 {
-			d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+			mustSet(d, "azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
 		} else {
 			log.Printf("[WARN] could not get Azure EIP name and resource group for the Spoke HA Gateway %s", gw.GwName)
 		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-		d.Set("vpc_reg", gw.VpcRegion)
+		mustSet(d, "vpc_reg", gw.VpcRegion)
 	} else if gw.CloudType == goaviatrix.AliCloud {
-		d.Set("vpc_reg", gw.VpcRegion)
+		mustSet(d, "vpc_reg", gw.VpcRegion)
 	}
 
 	if gw.InsaneMode == "yes" {
-		d.Set("insane_mode", true)
+		mustSet(d, "insane_mode", true)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("insane_mode_az", gw.GatewayZone)
+			mustSet(d, "insane_mode_az", gw.GatewayZone)
 		}
 	} else {
-		d.Set("insane_mode", false)
+		mustSet(d, "insane_mode", false)
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		if gw.GatewayZone != "" {
-			d.Set("availability_domain", gw.GatewayZone)
+			mustSet(d, "availability_domain", gw.GatewayZone)
 		} else {
-			d.Set("availability_domain", d.Get("availability_domain").(string))
+			mustSet(d, "availability_domain", getString(d, "availability_domain"))
 		}
-		d.Set("fault_domain", gw.FaultDomain)
+		mustSet(d, "fault_domain", gw.FaultDomain)
 	}
 
 	return nil
 }
 
 func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
-		CloudType: d.Get("cloud_type").(int),
-		GwName:    d.Get("gw_name").(string),
+		CloudType: getInt(d, "cloud_type"),
+		GwName:    getString(d, "gw_name"),
 	}
 
 	if d.HasChange("gw_size") {
-		gateway.GwName = d.Get("gw_name").(string)
-		gateway.VpcSize = d.Get("gw_size").(string)
+		gateway.GwName = getString(d, "gw_name")
+		gateway.VpcSize = getString(d, "gw_size")
 		err := client.UpdateGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway %s: %s", gateway.GwName, err)
+			return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
+			GwName: getString(d, "gw_name"),
 		}
 
-		singleAZ := d.Get("single_az_ha").(bool)
+		singleAZ := getBool(d, "single_az_ha")
 		if singleAZ {
 			singleAZGateway.SingleAZ = "yes"
 		} else {
@@ -420,18 +419,18 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAviatrixSpokeHaGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
-		CloudType: d.Get("cloud_type").(int),
-		GwName:    d.Get("gw_name").(string),
+		CloudType: getInt(d, "cloud_type"),
+		GwName:    getString(d, "gw_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix Spoke Ha Gateway: %#v", gateway)
 
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Spoke HA Gateway %s : %s", gateway.GwName, err)
+		return fmt.Errorf("failed to delete Aviatrix Spoke HA Gateway %s : %w", gateway.GwName, err)
 	}
 
 	return nil

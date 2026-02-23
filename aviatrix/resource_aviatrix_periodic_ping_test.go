@@ -7,9 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixPeriodicPing_basic(t *testing.T) {
@@ -84,7 +85,7 @@ func testAccCheckPeriodicPingExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no periodic_ping ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundPeriodicPing := &goaviatrix.PeriodicPing{
 			GwName: rs.Primary.Attributes["gw_name"],
@@ -103,7 +104,7 @@ func testAccCheckPeriodicPingExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckPeriodicPingDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_periodic_ping" {

@@ -5,10 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingDefaultActionRule() *schema.Resource {
@@ -46,20 +47,11 @@ func resourceAviatrixDistributedFirewallingDefaultActionRule() *schema.Resource 
 }
 
 func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
-	action, ok := d.Get("action").(string)
-	if !ok {
-		return diag.Errorf("failed to assert 'action' as string")
-	}
+	action := getString(d, "action")
 
-	logging, ok := d.Get("logging").(bool)
-	if !ok {
-		return diag.Errorf("failed to assert 'logging' as bool")
-	}
+	logging := getBool(d, "logging")
 
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
 		Action:  action,
@@ -67,7 +59,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.C
 	}
 
 	if logProfile, ok := d.GetOk("log_profile"); ok {
-		defaultActionRuleConfig.LogProfile = logProfile.(string)
+		defaultActionRuleConfig.LogProfile = mustString(logProfile)
 	}
 
 	if err := client.UpdateDistributedFirewallingDefaultActionRule(ctx, defaultActionRuleConfig); err != nil {
@@ -79,20 +71,11 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.C
 }
 
 func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
-	action, ok := d.Get("action").(string)
-	if !ok {
-		return diag.Errorf("failed to assert 'action' as string")
-	}
+	action := getString(d, "action")
 
-	logging, ok := d.Get("logging").(bool)
-	if !ok {
-		return diag.Errorf("failed to assert 'logging' as bool")
-	}
+	logging := getBool(d, "logging")
 
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
 		Action:  action,
@@ -100,7 +83,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.C
 	}
 
 	if logProfile, ok := d.GetOk("log_profile"); ok {
-		defaultActionRuleConfig.LogProfile = logProfile.(string)
+		defaultActionRuleConfig.LogProfile = mustString(logProfile)
 	}
 
 	if err := client.UpdateDistributedFirewallingDefaultActionRule(ctx, defaultActionRuleConfig); err != nil {
@@ -113,10 +96,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.C
 }
 
 func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	if d.Id() != strings.ReplaceAll(client.ControllerIP, ".", "-") {
 		return diag.Errorf("ID: %s does not match controller IP %q: please provide correct ID for importing", d.Id(), client.ControllerIP)
@@ -151,10 +131,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Con
 }
 
 func resourceAviatrixDistributedFirewallingDefaultActionRuleDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{
 		Action:     "PERMIT",

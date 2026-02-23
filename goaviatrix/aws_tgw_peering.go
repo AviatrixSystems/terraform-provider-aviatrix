@@ -72,10 +72,30 @@ func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 
 func DiffSuppressFuncAwsTgwPeeringTgwName1(k, old, new string, d *schema.ResourceData) bool {
 	tgwName2Old, _ := d.GetChange("tgw_name2")
-	return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string)
+
+	tgw2Cur, ok := d.Get("tgw_name2").(string)
+	if !ok {
+		return false
+	}
+	tgw2Old, ok := tgwName2Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == tgw2Cur && new == tgw2Old
 }
 
 func DiffSuppressFuncAwsTgwPeeringTgwName2(k, old, new string, d *schema.ResourceData) bool {
 	tgwName1Old, _ := d.GetChange("tgw_name1")
-	return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string)
+
+	tgw1Cur, ok := d.Get("tgw_name1").(string)
+	if !ok {
+		return false
+	}
+	tgw1Old, ok := tgwName1Old.(string)
+	if !ok {
+		return false
+	}
+
+	return old == tgw1Cur && new == tgw1Old
 }

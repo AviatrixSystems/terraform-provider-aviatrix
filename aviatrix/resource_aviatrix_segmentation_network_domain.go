@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSegmentationNetworkDomain() *schema.Resource {
@@ -14,7 +16,7 @@ func resourceAviatrixSegmentationNetworkDomain() *schema.Resource {
 		Read:   resourceAviatrixSegmentationNetworkDomainRead,
 		Delete: resourceAviatrixSegmentationNetworkDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,21 +32,21 @@ func resourceAviatrixSegmentationNetworkDomain() *schema.Resource {
 
 func marshalSegmentationNetworkDomainInput(d *schema.ResourceData) *goaviatrix.SegmentationSecurityDomain {
 	return &goaviatrix.SegmentationSecurityDomain{
-		DomainName: d.Get("domain_name").(string),
+		DomainName: getString(d, "domain_name"),
 	}
 }
 
 func resourceAviatrixSegmentationNetworkDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	domain := marshalSegmentationNetworkDomainInput(d)
 
 	d.SetId(domain.DomainName)
 	flag := false
-	defer resourceAviatrixSegmentationNetworkDomainReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixSegmentationNetworkDomainReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if err := client.CreateSegmentationSecurityDomain(domain); err != nil {
-		return fmt.Errorf("could not create network domain: %v", err)
+		return fmt.Errorf("could not create network domain: %w", err)
 	}
 
 	return resourceAviatrixSegmentationNetworkDomainReadIfRequired(d, meta, &flag)
@@ -59,9 +61,9 @@ func resourceAviatrixSegmentationNetworkDomainReadIfRequired(d *schema.ResourceD
 }
 
 func resourceAviatrixSegmentationNetworkDomainRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := getString(d, "domain_name")
 	if domainName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no segmentation_network_domain domain_name received. Import Id is %s", id)
@@ -74,26 +76,25 @@ func resourceAviatrixSegmentationNetworkDomainRead(d *schema.ResourceData, meta 
 	}
 
 	domain, err := client.GetSegmentationSecurityDomain(domain)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find segmentation_network_domain %s: %v", domainName, err)
+		return fmt.Errorf("could not find segmentation_network_domain %s: %w", domainName, err)
 	}
-
-	d.Set("domain_name", domain.DomainName)
+	mustSet(d, "domain_name", domain.DomainName)
 	d.SetId(domain.DomainName)
 	return nil
 }
 
 func resourceAviatrixSegmentationNetworkDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	domain := marshalSegmentationNetworkDomainInput(d)
 
 	if err := client.DeleteSegmentationSecurityDomain(domain); err != nil {
-		return fmt.Errorf("could not delete segmentation_network_domain: %v", err)
+		return fmt.Errorf("could not delete segmentation_network_domain: %w", err)
 	}
 
 	return nil

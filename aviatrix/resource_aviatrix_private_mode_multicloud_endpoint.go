@@ -2,11 +2,13 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixPrivateModeMulticloudEndpoint() *schema.Resource {
@@ -53,13 +55,13 @@ func resourceAviatrixPrivateModeMulticloudEndpoint() *schema.Resource {
 }
 
 func resourceAviatrixPrivateModeMulticloudEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	privateModeMulticloudEndpoint := &goaviatrix.PrivateModeMulticloudEndpoint{
-		AccountName:       d.Get("account_name").(string),
-		VpcId:             d.Get("vpc_id").(string),
-		Region:            d.Get("region").(string),
-		ControllerLbVpcId: d.Get("controller_lb_vpc_id").(string),
+		AccountName:       getString(d, "account_name"),
+		VpcId:             getString(d, "vpc_id"),
+		Region:            getString(d, "region"),
+		ControllerLbVpcId: getString(d, "controller_lb_vpc_id"),
 	}
 
 	flag := false
@@ -84,38 +86,37 @@ func resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx context.Con
 }
 
 func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if _, ok := d.GetOk("vpc_id"); !ok {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
-		d.Set("vpc_id", id)
+		mustSet(d, "vpc_id", id)
 	}
 
-	vpcId := d.Get("vpc_id").(string)
+	vpcId := getString(d, "vpc_id")
 	privateModeMulticloudEndpoint, err := client.GetPrivateModeMulticloudEndpoint(ctx, vpcId)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to get Private Mode multicloud endpoint: %s", err)
 	}
-
-	d.Set("account_name", privateModeMulticloudEndpoint.AccountName)
-	d.Set("vpc_id", privateModeMulticloudEndpoint.VpcId)
-	d.Set("region", privateModeMulticloudEndpoint.Region)
-	d.Set("controller_lb_vpc_id", privateModeMulticloudEndpoint.ControllerLbVpcId)
-	d.Set("dns_entry", privateModeMulticloudEndpoint.DnsEntry)
+	mustSet(d, "account_name", privateModeMulticloudEndpoint.AccountName)
+	mustSet(d, "vpc_id", privateModeMulticloudEndpoint.VpcId)
+	mustSet(d, "region", privateModeMulticloudEndpoint.Region)
+	mustSet(d, "controller_lb_vpc_id", privateModeMulticloudEndpoint.ControllerLbVpcId)
+	mustSet(d, "dns_entry", privateModeMulticloudEndpoint.DnsEntry)
 
 	d.SetId(privateModeMulticloudEndpoint.VpcId)
 	return nil
 }
 
 func resourceAviatrixPrivateModeMulticloudEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcId := d.Get("vpc_id").(string)
+	vpcId := getString(d, "vpc_id")
 	err := client.DeletePrivateModeMulticloudEndpoint(ctx, vpcId)
 	if err != nil {
 		return diag.Errorf("failed to delete Private Mode multicloud endpoint: %s", err)

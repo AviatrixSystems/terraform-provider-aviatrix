@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixRbacGroup() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixRbacGroup() *schema.Resource {
 		Delete: resourceAviatrixRbacGroupDelete,
 		Update: resourceAviatrixRbacGroupUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,9 +38,9 @@ func resourceAviatrixRbacGroup() *schema.Resource {
 }
 
 func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	groupName := d.Get("group_name").(string)
+	groupName := getString(d, "group_name")
 	group := &goaviatrix.RbacGroup{
 		GroupName: groupName,
 	}
@@ -47,19 +49,19 @@ func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(group.GroupName)
 	flag := false
-	defer resourceAviatrixRbacGroupReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixRbacGroupReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreatePermissionGroup(group)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix RBAC permission group: %s", err)
+		return fmt.Errorf("failed to create Aviatrix RBAC permission group: %w", err)
 	}
 
 	log.Printf("[DEBUG] Aviatrix RBAC permission group %s created", group.GroupName)
 
-	if d.Get("local_login").(bool) {
+	if getBool(d, "local_login") {
 		err := client.EnableLocalLoginForRBACGroup(groupName)
 		if err != nil {
-			return fmt.Errorf("failed to enable local_login for Aviatrix RBAC permission group: %s", err)
+			return fmt.Errorf("failed to enable local_login for Aviatrix RBAC permission group: %w", err)
 		}
 	}
 
@@ -67,18 +69,18 @@ func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixRbacGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-	groupName := d.Get("group_name").(string)
+	client := mustClient(meta)
+	groupName := getString(d, "group_name")
 
-	if d.Get("local_login").(bool) {
+	if getBool(d, "local_login") {
 		err := client.EnableLocalLoginForRBACGroup(groupName)
 		if err != nil {
-			return fmt.Errorf("failed to enable local_login for Aviatrix RBAC permission group: %s", err)
+			return fmt.Errorf("failed to enable local_login for Aviatrix RBAC permission group: %w", err)
 		}
 	} else {
 		err := client.DisableLocalLoginForRBACGroup(groupName)
 		if err != nil {
-			return fmt.Errorf("failed to disable local_login for Aviatrix RBAC permission group: %s", err)
+			return fmt.Errorf("failed to disable local_login for Aviatrix RBAC permission group: %w", err)
 		}
 	}
 	return resourceAviatrixRbacGroupRead(d, meta)
@@ -93,13 +95,13 @@ func resourceAviatrixRbacGroupReadIfRequired(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	groupName := d.Get("group_name").(string)
+	groupName := getString(d, "group_name")
 	if groupName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no group name received. Import Id is %s", id)
-		d.Set("group_name", id)
+		mustSet(d, "group_name", id)
 		d.SetId(id)
 		groupName = id
 	}
@@ -112,15 +114,15 @@ func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	rGroup, err := client.GetPermissionGroupDetails(groupName)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix RBAC permission group: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix RBAC permission group: %w", err)
 	}
 	if rGroup != nil {
-		d.Set("group_name", rGroup.GroupName)
-		d.Set("local_login", rGroup.LocalLogin)
+		mustSet(d, "group_name", rGroup.GroupName)
+		mustSet(d, "local_login", rGroup.LocalLogin)
 		d.SetId(rGroup.GroupName)
 	}
 
@@ -128,17 +130,17 @@ func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAviatrixRbacGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	group := &goaviatrix.RbacGroup{
-		GroupName: d.Get("group_name").(string),
+		GroupName: getString(d, "group_name"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix RBAC permission group: %#v", group)
 
 	err := client.DeletePermissionGroup(group)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix RBAC permission group: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix RBAC permission group: %w", err)
 	}
 
 	return nil

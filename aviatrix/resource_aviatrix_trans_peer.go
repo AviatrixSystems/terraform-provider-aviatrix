@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixTransPeer() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixTransPeer() *schema.Resource {
 		Read:   resourceAviatrixTransPeerRead,
 		Delete: resourceAviatrixTransPeerDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,23 +44,23 @@ func resourceAviatrixTransPeer() *schema.Resource {
 }
 
 func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	transPeer := &goaviatrix.TransPeer{
-		Source:        d.Get("source").(string),
-		Nexthop:       d.Get("nexthop").(string),
-		ReachableCidr: d.Get("reachable_cidr").(string),
+		Source:        getString(d, "source"),
+		Nexthop:       getString(d, "nexthop"),
+		ReachableCidr: getString(d, "reachable_cidr"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix transitive peering: %#v", transPeer)
 
 	d.SetId(transPeer.Source + "~" + transPeer.Nexthop + "~" + transPeer.ReachableCidr)
 	flag := false
-	defer resourceAviatrixTransPeerReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixTransPeerReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateTransPeer(transPeer)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Transitive peering: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Transitive peering: %w", err)
 	}
 
 	return resourceAviatrixTransPeerReadIfRequired(d, meta, &flag)
@@ -73,56 +75,55 @@ func resourceAviatrixTransPeerReadIfRequired(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	sourceGw := d.Get("source").(string)
-	nestHopGw := d.Get("nexthop").(string)
-	reachableCIDR := d.Get("reachable_cidr").(string)
+	sourceGw := getString(d, "source")
+	nestHopGw := getString(d, "nexthop")
+	reachableCIDR := getString(d, "reachable_cidr")
 
 	if sourceGw == "" || nestHopGw == "" || reachableCIDR == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no transit gateway names or reachable cidr received. "+
 			"Import Id is %s", id)
-		d.Set("source", strings.Split(id, "~")[0])
-		d.Set("nexthop", strings.Split(id, "~")[1])
-		d.Set("reachable_cidr", strings.Split(id, "~")[2])
+		mustSet(d, "source", strings.Split(id, "~")[0])
+		mustSet(d, "nexthop", strings.Split(id, "~")[1])
+		mustSet(d, "reachable_cidr", strings.Split(id, "~")[2])
 		d.SetId(id)
 	}
 
 	transPeer := &goaviatrix.TransPeer{
-		Source:        d.Get("source").(string),
-		Nexthop:       d.Get("nexthop").(string),
-		ReachableCidr: d.Get("reachable_cidr").(string),
+		Source:        getString(d, "source"),
+		Nexthop:       getString(d, "nexthop"),
+		ReachableCidr: getString(d, "reachable_cidr"),
 	}
 	transPeer, err := client.GetTransPeer(transPeer)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Transitive peering: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Transitive peering: %w", err)
 	}
-
-	d.Set("source", transPeer.Source)
-	d.Set("nexthop", transPeer.Nexthop)
-	d.Set("reachable_cidr", transPeer.ReachableCidr)
+	mustSet(d, "source", transPeer.Source)
+	mustSet(d, "nexthop", transPeer.Nexthop)
+	mustSet(d, "reachable_cidr", transPeer.ReachableCidr)
 
 	return nil
 }
 
 func resourceAviatrixTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	transPeer := &goaviatrix.TransPeer{
-		Source:        d.Get("source").(string),
-		Nexthop:       d.Get("nexthop").(string),
-		ReachableCidr: d.Get("reachable_cidr").(string),
+		Source:        getString(d, "source"),
+		Nexthop:       getString(d, "nexthop"),
+		ReachableCidr: getString(d, "reachable_cidr"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix transpeer: %#v", transPeer)
 
 	err := client.DeleteTransPeer(transPeer)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Transpeer: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Transpeer: %w", err)
 	}
 
 	return nil

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 var clusterTagValueRegex = regexp.MustCompile(`^[\w\s_.:/=+@-]{0,128}$`)
@@ -119,12 +119,12 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 								Type: schema.TypeString,
 							},
 							ValidateDiagFunc: func(i interface{}, path cty.Path) diag.Diagnostics {
-								tags := i.(map[string]interface{})
+								tags := mustMap(i)
 								for key, value := range tags {
 									if !clusterTagValueRegex.MatchString(key) {
 										return diag.Errorf("tag key must be alphanumeric or one of _.:/=+@-")
 									}
-									if !clusterTagValueRegex.MatchString(value.(string)) {
+									if !clusterTagValueRegex.MatchString(mustString(value)) {
 										return diag.Errorf("tag value must be alphanumeric or one of _.:/=+@-")
 									}
 								}
@@ -141,37 +141,37 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 
 func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.KubernetesCluster, error) {
 	kubernetesCluster := &goaviatrix.KubernetesCluster{
-		ClusterId: d.Get("cluster_id").(string),
+		ClusterId: getString(d, "cluster_id"),
 		Credential: &goaviatrix.KubernetesCredential{
-			UseCspCredentials: d.Get("use_csp_credentials").(bool),
-			KubeConfig:        d.Get("kube_config").(string),
+			UseCspCredentials: getBool(d, "use_csp_credentials"),
+			KubeConfig:        getString(d, "kube_config"),
 		},
 	}
 
 	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
-		clusterDetails := clusterDetails.([]interface{})[0].(map[string]interface{})
+		clusterDetailsMap := mustMap(mustSlice(clusterDetails)[0])
 		resource := goaviatrix.ClusterResource{
-			AccountName: clusterDetails["account_name"].(string),
-			AccountId:   clusterDetails["account_id"].(string),
-			Name:        clusterDetails["name"].(string),
-			VpcId:       clusterDetails["vpc_id"].(string),
-			Region:      clusterDetails["region"].(string),
-			Version:     clusterDetails["version"].(string),
-			Platform:    clusterDetails["platform"].(string),
-			Public:      clusterDetails["is_publicly_accessible"].(bool),
-			NetworkMode: clusterDetails["network_mode"].(string),
+			AccountName: mustString(clusterDetailsMap["account_name"]),
+			AccountId:   mustString(clusterDetailsMap["account_id"]),
+			Name:        mustString(clusterDetailsMap["name"]),
+			VpcId:       mustString(clusterDetailsMap["vpc_id"]),
+			Region:      mustString(clusterDetailsMap["region"]),
+			Version:     mustString(clusterDetailsMap["version"]),
+			Platform:    mustString(clusterDetailsMap["platform"]),
+			Public:      mustBool(clusterDetailsMap["is_publicly_accessible"]),
+			NetworkMode: mustString(clusterDetailsMap["network_mode"]),
 		}
-		if project, ok := clusterDetails["project"]; ok {
-			resource.Project = project.(string)
+		if project, ok := clusterDetailsMap["project"]; ok {
+			resource.Project = mustString(project)
 		}
-		if compartment, ok := clusterDetails["compartment"]; ok {
-			resource.Compartment = compartment.(string)
+		if compartment, ok := clusterDetailsMap["compartment"]; ok {
+			resource.Compartment = mustString(compartment)
 		}
-		if tags, ok := clusterDetails["tags"].(map[string]interface{}); ok {
+		if tags, ok := clusterDetailsMap["tags"].(map[string]interface{}); ok {
 			for key, value := range tags {
 				resource.Tags = append(resource.Tags, goaviatrix.Tag{
 					Key:   key,
-					Value: value.(string),
+					Value: mustString(value),
 				})
 			}
 		}
@@ -182,7 +182,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 }
 
 func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	kubernetesCluster, err := marshalKubernetesClusterInput(d)
 	if err != nil {
@@ -197,19 +197,18 @@ func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	kubernetesCluster, err := client.GetKubernetesCluster(ctx, d.Id())
 	if err != nil {
 		d.SetId("")
 		return nil
 	}
-
-	d.Set("cluster_id", kubernetesCluster.ClusterId)
+	mustSet(d, "cluster_id", kubernetesCluster.ClusterId)
 	if kubernetesCluster.Credential != nil {
 		credential := kubernetesCluster.Credential
-		d.Set("use_csp_credentials", credential.UseCspCredentials)
-		d.Set("kube_config", credential.KubeConfig)
+		mustSet(d, "use_csp_credentials", credential.UseCspCredentials)
+		mustSet(d, "kube_config", credential.KubeConfig)
 	}
 	if kubernetesCluster.Resource != nil {
 		details := make(map[string]interface{})
@@ -236,14 +235,14 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 			}
 			details["tags"] = tags
 		}
-		d.Set("cluster_details", []map[string]interface{}{details})
+		mustSet(d, "cluster_details", []map[string]interface{}{details})
 	}
 
 	return nil
 }
 
 func resourceAviatrixKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	kubernetesCluster, err := marshalKubernetesClusterInput(d)
 	if err != nil {
@@ -256,7 +255,7 @@ func resourceAviatrixKubernetesClusterUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAviatrixKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteKubernetesCluster(ctx, d.Id())
 	if err != nil {

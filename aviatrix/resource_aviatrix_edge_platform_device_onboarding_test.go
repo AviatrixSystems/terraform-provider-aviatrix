@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgePlatformDeviceOnboarding_basic(t *testing.T) {
@@ -72,11 +74,11 @@ func testAccCheckEdgePlatformDeviceOnboardingExists(resourceName, accountName, d
 			return fmt.Errorf("no edge platform device onboarding id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetEdgeNEODevice(context.Background(), accountName, deviceName)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("could not find edge platform device")
 			}
 			return err
@@ -87,7 +89,7 @@ func testAccCheckEdgePlatformDeviceOnboardingExists(resourceName, accountName, d
 }
 
 func testAccCheckEdgePlatformDeviceOnboardingDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_platform_device_onboarding" {
@@ -95,7 +97,7 @@ func testAccCheckEdgePlatformDeviceOnboardingDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeNEODevice(context.Background(), rs.Primary.Attributes["account_name"], rs.Primary.Attributes["device_name"])
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge platform device still exists")
 		}
 	}

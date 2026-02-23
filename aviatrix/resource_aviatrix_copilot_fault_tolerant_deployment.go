@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixCopilotFaultTolerantDeployment() *schema.Resource {
@@ -118,29 +120,29 @@ func resourceAviatrixCopilotFaultTolerantDeployment() *schema.Resource {
 
 func marshalCopilotFaultTolerantDeploymentInput(d *schema.ResourceData) *goaviatrix.CopilotFaultTolerantDeployment {
 	copilotFaultTolerantDeployment := &goaviatrix.CopilotFaultTolerantDeployment{
-		CloudType:                        d.Get("cloud_type").(int),
-		AccountName:                      d.Get("account_name").(string),
-		Region:                           d.Get("region").(string),
-		ControllerServiceAccountUsername: d.Get("controller_service_account_username").(string),
-		ControllerServiceAccountPassword: d.Get("controller_service_account_password").(string),
+		CloudType:                        getInt(d, "cloud_type"),
+		AccountName:                      getString(d, "account_name"),
+		Region:                           getString(d, "region"),
+		ControllerServiceAccountUsername: getString(d, "controller_service_account_username"),
+		ControllerServiceAccountPassword: getString(d, "controller_service_account_password"),
 	}
 
 	mainCopilot := &goaviatrix.MainCopilot{
-		VpcId:        d.Get("main_copilot_vpc_id").(string),
-		Subnet:       d.Get("main_copilot_subnet").(string),
-		InstanceSize: d.Get("main_copilot_instance_size").(string),
+		VpcId:        getString(d, "main_copilot_vpc_id"),
+		Subnet:       getString(d, "main_copilot_subnet"),
+		InstanceSize: getString(d, "main_copilot_instance_size"),
 	}
 	copilotFaultTolerantDeployment.MainCopilot = mainCopilot
 
-	clusterDataNode := d.Get("cluster_data_nodes").([]interface{})
+	clusterDataNode := getList(d, "cluster_data_nodes")
 	for _, clusterDataNode0 := range clusterDataNode {
-		clusterDataNode1 := clusterDataNode0.(map[string]interface{})
+		clusterDataNode1 := mustMap(clusterDataNode0)
 
 		clusterDataNode2 := &goaviatrix.ClusterDataNode{
-			VpcId:          clusterDataNode1["vpc_id"].(string),
-			Subnet:         clusterDataNode1["subnet"].(string),
-			InstanceSize:   clusterDataNode1["instance_size"].(string),
-			DataVolumeSize: clusterDataNode1["data_volume_size"].(int),
+			VpcId:          mustString(clusterDataNode1["vpc_id"]),
+			Subnet:         mustString(clusterDataNode1["subnet"]),
+			InstanceSize:   mustString(clusterDataNode1["instance_size"]),
+			DataVolumeSize: mustInt(clusterDataNode1["data_volume_size"]),
 		}
 
 		copilotFaultTolerantDeployment.ClusterDataNodes = append(copilotFaultTolerantDeployment.ClusterDataNodes, clusterDataNode2)
@@ -150,7 +152,7 @@ func marshalCopilotFaultTolerantDeploymentInput(d *schema.ResourceData) *goaviat
 }
 
 func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilotFaultTolerantDeployment := marshalCopilotFaultTolerantDeploymentInput(d)
 
@@ -169,11 +171,11 @@ func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d
 	for i := 0; ; i++ {
 		copilotAssociationStatus, err := client.GetCopilotAssociationStatus(ctx)
 
-		if err != nil && err != goaviatrix.ErrNotFound {
+		if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
 			return diag.Errorf("could not get copilot association status: %v", err)
 		}
 
-		if err != goaviatrix.ErrNotFound && copilotAssociationStatus.Status {
+		if !errors.Is(err, goaviatrix.ErrNotFound) && copilotAssociationStatus.Status {
 			break
 		}
 
@@ -196,30 +198,29 @@ func resourceAviatrixCopilotFaultTolerantDeploymentReadIfRequired(ctx context.Co
 }
 
 func resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
 	}
 
 	copilotAssociationStatus, err := client.GetCopilotAssociationStatus(ctx)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not get copilot association status: %v", err)
 	}
-
-	d.Set("main_copilot_private_ip", copilotAssociationStatus.IP)
-	d.Set("main_copilot_public_ip", copilotAssociationStatus.PublicIp)
+	mustSet(d, "main_copilot_private_ip", copilotAssociationStatus.IP)
+	mustSet(d, "main_copilot_public_ip", copilotAssociationStatus.PublicIp)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixCopilotFaultTolerantDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteCopilotFaultTolerant(ctx)
 	if err != nil {

@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeSpokeTransitAttachment_basic(t *testing.T) {
@@ -397,7 +399,7 @@ func testAccCheckEdgeSpokeTransitAttachmentExists(resourceName string) resource.
 			return fmt.Errorf("no edge as a spoke transit attachment ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		attachment := &goaviatrix.SpokeTransitAttachment{
 			SpokeGwName:   rs.Primary.Attributes["spoke_gw_name"],
@@ -416,7 +418,7 @@ func testAccCheckEdgeSpokeTransitAttachmentExists(resourceName string) resource.
 }
 
 func testAccCheckEdgeSpokeTransitAttachmentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_spoke_transit_attachment" {
@@ -429,7 +431,7 @@ func testAccCheckEdgeSpokeTransitAttachmentDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeSpokeTransitAttachment(context.Background(), attachment)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge as a spoke transit attachment still exists %s", err.Error())
 		}
 	}

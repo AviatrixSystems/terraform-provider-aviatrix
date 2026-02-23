@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFilebeatForwarder() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 		Read:   resourceAviatrixFilebeatForwarderRead,
 		Delete: resourceAviatrixFilebeatForwarderDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,10 +70,10 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 }
 
 func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	_, err := client.GetFilebeatForwarderStatus()
-	if err != goaviatrix.ErrNotFound {
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
 		return fmt.Errorf("the filebeat_forwarder is already enabled, please import to manage with Terraform")
 	} else {
 		return fmt.Errorf("the support for filebeat forwarder is deprecated")
@@ -79,27 +81,26 @@ func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != "filebeat_forwarder" {
 		return fmt.Errorf("invalid ID, expected ID \"filebeat_forwarder\", instead got %s", d.Id())
 	}
 
 	filebeatForwarderStatus, err := client.GetFilebeatForwarderStatus()
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get filebeat forwarder status: %v", err)
+		return fmt.Errorf("could not get filebeat forwarder status: %w", err)
 	}
-
-	d.Set("server", filebeatForwarderStatus.Server)
+	mustSet(d, "server", filebeatForwarderStatus.Server)
 	port, _ := strconv.Atoi(filebeatForwarderStatus.Port)
-	d.Set("port", port)
-	d.Set("status", filebeatForwarderStatus.Status)
+	mustSet(d, "port", port)
+	mustSet(d, "status", filebeatForwarderStatus.Status)
 	if len(filebeatForwarderStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", filebeatForwarderStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", filebeatForwarderStatus.ExcludedGateways)
 	}
 
 	d.SetId("filebeat_forwarder")
@@ -107,10 +108,10 @@ func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixFilebeatForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := client.DisableFilebeatForwarder(); err != nil {
-		return fmt.Errorf("could not disable filebeat forwarder: %v", err)
+		return fmt.Errorf("could not disable filebeat forwarder: %w", err)
 	}
 
 	return nil

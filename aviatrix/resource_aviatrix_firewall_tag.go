@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFirewallTag() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 		Update: resourceAviatrixFirewallTagUpdate,
 		Delete: resourceAviatrixFirewallTagDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -48,10 +50,10 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 }
 
 func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{
-		Name: d.Get("firewall_tag").(string),
+		Name: getString(d, "firewall_tag"),
 	}
 
 	if firewallTag.Name == "" {
@@ -60,21 +62,21 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(firewallTag.Name)
 	flag := false
-	defer resourceAviatrixFirewallTagReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixFirewallTagReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateFirewallTag(firewallTag)
 	if err != nil {
-		return fmt.Errorf("failed to create firewall tag: %s", err)
+		return fmt.Errorf("failed to create firewall tag: %w", err)
 	}
 
 	// If cidr list is present, update cidr list
 	if _, ok := d.GetOk("cidr_list"); ok {
-		cidrList := d.Get("cidr_list").([]interface{})
+		cidrList := getList(d, "cidr_list")
 		for _, currCIDR := range cidrList {
-			cm := currCIDR.(map[string]interface{})
+			cm := mustMap(currCIDR)
 			cidrMember := goaviatrix.CIDRMember{
-				CIDRTag: cm["cidr_tag_name"].(string),
-				CIDR:    cm["cidr"].(string),
+				CIDRTag: mustString(cm["cidr_tag_name"]),
+				CIDR:    mustString(cm["cidr"]),
 			}
 			if cidrMember.CIDRTag == "" {
 				return fmt.Errorf("invalid choice: cidr_tag_name can't be empty")
@@ -87,7 +89,7 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 
 		err := client.UpdateFirewallTag(firewallTag)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix FirewallTag: %s", err)
+			return fmt.Errorf("failed to update Aviatrix FirewallTag: %w", err)
 		}
 	}
 
@@ -103,26 +105,26 @@ func resourceAviatrixFirewallTagReadIfRequired(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	fTag := d.Get("firewall_tag").(string)
+	fTag := getString(d, "firewall_tag")
 	if fTag == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no firewall tag name received. Import Id is %s", id)
-		d.Set("firewall_tag", id)
+		mustSet(d, "firewall_tag", id)
 		d.SetId(id)
 	}
 
 	firewallTag := &goaviatrix.FirewallTag{
-		Name: d.Get("firewall_tag").(string),
+		Name: getString(d, "firewall_tag"),
 	}
 	fwt, err := client.GetFirewallTag(firewallTag)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error fetching firewall tag %s: %s", firewallTag.Name, err)
+		return fmt.Errorf("error fetching firewall tag %s: %w", firewallTag.Name, err)
 	}
 
 	log.Printf("[TRACE] Reading cidr list for tag %s: %#v", firewallTag.Name, fwt)
@@ -146,10 +148,10 @@ func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{
-		Name: d.Get("firewall_tag").(string),
+		Name: getString(d, "firewall_tag"),
 	}
 
 	d.Partial(true)
@@ -157,19 +159,19 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewallTag)
 
 	// Update cidr list
-	cidrList := d.Get("cidr_list").([]interface{})
+	cidrList := getList(d, "cidr_list")
 	for _, currCIDR := range cidrList {
-		cm := currCIDR.(map[string]interface{})
+		cm := mustMap(currCIDR)
 		cidrMember := goaviatrix.CIDRMember{
-			CIDRTag: cm["cidr_tag_name"].(string),
-			CIDR:    cm["cidr"].(string),
+			CIDRTag: mustString(cm["cidr_tag_name"]),
+			CIDR:    mustString(cm["cidr"]),
 		}
 		firewallTag.CIDRList = append(firewallTag.CIDRList, cidrMember)
 	}
 
 	err := client.UpdateFirewallTag(firewallTag)
 	if err != nil {
-		return fmt.Errorf("failed to update Aviatrix FirewallTag: %s", err)
+		return fmt.Errorf("failed to update Aviatrix FirewallTag: %w", err)
 	}
 
 	d.Partial(false)
@@ -177,15 +179,15 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAviatrixFirewallTagDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{
-		Name: d.Get("firewall_tag").(string),
+		Name: getString(d, "firewall_tag"),
 	}
 
 	err := client.DeleteFirewallTag(firewallTag)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix FirewallTag policy list: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix FirewallTag policy list: %w", err)
 	}
 
 	return nil

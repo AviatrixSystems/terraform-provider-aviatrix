@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
@@ -182,7 +184,7 @@ func testAccCheckTransitFireNetPolicyExists(n string, transitFireNetPolicy *goav
 			return fmt.Errorf("no transit firenet policy ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundTransitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
 			TransitFireNetGatewayName: rs.Primary.Attributes["transit_firenet_gateway_name"],
@@ -200,7 +202,7 @@ func testAccCheckTransitFireNetPolicyExists(n string, transitFireNetPolicy *goav
 }
 
 func testAccCheckTransitFireNetPolicyDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_transit_firenet_policy" {
@@ -213,7 +215,7 @@ func testAccCheckTransitFireNetPolicyDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetTransitFireNetPolicy(foundTransitFireNetPolicy)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("transit firenet policy still exists")
 		}
 	}

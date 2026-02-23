@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,12 +36,10 @@ func dataSourceAviatrixDcfLogProfile() *schema.Resource {
 }
 
 func dataSourceAviatrixDcfLogProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	profileName, ok := d.Get("profile_name").(string)
-	if !ok {
-		return diag.Errorf("profile_name must be of type string")
-	}
+	profileName := getString(d, "profile_name")
+
 	if profileName == "" {
 		return diag.Errorf("profile_name must be specified")
 	}

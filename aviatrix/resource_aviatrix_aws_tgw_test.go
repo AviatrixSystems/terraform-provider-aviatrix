@@ -6,10 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAWSTgw_basic(t *testing.T) {
@@ -78,7 +79,7 @@ func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.Test
 			return fmt.Errorf("no AWS TGW ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundAwsTgw := &goaviatrix.AWSTgw{
 			Name: rs.Primary.Attributes["tgw_name"],
@@ -98,7 +99,7 @@ func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.Test
 }
 
 func testAccCheckAWSTgwDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw" {
@@ -114,7 +115,7 @@ func testAccCheckAWSTgwDestroy(s *terraform.State) error {
 			if strings.Contains(err.Error(), "does not exist") {
 				return nil
 			}
-			return fmt.Errorf("AWS TGW still exists: %v", err)
+			return fmt.Errorf("AWS TGW still exists: %w", err)
 		}
 
 		return fmt.Errorf("AWS TGW still exists")

@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingIntraVpc() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixDistributedFirewallingIntraVpc() *schema.Resource {
 		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingIntraVpcUpdate,
 		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingIntraVpcDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -50,7 +52,7 @@ func resourceAviatrixDistributedFirewallingIntraVpc() *schema.Resource {
 }
 
 func resourceAviatrixDistributedFirewallingIntraVpcCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpcList, err := marshalDistributedFirewallingIntraVpcListInput(d)
 	if err != nil {
@@ -77,11 +79,11 @@ func resourceAviatrixDistributedFirewallingIntraVpcReadIfRequired(ctx context.Co
 }
 
 func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpcList, err := client.GetDistributedFirewallingIntraVpc(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -107,7 +109,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *
 }
 
 func resourceAviatrixDistributedFirewallingIntraVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChange("vpcs") {
@@ -126,7 +128,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcUpdate(ctx context.Context, d
 }
 
 func resourceAviatrixDistributedFirewallingIntraVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteDistributedFirewallingIntraVpc(ctx)
 	if err != nil {
@@ -139,14 +141,14 @@ func resourceAviatrixDistributedFirewallingIntraVpcDelete(ctx context.Context, d
 func marshalDistributedFirewallingIntraVpcListInput(d *schema.ResourceData) (*goaviatrix.DistributedFirewallingIntraVpcList, error) {
 	vpcList := &goaviatrix.DistributedFirewallingIntraVpcList{}
 
-	vpcs := d.Get("vpcs").([]interface{})
+	vpcs := getList(d, "vpcs")
 	for _, vpcInterface := range vpcs {
-		vpc := vpcInterface.(map[string]interface{})
+		vpc := mustMap(vpcInterface)
 
 		distributedFirewallingVpc := &goaviatrix.DistributedFirewallingIntraVpc{
-			AccountName: vpc["account_name"].(string),
-			VpcId:       vpc["vpc_id"].(string),
-			Region:      vpc["region"].(string),
+			AccountName: mustString(vpc["account_name"]),
+			VpcId:       mustString(vpc["vpc_id"]),
+			Region:      mustString(vpc["region"]),
 		}
 
 		vpcList.VPCs = append(vpcList.VPCs, *distributedFirewallingVpc)

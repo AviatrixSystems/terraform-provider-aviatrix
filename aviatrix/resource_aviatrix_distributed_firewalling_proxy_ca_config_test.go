@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -77,7 +76,7 @@ func testAccDistributedFirewallingProxyCaConfigExists(n string) resource.TestChe
 			return fmt.Errorf("no distributed-firewalling proxy ca config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("distributed-firewalling origin ca config ID not found")
@@ -88,7 +87,7 @@ func testAccDistributedFirewallingProxyCaConfigExists(n string) resource.TestChe
 }
 
 func testAccDistributedFirewallingProxyCaConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_distributed_firewalling_proxy_ca_config" {
@@ -97,7 +96,7 @@ func testAccDistributedFirewallingProxyCaConfigDestroy(s *terraform.State) error
 
 		proxyCaCertInstance, err := client.GetMetaCaCertificate(context.Background())
 		if err != nil {
-			return fmt.Errorf("could not retrieve distributed firewalling proxy ca config: %s", err)
+			return fmt.Errorf("could not retrieve distributed firewalling proxy ca config: %w", err)
 		}
 		if proxyCaCertInstance.UploadInfo != "self-signed-cert" {
 			return fmt.Errorf("distributed firewalling proxy ca config still exists")

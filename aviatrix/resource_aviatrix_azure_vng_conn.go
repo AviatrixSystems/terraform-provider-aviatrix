@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAzureVngConn() *schema.Resource {
@@ -14,7 +16,7 @@ func resourceAviatrixAzureVngConn() *schema.Resource {
 		Read:   resourceAviatrixAzureVngConnRead,
 		Delete: resourceAviatrixAzureVngConnDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,22 +53,22 @@ func resourceAviatrixAzureVngConn() *schema.Resource {
 
 func marshalAzureVngConnInput(d *schema.ResourceData) *goaviatrix.AzureVngConn {
 	return &goaviatrix.AzureVngConn{
-		PrimaryGatewayName: d.Get("primary_gateway_name").(string),
-		ConnectionName:     d.Get("connection_name").(string),
+		PrimaryGatewayName: getString(d, "primary_gateway_name"),
+		ConnectionName:     getString(d, "connection_name"),
 	}
 }
 
 func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	azureVngConn := marshalAzureVngConnInput(d)
 
 	d.SetId(azureVngConn.ConnectionName)
 	flag := false
-	defer resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if err := client.ConnectAzureVng(azureVngConn); err != nil {
-		return fmt.Errorf("could not connect to azure vng: %v", err)
+		return fmt.Errorf("could not connect to azure vng: %w", err)
 	}
 
 	return resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag)
@@ -81,44 +83,42 @@ func resourceAviatrixAzureVngConnReadIfRequired(d *schema.ResourceData, meta int
 }
 
 func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	connectionName := d.Get("connection_name").(string)
+	connectionName := getString(d, "connection_name")
 
 	if connectionName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
-
-		d.Set("connection_name", id)
+		mustSet(d, "connection_name", id)
 		connectionName = id
 	}
 
 	azureVngConnStatus, err := client.GetAzureVngConnStatus(connectionName)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get azure vng conn status: %v", err)
+		return fmt.Errorf("could not get azure vng conn status: %w", err)
 	}
-
-	d.Set("primary_gateway_name", azureVngConnStatus.PrimaryGatewayName)
-	d.Set("vpc_id", azureVngConnStatus.VpcId)
-	d.Set("vng_name", azureVngConnStatus.VngName)
-	d.Set("attached", azureVngConnStatus.Attached)
+	mustSet(d, "primary_gateway_name", azureVngConnStatus.PrimaryGatewayName)
+	mustSet(d, "vpc_id", azureVngConnStatus.VpcId)
+	mustSet(d, "vng_name", azureVngConnStatus.VngName)
+	mustSet(d, "attached", azureVngConnStatus.Attached)
 
 	d.SetId(connectionName)
 	return nil
 }
 
 func resourceAviatrixAzureVngConnDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcId := d.Get("vpc_id").(string)
-	connectionName := d.Get("connection_name").(string)
+	vpcId := getString(d, "vpc_id")
+	connectionName := getString(d, "connection_name")
 
 	if err := client.DisconnectAzureVng(vpcId, connectionName); err != nil {
-		return fmt.Errorf("could not disconnect vng connection: %v", err)
+		return fmt.Errorf("could not disconnect vng connection: %w", err)
 	}
 
 	return nil

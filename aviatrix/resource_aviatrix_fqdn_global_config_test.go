@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -61,7 +60,7 @@ func testAccCheckFQDNGlobalConfigExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no fqdn global config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("fqdn global config ID not found")
@@ -72,7 +71,7 @@ func testAccCheckFQDNGlobalConfigExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckFQDNGlobalConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_fqdn_global_config" {
@@ -81,7 +80,7 @@ func testAccCheckFQDNGlobalConfigDestroy(s *terraform.State) error {
 
 		privateSubFilter, err := client.GetFQDNPrivateNetworkFilteringStatus(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get FQDN private network filter status: %s", err)
+			return fmt.Errorf("failed to get FQDN private network filter status: %w", err)
 		}
 		if privateSubFilter.PrivateSubFilter == "enabled" {
 			return fmt.Errorf("failed to destroy fqdn global config")

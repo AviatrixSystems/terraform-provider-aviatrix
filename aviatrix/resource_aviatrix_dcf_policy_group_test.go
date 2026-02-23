@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -117,10 +116,7 @@ func testAccCheckDcfPolicyGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF Policy Group ID is set")
 		}
 
-		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-		}
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetDCFPolicyBlock(context.Background(), rs.Primary.ID)
 		if err != nil {
@@ -132,10 +128,7 @@ func testAccCheckDcfPolicyGroupExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDcfPolicyGroupDestroy(s *terraform.State) error {
-	client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-	if !ok {
-		return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-	}
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_policy_group" {

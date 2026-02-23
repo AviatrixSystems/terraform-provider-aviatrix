@@ -1,16 +1,18 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
@@ -109,6 +111,56 @@ func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
 	}
 }
 
+func TestAccAviatrixTransitExternalDeviceConn_proxyId(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_external_device_conn.test_proxy_id"
+
+	skipAcc := os.Getenv("SKIP_TRANSIT_EXTERNAL_DEVICE_CONN")
+	if skipAcc == "yes" {
+		t.Skip("Skipping transit external device connection tests as 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN' is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN' to 'yes' to skip Site2Cloud transit external device connection tests")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitExternalDeviceConnConfigProxyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", fmt.Sprintf("%s-proxy-id", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "static"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.15"),
+					resource.TestCheckResourceAttr(resourceName, "remote_subnet", "192.168.1.0/24,192.168.2.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "local_subnet", "10.0.0.0/16,10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_id_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccTransitExternalDeviceConnConfigProxyIdUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					resource.TestCheckResourceAttr(resourceName, "local_subnet", "10.0.0.0/16,10.1.0.0/16,10.2.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_id_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccTransitExternalDeviceConnConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
@@ -188,6 +240,70 @@ func TestTransitExternalDeviceConnSchema_RemoteLanIPv6FieldsReference(t *testing
 
 	assert.Equal(t, backupRemoteLanIPField.Type, backupRemoteLanIPv6Field.Type, "backup_remote_lan_ipv6_ip should have same type as backup_remote_lan_ip")
 	assert.Equal(t, backupRemoteLanIPField.ForceNew, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should have same ForceNew as backup_remote_lan_ip")
+}
+
+func TestTransitExternalDeviceConnSchema_EnableIPv6ForceNew(t *testing.T) {
+	resource := resourceAviatrixTransitExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test enable_ipv6 field exists and has correct properties
+	enableIPv6Field, ok := schemaMap["enable_ipv6"]
+	assert.True(t, ok, "enable_ipv6 field should exist in schema")
+	assert.Equal(t, schema.TypeBool, enableIPv6Field.Type)
+	assert.True(t, enableIPv6Field.Optional, "enable_ipv6 should be optional")
+	assert.True(t, enableIPv6Field.ForceNew, "enable_ipv6 should be ForceNew")
+	assert.Contains(t, enableIPv6Field.Description, "Enable IPv6")
+}
+
+func TestTransitExternalDeviceConnSchema_LocalSubnetField(t *testing.T) {
+	resource := resourceAviatrixTransitExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test local_subnet field exists and has correct properties
+	localSubnetField, ok := schemaMap["local_subnet"]
+	assert.True(t, ok, "local_subnet field should exist in schema")
+	assert.Equal(t, schema.TypeString, localSubnetField.Type, "local_subnet should be TypeString")
+	assert.True(t, localSubnetField.Optional, "local_subnet should be optional")
+	assert.NotNil(t, localSubnetField.DiffSuppressFunc, "local_subnet should have DiffSuppressFunc")
+	assert.Contains(t, localSubnetField.Description, "Local CIDRs", "local_subnet description should mention Local CIDRs")
+}
+
+func TestTransitExternalDeviceConnSchema_ProxyIdEnabledField(t *testing.T) {
+	resource := resourceAviatrixTransitExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	// Test proxy_id_enabled field exists and has correct properties
+	proxyIdEnabledField, ok := schemaMap["proxy_id_enabled"]
+	assert.True(t, ok, "proxy_id_enabled field should exist in schema")
+	assert.Equal(t, schema.TypeBool, proxyIdEnabledField.Type, "proxy_id_enabled should be TypeBool")
+	assert.True(t, proxyIdEnabledField.Optional, "proxy_id_enabled should be optional")
+	assert.Equal(t, false, proxyIdEnabledField.Default, "proxy_id_enabled should have default value false")
+	assert.Contains(t, proxyIdEnabledField.Description, "proxy ID", "proxy_id_enabled description should mention proxy ID")
+}
+
+func TestTransitExternalDeviceConnSchema_LocalSubnetAndProxyIdComparison(t *testing.T) {
+	// Test that local_subnet and proxy_id_enabled follow similar patterns to remote_subnet
+	resource := resourceAviatrixTransitExternalDeviceConn()
+	schemaMap := resource.Schema
+
+	remoteSubnetField, ok := schemaMap["remote_subnet"]
+	assert.True(t, ok, "remote_subnet field should exist for reference")
+
+	localSubnetField, ok := schemaMap["local_subnet"]
+	assert.True(t, ok, "local_subnet field should exist")
+
+	// Both subnet fields should be TypeString and Optional
+	assert.Equal(t, remoteSubnetField.Type, localSubnetField.Type, "local_subnet should have same type as remote_subnet")
+	assert.Equal(t, remoteSubnetField.Optional, localSubnetField.Optional, "local_subnet should have same Optional as remote_subnet")
+
+	// Both should have DiffSuppressFunc (for handling comma-separated CIDRs with spaces)
+	assert.NotNil(t, remoteSubnetField.DiffSuppressFunc, "remote_subnet should have DiffSuppressFunc")
+	assert.NotNil(t, localSubnetField.DiffSuppressFunc, "local_subnet should have DiffSuppressFunc")
+
+	// Test proxy_id_enabled exists and is boolean
+	proxyIdEnabledField, ok := schemaMap["proxy_id_enabled"]
+	assert.True(t, ok, "proxy_id_enabled field should exist")
+	assert.Equal(t, schema.TypeBool, proxyIdEnabledField.Type, "proxy_id_enabled should be TypeBool")
 }
 
 func testAccTransitExternalDeviceConnConfigBgpBfd(rName string) string {
@@ -307,7 +423,7 @@ func testAccCheckTransitExternalDeviceConnExists(n string, externalDeviceConn *g
 			return fmt.Errorf("no transit external device connection ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundExternalDeviceConn := &goaviatrix.ExternalDeviceConn{
 			VpcID:          rs.Primary.Attributes["vpc_id"],
@@ -332,7 +448,7 @@ func testAccCheckTransitExternalDeviceConnExists(n string, externalDeviceConn *g
 }
 
 func testAccCheckTransitExternalDeviceConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_transit_external_device_conn" {
@@ -351,7 +467,7 @@ func testAccCheckTransitExternalDeviceConnDestroy(s *terraform.State) error {
 		}
 
 		_, err = client.GetExternalDeviceConnDetail(foundExternalDeviceConn, localGateway)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("site2cloud still exists %s", err.Error())
 		}
 	}
@@ -619,5 +735,71 @@ resource "aviatrix_transit_external_device_conn" "test_disable_activemesh_not_se
 	disable_activemesh  = true  # Explicitly set to true - should appear in state
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccTransitExternalDeviceConnConfigProxyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_transit_external_device_conn" "test_proxy_id" {
+	vpc_id            = aviatrix_transit_gateway.test.vpc_id
+	connection_name   = "%s-proxy-id"
+	gw_name           = aviatrix_transit_gateway.test.gw_name
+	connection_type   = "static"
+	remote_gateway_ip = "172.12.13.15"
+	remote_subnet     = "192.168.1.0/24,192.168.2.0/24"
+	local_subnet      = "10.0.0.0/16,10.1.0.0/16"
+	proxy_id_enabled  = true
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
+}
+
+func testAccTransitExternalDeviceConnConfigProxyIdUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_transit_external_device_conn" "test_proxy_id" {
+	vpc_id            = aviatrix_transit_gateway.test.vpc_id
+	connection_name   = "%s-proxy-id"
+	gw_name           = aviatrix_transit_gateway.test.gw_name
+	connection_type   = "static"
+	remote_gateway_ip = "172.12.13.15"
+	remote_subnet     = "192.168.1.0/24,192.168.2.0/24"
+	local_subnet      = "10.0.0.0/16,10.1.0.0/16,10.2.0.0/16"
+	proxy_id_enabled  = false
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
 }

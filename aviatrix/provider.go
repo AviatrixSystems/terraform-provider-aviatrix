@@ -4,12 +4,16 @@ import (
 	"errors"
 	"os"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	_ "embed"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"8.2"}
+//go:embed terraform_provider_version.txt
+var buildVersion string
+var supportedVersions = []string{buildVersion}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -31,9 +35,9 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("AVIATRIX_PASSWORD"),
 			},
 			"skip_version_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AVIATRIX_SKIP_VERSION_VALIDATION", false),
 			},
 			"verify_ssl_certificate": {
 				Type:     schema.TypeBool,
@@ -113,9 +117,11 @@ func Provider() *schema.Provider {
 			"aviatrix_dcf_ruleset":                                            resourceAviatrixDCFRuleset(),
 			"aviatrix_dcf_ips_rule_feed":                                      resourceAviatrixDCFIpsRuleFeed(),
 			"aviatrix_dcf_ips_profile":                                        resourceAviatrixDCFIpsProfile(),
+			"aviatrix_dcf_default_ips_profile":                                resourceAviatrixDCFDefaultIpsProfile(),
 			"aviatrix_dcf_ips_profile_vpc":                                    resourceAviatrixDCFIpsProfileVpc(),
 			"aviatrix_dcf_trustbundle":                                        resourceAviatrixDCFTrustBundle(),
 			"aviatrix_device_interface_config":                                resourceAviatrixDeviceInterfaceConfig(),
+			"aviatrix_config_feature":                                         resourceAviatrixConfigFeature(),
 			"aviatrix_distributed_firewalling_config":                         resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":                      resourceAviatrixDistributedFirewallingIntraVpc(),
 			"aviatrix_distributed_firewalling_origin_cert_enforcement_config": resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig(),
@@ -189,7 +195,9 @@ func Provider() *schema.Provider {
 			"aviatrix_sla_class":                                              resourceAviatrixSLAClass(),
 			"aviatrix_smart_group":                                            resourceAviatrixSmartGroup(),
 			"aviatrix_splunk_logging":                                         resourceAviatrixSplunkLogging(),
+			"aviatrix_spoke_group":                                            resourceAviatrixSpokeGroup(),
 			"aviatrix_spoke_gateway":                                          resourceAviatrixSpokeGateway(),
+			"aviatrix_spoke_instance":                                         resourceAviatrixSpokeInstance(),
 			"aviatrix_spoke_ha_gateway":                                       resourceAviatrixSpokeHaGateway(),
 			"aviatrix_spoke_gateway_subnet_group":                             resourceAviatrixSpokeGatewaySubnetGroup(),
 			"aviatrix_spoke_external_device_conn":                             resourceAviatrixSpokeExternalDeviceConn(),
@@ -201,6 +209,8 @@ func Provider() *schema.Provider {
 			"aviatrix_transit_firenet_policy":                                 resourceAviatrixTransitFireNetPolicy(),
 			"aviatrix_transit_gateway":                                        resourceAviatrixTransitGateway(),
 			"aviatrix_transit_gateway_peering":                                resourceAviatrixTransitGatewayPeering(),
+			"aviatrix_transit_instance":                                       resourceAviatrixTransitInstance(),
+			"aviatrix_transit_group":                                          resourceAviatrixTransitGroup(),
 			"aviatrix_tunnel":                                                 resourceAviatrixTunnel(),
 			"aviatrix_vgw_conn":                                               resourceAviatrixVGWConn(),
 			"aviatrix_vpc":                                                    resourceAviatrixVpc(),
@@ -217,6 +227,7 @@ func Provider() *schema.Provider {
 			"aviatrix_web_group":                            dataSourceAviatrixDcfWebgroups(),
 			"aviatrix_dcf_trustbundle":                      dataSourceAviatrixDcfTrustbundle(),
 			"aviatrix_dcf_log_profile":                      dataSourceAviatrixDcfLogProfile(),
+			"aviatrix_dcf_tls_profile":                      dataSourceAviatrixDCFTLSProfile(),
 			"aviatrix_dcf_attachment_point":                 dataSourceAviatrixDcfAttachmentPoints(),
 			"aviatrix_device_interfaces":                    dataSourceAviatrixDeviceInterfaces(),
 			"aviatrix_edge_gateway_wan_interface_discovery": dataSourceAviatrixEdgeGatewayWanInterfaceDiscovery(),
@@ -253,15 +264,15 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 
 func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		ControllerIP: d.Get("controller_ip").(string),
-		Username:     d.Get("username").(string),
-		Password:     d.Get("password").(string),
-		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
-		PathToCACert: d.Get("path_to_ca_certificate").(string),
-		IgnoreTags:   expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
+		ControllerIP: getString(d, "controller_ip"),
+		Username:     getString(d, "username"),
+		Password:     getString(d, "password"),
+		VerifyCert:   getBool(d, "verify_ssl_certificate"),
+		PathToCACert: getString(d, "path_to_ca_certificate"),
+		IgnoreTags:   expandProviderIgnoreTags(getList(d, "ignore_tags")),
 	}
 
-	skipVersionValidation := d.Get("skip_version_validation").(bool)
+	skipVersionValidation := getBool(d, "skip_version_validation")
 	if skipVersionValidation {
 		return config.Client()
 	}
@@ -281,12 +292,12 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 
 func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		ControllerIP: d.Get("controller_ip").(string),
-		Username:     d.Get("username").(string),
-		Password:     d.Get("password").(string),
-		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
-		PathToCACert: d.Get("path_to_ca_certificate").(string),
-		IgnoreTags:   expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
+		ControllerIP: getString(d, "controller_ip"),
+		Username:     getString(d, "username"),
+		Password:     getString(d, "password"),
+		VerifyCert:   getBool(d, "verify_ssl_certificate"),
+		PathToCACert: getString(d, "path_to_ca_certificate"),
+		IgnoreTags:   expandProviderIgnoreTags(getList(d, "ignore_tags")),
 	}
 
 	return config.Client()
@@ -298,7 +309,7 @@ func expandProviderIgnoreTags(l []interface{}) *goaviatrix.IgnoreTagsConfig {
 	}
 
 	ignoreConfig := &goaviatrix.IgnoreTagsConfig{}
-	m := l[0].(map[string]interface{})
+	m := mustMap(l[0])
 
 	if v, ok := m["keys"].(*schema.Set); ok {
 		ignoreConfig.Keys = goaviatrix.NewIgnoreTags(v.List())

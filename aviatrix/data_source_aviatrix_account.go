@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixAccount() *schema.Resource {
@@ -118,21 +120,21 @@ func dataSourceAviatrixAccount() *schema.Resource {
 }
 
 func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	account := &goaviatrix.Account{
-		AccountName: d.Get("account_name").(string),
+		AccountName: getString(d, "account_name"),
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
 
 	acc, err := client.GetAccount(account)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("aviatrix Account: %s", err)
+		return fmt.Errorf("aviatrix Account: %w", err)
 	}
 
 	_ = d.Set("account_name", acc.AccountName)

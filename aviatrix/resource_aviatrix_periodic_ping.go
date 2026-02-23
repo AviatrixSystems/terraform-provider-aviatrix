@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixPeriodicPing() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixPeriodicPing() *schema.Resource {
 		Read:   resourceAviatrixPeriodicPingRead,
 		Delete: resourceAviatrixPeriodicPingDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -45,20 +47,20 @@ func resourceAviatrixPeriodicPing() *schema.Resource {
 
 func marshalPeriodicPingInput(d *schema.ResourceData) *goaviatrix.PeriodicPing {
 	return &goaviatrix.PeriodicPing{
-		GwName:   d.Get("gw_name").(string),
-		Interval: strconv.Itoa(d.Get("interval").(int)),
-		IP:       d.Get("ip_address").(string),
+		GwName:   getString(d, "gw_name"),
+		Interval: strconv.Itoa(getInt(d, "interval")),
+		IP:       getString(d, "ip_address"),
 	}
 }
 
 func resourceAviatrixPeriodicPingCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	pp := marshalPeriodicPingInput(d)
 
 	d.SetId(pp.GwName)
 	flag := false
-	defer resourceAviatrixPeriodicPingReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixPeriodicPingReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if err := client.CreatePeriodicPing(pp); err != nil {
 		return err
@@ -76,9 +78,9 @@ func resourceAviatrixPeriodicPingReadIfRequired(d *schema.ResourceData, meta int
 }
 
 func resourceAviatrixPeriodicPingRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no periodic_ping gw_name received. Import Id is %s", id)
@@ -91,24 +93,23 @@ func resourceAviatrixPeriodicPingRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	pp, err := client.GetPeriodicPing(pp)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find periodic_ping %s: %v", gwName, err)
+		return fmt.Errorf("could not find periodic_ping %s: %w", gwName, err)
 	}
-
-	d.Set("gw_name", gwName)
-	d.Set("ip_address", pp.IP)
-	d.Set("interval", pp.IntervalAsInt)
+	mustSet(d, "gw_name", gwName)
+	mustSet(d, "ip_address", pp.IP)
+	mustSet(d, "interval", pp.IntervalAsInt)
 
 	d.SetId(pp.GwName)
 	return nil
 }
 
 func resourceAviatrixPeriodicPingDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	pp := marshalPeriodicPingInput(d)
 

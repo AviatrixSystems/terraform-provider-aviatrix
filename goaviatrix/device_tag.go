@@ -121,7 +121,7 @@ func (c *Client) CommitDeviceTag(brt *DeviceTag) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("tried to commit device tag %d times but could not succeed: %v", maxTries, err)
+		return fmt.Errorf("tried to commit device tag %d times but could not succeed: %w", maxTries, err)
 	}
 
 	return nil

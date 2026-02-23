@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -92,7 +91,7 @@ func testAccK8sConfigExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no k8s config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("k8s config ID not found")
@@ -103,7 +102,7 @@ func testAccK8sConfigExists(n string) resource.TestCheckFunc {
 }
 
 func testAccK8sConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_k8s_config" {

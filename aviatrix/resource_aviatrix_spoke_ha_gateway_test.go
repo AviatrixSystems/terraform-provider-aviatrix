@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
@@ -130,7 +131,7 @@ func testAccCheckSpokeHaGatewayExists(n string, gateway *goaviatrix.Gateway) res
 			return fmt.Errorf("no spoke gateway ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundGateway := &goaviatrix.Gateway{
 			GwName:      rs.Primary.Attributes["gw_name"],
@@ -151,7 +152,7 @@ func testAccCheckSpokeHaGatewayExists(n string, gateway *goaviatrix.Gateway) res
 }
 
 func testAccCheckSpokeHaGatewayDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_spoke_ha_gateway" {

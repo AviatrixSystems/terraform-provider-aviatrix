@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"slices"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSegmentationNetworkDomainConnectionPolicy() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicy() *schema.Resourc
 		Read:   resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead,
 		Delete: resourceAviatrixSegmentationNetworkDomainConnectionPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,16 +41,16 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicy() *schema.Resourc
 func marshalSegmentationNetworkDomainConnectionPolicyInput(d *schema.ResourceData) *goaviatrix.SegmentationSecurityDomainConnectionPolicy {
 	return &goaviatrix.SegmentationSecurityDomainConnectionPolicy{
 		Domain1: &goaviatrix.SegmentationSecurityDomain{
-			DomainName: d.Get("domain_name_1").(string),
+			DomainName: getString(d, "domain_name_1"),
 		},
 		Domain2: &goaviatrix.SegmentationSecurityDomain{
-			DomainName: d.Get("domain_name_2").(string),
+			DomainName: getString(d, "domain_name_2"),
 		},
 	}
 }
 
 func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	policy := marshalSegmentationNetworkDomainConnectionPolicyInput(d)
 
@@ -65,10 +67,10 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.R
 
 	d.SetId(policy.Domain1.DomainName + "~" + policy.Domain2.DomainName)
 	flag := false
-	defer resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if err := client.CreateSegmentationSecurityDomainConnectionPolicy(policy); err != nil {
-		return fmt.Errorf("could not create network domain connection policy: %v", err)
+		return fmt.Errorf("could not create network domain connection policy: %w", err)
 	}
 
 	return resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d, meta, &flag)
@@ -83,10 +85,10 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d *
 }
 
 func resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	domainName1 := d.Get("domain_name_1").(string)
-	domainName2 := d.Get("domain_name_2").(string)
+	domainName1 := getString(d, "domain_name_1")
+	domainName2 := getString(d, "domain_name_2")
 	if domainName1 == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no segmentation_network_domain_connection_policy domain_name received. Import Id is %s", id)
@@ -106,27 +108,26 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d *schema.Res
 	}
 
 	_, err := client.GetSegmentationSecurityDomainConnectionPolicy(policy)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find segmentation_network_domain_connection_policy %s: %v", domainName1+"~"+domainName2, err)
+		return fmt.Errorf("could not find segmentation_network_domain_connection_policy %s: %w", domainName1+"~"+domainName2, err)
 	}
-
-	d.Set("domain_name_1", domainName1)
-	d.Set("domain_name_2", domainName2)
+	mustSet(d, "domain_name_1", domainName1)
+	mustSet(d, "domain_name_2", domainName2)
 	d.SetId(domainName1 + "~" + domainName2)
 	return nil
 }
 
 func resourceAviatrixSegmentationNetworkDomainConnectionPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	policy := marshalSegmentationNetworkDomainConnectionPolicyInput(d)
 
 	if err := client.DeleteSegmentationSecurityDomainConnectionPolicy(policy); err != nil {
-		return fmt.Errorf("could not delete segmentation_network_domain_connection_policy: %v", err)
+		return fmt.Errorf("could not delete segmentation_network_domain_connection_policy: %w", err)
 	}
 
 	return nil

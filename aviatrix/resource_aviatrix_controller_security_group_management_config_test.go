@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -73,7 +72,7 @@ func testAccCheckControllerSecurityGroupManagementConfigExists(n string) resourc
 			return fmt.Errorf("no controller security group management config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("controller security group management config ID not found")
@@ -84,7 +83,7 @@ func testAccCheckControllerSecurityGroupManagementConfigExists(n string) resourc
 }
 
 func testAccCheckControllerSecurityGroupManagementConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_security_group_management_config" {
@@ -93,7 +92,7 @@ func testAccCheckControllerSecurityGroupManagementConfigDestroy(s *terraform.Sta
 
 		_, err := client.GetSecurityGroupManagementStatus()
 		if err != nil {
-			return fmt.Errorf("could not retrieve Controller Security Group Management Status due to err: %v", err)
+			return fmt.Errorf("could not retrieve Controller Security Group Management Status due to err: %w", err)
 		}
 	}
 

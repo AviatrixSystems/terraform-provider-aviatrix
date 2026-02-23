@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
@@ -87,7 +88,7 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no vpn user accelerator ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		elbList, err := client.GetVpnUserAccelerator()
 		if err != nil {
@@ -102,7 +103,7 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_vpn_user_accelerator" {
@@ -111,7 +112,7 @@ func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
 
 		elbList, err := client.GetVpnUserAccelerator()
 		if err != nil {
-			return fmt.Errorf("error retrieving vpn user accelerator: %s", err)
+			return fmt.Errorf("error retrieving vpn user accelerator: %w", err)
 		}
 		if goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator still exists")

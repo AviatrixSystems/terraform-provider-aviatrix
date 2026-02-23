@@ -1,12 +1,16 @@
 package aviatrix
 
 import (
+	"context"
+	"fmt"
+	"net"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestSortSpokeInterfacesByCustomOrder(t *testing.T) {
@@ -397,6 +401,82 @@ func TestValidateIPv6AccessTypeFunction(t *testing.T) {
 			} else {
 				assert.Empty(t, errors)
 			}
+		})
+	}
+}
+
+func TestIsTimeoutOrConnectionError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+		{
+			name:     "context deadline exceeded",
+			err:      fmt.Errorf(`HTTP POST "https://1.2.3.4/v2/api" failed: Post "https://1.2.3.4/v2/api": context deadline exceeded`),
+			expected: true,
+		},
+		{
+			name:     "EOF error",
+			err:      fmt.Errorf(`HTTP POST "https://1.2.3.4/v2/api" failed: Post "https://1.2.3.4/v2/api": EOF`),
+			expected: true,
+		},
+		{
+			name:     "connection reset",
+			err:      fmt.Errorf("read tcp 10.0.0.1:443: connection reset by peer"),
+			expected: true,
+		},
+		{
+			name:     "already joined error (not a timeout)",
+			err:      fmt.Errorf("[AVXERR-TRANSIT-0034] spoke gateway already joined"),
+			expected: false,
+		},
+		{
+			name:     "gateway not up error (not a timeout)",
+			err:      fmt.Errorf("spoke gateway is not up"),
+			expected: false,
+		},
+		{
+			name:     "generic API failure (not a timeout)",
+			err:      fmt.Errorf("rest API attach_spoke_to_transit_gw failed: invalid gateway"),
+			expected: false,
+		},
+		{
+			name:     "wrapped context deadline exceeded",
+			err:      fmt.Errorf("failed to attach spoke: myspoke to transit mytransit: HTTP POST failed: context deadline exceeded"),
+			expected: true,
+		},
+		{
+			name:     "context.DeadlineExceeded (type-safe)",
+			err:      context.DeadlineExceeded,
+			expected: true,
+		},
+		{
+			name:     "wrapped context.DeadlineExceeded (type-safe)",
+			err:      fmt.Errorf("HTTP POST failed: %w", context.DeadlineExceeded),
+			expected: true,
+		},
+		{
+			name:     "context.Canceled (type-safe)",
+			err:      context.Canceled,
+			expected: true,
+		},
+		{
+			name:     "net.Error timeout (type-safe)",
+			err:      &net.DNSError{IsTimeout: true},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isTimeoutOrConnectionError(tt.err)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

@@ -3,15 +3,17 @@ package aviatrix
 import (
 	"crypto/tls"
 	"crypto/x509"
+	_ "embed"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"runtime"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
+//go:embed terraform_provider_version.txt
 var Version string
 
 // Config contains the configuration for the Aviatrix provider
@@ -53,7 +55,8 @@ func (wtr *wrapTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // Aviatrix Controller.
 func defaultTransport(caCertPath string, verifyCert bool) (*http.Transport, error) {
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: !verifyCert,
+		InsecureSkipVerify: !verifyCert, //nolint:gosec // G402: InsecureSkipVerify is controlled by user config
+		MinVersion:         tls.VersionTLS12,
 	}
 
 	if verifyCert && caCertPath != "" {
@@ -99,4 +102,14 @@ func (c *Config) Client() (*goaviatrix.Client, error) {
 		log.Printf("[ERROR] unable to create client: %s", err)
 	}
 	return client, err
+}
+
+// mustClient asserts that the meta interface is a valid *goaviatrix.Client.
+// This is a helper to satisfy forcetypeassert lints while ensuring the
+// provider has its required API client.
+func mustClient(meta interface{}) *goaviatrix.Client {
+	if client, ok := meta.(*goaviatrix.Client); ok && client != nil {
+		return client
+	}
+	panic("internal error: provider meta is not a valid *goaviatrix.Client; check provider configuration")
 }

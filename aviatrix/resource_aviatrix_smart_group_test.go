@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -509,11 +508,11 @@ func testAccCheckSmartGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("no Smart Group ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		smartGroup, err := client.GetSmartGroup(context.Background(), rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("failed to get Smart Group status: %v", err)
+			return fmt.Errorf("failed to get Smart Group status: %w", err)
 		}
 
 		if smartGroup.UUID != rs.Primary.ID {
@@ -525,7 +524,7 @@ func testAccCheckSmartGroupExists(name string) resource.TestCheckFunc {
 }
 
 func testAccSmartGroupDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_smart_group" {

@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFirewallInstance() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 		Update: resourceAviatrixFirewallInstanceUpdate,
 		Delete: resourceAviatrixFirewallInstanceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -261,37 +263,37 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 }
 
 func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{
-		VpcID:                d.Get("vpc_id").(string),
-		GwName:               d.Get("firenet_gw_name").(string),
-		FirewallName:         d.Get("firewall_name").(string),
-		FirewallImage:        d.Get("firewall_image").(string),
-		FirewallImageVersion: d.Get("firewall_image_version").(string),
-		FirewallImageId:      d.Get("firewall_image_id").(string),
-		FirewallSize:         d.Get("firewall_size").(string),
-		EgressSubnet:         d.Get("egress_subnet").(string),
-		EgressVpc:            d.Get("egress_vpc_id").(string),
-		ManagementSubnet:     d.Get("management_subnet").(string),
-		ManagementVpc:        d.Get("management_vpc_id").(string),
-		KeyName:              d.Get("key_name").(string),
-		IamRole:              d.Get("iam_role").(string),
-		BootstrapBucketName:  d.Get("bootstrap_bucket_name").(string),
-		Username:             d.Get("username").(string),
-		Password:             d.Get("password").(string),
-		SshPublicKey:         d.Get("ssh_public_key").(string),
-		BootstrapStorageName: d.Get("bootstrap_storage_name").(string),
-		StorageAccessKey:     d.Get("storage_access_key").(string),
-		FileShareFolder:      d.Get("file_share_folder").(string),
-		ShareDirectory:       d.Get("share_directory").(string),
-		SicKey:               d.Get("sic_key").(string),
-		ContainerFolder:      d.Get("container_folder").(string),
-		SasUrlConfig:         d.Get("sas_url_config").(string),
-		SasUriLicense:        d.Get("sas_url_license").(string),
-		UserData:             d.Get("user_data").(string),
-		AvailabilityDomain:   d.Get("availability_domain").(string),
-		FaultDomain:          d.Get("fault_domain").(string),
+		VpcID:                getString(d, "vpc_id"),
+		GwName:               getString(d, "firenet_gw_name"),
+		FirewallName:         getString(d, "firewall_name"),
+		FirewallImage:        getString(d, "firewall_image"),
+		FirewallImageVersion: getString(d, "firewall_image_version"),
+		FirewallImageId:      getString(d, "firewall_image_id"),
+		FirewallSize:         getString(d, "firewall_size"),
+		EgressSubnet:         getString(d, "egress_subnet"),
+		EgressVpc:            getString(d, "egress_vpc_id"),
+		ManagementSubnet:     getString(d, "management_subnet"),
+		ManagementVpc:        getString(d, "management_vpc_id"),
+		KeyName:              getString(d, "key_name"),
+		IamRole:              getString(d, "iam_role"),
+		BootstrapBucketName:  getString(d, "bootstrap_bucket_name"),
+		Username:             getString(d, "username"),
+		Password:             getString(d, "password"),
+		SshPublicKey:         getString(d, "ssh_public_key"),
+		BootstrapStorageName: getString(d, "bootstrap_storage_name"),
+		StorageAccessKey:     getString(d, "storage_access_key"),
+		FileShareFolder:      getString(d, "file_share_folder"),
+		ShareDirectory:       getString(d, "share_directory"),
+		SicKey:               getString(d, "sic_key"),
+		ContainerFolder:      getString(d, "container_folder"),
+		SasUrlConfig:         getString(d, "sas_url_config"),
+		SasUriLicense:        getString(d, "sas_url_license"),
+		UserData:             getString(d, "user_data"),
+		AvailabilityDomain:   getString(d, "availability_domain"),
+		FaultDomain:          getString(d, "fault_domain"),
 	}
 
 	// For additional config validation we try to get the cloud_type from the given
@@ -355,7 +357,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	zone := d.Get("zone").(string)
+	zone := getString(d, "zone")
 	if zone != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.Azure|goaviatrix.AWS|goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("'zone' attribute is only valid for AWS, GCP or Azure")
 	}
@@ -426,11 +428,11 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 	tags, err := extractTags(d, cloudType)
 	if err != nil {
-		return fmt.Errorf("error creating tags for firewall instance: %v", err)
+		return fmt.Errorf("error creating tags for firewall instance: %w", err)
 	}
 	tagJson, err := TagsMapToJson(tags)
 	if err != nil {
-		return fmt.Errorf("failed to add tags when creating firewall instance: %v", err)
+		return fmt.Errorf("failed to add tags when creating firewall instance: %w", err)
 	}
 	firewallInstance.Tags = tags
 	firewallInstance.TagJson = tagJson
@@ -444,10 +446,10 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("failed to get firewall instance information")
 		}
-		return fmt.Errorf("failed to create a new firewall instance: %s", err)
+		return fmt.Errorf("failed to create a new firewall instance: %w", err)
 	}
 
 	d.SetId(instanceID)
@@ -455,120 +457,118 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := getString(d, "instance_id")
 	if instanceID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no firewall names received. Import Id is %s", id)
-		d.Set("instance_id", id)
+		mustSet(d, "instance_id", id)
 		d.SetId(id)
 	}
 
 	firewallInstance := &goaviatrix.FirewallInstance{
-		InstanceID: d.Get("instance_id").(string),
+		InstanceID: getString(d, "instance_id"),
 	}
 
 	fI, err := client.GetFirewallInstance(firewallInstance)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Firewall Instance: %s", err)
+		return fmt.Errorf("couldn't find Firewall Instance: %w", err)
 	}
 
 	log.Printf("[INFO] Found Firewall Instance: %#v", firewallInstance)
 
 	cloudType := goaviatrix.VendorToCloudType(fI.CloudVendor)
-
-	d.Set("cloud_type", cloudType)
+	mustSet(d, "cloud_type", cloudType)
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("vpc_id", fI.FirenetVpc)
-		d.Set("gcp_vpc_id", fI.VpcID)
+		mustSet(d, "vpc_id", fI.FirenetVpc)
+		mustSet(d, "gcp_vpc_id", fI.VpcID)
 	} else {
-		d.Set("vpc_id", fI.VpcID)
+		mustSet(d, "vpc_id", fI.VpcID)
 	}
-	d.Set("firenet_gw_name", fI.GwName)
-	d.Set("firewall_name", fI.FirewallName)
-	d.Set("firewall_image", fI.FirewallImage)
-	d.Set("firewall_size", fI.FirewallSize)
-	d.Set("instance_id", fI.InstanceID)
+	mustSet(d, "firenet_gw_name", fI.GwName)
+	mustSet(d, "firewall_name", fI.FirewallName)
+	mustSet(d, "firewall_image", fI.FirewallImage)
+	mustSet(d, "firewall_size", fI.FirewallSize)
+	mustSet(d, "instance_id", fI.InstanceID)
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("egress_subnet", fI.EgressSubnetID)
-		d.Set("egress_vpc_id", fI.EgressVpc)
+		mustSet(d, "egress_subnet", fI.EgressSubnetID)
+		mustSet(d, "egress_vpc_id", fI.EgressVpc)
 	} else {
-		d.Set("egress_subnet", fI.EgressSubnet)
+		mustSet(d, "egress_subnet", fI.EgressSubnet)
 	}
 	if strings.HasPrefix(fI.FirewallImage, "Palo Alto Networks") {
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("management_subnet", fI.ManagementSubnetID)
-			d.Set("management_vpc_id", fI.ManagementVpc)
+			mustSet(d, "management_subnet", fI.ManagementSubnetID)
+			mustSet(d, "management_vpc_id", fI.ManagementVpc)
 		} else {
-			d.Set("management_subnet", fI.ManagementSubnet)
+			mustSet(d, "management_subnet", fI.ManagementSubnet)
 		}
 	}
 
 	if fI.AvailabilityZone != "" {
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && fI.AvailabilityZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+fI.AvailabilityZone)
+			mustSet(d, "zone", "az-"+fI.AvailabilityZone)
 		} else if (goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) && fI.GwName == "") || goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("zone", fI.AvailabilityZone)
+			mustSet(d, "zone", fI.AvailabilityZone)
 		}
 	}
-
-	d.Set("lan_interface", fI.LanInterface)
-	d.Set("management_interface", fI.ManagementInterface)
-	d.Set("egress_interface", fI.EgressInterface)
-	d.Set("public_ip", fI.ManagementPublicIP)
+	mustSet(d, "lan_interface", fI.LanInterface)
+	mustSet(d, "management_interface", fI.ManagementInterface)
+	mustSet(d, "egress_interface", fI.EgressInterface)
+	mustSet(d, "public_ip", fI.ManagementPublicIP)
 
 	if fI.FirewallImageVersion != "" {
-		d.Set("firewall_image_version", fI.FirewallImageVersion)
+		mustSet(d, "firewall_image_version", fI.FirewallImageVersion)
 	}
 	if fI.IamRole != "" {
-		d.Set("iam_role", fI.IamRole)
+		mustSet(d, "iam_role", fI.IamRole)
 	}
 	if fI.BootstrapBucketName != "" {
-		d.Set("bootstrap_bucket_name", fI.BootstrapBucketName)
+		mustSet(d, "bootstrap_bucket_name", fI.BootstrapBucketName)
 	}
 	if fI.Username != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("username", fI.Username)
+		mustSet(d, "username", fI.Username)
 	}
 	if fI.BootstrapStorageName != "" {
-		d.Set("bootstrap_storage_name", fI.BootstrapStorageName)
+		mustSet(d, "bootstrap_storage_name", fI.BootstrapStorageName)
 	}
 	if fI.FileShareFolder != "" {
-		d.Set("file_share_folder", fI.FileShareFolder)
+		mustSet(d, "file_share_folder", fI.FileShareFolder)
 	}
 	if fI.ShareDirectory != "" {
-		d.Set("share_directory", fI.ShareDirectory)
+		mustSet(d, "share_directory", fI.ShareDirectory)
 	}
 	if fI.ContainerFolder != "" {
-		d.Set("container_folder", fI.ContainerFolder)
+		mustSet(d, "container_folder", fI.ContainerFolder)
 	}
 	if fI.SasUrlConfig != "" {
-		d.Set("sas_url_config", fI.SasUrlConfig)
+		mustSet(d, "sas_url_config", fI.SasUrlConfig)
 	}
 	if fI.SasUriLicense != "" {
-		d.Set("sas_url_license", fI.SasUriLicense)
+		mustSet(d, "sas_url_license", fI.SasUriLicense)
 	}
 	if fI.UserData != "" {
-		d.Set("user_data", fI.UserData)
+		mustSet(d, "user_data", fI.UserData)
 	}
 	if len(fI.Tags) > 0 {
 		tags := goaviatrix.KeyValueTags(fI.Tags).IgnoreConfig(ignoreTagsConfig)
 		err := d.Set("tags", tags)
 		if err != nil {
-			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
+			return fmt.Errorf("failed to set tags for firewall_instance on read: %w", err)
 		}
 	}
 	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("firewall_image_id", fI.FirewallImageId)
+		mustSet(d, "firewall_image_id", fI.FirewallImageId)
 	}
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {
-		d.Set("availability_domain", fI.AvailabilityZone)
-		d.Set("fault_domain", fI.FaultDomain)
+		mustSet(d, "availability_domain", fI.AvailabilityZone)
+		mustSet(d, "fault_domain", fI.FaultDomain)
 	}
 
 	return nil
@@ -579,14 +579,14 @@ func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("can not change firewall_image_id")
 	}
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	if d.HasChange("tags") {
-		tags, err := extractTags(d, d.Get("cloud_type").(int))
+		tags, err := extractTags(d, getInt(d, "cloud_type"))
 		if err != nil {
-			return fmt.Errorf("failed to extract tags: %v", err)
+			return fmt.Errorf("failed to extract tags: %w", err)
 		}
 		firewallInstance := &goaviatrix.FirewallInstance{
-			InstanceID: d.Get("instance_id").(string),
+			InstanceID: getString(d, "instance_id"),
 			Tags:       tags,
 		}
 
@@ -594,28 +594,28 @@ func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interfa
 
 		err = client.UpdateFirewallInstanceTags(firewallInstance)
 		if err != nil {
-			return fmt.Errorf("failed to update tags for firewall: %v", err)
+			return fmt.Errorf("failed to update tags for firewall: %w", err)
 		}
 	}
 	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
 func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{
-		VpcID:      d.Get("vpc_id").(string),
-		InstanceID: d.Get("instance_id").(string),
+		VpcID:      getString(d, "vpc_id"),
+		InstanceID: getString(d, "instance_id"),
 	}
-	if goaviatrix.IsCloudType(d.Get("cloud_type").(int), goaviatrix.GCPRelatedCloudTypes) {
-		firewallInstance.VpcID = d.Get("gcp_vpc_id").(string)
+	if goaviatrix.IsCloudType(getInt(d, "cloud_type"), goaviatrix.GCPRelatedCloudTypes) {
+		firewallInstance.VpcID = getString(d, "gcp_vpc_id")
 	}
 
 	log.Printf("[INFO] Deleting firewall instance: %#v", firewallInstance)
 
 	err := client.DeleteFirewallInstance(firewallInstance)
 	if err != nil {
-		return fmt.Errorf("failed to delete firewall instance: %s", err)
+		return fmt.Errorf("failed to delete firewall instance: %w", err)
 	}
 
 	return nil

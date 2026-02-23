@@ -59,6 +59,8 @@ type EdgeEquinixInterface struct {
 	Dhcp          bool               `json:"dhcp"`
 	IpAddr        string             `json:"ipaddr"`
 	GatewayIp     string             `json:"gateway_ip"`
+	IPv6Addr      string             `json:"v6_ipaddr,omitempty"`
+	GatewayIPv6IP string             `json:"gateway_ipv6_ip,omitempty"`
 	DnsPrimary    string             `json:"dns_primary"`
 	DnsSecondary  string             `json:"dns_secondary"`
 	SubInterfaces []*EdgeEquinixVlan `json:"subinterfaces,omitempty"`

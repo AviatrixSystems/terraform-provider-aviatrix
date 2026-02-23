@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,9 +30,9 @@ func resourceAviatrixControllerEmailExceptionNotificationConfig() *schema.Resour
 }
 
 func resourceAviatrixControllerEmailExceptionNotificationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enableEmailExceptionNotification := d.Get("enable_email_exception_notification").(bool)
+	enableEmailExceptionNotification := getBool(d, "enable_email_exception_notification")
 	if !enableEmailExceptionNotification {
 		err := client.SetEmailExceptionNotification(ctx, false)
 		if err != nil {
@@ -46,7 +45,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigCreate(ctx contex
 }
 
 func resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -56,17 +55,17 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx context.
 	if err != nil {
 		return diag.Errorf("could not get exception email notification status: %v", err)
 	}
-	d.Set("enable_email_exception_notification", enableEmailExceptionNotification)
+	mustSet(d, "enable_email_exception_notification", enableEmailExceptionNotification)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerEmailExceptionNotificationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("enable_email_exception_notification") {
-		err := client.SetEmailExceptionNotification(ctx, d.Get("enable_email_exception_notification").(bool))
+		err := client.SetEmailExceptionNotification(ctx, getBool(d, "enable_email_exception_notification"))
 		if err != nil {
 			return diag.Errorf("could not update email exception notification: %v", err)
 		}
@@ -76,7 +75,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigUpdate(ctx contex
 }
 
 func resourceAviatrixControllerEmailExceptionNotificationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.SetEmailExceptionNotification(ctx, true)
 	if err != nil {

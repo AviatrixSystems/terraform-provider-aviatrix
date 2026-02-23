@@ -18,7 +18,6 @@ type EdgeSpoke struct {
 	Action                             string `json:"action,omitempty"`
 	CID                                string `json:"CID,omitempty"`
 	Type                               string `json:"type,omitempty"`
-	Caag                               bool   `json:"caag,omitempty"`
 	GwName                             string `json:"gateway_name,omitempty"`
 	SiteId                             string `json:"site_id,omitempty"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip,omitempty"`
@@ -139,7 +138,6 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	edgeSpoke.Action = "create_edge_gateway"
 	edgeSpoke.CID = c.CID
 	edgeSpoke.Type = "spoke"
-	edgeSpoke.Caag = false
 
 	interfaces, err := json.Marshal(edgeSpoke.InterfaceList)
 	if err != nil {
@@ -182,6 +180,89 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	}
 
 	return nil
+}
+
+// EdgeSpokeHa represents an HA edge spoke gateway
+type EdgeSpokeHa struct {
+	Action                   string `form:"action" json:"action"`
+	CID                      string `form:"CID" json:"CID"`
+	GroupUUID                string `form:"group_uuid,omitempty" json:"group_uuid,omitempty"`
+	PrimaryGwName            string `form:"primary_gw_name,omitempty" json:"primary_gw_name,omitempty"`
+	SiteID                   string `form:"site_id,omitempty" json:"site_id,omitempty"`
+	ZtpFileType              string `form:"ztp_file_type,omitempty" json:"ztp_file_type,omitempty"`
+	ZtpFileDownloadPath      string `form:"-"`
+	InterfaceList            []*EdgeSpokeInterface
+	Interfaces               string `form:"interfaces,omitempty" json:"interfaces"`
+	NoProgressBar            bool   `form:"no_progress_bar,omitempty" json:"no_progress_bar,omitempty"`
+	ManagementEgressIPPrefix string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip,omitempty"`
+	CloudInit                bool   `form:"cloud_init,omitempty" json:"cloud_init,omitempty"`
+}
+
+// CreateEdgeSpokeHa creates an HA edge spoke gateway
+func (c *Client) CreateEdgeSpokeHa(ctx context.Context, edgeSpokeHa *EdgeSpokeHa) (string, error) {
+	edgeSpokeHa.CID = c.CID
+	edgeSpokeHa.Action = "create_multicloud_ha_gateway"
+	edgeSpokeHa.NoProgressBar = true
+
+	if edgeSpokeHa.ZtpFileType == "iso" {
+		edgeSpokeHa.CloudInit = false
+	} else {
+		edgeSpokeHa.CloudInit = true
+	}
+
+	interfaces, err := json.Marshal(edgeSpokeHa.InterfaceList)
+	if err != nil {
+		return "", err
+	}
+
+	edgeSpokeHa.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	type CreateEdgeSpokeHaResp struct {
+		Return bool   `json:"return"`
+		Result string `json:"results"`
+		Reason string `json:"reason"`
+	}
+
+	var data CreateEdgeSpokeHaResp
+
+	gwName, err := c.PostAPIContext2HaGw(ctx, &data, edgeSpokeHa.Action, edgeSpokeHa, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+
+	// Write ZTP file if download path is provided
+	if edgeSpokeHa.ZtpFileDownloadPath != "" {
+		var fileName string
+		if edgeSpokeHa.ZtpFileType == "iso" {
+			fileName = edgeSpokeHa.ZtpFileDownloadPath + "/" + edgeSpokeHa.SiteID + "-hagw.iso"
+		} else {
+			fileName = edgeSpokeHa.ZtpFileDownloadPath + "/" + edgeSpokeHa.SiteID + "-hagw-cloud-init.txt"
+		}
+
+		outFile, err := os.Create(fileName)
+		if err != nil {
+			return gwName, err
+		}
+		defer outFile.Close()
+
+		if edgeSpokeHa.ZtpFileType == "iso" {
+			decodedResult, err := b64.StdEncoding.DecodeString(data.Result)
+			if err != nil {
+				return gwName, err
+			}
+			_, err = outFile.Write(decodedResult)
+			if err != nil {
+				return gwName, err
+			}
+		} else {
+			_, err = outFile.WriteString(data.Result)
+			if err != nil {
+				return gwName, err
+			}
+		}
+	}
+
+	return gwName, nil
 }
 
 func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpokeResp, error) {
@@ -282,17 +363,39 @@ func (c *Client) UpdateEdgeSpokeGeoCoordinate(ctx context.Context, edgeSpoke *Ed
 }
 
 func ValidateEdgeSpokeLatitude(val interface{}, key string) (warns []string, errs []error) {
-	v, _ := strconv.ParseFloat(val.(string), 64)
+	s, ok := val.(string)
+	if !ok {
+		errs = append(errs, fmt.Errorf("%s must be a string", key))
+		return
+	}
+
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("%s must be a valid number", key))
+		return
+	}
+
 	if v < -90 || v > 90 {
-		errs = append(errs, fmt.Errorf("latitude must be between -90 and 90"))
+		errs = append(errs, fmt.Errorf("%s must be between -90 and 90", key))
 	}
 	return
 }
 
 func ValidateEdgeSpokeLongitude(val interface{}, key string) (warns []string, errs []error) {
-	v, _ := strconv.ParseFloat(val.(string), 64)
+	s, ok := val.(string)
+	if !ok {
+		errs = append(errs, fmt.Errorf("%s must be a string", key))
+		return
+	}
+
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("%s must be a valid number", key))
+		return
+	}
+
 	if v < -180 || v > 180 {
-		errs = append(errs, fmt.Errorf("longitude must be between -180 and 180"))
+		errs = append(errs, fmt.Errorf("%s must be between -180 and 180", key))
 	}
 	return
 }

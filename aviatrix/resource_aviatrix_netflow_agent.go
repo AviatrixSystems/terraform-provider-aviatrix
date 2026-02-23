@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -17,7 +19,7 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 		Read:   resourceAviatrixNetflowAgentRead,
 		Delete: resourceAviatrixNetflowAgentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,20 +70,20 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 
 func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
 	netflowAgent := &goaviatrix.NetflowAgent{
-		ServerIp: d.Get("server_ip").(string),
-		Port:     d.Get("port").(int),
-		Version:  d.Get("version").(int),
+		ServerIp: getString(d, "server_ip"),
+		Port:     getInt(d, "port"),
+		Version:  getInt(d, "version"),
 	}
 
 	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
+	for _, v := range getSet(d, "excluded_gateways").List() {
+		excludedGateways = append(excludedGateways, mustString(v))
 	}
 	if len(excludedGateways) != 0 {
 		netflowAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
 	}
 
-	if d.Get("enable_l7_mode").(bool) {
+	if getBool(d, "enable_l7_mode") {
 		netflowAgent.L7Mode = "enable"
 	} else {
 		netflowAgent.L7Mode = "disable"
@@ -91,17 +93,17 @@ func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
 }
 
 func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	_, err := client.GetNetflowAgentStatus()
-	if err != goaviatrix.ErrNotFound {
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
 		return fmt.Errorf("the netflow_agent is already enabled, please import to manage with Terraform")
 	}
 
 	netflowAgent := marshalNetflowAgentInput(d)
 
 	if err := client.EnableNetflowAgent(netflowAgent); err != nil {
-		return fmt.Errorf("could not enable netflow agent: %v", err)
+		return fmt.Errorf("could not enable netflow agent: %w", err)
 	}
 
 	d.SetId("netflow_agent")
@@ -109,41 +111,40 @@ func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != "netflow_agent" {
 		return fmt.Errorf("invalid ID, expected ID \"netflow_agent\", instead got %s", d.Id())
 	}
 
 	netflowAgentStatus, err := client.GetNetflowAgentStatus()
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get netflow agent status: %v", err)
+		return fmt.Errorf("could not get netflow agent status: %w", err)
 	}
-
-	d.Set("server_ip", netflowAgentStatus.ServerIp)
+	mustSet(d, "server_ip", netflowAgentStatus.ServerIp)
 	port, _ := strconv.Atoi(netflowAgentStatus.Port)
-	d.Set("port", port)
+	mustSet(d, "port", port)
 	version, _ := strconv.Atoi(netflowAgentStatus.Version)
-	d.Set("version", version)
-	d.Set("enable_l7_mode", netflowAgentStatus.L7Mode)
+	mustSet(d, "version", version)
+	mustSet(d, "enable_l7_mode", netflowAgentStatus.L7Mode)
 	if len(netflowAgentStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", netflowAgentStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", netflowAgentStatus.ExcludedGateways)
 	}
-	d.Set("status", netflowAgentStatus.Status)
+	mustSet(d, "status", netflowAgentStatus.Status)
 
 	d.SetId("netflow_agent")
 	return nil
 }
 
 func resourceAviatrixNetflowAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if err := client.DisableNetflowAgent(); err != nil {
-		return fmt.Errorf("could not disable netflow agent: %v", err)
+		return fmt.Errorf("could not disable netflow agent: %w", err)
 	}
 
 	return nil

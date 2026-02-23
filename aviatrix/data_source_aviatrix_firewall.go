@@ -1,10 +1,12 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixFirewall() *schema.Resource {
@@ -76,9 +78,9 @@ func dataSourceAviatrixFirewall() *schema.Resource {
 }
 
 func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 
 	firewall := &goaviatrix.Firewall{
 		GwName: gwName,
@@ -86,24 +88,21 @@ func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) er
 
 	fw, err := client.GetPolicy(firewall)
 
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error fetching firewall policy for gateway %s: %s", firewall.GwName, err)
+		return fmt.Errorf("error fetching firewall policy for gateway %s: %w", firewall.GwName, err)
 	}
-
-	d.Set("gw_name", gwName)
-
-	d.Set("base_policy", "deny-all")
+	mustSet(d, "gw_name", gwName)
+	mustSet(d, "base_policy", "deny-all")
 	if fw.BasePolicy == "allow-all" {
-		d.Set("base_policy", "allow-all")
+		mustSet(d, "base_policy", "allow-all")
 	}
-
-	d.Set("base_log_enabled", false)
+	mustSet(d, "base_log_enabled", false)
 	if fw.BaseLogEnabled == "on" {
-		d.Set("base_log_enabled", true)
+		mustSet(d, "base_log_enabled", true)
 	}
 
 	var policies []map[string]interface{}
@@ -111,7 +110,7 @@ func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) er
 		policies = append(policies, goaviatrix.PolicyToMap(p))
 	}
 	if err = d.Set("policies", policies); err != nil {
-		return fmt.Errorf("error setting firewall policies for gateway %s: %s", firewall.GwName, err)
+		return fmt.Errorf("error setting firewall policies for gateway %s: %w", firewall.GwName, err)
 	}
 
 	d.SetId(gwName)

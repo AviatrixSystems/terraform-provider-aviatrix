@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAwsTgwNetworkDomain_basic(t *testing.T) {
@@ -109,7 +111,7 @@ func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, 
 			return fmt.Errorf("resource %s not found", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		netDomain := &goaviatrix.SecurityDomain{
 			Name:       netDomainName,
@@ -117,7 +119,7 @@ func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, 
 		}
 
 		_, err := client.GetSecurityDomain(netDomain)
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("network domain %s not found", netDomainName)
 		}
 
@@ -126,7 +128,7 @@ func testAccCheckAwsTgwNetworkDomainExists(resourceName string, tgwName string, 
 }
 
 func testAccCheckAwsTgwNetworkDomainDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_network_domain" {
@@ -144,15 +146,15 @@ func testAccCheckAwsTgwNetworkDomainDestroy(s *terraform.State) error {
 
 		_, err := client.ListTgwDetails(awsTgw)
 
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			networkDomain := &goaviatrix.SecurityDomain{
 				Name:       rs.Primary.Attributes["name"],
 				AwsTgwName: rs.Primary.Attributes["tgw_name"],
 			}
 
 			_, err := client.GetSecurityDomain(networkDomain)
-			if err != goaviatrix.ErrNotFound {
-				return fmt.Errorf("network domain still exists: %v", err)
+			if !errors.Is(err, goaviatrix.ErrNotFound) {
+				return fmt.Errorf("network domain still exists: %w", err)
 			}
 		} else {
 			break

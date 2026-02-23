@@ -82,6 +82,7 @@ type Site2Cloud struct {
 	CaCertTagName                 string `form:"cert_name,omitempty"`
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
 	BackupRemoteIdentifier        string `form:"cert_based_s2c_ha_remote_id,omitempty"`
+	ProxyIdEnabled                bool
 }
 
 type EditSite2Cloud struct {
@@ -107,6 +108,7 @@ type EditSite2Cloud struct {
 	CaCertTagName                 string `form:"s2c_cacert_tag_name,omitempty"`
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
 	BackupRemoteIdentifier        string `form:"cert_based_s2c_ha_remote_id,omitempty"`
+	ProxyIdEnabled                string `form:"proxy_id_enabled,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -183,6 +185,7 @@ type EditSite2CloudConnDetail struct {
 	RemoteGwLongitude              float64       `json:"remote_longitude,omitempty"`
 	BackupRemoteGwLatitude         float64       `json:"remote_backup_latitude,omitempty"`
 	BackupRemoteGwLongitude        float64       `json:"remote_backup_longitude,omitempty"`
+	ProxyIdEnabled                 bool          `json:"proxy_id_enabled,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -307,6 +310,10 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	form["backup_remote_tunnel_ip"] = site2cloud.BackupRemoteTunnelIp
 	if site2cloud.EnableSingleIpHA {
 		form["enable_single_ip_ha"] = "true"
+	}
+
+	if site2cloud.ProxyIdEnabled {
+		form["proxy_id_enabled"] = "true"
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -462,6 +469,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.EnableSingleIpHA = s2cConnDetail.EnableSingleIpHA == "enabled"
 		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier
 		site2cloud.Phase1LocalIdentifier = s2cConnDetail.Phase1LocalIdentifier
+		site2cloud.ProxyIdEnabled = s2cConnDetail.ProxyIdEnabled
 		return site2cloud, nil
 	}
 
@@ -613,18 +621,42 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 		return false
 	}
 
-	ip := d.Get("remote_gateway_ip").(string)
-	haip := d.Get("backup_remote_gateway_ip").(string)
-	o, n := d.GetChange("phase1_remote_identifier")
-	haEnabled := d.Get("ha_enabled").(bool)
-	singleIpHA := d.Get("enable_single_ip_ha").(bool)
+	ip, ok := d.Get("remote_gateway_ip").(string)
+	if !ok {
+		return false
+	}
+	haip, ok := d.Get("backup_remote_gateway_ip").(string)
+	if !ok {
+		return false
+	}
 
-	ph1RemoteIdListOld := ExpandStringList(o.([]interface{}))
-	ph1RemoteIdListNew := ExpandStringList(n.([]interface{}))
+	o, n := d.GetChange("phase1_remote_identifier")
+
+	haEnabled, ok := d.Get("ha_enabled").(bool)
+	if !ok {
+		return false
+	}
+	singleIpHA, ok := d.Get("enable_single_ip_ha").(bool)
+	if !ok {
+		return false
+	}
+
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
+
+	ph1RemoteIdListOld := ExpandStringList(oList)
+	ph1RemoteIdListNew := ExpandStringList(nList)
 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 		if haEnabled && !singleIpHA {
-			if len(ph1RemoteIdListOld) == 1 && len(ph1RemoteIdListNew) == 1 && ip == haip && ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip {
+			if len(ph1RemoteIdListOld) == 1 && len(ph1RemoteIdListNew) == 1 && ip == haip &&
+				ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip {
 				return true
 			}
 			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
@@ -645,97 +677,182 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 
 func DiffSuppressFuncRemoteSourceRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_source_real_cidrs")
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
 
-	return Equivalent(cidrListOld, cidrListNew)
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
+
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncRemoteSourceVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_source_virtual_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncRemoteDestinationRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_destination_real_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncRemoteDestinationVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_destination_virtual_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncLocalSourceRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("local_source_real_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncLocalSourceVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("local_source_virtual_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncLocalDestinationRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("local_destination_real_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncLocalDestinationVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("local_destination_virtual_cidrs")
 
-	cidrListOld := ExpandStringList(o.([]interface{}))
-	cidrListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
 
-	return Equivalent(cidrListOld, cidrListNew)
+	return Equivalent(ExpandStringList(oList), ExpandStringList(nList))
 }
 
 func DiffSuppressFuncRemoteGwLatitude(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_gateway_latitude")
 
-	return math.Abs(o.(float64)-n.(float64)) < 1
+	ov, ok := o.(float64)
+	if !ok {
+		return false
+	}
+	nv, ok := n.(float64)
+	if !ok {
+		return false
+	}
+
+	return math.Abs(ov-nv) < 1
 }
 
 func DiffSuppressFuncRemoteGwLongitude(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("remote_gateway_longitude")
 
-	return math.Abs(o.(float64)-n.(float64)) < 1
+	ov, ok := o.(float64)
+	if !ok {
+		return false
+	}
+	nv, ok := n.(float64)
+	if !ok {
+		return false
+	}
+
+	return math.Abs(ov-nv) < 1
 }
 
 func DiffSuppressFuncBackupRemoteGwLatitude(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("backup_remote_gateway_latitude")
 
-	return math.Abs(o.(float64)-n.(float64)) < 1
+	ov, ok := o.(float64)
+	if !ok {
+		return false
+	}
+	nv, ok := n.(float64)
+	if !ok {
+		return false
+	}
+
+	return math.Abs(ov-nv) < 1
 }
 
 func DiffSuppressFuncBackupRemoteGwLongitude(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("backup_remote_gateway_longitude")
 
-	return math.Abs(o.(float64)-n.(float64)) < 1
+	ov, ok := o.(float64)
+	if !ok {
+		return false
+	}
+	nv, ok := n.(float64)
+	if !ok {
+		return false
+	}
+
+	return math.Abs(ov-nv) < 1
 }
 
 func StringCanBeEmptyButCannotBeWhiteSpace(val interface{}, key string) (warns []string, errs []error) {

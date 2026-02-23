@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFQDNTagRule_basic(t *testing.T) {
@@ -70,7 +71,7 @@ func testAccCheckFQDNDomainNameExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no fqdn_tag_rule ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		fqdn := &goaviatrix.FQDN{
 			FQDNTag: rs.Primary.Attributes["fqdn_tag_name"],
@@ -97,7 +98,7 @@ func testAccCheckFQDNDomainNameExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckFQDNDomainNameDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_fqdn_tag_rule" {

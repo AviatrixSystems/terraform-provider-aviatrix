@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -60,11 +59,11 @@ func testAccCheckControllerGatewayKeepaliveConfigExists(n string) resource.TestC
 			return fmt.Errorf("no gateway keepalive config resource ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetGatewayKeepaliveConfig(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get gateway keepalive config status: %v", err)
+			return fmt.Errorf("failed to get gateway keepalive config status: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -76,7 +75,7 @@ func testAccCheckControllerGatewayKeepaliveConfigExists(n string) resource.TestC
 }
 
 func testAccCheckControllerGatewayKeepaliveConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_gateway_keepalive_config" {

@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixDeviceInterfaceConfig_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccCheckDeviceInterfaceConfigExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no device_interface_config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		device := &goaviatrix.Device{Name: rs.Primary.Attributes["device_name"]}
 

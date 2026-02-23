@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,10 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeMegaport() *schema.Resource {
@@ -373,109 +375,89 @@ func resourceAviatrixEdgeMegaport() *schema.Resource {
 
 func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport, error) {
 	edgeMegaport := &goaviatrix.EdgeMegaport{
-		AccountName:                        d.Get("account_name").(string),
-		GwName:                             d.Get("gw_name").(string),
-		SiteID:                             d.Get("site_id").(string),
-		ZtpFileDownloadPath:                d.Get("ztp_file_download_path").(string),
+		AccountName:                        getString(d, "account_name"),
+		GwName:                             getString(d, "gw_name"),
+		SiteID:                             getString(d, "site_id"),
+		ZtpFileDownloadPath:                getString(d, "ztp_file_download_path"),
 		ManagementEgressIPPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
-		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DNSServerIP:                        d.Get("dns_server_ip").(string),
-		SecondaryDNSServerIP:               d.Get("secondary_dns_server_ip").(string),
-		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
-		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
-		LocalAsNumber:                      d.Get("local_as_number").(string),
+		EnableManagementOverPrivateNetwork: getBool(d, "enable_management_over_private_network"),
+		DNSServerIP:                        getString(d, "dns_server_ip"),
+		SecondaryDNSServerIP:               getString(d, "secondary_dns_server_ip"),
+		EnableEdgeActiveStandby:            getBool(d, "enable_edge_active_standby"),
+		EnableEdgeActiveStandbyPreemptive:  getBool(d, "enable_edge_active_standby_preemptive"),
+		LocalAsNumber:                      getString(d, "local_as_number"),
 		PrependAsPath:                      getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		EnableLearnedCidrsApproval:         getBool(d, "enable_learned_cidrs_approval"),
 		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_neighbor_status_polling_time").(int),
-		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
-		Latitude:                           d.Get("latitude").(string),
-		Longitude:                          d.Get("longitude").(string),
-		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnablePreserveAsPath:               getBool(d, "enable_preserve_as_path"),
+		BgpPollingTime:                     getInt(d, "bgp_polling_time"),
+		BgpBfdPollingTime:                  getInt(d, "bgp_neighbor_status_polling_time"),
+		BgpHoldTime:                        getInt(d, "bgp_hold_time"),
+		EnableEdgeTransitiveRouting:        getBool(d, "enable_edge_transitive_routing"),
+		EnableJumboFrame:                   getBool(d, "enable_jumbo_frame"),
+		Latitude:                           getString(d, "latitude"),
+		Longitude:                          getString(d, "longitude"),
+		RxQueueSize:                        getString(d, "rx_queue_size"),
+		EnableSingleIpSnat:                 getBool(d, "enable_single_ip_snat"),
 	}
 
-	interfaces := d.Get("interfaces").([]interface{})
+	interfaces := getList(d, "interfaces")
 	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+		interface1 := mustMap(interface0)
 
 		interface2 := &goaviatrix.EdgeMegaportInterface{
-			LogicalInterfaceName: interface1["logical_ifname"].(string),
-			PublicIP:             interface1["wan_public_ip"].(string),
-			Tag:                  interface1["tag"].(string),
-			Dhcp:                 interface1["enable_dhcp"].(bool),
-			IPAddr:               interface1["ip_address"].(string),
-			GatewayIP:            interface1["gateway_ip"].(string),
-			DNSPrimary:           interface1["dns_server_ip"].(string),
-			DNSSecondary:         interface1["secondary_dns_server_ip"].(string),
+			LogicalInterfaceName: mustString(interface1["logical_ifname"]),
+			PublicIP:             mustString(interface1["wan_public_ip"]),
+			Tag:                  mustString(interface1["tag"]),
+			Dhcp:                 mustBool(interface1["enable_dhcp"]),
+			IPAddr:               mustString(interface1["ip_address"]),
+			GatewayIP:            mustString(interface1["gateway_ip"]),
+			DNSPrimary:           mustString(interface1["dns_server_ip"]),
+			DNSSecondary:         mustString(interface1["secondary_dns_server_ip"]),
 		}
 
 		// vrrp_state and virtual_ip are only applicable for LAN interfaces
-		logicalIfname, ok := interface1["logical_ifname"].(string)
-		if !ok {
-			return nil, fmt.Errorf("invalid or missing value for 'logical_ifname'")
-		}
-		enableVrrp, ok := interface1["enable_vrrp"].(bool)
-		if !ok {
-			return nil, fmt.Errorf("invalid or missing value for 'enable_vrrp'")
-		}
+		logicalIfname := mustString(interface1["logical_ifname"])
+		enableVrrp := mustBool(interface1["enable_vrrp"])
 		if strings.HasPrefix(logicalIfname, "lan") && enableVrrp {
 			interface2.VrrpState = enableVrrp
-			interface2.VirtualIP, ok = interface1["vrrp_virtual_ip"].(string)
-			if !ok {
-				return nil, fmt.Errorf("invalid or missing value for 'vrrp_virtual_ip'")
-			}
+			interface2.VirtualIP = mustString(interface1["vrrp_virtual_ip"])
 		}
 
 		edgeMegaport.InterfaceList = append(edgeMegaport.InterfaceList, interface2)
 	}
 
-	vlan := d.Get("vlan").([]interface{})
+	vlan := getList(d, "vlan")
 	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
+		vlan1 := mustMap(vlan0)
 
 		vlan2 := &goaviatrix.EdgeMegaportVlan{
-			ParentLogicalInterface: vlan1["parent_logical_interface_name"].(string),
-			IPAddr:                 vlan1["ip_address"].(string),
-			GatewayIP:              vlan1["gateway_ip"].(string),
-			PeerIPAddr:             vlan1["peer_ip_address"].(string),
-			PeerGatewayIP:          vlan1["peer_gateway_ip"].(string),
-			VirtualIP:              vlan1["vrrp_virtual_ip"].(string),
-			Tag:                    vlan1["tag"].(string),
+			ParentLogicalInterface: mustString(vlan1["parent_logical_interface_name"]),
+			IPAddr:                 mustString(vlan1["ip_address"]),
+			GatewayIP:              mustString(vlan1["gateway_ip"]),
+			PeerIPAddr:             mustString(vlan1["peer_ip_address"]),
+			PeerGatewayIP:          mustString(vlan1["peer_gateway_ip"]),
+			VirtualIP:              mustString(vlan1["vrrp_virtual_ip"]),
+			Tag:                    mustString(vlan1["tag"]),
 		}
 
-		vlandID, ok := vlan1["vlan_id"].(int)
-		if !ok {
-			return nil, fmt.Errorf("invalid or missing value for 'vlan_id'")
-		}
+		vlandID := mustInt(vlan1["vlan_id"])
 		vlan2.VlanID = strconv.Itoa(vlandID)
 
 		edgeMegaport.VlanList = append(edgeMegaport.VlanList, vlan2)
 	}
 
 	interfaceMapping := map[string][]string{}
-	interfaceMappingList, ok := d.Get("interface_mapping").([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("incorrect type for interface_mapping")
-	}
+	interfaceMappingList := getList(d, "interface_mapping")
+
 	if len(interfaceMappingList) > 0 {
 		// get the user provided interface mapping
 		for _, value := range interfaceMappingList {
-			mappingMap, ok := value.(map[string]interface{})
-			if !ok {
-				return nil, fmt.Errorf("invalid type %T for interface mapping, expected a map", value)
-			}
-			interfaceName, ok1 := mappingMap["name"].(string)
-			interfaceType, ok2 := mappingMap["type"].(string)
-			interfaceIndex, ok3 := mappingMap["index"].(int)
-			if !ok1 || !ok2 || !ok3 {
-				return nil, fmt.Errorf("invalid interface mapping, 'name', 'type', and 'index' must be strings")
-			}
+			mappingMap := mustMap(value)
+			interfaceName := mustString(mappingMap["name"])
+			interfaceType := mustString(mappingMap["type"])
+			interfaceIndex := mustInt(mappingMap["index"])
 			interfaceMapping[interfaceName] = []string{interfaceType, strconv.Itoa(interfaceIndex)}
 		}
 	} else {
@@ -490,11 +472,11 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 	}
 	interfaceMappingJSON, err := json.Marshal(interfaceMapping)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal interface mapping to json: %v", err)
+		return nil, fmt.Errorf("failed to marshal interface mapping to json: %w", err)
 	}
 	edgeMegaport.InterfaceMapping = string(interfaceMappingJSON)
 
-	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+	if getBool(d, "enable_auto_advertise_lan_cidrs") {
 		edgeMegaport.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
 		edgeMegaport.EnableAutoAdvertiseLanCidrs = "disable"
@@ -504,7 +486,7 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 }
 
 func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeMegaport, err := marshalEdgeMegaportInput(d)
@@ -648,11 +630,8 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if edgeMegaport.RxQueueSize != "" {
-		gatewayForGatewayFunctions.RxQueueSize = edgeMegaport.RxQueueSize
-		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
-		if err != nil {
-			return diag.Errorf("could not set rx queue size after Edge Megaport creation: %v", err)
-		}
+		return diag.Errorf("'rx_queue_size' cannot be set during gateway creation. " +
+			"Please create the gateway first, then set 'rx_queue_size' in a subsequent 'terraform apply'")
 	}
 
 	if edgeMegaport.EnableSingleIpSnat {
@@ -694,19 +673,19 @@ func resourceAviatrixEdgeMegaportReadIfRequired(ctx context.Context, d *schema.R
 }
 
 func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("gw_name").(string) == "" {
+	if getString(d, "gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
 		_ = d.Set("gw_name", id)
 		d.SetId(id)
 	}
 
-	edgeMegaportResp, err := client.GetEdgeMegaport(ctx, d.Get("gw_name").(string))
+	edgeMegaportResp, err := client.GetEdgeMegaport(ctx, getString(d, "gw_name"))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -787,10 +766,8 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
 	// get user interface order
-	userInterfaces, ok := d.Get("interfaces").([]interface{})
-	if !ok {
-		return diag.Errorf("incorrect type for interfaces, expected a list")
-	}
+	userInterfaces := getList(d, "interfaces")
+
 	userInterfaceOrder, err := getUserInterfaceOrder(userInterfaces)
 	if err != nil {
 		return diag.Errorf("failed to get user interface order: %s", err)
@@ -873,7 +850,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeMegaport, err := marshalEdgeMegaportInput(d)
@@ -1100,11 +1077,11 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
-	accountName := d.Get("account_name").(string)
-	gwName := d.Get("gw_name").(string)
-	siteId := d.Get("site_id").(string)
-	ztpFileDownloadPath := d.Get("ztp_file_download_path").(string)
+	client := mustClient(meta)
+	accountName := getString(d, "account_name")
+	gwName := getString(d, "gw_name")
+	siteId := getString(d, "site_id")
+	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 
 	err := client.DeleteEdgeMegaport(ctx, accountName, gwName)
 	if err != nil {

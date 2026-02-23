@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -8,9 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixProxyConfig_basic(t *testing.T) {
@@ -77,7 +79,7 @@ func testAccCheckProxyConfigExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no proxy config ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("proxy config ID not found")
@@ -88,7 +90,7 @@ func testAccCheckProxyConfigExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckProxyConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_proxy_config" {
@@ -97,10 +99,10 @@ func testAccCheckProxyConfigDestroy(s *terraform.State) error {
 
 		_, err := client.GetProxyConfig()
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return nil
 			}
-			return fmt.Errorf("could not retrieve proxy config status: %s", err)
+			return fmt.Errorf("could not retrieve proxy config status: %w", err)
 		}
 	}
 

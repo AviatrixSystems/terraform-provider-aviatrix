@@ -11,9 +11,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeMegaportHa() *schema.Resource {
@@ -130,14 +131,14 @@ func marshalEdgeMegaportHaInput(d *schema.ResourceData) (*goaviatrix.EdgeMegapor
 }
 
 func parseRequiredFields(d *schema.ResourceData) (string, string, []string, error) {
-	primaryGwName, ok := d.Get("primary_gw_name").(string)
-	if !ok || primaryGwName == "" {
-		return "", "", nil, fmt.Errorf("invalid or missing value for 'primary_gw_name'")
+	primaryGwName := getString(d, "primary_gw_name")
+	if primaryGwName == "" {
+		return "", "", nil, fmt.Errorf("missing value for %q", "primary_gw_name")
 	}
 
-	ztpFileDownloadPath, ok := d.Get("ztp_file_download_path").(string)
-	if !ok || ztpFileDownloadPath == "" {
-		return "", "", nil, fmt.Errorf("invalid or missing value for 'ztp_file_download_path'")
+	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
+	if ztpFileDownloadPath == "" {
+		return "", "", nil, fmt.Errorf("missing value for %q", "ztp_file_download_path")
 	}
 
 	managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
@@ -197,10 +198,7 @@ func assignInterfaceFields(interface1 map[string]interface{}, interface2 *goavia
 }
 
 func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok || client == nil {
-		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
 	if err != nil {
@@ -217,12 +215,9 @@ func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok || client == nil {
-		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
-	if primaryGwName, ok := d.Get("primary_gw_name").(string); ok && primaryGwName == "" {
+	if primaryGwName := getString(d, "primary_gw_name"); primaryGwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
@@ -230,7 +225,7 @@ func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceD
 		d.SetId(id)
 	}
 
-	edgeMegaportHaResp, err := client.GetEdgeMegaportHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeMegaportHaResp, err := client.GetEdgeMegaportHa(ctx, getString(d, "primary_gw_name")+"-hagw")
 	if err != nil {
 		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
@@ -272,10 +267,7 @@ func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok || client == nil {
-		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
 	if err != nil {
@@ -303,30 +295,21 @@ func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixEdgeMegaportHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok || client == nil {
-		return diag.Errorf("failed to cast meta to *goaviatrix.Client")
-	}
+	client := mustClient(meta)
+	accountName := getString(d, "account_name")
+	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
+	primaryGwName := getString(d, "primary_gw_name")
 
-	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
-	if err != nil {
-		return diag.Errorf("failed to marshal Edge Megaport HA input: %s", err)
-	}
-	accountName, ok := d.Get("account_name").(string)
-	if !ok {
-		return diag.Errorf("failed to get account name")
-	}
-
-	err = client.DeleteEdgeMegaport(ctx, accountName, d.Id())
+	err := client.DeleteEdgeMegaport(ctx, accountName, d.Id())
 	if err != nil {
 		return diag.Errorf("could not delete Edge Megaport HA: %v", err)
 	}
 
-	fileName := edgeMegaportHa.ZtpFileDownloadPath + "/" + edgeMegaportHa.PrimaryGwName + "-hagw-cloud-init.txt"
-
-	err = os.Remove(fileName)
-	if err != nil {
-		log.Printf("[WARN] could not remove the ztp file: %v", err)
+	if ztpFileDownloadPath != "" && primaryGwName != "" {
+		fileName := ztpFileDownloadPath + "/" + primaryGwName + "-hagw-cloud-init.txt"
+		if err := os.Remove(fileName); err != nil {
+			log.Printf("[WARN] could not remove the ztp file: %v", err)
+		}
 	}
 
 	return nil

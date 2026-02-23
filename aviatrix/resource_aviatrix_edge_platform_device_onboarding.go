@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -9,8 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgePlatformDeviceOnboarding() *schema.Resource {
@@ -108,28 +110,28 @@ func resourceAviatrixEdgePlatformDeviceOnboarding() *schema.Resource {
 
 func marshalEdgePlatformDeviceOnboardingInput(d *schema.ResourceData) *goaviatrix.EdgeNEODevice {
 	edgeNEODevice := &goaviatrix.EdgeNEODevice{
-		AccountName:            d.Get("account_name").(string),
-		DeviceName:             d.Get("device_name").(string),
-		SerialNumber:           d.Get("serial_number").(string),
-		HardwareModel:          d.Get("hardware_model").(string),
-		DownloadConfigFile:     d.Get("download_config_file").(bool),
-		ConfigFileDownloadPath: d.Get("config_file_download_path").(string),
+		AccountName:            getString(d, "account_name"),
+		DeviceName:             getString(d, "device_name"),
+		SerialNumber:           getString(d, "serial_number"),
+		HardwareModel:          getString(d, "hardware_model"),
+		DownloadConfigFile:     getBool(d, "download_config_file"),
+		ConfigFileDownloadPath: getString(d, "config_file_download_path"),
 	}
 
-	network := d.Get("network").(*schema.Set).List()
+	network := getSet(d, "network").List()
 	for _, network0 := range network {
-		network1 := network0.(map[string]interface{})
+		network1 := mustMap(network0)
 
 		network2 := &goaviatrix.EdgeNEODeviceNetwork{
-			InterfaceName:  network1["interface_name"].(string),
-			EnableDhcp:     network1["enable_dhcp"].(bool),
-			GatewayIp:      network1["gateway_ip"].(string),
-			Ipv4Cidr:       network1["ipv4_cidr"].(string),
-			ProxyProfileId: network1["proxy_profile_id"].(string),
+			InterfaceName:  mustString(network1["interface_name"]),
+			EnableDhcp:     mustBool(network1["enable_dhcp"]),
+			GatewayIp:      mustString(network1["gateway_ip"]),
+			Ipv4Cidr:       mustString(network1["ipv4_cidr"]),
+			ProxyProfileId: mustString(network1["proxy_profile_id"]),
 		}
 
-		for _, dnsServerIp := range network1["dns_server_ips"].([]interface{}) {
-			network2.DnsServerIps = append(network2.DnsServerIps, dnsServerIp.(string))
+		for _, dnsServerIp := range mustSlice(network1["dns_server_ips"]) {
+			network2.DnsServerIps = append(network2.DnsServerIps, mustString(dnsServerIp))
 		}
 
 		edgeNEODevice.Network = append(edgeNEODevice.Network, network2)
@@ -139,7 +141,7 @@ func marshalEdgePlatformDeviceOnboardingInput(d *schema.ResourceData) *goaviatri
 }
 
 func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)
 
@@ -166,7 +168,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *
 	for i := 0; ; i++ {
 		edgeNEODeviceResp, err := client.GetEdgeNEODevice(ctx, edgeNEODevice.AccountName, edgeNEODevice.DeviceName)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return diag.Errorf("could not find onboarded Edge Platform device")
 			} else if !strings.Contains(err.Error(), "Failed to list devices: can not access dinfo") {
 				return diag.Errorf("could not read Edge Platform device during onboarding due to: %v", err)
@@ -197,10 +199,10 @@ func resourceAviatrixEdgePlatformDeviceOnboardingReadIfRequired(ctx context.Cont
 }
 
 func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
-	deviceName := d.Get("device_name").(string)
+	accountName := getString(d, "account_name")
+	deviceName := getString(d, "device_name")
 	if accountName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
@@ -220,7 +222,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 		edgeNEODeviceResp, err = client.GetEdgeNEODevice(ctx, accountName, deviceName)
 
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				d.SetId("")
 				return nil
 			} else if !strings.Contains(err.Error(), "Failed to list devices: can not access dinfo") {
@@ -237,12 +239,11 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 			return diag.Errorf("could not read Edge Platform device after 10 minutes: %s", err)
 		}
 	}
-
-	d.Set("account_name", accountName)
-	d.Set("device_name", edgeNEODeviceResp.DeviceName)
-	d.Set("device_id", edgeNEODeviceResp.DeviceId)
-	d.Set("serial_number", edgeNEODeviceResp.SerialNumber)
-	d.Set("hardware_model", edgeNEODeviceResp.HardwareModel)
+	mustSet(d, "account_name", accountName)
+	mustSet(d, "device_name", edgeNEODeviceResp.DeviceName)
+	mustSet(d, "device_id", edgeNEODeviceResp.DeviceId)
+	mustSet(d, "serial_number", edgeNEODeviceResp.SerialNumber)
+	mustSet(d, "hardware_model", edgeNEODeviceResp.HardwareModel)
 
 	var network []map[string]interface{}
 	for _, network0 := range edgeNEODeviceResp.Network {
@@ -266,7 +267,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 }
 
 func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)
 
@@ -302,7 +303,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *
 			}
 		} else {
 			oldConfigFileDownloadPath, _ := d.GetChange("config_file_download_path")
-			fileName := oldConfigFileDownloadPath.(string) + edgeNEODevice.SerialNumber + "-bootstrap-config.img"
+			fileName := mustString(oldConfigFileDownloadPath) + edgeNEODevice.SerialNumber + "-bootstrap-config.img"
 			err := os.Remove(fileName)
 			if err != nil {
 				log.Printf("[WARN] could not remove the config file: %v", err)
@@ -321,7 +322,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *
 }
 
 func resourceAviatrixEdgePlatformDeviceOnboardingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)
 

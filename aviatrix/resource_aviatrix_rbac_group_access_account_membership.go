@@ -6,8 +6,9 @@ import (
 	"log"
 	"sort"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixRbacGroupAccessAccountMembership() *schema.Resource {
@@ -53,10 +54,10 @@ func resourceAviatrixRbacGroupAccessAccountMembership() *schema.Resource {
 }
 
 func resourceAviatrixRbacGroupAccessAccountMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	group := d.Get("group_name").(string)
-	accessAccounts := expandStringSet(d.Get("access_account_names").(*schema.Set))
+	group := getString(d, "group_name")
+	accessAccounts := expandStringSet(getSet(d, "access_account_names"))
 
 	log.Printf("[INFO] Creating (authoritative) access account membership for group %q: %v", group, accessAccounts)
 
@@ -69,9 +70,9 @@ func resourceAviatrixRbacGroupAccessAccountMembershipCreate(d *schema.ResourceDa
 }
 
 func resourceAviatrixRbacGroupAccessAccountMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	group := d.Get("group_name").(string)
+	group := getString(d, "group_name")
 	if group == "" {
 		group = d.Id()
 		_ = d.Set("group_name", group)
@@ -99,11 +100,11 @@ func resourceAviatrixRbacGroupAccessAccountMembershipRead(d *schema.ResourceData
 }
 
 func resourceAviatrixRbacGroupAccessAccountMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-	group := d.Get("group_name").(string)
+	client := mustClient(meta)
+	group := getString(d, "group_name")
 
 	if d.HasChange("access_account_names") {
-		desired := expandStringSet(d.Get("access_account_names").(*schema.Set))
+		desired := expandStringSet(getSet(d, "access_account_names"))
 		if err := client.SetRbacGroupAccessAccounts(group, desired); err != nil {
 			return fmt.Errorf("failed to update access accounts for RBAC group %q: %w", group, err)
 		}
@@ -113,13 +114,13 @@ func resourceAviatrixRbacGroupAccessAccountMembershipUpdate(d *schema.ResourceDa
 }
 
 func resourceAviatrixRbacGroupAccessAccountMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if v, ok := d.GetOk("remove_access_accounts_on_destroy"); !ok || !v.(bool) {
+	if v, ok := d.GetOk("remove_access_accounts_on_destroy"); !ok || !mustBool(v) {
 		return nil
 	}
 
-	group := d.Get("group_name").(string)
+	group := getString(d, "group_name")
 
 	accessAccounts, err := client.ListRbacGroupAccessAccounts(group)
 	if err != nil {

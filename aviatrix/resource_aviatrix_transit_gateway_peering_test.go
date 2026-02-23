@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) {
@@ -136,7 +138,7 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no aviatrix transit gateway peering ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundTransitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 			TransitGatewayName1: rs.Primary.Attributes["transit_gateway_name1"],
@@ -244,7 +246,7 @@ func testAccTransitGatewayPeeringConfigEdge(accountName, transit1GwName, transit
 }
 
 func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_transit_gateway_peering" {
@@ -257,7 +259,7 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix transit gateway peering still exists")
 		}
 	}

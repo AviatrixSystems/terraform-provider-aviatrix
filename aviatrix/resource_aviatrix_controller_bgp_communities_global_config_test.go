@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -59,10 +58,7 @@ func testAccCheckControllerBgpCommunitiesGlobalConfigExists(n string) resource.T
 			return fmt.Errorf("no controller bgp communities global config ID is set")
 		}
 
-		client, ok := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("failed to assert Meta as *goaviatrix.Client")
-		}
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetControllerBgpCommunitiesGlobal(context.Background())
 		if err != nil {

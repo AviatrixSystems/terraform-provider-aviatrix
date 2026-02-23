@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -88,7 +88,7 @@ func testAccCheckSpokeGatewayInspectionSubnetsMatch(resourceName string, input [
 			return fmt.Errorf("data source spoke gateway inspection subnets not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		subnetsForInspection, err := client.GetSubnetsForInspection(rs.Primary.Attributes["gw_name"])
 		if err != nil {

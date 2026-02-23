@@ -112,7 +112,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 
 	err = c.GetAwsTgwDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
-		if err == ErrNotFound {
+		if errors.Is(err, ErrNotFound) {
 			return nil, err
 		}
 		return nil, errors.New("aws tgw does not have security domain: " + err.Error())
@@ -120,7 +120,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 
 	aTVA, err := c.GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment)
 	if err != nil {
-		if err == ErrNotFound {
+		if errors.Is(err, ErrNotFound) {
 			return nil, err
 		}
 		return nil, errors.New("could not get security domain details: " + err.Error())
@@ -195,11 +195,16 @@ func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 }
 
 func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
-	awsTgw, err := c.ListTgwDetails(awsTgw)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgw.Name, err)
+	tgwName := "<unknown>"
+	if awsTgw != nil && awsTgw.Name != "" {
+		tgwName = awsTgw.Name
 	}
 
+	tgw, err := c.ListTgwDetails(awsTgw)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't find AWS TGW %s: %w", tgwName, err)
+	}
+	awsTgw = tgw
 	return awsTgw, nil
 }
 

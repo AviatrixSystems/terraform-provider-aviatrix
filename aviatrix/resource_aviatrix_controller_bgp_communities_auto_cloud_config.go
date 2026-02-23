@@ -5,10 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfig() *schema.Resource {
@@ -38,20 +39,13 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfig() *schema.Resource 
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
-	autoCloud, ok := d.Get("auto_cloud_enabled").(bool)
-	if !ok {
-		return diag.Errorf("failed to assert auto_cloud_enabled as bool")
-	}
+	autoCloud := getBool(d, "auto_cloud_enabled")
+
 	if autoCloud {
-		commPrefix, ok := d.Get("community_prefix").(int)
-		if !ok {
-			return diag.Errorf("failed to assert community_prefix as int")
-		}
+		commPrefix := getInt(d, "community_prefix")
+
 		err := client.SetControllerBgpCommunitiesAutoCloud(ctx, commPrefix)
 		if err != nil {
 			return diag.Errorf("failed to enable controller BGP communities auto cloud config: %v", err)
@@ -67,10 +61,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.C
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -105,21 +96,14 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Con
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	if d.HasChange("auto_cloud_enabled") || d.HasChange("community_prefix") {
-		autoCloud, ok := d.Get("auto_cloud_enabled").(bool)
-		if !ok {
-			return diag.Errorf("failed to assert auto_cloud_enabled as bool")
-		}
+		autoCloud := getBool(d, "auto_cloud_enabled")
+
 		if autoCloud {
-			commPrefix, ok := d.Get("community_prefix").(int)
-			if !ok {
-				return diag.Errorf("failed to assert community_prefix as int")
-			}
+			commPrefix := getInt(d, "community_prefix")
+
 			err := client.SetControllerBgpCommunitiesAutoCloud(ctx, commPrefix)
 			if err != nil {
 				return diag.Errorf("failed to enable controller BGP communities auto cloud config: %v", err)
@@ -136,10 +120,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.C
 }
 
 func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("failed to assert meta as *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	err := client.DisableControllerBgpCommunitiesAutoCloud(ctx)
 	if err != nil {

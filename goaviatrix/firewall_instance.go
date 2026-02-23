@@ -204,7 +204,7 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		if string(data.Results.TagsMessage) != `""` {
 			err = json.Unmarshal(data.Results.TagsMessage, &data.Results.Tags)
 			if err != nil {
-				return nil, fmt.Errorf("json Decode get_instance_by_id failed: %v", err)
+				return nil, fmt.Errorf("json Decode get_instance_by_id failed: %w", err)
 			}
 		}
 		return &data.Results, nil

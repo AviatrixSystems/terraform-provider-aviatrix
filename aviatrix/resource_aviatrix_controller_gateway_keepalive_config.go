@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceControllerGatewayKeepaliveConfigUpdate,
 		DeleteWithoutTimeout: resourceControllerGatewayKeepaliveConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,9 +34,9 @@ func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
 }
 
 func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	speed := d.Get("keepalive_speed").(string)
+	speed := getString(d, "keepalive_speed")
 	err := client.SetGatewayKeepaliveConfig(ctx, speed)
 	if err != nil {
 		return diag.Errorf("could not create Controller Gateway Keepalive Config: %v", err)
@@ -45,7 +47,7 @@ func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *sche
 }
 
 func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -53,23 +55,22 @@ func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema
 
 	speed, err := client.GetGatewayKeepaliveConfig(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Controller Gateway Keepalive Config: %v", err)
 	}
-
-	d.Set("keepalive_speed", speed)
+	mustSet(d, "keepalive_speed", speed)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("keepalive_speed") {
-		speed := d.Get("keepalive_speed").(string)
+		speed := getString(d, "keepalive_speed")
 		err := client.SetGatewayKeepaliveConfig(ctx, speed)
 		if err != nil {
 			return diag.Errorf("could not update Controller Gateway Keepalive Config: %v", err)
@@ -80,7 +81,7 @@ func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *sche
 }
 
 func resourceControllerGatewayKeepaliveConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.SetGatewayKeepaliveConfig(ctx, "medium")
 	if err != nil {
@@ -90,7 +91,7 @@ func resourceControllerGatewayKeepaliveConfigDelete(ctx context.Context, d *sche
 }
 
 func validateControllerGatewayKeepaliveSpeed(val interface{}, key string) (warns []string, errs []error) {
-	v := val.(string)
+	v := mustString(val)
 	if !stringInSlice(v, []string{"slow", "medium", "fast"}) {
 		errs = append(errs, fmt.Errorf("%s must be one of slow, medium or fast", key))
 	}

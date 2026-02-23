@@ -77,6 +77,25 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
 }
 ```
 ```hcl
+# Create an Aviatrix Azure Spoke Gateway with private route table configured
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
+  cloud_type                 = 8
+  account_name               = "my-azure"
+  gw_name                    = "spoke-gw-01"
+  vpc_id                     = "vnet_name:rg_name:resource_guid"
+  vpc_reg                    = "West US"
+  gw_size                    = "Standard_B1ms"
+  subnet                     = "10.13.0.0/24"
+  zone                       = "az-1"
+  single_ip_snat             = false
+  manage_ha_gateway          = false
+  private_route_table_config = [
+    "Foo_VNet_RTB_1:Bar_RG",
+    "Foo_VNet_RTB_2:Bar_RG",
+  ]
+}
+```
+```hcl
 # Create an Aviatrix OCI Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
   cloud_type          = 16
@@ -350,6 +369,7 @@ The following arguments are supported:
 * `included_advertised_spoke_routes` - (Optional) A list of comma separated CIDRs to be advertised onto the network as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC. Example: "10.4.0.0/16,10.5.0.0/16". Equivalent to "Custom Spoke Adv CIDRs" setting in the UI.
 * `enable_private_vpc_default_route` - (Optional) Program default route in VPC private route table. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 * `enable_skip_public_route_table_update` - (Optional) Skip programming VPC public route table. Default: false. Valid values: true or false. Available as of provider version R2.19+.
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).
 * `enable_auto_advertise_s2c_cidrs` - (Optional) Auto Advertise Spoke Site2Cloud CIDRs. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 
 ### [Learned CIDRs Approval for BGP Spoke Gateway](https://docs.aviatrix.com/documentation/latest/building-your-network/transit-bgp-route-approval.html)

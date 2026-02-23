@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
@@ -62,6 +64,7 @@ func (c *Client) CreateAWSPeer(awsPeer *AWSPeer) (string, error) {
 	if err != nil {
 		return "", errors.New("HTTP Post create_aws_peering failed: " + err.Error())
 	}
+	defer resp.Body.Close()
 	var data AwsPeerAPIResp
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(resp.Body)
@@ -97,6 +100,7 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 
 	var data AwsPeerGetAPIResp
 	buf := new(bytes.Buffer)
+	defer resp.Body.Close()
 	_, err = buf.ReadFrom(resp.Body)
 	if err != nil {
 		return nil, errors.New("ReadFrom list_aws_peerings failed: " + err.Error())
@@ -136,21 +140,35 @@ func (c *Client) UpdateAWSPeer(awsPeer *AWSPeer) error {
 func (c *Client) DeleteAWSPeer(awsPeer *AWSPeer) error {
 	awsPeer.CID = c.CID
 	awsPeer.Action = "delete_aws_peering"
+
 	resp, err := c.Post(c.baseURL, awsPeer)
 	if err != nil {
-		return errors.New("HTTP Post delete_aws_peering failed: " + err.Error())
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		return fmt.Errorf("HTTP Post delete_aws_peering failed: %w", err)
+	}
+	if resp == nil || resp.Body == nil {
+		return fmt.Errorf("HTTP Post delete_aws_peering returned nil response/body")
+	}
+	defer resp.Body.Close()
+
+	const maxBody = 256 << 10 // 256 KiB
+	body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
+	if readErr != nil {
+		return fmt.Errorf("read delete_aws_peering response body failed: %w", readErr)
+	}
+
+	if len(body) > maxBody {
+		return fmt.Errorf("delete_aws_peering: response body too large (>%d bytes)", maxBody)
 	}
 
 	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_aws_peering failed: " + err.Error() + "\n Body: " + bodyString)
+	if err := json.Unmarshal(body, &data); err != nil {
+		return fmt.Errorf("delete_aws_peering: failed to decode json response: %w (body: %s)", err, body)
 	}
 	if !data.Return {
-		return errors.New("Rest API delete_aws_peering Post failed: " + data.Reason)
+		return fmt.Errorf("rest api delete_aws_peering post failed: %s", data.Reason)
 	}
 	return nil
 }
@@ -158,8 +176,17 @@ func (c *Client) DeleteAWSPeer(awsPeer *AWSPeer) error {
 func DiffSuppressFuncRtbList1(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("rtb_list1")
 
-	rtbListOld := ExpandStringList(o.([]interface{}))
-	rtbListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
+
+	rtbListOld := ExpandStringList(oList)
+	rtbListNew := ExpandStringList(nList)
 
 	return Equivalent(rtbListOld, rtbListNew)
 }
@@ -167,8 +194,17 @@ func DiffSuppressFuncRtbList1(k, old, new string, d *schema.ResourceData) bool {
 func DiffSuppressFuncRtbList2(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("rtb_list2")
 
-	rtbListOld := ExpandStringList(o.([]interface{}))
-	rtbListNew := ExpandStringList(n.([]interface{}))
+	oList, ok := o.([]interface{})
+	if !ok {
+		return false
+	}
+	nList, ok := n.([]interface{})
+	if !ok {
+		return false
+	}
+
+	rtbListOld := ExpandStringList(oList)
+	rtbListNew := ExpandStringList(nList)
 
 	return Equivalent(rtbListOld, rtbListNew)
 }

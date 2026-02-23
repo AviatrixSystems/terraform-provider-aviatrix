@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAWSTgwPeering_basic(t *testing.T) {
@@ -153,14 +155,14 @@ func tesAccCheckAWSTgwPeeringExists(n string, awsTgwPeering *goaviatrix.AwsTgwPe
 			return fmt.Errorf("no aviatrix AWS tgw peering ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		foundAwsTgwPeering := &goaviatrix.AwsTgwPeering{
 			TgwName1: rs.Primary.Attributes["tgw_name1"],
 			TgwName2: rs.Primary.Attributes["tgw_name2"],
 		}
 		err := client.GetAwsTgwPeering(foundAwsTgwPeering)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("no aviatrix AWS tgw peering is found")
 			}
 			return err
@@ -172,7 +174,7 @@ func tesAccCheckAWSTgwPeeringExists(n string, awsTgwPeering *goaviatrix.AwsTgwPe
 }
 
 func testAccCheckAWSTgwPeeringDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_tgw_peering" {
@@ -185,7 +187,7 @@ func testAccCheckAWSTgwPeeringDestroy(s *terraform.State) error {
 		}
 
 		err := client.GetAwsTgwPeering(foundAwsTgwPeering)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix AWS tgw peering still exists")
 		}
 	}

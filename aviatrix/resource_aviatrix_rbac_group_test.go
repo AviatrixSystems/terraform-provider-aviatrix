@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixRbacGroup_basic(t *testing.T) {
@@ -64,7 +66,7 @@ func testAccCheckRbacGroupExists(n string, rbacGroup *goaviatrix.RbacGroup) reso
 			return fmt.Errorf("no RbacGroup ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundRbacGroup := &goaviatrix.RbacGroup{
 			GroupName: rs.Primary.Attributes["group_name"],
@@ -84,7 +86,7 @@ func testAccCheckRbacGroupExists(n string, rbacGroup *goaviatrix.RbacGroup) reso
 }
 
 func testAccCheckRbacGroupDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_rbac_group" {
@@ -95,7 +97,7 @@ func testAccCheckRbacGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetPermissionGroup(foundRbacGroup)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("RbacGroup still enabled")
 		}
 	}

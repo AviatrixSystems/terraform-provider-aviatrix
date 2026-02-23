@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 		Update: resourceAviatrixAwsTgwVpcAttachmentUpdate,
 		Delete: resourceAviatrixAwsTgwVpcAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -94,46 +96,46 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 }
 
 func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName:                      d.Get("tgw_name").(string),
-		Region:                       d.Get("region").(string),
-		VpcAccountName:               d.Get("vpc_account_name").(string),
-		VpcID:                        d.Get("vpc_id").(string),
-		CustomizedRoutes:             d.Get("customized_routes").(string),
-		Subnets:                      d.Get("subnets").(string),
-		RouteTables:                  d.Get("route_tables").(string),
-		CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
-		DisableLocalRoutePropagation: d.Get("disable_local_route_propagation").(bool),
-		EdgeAttachment:               d.Get("edge_attachment").(string),
-		SecurityDomainName:           d.Get("network_domain_name").(string),
+		TgwName:                      getString(d, "tgw_name"),
+		Region:                       getString(d, "region"),
+		VpcAccountName:               getString(d, "vpc_account_name"),
+		VpcID:                        getString(d, "vpc_id"),
+		CustomizedRoutes:             getString(d, "customized_routes"),
+		Subnets:                      getString(d, "subnets"),
+		RouteTables:                  getString(d, "route_tables"),
+		CustomizedRouteAdvertisement: getString(d, "customized_route_advertisement"),
+		DisableLocalRoutePropagation: getBool(d, "disable_local_route_propagation"),
+		EdgeAttachment:               getString(d, "edge_attachment"),
+		SecurityDomainName:           getString(d, "network_domain_name"),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("could not find Security Domain: %s", awsTgwVpcAttachment.SecurityDomainName)
 		}
-		return fmt.Errorf("could not find Security Domain due to: %v", err)
+		return fmt.Errorf("could not find Security Domain due to: %w", err)
 	}
 
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
 
 	d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 	flag := false
-	defer resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if isFirewallSecurityDomain {
 		err = client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %s", err)
+			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %w", err)
 		}
 
 		if awsTgwVpcAttachment.EdgeAttachment != "" {
 			err = client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
 			if err != nil {
-				return fmt.Errorf("failed to enable firewall attachment access from onprem: %s", err)
+				return fmt.Errorf("failed to enable firewall attachment access from onprem: %w", err)
 			}
 		}
 	} else {
@@ -143,7 +145,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 
 		err = client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
+			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %w", err)
 		}
 	}
 
@@ -159,54 +161,54 @@ func resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d *schema.ResourceData, m
 }
 
 func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tgwName := d.Get("tgw_name").(string)
-	vpcID := d.Get("vpc_id").(string)
+	tgwName := getString(d, "tgw_name")
+	vpcID := getString(d, "vpc_id")
 
-	if tgwName == "" || d.Get("network_domain_name").(string) == "" || vpcID == "" {
+	if tgwName == "" || getString(d, "network_domain_name") == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
-		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("network_domain_name", strings.Split(id, "~")[1])
-		d.Set("vpc_id", strings.Split(id, "~")[2])
+		mustSet(d, "tgw_name", strings.Split(id, "~")[0])
+		mustSet(d, "network_domain_name", strings.Split(id, "~")[1])
+		mustSet(d, "vpc_id", strings.Split(id, "~")[2])
 	}
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName:            d.Get("tgw_name").(string),
-		VpcID:              d.Get("vpc_id").(string),
-		SecurityDomainName: d.Get("network_domain_name").(string),
+		TgwName:            getString(d, "tgw_name"),
+		VpcID:              getString(d, "vpc_id"),
+		SecurityDomainName: getString(d, "network_domain_name"),
 	}
 
 	aTVA, err := client.GetAwsTgwVpcAttachment(awsTgwVpcAttachment)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to get Aviatrix Aws Tgw Vpc Attach: %s", err)
+		return fmt.Errorf("failed to get Aviatrix Aws Tgw Vpc Attach: %w", err)
 	}
 	if aTVA != nil {
-		d.Set("tgw_name", aTVA.TgwName)
-		d.Set("region", aTVA.Region)
-		d.Set("network_domain_name", aTVA.SecurityDomainName)
-		d.Set("vpc_account_name", aTVA.VpcAccountName)
-		d.Set("vpc_id", aTVA.VpcID)
-		d.Set("disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
+		mustSet(d, "tgw_name", aTVA.TgwName)
+		mustSet(d, "region", aTVA.Region)
+		mustSet(d, "network_domain_name", aTVA.SecurityDomainName)
+		mustSet(d, "vpc_account_name", aTVA.VpcAccountName)
+		mustSet(d, "vpc_id", aTVA.VpcID)
+		mustSet(d, "disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
 
-		if d.Get("subnets").(string) != "" {
-			subnetsFromConfigList := strings.Split(d.Get("subnets").(string), ",")
+		if getString(d, "subnets") != "" {
+			subnetsFromConfigList := strings.Split(getString(d, "subnets"), ",")
 			subnetsFromReadList := strings.Split(aTVA.Subnets, ",")
 			if len(goaviatrix.Difference(subnetsFromConfigList, subnetsFromReadList)) == 0 ||
 				len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) == 0 {
-				d.Set("subnets", d.Get("subnets").(string))
+				mustSet(d, "subnets", getString(d, "subnets"))
 			} else {
-				d.Set("subnets", aTVA.Subnets)
+				mustSet(d, "subnets", aTVA.Subnets)
 			}
 		} else {
-			d.Set("subnets", aTVA.Subnets)
+			mustSet(d, "subnets", aTVA.Subnets)
 		}
-		if d.Get("route_tables").(string) != "" {
-			routeTablesFromConfigList := strings.Split(d.Get("route_tables").(string), ",")
+		if getString(d, "route_tables") != "" {
+			routeTablesFromConfigList := strings.Split(getString(d, "route_tables"), ",")
 			for i := 0; i < len(routeTablesFromConfigList); i++ {
 				routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
 			}
@@ -218,17 +220,16 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 				len(goaviatrix.Difference(routeTablesFromReadList, routeTablesFromConfigList)) != 0) &&
 				aTVA.RouteTables != "ALL" &&
 				aTVA.RouteTables != "All" {
-				d.Set("route_tables", aTVA.RouteTables)
+				mustSet(d, "route_tables", aTVA.RouteTables)
 			} else {
-				d.Set("route_tables", d.Get("route_tables").(string))
+				mustSet(d, "route_tables", getString(d, "route_tables"))
 			}
 		} else {
-			d.Set("route_tables", aTVA.RouteTables)
+			mustSet(d, "route_tables", aTVA.RouteTables)
 		}
-
-		d.Set("customized_routes", aTVA.CustomizedRoutes)
-		d.Set("customized_route_advertisement", aTVA.CustomizedRouteAdvertisement)
-		d.Set("edge_attachment", aTVA.EdgeAttachment)
+		mustSet(d, "customized_routes", aTVA.CustomizedRoutes)
+		mustSet(d, "customized_route_advertisement", aTVA.CustomizedRouteAdvertisement)
+		mustSet(d, "edge_attachment", aTVA.EdgeAttachment)
 		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 		return nil
 	}
@@ -238,9 +239,9 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 
 func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	flag := false
-	defer resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChange("region") {
@@ -251,46 +252,46 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("customized_routes") {
 		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-			TgwName:          d.Get("tgw_name").(string),
-			VpcID:            d.Get("vpc_id").(string),
-			CustomizedRoutes: d.Get("customized_routes").(string),
+			TgwName:          getString(d, "tgw_name"),
+			VpcID:            getString(d, "vpc_id"),
+			CustomizedRoutes: getString(d, "customized_routes"),
 		}
 		err := client.EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to update spoke vpc customized routes: %s", err)
+			return fmt.Errorf("failed to update spoke vpc customized routes: %w", err)
 		}
 	}
 	if d.HasChange("customized_route_advertisement") {
 		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-			TgwName:                      d.Get("tgw_name").(string),
-			VpcID:                        d.Get("vpc_id").(string),
-			CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
+			TgwName:                      getString(d, "tgw_name"),
+			VpcID:                        getString(d, "vpc_id"),
+			CustomizedRouteAdvertisement: getString(d, "customized_route_advertisement"),
 		}
 		err := client.EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to update spoke vpc customized routes advertisement: %s", err)
+			return fmt.Errorf("failed to update spoke vpc customized routes advertisement: %w", err)
 		}
 	}
 
 	if d.HasChange("edge_attachment") {
 		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-			TgwName:            d.Get("tgw_name").(string),
-			VpcID:              d.Get("vpc_id").(string),
-			EdgeAttachment:     d.Get("edge_attachment").(string),
-			SecurityDomainName: d.Get("network_domain_name").(string),
+			TgwName:            getString(d, "tgw_name"),
+			VpcID:              getString(d, "vpc_id"),
+			EdgeAttachment:     getString(d, "edge_attachment"),
+			SecurityDomainName: getString(d, "network_domain_name"),
 		}
 
 		isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("could not find Network Domain: %s", awsTgwVpcAttachment.SecurityDomainName)
 			}
-			return fmt.Errorf("could not find Network Domain due to: %v", err)
+			return fmt.Errorf("could not find Network Domain due to: %w", err)
 		}
 
 		oldEA, newEA := d.GetChange("edge_attachment")
-		oldEAString := oldEA.(string)
-		newEAString := newEA.(string)
+		oldEAString := mustString(oldEA)
+		newEAString := mustString(newEA)
 
 		if isFirewallSecurityDomain {
 			if oldEAString != "" && newEAString != "" {
@@ -298,19 +299,19 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 
 				err := client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
 				if err != nil {
-					return fmt.Errorf("failed to disable firewall attachment access from onprem while updating: %s", err)
+					return fmt.Errorf("failed to disable firewall attachment access from onprem while updating: %w", err)
 				}
 
 				awsTgwVpcAttachment.EdgeAttachment = newEAString
 
 				err = client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
 				if err != nil {
-					return fmt.Errorf("failed to enable firewall attachment access from onprem while updating: %s", err)
+					return fmt.Errorf("failed to enable firewall attachment access from onprem while updating: %w", err)
 				}
 			} else {
 				err := client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
 				if err != nil {
-					return fmt.Errorf("failed to update firewall attachment access from onprem: %s", err)
+					return fmt.Errorf("failed to update firewall attachment access from onprem: %w", err)
 				}
 			}
 		} else {
@@ -326,33 +327,33 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName:            d.Get("tgw_name").(string),
-		Region:             d.Get("region").(string),
-		VpcAccountName:     d.Get("vpc_account_name").(string),
-		VpcID:              d.Get("vpc_id").(string),
-		SecurityDomainName: d.Get("network_domain_name").(string),
+		TgwName:            getString(d, "tgw_name"),
+		Region:             getString(d, "region"),
+		VpcAccountName:     getString(d, "vpc_account_name"),
+		VpcID:              getString(d, "vpc_id"),
+		SecurityDomainName: getString(d, "network_domain_name"),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("could not find Network Domain: %s", awsTgwVpcAttachment.VpcID)
 		}
-		return fmt.Errorf("could not find Network Domain due to: %v", err)
+		return fmt.Errorf("could not find Network Domain due to: %w", err)
 	}
 
 	if isFirewallSecurityDomain {
 		err := client.DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to detach FireNet VPC from TGW: %v", err)
+			return fmt.Errorf("failed to detach FireNet VPC from TGW: %w", err)
 		}
 	} else {
 		err := client.DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment)
 		if err != nil {
-			return fmt.Errorf("failed to detach VPC from TGW: %v", err)
+			return fmt.Errorf("failed to detach VPC from TGW: %w", err)
 		}
 	}
 

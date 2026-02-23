@@ -9,10 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func requireEnv(t *testing.T, key string) string {
@@ -158,7 +159,7 @@ func testAccCheckRbacGroupAccessAccountMembershipExists(n string, got *[]string)
 			return fmt.Errorf("no rbac group access account membership ID set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		group := rs.Primary.Attributes["group_name"]
 		if group == "" {
 			group = rs.Primary.ID
@@ -181,7 +182,7 @@ func testAccCheckRbacGroupAccessAccountMembershipExists(n string, got *[]string)
 // If the group itself is gone, that's acceptable.
 func testAccCheckRbacGroupAccessAccountMembershipDestroy(lastApplied []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aviatrix_rbac_group_access_account_membership" {

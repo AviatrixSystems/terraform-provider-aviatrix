@@ -419,7 +419,7 @@ func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]st
 func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gateway, SecurityDomainName string) error {
 	transitGw, err := c.GetGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("could not get transit gateway to attach to AWS TGW: %v", err)
+		return fmt.Errorf("could not get transit gateway to attach to AWS TGW: %w", err)
 	}
 	form := map[string]string{
 		"CID":               c.CID,
@@ -439,7 +439,7 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gateway, SecurityDomainName string) error {
 	transitGw, err := c.GetGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("could not get transit gateway to detach from AWS TGW: %v", err)
+		return fmt.Errorf("could not get transit gateway to detach from AWS TGW: %w", err)
 	}
 	form := map[string]string{
 		"CID":      c.CID,

@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 )
 
@@ -66,7 +67,11 @@ func (c *Client) ConfigNotificationEmails(ctx context.Context, emailConfiguratio
 		"notif_email_args": notificationEmailArgs,
 	}
 
-	return c.PostAPIContext2(ctx, nil, form["action"].(string), form, BasicCheck)
+	action, ok := form["action"].(string)
+	if !ok {
+		return fmt.Errorf("form[action] expected string, got %T", form["action"])
+	}
+	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
 }
 
 func (c *Client) GetNotificationEmails(ctx context.Context) (*EmailConfiguration, error) {

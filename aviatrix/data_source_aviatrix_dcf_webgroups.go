@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -54,12 +53,10 @@ func dataSourceAviatrixDcfWebgroups() *schema.Resource {
 }
 
 func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	name, ok := d.Get("name").(string)
-	if !ok {
-		return diag.Errorf("name must be of type string")
-	}
+	name := getString(d, "name")
+
 	if name == "" {
 		return diag.Errorf("name must be specified")
 	}

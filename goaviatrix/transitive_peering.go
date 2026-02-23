@@ -1,10 +1,9 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
-	"strings"
+	"fmt"
+	"io"
 
 	//"github.com/davecgh/go-spew/spew"
 
@@ -38,29 +37,49 @@ func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
 	// TODO: use GetAPI - need API details
 	transPeer.CID = c.CID
 	transPeer.Action = "list_extended_vpc_peer"
+
 	resp, err := c.Post(c.baseURL, transPeer)
 	if err != nil {
-		return nil, errors.New("HTTP Post list_extended_vpc_peer failed: " + err.Error())
+		// If Post can return resp alongside err, avoid leaks.
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		return nil, fmt.Errorf("HTTP Post list_extended_vpc_peer failed: %w", err)
 	}
+	if resp == nil || resp.Body == nil {
+		return nil, fmt.Errorf("HTTP Post list_extended_vpc_peer returned nil response/body")
+	}
+	defer resp.Body.Close()
+
+	const maxBody = 256 << 10 // 256 KiB
+	body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
+	if readErr != nil {
+		return nil, fmt.Errorf("read list_extended_vpc_peer response body failed: %w", readErr)
+	}
+
+	if len(body) > maxBody {
+		return nil, fmt.Errorf("list_extended_vpc_peer: response body too large (>%d bytes)", maxBody)
+	}
+
 	var data TransPeerListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, fmt.Errorf("json Decode list_extended_vpc_peer failed: %w\nBody: %s", err, string(body))
 	}
 	if !data.Return {
-		return nil, errors.New("Rest API list_extended_vpc_peer Post failed: " + data.Reason)
+		return nil, fmt.Errorf("list_extended_vpc_peer: post failed: %s", data.Reason)
 	}
-	transPeerList := data.Results
-	for i := range transPeerList {
-		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop {
-			return &transPeerList[i], nil
+
+	for i := range data.Results {
+		if data.Results[i].Source == transPeer.Source && data.Results[i].Nexthop == transPeer.Nexthop {
+			found := data.Results[i]
+			return &found, nil
 		}
 	}
-	log.Errorf("Transitive peering with gateways %s and %s with subnet %s not found",
-		transPeer.Source, transPeer.Nexthop, transPeer.ReachableCidr)
+
+	log.Errorf(
+		"Transitive peering with gateways %s and %s with subnet %s not found",
+		transPeer.Source, transPeer.Nexthop, transPeer.ReachableCidr,
+	)
 	return nil, ErrNotFound
 }
 

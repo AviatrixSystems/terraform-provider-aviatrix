@@ -20,12 +20,12 @@ func checkAndReturnAPIResp2(resp *http.Response, v interface{}, method, action s
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %q failed: %v", action, err)
+		return fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
 	bodyString := buf.String()
 
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+		return fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 	}
 	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
 		return err
@@ -33,7 +33,7 @@ func checkAndReturnAPIResp2(resp *http.Response, v interface{}, method, action s
 
 	if v != nil {
 		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-			return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+			return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
 		}
 	}
 
@@ -50,7 +50,7 @@ func (c *Client) PostAPIContext2Download(ctx context.Context, action string, d i
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
 	resp, err := c.RequestContext2(ctx, "POST", Url, d)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP %s %q failed: %v", "POST", Url, err)
+		return nil, fmt.Errorf("HTTP %s %q failed: %w", "POST", Url, err)
 	}
 
 	if strings.Contains(resp.Header.Get("Content-Type"), "json") {
@@ -67,8 +67,9 @@ func (c *Client) PostAPIContext2Form(ctx context.Context, action string, d inter
 	url += "2/api"
 	resp, err := c.PostContext(ctx, url, d)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+		return fmt.Errorf("HTTP POST %q failed: %w", action, err)
 	}
+	defer resp.Body.Close()
 	return checkAPIResp(resp, action, checkFunc)
 }
 
@@ -82,9 +83,9 @@ func (c *Client) DoAPIContext2(ctx context.Context, verb string, v interface{}, 
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
 	resp, err := c.RequestContext2(ctx, verb, Url, d)
 	if err != nil {
-		return fmt.Errorf("HTTP %s %q failed: %v", verb, Url, err)
+		return fmt.Errorf("HTTP %s %q failed: %w", verb, Url, err)
 	}
-
+	defer resp.Body.Close()
 	return checkAndReturnAPIResp2(resp, v, verb, action, checkFunc)
 }
 
@@ -126,8 +127,11 @@ func (c *Client) RequestContext2(ctx context.Context, verb string, path string, 
 		}
 
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		resp.Body.Close()
+		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+			_ = resp.Body.Close()
+			return resp, readErr
+		}
+		_ = resp.Body.Close()
 
 		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
 		resp.Body = io.NopCloser(buf)
@@ -136,7 +140,7 @@ func (c *Client) RequestContext2(ctx context.Context, verb string, path string, 
 			bodyString := buf.String()
 			data = new(APIResp)
 			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-				return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+				return resp, fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 			}
 
 			// Any error not related to expired CID should return
@@ -166,7 +170,7 @@ func (c *Client) RequestContext2(ctx context.Context, verb string, path string, 
 				// Update CID in GET URL
 				Url, err := url.Parse(path)
 				if err != nil {
-					return resp, fmt.Errorf("failed to parse url: %v", err)
+					return resp, fmt.Errorf("failed to parse url: %w", err)
 				}
 				query := Url.Query()
 				query["CID"] = []string{c.CID}
@@ -199,9 +203,9 @@ func (c *Client) DoAPIContext2HaGw(ctx context.Context, verb string, v interface
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
 	resp, err := c.RequestContext2(ctx, verb, Url, d)
 	if err != nil {
-		return "", fmt.Errorf("HTTP %s %q failed: %v", verb, Url, err)
+		return "", fmt.Errorf("HTTP %s %q failed: %w", verb, Url, err)
 	}
-
+	defer resp.Body.Close()
 	return checkAndReturnAPIResp2HaGw(resp, v, verb, action, checkFunc)
 }
 
@@ -210,12 +214,12 @@ func checkAndReturnAPIResp2HaGw(resp *http.Response, v interface{}, method, acti
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("reading response body %q failed: %v", action, err)
+		return "", fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
 	bodyString := buf.String()
 
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return "", fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+		return "", fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 	}
 	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
 		return "", err
@@ -223,7 +227,7 @@ func checkAndReturnAPIResp2HaGw(resp *http.Response, v interface{}, method, acti
 
 	if v != nil {
 		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-			return "", fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+			return "", fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
 		}
 	}
 

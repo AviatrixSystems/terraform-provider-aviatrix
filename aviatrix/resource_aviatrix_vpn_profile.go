@@ -1,11 +1,13 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixProfile() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixProfile() *schema.Resource {
 		Update: resourceAviatrixProfileUpdate,
 		Delete: resourceAviatrixProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		SchemaVersion: 1,
@@ -83,45 +85,45 @@ func resourceAviatrixProfile() *schema.Resource {
 }
 
 func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	log.Printf("[INFO] Creating Aviatrix Profile: %v %T", d.Get("users"), d.Get("users"))
 
 	profile := &goaviatrix.Profile{
-		Name:     d.Get("name").(string),
-		BaseRule: d.Get("base_rule").(string),
+		Name:     getString(d, "name"),
+		BaseRule: getString(d, "base_rule"),
 		Policy:   make([]goaviatrix.ProfileRule, 0),
 	}
 	if profile.Name == "" {
 		return fmt.Errorf("profile name can't be empty string")
 	}
 
-	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	manageUserAttachment := getBool(d, "manage_user_attachment")
 	if manageUserAttachment {
-		for _, user := range d.Get("users").([]interface{}) {
-			profile.UserList = append(profile.UserList, user.(string))
+		for _, user := range getList(d, "users") {
+			profile.UserList = append(profile.UserList, mustString(user))
 		}
 	} else {
-		if len(d.Get("users").([]interface{})) != 0 {
+		if len(getList(d, "users")) != 0 {
 			return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'users' and manage user attachment in other resource")
 		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
 
-	names := d.Get("policy").([]interface{})
+	names := getList(d, "policy")
 	for _, domain := range names {
 		if domain != nil {
-			dn := domain.(map[string]interface{})
+			dn := mustMap(domain)
 			profileRule := &goaviatrix.ProfileRule{
-				Action:   dn["action"].(string),
-				Protocol: dn["proto"].(string),
-				Port:     dn["port"].(string),
-				Target:   dn["target"].(string),
+				Action:   mustString(dn["action"]),
+				Protocol: mustString(dn["proto"]),
+				Port:     mustString(dn["port"]),
+				Target:   mustString(dn["target"]),
 			}
 			err := client.ValidateProfileRule(profileRule)
 			if err != nil {
-				return fmt.Errorf("policy validation failed: %v", err)
+				return fmt.Errorf("policy validation failed: %w", err)
 			}
 			profile.Policy = append(profile.Policy, *profileRule)
 		}
@@ -131,11 +133,11 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(profile.Name)
 	flag := false
-	defer resourceAviatrixProfileReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixProfileReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateProfile(profile)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Profile: %w", err)
 	}
 
 	return resourceAviatrixProfileReadIfRequired(d, meta, &flag)
@@ -150,19 +152,19 @@ func resourceAviatrixProfileReadIfRequired(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	profileName := d.Get("name").(string)
+	profileName := getString(d, "name")
 	if profileName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no profile name received. Import Id is %s", id)
-		d.Set("name", id)
-		d.Set("manage_user_attachment", true)
+		mustSet(d, "name", id)
+		mustSet(d, "manage_user_attachment", true)
 		d.SetId(id)
 	}
 
 	profile := &goaviatrix.Profile{
-		Name:   d.Get("name").(string),
+		Name:   getString(d, "name"),
 		Policy: make([]goaviatrix.ProfileRule, 0),
 	}
 
@@ -170,50 +172,48 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	if errBase != nil {
 		return fmt.Errorf("can't get profile base policy for profile: %s", profile.Name)
 	}
-	d.Set("base_rule", profileBase.BaseRule)
+	mustSet(d, "base_rule", profileBase.BaseRule)
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find profile: %s", err)
+		return fmt.Errorf("couldn't find profile: %w", err)
 	}
-	d.Set("name", profile.Name)
+	mustSet(d, "name", profile.Name)
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
-	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	manageUserAttachment := getBool(d, "manage_user_attachment")
 	if manageUserAttachment {
 		var users []string
-		for _, user := range d.Get("users").([]interface{}) {
-			users = append(users, user.(string))
+		for _, user := range getList(d, "users") {
+			users = append(users, mustString(user))
 		}
 		if len(goaviatrix.Difference(users, profile.UserList)) == 0 &&
 			len(goaviatrix.Difference(profile.UserList, users)) == 0 {
-			d.Set("users", users)
+			mustSet(d, "users", users)
 		} else {
-			d.Set("users", profile.UserList)
+			mustSet(d, "users", profile.UserList)
 			log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
 		}
 	}
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
 	var Policies []map[string]interface{}
-	if profile != nil {
-		for _, policy := range profile.Policy {
-			policyDict := make(map[string]interface{})
-			policyDict["action"] = policy.Action
-			policyDict["target"] = policy.Target
-			policyDict["proto"] = policy.Protocol
-			policyDict["port"] = policy.Port
-			Policies = append(Policies, policyDict)
-		}
+	for _, policy := range profile.Policy {
+		policyDict := make(map[string]interface{})
+		policyDict["action"] = policy.Action
+		policyDict["target"] = policy.Target
+		policyDict["proto"] = policy.Protocol
+		policyDict["port"] = policy.Port
+		Policies = append(Policies, policyDict)
+	}
 
-		if err := d.Set("policy", Policies); err != nil {
-			log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
-		}
+	if err := d.Set("policy", Policies); err != nil {
+		log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
 	}
 	log.Printf("[INFO] Generated policies: %v", Policies)
 
@@ -222,41 +222,41 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	profile := &goaviatrix.Profile{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 	d.Partial(true)
 
-	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	manageUserAttachment := getBool(d, "manage_user_attachment")
 	if d.HasChange("manage_user_attachment") {
 		_, nMUA := d.GetChange("manage_user_attachment")
-		newManageUserAttachment := nMUA.(bool)
+		newManageUserAttachment := mustBool(nMUA)
 		if newManageUserAttachment {
-			d.Set("manage_user_attachment", true)
+			mustSet(d, "manage_user_attachment", true)
 		} else {
-			d.Set("manage_user_attachment", false)
+			mustSet(d, "manage_user_attachment", false)
 		}
 	}
 	if manageUserAttachment {
-		for _, user := range d.Get("users").([]interface{}) {
-			profile.UserList = append(profile.UserList, user.(string))
+		for _, user := range getList(d, "users") {
+			profile.UserList = append(profile.UserList, mustString(user))
 		}
 		log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
 	}
-	names := d.Get("policy").([]interface{})
+	names := getList(d, "policy")
 	for _, domain := range names {
-		dn := domain.(map[string]interface{})
+		dn := mustMap(domain)
 		profileRule := &goaviatrix.ProfileRule{
-			Action:   dn["action"].(string),
-			Protocol: dn["proto"].(string),
-			Port:     dn["port"].(string),
-			Target:   dn["target"].(string),
+			Action:   mustString(dn["action"]),
+			Protocol: mustString(dn["proto"]),
+			Port:     mustString(dn["port"]),
+			Target:   mustString(dn["target"]),
 		}
 		err := client.ValidateProfileRule(profileRule)
 		if err != nil {
-			return fmt.Errorf("policy validation failed: %v", err)
+			return fmt.Errorf("policy validation failed: %w", err)
 		}
 		profile.Policy = append(profile.Policy, *profileRule)
 	}
@@ -280,8 +280,8 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			if newU == nil {
 				newU = new([]interface{})
 			}
-			oldString := oldU.([]interface{})
-			newString := newU.([]interface{})
+			oldString := mustSlice(oldU)
+			newString := mustSlice(newU)
 			oldUserList := goaviatrix.ExpandStringList(oldString)
 			newUserList := goaviatrix.ExpandStringList(newString)
 			// Attach all the newly added Users
@@ -290,7 +290,7 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			profile.UserList = toAddUsers
 			err := client.AttachUsers(profile)
 			if err != nil {
-				return fmt.Errorf("failed to attach User : %s", err)
+				return fmt.Errorf("failed to attach User : %w", err)
 			}
 			// Detach all the removed Users
 			toDelGws := goaviatrix.Difference(oldUserList, newUserList)
@@ -298,11 +298,11 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			profile.UserList = toDelGws
 			err = client.DetachUsers(profile)
 			if err != nil {
-				return fmt.Errorf("failed to detach user : %s", err)
+				return fmt.Errorf("failed to detach user : %w", err)
 			}
 		}
 	} else {
-		if len(d.Get("users").([]interface{})) != 0 {
+		if len(getList(d, "users")) != 0 {
 			return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'users' and manage user attachment in other resource")
 		}
 	}
@@ -311,7 +311,7 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("policy") {
 		err := client.UpdateProfilePolicy(profile)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
+			return fmt.Errorf("failed to create Aviatrix Profile: %w", err)
 		}
 	}
 
@@ -320,25 +320,25 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAviatrixProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	profile := &goaviatrix.Profile{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 	log.Printf("[INFO] Deleting Aviatrix Profile: %#v", profile)
 	if _, ok := d.GetOk("users"); ok {
 		log.Printf("[INFO] Found users: %#v", d.Get("users"))
 
-		profile.UserList = goaviatrix.ExpandStringList(d.Get("users").([]interface{}))
+		profile.UserList = goaviatrix.ExpandStringList(getList(d, "users"))
 		err := client.DetachUsers(profile)
 		if err != nil {
-			return fmt.Errorf("failed to detach Users: %s", err)
+			return fmt.Errorf("failed to detach Users: %w", err)
 		}
 	}
 
 	err := client.DeleteProfile(profile)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Profile: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Profile: %w", err)
 	}
 
 	return nil

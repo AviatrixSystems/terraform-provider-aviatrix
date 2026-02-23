@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAccountUser_basic(t *testing.T) {
@@ -67,14 +69,14 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 			return fmt.Errorf("no Account ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundAccount := &goaviatrix.AccountUser{
 			UserName: rs.Primary.Attributes["username"],
 		}
 
 		_, err := client.GetAccountUser(foundAccount)
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("account not found in REST response")
 		}
 		if foundAccount.UserName != rs.Primary.ID {
@@ -87,7 +89,7 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 }
 
 func testAccCheckAccountUserDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_account" {

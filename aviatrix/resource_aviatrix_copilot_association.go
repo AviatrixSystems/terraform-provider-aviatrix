@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixCopilotAssociation() *schema.Resource {
@@ -32,9 +34,9 @@ func resourceAviatrixCopilotAssociation() *schema.Resource {
 }
 
 func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	addr := d.Get("copilot_address").(string)
+	addr := getString(d, "copilot_address")
 	err := client.EnableCopilotAssociation(ctx, addr)
 	if err != nil {
 		return diag.Errorf("could not associate copilot: %v", err)
@@ -45,24 +47,23 @@ func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceAviatrixCopilotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilot, err := client.GetCopilotAssociationStatus(ctx)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not get copilot association status: %v", err)
 	}
-
-	d.Set("copilot_address", copilot.IP)
+	mustSet(d, "copilot_address", copilot.IP)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixCopilotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DisableCopilotAssociation(ctx)
 	if err != nil {

@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"unicode"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAccountUser() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixAccountUser() *schema.Resource {
 		Update: resourceAviatrixAccountUserUpdate,
 		Delete: resourceAviatrixAccountUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -37,7 +39,7 @@ func resourceAviatrixAccountUser() *schema.Resource {
 				Required:    true,
 				Description: "Name of account user to be created. It can only include alphanumeric characters(lower case only), hyphens, dots or underscores. 1 to 80 in length. No spaces are allowed.",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
+					v := mustString(val)
 					for _, r := range v {
 						if unicode.IsUpper(r) {
 							errs = append(errs, fmt.Errorf("expected %s to not include upper letters, got: %s", key, val))
@@ -52,12 +54,12 @@ func resourceAviatrixAccountUser() *schema.Resource {
 }
 
 func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUser{
-		Password: d.Get("password").(string),
-		Email:    d.Get("email").(string),
-		UserName: d.Get("username").(string),
+		Password: getString(d, "password"),
+		Email:    getString(d, "email"),
+		UserName: getString(d, "username"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix account user: %#v", user)
@@ -68,7 +70,7 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 
 	err := client.CreateAccountUser(user)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Account User: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Account User: %w", err)
 	}
 
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
@@ -85,33 +87,33 @@ func resourceAviatrixAccountUserReadIfRequired(d *schema.ResourceData, meta inte
 }
 
 func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	userName := d.Get("username").(string)
+	userName := getString(d, "username")
 	if userName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		d.Set("username", id)
+		mustSet(d, "username", id)
 		d.SetId(id)
 	}
 
 	user := &goaviatrix.AccountUser{
-		UserName: d.Get("username").(string),
+		UserName: getString(d, "username"),
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix account user: %#v", user)
 
 	acc, err := client.GetAccountUser(user)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("aviatrix Account User: %s", err)
+		return fmt.Errorf("aviatrix Account User: %w", err)
 	}
 	if acc != nil {
-		d.Set("email", acc.Email)
-		d.Set("username", acc.UserName)
+		mustSet(d, "email", acc.Email)
+		mustSet(d, "username", acc.UserName)
 		d.SetId(acc.UserName)
 	}
 
@@ -119,11 +121,11 @@ func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUserEdit{
-		Email:    d.Get("email").(string),
-		UserName: d.Get("username").(string),
+		Email:    getString(d, "email"),
+		UserName: getString(d, "username"),
 	}
 
 	d.Partial(true)
@@ -139,11 +141,11 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 		if n == nil {
 			return fmt.Errorf("failed to updater Aviatrix Account User: email is required")
 		}
-		user.Email = n.(string)
+		user.Email = mustString(n)
 		user.What = "email"
 		err := client.UpdateAccountUserObject(user)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Account User: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Account User: %w", err)
 		}
 	}
 
@@ -152,17 +154,17 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUser{
-		UserName: d.Get("username").(string),
+		UserName: getString(d, "username"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix account user: %#v", user)
 
 	err := client.DeleteAccountUser(user)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Account User: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Account User: %w", err)
 	}
 
 	return nil

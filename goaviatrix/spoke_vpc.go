@@ -11,6 +11,7 @@ type SpokeVpc struct {
 	Action                       string `form:"action,omitempty"`
 	CID                          string `form:"CID,omitempty"`
 	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	GroupUUID                    string `form:"group_uuid,omitempty" json:"group_uuid,omitempty"`
 	DnsServer                    string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
 	GwName                       string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                       string `form:"gw_size,omitempty"`
@@ -50,7 +51,7 @@ type SpokeVpc struct {
 	BgpOverLan                   bool     `form:"bgp_lan,omitempty"`
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
-	EnableGlobalVpc              bool     `form:"global_vpc"`
+	EnableGlobalVpc              bool     `form:"global_vpc,omitempty"`
 	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
 	InsertionGateway             bool     `form:"insertion_gateway,omitempty"`
 	TunnelEncryptionCipher       string   `form:"ph2_encryption_policy,omitempty"`

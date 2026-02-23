@@ -104,6 +104,27 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
 }
 ```
 ```hcl
+# Create an Aviatrix Azure Transit Network Gateway with private route table configured
+resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
+  cloud_type                 = 8
+  account_name               = "devops_azure"
+  gw_name                    = "transit"
+  vpc_id                     = "vnet_name:rg_name:resource_guid"
+  vpc_reg                    = "West US"
+  gw_size                    = "Standard_B1ms"
+  subnet                     = "10.30.0.0/24"
+  zone                       = "az-1"
+  ha_subnet                  = "10.30.0.0/24"
+  ha_zone                    = "az-2"
+  ha_gw_size                 = "Standard_B1ms"
+  connected_transit          = true
+  private_route_table_config = [
+    "Foo_VNet_RTB_1:Bar_RG",
+    "Foo_VNet_RTB_2:Bar_RG",
+  ]
+}
+```
+```hcl
 # Create an Aviatrix Azure Transit Network Gateway with HA enabled and BGP over LAN enabled with multiple interfaces
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   cloud_type                  = 8
@@ -495,6 +516,7 @@ The following arguments are supported:
 
 ### Advanced Options
 * `connected_transit` - (Optional) Specify Connected Transit status. If enabled, it allows spokes to run traffics to other spokes via transit gateway. Valid values: true, false. Default value: false.
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the transit VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).
 * `enable_advertise_transit_cidr` - (Optional) Switch to enable/disable advertise transit VPC network CIDR for a VGW connection. Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
 * `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to be advertised to external BGP router. Example: "10.2.0.0/16,10.4.0.0/16". Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
 * `enable_hybrid_connection` - (Optional) Sign of readiness for AWS TGW connection. Only supported for AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Example: false.

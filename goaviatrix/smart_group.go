@@ -106,13 +106,22 @@ func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupM
 }
 
 func setFilterInterface(filterField *string, filterMap map[string]interface{}, fieldKey string) {
-	if val, ok := filterMap[fieldKey]; ok {
-		*filterField = val.(string)
-		if fieldKey == RegionKey {
-			// Ensure that the region is always in lowercase, no-space
-			*filterField = strings.ToLower(strings.ReplaceAll(*filterField, " ", ""))
-		}
+	val, ok := filterMap[fieldKey]
+	if !ok || val == nil {
+		return
 	}
+
+	s, ok := val.(string)
+	if !ok {
+		return
+	}
+
+	if fieldKey == RegionKey {
+		// Ensure that the region is always in lowercase, no-space
+		s = strings.ToLower(strings.ReplaceAll(s, " ", ""))
+	}
+
+	*filterField = s
 }
 
 func setFilter(filterField string, filterMap map[string]interface{}, fieldKey string) {
@@ -261,9 +270,16 @@ func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 	for _, filterResult := range smartGroupResult.Selector.Any {
 		filterMap := filterResult.All
 		var filter *SmartGroupMatchExpression
+
 		if MapContains(filterMap, ExternalKey) {
 			filter = &SmartGroupMatchExpression{}
-			filter.External = filterMap[ExternalKey].(string)
+
+			raw, ok := filterMap[ExternalKey]
+			if ok && raw != nil {
+				if s, ok := raw.(string); ok {
+					filter.External = s
+				}
+			}
 		} else {
 			filter = NewSmartGroupMatchExpression(filterMap)
 		}
@@ -271,9 +287,17 @@ func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 		if MapContains(filterMap, ExternalKey) {
 			extArgs := make(map[string]string)
 			for key, value := range filterMap {
-				if key != ExternalKey {
-					extArgs[key] = value.(string)
+				if key == ExternalKey {
+					continue
 				}
+				if value == nil {
+					continue
+				}
+				s, ok := value.(string)
+				if !ok {
+					continue
+				}
+				extArgs[key] = s
 			}
 			if len(extArgs) > 0 {
 				filter.ExtArgs = extArgs
@@ -281,15 +305,25 @@ func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 		} else if MapContains(filterMap, TypeKey) {
 			tags := make(map[string]string)
 			for key, value := range filterMap {
-				if strings.HasPrefix(key, TagsPrefix+".") {
-					tags[strings.TrimPrefix(key, TagsPrefix+".")] = value.(string)
+				if !strings.HasPrefix(key, TagsPrefix+".") {
+					continue
 				}
+				if value == nil {
+					continue
+				}
+				s, ok := value.(string)
+				if !ok {
+					continue
+				}
+				tags[strings.TrimPrefix(key, TagsPrefix+".")] = s
 			}
 			if len(tags) > 0 {
 				filter.Tags = tags
 			}
 		}
+
 		smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 	}
+
 	return smartGroup
 }

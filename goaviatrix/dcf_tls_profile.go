@@ -104,3 +104,18 @@ func (c *Client) DeleteTLSProfile(ctx context.Context, uuid string) error {
 	}
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
+
+func (c *Client) GetTLSProfileByName(ctx context.Context, displayName string) (*TLSProfileWithID, error) {
+	listResponse, err := c.ListTLSProfiles(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list TLS profiles: %w", err)
+	}
+
+	for _, profile := range listResponse.Profiles {
+		if profile.DisplayName == displayName {
+			return &profile, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}

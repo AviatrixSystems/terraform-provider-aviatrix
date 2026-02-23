@@ -6,9 +6,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixGlobalVpcTaggingSettings() *schema.Resource {
@@ -39,15 +40,15 @@ func resourceAviatrixGlobalVpcTaggingSettings() *schema.Resource {
 
 func marshalGlobalVpcTaggingSettingsInput(d *schema.ResourceData) *goaviatrix.GlobalVpcTaggingSettings {
 	globalVpcTaggingSettings := &goaviatrix.GlobalVpcTaggingSettings{
-		ServiceState: d.Get("service_state").(string),
-		EnableAlert:  d.Get("enable_alert").(bool),
+		ServiceState: getString(d, "service_state"),
+		EnableAlert:  getBool(d, "enable_alert"),
 	}
 
 	return globalVpcTaggingSettings
 }
 
 func resourceAviatrixGlobalVpcTaggingSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	globalVpcTaggingSettings := marshalGlobalVpcTaggingSettingsInput(d)
 
@@ -72,7 +73,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsReadIfRequired(ctx context.Context,
 }
 
 func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -82,16 +83,15 @@ func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema
 	if err != nil {
 		return diag.Errorf("failed to read global vpc tagging settings: %s", err)
 	}
-
-	d.Set("service_state", globalVpcTaggingSettings.ServiceState)
-	d.Set("enable_alert", globalVpcTaggingSettings.EnableAlert)
+	mustSet(d, "service_state", globalVpcTaggingSettings.ServiceState)
+	mustSet(d, "enable_alert", globalVpcTaggingSettings.EnableAlert)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixGlobalVpcTaggingSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChanges("service_state", "enable_alert") {
@@ -108,7 +108,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsUpdate(ctx context.Context, d *sche
 }
 
 func resourceAviatrixGlobalVpcTaggingSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	globalVpcTaggingSettings := &goaviatrix.GlobalVpcTaggingSettings{
 		ServiceState: "semi_automatic",

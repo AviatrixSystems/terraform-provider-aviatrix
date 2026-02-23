@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFQDNTagRule() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixFQDNTagRule() *schema.Resource {
 		Read:   resourceAviatrixFQDNTagRuleRead,
 		Delete: resourceAviatrixFQDNTagRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,13 +61,13 @@ func resourceAviatrixFQDNTagRule() *schema.Resource {
 
 func marshalFQDNTagRuleInput(d *schema.ResourceData) *goaviatrix.FQDN {
 	return &goaviatrix.FQDN{
-		FQDNTag: d.Get("fqdn_tag_name").(string),
+		FQDNTag: getString(d, "fqdn_tag_name"),
 		DomainList: []*goaviatrix.Filters{
 			{
-				FQDN:     d.Get("fqdn").(string),
-				Protocol: d.Get("protocol").(string),
-				Port:     d.Get("port").(string),
-				Verdict:  d.Get("action").(string),
+				FQDN:     getString(d, "fqdn"),
+				Protocol: getString(d, "protocol"),
+				Port:     getString(d, "port"),
+				Verdict:  getString(d, "action"),
 			},
 		},
 	}
@@ -77,7 +79,7 @@ func getFQDNTagRuleID(fqdn *goaviatrix.FQDN) string {
 }
 
 func resourceAviatrixFQDNTagRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	fqdn := marshalFQDNTagRuleInput(d)
 
@@ -91,13 +93,13 @@ func resourceAviatrixFQDNTagRuleCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAviatrixFQDNTagRuleRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	fqdnTag := d.Get("fqdn_tag_name").(string)
-	fqdnDomain := d.Get("fqdn").(string)
-	protocol := d.Get("protocol").(string)
-	port := d.Get("port").(string)
-	action := d.Get("action").(string)
+	fqdnTag := getString(d, "fqdn_tag_name")
+	fqdnDomain := getString(d, "fqdn")
+	protocol := getString(d, "protocol")
+	port := getString(d, "port")
+	action := getString(d, "action")
 
 	if fqdnTag == "" {
 		id := d.Id()
@@ -126,19 +128,18 @@ func resourceAviatrixFQDNTagRuleRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	fqdn, err := client.GetFQDNTagRule(fqdn)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find fqdn_tag_rule %s: %v", fqdnDomain, err)
+		return fmt.Errorf("could not find fqdn_tag_rule %s: %w", fqdnDomain, err)
 	}
-
-	d.Set("fqdn_tag_name", fqdnTag)
-	d.Set("fqdn", fqdnDomain)
-	d.Set("protocol", protocol)
-	d.Set("port", port)
-	d.Set("action", action)
+	mustSet(d, "fqdn_tag_name", fqdnTag)
+	mustSet(d, "fqdn", fqdnDomain)
+	mustSet(d, "protocol", protocol)
+	mustSet(d, "port", port)
+	mustSet(d, "action", action)
 
 	id := getFQDNTagRuleID(fqdn)
 	d.SetId(id)
@@ -146,12 +147,12 @@ func resourceAviatrixFQDNTagRuleRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAviatrixFQDNTagRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	fqdn := marshalFQDNTagRuleInput(d)
 
 	err := client.DeleteFQDNTagRule(fqdn)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		return nil
 	}
 	if err != nil {

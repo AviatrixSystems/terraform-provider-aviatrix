@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeGatewaySelfmanagedHa_basic(t *testing.T) {
@@ -123,7 +125,7 @@ func testAccCheckEdgeGatewaySelfmanagedHaExists(resourceName string) resource.Te
 			return fmt.Errorf("no edge gateway selfmanaged ha id is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		edgeGatewaySelfmanagedHa, err := client.GetEdgeVmSelfmanagedHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != nil {
@@ -137,7 +139,7 @@ func testAccCheckEdgeGatewaySelfmanagedHaExists(resourceName string) resource.Te
 }
 
 func testAccCheckEdgeGatewaySelfmanagedHaDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_gateway_selfmanaged_ha" {
@@ -145,7 +147,7 @@ func testAccCheckEdgeGatewaySelfmanagedHaDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetEdgeVmSelfmanagedHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("edge gateway selfmanaged ha still exists")
 		}
 	}

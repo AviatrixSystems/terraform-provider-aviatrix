@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,8 +12,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeNEO() *schema.Resource {
@@ -371,77 +373,77 @@ func resourceAviatrixEdgeNEO() *schema.Resource {
 
 func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 	edgeNEO := &goaviatrix.EdgeNEO{
-		AccountName:                        d.Get("account_name").(string),
-		GwName:                             d.Get("gw_name").(string),
-		SiteId:                             d.Get("site_id").(string),
-		DeviceId:                           d.Get("device_id").(string),
-		GwSize:                             d.Get("gw_size").(string),
+		AccountName:                        getString(d, "account_name"),
+		GwName:                             getString(d, "gw_name"),
+		SiteId:                             getString(d, "site_id"),
+		DeviceId:                           getString(d, "device_id"),
+		GwSize:                             getString(d, "gw_size"),
 		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
-		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DnsServerIp:                        d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
-		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
-		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
-		LocalAsNumber:                      d.Get("local_as_number").(string),
+		EnableManagementOverPrivateNetwork: getBool(d, "enable_management_over_private_network"),
+		DnsServerIp:                        getString(d, "dns_server_ip"),
+		SecondaryDnsServerIp:               getString(d, "secondary_dns_server_ip"),
+		EnableEdgeActiveStandby:            getBool(d, "enable_edge_active_standby"),
+		EnableEdgeActiveStandbyPreemptive:  getBool(d, "enable_edge_active_standby_preemptive"),
+		LocalAsNumber:                      getString(d, "local_as_number"),
 		PrependAsPath:                      getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		EnableLearnedCidrsApproval:         getBool(d, "enable_learned_cidrs_approval"),
 		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
-		Latitude:                           d.Get("latitude").(string),
-		Longitude:                          d.Get("longitude").(string),
-		RxQueueSize:                        d.Get("rx_queue_size").(string),
+		EnablePreserveAsPath:               getBool(d, "enable_preserve_as_path"),
+		BgpPollingTime:                     getInt(d, "bgp_polling_time"),
+		BgpHoldTime:                        getInt(d, "bgp_hold_time"),
+		EnableEdgeTransitiveRouting:        getBool(d, "enable_edge_transitive_routing"),
+		EnableJumboFrame:                   getBool(d, "enable_jumbo_frame"),
+		Latitude:                           getString(d, "latitude"),
+		Longitude:                          getString(d, "longitude"),
+		RxQueueSize:                        getString(d, "rx_queue_size"),
 		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
 		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
-		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnableSingleIpSnat:                 getBool(d, "enable_single_ip_snat"),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+		interface1 := mustMap(interface0)
 
 		interface2 := &goaviatrix.EdgeNEOInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
-			VrrpState:    interface1["enable_vrrp"].(bool),
-			VirtualIp:    interface1["vrrp_virtual_ip"].(string),
+			IfName:       mustString(interface1["name"]),
+			Type:         mustString(interface1["type"]),
+			PublicIp:     mustString(interface1["wan_public_ip"]),
+			Tag:          mustString(interface1["tag"]),
+			Dhcp:         mustBool(interface1["enable_dhcp"]),
+			IpAddr:       mustString(interface1["ip_address"]),
+			GatewayIp:    mustString(interface1["gateway_ip"]),
+			DnsPrimary:   mustString(interface1["dns_server_ip"]),
+			DnsSecondary: mustString(interface1["secondary_dns_server_ip"]),
+			VrrpState:    mustBool(interface1["enable_vrrp"]),
+			VirtualIp:    mustString(interface1["vrrp_virtual_ip"]),
 		}
 
 		edgeNEO.InterfaceList = append(edgeNEO.InterfaceList, interface2)
 	}
 
-	vlan := d.Get("vlan").(*schema.Set).List()
+	vlan := getSet(d, "vlan").List()
 	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
+		vlan1 := mustMap(vlan0)
 
 		vlan2 := &goaviatrix.EdgeNEOVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
+			ParentInterface: mustString(vlan1["parent_interface_name"]),
+			IpAddr:          mustString(vlan1["ip_address"]),
+			GatewayIp:       mustString(vlan1["gateway_ip"]),
+			PeerIpAddr:      mustString(vlan1["peer_ip_address"]),
+			PeerGatewayIp:   mustString(vlan1["peer_gateway_ip"]),
+			VirtualIp:       mustString(vlan1["vrrp_virtual_ip"]),
+			Tag:             mustString(vlan1["tag"]),
 		}
 
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+		vlan2.VlanId = strconv.Itoa(mustInt(vlan1["vlan_id"]))
 
 		edgeNEO.VlanList = append(edgeNEO.VlanList, vlan2)
 	}
 
-	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+	if getBool(d, "enable_auto_advertise_lan_cidrs") {
 		edgeNEO.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
 		edgeNEO.EnableAutoAdvertiseLanCidrs = "disable"
@@ -451,7 +453,7 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 }
 
 func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeNEO := marshalEdgeNEOInput(d)
@@ -633,43 +635,42 @@ func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.Resour
 }
 
 func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("gw_name").(string) == "" {
+	if getString(d, "gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
-	edgeNEOResp, err := client.GetEdgeNEO(ctx, d.Get("gw_name").(string))
+	edgeNEOResp, err := client.GetEdgeNEO(ctx, getString(d, "gw_name"))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge NEO: %v", err)
 	}
-
-	d.Set("account_name", edgeNEOResp.AccountName)
-	d.Set("gw_name", edgeNEOResp.GwName)
-	d.Set("site_id", edgeNEOResp.SiteId)
-	d.Set("device_id", edgeNEOResp.DeviceId)
-	d.Set("gw_size", edgeNEOResp.GwSize)
-	d.Set("enable_management_over_private_network", edgeNEOResp.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeNEOResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeNEOResp.SecondaryDnsServerIp)
-	d.Set("local_as_number", edgeNEOResp.LocalAsNumber)
-	d.Set("prepend_as_path", edgeNEOResp.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeNEOResp.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeNEOResp.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeNEOResp.EnableLearnedCidrsApproval)
+	mustSet(d, "account_name", edgeNEOResp.AccountName)
+	mustSet(d, "gw_name", edgeNEOResp.GwName)
+	mustSet(d, "site_id", edgeNEOResp.SiteId)
+	mustSet(d, "device_id", edgeNEOResp.DeviceId)
+	mustSet(d, "gw_size", edgeNEOResp.GwSize)
+	mustSet(d, "enable_management_over_private_network", edgeNEOResp.EnableManagementOverPrivateNetwork)
+	mustSet(d, "dns_server_ip", edgeNEOResp.DnsServerIp)
+	mustSet(d, "secondary_dns_server_ip", edgeNEOResp.SecondaryDnsServerIp)
+	mustSet(d, "local_as_number", edgeNEOResp.LocalAsNumber)
+	mustSet(d, "prepend_as_path", edgeNEOResp.PrependAsPath)
+	mustSet(d, "enable_edge_active_standby", edgeNEOResp.EnableEdgeActiveStandby)
+	mustSet(d, "enable_edge_active_standby_preemptive", edgeNEOResp.EnableEdgeActiveStandbyPreemptive)
+	mustSet(d, "enable_learned_cidrs_approval", edgeNEOResp.EnableLearnedCidrsApproval)
 
 	if edgeNEOResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeNEOResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeNEOResp.ManagementEgressIpPrefix, ","))
 	}
 
 	if edgeNEOResp.EnableLearnedCidrsApproval {
@@ -683,35 +684,33 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 			return diag.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
-		d.Set("approved_learned_cidrs", nil)
+		mustSet(d, "approved_learned_cidrs", nil)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeNEOResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
 		len(goaviatrix.Difference(edgeNEOResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeNEOResp.SpokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", edgeNEOResp.SpokeBgpManualAdvertisedCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
-
-	d.Set("enable_preserve_as_path", edgeNEOResp.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeNEOResp.BgpPollingTime)
-	d.Set("bgp_hold_time", edgeNEOResp.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeNEOResp.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeNEOResp.EnableJumboFrame)
+	mustSet(d, "enable_preserve_as_path", edgeNEOResp.EnablePreserveAsPath)
+	mustSet(d, "bgp_polling_time", edgeNEOResp.BgpPollingTime)
+	mustSet(d, "bgp_hold_time", edgeNEOResp.BgpHoldTime)
+	mustSet(d, "enable_edge_transitive_routing", edgeNEOResp.EnableEdgeTransitiveRouting)
+	mustSet(d, "enable_jumbo_frame", edgeNEOResp.EnableJumboFrame)
 	if edgeNEOResp.Latitude != 0 || edgeNEOResp.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeNEOResp.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeNEOResp.Longitude))
+		mustSet(d, "latitude", fmt.Sprintf("%.6f", edgeNEOResp.Latitude))
+		mustSet(d, "longitude", fmt.Sprintf("%.6f", edgeNEOResp.Longitude))
 	} else {
-		d.Set("latitude", "")
-		d.Set("longitude", "")
+		mustSet(d, "latitude", "")
+		mustSet(d, "longitude", "")
 	}
-
-	d.Set("rx_queue_size", edgeNEOResp.RxQueueSize)
-	d.Set("state", edgeNEOResp.State)
-	d.Set("wan_interface_names", edgeNEOResp.WanInterface)
-	d.Set("lan_interface_names", edgeNEOResp.LanInterface)
-	d.Set("management_interface_names", edgeNEOResp.MgmtInterface)
+	mustSet(d, "rx_queue_size", edgeNEOResp.RxQueueSize)
+	mustSet(d, "state", edgeNEOResp.State)
+	mustSet(d, "wan_interface_names", edgeNEOResp.WanInterface)
+	mustSet(d, "lan_interface_names", edgeNEOResp.LanInterface)
+	mustSet(d, "management_interface_names", edgeNEOResp.MgmtInterface)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
@@ -760,16 +759,15 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	if err = d.Set("vlan", vlan); err != nil {
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
-
-	d.Set("enable_single_ip_snat", edgeNEOResp.EnableNat == "yes" && edgeNEOResp.SnatMode == "primary")
-	d.Set("enable_auto_advertise_lan_cidrs", edgeNEOResp.EnableAutoAdvertiseLanCidrs)
+	mustSet(d, "enable_single_ip_snat", edgeNEOResp.EnableNat == "yes" && edgeNEOResp.SnatMode == "primary")
+	mustSet(d, "enable_auto_advertise_lan_cidrs", edgeNEOResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeNEOResp.GwName)
 	return nil
 }
 
 func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeNEO := marshalEdgeNEOInput(d)
@@ -975,10 +973,10 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
-	gwName := d.Get("gw_name").(string)
+	accountName := getString(d, "account_name")
+	gwName := getString(d, "gw_name")
 
 	err := client.DeleteEdgeNEO(ctx, accountName, gwName)
 	if err != nil {

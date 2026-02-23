@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 //nolint:funlen
@@ -49,7 +50,7 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
 							Description: "Action for the specified source and destination Smart Groups. " +
-								"Must be one of DEEP_PACKET_INSPECTION_PERMIT, INTRUSION_DETECTION_PERMIT, PERMIT or DENY.",
+								"Must be one of INTRUSION_DETECTION_PERMIT, PERMIT or DENY.",
 						},
 						"decrypt_policy": {
 							Type:         schema.TypeString,
@@ -138,6 +139,7 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 						"tls_profile": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "TLS profile UUID for the rule.",
 						},
 						"uuid": {
@@ -160,7 +162,8 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 						"log_profile": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Log profile UUID for the rule.",
+							Default:     "def000ad-7000-0000-0000-000000000001",
+							Description: "Log profile UUID for the rule. This will be set to Log at Start by default which has a UUID of def000ad-7000-0000-0000-000000000001.",
 							// The log profile UUID must be one of the predefined log profile UUIDs
 							// def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START
 							// def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END
@@ -178,16 +181,12 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
 	policyList := &goaviatrix.DCFPolicyList{}
 
-	name, ok := d.Get("name").(string)
-	if !ok {
-		return nil, fmt.Errorf("ruleset name must be of type string")
-	}
+	name := getString(d, "name")
+
 	policyList.Name = name
 
-	attachTo, ok := d.Get("attach_to").(string)
-	if !ok {
-		return nil, fmt.Errorf("ruleset attach_to must be of type string")
-	}
+	attachTo := getString(d, "attach_to")
+
 	policyList.AttachTo = attachTo
 
 	policiesSet, ok := d.Get("rules").(*schema.Set)
@@ -366,14 +365,21 @@ func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]st
 }
 
 func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
 		return diag.Errorf("invalid inputs for DCF Ruleset during create: %s", err)
+	}
+
+	var returnDiag diag.Diagnostics
+
+	for _, policy := range policyList.Policies {
+		if policy.Action == "DEEP_PACKET_INSPECTION_PERMIT" {
+			returnDiag = diag.Errorf("DEEP_PACKET_INSPECTION_PERMIT will no longer be a valid Action value in the next major release. Use INTRUSION_DETECTION_PERMIT and DECRYPT_ALLOWED instead")
+			returnDiag[0].Severity = diag.Warning
+			break
+		}
 	}
 
 	uuid, err := client.CreateDCFPolicyList(ctx, policyList)
@@ -383,15 +389,12 @@ func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(uuid)
 
-	return nil
+	return returnDiag
 }
 
 //nolint:funlen,cyclop
 func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 
@@ -460,10 +463,7 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	policyList, err := marshalDCFRulesetInput(d)
 	if err != nil {
@@ -479,10 +479,7 @@ func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
 	uuid := d.Id()
 

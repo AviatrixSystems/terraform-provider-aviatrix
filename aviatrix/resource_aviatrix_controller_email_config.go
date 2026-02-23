@@ -4,9 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixControllerEmailConfig() *schema.Resource {
@@ -71,14 +72,14 @@ func resourceAviatrixControllerEmailConfig() *schema.Resource {
 }
 
 func resourceAviatrixControllerEmailConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	emailConfiguration := &goaviatrix.EmailConfiguration{
-		AdminAlertEmail:                  d.Get("admin_alert_email").(string),
-		CriticalAlertEmail:               d.Get("critical_alert_email").(string),
-		SecurityEventEmail:               d.Get("security_event_email").(string),
-		StatusChangeEmail:                d.Get("status_change_email").(string),
-		StatusChangeNotificationInterval: d.Get("status_change_notification_interval").(int),
+		AdminAlertEmail:                  getString(d, "admin_alert_email"),
+		CriticalAlertEmail:               getString(d, "critical_alert_email"),
+		SecurityEventEmail:               getString(d, "security_event_email"),
+		StatusChangeEmail:                getString(d, "status_change_email"),
+		StatusChangeNotificationInterval: getInt(d, "status_change_notification_interval"),
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -109,7 +110,7 @@ func resourceAviatrixControllerEmailConfigReadIfRequired(ctx context.Context, d 
 }
 
 func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -119,36 +120,36 @@ func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.Re
 	if err != nil {
 		return diag.Errorf("could not get notification emails: %v", err)
 	}
-	d.Set("admin_alert_email", emailConfiguration.AdminAlertEmail)
-	d.Set("critical_alert_email", emailConfiguration.CriticalAlertEmail)
-	d.Set("security_event_email", emailConfiguration.SecurityEventEmail)
-	d.Set("status_change_email", emailConfiguration.StatusChangeEmail)
-	d.Set("status_change_notification_interval", emailConfiguration.StatusChangeNotificationInterval)
-	d.Set("admin_alert_email_verified", emailConfiguration.AdminAlertEmailVerified)
-	d.Set("critical_alert_email_verified", emailConfiguration.CriticalAlertEmailVerified)
-	d.Set("security_event_email_verified", emailConfiguration.SecurityEventEmailVerified)
-	d.Set("status_change_email_verified", emailConfiguration.StatusChangeEmailVerified)
+	mustSet(d, "admin_alert_email", emailConfiguration.AdminAlertEmail)
+	mustSet(d, "critical_alert_email", emailConfiguration.CriticalAlertEmail)
+	mustSet(d, "security_event_email", emailConfiguration.SecurityEventEmail)
+	mustSet(d, "status_change_email", emailConfiguration.StatusChangeEmail)
+	mustSet(d, "status_change_notification_interval", emailConfiguration.StatusChangeNotificationInterval)
+	mustSet(d, "admin_alert_email_verified", emailConfiguration.AdminAlertEmailVerified)
+	mustSet(d, "critical_alert_email_verified", emailConfiguration.CriticalAlertEmailVerified)
+	mustSet(d, "security_event_email_verified", emailConfiguration.SecurityEventEmailVerified)
+	mustSet(d, "status_change_email_verified", emailConfiguration.StatusChangeEmailVerified)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChanges("admin_alert_email", "critical_alert_email", "security_event_email", "status_change_email") {
 		emailConfiguration := &goaviatrix.EmailConfiguration{}
 		if d.HasChange("admin_alert_email") {
-			emailConfiguration.AdminAlertEmail = d.Get("admin_alert_email").(string)
+			emailConfiguration.AdminAlertEmail = getString(d, "admin_alert_email")
 		}
 		if d.HasChange("critical_alert_email") {
-			emailConfiguration.CriticalAlertEmail = d.Get("critical_alert_email").(string)
+			emailConfiguration.CriticalAlertEmail = getString(d, "critical_alert_email")
 		}
 		if d.HasChange("security_event_email") {
-			emailConfiguration.SecurityEventEmail = d.Get("security_event_email").(string)
+			emailConfiguration.SecurityEventEmail = getString(d, "security_event_email")
 		}
 		if d.HasChange("status_change_email") {
-			emailConfiguration.StatusChangeEmail = d.Get("status_change_email").(string)
+			emailConfiguration.StatusChangeEmail = getString(d, "status_change_email")
 		}
 
 		err := client.ConfigNotificationEmails(ctx, emailConfiguration)
@@ -159,7 +160,7 @@ func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.
 
 	if d.HasChange("status_change_notification_interval") {
 		emailConfiguration := &goaviatrix.EmailConfiguration{
-			StatusChangeNotificationInterval: d.Get("status_change_notification_interval").(int),
+			StatusChangeNotificationInterval: getInt(d, "status_change_notification_interval"),
 		}
 
 		err := client.SetStatusChangeNotificationInterval(emailConfiguration)
@@ -172,7 +173,7 @@ func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.
 }
 
 func resourceAviatrixControllerEmailConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	emailConfiguration := &goaviatrix.EmailConfiguration{
 		StatusChangeNotificationInterval: 60,

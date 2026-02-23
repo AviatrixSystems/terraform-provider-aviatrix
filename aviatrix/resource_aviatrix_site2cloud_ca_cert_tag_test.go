@@ -8,9 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSite2CloudCaCertTag_basic(t *testing.T) {
@@ -74,7 +75,7 @@ func testAccCheckSite2CloudCaCertTagExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no site2cloud ca cert tag ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		s2cCaCertTag := &goaviatrix.S2CCaCertTag{
 			TagName: rs.Primary.Attributes["tag_name"],
@@ -93,7 +94,7 @@ func testAccCheckSite2CloudCaCertTagExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSite2CloudCaCertTagDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_site2cloud_ca_cert_tag" {

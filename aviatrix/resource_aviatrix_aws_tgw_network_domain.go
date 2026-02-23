@@ -2,14 +2,16 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwNetworkDomain() *schema.Resource {
@@ -62,18 +64,18 @@ func resourceAviatrixAwsTgwNetworkDomain() *schema.Resource {
 
 func marshalNetworkDomainInput(d *schema.ResourceData) *goaviatrix.SecurityDomain {
 	networkDomain := &goaviatrix.SecurityDomain{
-		Name:                   d.Get("name").(string),
-		AwsTgwName:             d.Get("tgw_name").(string),
-		AviatrixFirewallDomain: d.Get("aviatrix_firewall").(bool),
-		NativeEgressDomain:     d.Get("native_egress").(bool),
-		NativeFirewallDomain:   d.Get("native_firewall").(bool),
+		Name:                   getString(d, "name"),
+		AwsTgwName:             getString(d, "tgw_name"),
+		AviatrixFirewallDomain: getBool(d, "aviatrix_firewall"),
+		NativeEgressDomain:     getBool(d, "native_egress"),
+		NativeFirewallDomain:   getBool(d, "native_firewall"),
 	}
 
 	return networkDomain
 }
 
 func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	networkDomain := marshalNetworkDomainInput(d)
 
@@ -111,9 +113,9 @@ func resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx context.Context, d *s
 }
 
 func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	name := d.Get("name").(string)
+	name := getString(d, "name")
 
 	if name == "" {
 		id := d.Id()
@@ -122,13 +124,13 @@ func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.Reso
 		if len(parts) != 2 {
 			return diag.Errorf("invalid ID, expected ID tgw_name~domain_name, instead got %s", d.Id())
 		}
-		d.Set("tgw_name", parts[0])
-		d.Set("name", parts[1])
+		mustSet(d, "tgw_name", parts[0])
+		mustSet(d, "name", parts[1])
 		d.SetId(id)
 	}
 
-	name = d.Get("name").(string)
-	tgwName := d.Get("tgw_name").(string)
+	name = getString(d, "name")
+	tgwName := getString(d, "tgw_name")
 
 	networkDomain := &goaviatrix.SecurityDomain{
 		Name:       name,
@@ -136,28 +138,27 @@ func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.Reso
 	}
 
 	networkDomainDetails, err := client.GetSecurityDomainDetails(ctx, networkDomain)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("couldn't get the details of the network domain %s due to %v", name, err)
 	}
-
-	d.Set("aviatrix_firewall", networkDomainDetails.AviatrixFirewallDomain)
-	d.Set("native_egress", networkDomainDetails.NativeEgressDomain)
-	d.Set("native_firewall", networkDomainDetails.NativeFirewallDomain)
+	mustSet(d, "aviatrix_firewall", networkDomainDetails.AviatrixFirewallDomain)
+	mustSet(d, "native_egress", networkDomainDetails.NativeEgressDomain)
+	mustSet(d, "native_firewall", networkDomainDetails.NativeFirewallDomain)
 
 	d.SetId(tgwName + "~" + name)
 	return nil
 }
 
 func resourceAviatrixAwsTgwNetworkDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	networkDomain := &goaviatrix.SecurityDomain{
-		Name:       d.Get("name").(string),
-		AwsTgwName: d.Get("tgw_name").(string),
+		Name:       getString(d, "name"),
+		AwsTgwName: getString(d, "tgw_name"),
 	}
 
 	defaultDomains := []string{"Aviatrix_Edge_Domain", "Default_Domain", "Shared_Service_Domain"}

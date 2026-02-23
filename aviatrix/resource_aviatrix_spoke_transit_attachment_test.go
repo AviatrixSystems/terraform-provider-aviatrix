@@ -1,15 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSpokeTransitAttachment_basic(t *testing.T) {
@@ -46,8 +47,7 @@ func TestAccAviatrixSpokeTransitAttachment_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSpokeTransitAttachmentConfigEdge("acc-"+rName, "spoke-"+rName, os.Getenv("PWD"), "transit-"+rName, "site-"+rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccSpokeTransitAttachmentConfigEdge("acc-"+rName, "spoke-"+rName, "transit-"+rName, "site-"+rName), Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpokeTransitAttachmentExists(resourceName, &spokeTransitAttachment),
 					resource.TestCheckResourceAttr(resourceName, "spoke_gw_name", "spoke-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "transit_gw_name", "transit-"+rName),
@@ -115,9 +115,8 @@ resource "aviatrix_spoke_transit_attachment" "test" {
 		rName, rName)
 }
 
-func testAccSpokeTransitAttachmentConfigEdge(accountName, spokeGwName, path, transitGwName, transitSiteID string) string {
-	repoRootPath := filepath.Dir(path)
-	filePath := filepath.Join(repoRootPath, "test-data", "testAccEdgeSpokeTransitAttachmentConfigEdge.tf")
+func testAccSpokeTransitAttachmentConfigEdge(accountName, spokeGwName, transitGwName, transitSiteID string) string {
+	filePath := "test-data/testAccEdgeSpokeTransitAttachmentConfigEdge.tf"
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return ""
@@ -134,7 +133,6 @@ func testAccSpokeTransitAttachmentConfigEdge(accountName, spokeGwName, path, tra
 		spokeGwName,
 		transitGwName,
 		transitSiteID,
-		path,
 	)
 }
 
@@ -148,7 +146,7 @@ func testAccCheckSpokeTransitAttachmentExists(n string, spokeTransitAttachment *
 			return fmt.Errorf("no spoke transit attachment ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundSpokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
 			SpokeGwName:   rs.Primary.Attributes["spoke_gw_name"],
@@ -168,7 +166,7 @@ func testAccCheckSpokeTransitAttachmentExists(n string, spokeTransitAttachment *
 }
 
 func testAccCheckSpokeTransitAttachmentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_spoke_transit_attachment" {
@@ -181,7 +179,7 @@ func testAccCheckSpokeTransitAttachmentDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetSpokeTransitAttachment(foundSpokeTransitAttachment)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("spoke transit attachment still exists %s", err.Error())
 		}
 	}

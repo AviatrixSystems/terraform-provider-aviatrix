@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFirewallPolicy_basic(t *testing.T) {
@@ -104,7 +105,7 @@ func testAccCheckFirewallPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no firewall_policy ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		logEnabled := "on"
 		if rs.Primary.Attributes["log_enabled"] == "false" {
@@ -138,7 +139,7 @@ func testAccCheckFirewallPolicyExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckFirewallPolicyDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_firewall_policy" {

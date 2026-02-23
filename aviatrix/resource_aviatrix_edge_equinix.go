@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,8 +13,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeEquinix() *schema.Resource {
@@ -249,6 +251,16 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 							Optional:    true,
 							Description: "Gateway IP.",
 						},
+						"ipv6_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IPv6 address.",
+						},
+						"gateway_ipv6": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IPv6 IP.",
+						},
 						"dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -358,78 +370,94 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 
 func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 	edgeEquinix := &goaviatrix.EdgeEquinix{
-		AccountName:                        d.Get("account_name").(string),
-		GwName:                             d.Get("gw_name").(string),
-		SiteId:                             d.Get("site_id").(string),
-		ZtpFileDownloadPath:                d.Get("ztp_file_download_path").(string),
+		AccountName:                        getString(d, "account_name"),
+		GwName:                             getString(d, "gw_name"),
+		SiteId:                             getString(d, "site_id"),
+		ZtpFileDownloadPath:                getString(d, "ztp_file_download_path"),
 		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
-		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DnsServerIp:                        d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
-		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
-		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
-		LocalAsNumber:                      d.Get("local_as_number").(string),
+		EnableManagementOverPrivateNetwork: getBool(d, "enable_management_over_private_network"),
+		DnsServerIp:                        getString(d, "dns_server_ip"),
+		SecondaryDnsServerIp:               getString(d, "secondary_dns_server_ip"),
+		EnableEdgeActiveStandby:            getBool(d, "enable_edge_active_standby"),
+		EnableEdgeActiveStandbyPreemptive:  getBool(d, "enable_edge_active_standby_preemptive"),
+		LocalAsNumber:                      getString(d, "local_as_number"),
 		PrependAsPath:                      getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		EnableLearnedCidrsApproval:         getBool(d, "enable_learned_cidrs_approval"),
 		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_neighbor_status_polling_time").(int),
-		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
-		Latitude:                           d.Get("latitude").(string),
-		Longitude:                          d.Get("longitude").(string),
-		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnablePreserveAsPath:               getBool(d, "enable_preserve_as_path"),
+		BgpPollingTime:                     getInt(d, "bgp_polling_time"),
+		BgpBfdPollingTime:                  getInt(d, "bgp_neighbor_status_polling_time"),
+		BgpHoldTime:                        getInt(d, "bgp_hold_time"),
+		EnableEdgeTransitiveRouting:        getBool(d, "enable_edge_transitive_routing"),
+		EnableJumboFrame:                   getBool(d, "enable_jumbo_frame"),
+		Latitude:                           getString(d, "latitude"),
+		Longitude:                          getString(d, "longitude"),
+		RxQueueSize:                        getString(d, "rx_queue_size"),
+		EnableSingleIpSnat:                 getBool(d, "enable_single_ip_snat"),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, interface0 := range interfaces {
-		interface1 := interface0.(map[string]interface{})
+		interface1 := mustMap(interface0)
 
 		interface2 := &goaviatrix.EdgeEquinixInterface{
-			IfName:       interface1["name"].(string),
-			Type:         interface1["type"].(string),
-			PublicIp:     interface1["wan_public_ip"].(string),
-			Tag:          interface1["tag"].(string),
-			Dhcp:         interface1["enable_dhcp"].(bool),
-			IpAddr:       interface1["ip_address"].(string),
-			GatewayIp:    interface1["gateway_ip"].(string),
-			DnsPrimary:   interface1["dns_server_ip"].(string),
-			DnsSecondary: interface1["secondary_dns_server_ip"].(string),
+			IfName:       mustString(interface1["name"]),
+			Type:         mustString(interface1["type"]),
+			PublicIp:     mustString(interface1["wan_public_ip"]),
+			Tag:          mustString(interface1["tag"]),
+			Dhcp:         mustBool(interface1["enable_dhcp"]),
+			IpAddr:       mustString(interface1["ip_address"]),
+			GatewayIp:    mustString(interface1["gateway_ip"]),
+			DnsPrimary:   mustString(interface1["dns_server_ip"]),
+			DnsSecondary: mustString(interface1["secondary_dns_server_ip"]),
+		}
+
+		// IPv6 fields are optional
+		if v, ok := interface1["ipv6_address"]; ok && v != nil {
+			ip := mustString(v)
+			if ip != "" {
+				interface2.IPv6Addr = ip
+
+				// gateway_ipv6 only makes sense if ipv6_address is set
+				if gwv, ok := interface1["gateway_ipv6"]; ok && gwv != nil {
+					gw := mustString(gwv)
+					if gw != "" {
+						interface2.GatewayIPv6IP = gw
+					}
+				}
+			}
 		}
 
 		// vrrp_state and virtual_ip are only applicable for LAN interfaces
-		if interface1["type"].(string) == "LAN" && interface1["enable_vrrp"].(bool) {
-			interface2.VrrpState = interface1["enable_vrrp"].(bool)
-			interface2.VirtualIp = interface1["vrrp_virtual_ip"].(string)
+		if mustString(interface1["type"]) == "LAN" && mustBool(interface1["enable_vrrp"]) {
+			interface2.VrrpState = mustBool(interface1["enable_vrrp"])
+			interface2.VirtualIp = mustString(interface1["vrrp_virtual_ip"])
 		}
 
 		edgeEquinix.InterfaceList = append(edgeEquinix.InterfaceList, interface2)
 	}
 
-	vlan := d.Get("vlan").(*schema.Set).List()
+	vlan := getSet(d, "vlan").List()
 	for _, vlan0 := range vlan {
-		vlan1 := vlan0.(map[string]interface{})
+		vlan1 := mustMap(vlan0)
 
 		vlan2 := &goaviatrix.EdgeEquinixVlan{
-			ParentInterface: vlan1["parent_interface_name"].(string),
-			IpAddr:          vlan1["ip_address"].(string),
-			GatewayIp:       vlan1["gateway_ip"].(string),
-			PeerIpAddr:      vlan1["peer_ip_address"].(string),
-			PeerGatewayIp:   vlan1["peer_gateway_ip"].(string),
-			VirtualIp:       vlan1["vrrp_virtual_ip"].(string),
-			Tag:             vlan1["tag"].(string),
+			ParentInterface: mustString(vlan1["parent_interface_name"]),
+			IpAddr:          mustString(vlan1["ip_address"]),
+			GatewayIp:       mustString(vlan1["gateway_ip"]),
+			PeerIpAddr:      mustString(vlan1["peer_ip_address"]),
+			PeerGatewayIp:   mustString(vlan1["peer_gateway_ip"]),
+			VirtualIp:       mustString(vlan1["vrrp_virtual_ip"]),
+			Tag:             mustString(vlan1["tag"]),
 		}
 
-		vlan2.VlanId = strconv.Itoa(vlan1["vlan_id"].(int))
+		vlan2.VlanId = strconv.Itoa(mustInt(vlan1["vlan_id"]))
 
 		edgeEquinix.VlanList = append(edgeEquinix.VlanList, vlan2)
 	}
 
-	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+	if getBool(d, "enable_auto_advertise_lan_cidrs") {
 		edgeEquinix.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
 		edgeEquinix.EnableAutoAdvertiseLanCidrs = "disable"
@@ -439,7 +467,7 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 }
 
 func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeEquinix := marshalEdgeEquinixInput(d)
@@ -580,11 +608,8 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if edgeEquinix.RxQueueSize != "" {
-		gatewayForGatewayFunctions.RxQueueSize = edgeEquinix.RxQueueSize
-		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
-		if err != nil {
-			return diag.Errorf("could not set rx queue size after Edge Equinix creation: %v", err)
-		}
+		return diag.Errorf("'rx_queue_size' cannot be set during gateway creation. " +
+			"Please create the gateway first, then set 'rx_queue_size' in a subsequent 'terraform apply'")
 	}
 
 	if edgeEquinix.EnableSingleIpSnat {
@@ -627,41 +652,40 @@ func resourceAviatrixEdgeEquinixReadIfRequired(ctx context.Context, d *schema.Re
 }
 
 func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("gw_name").(string) == "" {
+	if getString(d, "gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
-	edgeEquinixResp, err := client.GetEdgeEquinix(ctx, d.Get("gw_name").(string))
+	edgeEquinixResp, err := client.GetEdgeEquinix(ctx, getString(d, "gw_name"))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Equinix: %v", err)
 	}
-
-	d.Set("account_name", edgeEquinixResp.AccountName)
-	d.Set("gw_name", edgeEquinixResp.GwName)
-	d.Set("site_id", edgeEquinixResp.SiteId)
-	d.Set("enable_management_over_private_network", edgeEquinixResp.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeEquinixResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeEquinixResp.SecondaryDnsServerIp)
-	d.Set("local_as_number", edgeEquinixResp.LocalAsNumber)
-	d.Set("prepend_as_path", edgeEquinixResp.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeEquinixResp.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeEquinixResp.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeEquinixResp.EnableLearnedCidrsApproval)
+	mustSet(d, "account_name", edgeEquinixResp.AccountName)
+	mustSet(d, "gw_name", edgeEquinixResp.GwName)
+	mustSet(d, "site_id", edgeEquinixResp.SiteId)
+	mustSet(d, "enable_management_over_private_network", edgeEquinixResp.EnableManagementOverPrivateNetwork)
+	mustSet(d, "dns_server_ip", edgeEquinixResp.DnsServerIp)
+	mustSet(d, "secondary_dns_server_ip", edgeEquinixResp.SecondaryDnsServerIp)
+	mustSet(d, "local_as_number", edgeEquinixResp.LocalAsNumber)
+	mustSet(d, "prepend_as_path", edgeEquinixResp.PrependAsPath)
+	mustSet(d, "enable_edge_active_standby", edgeEquinixResp.EnableEdgeActiveStandby)
+	mustSet(d, "enable_edge_active_standby_preemptive", edgeEquinixResp.EnableEdgeActiveStandbyPreemptive)
+	mustSet(d, "enable_learned_cidrs_approval", edgeEquinixResp.EnableLearnedCidrsApproval)
 
 	if edgeEquinixResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeEquinixResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeEquinixResp.ManagementEgressIpPrefix, ","))
 	}
 
 	if edgeEquinixResp.EnableLearnedCidrsApproval {
@@ -675,37 +699,35 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 			return diag.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
-		d.Set("approved_learned_cidrs", nil)
+		mustSet(d, "approved_learned_cidrs", nil)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeEquinixResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
 		len(goaviatrix.Difference(edgeEquinixResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeEquinixResp.SpokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", edgeEquinixResp.SpokeBgpManualAdvertisedCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
-
-	d.Set("enable_preserve_as_path", edgeEquinixResp.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeEquinixResp.BgpPollingTime)
-	d.Set("bgp_neighbor_status_polling_time", edgeEquinixResp.BgpBfdPollingTime)
-	d.Set("bgp_hold_time", edgeEquinixResp.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeEquinixResp.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeEquinixResp.EnableJumboFrame)
+	mustSet(d, "enable_preserve_as_path", edgeEquinixResp.EnablePreserveAsPath)
+	mustSet(d, "bgp_polling_time", edgeEquinixResp.BgpPollingTime)
+	mustSet(d, "bgp_neighbor_status_polling_time", edgeEquinixResp.BgpBfdPollingTime)
+	mustSet(d, "bgp_hold_time", edgeEquinixResp.BgpHoldTime)
+	mustSet(d, "enable_edge_transitive_routing", edgeEquinixResp.EnableEdgeTransitiveRouting)
+	mustSet(d, "enable_jumbo_frame", edgeEquinixResp.EnableJumboFrame)
 	if edgeEquinixResp.Latitude != 0 || edgeEquinixResp.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeEquinixResp.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeEquinixResp.Longitude))
+		mustSet(d, "latitude", fmt.Sprintf("%.6f", edgeEquinixResp.Latitude))
+		mustSet(d, "longitude", fmt.Sprintf("%.6f", edgeEquinixResp.Longitude))
 	} else {
-		d.Set("latitude", "")
-		d.Set("longitude", "")
+		mustSet(d, "latitude", "")
+		mustSet(d, "longitude", "")
 	}
 
 	if len(edgeEquinixResp.AdvertisedCidrList) > 0 {
 		_ = d.Set("included_advertised_spoke_routes", edgeEquinixResp.AdvertisedCidrList)
 	}
-
-	d.Set("rx_queue_size", edgeEquinixResp.RxQueueSize)
-	d.Set("state", edgeEquinixResp.State)
+	mustSet(d, "rx_queue_size", edgeEquinixResp.RxQueueSize)
+	mustSet(d, "state", edgeEquinixResp.State)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
@@ -754,16 +776,15 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	if err = d.Set("vlan", vlan); err != nil {
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
-
-	d.Set("enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
-	d.Set("enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
+	mustSet(d, "enable_single_ip_snat", edgeEquinixResp.EnableNat == "yes" && edgeEquinixResp.SnatMode == "primary")
+	mustSet(d, "enable_auto_advertise_lan_cidrs", edgeEquinixResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeEquinixResp.GwName)
 	return nil
 }
 
 func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeEquinix := marshalEdgeEquinixInput(d)
@@ -983,12 +1004,12 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixEdgeEquinixDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
-	gwName := d.Get("gw_name").(string)
-	siteId := d.Get("site_id").(string)
-	ztpFileDownloadPath := d.Get("ztp_file_download_path").(string)
+	accountName := getString(d, "account_name")
+	gwName := getString(d, "gw_name")
+	siteId := getString(d, "site_id")
+	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 
 	err := client.DeleteEdgeEquinix(ctx, accountName, gwName)
 	if err != nil {

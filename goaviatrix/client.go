@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -88,6 +87,7 @@ func (c *Client) GetApiToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	var data GetApiTokenResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return "", err
@@ -125,6 +125,7 @@ func (c *Client) Login() error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	var data LoginResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
@@ -147,6 +148,7 @@ func (c *Client) LoginForCloudn() error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	var data LoginResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
@@ -192,16 +194,17 @@ func NewClient(username string, password string, controllerIP string, HTTPClient
 //	error - if any
 func (c *Client) init(controllerIP string) (*Client, error) {
 	if len(controllerIP) == 0 {
-		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
+		return nil, fmt.Errorf("controller ip is not set")
 	}
-
 	c.baseURL = "https://" + controllerIP + "/v2/api"
-
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
+			// whynosemgrep: we need to support insecure TLS
+			// nosemgrep: problem-based-packs.insecure-transport.go-stdlib.bypass-tls-verification.bypass-tls-verification
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
+				InsecureSkipVerify: true, //nolint:gosec
+				MinVersion:         tls.VersionTLS12,
 			},
 		}
 		c.HTTPClient = &http.Client{Transport: tr}
@@ -209,7 +212,6 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 	if err := c.Login(); err != nil {
 		return nil, err
 	}
-
 	return c, nil
 }
 
@@ -267,8 +269,9 @@ func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIRespons
 func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
 	resp, err := c.PostContext(ctx, c.baseURL, d)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+		return fmt.Errorf("HTTP POST %q failed: %w", action, err)
 	}
+	defer resp.Body.Close()
 	return checkAPIResp(resp, action, checkFunc)
 }
 
@@ -276,7 +279,7 @@ func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{
 func (c *Client) PostAPIDownloadContext(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) (io.ReadCloser, error) {
 	resp, err := c.PostContext(ctx, c.baseURL, d)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+		return nil, fmt.Errorf("HTTP POST %q failed: %w", action, err)
 	}
 
 	if strings.Contains(resp.Header.Get("Content-Type"), "json") {
@@ -297,8 +300,9 @@ func (c *Client) PostAPIWithResponse(v interface{}, action string, d interface{}
 func (c *Client) PostAPIContextWithResponse(ctx context.Context, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
 	resp, err := c.PostContext(ctx, c.baseURL, d)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+		return fmt.Errorf("HTTP POST %q failed: %w", action, err)
 	}
+	defer resp.Body.Close()
 	return checkAndReturnAPIResp(resp, v, "POST", action, checkFunc)
 }
 
@@ -310,8 +314,9 @@ func (c *Client) PostFileAPI(params map[string]string, files []File, checkFunc C
 	}
 	resp, err := c.PostFile(c.baseURL, params, files)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
+		return fmt.Errorf("HTTP POST %q failed: %w", params["action"], err)
 	}
+	defer resp.Body.Close()
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
@@ -323,8 +328,9 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	}
 	resp, err := c.PostFileContext(ctx, c.baseURL, params, files)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
+		return fmt.Errorf("HTTP POST %q failed: %w", params["action"], err)
 	}
+	defer resp.Body.Close()
 	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
@@ -384,8 +390,11 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	resp.Body.Close()
+	if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+		_ = resp.Body.Close()
+		return fmt.Errorf("read response body for %s failed: %w", action, readErr)
+	}
+	_ = resp.Body.Close()
 	bodyString := buf.String()
 
 	var data struct {
@@ -395,7 +404,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	}
 
 	if err = json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
+		return fmt.Errorf("json decode %s failed: %w (body: %s)", action, err, bodyString)
 	}
 	if !data.Return {
 		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
@@ -422,9 +431,14 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 			time.Sleep(sleepDuration)
 			continue
 		}
+
 		buf = new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		resp.Body.Close()
+		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+			_ = resp.Body.Close()
+			return fmt.Errorf("read check_task_status body failed: %w", readErr)
+		}
+		_ = resp.Body.Close()
+
 		pollBodyString := buf.String()
 		err = json.Unmarshal([]byte(pollBodyString), &data)
 		if err != nil {
@@ -458,6 +472,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		// Async API is done, return result of checkFunc
 		return checkFunc(action, "Post", data.Result, data.Return)
 	}
+
 	// Waited for too long and async API never finished
 	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }
@@ -468,11 +483,11 @@ func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponse
 	var b bytes.Buffer
 	_, err := b.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %q failed: %v", action, err)
+		return fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
 	body := b.String()
 	if err = json.Unmarshal([]byte(body), &data); err != nil {
-		return fmt.Errorf("json Decode %q failed: %v\n Body: %s", action, err, body)
+		return fmt.Errorf("json Decode %q failed: %w\n Body: %s", action, err, body)
 	}
 
 	return checkFunc(action, "Post", data.Reason, data.Return)
@@ -485,18 +500,18 @@ func checkAndReturnAPIResp(resp *http.Response, v interface{}, method, action st
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %q failed: %v", action, err)
+		return fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
 	bodyString := buf.String()
 
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+		return fmt.Errorf("json decode into standard format failed: %w (body: %s)", err, bodyString)
 	}
 	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
 		return err
 	}
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+		return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
 	}
 	return nil
 }
@@ -512,19 +527,32 @@ func (c *Client) GetAPI(v interface{}, action string, d map[string]string, check
 // If the GET request fails we will retry
 // First, we decode into the generic APIResp struct, then check for errors
 // If no errors, we will decode into the user defined structure that is passed in
-func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+func (c *Client) GetAPIContext(
+	ctx context.Context,
+	v interface{},
+	action string,
+	d map[string]string,
+	checkFunc CheckAPIResponseFunc,
+) error {
 	Url, err := c.urlEncode(d)
 	if err != nil {
-		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+		return fmt.Errorf("could not url encode values for action %q: %w", action, err)
 	}
 
-	try, maxTries, backoff := 0, 5, 500*time.Millisecond
+	try, maxTries := 0, 5
+	backoff := 500 * time.Millisecond
+
 	var resp *http.Response
 	for {
 		try++
+
 		resp, err = c.GetContext(ctx, Url, nil)
 		if err == nil {
 			break
+		}
+
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
 		}
 
 		log.WithFields(log.Fields{
@@ -534,33 +562,51 @@ func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string
 		}).Warnf("HTTP GET request failed")
 
 		if try == maxTries {
-			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+			return fmt.Errorf("HTTP Get %s failed after %d tries: %w", action, try, err)
 		}
-		time.Sleep(backoff)
-		// Double the backoff time after each failed try
-		backoff *= 2
+
+		select {
+		case <-time.After(backoff):
+			backoff *= 2
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	var data APIResp
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	if resp == nil || resp.Body == nil {
+		return fmt.Errorf("HTTP Get %s returned nil response/body", action)
 	}
+	defer resp.Body.Close()
+
+	const maxBody = 256 << 10 // 256 KiB
+	body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
+	if readErr != nil {
+		return fmt.Errorf("read response body for %s failed: %w", action, readErr)
+	}
+	if len(body) > maxBody {
+		body = body[:maxBody]
+	}
+
+	var data APIResp
+	if err := json.Unmarshal(body, &data); err != nil {
+		return fmt.Errorf("json decode into standard format failed for %s: %w\nBody: %s", action, err, string(body))
+	}
+
 	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
 		return err
 	}
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+
+	if err := json.Unmarshal(body, v); err != nil {
+		return fmt.Errorf("json decode into target failed for %s: %w\nBody: %s", action, err, string(body))
 	}
+
 	return nil
 }
 
 func (c *Client) urlEncode(d map[string]string) (string, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return "", fmt.Errorf("parsing url: %v", err)
+		return "", fmt.Errorf("parsing url: %w", err)
 	}
 	v := url.Values{}
 	for key, val := range d {
@@ -635,7 +681,7 @@ func encodeMultipartFormData(params map[string]string, files []File) (*bytes.Buf
 			if err != nil {
 				return nil, "", err
 			}
-			fileContents, err := ioutil.ReadAll(file)
+			fileContents, err := io.ReadAll(file)
 			if err != nil {
 				return nil, "", err
 			}
@@ -708,7 +754,7 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 		try++
 
 		if i != nil {
-			body, err := form.EncodeToValues(i, true)
+			body, err := form.EncodeToValues(i)
 			if err != nil {
 				return nil, err
 			}
@@ -731,8 +777,11 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 		}
 
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		resp.Body.Close()
+		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+			_ = resp.Body.Close()
+			return resp, readErr
+		}
+		_ = resp.Body.Close()
 
 		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
 		resp.Body = io.NopCloser(buf)
@@ -741,7 +790,7 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 			bodyString := buf.String()
 			data = new(APIResp)
 			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-				return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+				return resp, fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 			}
 
 			// Any error not related to expired CID should return
@@ -771,7 +820,7 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 				// Update CID in GET URL
 				Url, err := url.Parse(path)
 				if err != nil {
-					return resp, fmt.Errorf("failed to parse url: %v", err)
+					return resp, fmt.Errorf("failed to parse url: %w", err)
 				}
 				query := Url.Query()
 				query["CID"] = []string{c.CID}
@@ -836,8 +885,11 @@ func (c *Client) RequestContextLogin(ctx context.Context, verb string, path stri
 		}
 
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		resp.Body.Close()
+		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+			_ = resp.Body.Close()
+			return resp, readErr
+		}
+		_ = resp.Body.Close()
 
 		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
 		resp.Body = io.NopCloser(buf)
@@ -846,7 +898,7 @@ func (c *Client) RequestContextLogin(ctx context.Context, verb string, path stri
 			bodyString := buf.String()
 			data = new(APIResp)
 			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-				return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+				return resp, fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
 			}
 
 			// Any error not related to expired CID should return
@@ -876,7 +928,7 @@ func (c *Client) RequestContextLogin(ctx context.Context, verb string, path stri
 				// Update CID in GET URL
 				Url, err := url.Parse(path)
 				if err != nil {
-					return resp, fmt.Errorf("failed to parse url: %v", err)
+					return resp, fmt.Errorf("failed to parse url: %w", err)
 				}
 				query := Url.Query()
 				query["CID"] = []string{c.CID}

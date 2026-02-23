@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAwsTgwConnect() *schema.Resource {
@@ -60,15 +62,15 @@ func resourceAviatrixAwsTgwConnect() *schema.Resource {
 
 func marshalAwsTgwConnectInput(d *schema.ResourceData) *goaviatrix.AwsTgwConnect {
 	return &goaviatrix.AwsTgwConnect{
-		TgwName:               d.Get("tgw_name").(string),
-		ConnectionName:        d.Get("connection_name").(string),
-		TransportAttachmentID: d.Get("transport_vpc_id").(string),
-		SecurityDomainName:    d.Get("network_domain_name").(string),
+		TgwName:               getString(d, "tgw_name"),
+		ConnectionName:        getString(d, "connection_name"),
+		TransportAttachmentID: getString(d, "transport_vpc_id"),
+		SecurityDomainName:    getString(d, "network_domain_name"),
 	}
 }
 
 func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	connect := marshalAwsTgwConnectInput(d)
 
@@ -81,10 +83,10 @@ func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	connectionName := d.Get("connection_name").(string)
-	tgwName := d.Get("tgw_name").(string)
+	connectionName := getString(d, "connection_name")
+	tgwName := getString(d, "tgw_name")
 	if connectionName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no aws_tgw_connect connection_name received. Import Id is %s", id)
@@ -102,30 +104,29 @@ func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceDa
 		TgwName:        tgwName,
 	}
 	connect, err := client.GetTGWConnect(ctx, connect)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
 		return diag.Errorf("could not find aws_tgw_connect %s: %v", connectionName, err)
 	}
-
-	d.Set("tgw_name", connect.TgwName)
-	d.Set("connection_name", connect.ConnectionName)
-	d.Set("transport_vpc_id", connect.TransportAttachmentName)
-	d.Set("connect_attachment_id", connect.ConnectAttachmentID)
-	d.Set("transport_attachment_id", connect.TransportAttachmentID)
-	d.Set("network_domain_name", connect.SecurityDomainName)
+	mustSet(d, "tgw_name", connect.TgwName)
+	mustSet(d, "connection_name", connect.ConnectionName)
+	mustSet(d, "transport_vpc_id", connect.TransportAttachmentName)
+	mustSet(d, "connect_attachment_id", connect.ConnectAttachmentID)
+	mustSet(d, "transport_attachment_id", connect.TransportAttachmentID)
+	mustSet(d, "network_domain_name", connect.SecurityDomainName)
 
 	d.SetId(connect.ID())
 	return nil
 }
 
 func resourceAviatrixAwsTgwConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	connect := marshalAwsTgwConnectInput(d)
-	connect.ConnectAttachmentID = d.Get("connect_attachment_id").(string)
+	connect.ConnectAttachmentID = getString(d, "connect_attachment_id")
 	if err := client.DetachTGWConnectFromTGW(ctx, connect); err != nil {
 		return diag.Errorf("could not detach tgw connect from tgw: %v", err)
 	}

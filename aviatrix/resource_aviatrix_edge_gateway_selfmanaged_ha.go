@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -10,8 +11,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
@@ -142,30 +144,30 @@ func resourceAviatrixEdgeGatewaySelfmanagedHa() *schema.Resource {
 
 func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmSelfmanagedHa {
 	edgeGatewaySelfmanagedHa := &goaviatrix.EdgeVmSelfmanagedHa{
-		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		SiteId:                   d.Get("site_id").(string),
-		ZtpFileType:              d.Get("ztp_file_type").(string),
-		ZtpFileDownloadPath:      d.Get("ztp_file_download_path").(string),
-		DnsServerIp:              d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:     d.Get("secondary_dns_server_ip").(string),
+		PrimaryGwName:            getString(d, "primary_gw_name"),
+		SiteId:                   getString(d, "site_id"),
+		ZtpFileType:              getString(d, "ztp_file_type"),
+		ZtpFileDownloadPath:      getString(d, "ztp_file_download_path"),
+		DnsServerIp:              getString(d, "dns_server_ip"),
+		SecondaryDnsServerIp:     getString(d, "secondary_dns_server_ip"),
 		ManagementEgressIPPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+		if1 := mustMap(if0)
 
 		if2 := &goaviatrix.EdgeSpokeInterface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DNSPrimary:   if1["dns_server_ip"].(string),
-			DNSSecondary: if1["secondary_dns_server_ip"].(string),
-			IPv6Addr:     if1["ipv6_address"].(string),
-			GatewayIPv6:  if1["gateway_ipv6"].(string),
+			IfName:       mustString(if1["name"]),
+			Type:         mustString(if1["type"]),
+			PublicIp:     mustString(if1["wan_public_ip"]),
+			Dhcp:         mustBool(if1["enable_dhcp"]),
+			IpAddr:       mustString(if1["ip_address"]),
+			GatewayIp:    mustString(if1["gateway_ip"]),
+			DNSPrimary:   mustString(if1["dns_server_ip"]),
+			DNSSecondary: mustString(if1["secondary_dns_server_ip"]),
+			IPv6Addr:     mustString(if1["ipv6_address"]),
+			GatewayIPv6:  mustString(if1["gateway_ipv6"]),
 		}
 
 		edgeGatewaySelfmanagedHa.InterfaceList = append(edgeGatewaySelfmanagedHa.InterfaceList, if2)
@@ -175,7 +177,7 @@ func marshalEdgeGatewaySelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.Ed
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
 
@@ -189,19 +191,19 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaCreate(ctx context.Context, d *sche
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if d.Get("primary_gw_name").(string) == "" {
+	if getString(d, "primary_gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
-		d.Set("primary_gw_name", parts[0])
+		mustSet(d, "primary_gw_name", parts[0])
 		d.SetId(id)
 	}
 
-	edgeGatewaySelfmanagedHaResp, err := client.GetEdgeVmSelfmanagedHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeGatewaySelfmanagedHaResp, err := client.GetEdgeVmSelfmanagedHa(ctx, getString(d, "primary_gw_name")+"-hagw")
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -214,11 +216,11 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 	_ = d.Set("secondary_dns_server_ip", edgeGatewaySelfmanagedHaResp.SecondaryDNSServerIP)
 
 	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "iso" || edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud-init" {
-		d.Set("ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)
+		mustSet(d, "ztp_file_type", edgeGatewaySelfmanagedHaResp.ZtpFileType)
 	}
 
 	if edgeGatewaySelfmanagedHaResp.ZtpFileType == "cloud_init" {
-		d.Set("ztp_file_type", "cloud-init")
+		mustSet(d, "ztp_file_type", "cloud-init")
 	}
 
 	if edgeGatewaySelfmanagedHaResp.ManagementEgressIPPrefix == "" {
@@ -253,7 +255,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaRead(ctx context.Context, d *schema
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeGatewaySelfmanagedHa := marshalEdgeGatewaySelfmanagedHaInput(d)
 
@@ -278,7 +280,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedHaUpdate(ctx context.Context, d *sche
 }
 
 func resourceAviatrixEdgeGatewaySelfmanagedHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteEdgeSpoke(ctx, d.Id())
 	if err != nil {

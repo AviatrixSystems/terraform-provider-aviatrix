@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preAWSPeerCheck(t *testing.T, msgCommon string) {
@@ -105,7 +107,7 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 			return fmt.Errorf("no AWSPeer ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundPeer := &goaviatrix.AWSPeer{
 			VpcID1: rs.Primary.Attributes["vpc_id1"],
@@ -129,7 +131,7 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 }
 
 func testAccCheckAWSPeerDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_aws_peer" {
@@ -142,7 +144,7 @@ func testAccCheckAWSPeerDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetAWSPeer(foundPeer)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("awsPeer still exists")
 		}
 	}

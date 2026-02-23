@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixWebGroup() *schema.Resource {
@@ -68,14 +70,14 @@ func resourceAviatrixWebGroup() *schema.Resource {
 
 func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) {
 	webGroup := &goaviatrix.WebGroup{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 
-	for _, selectorInterface := range d.Get("selector.0.match_expressions").([]interface{}) {
+	for _, selectorInterface := range getList(d, "selector.0.match_expressions") {
 		if selectorInterface == nil {
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
-		selectorInfo := selectorInterface.(map[string]interface{})
+		selectorInfo := mustMap(selectorInterface)
 		var filter *goaviatrix.WebGroupMatchExpression
 
 		if goaviatrix.MapContains(selectorInfo, "snifilter") && goaviatrix.MapContains(selectorInfo, "urlfilter") {
@@ -83,8 +85,8 @@ func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) 
 		}
 
 		filter = &goaviatrix.WebGroupMatchExpression{
-			SniFilter: selectorInfo["snifilter"].(string),
-			UrlFilter: selectorInfo["urlfilter"].(string),
+			SniFilter: mustString(selectorInfo["snifilter"]),
+			UrlFilter: mustString(selectorInfo["urlfilter"]),
 		}
 
 		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
@@ -94,7 +96,7 @@ func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) 
 }
 
 func resourceAviatrixWebGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	webGroup, err := marshalWebGroupInput(d)
 	if err != nil {
@@ -121,21 +123,20 @@ func resourceAviatrixWebGroupReadIfRequired(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	webGroup, err := client.GetWebGroup(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read Web Group: %s", err)
 	}
-
-	d.Set("name", webGroup.Name)
+	mustSet(d, "name", webGroup.Name)
 
 	var expressions []interface{}
 
@@ -161,7 +162,7 @@ func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAviatrixWebGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -182,7 +183,7 @@ func resourceAviatrixWebGroupUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAviatrixWebGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteWebGroup(ctx, uuid)

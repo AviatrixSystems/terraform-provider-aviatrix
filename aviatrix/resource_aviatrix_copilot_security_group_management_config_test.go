@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -88,7 +87,7 @@ func testAccCheckCopilotSecurityGroupManagementConfigExists(resourceName string)
 			return fmt.Errorf("copilot security group management config id is not set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("could not find copilot security group management id")
@@ -98,7 +97,7 @@ func testAccCheckCopilotSecurityGroupManagementConfigExists(resourceName string)
 }
 
 func testAccCheckCopilotSecurityGroupManagementConfigDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_copilot_security_group_management_config" {
@@ -107,7 +106,7 @@ func testAccCheckCopilotSecurityGroupManagementConfigDestroy(s *terraform.State)
 
 		copilotSecurityGroupManagementConfig, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
 		if err != nil {
-			return fmt.Errorf("could not read copilot security group management config due to err: %v", err)
+			return fmt.Errorf("could not read copilot security group management config due to err: %w", err)
 		}
 		if copilotSecurityGroupManagementConfig.State == "Enabled" {
 			return fmt.Errorf("copilot security group management is still enabled")

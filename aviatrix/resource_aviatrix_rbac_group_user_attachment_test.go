@@ -1,15 +1,17 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixRbacGroupUserAttachment_basic(t *testing.T) {
@@ -77,7 +79,7 @@ func testAccCheckRbacGroupUserAttachmentExists(n string, rAttachment *goaviatrix
 			return fmt.Errorf("no RbacGroupUserAttachment ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundAttachment := &goaviatrix.RbacGroupUserAttachment{
 			GroupName: rs.Primary.Attributes["group_name"],
@@ -101,7 +103,7 @@ func testAccCheckRbacGroupUserAttachmentExists(n string, rAttachment *goaviatrix
 }
 
 func testAccCheckRbacGroupUserAttachmentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_rbac_group_user_attachment" {
@@ -113,7 +115,7 @@ func testAccCheckRbacGroupUserAttachmentDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetRbacGroupUserAttachment(foundAttachment)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			if strings.Contains(err.Error(), "is invalid") {
 				return nil
 			}

@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
@@ -38,7 +40,7 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
 							Description: "Action for the specified source and destination Smart Groups." +
-								"Must be one of PERMIT or DENY.",
+								"Must be one of PERMIT, DENY, or INTRUSION_DETECTION_PERMIT.",
 						},
 						"dst_smart_groups": {
 							Type:        schema.TypeSet,
@@ -159,58 +161,58 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goaviatrix.DistributedFirewallingPolicyList, error) {
 	policyList := &goaviatrix.DistributedFirewallingPolicyList{}
 
-	policies := d.Get("policies").([]interface{})
+	policies := getList(d, "policies")
 	for _, policyInterface := range policies {
-		policy := policyInterface.(map[string]interface{})
+		policy := mustMap(policyInterface)
 
 		distributedFirewallingPolicy := &goaviatrix.DistributedFirewallingPolicy{
-			Name:                   policy["name"].(string),
-			Action:                 policy["action"].(string),
-			Priority:               policy["priority"].(int),
-			FlowAppRequirement:     policy["flow_app_requirement"].(string),
-			DecryptPolicy:          policy["decrypt_policy"].(string),
-			ExcludeSgOrchestration: policy["exclude_sg_orchestration"].(bool),
+			Name:                   mustString(policy["name"]),
+			Action:                 mustString(policy["action"]),
+			Priority:               mustInt(policy["priority"]),
+			FlowAppRequirement:     mustString(policy["flow_app_requirement"]),
+			DecryptPolicy:          mustString(policy["decrypt_policy"]),
+			ExcludeSgOrchestration: mustBool(policy["exclude_sg_orchestration"]),
 		}
 
-		protocol := strings.ToUpper(policy["protocol"].(string))
+		protocol := strings.ToUpper(mustString(policy["protocol"]))
 		if protocol == "ANY" {
 			distributedFirewallingPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
 		} else {
 			distributedFirewallingPolicy.Protocol = protocol
 		}
 
-		for _, smartGroup := range policy["src_smart_groups"].(*schema.Set).List() {
-			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, smartGroup.(string))
+		for _, smartGroup := range mustSchemaSet(policy["src_smart_groups"]).List() {
+			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, mustString(smartGroup))
 		}
 
-		for _, smartGroup := range policy["dst_smart_groups"].(*schema.Set).List() {
-			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroup.(string))
+		for _, smartGroup := range mustSchemaSet(policy["dst_smart_groups"]).List() {
+			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, mustString(smartGroup))
 		}
 
-		for _, webGroup := range policy["web_groups"].(*schema.Set).List() {
-			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, webGroup.(string))
+		for _, webGroup := range mustSchemaSet(policy["web_groups"]).List() {
+			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, mustString(webGroup))
 		}
 
 		if logging, loggingOk := policy["logging"]; loggingOk {
-			distributedFirewallingPolicy.Logging = logging.(bool)
+			distributedFirewallingPolicy.Logging = mustBool(logging)
 		}
 
 		if watch, watchOk := policy["watch"]; watchOk {
-			distributedFirewallingPolicy.Watch = watch.(bool)
+			distributedFirewallingPolicy.Watch = mustBool(watch)
 		}
 
 		if goaviatrix.MapContains(policy, "port_ranges") {
 			if distributedFirewallingPolicy.Protocol == "ICMP" {
 				return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 			}
-			for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
-				portRangeMap := portRangeInterface.(map[string]interface{})
+			for _, portRangeInterface := range mustSlice(policy["port_ranges"]) {
+				portRangeMap := mustMap(portRangeInterface)
 				portRange := &goaviatrix.DistributedFirewallingPortRange{
-					Lo: portRangeMap["lo"].(int),
+					Lo: mustInt(portRangeMap["lo"]),
 				}
 
 				if hi, hiOk := portRangeMap["hi"]; hiOk {
-					portRange.Hi = hi.(int)
+					portRange.Hi = mustInt(hi)
 				}
 
 				distributedFirewallingPolicy.PortRanges = append(distributedFirewallingPolicy.PortRanges, *portRange)
@@ -218,23 +220,15 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 		}
 
 		if uuid, uuidOk := policy["uuid"]; uuidOk {
-			distributedFirewallingPolicy.UUID = uuid.(string)
+			distributedFirewallingPolicy.UUID = mustString(uuid)
 		}
 
 		if tlsProfileUUID, ok := policy["tls_profile"]; ok {
-			uuidStr, ok := tlsProfileUUID.(string)
-			if !ok {
-				return nil, fmt.Errorf("invalid type for tls_profile, should be a string")
-			}
-			distributedFirewallingPolicy.TLSProfile = uuidStr
+			distributedFirewallingPolicy.TLSProfile = mustString(tlsProfileUUID)
 		}
 
 		if logProfileUUID, ok := policy["log_profile"]; ok {
-			uuidStr, ok := logProfileUUID.(string)
-			if !ok {
-				return nil, fmt.Errorf("invalid type for log_profile, should be a string")
-			}
-			distributedFirewallingPolicy.LogProfile = uuidStr
+			distributedFirewallingPolicy.LogProfile = mustString(logProfileUUID)
 		}
 
 		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
@@ -244,7 +238,7 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 }
 
 func resourceAviatrixDistributedFirewallingPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	policyList, err := marshalDistributedFirewallingPolicyListInput(d)
 	if err != nil {
@@ -271,11 +265,11 @@ func resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx context.
 }
 
 func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	policyList, err := client.GetDistributedFirewallingPolicyList(ctx)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -333,7 +327,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 }
 
 func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	d.Partial(true)
 	if d.HasChange("policies") {
@@ -352,7 +346,7 @@ func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context,
 }
 
 func resourceAviatrixDistributedFirewallingPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DeleteDistributedFirewallingPolicyList(ctx)
 	if err != nil {

@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFQDNPassThrough() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixFQDNPassThrough() *schema.Resource {
 		Update: resourceAviatrixFQDNPassThroughUpdate,
 		Delete: resourceAviatrixFQDNPassThroughDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,12 +44,12 @@ func resourceAviatrixFQDNPassThrough() *schema.Resource {
 }
 
 func resourceAviatrixFQDNPassThroughCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
+	gw := &goaviatrix.Gateway{GwName: getString(d, "gw_name")}
 	var cidrs []string
-	for _, v := range d.Get("pass_through_cidrs").(*schema.Set).List() {
-		cidrs = append(cidrs, v.(string))
+	for _, v := range getSet(d, "pass_through_cidrs").List() {
+		cidrs = append(cidrs, mustString(v))
 	}
 	if err := client.ConfigureFQDNPassThroughCIDRs(gw, cidrs); err != nil {
 		return err
@@ -58,9 +60,9 @@ func resourceAviatrixFQDNPassThroughCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixFQDNPassThroughRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := getString(d, "gw_name")
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no fqdn_pass_through gwName received. Import Id is %s", id)
@@ -69,15 +71,14 @@ func resourceAviatrixFQDNPassThroughRead(d *schema.ResourceData, meta interface{
 	}
 	gw := &goaviatrix.Gateway{GwName: gwName}
 	cidrs, err := client.GetFQDNPassThroughCIDRs(gw)
-	if err == goaviatrix.ErrNotFound {
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find fqdn_pass_through %s: %v", gwName, err)
+		return fmt.Errorf("could not find fqdn_pass_through %s: %w", gwName, err)
 	}
-
-	d.Set("gw_name", gwName)
+	mustSet(d, "gw_name", gwName)
 
 	// CIDRs returned from the API are in the form: <cidr>~~<tags>
 	// The tags are irrelevant so we will remove them before saving the CIDRs to the state file.
@@ -88,21 +89,21 @@ func resourceAviatrixFQDNPassThroughRead(d *schema.ResourceData, meta interface{
 
 	err = d.Set("pass_through_cidrs", cidrsWithoutTags)
 	if err != nil {
-		return fmt.Errorf("could not set pass_through_cidrs: %v", err)
+		return fmt.Errorf("could not set pass_through_cidrs: %w", err)
 	}
 
 	return nil
 }
 
 func resourceAviatrixFQDNPassThroughUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
+	gw := &goaviatrix.Gateway{GwName: getString(d, "gw_name")}
 
 	if d.HasChange("pass_through_cidrs") {
 		var cidrs []string
-		for _, v := range d.Get("pass_through_cidrs").(*schema.Set).List() {
-			cidrs = append(cidrs, v.(string))
+		for _, v := range getSet(d, "pass_through_cidrs").List() {
+			cidrs = append(cidrs, mustString(v))
 		}
 		if err := client.ConfigureFQDNPassThroughCIDRs(gw, cidrs); err != nil {
 			return err
@@ -114,9 +115,9 @@ func resourceAviatrixFQDNPassThroughUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAviatrixFQDNPassThroughDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
+	gw := &goaviatrix.Gateway{GwName: getString(d, "gw_name")}
 	if err := client.DisableFQDNPassThrough(gw); err != nil {
 		return err
 	}

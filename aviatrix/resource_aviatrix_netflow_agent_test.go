@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixNetflowAgent_basic(t *testing.T) {
@@ -60,10 +62,10 @@ func testAccCheckNetflowAgentExists(resourceName string) resource.TestCheckFunc 
 			return fmt.Errorf("netflow agent not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		_, err := client.GetNetflowAgentStatus()
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("netflow agent not found")
 		}
 
@@ -73,7 +75,7 @@ func testAccCheckNetflowAgentExists(resourceName string) resource.TestCheckFunc 
 
 func testAccCheckNetflowAgentExcludedGatewaysMatch(input []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		resp, _ := client.GetNetflowAgentStatus()
 		if !goaviatrix.Equivalent(resp.ExcludedGateways, input) {
@@ -84,7 +86,7 @@ func testAccCheckNetflowAgentExcludedGatewaysMatch(input []string) resource.Test
 }
 
 func testAccCheckNetflowAgentDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_netflow_agent" {
@@ -92,7 +94,7 @@ func testAccCheckNetflowAgentDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetNetflowAgentStatus()
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("netflow_agent still exists")
 		}
 	}

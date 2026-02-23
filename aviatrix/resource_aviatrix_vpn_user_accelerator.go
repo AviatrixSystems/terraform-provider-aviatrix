@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixVPNUserAccelerator() *schema.Resource {
@@ -16,7 +18,7 @@ func resourceAviatrixVPNUserAccelerator() *schema.Resource {
 		Read:   resourceAviatrixVPNUserAcceleratorRead,
 		Delete: resourceAviatrixVPNUserAcceleratorDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,13 +33,13 @@ func resourceAviatrixVPNUserAccelerator() *schema.Resource {
 }
 
 func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	elb := d.Get("elb_name").(string)
+	elb := getString(d, "elb_name")
 	// compare if elb is in elb list for current elbs
 	elbList, err := client.GetVpnUserAccelerator()
 	if err != nil {
-		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
+		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %w", err)
 	}
 	if goaviatrix.Contains(elbList, elb) {
 		return fmt.Errorf("elb is already included in the VPN User Accelerator. Import into terraform rather than create a new resource")
@@ -60,7 +62,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 			if i <= 10 && (strings.Contains(err.Error(), "Endpoint not found") || strings.Contains(err.Error(), "not active")) {
 				time.Sleep(60 * time.Second)
 			} else {
-				return fmt.Errorf("failed to create Vpn User Accelerator: %s", err)
+				return fmt.Errorf("failed to create Vpn User Accelerator: %w", err)
 			}
 		}
 	}
@@ -70,13 +72,13 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	elbName := d.Get("elb_name").(string)
+	elbName := getString(d, "elb_name")
 	if elbName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no elb name received. Import id is %s", id)
-		d.Set("elb_name", id)
+		mustSet(d, "elb_name", id)
 		elbName = id
 		d.SetId(id)
 	}
@@ -87,18 +89,18 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 
 	elbList, err := client.GetVpnUserAccelerator()
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
+		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %w", err)
 	}
 
 	log.Printf("[DEBUG] elbList: %s", elbList)
 
 	if elbList != nil {
 		if goaviatrix.Contains(elbList, elbName) {
-			d.Set("elb_name", elbName)
+			mustSet(d, "elb_name", elbName)
 		} else {
 			d.SetId("")
 			return nil
@@ -109,14 +111,14 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	elbName := d.Get("elb_name").(string)
+	elbName := getString(d, "elb_name")
 	toDelete := []string{elbName}
 
 	elbList, err := client.GetVpnUserAccelerator()
 	if err != nil {
-		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
+		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %w", err)
 	}
 	if elbList != nil {
 		xlr := &goaviatrix.VpnUserXlr{}
@@ -133,7 +135,7 @@ func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta inter
 
 		err := client.UpdateVpnUserAccelerator(xlr)
 		if err != nil {
-			return fmt.Errorf("unable to remove elb in Vpn User Accelerator due to %v", err)
+			return fmt.Errorf("unable to remove elb in Vpn User Accelerator due to %w", err)
 		}
 	}
 

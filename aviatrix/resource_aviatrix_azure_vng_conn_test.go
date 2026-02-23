@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAzureVngConn_basic(t *testing.T) {
@@ -85,7 +87,7 @@ func testAccCheckAzureVngConnExists(resourceName string, connectionName string) 
 			return fmt.Errorf("azure vng conn not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		resp, err := client.GetAzureVngConnStatus(connectionName)
 		if err == nil && !resp.Attached {
@@ -99,7 +101,7 @@ func testAccCheckAzureVngConnExists(resourceName string, connectionName string) 
 }
 
 func testAccCheckAzureVngConnDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_azure_vng_conn" {
@@ -109,7 +111,7 @@ func testAccCheckAzureVngConnDestroy(s *terraform.State) error {
 		connectionName := rs.Primary.Attributes["connection_name"]
 
 		_, err := client.GetAzureVngConnStatus(connectionName)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("azure_vpn_conn still exists")
 		}
 	}

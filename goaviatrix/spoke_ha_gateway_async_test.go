@@ -182,7 +182,10 @@ func TestCreateSpokeHaGw_AsyncFlagAlwaysTrue(t *testing.T) {
 			_, err := testClient.CreateSpokeHaGwWithMock(gateway)
 			assert.NoError(t, err)
 
-			calledGateway := mockAPI.LastInterface.(*SpokeHaGateway)
+			calledGateway, ok := mockAPI.LastInterface.(*SpokeHaGateway)
+			if !ok {
+				t.Fatalf("LastInterface expected *SpokeHaGateway, got %T", mockAPI.LastInterface)
+			}
 			assert.True(t, calledGateway.Async, "Async flag should always be true when calling API")
 		})
 	}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -72,11 +71,11 @@ func testAccCheckControllerEmailConfigExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("controller email config ID is not set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetNotificationEmails(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get controller email notification settings: %v", err)
+			return fmt.Errorf("failed to get controller email notification settings: %w", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -88,7 +87,7 @@ func testAccCheckControllerEmailConfigExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckControllerEmailConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_controller_email_config" {

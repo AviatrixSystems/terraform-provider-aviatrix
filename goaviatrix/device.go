@@ -21,7 +21,6 @@ type Device struct {
 	PrimaryInterfaceIP string `form:"-" json:"wan_if_primary_public_ip"`
 	ConnectionName     string `form:"-" json:"conn_name"`
 	SoftwareVersion    string `form:"-" json:"software_version"`
-	IsCaag             bool   `form:"-" json:"is_caag"`
 }
 
 type DeviceWanInterface struct {

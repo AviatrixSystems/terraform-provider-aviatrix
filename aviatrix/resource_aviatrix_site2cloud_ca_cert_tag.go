@@ -2,12 +2,14 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
 		UpdateWithoutTimeout: resourceAviatrixSite2CloudCaCertTagUpdate,
 		DeleteWithoutTimeout: resourceAviatrixSite2CloudCaCertTagDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,13 +73,13 @@ func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
 }
 
 func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	for _, v := range d.Get("ca_certificates").(*schema.Set).List() {
-		certInstance := v.(map[string]interface{})
+	for _, v := range getSet(d, "ca_certificates").List() {
+		certInstance := mustMap(v)
 		s2cCaCert := &goaviatrix.S2CCaCert{
-			TagName:       d.Get("tag_name").(string),
-			CaCertificate: certInstance["cert_content"].(string),
+			TagName:       getString(d, "tag_name"),
+			CaCertificate: mustString(certInstance["cert_content"]),
 		}
 
 		if err := client.CreateS2CCaCert(ctx, s2cCaCert); err != nil {
@@ -85,36 +87,35 @@ func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.Re
 		}
 	}
 
-	d.SetId(d.Get("tag_name").(string))
+	d.SetId(getString(d, "tag_name"))
 	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
 func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tagName := d.Get("tag_name").(string)
+	tagName := getString(d, "tag_name")
 
 	if tagName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
-		d.Set("tag_name", id)
+		mustSet(d, "tag_name", id)
 		d.SetId(id)
 	}
 
 	s2cCaCertTag := &goaviatrix.S2CCaCertTag{
-		TagName: d.Get("tag_name").(string),
+		TagName: getString(d, "tag_name"),
 	}
 
 	s2cCaCertTagResp, err := client.GetS2CCaCertTag(ctx, s2cCaCertTag)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("couldn't get site2cloud ca cert tag: %s", err)
 	}
-
-	d.Set("tag_name", s2cCaCertTagResp.TagName)
+	mustSet(d, "tag_name", s2cCaCertTagResp.TagName)
 
 	var caCertInstances []map[string]interface{}
 	for _, certInstance := range s2cCaCertTagResp.CaCertificates {
@@ -137,24 +138,24 @@ func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 	d.Partial(true)
 
 	if d.HasChange("ca_certificates") {
 		oldCerts, newCerts := d.GetChange("ca_certificates")
 
 		mapCaCertID := make(map[string]bool)
-		for _, cert := range oldCerts.(*schema.Set).List() {
-			certInstance := cert.(map[string]interface{})
-			mapCaCertID[certInstance["id"].(string)] = true
+		for _, cert := range mustSchemaSet(oldCerts).List() {
+			certInstance := mustMap(cert)
+			mapCaCertID[mustString(certInstance["id"])] = true
 		}
 
-		for _, cert := range newCerts.(*schema.Set).List() {
-			certInstance := cert.(map[string]interface{})
-			if certInstance["id"].(string) == "" {
+		for _, cert := range mustSchemaSet(newCerts).List() {
+			certInstance := mustMap(cert)
+			if mustString(certInstance["id"]) == "" {
 				s2cCaCert := &goaviatrix.S2CCaCert{
-					TagName:       d.Get("tag_name").(string),
-					CaCertificate: certInstance["cert_content"].(string),
+					TagName:       getString(d, "tag_name"),
+					CaCertificate: mustString(certInstance["cert_content"]),
 				}
 
 				if err := client.CreateS2CCaCert(ctx, s2cCaCert); err != nil {
@@ -162,7 +163,7 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.Re
 				}
 				continue
 			}
-			delete(mapCaCertID, certInstance["id"].(string))
+			delete(mapCaCertID, mustString(certInstance["id"]))
 		}
 
 		for id := range mapCaCertID {
@@ -177,17 +178,17 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.Re
 	}
 
 	d.Partial(false)
-	d.SetId(d.Get("tag_name").(string))
+	d.SetId(getString(d, "tag_name"))
 	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
 func resourceAviatrixSite2CloudCaCertTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	for _, cert := range d.Get("ca_certificates").(*schema.Set).List() {
-		certInstance := cert.(map[string]interface{})
+	for _, cert := range getSet(d, "ca_certificates").List() {
+		certInstance := mustMap(cert)
 		cert := &goaviatrix.CaCertInstance{
-			ID: certInstance["id"].(string),
+			ID: mustString(certInstance["id"]),
 		}
 
 		err := client.DeleteCertInstance(ctx, cert)

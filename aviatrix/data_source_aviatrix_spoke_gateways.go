@@ -7,8 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixSpokeGateways() *schema.Resource {
@@ -307,7 +308,7 @@ func dataSourceAviatrixSpokeGateways() *schema.Resource {
 }
 
 func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	SpokeGatewayList, err := client.GetSpokeGatewayList(ctx)
 	if err != nil {

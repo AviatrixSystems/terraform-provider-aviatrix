@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
@@ -104,9 +105,10 @@ func (c *Client) GetEdgePlatformProxyProfile(ctx context.Context, accountName, p
 
 func (c *Client) DeleteEdgePlatformProxyProfile(ctx context.Context, accountName, profileName string) error {
 	proxyProfile, err := c.GetEdgePlatformProxyProfile(ctx, accountName, profileName)
-	if err == ErrNotFound {
+	if errors.Is(err, ErrNotFound) {
 		return nil
-	} else if err != nil {
+	}
+	if err != nil {
 		return err
 	}
 

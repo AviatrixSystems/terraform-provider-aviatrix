@@ -6,10 +6,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixDCFTrustBundle() *schema.Resource {
@@ -65,13 +66,13 @@ func suppressBundleContentDiff(_ string, oldContent string, newContent string, _
 
 func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleItemRequest {
 	return &goaviatrix.TrustBundleItemRequest{
-		DisplayName:   d.Get("display_name").(string),
-		BundleContent: d.Get("bundle_content").(string),
+		DisplayName:   getString(d, "display_name"),
+		BundleContent: getString(d, "bundle_content"),
 	}
 }
 
 func resourceAviatrixDCFTrustBundleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	trustBundleRequest := marshalDCFTrustBundleInput(d)
 
@@ -87,7 +88,7 @@ func resourceAviatrixDCFTrustBundleCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	bundleID := d.Id()
 
@@ -99,21 +100,20 @@ func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceD
 		}
 		return diag.Errorf("failed to read DCF Trust Bundle: %s", err)
 	}
-
-	d.Set("bundle_id", trustBundle.BundleID)
-	d.Set("display_name", trustBundle.DisplayName)
+	mustSet(d, "bundle_id", trustBundle.BundleID)
+	mustSet(d, "display_name", trustBundle.DisplayName)
 	if !trustBundle.CreatedAt.IsZero() {
-		d.Set("created_at", trustBundle.CreatedAt.Format("2006-01-02T15:04:05Z"))
+		mustSet(d, "created_at", trustBundle.CreatedAt.Format("2006-01-02T15:04:05Z"))
 	} else {
-		d.Set("created_at", "")
+		mustSet(d, "created_at", "")
 	}
 	bundleContent := strings.TrimSpace(strings.Join(trustBundle.BundleContent, "\n"))
-	d.Set("bundle_content", bundleContent)
+	mustSet(d, "bundle_content", bundleContent)
 	return nil
 }
 
 func resourceAviatrixDCFTrustBundleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	bundleID := d.Id()
 
@@ -129,7 +129,7 @@ func resourceAviatrixDCFTrustBundleUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAviatrixDCFTrustBundleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	bundleID := d.Id()
 

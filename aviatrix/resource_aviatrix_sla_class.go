@@ -2,10 +2,12 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSLAClass() *schema.Resource {
@@ -50,17 +52,17 @@ func resourceAviatrixSLAClass() *schema.Resource {
 
 func marshalSLAClassInput(d *schema.ResourceData) *goaviatrix.SLAClass {
 	slaClass := &goaviatrix.SLAClass{
-		Name:           d.Get("name").(string),
-		Latency:        d.Get("latency").(int),
-		Jitter:         d.Get("jitter").(int),
-		PacketDropRate: d.Get("packet_drop_rate").(float64),
+		Name:           getString(d, "name"),
+		Latency:        getInt(d, "latency"),
+		Jitter:         getInt(d, "jitter"),
+		PacketDropRate: getFloat64(d, "packet_drop_rate"),
 	}
 
 	return slaClass
 }
 
 func resourceAviatrixSLAClassCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	slaClass := marshalSLAClassInput(d)
 
@@ -85,30 +87,29 @@ func resourceAviatrixSLAClassReadIfRequired(ctx context.Context, d *schema.Resou
 }
 
 func resourceAviatrixSLAClassRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	slaClass, err := client.GetSLAClass(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read sla class %s", err)
 	}
-
-	d.Set("name", slaClass.Name)
-	d.Set("latency", slaClass.Latency)
-	d.Set("jitter", slaClass.Jitter)
-	d.Set("packet_drop_rate", slaClass.PacketDropRate)
+	mustSet(d, "name", slaClass.Name)
+	mustSet(d, "latency", slaClass.Latency)
+	mustSet(d, "jitter", slaClass.Jitter)
+	mustSet(d, "packet_drop_rate", slaClass.PacketDropRate)
 
 	return nil
 }
 
 func resourceAviatrixSLAClassUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -126,7 +127,7 @@ func resourceAviatrixSLAClassUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAviatrixSLAClassDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteSLAClass(ctx, uuid)

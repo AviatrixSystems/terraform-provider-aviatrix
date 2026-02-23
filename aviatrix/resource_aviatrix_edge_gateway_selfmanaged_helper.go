@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func validateIdentifierValue(val interface{}, key string) (warns []string, errs []error) {
@@ -300,8 +301,9 @@ func buildEdgeSpokeVlan(vlan1 map[string]interface{}) (*goaviatrix.EdgeSpokeVlan
 }
 
 func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) error {
-	customInterfaceMapping, ok := d.Get("custom_interface_mapping").([]interface{})
-	if ok {
+	customInterfaceMapping := getList(d, "custom_interface_mapping")
+
+	if len(customInterfaceMapping) > 0 {
 		customInterfaceMap, err := getCustomInterfaceMapDetails(customInterfaceMapping)
 		if err != nil {
 			return err

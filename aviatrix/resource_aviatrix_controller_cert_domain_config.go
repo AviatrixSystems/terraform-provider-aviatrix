@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,9 +31,9 @@ func resourceAviatrixControllerCertDomainConfig() *schema.Resource {
 }
 
 func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	certDomain := d.Get("cert_domain").(string)
+	certDomain := getString(d, "cert_domain")
 
 	err := client.SetCertDomain(ctx, certDomain)
 	if err != nil {
@@ -62,7 +61,7 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 }
 
 func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -72,18 +71,17 @@ func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *sche
 	if err != nil {
 		return diag.Errorf("could not get cert domain: %v", err)
 	}
-
-	d.Set("cert_domain", certDomainConfig.CertDomain)
+	mustSet(d, "cert_domain", certDomainConfig.CertDomain)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("cert_domain") {
-		err := client.SetCertDomain(ctx, d.Get("cert_domain").(string))
+		err := client.SetCertDomain(ctx, getString(d, "cert_domain"))
 		if err != nil {
 			if strings.Contains(err.Error(), "EOF") {
 				sleepTime, err := client.GetSleepTime(ctx)
@@ -109,7 +107,7 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 }
 
 func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.SetCertDomain(ctx, "aviatrixnetwork.com")
 	if err != nil {

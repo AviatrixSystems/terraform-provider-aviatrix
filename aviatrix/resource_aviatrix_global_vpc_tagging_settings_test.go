@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -58,7 +57,7 @@ func testAccCheckGlobalVpcTaggingSettingsExists(resourceName string) resource.Te
 			return fmt.Errorf("global vpc tagging settings not found: %s", resourceName)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		globalVpcTaggingSettings, _ := client.GetGlobalVpcTaggingSettings(context.Background())
 		if globalVpcTaggingSettings.ServiceState != "automatic" {
@@ -70,7 +69,7 @@ func testAccCheckGlobalVpcTaggingSettingsExists(resourceName string) resource.Te
 }
 
 func testAccCheckGlobalVpcTaggingSettingsDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_global_vpc_tagging_settings" {

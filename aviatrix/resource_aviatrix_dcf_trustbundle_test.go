@@ -8,9 +8,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixDCFTrustBundle_basic(t *testing.T) {
@@ -176,7 +177,7 @@ func testAccCheckDCFTrustBundleExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no DCF Trust Bundle ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		trustBundle, err := client.GetDCFTrustBundleByID(context.Background(), rs.Primary.ID)
 		if err != nil {
@@ -192,7 +193,7 @@ func testAccCheckDCFTrustBundleExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDCFTrustBundleDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_dcf_trustbundle" {

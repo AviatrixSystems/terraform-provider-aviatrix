@@ -4,13 +4,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAviatrixDistributedFirewallingConfig() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated. Use aviatrix_config_feature instead.",
 		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingConfigCreate,
 		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingConfigRead,
 		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingConfigUpdate,
@@ -31,9 +31,9 @@ func resourceAviatrixDistributedFirewallingConfig() *schema.Resource {
 }
 
 func resourceAviatrixDistributedFirewallingConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	enableDFW := d.Get("enable_distributed_firewalling").(bool)
+	enableDFW := getBool(d, "enable_distributed_firewalling")
 	if enableDFW {
 		err := client.EnableDistributedFirewalling(ctx)
 		if err != nil {
@@ -51,7 +51,7 @@ func resourceAviatrixDistributedFirewallingConfigCreate(ctx context.Context, d *
 }
 
 func resourceAviatrixDistributedFirewallingConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -61,17 +61,17 @@ func resourceAviatrixDistributedFirewallingConfigRead(ctx context.Context, d *sc
 	if err != nil {
 		return diag.Errorf("failed to read Distributed-firewalling status: %s", err)
 	}
-	d.Set("enable_distributed_firewalling", distributedFirewalling.EnableDistributedFirewalling)
+	mustSet(d, "enable_distributed_firewalling", distributedFirewalling.EnableDistributedFirewalling)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
 func resourceAviatrixDistributedFirewallingConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.HasChange("enable_distributed_firewalling") {
-		distributedFirewalling := d.Get("enable_distributed_firewalling").(bool)
+		distributedFirewalling := getBool(d, "enable_distributed_firewalling")
 
 		if distributedFirewalling {
 			err := client.EnableDistributedFirewalling(ctx)
@@ -90,7 +90,7 @@ func resourceAviatrixDistributedFirewallingConfigUpdate(ctx context.Context, d *
 }
 
 func resourceAviatrixDistributedFirewallingConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DisableDistributedFirewalling(ctx)
 	if err != nil {

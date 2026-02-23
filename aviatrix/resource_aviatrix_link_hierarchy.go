@@ -2,11 +2,13 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixLinkHierarchy() *schema.Resource {
@@ -65,18 +67,18 @@ func resourceAviatrixLinkHierarchy() *schema.Resource {
 
 func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]interface{} {
 	var links []map[string]interface{}
-	linksInput := d.Get("links").([]interface{})
+	linksInput := getList(d, "links")
 
 	for n0, v0 := range linksInput {
 		link := make(map[string]interface{})
 		var wanLink []map[string]interface{}
 
-		link["name"] = v0.(map[string]interface{})["name"]
-		wanLinkList := d.Get("links." + strconv.Itoa(n0) + ".wan_link").(*schema.Set).List()
+		link["name"] = mustMap(v0)["name"]
+		wanLinkList := mustSchemaSet(d.Get("links." + strconv.Itoa(n0) + ".wan_link")).List()
 
 		for _, v1 := range wanLinkList {
 			wanTag := make(map[string]interface{})
-			wanTag["wan_tag"] = v1.(map[string]interface{})["wan_tag"]
+			wanTag["wan_tag"] = mustMap(v1)["wan_tag"]
 			wanLink = append(wanLink, wanTag)
 		}
 
@@ -86,14 +88,14 @@ func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]interface{} {
 	}
 
 	linkHierarchy := make(map[string]interface{})
-	linkHierarchy["name"] = d.Get("name").(string)
+	linkHierarchy["name"] = getString(d, "name")
 	linkHierarchy["links"] = links
 
 	return linkHierarchy
 }
 
 func resourceAviatrixLinkHierarchyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	linkHierarchy := marshalLinkHierarchyInput(d)
 
@@ -118,21 +120,20 @@ func resourceAviatrixLinkHierarchyReadIfRequired(ctx context.Context, d *schema.
 }
 
 func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
-	d.Set("uuid", uuid)
+	mustSet(d, "uuid", uuid)
 
 	linkHierarchy, err := client.GetLinkHierarchy(ctx, uuid)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("failed to read link hierarchy: %s", err)
 	}
-
-	d.Set("name", linkHierarchy.Name)
+	mustSet(d, "name", linkHierarchy.Name)
 
 	var links []interface{}
 
@@ -159,7 +160,7 @@ func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAviatrixLinkHierarchyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	d.Partial(true)
@@ -177,7 +178,7 @@ func resourceAviatrixLinkHierarchyUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAviatrixLinkHierarchyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	uuid := d.Id()
 	err := client.DeleteLinkHierarchy(ctx, uuid)

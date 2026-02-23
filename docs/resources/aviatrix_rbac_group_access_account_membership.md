@@ -3,11 +3,12 @@ subcategory: "Accounts"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_rbac_group_access_account_membership"
 description: |-
-Creates and manages Aviatrix RBAC group access-account membership
+  Creates and manages Aviatrix RBAC group access-account membership
 ---
+
 # aviatrix_rbac_group_access_account_membership
 
-The **_aviatrix_rbac_group_access_account_membership** resource allows the creation and management of access-account membership for Aviatrix RBAC (Role-Based Access Control) groups. This resource is authoritative for a group’s access-account membership: it manages the complete set of access accounts that belong to the specified group and will add/remove memberships to match your configuration.
+The **aviatrix_rbac_group_access_account_membership** resource allows the creation and management of access-account membership for Aviatrix RBAC (Role-Based Access Control) groups. This resource is authoritative for a group’s access-account membership: it manages the complete set of access accounts that belong to the specified group and will add/remove memberships to match your configuration.
 
 > **Note:** There is another related resource, [`aviatrix_rbac_group_access_account_attachment`](./aviatrix_rbac_group_access_account_attachment.md), which manages a single access-account-to-group attachment per resource. While that resource is still available, you should prefer **`aviatrix_rbac_group_access_account_membership`** when managing an entire group’s membership as a single source of truth, especially for larger sets of access accounts or groups.
 

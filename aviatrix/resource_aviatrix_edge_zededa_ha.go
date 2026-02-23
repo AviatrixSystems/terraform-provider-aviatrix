@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeZededaHa() *schema.Resource {
@@ -113,25 +115,25 @@ func resourceAviatrixEdgeZededaHa() *schema.Resource {
 
 func marshalEdgeZededaHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 	edgeCSPHa := &goaviatrix.EdgeCSPHa{
-		PrimaryGwName:            d.Get("primary_gw_name").(string),
-		ComputeNodeUuid:          d.Get("compute_node_uuid").(string),
+		PrimaryGwName:            getString(d, "primary_gw_name"),
+		ComputeNodeUuid:          getString(d, "compute_node_uuid"),
 		ManagementEgressIpPrefix: strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+		if1 := mustMap(if0)
 
 		if2 := &goaviatrix.Interface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Tag:          if1["tag"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_server_ip"].(string),
-			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+			IfName:       mustString(if1["name"]),
+			Type:         mustString(if1["type"]),
+			PublicIp:     mustString(if1["wan_public_ip"]),
+			Tag:          mustString(if1["tag"]),
+			Dhcp:         mustBool(if1["enable_dhcp"]),
+			IpAddr:       mustString(if1["ip_address"]),
+			GatewayIp:    mustString(if1["gateway_ip"]),
+			DnsPrimary:   mustString(if1["dns_server_ip"]),
+			DnsSecondary: mustString(if1["secondary_dns_server_ip"]),
 		}
 
 		edgeCSPHa.InterfaceList = append(edgeCSPHa.InterfaceList, if2)
@@ -141,7 +143,7 @@ func marshalEdgeZededaHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 }
 
 func resourceAviatrixEdgeZededaHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeCSPHa := marshalEdgeZededaHaInput(d)
 
@@ -155,33 +157,32 @@ func resourceAviatrixEdgeZededaHaCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixEdgeZededaHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if d.Get("primary_gw_name").(string) == "" {
+	if getString(d, "primary_gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "-hagw")
-		d.Set("primary_gw_name", parts[0])
+		mustSet(d, "primary_gw_name", parts[0])
 		d.SetId(id)
 	}
 
-	edgeCSPHaResp, err := client.GetEdgeCSPHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeCSPHaResp, err := client.GetEdgeCSPHa(ctx, getString(d, "primary_gw_name")+"-hagw")
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Zededa HA: %v", err)
 	}
-
-	d.Set("primary_gw_name", edgeCSPHaResp.PrimaryGwName)
-	d.Set("compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
-	d.Set("account_name", edgeCSPHaResp.AccountName)
+	mustSet(d, "primary_gw_name", edgeCSPHaResp.PrimaryGwName)
+	mustSet(d, "compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
+	mustSet(d, "account_name", edgeCSPHaResp.AccountName)
 
 	if edgeCSPHaResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPHaResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeCSPHaResp.ManagementEgressIpPrefix, ","))
 	}
 
 	var interfaces []map[string]interface{}
@@ -209,7 +210,7 @@ func resourceAviatrixEdgeZededaHaRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAviatrixEdgeZededaHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	edgeCSPHa := marshalEdgeZededaHaInput(d)
 
@@ -234,9 +235,9 @@ func resourceAviatrixEdgeZededaHaUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAviatrixEdgeZededaHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
+	accountName := getString(d, "account_name")
 
 	err := client.DeleteEdgeCSP(ctx, accountName, d.Id())
 	if err != nil {

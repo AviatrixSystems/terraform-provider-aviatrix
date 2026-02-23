@@ -4,9 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestGetDstWanInterfaces(t *testing.T) {
@@ -322,9 +323,9 @@ func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t
 			form := map[string]interface{}{
 				"CID":                     "test-cid",
 				"action":                  "edit_inter_transit_gateway_peering",
-				"gateway1":                d.Get("spoke_gw_name").(string),
-				"gateway2":                d.Get("transit_gw_name").(string),
-				"enable_firenet_for_edge": d.Get("enable_firenet_for_edge").(bool),
+				"gateway1":                getString(d, "spoke_gw_name"),
+				"gateway2":                getString(d, "transit_gw_name"),
+				"enable_firenet_for_edge": getBool(d, "enable_firenet_for_edge"),
 			}
 
 			assert.Equal(t, "edit_inter_transit_gateway_peering", form["action"])

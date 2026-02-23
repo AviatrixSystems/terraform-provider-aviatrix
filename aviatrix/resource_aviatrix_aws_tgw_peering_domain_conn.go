@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixAWSTgwPeeringDomainConn() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixAWSTgwPeeringDomainConn() *schema.Resource {
 		Read:   resourceAviatrixAWSTgwPeeringDomainConnRead,
 		Delete: resourceAviatrixAWSTgwPeeringDomainConnDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,24 +54,24 @@ func resourceAviatrixAWSTgwPeeringDomainConn() *schema.Resource {
 }
 
 func resourceAviatrixAWSTgwPeeringDomainConnCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	domainConn := &goaviatrix.DomainConn{
-		TgwName1:    d.Get("tgw_name1").(string),
-		DomainName1: d.Get("domain_name1").(string),
-		TgwName2:    d.Get("tgw_name2").(string),
-		DomainName2: d.Get("domain_name2").(string),
+		TgwName1:    getString(d, "tgw_name1"),
+		DomainName1: getString(d, "domain_name1"),
+		TgwName2:    getString(d, "tgw_name2"),
+		DomainName2: getString(d, "domain_name2"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix domain connection between tgw: %s and %s", domainConn.TgwName1, domainConn.TgwName2)
 
 	d.SetId(domainConn.TgwName1 + ":" + domainConn.DomainName1 + "~" + domainConn.TgwName2 + ":" + domainConn.DomainName2)
 	flag := false
-	defer resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateDomainConn(domainConn)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix domain connection between two tgws: %s", err)
+		return fmt.Errorf("failed to create Aviatrix domain connection between two tgws: %w", err)
 	}
 
 	return resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag)
@@ -84,39 +86,39 @@ func resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d *schema.ResourceDat
 }
 
 func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	tgwName1 := d.Get("tgw_name1").(string)
-	domainName1 := d.Get("domain_name1").(string)
-	tgwName2 := d.Get("tgw_name2").(string)
-	domainName2 := d.Get("domain_name2").(string)
+	tgwName1 := getString(d, "tgw_name1")
+	domainName1 := getString(d, "domain_name1")
+	tgwName2 := getString(d, "tgw_name2")
+	domainName2 := getString(d, "domain_name2")
 
 	if tgwName1 == "" || domainName1 == "" || tgwName2 == "" || domainName2 == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		tgwDomain1 := strings.Split(id, "~")[0]
 		tgwDomain2 := strings.Split(id, "~")[1]
-		d.Set("tgw_name1", strings.Split(tgwDomain1, ":")[0])
-		d.Set("domain_name1", strings.Split(tgwDomain1, ":")[1])
-		d.Set("tgw_name2", strings.Split(tgwDomain2, ":")[0])
-		d.Set("domain_name2", strings.Split(tgwDomain2, ":")[1])
+		mustSet(d, "tgw_name1", strings.Split(tgwDomain1, ":")[0])
+		mustSet(d, "domain_name1", strings.Split(tgwDomain1, ":")[1])
+		mustSet(d, "tgw_name2", strings.Split(tgwDomain2, ":")[0])
+		mustSet(d, "domain_name2", strings.Split(tgwDomain2, ":")[1])
 		d.SetId(id)
 	}
 
 	domainConn := &goaviatrix.DomainConn{
-		TgwName1:    d.Get("tgw_name1").(string),
-		DomainName1: d.Get("domain_name1").(string),
-		TgwName2:    d.Get("tgw_name2").(string),
-		DomainName2: d.Get("domain_name2").(string),
+		TgwName1:    getString(d, "tgw_name1"),
+		DomainName1: getString(d, "domain_name1"),
+		TgwName2:    getString(d, "tgw_name2"),
+		DomainName2: getString(d, "domain_name2"),
 	}
 
 	err := client.GetDomainConn(domainConn)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix domain connection: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix domain connection: %w", err)
 	}
 
 	d.SetId(domainConn.TgwName1 + ":" + domainConn.DomainName1 + "~" + domainConn.TgwName2 + ":" + domainConn.DomainName2)
@@ -124,20 +126,20 @@ func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta in
 }
 
 func resourceAviatrixAWSTgwPeeringDomainConnDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	domainConn := &goaviatrix.DomainConn{
-		TgwName1:    d.Get("tgw_name1").(string),
-		DomainName1: d.Get("domain_name1").(string),
-		TgwName2:    d.Get("tgw_name2").(string),
-		DomainName2: d.Get("domain_name2").(string),
+		TgwName1:    getString(d, "tgw_name1"),
+		DomainName1: getString(d, "domain_name1"),
+		TgwName2:    getString(d, "tgw_name2"),
+		DomainName2: getString(d, "domain_name2"),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix domain connection: %#v", domainConn)
 
 	err := client.DeleteDomainConn(domainConn)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix domain connection: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix domain connection: %w", err)
 	}
 
 	return nil

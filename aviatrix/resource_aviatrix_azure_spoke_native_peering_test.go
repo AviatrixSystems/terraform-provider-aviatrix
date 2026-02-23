@@ -1,15 +1,17 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preAzureSpokeNativePeeringCheck(t *testing.T, msgCommon string) {
@@ -121,7 +123,7 @@ func tesAccCheckAzureSpokeNativePeeringExists(n string, azureSpokeNativePeering 
 			return fmt.Errorf("no Azure spoke native peering ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundPeering := &goaviatrix.AzureSpokeNativePeering{
 			TransitGatewayName: rs.Primary.Attributes["transit_gateway_name"],
@@ -131,7 +133,7 @@ func tesAccCheckAzureSpokeNativePeeringExists(n string, azureSpokeNativePeering 
 
 		foundPeering2, err := client.GetAzureSpokeNativePeering(foundPeering)
 		if err != nil {
-			if err == goaviatrix.ErrNotFound {
+			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("azure spoke native peering does not exist")
 			}
 			return err
@@ -152,7 +154,7 @@ func tesAccCheckAzureSpokeNativePeeringExists(n string, azureSpokeNativePeering 
 }
 
 func testAccCheckAzureSpokeNativePeeringDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_azure_spoke_native_peering" {
@@ -166,7 +168,7 @@ func testAccCheckAzureSpokeNativePeeringDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetAzureSpokeNativePeering(foundPeering)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			if strings.Contains(err.Error(), "not found in controller database") {
 				return nil
 			}

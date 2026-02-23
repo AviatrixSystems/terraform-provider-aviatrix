@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestReverseIfnameTranslation(t *testing.T) {
@@ -268,14 +269,19 @@ func TestGetBooleanValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, resourceSchema, tt.inputData)
-			val, err := getBooleanValue(d, tt.key)
 
 			if tt.expectedError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedValue, val)
+				assert.Panics(t, func() {
+					_ = getBool(d, tt.key)
+				})
+				return
 			}
+
+			var val bool
+			assert.NotPanics(t, func() {
+				val = getBool(d, tt.key)
+			})
+			assert.Equal(t, tt.expectedValue, val)
 		})
 	}
 }

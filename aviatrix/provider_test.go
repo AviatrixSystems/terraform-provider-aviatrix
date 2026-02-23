@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,7 +32,7 @@ func init() {
 	}
 
 	testAccProviderVersionValidation = Provider()
-	testAccProviderVersionValidation.ConfigureFunc = aviatrixConfigureWithoutVersionValidation
+	testAccProviderVersionValidation.ConfigureFunc = aviatrixConfigureWithoutVersionValidation //nolint:staticcheck // SA1019: test-only provider setup
 	testAccProvidersVersionValidation = map[string]*schema.Provider{
 		"aviatrix": testAccProviderVersionValidation,
 	}
@@ -80,7 +81,7 @@ resource "aviatrix_rbac_group" "a" {
 }
 
 func testCID(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	log.Printf("found CID: %s", client.CID)
 	time.Sleep(time.Hour + 30*time.Minute)
@@ -90,7 +91,7 @@ func testCID(s *terraform.State) error {
 	}
 	rGroup, err := client.GetPermissionGroup(group)
 	if err != nil {
-		return fmt.Errorf("CID test failed with: %v", err)
+		return fmt.Errorf("CID test failed with: %w", err)
 	}
 
 	fmt.Printf("Found user: %v", rGroup.GroupName)

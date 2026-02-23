@@ -9,9 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixEdgeMegaportHa_basic(t *testing.T) {
@@ -117,10 +118,7 @@ func testAccCheckEdgeMegaportHaExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("no edge megaport ha id is set")
 		}
 
-		client, ok := testAccProvider.Meta().(*goaviatrix.Client)
-		if !ok {
-			return fmt.Errorf("client not found")
-		}
+		client := mustClient(testAccProvider.Meta())
 
 		edgeMegaportHa, err := client.GetEdgeMegaportHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != nil {
@@ -134,10 +132,7 @@ func testAccCheckEdgeMegaportHaExists(resourceName string) resource.TestCheckFun
 }
 
 func testAccCheckEdgeMegaportHaDestroy(s *terraform.State) error {
-	client, ok := testAccProvider.Meta().(*goaviatrix.Client)
-	if !ok {
-		return fmt.Errorf("client not found")
-	}
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_edge_megaport_ha" {

@@ -1,12 +1,14 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFirewallManagementAccess() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixFirewallManagementAccess() *schema.Resource {
 		Read:   resourceAviatrixFirewallManagementAccessRead,
 		Delete: resourceAviatrixFirewallManagementAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,22 +38,22 @@ func resourceAviatrixFirewallManagementAccess() *schema.Resource {
 }
 
 func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallManagementAccess := &goaviatrix.FirewallManagementAccess{
-		TransitFireNetGatewayName:    d.Get("transit_firenet_gateway_name").(string),
-		ManagementAccessResourceName: d.Get("management_access_resource_name").(string),
+		TransitFireNetGatewayName:    getString(d, "transit_firenet_gateway_name"),
+		ManagementAccessResourceName: getString(d, "management_access_resource_name"),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix firewall management access: %#v", firewallManagementAccess)
 
 	d.SetId(firewallManagementAccess.TransitFireNetGatewayName + "~" + firewallManagementAccess.ManagementAccessResourceName)
 	flag := false
-	defer resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag)
+	defer func() { _ = resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	err := client.CreateFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix firewall management access: %s", err)
+		return fmt.Errorf("failed to create Aviatrix firewall management access: %w", err)
 	}
 
 	return resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag)
@@ -66,42 +68,41 @@ func resourceAviatrixFirewallManagementAccessReadIfRequired(d *schema.ResourceDa
 }
 
 func resourceAviatrixFirewallManagementAccessRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	transitFireNetGatewayName := d.Get("transit_firenet_gateway_name").(string)
+	transitFireNetGatewayName := getString(d, "transit_firenet_gateway_name")
 
 	if transitFireNetGatewayName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no transit firenet gateway name received. Import Id is %s", id)
-		d.Set("transit_firenet_gateway_name", strings.Split(id, "~")[0])
+		mustSet(d, "transit_firenet_gateway_name", strings.Split(id, "~")[0])
 		d.SetId(id)
 	}
 
 	firewallManagementAccess := &goaviatrix.FirewallManagementAccess{
-		TransitFireNetGatewayName: d.Get("transit_firenet_gateway_name").(string),
+		TransitFireNetGatewayName: getString(d, "transit_firenet_gateway_name"),
 	}
 
 	firewallManagementAccessRead, err := client.GetFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix firewall management access: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix firewall management access: %w", err)
 	}
-
-	d.Set("transit_firenet_gateway_name", firewallManagementAccessRead.TransitFireNetGatewayName)
-	d.Set("management_access_resource_name", firewallManagementAccessRead.ManagementAccessResourceName)
+	mustSet(d, "transit_firenet_gateway_name", firewallManagementAccessRead.TransitFireNetGatewayName)
+	mustSet(d, "management_access_resource_name", firewallManagementAccessRead.ManagementAccessResourceName)
 
 	d.SetId(firewallManagementAccessRead.TransitFireNetGatewayName)
 	return nil
 }
 
 func resourceAviatrixFirewallManagementAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	firewallManagementAccess := &goaviatrix.FirewallManagementAccess{
-		TransitFireNetGatewayName:    d.Get("transit_firenet_gateway_name").(string),
+		TransitFireNetGatewayName:    getString(d, "transit_firenet_gateway_name"),
 		ManagementAccessResourceName: "no",
 	}
 
@@ -109,7 +110,7 @@ func resourceAviatrixFirewallManagementAccessDelete(d *schema.ResourceData, meta
 
 	err := client.DestroyFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
-		return fmt.Errorf("failed to destroy Aviatrix firewall management access: %s", err)
+		return fmt.Errorf("failed to destroy Aviatrix firewall management access: %w", err)
 	}
 	return nil
 }

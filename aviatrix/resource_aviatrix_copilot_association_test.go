@@ -2,13 +2,15 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixCopilotAssociation_basic(t *testing.T) {
@@ -59,11 +61,11 @@ func testAccCheckCopilotAssociationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no copilot association ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProviderVersionValidation.Meta())
 
 		_, err := client.GetCopilotAssociationStatus(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get copilot association status: %v", err)
+			return fmt.Errorf("failed to get copilot association status: %w", err)
 		}
 
 		return nil
@@ -71,7 +73,7 @@ func testAccCheckCopilotAssociationExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckCopilotAssociationDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProviderVersionValidation.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_copilot_association" {
@@ -79,7 +81,7 @@ func testAccCheckCopilotAssociationDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetCopilotAssociationStatus(context.Background())
-		if err == nil || err != goaviatrix.ErrNotFound {
+		if err == nil || !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("copilot association exists when it should be destroyed")
 		}
 	}

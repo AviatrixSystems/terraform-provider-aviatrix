@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,12 +27,9 @@ func dataSourceAviatrixDcfAttachmentPoints() *schema.Resource {
 }
 
 func dataSourceAviatrixDcfAttachmentPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client, ok := meta.(*goaviatrix.Client)
-	if !ok {
-		return diag.Errorf("client must be of type *goaviatrix.Client")
-	}
+	client := mustClient(meta)
 
-	name := d.Get("name").(string)
+	name := getString(d, "name")
 
 	attachmentPoint, err := client.GetDCFAttachmentPoint(ctx, name)
 	if err != nil {
@@ -41,7 +37,7 @@ func dataSourceAviatrixDcfAttachmentPointsRead(ctx context.Context, d *schema.Re
 	}
 
 	d.SetId(attachmentPoint.AttachmentPointID)
-	d.Set("name", name)
-	d.Set("attachment_point_id", attachmentPoint.AttachmentPointID)
+	mustSet(d, "name", name)
+	mustSet(d, "attachment_point_id", attachmentPoint.AttachmentPointID)
 	return nil
 }

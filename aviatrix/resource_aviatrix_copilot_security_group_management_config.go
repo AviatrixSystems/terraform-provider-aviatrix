@@ -4,9 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixCopilotSecurityGroupManagementConfig() *schema.Resource {
@@ -63,20 +64,20 @@ func resourceAviatrixCopilotSecurityGroupManagementConfig() *schema.Resource {
 
 func marshalCopilotSecurityGroupManagementConfigInput(d *schema.ResourceData) *goaviatrix.CopilotSecurityGroupManagementConfig {
 	copilotSecurityGroupManagementConfig := &goaviatrix.CopilotSecurityGroupManagementConfig{
-		CloudType:                            d.Get("cloud_type").(int),
-		AccountName:                          d.Get("account_name").(string),
-		Region:                               d.Get("region").(string),
-		Zone:                                 d.Get("zone").(string),
-		VpcId:                                d.Get("vpc_id").(string),
-		InstanceId:                           d.Get("instance_id").(string),
-		EnableCopilotSecurityGroupManagement: d.Get("enable_copilot_security_group_management").(bool),
+		CloudType:                            getInt(d, "cloud_type"),
+		AccountName:                          getString(d, "account_name"),
+		Region:                               getString(d, "region"),
+		Zone:                                 getString(d, "zone"),
+		VpcId:                                getString(d, "vpc_id"),
+		InstanceId:                           getString(d, "instance_id"),
+		EnableCopilotSecurityGroupManagement: getBool(d, "enable_copilot_security_group_management"),
 	}
 
 	return copilotSecurityGroupManagementConfig
 }
 
 func resourceAviatrixCopilotSecurityGroupManagementConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilotSecurityGroupManagementConfig := marshalCopilotSecurityGroupManagementConfigInput(d)
 
@@ -129,7 +130,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigReadIfRequired(ctx cont
 }
 
 func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
@@ -141,16 +142,16 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Contex
 	}
 
 	if copilotSecurityGroupManagementConfig != nil {
-		d.Set("enable_copilot_security_group_management", copilotSecurityGroupManagementConfig.State == "Enabled")
-		d.Set("cloud_type", copilotSecurityGroupManagementConfig.CloudType)
-		d.Set("account_name", copilotSecurityGroupManagementConfig.AccountName)
-		d.Set("vpc_id", copilotSecurityGroupManagementConfig.VpcId)
-		d.Set("instance_id", copilotSecurityGroupManagementConfig.InstanceIdReturn)
+		mustSet(d, "enable_copilot_security_group_management", copilotSecurityGroupManagementConfig.State == "Enabled")
+		mustSet(d, "cloud_type", copilotSecurityGroupManagementConfig.CloudType)
+		mustSet(d, "account_name", copilotSecurityGroupManagementConfig.AccountName)
+		mustSet(d, "vpc_id", copilotSecurityGroupManagementConfig.VpcId)
+		mustSet(d, "instance_id", copilotSecurityGroupManagementConfig.InstanceIdReturn)
 
 		if goaviatrix.IsCloudType(copilotSecurityGroupManagementConfig.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			d.Set("region", copilotSecurityGroupManagementConfig.Region)
+			mustSet(d, "region", copilotSecurityGroupManagementConfig.Region)
 		} else if goaviatrix.IsCloudType(copilotSecurityGroupManagementConfig.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("zone", copilotSecurityGroupManagementConfig.Zone)
+			mustSet(d, "zone", copilotSecurityGroupManagementConfig.Zone)
 		}
 	} else {
 		return diag.Errorf("could not read copilot security group management config")
@@ -161,7 +162,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Contex
 }
 
 func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	copilotSecurityGroupManagementConfig := marshalCopilotSecurityGroupManagementConfigInput(d)
 
@@ -237,7 +238,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Cont
 }
 
 func resourceAviatrixCopilotSecurityGroupManagementConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	err := client.DisableCopilotSecurityGroupManagement(ctx)
 	if err != nil {

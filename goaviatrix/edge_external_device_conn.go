@@ -19,6 +19,7 @@ type EdgeExternalDeviceConn struct {
 	BgpSendCommunitiesBlock    bool   `json:"conn_bgp_send_communities_block,omitempty"`
 	RemoteGatewayIP            string `json:"external_device_ip_address,omitempty"`
 	RemoteSubnet               string `json:"remote_subnet,omitempty"`
+	LocalSubnet                string `json:"local_subnet,omitempty"`
 	DirectConnect              string `json:"direct_connect,omitempty"`
 	PreSharedKey               string `json:"pre_shared_key,omitempty"`
 	LocalTunnelCidr            string `json:"local_tunnel_ip,omitempty"`
@@ -64,6 +65,7 @@ type EdgeExternalDeviceConn struct {
 	// breaks that.
 	EnableBgpMultihop        bool `form:"enable_bgp_multihop"`
 	DisableActivemesh        bool
+	ProxyIdEnabled           bool
 	TunnelSrcIP              string
 	EnableIpv6               bool   `form:"ipv6_enabled,omitempty"`
 	ExternalDeviceIPv6       string `form:"external_device_ipv6,omitempty"`

@@ -1,13 +1,15 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixVpc() *schema.Resource {
@@ -17,7 +19,7 @@ func resourceAviatrixVpc() *schema.Resource {
 		Update: resourceAviatrixVpcUpdate,
 		Delete: resourceAviatrixVpcDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		SchemaVersion: 1,
@@ -260,7 +262,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				ForceNew:    true,
 				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8). Optional for GCP (4).",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
+					v := mustString(val)
 					ip, ipnet, err := net.ParseCIDR(v)
 					if err != nil {
 						errs = append(errs, fmt.Errorf("%q must be a valid IPv6 CIDR, got: %s", key, v))
@@ -300,18 +302,18 @@ func resourceAviatrixVpc() *schema.Resource {
 }
 
 func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
-		CloudType:              d.Get("cloud_type").(int),
-		AccountName:            d.Get("account_name").(string),
-		Region:                 d.Get("region").(string),
-		Name:                   d.Get("name").(string),
-		Cidr:                   d.Get("cidr").(string),
-		SubnetSize:             d.Get("subnet_size").(int),
-		NumOfSubnetPairs:       d.Get("num_of_subnet_pairs").(int),
-		EnablePrivateOobSubnet: d.Get("enable_private_oob_subnet").(bool),
-		PrivateModeSubnets:     d.Get("private_mode_subnets").(bool),
+		CloudType:              getInt(d, "cloud_type"),
+		AccountName:            getString(d, "account_name"),
+		Region:                 getString(d, "region"),
+		Name:                   getString(d, "name"),
+		Cidr:                   getString(d, "cidr"),
+		SubnetSize:             getInt(d, "subnet_size"),
+		NumOfSubnetPairs:       getInt(d, "num_of_subnet_pairs"),
+		EnablePrivateOobSubnet: getBool(d, "enable_private_oob_subnet"),
+		PrivateModeSubnets:     getBool(d, "private_mode_subnets"),
 	}
 	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specify 'region'")
@@ -341,8 +343,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
-	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
+	aviatrixTransitVpc := getBool(d, "aviatrix_transit_vpc")
+	aviatrixFireNetVpc := getBool(d, "aviatrix_firenet_vpc")
 
 	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported by AWS (1), AWSGov (256), AWSChina (1024) and Alibaba Cloud (8192)")
@@ -354,7 +356,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
 	}
 
-	nativeGwlb := d.Get("enable_native_gwlb").(bool)
+	nativeGwlb := getBool(d, "enable_native_gwlb")
 	if nativeGwlb && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWS) {
 		return fmt.Errorf("'enable_native_gwlb' is only valid with cloud_type = 1 (AWS)")
 	}
@@ -375,24 +377,24 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
 	}
 
-	ipv6Enabled := d.Get("enable_ipv6").(bool)
+	ipv6Enabled := getBool(d, "enable_ipv6")
 
 	if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		if _, ok := d.GetOk("subnets"); ok {
-			subnets := d.Get("subnets").([]interface{})
+			subnets := getList(d, "subnets")
 			for _, subnet := range subnets {
-				sub := subnet.(map[string]interface{})
+				sub := mustMap(subnet)
 				subnetInfo := goaviatrix.SubnetInfo{
-					Name:   sub["name"].(string),
-					Region: sub["region"].(string),
-					Cidr:   sub["cidr"].(string),
+					Name:   mustString(sub["name"]),
+					Region: mustString(sub["region"]),
+					Cidr:   mustString(sub["cidr"]),
 				}
 				if ipv6Enabled {
 					if ipv6Cidr, ok := sub["ipv6_cidr"]; ok {
-						subnetInfo.IPv6Cidr = ipv6Cidr.(string)
+						subnetInfo.IPv6Cidr = mustString(ipv6Cidr)
 					}
 					if ipv6AccessType, ok := sub["ipv6_access_type"]; ok {
-						subnetInfo.IPv6AccessType = ipv6AccessType.(string)
+						subnetInfo.IPv6AccessType = mustString(ipv6AccessType)
 					}
 				}
 				vpc.Subnets = append(vpc.Subnets, subnetInfo)
@@ -408,7 +410,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
-		vpc.ResourceGroup = resourceGroup.(string)
+		vpc.ResourceGroup = mustString(resourceGroup)
 	}
 
 	// Handle IPv6 fields
@@ -422,7 +424,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		// Handle ipv6_access_type for Azure
 		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
-				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+				vpc.VpcIpv6Cidr = mustString(vpcIpv6Cidr)
 			} else {
 				return fmt.Errorf("error creating vpc: valid vpc_ipv6_cidr is required when enable_ipv6 is true for Azure")
 			}
@@ -430,10 +432,10 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			if ipv6AccessType, ok := d.GetOk("ipv6_access_type"); ok {
-				vpc.Ipv6AccessType = ipv6AccessType.(string)
+				vpc.Ipv6AccessType = mustString(ipv6AccessType)
 			}
 			if vpcIpv6Cidr, ok := d.GetOk("vpc_ipv6_cidr"); ok {
-				vpc.VpcIpv6Cidr = vpcIpv6Cidr.(string)
+				vpc.VpcIpv6Cidr = mustString(vpcIpv6Cidr)
 			}
 		}
 	}
@@ -441,9 +443,9 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	err := client.CreateVpc(vpc)
 	if err != nil {
 		if vpc.AviatrixTransitVpc == "yes" {
-			return fmt.Errorf("failed to create a new Aviatrix Transit VPC: %s", err)
+			return fmt.Errorf("failed to create a new Aviatrix Transit VPC: %w", err)
 		}
-		return fmt.Errorf("failed to create a new VPC: %s", err)
+		return fmt.Errorf("failed to create a new VPC: %w", err)
 	}
 
 	d.SetId(vpc.Name)
@@ -453,12 +455,12 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	vpc.VpcID = d.Get("vpc_id").(string)
+	vpc.VpcID = getString(d, "vpc_id")
 
 	if nativeGwlb {
 		err = client.EnableNativeAwsGwlbFirenet(vpc)
 		if err != nil {
-			return fmt.Errorf("could not enable native AWS Gwlb: %v", err)
+			return fmt.Errorf("could not enable native AWS Gwlb: %w", err)
 		}
 	}
 
@@ -466,73 +468,73 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	vpcName := d.Get("name").(string)
+	vpcName := getString(d, "name")
 	if vpcName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
-		d.Set("name", id)
+		mustSet(d, "name", id)
 		d.SetId(id)
 		return resourceAviatrixVpcRead(d, meta)
 	}
 
 	vpc := &goaviatrix.Vpc{
-		Name: d.Get("name").(string),
+		Name: getString(d, "name"),
 	}
 
 	vC, err := client.GetVpc(vpc)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find VPC: %s", err)
+		return fmt.Errorf("couldn't find VPC: %w", err)
 	}
 
 	log.Printf("[INFO] Found VPC: %#v", vpc)
-
-	d.Set("cloud_type", vC.CloudType)
-	d.Set("account_name", vC.AccountName)
-	d.Set("name", vC.Name)
+	mustSet(d, "cloud_type", vC.CloudType)
+	mustSet(d, "account_name", vC.AccountName)
+	mustSet(d, "name", vC.Name)
 	if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("region", vC.Region)
-		d.Set("cidr", vC.Cidr)
+		mustSet(d, "region", vC.Region)
+		mustSet(d, "cidr", vC.Cidr)
 	}
 	if vC.SubnetSize != 0 {
-		d.Set("subnet_size", vC.SubnetSize)
+		mustSet(d, "subnet_size", vC.SubnetSize)
 	}
 	if vC.NumOfSubnetPairs != 0 {
-		d.Set("num_of_subnet_pairs", vC.NumOfSubnetPairs)
+		mustSet(d, "num_of_subnet_pairs", vC.NumOfSubnetPairs)
 	}
-	d.Set("enable_private_oob_subnet", vC.EnablePrivateOobSubnet)
+	mustSet(d, "enable_private_oob_subnet", vC.EnablePrivateOobSubnet)
 	if vC.AviatrixTransitVpc == "yes" {
-		d.Set("aviatrix_transit_vpc", true)
+		mustSet(d, "aviatrix_transit_vpc", true)
 	} else {
-		d.Set("aviatrix_transit_vpc", false)
+		mustSet(d, "aviatrix_transit_vpc", false)
 	}
 	if vC.AviatrixFireNetVpc == "yes" {
-		d.Set("aviatrix_firenet_vpc", true)
+		mustSet(d, "aviatrix_firenet_vpc", true)
 	} else {
-		d.Set("aviatrix_firenet_vpc", false)
+		mustSet(d, "aviatrix_firenet_vpc", false)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		// d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
-		d.Set("vpc_id", vC.VpcID)
+		mustSet(
+			// d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
+			d, "vpc_id", vC.VpcID)
 	} else {
-		d.Set("vpc_id", vC.VpcID)
+		mustSet(d, "vpc_id", vC.VpcID)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		account := &goaviatrix.Account{
-			AccountName: d.Get("account_name").(string),
+			AccountName: getString(d, "account_name"),
 		}
 
 		acc, err := client.GetAccount(account)
 		if err != nil {
-			if err != goaviatrix.ErrNotFound {
-				return fmt.Errorf("aviatrix Account: %s", err)
+			if !errors.Is(err, goaviatrix.ErrNotFound) {
+				return fmt.Errorf("aviatrix Account: %w", err)
 			}
 		}
 
@@ -546,8 +548,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
-		d.Set("resource_group", resourceGroup)
-		d.Set("azure_vnet_resource_id", azureVnetResourceId)
+		mustSet(d, "resource_group", resourceGroup)
+		mustSet(d, "azure_vnet_resource_id", azureVnetResourceId)
 	}
 
 	subnetsMap := make(map[string]map[string]interface{})
@@ -577,13 +579,13 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	var subnetsFromFile []map[string]interface{}
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		subnets := d.Get("subnets").([]interface{})
+		subnets := getList(d, "subnets")
 		for _, subnet := range subnets {
-			sub := subnet.(map[string]interface{})
+			sub := mustMap(subnet)
 			subnetInfo := &goaviatrix.SubnetInfo{
-				Cidr:   sub["cidr"].(string),
-				Name:   sub["name"].(string),
-				Region: sub["region"].(string),
+				Cidr:   mustString(sub["cidr"]),
+				Name:   mustString(sub["name"]),
+				Region: mustString(sub["region"]),
 			}
 
 			key := subnetInfo.Region + "~" + subnetInfo.Cidr + "~" + subnetInfo.Name
@@ -639,77 +641,76 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWS) {
 		firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: vC.VpcID})
-		if err == goaviatrix.ErrNotFound {
-			d.Set("enable_native_gwlb", false)
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			mustSet(d, "enable_native_gwlb", false)
 		} else if err != nil {
-			return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %v", err)
+			return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %w", err)
 		} else {
-			d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
+			mustSet(d, "enable_native_gwlb", firenetDetail.NativeGwlb)
 		}
 	} else {
-		d.Set("enable_native_gwlb", false)
+		mustSet(d, "enable_native_gwlb", false)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		var rtbs []string
 		rtbs, err = getAllRouteTables(vpc, client)
 		if err != nil {
-			return fmt.Errorf("could not get vpc route table ids: %v", err)
+			return fmt.Errorf("could not get vpc route table ids: %w", err)
 		}
 
 		if err := d.Set("route_tables", rtbs); err != nil {
 			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
 		}
 	} else {
-		d.Set("route_tables", []string{})
+		mustSet(d, "route_tables", []string{})
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		availabilityDomains, err := client.ListOciVpcAvailabilityDomains(vC)
 		if err != nil {
-			return fmt.Errorf("could not get OCI availability domains: %v", err)
+			return fmt.Errorf("could not get OCI availability domains: %w", err)
 		}
-		d.Set("availability_domains", availabilityDomains)
+		mustSet(d, "availability_domains", availabilityDomains)
 
 		faultDomains, err := client.ListOciVpcFaultDomains(vC)
 		if err != nil {
-			return fmt.Errorf("could not get OCI fault domains: %v", err)
+			return fmt.Errorf("could not get OCI fault domains: %w", err)
 		}
-		d.Set("fault_domains", faultDomains)
+		mustSet(d, "fault_domains", faultDomains)
 	} else {
-		d.Set("availability_domains", nil)
-		d.Set("fault_domains", nil)
+		mustSet(d, "availability_domains", nil)
+		mustSet(d, "fault_domains", nil)
 	}
-
-	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
-	d.Set("enable_ipv6", vC.EnableIpv6)
+	mustSet(d, "private_mode_subnets", vC.PrivateModeSubnets)
+	mustSet(d, "enable_ipv6", vC.EnableIpv6)
 	if vC.VpcIpv6Cidr != "" {
-		d.Set("vpc_ipv6_cidr", vC.VpcIpv6Cidr)
+		mustSet(d, "vpc_ipv6_cidr", vC.VpcIpv6Cidr)
 	}
 
 	return nil
 }
 
 func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
-		AccountName: d.Get("account_name").(string),
-		VpcID:       d.Get("vpc_id").(string),
-		Region:      d.Get("region").(string),
+		AccountName: getString(d, "account_name"),
+		VpcID:       getString(d, "vpc_id"),
+		Region:      getString(d, "region"),
 	}
 
 	if d.HasChange("enable_native_gwlb") {
-		nativeGwlb := d.Get("enable_native_gwlb").(bool)
+		nativeGwlb := getBool(d, "enable_native_gwlb")
 		if nativeGwlb {
 			err := client.EnableNativeAwsGwlbFirenet(vpc)
 			if err != nil {
-				return fmt.Errorf("could not enable native AWS gwlb firenet: %v", err)
+				return fmt.Errorf("could not enable native AWS gwlb firenet: %w", err)
 			}
 		} else {
 			err := client.DisableNativeAwsGwlbFirenet(vpc)
 			if err != nil {
-				return fmt.Errorf("could not disable native AWS gwlb firenet: %v", err)
+				return fmt.Errorf("could not disable native AWS gwlb firenet: %w", err)
 			}
 		}
 	}
@@ -718,26 +719,26 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
-		AccountName: d.Get("account_name").(string),
-		Name:        d.Get("name").(string),
-		VpcID:       d.Get("vpc_id").(string),
+		AccountName: getString(d, "account_name"),
+		Name:        getString(d, "name"),
+		VpcID:       getString(d, "vpc_id"),
 	}
 
 	log.Printf("[INFO] Deleting VPC: %#v", vpc)
 
-	if d.Get("enable_native_gwlb").(bool) {
+	if getBool(d, "enable_native_gwlb") {
 		err := client.DisableNativeAwsGwlbFirenet(vpc)
 		if err != nil {
-			return fmt.Errorf("could not disable native AWS gwlb: %v", err)
+			return fmt.Errorf("could not disable native AWS gwlb: %w", err)
 		}
 	}
 
 	err := client.DeleteVpc(vpc)
 	if err != nil {
-		return fmt.Errorf("failed to delete VPC: %s", err)
+		return fmt.Errorf("failed to delete VPC: %w", err)
 	}
 
 	return nil

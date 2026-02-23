@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_k8s_config
 
+This resource is deprecated. Use aviatrix_config_feature instead.
+
 The **aviatrix_k8s_config** resource allows management of an Aviatrix K8s configuration. This resource is available as of provider version R3.0+.
 
 ## Example Usage

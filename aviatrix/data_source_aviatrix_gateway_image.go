@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,16 +33,15 @@ func dataSourceAviatrixGatewayImage() *schema.Resource {
 }
 
 func dataSourceAviatrixGatewayImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	cloudType := d.Get("cloud_type").(int)
-	softwareVersion := d.Get("software_version").(string)
+	cloudType := getInt(d, "cloud_type")
+	softwareVersion := getString(d, "software_version")
 	v, err := client.GetCompatibleImageVersion(ctx, cloudType, softwareVersion)
 	if err != nil {
 		return diag.Errorf("could not get compatible image version: %v", err)
 	}
-
-	d.Set("image_version", v)
+	mustSet(d, "image_version", v)
 	d.SetId(v)
 	return nil
 }

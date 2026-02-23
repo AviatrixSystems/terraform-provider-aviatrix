@@ -11,17 +11,17 @@
 set -e
 
 if [[ ! -f CHANGELOG.md ]]; then
-	echo "ERROR: CHANGELOG.md not found in pwd."
-	echo "Please run this from the root of the terraform provider repository"
-	exit 1
+    echo "ERROR: CHANGELOG.md not found in pwd."
+    echo "Please run this from the root of the terraform provider repository"
+    exit 1
 fi
 
 if [[ $(uname) == "Darwin" ]]; then
-	echo "Using BSD sed"
-	SED="sed -i.bak -E -e"
+    echo "Using BSD sed"
+    SED="sed -i.bak -E -e"
 else
-	echo "Using GNU sed"
-	SED="sed -i.bak -r -e"
+    echo "Using GNU sed"
+    SED="sed -i.bak -r -e"
 fi
 
 PROVIDER_URL="https:\/\/github.com\/terraform-providers\/terraform-provider-aviatrix\/issues"

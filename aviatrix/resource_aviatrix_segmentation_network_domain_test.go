@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixSegmentationNetworkDomain_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func testAccCheckSegmentationNetworkDomainExists(n string) resource.TestCheckFun
 			return fmt.Errorf("no segmentation_network_domain ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundSegmentationNetworkDomain := &goaviatrix.SegmentationSecurityDomain{
 			DomainName: rs.Primary.Attributes["domain_name"],
@@ -78,7 +79,7 @@ func testAccCheckSegmentationNetworkDomainExists(n string) resource.TestCheckFun
 }
 
 func testAccCheckSegmentationNetworkDomainDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_segmentation_network_domain" {

@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -53,12 +51,12 @@ func testAccDataSourceAviatrixCallerIdentity(name string) resource.TestCheckFunc
 			return fmt.Errorf("root module has no data source called %s", name)
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 		client.CID = rs.Primary.Attributes["cid"]
 
 		version, err := client.GetCurrentVersion()
 		if err != nil {
-			return fmt.Errorf("valid CID was not returned. Get version API gave the following Error: %v", err)
+			return fmt.Errorf("valid CID was not returned. Get version API gave the following Error: %w", err)
 		}
 		if !strings.Contains(version, ".") {
 			return fmt.Errorf("valid CID was not returned. Get version API gave the wrong version")

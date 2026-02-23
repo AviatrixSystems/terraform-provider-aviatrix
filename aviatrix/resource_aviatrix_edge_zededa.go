@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,8 +12,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixEdgeZededa() *schema.Resource {
@@ -385,79 +387,79 @@ func resourceAviatrixEdgeZededa() *schema.Resource {
 
 func marshalEdgeZededaInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 	edgeCSP := &goaviatrix.EdgeCSP{
-		AccountName:                        d.Get("account_name").(string),
-		GwName:                             d.Get("gw_name").(string),
-		SiteId:                             d.Get("site_id").(string),
-		ProjectUuid:                        d.Get("project_uuid").(string),
-		ComputeNodeUuid:                    d.Get("compute_node_uuid").(string),
-		TemplateUuid:                       d.Get("template_uuid").(string),
+		AccountName:                        getString(d, "account_name"),
+		GwName:                             getString(d, "gw_name"),
+		SiteId:                             getString(d, "site_id"),
+		ProjectUuid:                        getString(d, "project_uuid"),
+		ComputeNodeUuid:                    getString(d, "compute_node_uuid"),
+		TemplateUuid:                       getString(d, "template_uuid"),
 		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
-		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		DnsServerIp:                        d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
-		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
-		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
-		LocalAsNumber:                      d.Get("local_as_number").(string),
+		EnableManagementOverPrivateNetwork: getBool(d, "enable_management_over_private_network"),
+		DnsServerIp:                        getString(d, "dns_server_ip"),
+		SecondaryDnsServerIp:               getString(d, "secondary_dns_server_ip"),
+		EnableEdgeActiveStandby:            getBool(d, "enable_edge_active_standby"),
+		EnableEdgeActiveStandbyPreemptive:  getBool(d, "enable_edge_active_standby_preemptive"),
+		LocalAsNumber:                      getString(d, "local_as_number"),
 		PrependAsPath:                      getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		EnableLearnedCidrsApproval:         getBool(d, "enable_learned_cidrs_approval"),
 		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
-		BgpBfdPollingTime:                  d.Get("bgp_neighbor_status_polling_time").(int),
-		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
-		Latitude:                           d.Get("latitude").(string),
-		Longitude:                          d.Get("longitude").(string),
-		RxQueueSize:                        d.Get("rx_queue_size").(string),
+		EnablePreserveAsPath:               getBool(d, "enable_preserve_as_path"),
+		BgpPollingTime:                     getInt(d, "bgp_polling_time"),
+		BgpBfdPollingTime:                  getInt(d, "bgp_neighbor_status_polling_time"),
+		BgpHoldTime:                        getInt(d, "bgp_hold_time"),
+		EnableEdgeTransitiveRouting:        getBool(d, "enable_edge_transitive_routing"),
+		EnableJumboFrame:                   getBool(d, "enable_jumbo_frame"),
+		Latitude:                           getString(d, "latitude"),
+		Longitude:                          getString(d, "longitude"),
+		RxQueueSize:                        getString(d, "rx_queue_size"),
 		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
 		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
-		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnableSingleIpSnat:                 getBool(d, "enable_single_ip_snat"),
 	}
 
-	interfaces := d.Get("interfaces").(*schema.Set).List()
+	interfaces := getSet(d, "interfaces").List()
 	for _, if0 := range interfaces {
-		if1 := if0.(map[string]interface{})
+		if1 := mustMap(if0)
 
 		if2 := &goaviatrix.Interface{
-			IfName:       if1["name"].(string),
-			Type:         if1["type"].(string),
-			PublicIp:     if1["wan_public_ip"].(string),
-			Tag:          if1["tag"].(string),
-			Dhcp:         if1["enable_dhcp"].(bool),
-			IpAddr:       if1["ip_address"].(string),
-			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_server_ip"].(string),
-			DnsSecondary: if1["secondary_dns_server_ip"].(string),
-			VrrpState:    if1["enable_vrrp"].(bool),
-			VirtualIp:    if1["vrrp_virtual_ip"].(string),
+			IfName:       mustString(if1["name"]),
+			Type:         mustString(if1["type"]),
+			PublicIp:     mustString(if1["wan_public_ip"]),
+			Tag:          mustString(if1["tag"]),
+			Dhcp:         mustBool(if1["enable_dhcp"]),
+			IpAddr:       mustString(if1["ip_address"]),
+			GatewayIp:    mustString(if1["gateway_ip"]),
+			DnsPrimary:   mustString(if1["dns_server_ip"]),
+			DnsSecondary: mustString(if1["secondary_dns_server_ip"]),
+			VrrpState:    mustBool(if1["enable_vrrp"]),
+			VirtualIp:    mustString(if1["vrrp_virtual_ip"]),
 		}
 
 		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
 	}
 
-	vlan := d.Get("vlan").(*schema.Set).List()
+	vlan := getSet(d, "vlan").List()
 	for _, v0 := range vlan {
-		v1 := v0.(map[string]interface{})
+		v1 := mustMap(v0)
 
 		v2 := &goaviatrix.Vlan{
-			ParentInterface: v1["parent_interface_name"].(string),
-			IpAddr:          v1["ip_address"].(string),
-			GatewayIp:       v1["gateway_ip"].(string),
-			PeerIpAddr:      v1["peer_ip_address"].(string),
-			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
-			VirtualIp:       v1["vrrp_virtual_ip"].(string),
-			Tag:             v1["tag"].(string),
+			ParentInterface: mustString(v1["parent_interface_name"]),
+			IpAddr:          mustString(v1["ip_address"]),
+			GatewayIp:       mustString(v1["gateway_ip"]),
+			PeerIpAddr:      mustString(v1["peer_ip_address"]),
+			PeerGatewayIp:   mustString(v1["peer_gateway_ip"]),
+			VirtualIp:       mustString(v1["vrrp_virtual_ip"]),
+			Tag:             mustString(v1["tag"]),
 		}
 
-		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
+		v2.VlanId = strconv.Itoa(mustInt(v1["vlan_id"]))
 
 		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
 	}
 
-	if d.Get("enable_auto_advertise_lan_cidrs").(bool) {
+	if getBool(d, "enable_auto_advertise_lan_cidrs") {
 		edgeCSP.EnableAutoAdvertiseLanCidrs = "enable"
 	} else {
 		edgeCSP.EnableAutoAdvertiseLanCidrs = "disable"
@@ -467,7 +469,7 @@ func marshalEdgeZededaInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 }
 
 func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeCSP := marshalEdgeZededaInput(d)
@@ -649,44 +651,43 @@ func resourceAviatrixEdgeZededaReadIfRequired(ctx context.Context, d *schema.Res
 }
 
 func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// handle import
-	if d.Get("gw_name").(string) == "" {
+	if getString(d, "gw_name") == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no name received. Import Id is %s", id)
-		d.Set("gw_name", id)
+		mustSet(d, "gw_name", id)
 		d.SetId(id)
 	}
 
-	edgeCSPResp, err := client.GetEdgeCSP(ctx, d.Get("gw_name").(string))
+	edgeCSPResp, err := client.GetEdgeCSP(ctx, getString(d, "gw_name"))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
+		if errors.Is(err, goaviatrix.ErrNotFound) {
 			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("could not read Edge Zededa: %v", err)
 	}
-
-	d.Set("account_name", edgeCSPResp.AccountName)
-	d.Set("gw_name", edgeCSPResp.GwName)
-	d.Set("site_id", edgeCSPResp.SiteId)
-	d.Set("project_uuid", edgeCSPResp.ProjectUuid)
-	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
-	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
-	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
-	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
-	d.Set("secondary_dns_server_ip", edgeCSPResp.SecondaryDnsServerIp)
-	d.Set("local_as_number", edgeCSPResp.LocalAsNumber)
-	d.Set("prepend_as_path", edgeCSPResp.PrependAsPath)
-	d.Set("enable_edge_active_standby", edgeCSPResp.EnableEdgeActiveStandby)
-	d.Set("enable_edge_active_standby_preemptive", edgeCSPResp.EnableEdgeActiveStandbyPreemptive)
-	d.Set("enable_learned_cidrs_approval", edgeCSPResp.EnableLearnedCidrsApproval)
+	mustSet(d, "account_name", edgeCSPResp.AccountName)
+	mustSet(d, "gw_name", edgeCSPResp.GwName)
+	mustSet(d, "site_id", edgeCSPResp.SiteId)
+	mustSet(d, "project_uuid", edgeCSPResp.ProjectUuid)
+	mustSet(d, "compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
+	mustSet(d, "template_uuid", edgeCSPResp.TemplateUuid)
+	mustSet(d, "enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
+	mustSet(d, "dns_server_ip", edgeCSPResp.DnsServerIp)
+	mustSet(d, "secondary_dns_server_ip", edgeCSPResp.SecondaryDnsServerIp)
+	mustSet(d, "local_as_number", edgeCSPResp.LocalAsNumber)
+	mustSet(d, "prepend_as_path", edgeCSPResp.PrependAsPath)
+	mustSet(d, "enable_edge_active_standby", edgeCSPResp.EnableEdgeActiveStandby)
+	mustSet(d, "enable_edge_active_standby_preemptive", edgeCSPResp.EnableEdgeActiveStandbyPreemptive)
+	mustSet(d, "enable_learned_cidrs_approval", edgeCSPResp.EnableLearnedCidrsApproval)
 
 	if edgeCSPResp.ManagementEgressIpPrefix == "" {
-		d.Set("management_egress_ip_prefix_list", nil)
+		mustSet(d, "management_egress_ip_prefix_list", nil)
 	} else {
-		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
+		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	}
 
 	if edgeCSPResp.EnableLearnedCidrsApproval {
@@ -700,36 +701,34 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 			return diag.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
-		d.Set("approved_learned_cidrs", nil)
+		mustSet(d, "approved_learned_cidrs", nil)
 	}
 
 	spokeBgpManualAdvertisedCidrs := getStringSet(d, "spoke_bgp_manual_advertise_cidrs")
 	if len(goaviatrix.Difference(spokeBgpManualAdvertisedCidrs, edgeCSPResp.SpokeBgpManualAdvertisedCidrs)) != 0 ||
 		len(goaviatrix.Difference(edgeCSPResp.SpokeBgpManualAdvertisedCidrs, spokeBgpManualAdvertisedCidrs)) != 0 {
-		d.Set("spoke_bgp_manual_advertise_cidrs", edgeCSPResp.SpokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", edgeCSPResp.SpokeBgpManualAdvertisedCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
+		mustSet(d, "spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertisedCidrs)
 	}
-
-	d.Set("enable_preserve_as_path", edgeCSPResp.EnablePreserveAsPath)
-	d.Set("bgp_polling_time", edgeCSPResp.BgpPollingTime)
-	d.Set("bgp_neighbor_status_polling_time", edgeCSPResp.BgpBfdPollingTime)
-	d.Set("bgp_hold_time", edgeCSPResp.BgpHoldTime)
-	d.Set("enable_edge_transitive_routing", edgeCSPResp.EnableEdgeTransitiveRouting)
-	d.Set("enable_jumbo_frame", edgeCSPResp.EnableJumboFrame)
+	mustSet(d, "enable_preserve_as_path", edgeCSPResp.EnablePreserveAsPath)
+	mustSet(d, "bgp_polling_time", edgeCSPResp.BgpPollingTime)
+	mustSet(d, "bgp_neighbor_status_polling_time", edgeCSPResp.BgpBfdPollingTime)
+	mustSet(d, "bgp_hold_time", edgeCSPResp.BgpHoldTime)
+	mustSet(d, "enable_edge_transitive_routing", edgeCSPResp.EnableEdgeTransitiveRouting)
+	mustSet(d, "enable_jumbo_frame", edgeCSPResp.EnableJumboFrame)
 	if edgeCSPResp.Latitude != 0 || edgeCSPResp.Longitude != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeCSPResp.Latitude))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeCSPResp.Longitude))
+		mustSet(d, "latitude", fmt.Sprintf("%.6f", edgeCSPResp.Latitude))
+		mustSet(d, "longitude", fmt.Sprintf("%.6f", edgeCSPResp.Longitude))
 	} else {
-		d.Set("latitude", "")
-		d.Set("longitude", "")
+		mustSet(d, "latitude", "")
+		mustSet(d, "longitude", "")
 	}
-
-	d.Set("rx_queue_size", edgeCSPResp.RxQueueSize)
-	d.Set("state", edgeCSPResp.State)
-	d.Set("wan_interface_names", edgeCSPResp.WanInterface)
-	d.Set("lan_interface_names", edgeCSPResp.LanInterface)
-	d.Set("management_interface_names", edgeCSPResp.MgmtInterface)
+	mustSet(d, "rx_queue_size", edgeCSPResp.RxQueueSize)
+	mustSet(d, "state", edgeCSPResp.State)
+	mustSet(d, "wan_interface_names", edgeCSPResp.WanInterface)
+	mustSet(d, "lan_interface_names", edgeCSPResp.LanInterface)
+	mustSet(d, "management_interface_names", edgeCSPResp.MgmtInterface)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
@@ -778,16 +777,15 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 	if err = d.Set("vlan", vlan); err != nil {
 		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
-
-	d.Set("enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
-	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
+	mustSet(d, "enable_single_ip_snat", edgeCSPResp.EnableNat == "yes" && edgeCSPResp.SnatMode == "primary")
+	mustSet(d, "enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
 }
 
 func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	// read configs
 	edgeCSP := marshalEdgeZededaInput(d)
@@ -1000,10 +998,10 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAviatrixEdgeZededaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	accountName := d.Get("account_name").(string)
-	gwName := d.Get("gw_name").(string)
+	accountName := getString(d, "account_name")
+	gwName := getString(d, "gw_name")
 
 	err := client.DeleteEdgeCSP(ctx, accountName, gwName)
 	if err != nil {

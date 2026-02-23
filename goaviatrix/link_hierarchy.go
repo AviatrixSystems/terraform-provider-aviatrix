@@ -74,26 +74,56 @@ func (c *Client) DeleteLinkHierarchy(ctx context.Context, uuid string) error {
 
 func DiffSuppressFuncLinkHierarchy(k, old, new string, d *schema.ResourceData) bool {
 	lOld, lNew := d.GetChange("links")
-	var linksOld []map[string]interface{}
 
-	for _, l0 := range lOld.([]interface{}) {
-		l1 := l0.(map[string]interface{})
+	oldList, ok := lOld.([]interface{})
+	if !ok {
+		return false
+	}
+	newList, ok := lNew.([]interface{})
+	if !ok {
+		return false
+	}
+
+	linksOld := make([]map[string]interface{}, 0, len(oldList))
+	for _, l0 := range oldList {
+		l1, ok := l0.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		linksOld = append(linksOld, l1)
 	}
 
-	var linksNew []map[string]interface{}
-
-	for _, l0 := range lNew.([]interface{}) {
-		l1 := l0.(map[string]interface{})
+	linksNew := make([]map[string]interface{}, 0, len(newList))
+	for _, l0 := range newList {
+		l1, ok := l0.(map[string]interface{})
+		if !ok {
+			return false
+		}
 		linksNew = append(linksNew, l1)
 	}
 
 	sort.Slice(linksOld, func(i, j int) bool {
-		return linksOld[i]["name"].(string) < linksOld[j]["name"].(string)
+		ni, ok := linksOld[i]["name"].(string)
+		if !ok {
+			return false
+		}
+		nj, ok := linksOld[j]["name"].(string)
+		if !ok {
+			return false
+		}
+		return ni < nj
 	})
 
 	sort.Slice(linksNew, func(i, j int) bool {
-		return linksNew[i]["name"].(string) < linksNew[j]["name"].(string)
+		ni, ok := linksNew[i]["name"].(string)
+		if !ok {
+			return false
+		}
+		nj, ok := linksNew[j]["name"].(string)
+		if !ok {
+			return false
+		}
+		return ni < nj
 	})
 
 	return reflect.DeepEqual(linksOld, linksNew)

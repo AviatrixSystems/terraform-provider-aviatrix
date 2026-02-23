@@ -36,6 +36,7 @@ const (
 	OCIRelatedCloudTypes      = OCI
 	AliCloudRelatedCloudTypes = AliCloud
 	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT | EDGESELFMANAGED
+	CSPRelatedCloudTypes      = AWSRelatedCloudTypes | GCPRelatedCloudTypes | AzureArmRelatedCloudTypes | OCIRelatedCloudTypes | AliCloudRelatedCloudTypes
 )
 
 // The value is corresponding to cloudn repro definition of the same name
@@ -98,6 +99,14 @@ func VendorToCloudType(vendor string) int {
 		return AzureChina
 	case "Oracle Cloud Infrastructure":
 		return OCI
+	case "Alibaba Cloud":
+		return AliCloud
+	case "Aviatrix Edge Platform":
+		return EDGECSP
+	case "Equinix":
+		return EDGEEQUINIX
+	case "Megaport":
+		return EDGEMEGAPORT
 	default:
 		return 0
 	}

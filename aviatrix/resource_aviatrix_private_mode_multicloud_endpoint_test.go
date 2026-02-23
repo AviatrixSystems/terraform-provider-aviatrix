@@ -2,15 +2,17 @@ package aviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func prePrivateModeMulticloudEndpointCheck(t *testing.T, msgCommon string) {
@@ -101,7 +103,7 @@ func testAccAviatrixPrivateModeMulticloudEndpointExists(n string) resource.TestC
 			return fmt.Errorf("no private mode multicloud endpoint ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		vpcId := rs.Primary.ID
 		_, err := client.GetPrivateModeMulticloudEndpoint(context.Background(), vpcId)
@@ -114,27 +116,27 @@ func testAccAviatrixPrivateModeMulticloudEndpointExists(n string) resource.TestC
 }
 
 func testAccAviatrixPrivateModeMulticloudEndpointDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "aviatrix_private_mode_lb" {
 			vpcId := rs.Primary.ID
 			_, err := client.GetPrivateModeLoadBalancer(context.Background(), vpcId)
 			if err != nil {
-				if err == goaviatrix.ErrNotFound {
+				if errors.Is(err, goaviatrix.ErrNotFound) {
 					continue
 				}
-				return fmt.Errorf("failed to destroy Private Mode load balancer: %s", err)
+				return fmt.Errorf("failed to destroy Private Mode load balancer: %w", err)
 			}
 			return fmt.Errorf("failed to destroy Private Mode load balancer")
 		} else if rs.Type == "aviatrix_private_mode_multicloud_load_balancer" {
 			vpcId := rs.Primary.ID
 			_, err := client.GetPrivateModeMulticloudEndpoint(context.Background(), vpcId)
 			if err != nil {
-				if err == goaviatrix.ErrNotFound {
+				if errors.Is(err, goaviatrix.ErrNotFound) {
 					continue
 				}
-				return fmt.Errorf("error getting Private Mode multicloud endpoint after destroy: %s", err)
+				return fmt.Errorf("error getting Private Mode multicloud endpoint after destroy: %w", err)
 			}
 			return fmt.Errorf("failed to destroy Private Mode multicloud endpoint")
 		}

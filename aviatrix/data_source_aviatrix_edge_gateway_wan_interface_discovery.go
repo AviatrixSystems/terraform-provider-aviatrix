@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -34,17 +33,16 @@ func dataSourceAviatrixEdgeGatewayWanInterfaceDiscovery() *schema.Resource {
 }
 
 func dataSourceAviatrixEdgeGatewayWanInterfaceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	gwName := d.Get("gw_name").(string)
-	wanInterfaceName := d.Get("wan_interface_name").(string)
+	gwName := getString(d, "gw_name")
+	wanInterfaceName := getString(d, "wan_interface_name")
 
 	ip, err := client.GetEdgeGatewayWanIp(ctx, gwName, wanInterfaceName)
 	if err != nil {
 		return diag.Errorf("couldn't get wan interface ip for edge gateway %s: %s", gwName, err)
 	}
-
-	d.Set("ip_address", ip)
+	mustSet(d, "ip_address", ip)
 
 	d.SetId(gwName + "~" + wanInterfaceName)
 	return nil

@@ -1,12 +1,12 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"golang.org/x/net/context"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -137,7 +137,7 @@ func PolicyToMap(p *Policy) map[string]interface{} {
 func (c *Client) AddFirewallPolicy(fw *Firewall) error {
 	rules, err := json.Marshal(fw.PolicyList)
 	if err != nil {
-		return fmt.Errorf("could not marshal firewall policies: %v", err)
+		return fmt.Errorf("could not marshal firewall policies: %w", err)
 	}
 
 	form := map[string]interface{}{
@@ -147,13 +147,21 @@ func (c *Client) AddFirewallPolicy(fw *Firewall) error {
 		"rules":        string(rules),
 	}
 
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
+	raw, exists := form["action"]
+	if !exists || raw == nil {
+		return fmt.Errorf("missing form[action]")
+	}
+	action, ok := raw.(string)
+	if !ok || action == "" {
+		return fmt.Errorf("form[action] expected string, got %T", raw)
+	}
+	return c.PostAPIContext2(context.Background(), nil, action, form, BasicCheck)
 }
 
 func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
 	rules, err := json.Marshal(fw.PolicyList)
 	if err != nil {
-		return fmt.Errorf("could not marshal firewall policies: %v", err)
+		return fmt.Errorf("could not marshal firewall policies: %w", err)
 	}
 
 	form := map[string]interface{}{
@@ -174,16 +182,24 @@ func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
 		return nil
 	}
 
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, checkFunc)
+	raw, exists := form["action"]
+	if !exists || raw == nil {
+		return fmt.Errorf("missing form[action]")
+	}
+	action, ok := raw.(string)
+	if !ok || action == "" {
+		return fmt.Errorf("form[action] expected non-empty string, got %T", raw)
+	}
+	return c.PostAPIContext2(context.Background(), nil, action, form, checkFunc)
 }
 
 func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 	foundFirewall, err := c.GetPolicy(fw)
 	if err != nil {
-		if err == ErrNotFound {
+		if errors.Is(err, ErrNotFound) {
 			return nil, err
 		}
-		return nil, fmt.Errorf("could not list firewall rules: %v", err)
+		return nil, fmt.Errorf("could not list firewall rules: %w", err)
 	}
 	rule := fw.PolicyList[0]
 	found := false
@@ -210,7 +226,7 @@ func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 func (c *Client) InsertFirewallPolicy(fw *Firewall) error {
 	rules, err := json.Marshal(fw.PolicyList)
 	if err != nil {
-		return fmt.Errorf("could not marshal firewall policies: %v", err)
+		return fmt.Errorf("could not marshal firewall policies: %w", err)
 	}
 
 	form := map[string]interface{}{
@@ -221,5 +237,21 @@ func (c *Client) InsertFirewallPolicy(fw *Firewall) error {
 		"position":     strconv.Itoa(fw.PolicyList[0].Position),
 	}
 
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
+	raw, exists := form["action"]
+	if !exists {
+		return fmt.Errorf("missing form[action]")
+	}
+	if raw == nil {
+		return fmt.Errorf("nil form[action]")
+	}
+
+	action, ok := raw.(string)
+	if !ok {
+		return fmt.Errorf("form[action] expected string, got %T", raw)
+	}
+	if action == "" {
+		return fmt.Errorf("form[action] is empty")
+	}
+
+	return c.PostAPIContext2(context.Background(), nil, action, form, BasicCheck)
 }

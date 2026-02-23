@@ -1,15 +1,17 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 var remoteSyslogMatcher = regexp.MustCompile(`\bremote_syslog_[0-9]\b`)
@@ -20,7 +22,7 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 		Read:   resourceAviatrixRemoteSyslogRead,
 		Delete: resourceAviatrixRemoteSyslogDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,20 +121,20 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 
 func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 	remoteSyslog := &goaviatrix.RemoteSyslog{
-		Server:            d.Get("server").(string),
-		Port:              d.Get("port").(int),
-		Protocol:          d.Get("protocol").(string),
-		Index:             d.Get("index").(int),
-		Name:              d.Get("name").(string),
-		Template:          d.Get("template").(string),
-		CaCertificate:     d.Get("ca_certificate_file").(string),
-		PublicCertificate: d.Get("public_certificate_file").(string),
-		PrivateKey:        d.Get("private_key_file").(string),
+		Server:            getString(d, "server"),
+		Port:              getInt(d, "port"),
+		Protocol:          getString(d, "protocol"),
+		Index:             getInt(d, "index"),
+		Name:              getString(d, "name"),
+		Template:          getString(d, "template"),
+		CaCertificate:     getString(d, "ca_certificate_file"),
+		PublicCertificate: getString(d, "public_certificate_file"),
+		PrivateKey:        getString(d, "private_key_file"),
 	}
 
 	var excludeGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludeGateways = append(excludeGateways, v.(string))
+	for _, v := range getSet(d, "excluded_gateways").List() {
+		excludeGateways = append(excludeGateways, mustString(v))
 	}
 	if len(excludeGateways) != 0 {
 		remoteSyslog.ExcludeGatewayInput = strings.Join(excludeGateways, ",")
@@ -142,11 +144,11 @@ func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 }
 
 func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	_, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
-	if err != goaviatrix.ErrNotFound {
-		return fmt.Errorf("the remote_syslog with index %d is already enabled, please import to manage with Terraform", d.Get("index").(int))
+	_, err := client.GetRemoteSyslogStatus(getInt(d, "index"))
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
+		return fmt.Errorf("the remote_syslog with index %d is already enabled, please import to manage with Terraform", getInt(d, "index"))
 	}
 
 	remoteSyslog := marshalRemoteSyslogInput(d)
@@ -158,7 +160,7 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if err := client.EnableRemoteSyslog(remoteSyslog); err != nil {
-		return fmt.Errorf("could not enable remote syslog: %v", err)
+		return fmt.Errorf("could not enable remote syslog: %w", err)
 	}
 
 	d.SetId("remote_syslog_" + strconv.Itoa(remoteSyslog.Index))
@@ -166,9 +168,9 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	server := d.Get("server").(string)
+	server := getString(d, "server")
 
 	if server == "" {
 		id := d.Id()
@@ -180,31 +182,31 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		index, _ := strconv.Atoi(id[len(id)-1:])
-		d.Set("index", index)
+		mustSet(d, "index", index)
 		d.SetId(id)
 	}
 
-	remoteSyslogStatus, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
-	if err == goaviatrix.ErrNotFound {
+	remoteSyslogStatus, err := client.GetRemoteSyslogStatus(getInt(d, "index"))
+	if errors.Is(err, goaviatrix.ErrNotFound) {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get remote syslog status: %v", err)
+		return fmt.Errorf("could not get remote syslog status: %w", err)
 	}
 
 	idx, _ := strconv.Atoi(remoteSyslogStatus.Index)
-	d.Set("index", idx)
-	d.Set("name", remoteSyslogStatus.Name)
-	d.Set("server", remoteSyslogStatus.Server)
+	mustSet(d, "index", idx)
+	mustSet(d, "name", remoteSyslogStatus.Name)
+	mustSet(d, "server", remoteSyslogStatus.Server)
 	port, _ := strconv.Atoi(string(remoteSyslogStatus.Port))
-	d.Set("port", port)
-	d.Set("protocol", remoteSyslogStatus.Protocol)
-	d.Set("template", remoteSyslogStatus.Template)
-	d.Set("notls", remoteSyslogStatus.Notls)
-	d.Set("status", remoteSyslogStatus.Status)
+	mustSet(d, "port", port)
+	mustSet(d, "protocol", remoteSyslogStatus.Protocol)
+	mustSet(d, "template", remoteSyslogStatus.Template)
+	mustSet(d, "notls", remoteSyslogStatus.Notls)
+	mustSet(d, "status", remoteSyslogStatus.Status)
 	if len(remoteSyslogStatus.ExcludedGateways) != 0 {
-		d.Set("excluded_gateways", remoteSyslogStatus.ExcludedGateways)
+		mustSet(d, "excluded_gateways", remoteSyslogStatus.ExcludedGateways)
 	}
 
 	d.SetId("remote_syslog_" + remoteSyslogStatus.Index)
@@ -212,10 +214,10 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAviatrixRemoteSyslogDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
-	if err := client.DisableRemoteSyslog(d.Get("index").(int)); err != nil {
-		return fmt.Errorf("could not disable remote syslog: %v", err)
+	if err := client.DisableRemoteSyslog(getInt(d, "index")); err != nil {
+		return fmt.Errorf("could not disable remote syslog: %w", err)
 	}
 
 	return nil

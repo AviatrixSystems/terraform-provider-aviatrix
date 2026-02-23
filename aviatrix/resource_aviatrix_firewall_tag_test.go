@@ -1,14 +1,16 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixFirewallTag_basic(t *testing.T) {
@@ -74,7 +76,7 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 			return fmt.Errorf("no tag ID is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := mustClient(testAccProvider.Meta())
 
 		foundTag := &goaviatrix.FirewallTag{
 			Name: rs.Primary.Attributes["firewall_tag"],
@@ -94,7 +96,7 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 }
 
 func testAccCheckFirewallTagDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := mustClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_firewall_tag" {
@@ -105,7 +107,7 @@ func testAccCheckFirewallTagDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetFirewallTag(foundTag)
-		if err != goaviatrix.ErrNotFound {
+		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("firewall tag still exists after destroy")
 		}
 	}

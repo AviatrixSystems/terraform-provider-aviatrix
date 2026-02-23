@@ -27,6 +27,8 @@ resource "aviatrix_edge_csp_ha" "test" {
     type       = "LAN"
     ip_address = "10.220.11.20/24"
     gateway_ip = "10.220.11.1"
+    ipv6_address = "2600:1f1d:c7d:6c00:6ce2:d09:c5a8:4001/64"
+    gateway_ipv6 = "2600:1f1d:c7d:6c00:6ce2:d09:c5a8:4100"
   }
 
   interfaces {
@@ -54,6 +56,8 @@ The following arguments are supported:
   * `wan_public_ip` - (Optional) WAN public IP.
   * `ip_address` - (Optional) Interface static IP address.
   * `gateway_ip` - (Optional) Gateway IP.
+  * `ipv6_address` - (Optional) Interface static IPv6 IP address. Only for LAN interface.
+  * `gateway_ipv6` - (Optional) Gateway IPv6 IP. Only for LAN interface.
   * `dns_server_ip` - (Optional) Primary DNS server IP.
   * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
   * `tag` - (Optional) Tag.

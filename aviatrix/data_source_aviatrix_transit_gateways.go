@@ -9,8 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixTransitGateways() *schema.Resource {
@@ -366,7 +367,7 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 }
 
 func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*goaviatrix.Client)
+	client := mustClient(meta)
 
 	TransitGatewayList, err := client.GetTransitGatewayList(ctx)
 	if err != nil {
