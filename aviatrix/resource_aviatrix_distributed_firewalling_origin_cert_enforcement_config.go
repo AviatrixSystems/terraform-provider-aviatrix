@@ -15,6 +15,7 @@ import (
 
 func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated from controller version 8.2.0+, please use aviatrix_dcf_tls_profile instead.",
 		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate,
 		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead,
 		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate,

@@ -14,6 +14,7 @@ import (
 
 func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated from controller version 9.0.0+, please use aviatrix_dcf_mitm_ca instead.",
 		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigCreate,
 		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingProxyCaConfigRead,
 		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingProxyCaConfigDelete,

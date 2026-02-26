@@ -65,6 +65,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the gateway which is going to be created.",
 			},
+			"group_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the gateway group which is going to be created.",
+			},
 			"vpc_id": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -1630,6 +1635,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[TRACE] reading spoke gateway %s: %#v", getString(d, "gw_name"), gw)
+	mustSet(d, "group_name", gw.GroupName)
 	mustSet(d, "cloud_type", gw.CloudType)
 	mustSet(d, "account_name", gw.AccountName)
 	mustSet(d, "enable_encrypt_volume", gw.EnableEncryptVolume)

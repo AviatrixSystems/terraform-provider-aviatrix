@@ -51,7 +51,7 @@ func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta
 	flag := false
 	defer func() { _ = resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
-	err := client.CreateFirewallManagementAccess(firewallManagementAccess)
+	err := client.EditFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix firewall management access: %w", err)
 	}
@@ -108,7 +108,7 @@ func resourceAviatrixFirewallManagementAccessDelete(d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Destroying Aviatrix firewall management access: %#v", firewallManagementAccess)
 
-	err := client.DestroyFirewallManagementAccess(firewallManagementAccess)
+	err := client.EditFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
 		return fmt.Errorf("failed to destroy Aviatrix firewall management access: %w", err)
 	}

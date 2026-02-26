@@ -13,7 +13,7 @@ type FirewallManagementAccessAPIResp struct {
 	Reason  string                     `json:"reason"`
 }
 
-func (c *Client) CreateFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) error {
+func (c *Client) EditFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) error {
 	form := map[string]string{
 		"CID":               c.CID,
 		"action":            "edit_transit_firenet_management_access",
@@ -26,8 +26,9 @@ func (c *Client) CreateFirewallManagementAccess(firewallManagementAccess *Firewa
 
 func (c *Client) GetFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) (*FirewallManagementAccess, error) {
 	form := map[string]string{
-		"CID":    c.CID,
-		"action": "list_transit_firenet_spoke_policies",
+		"CID":          c.CID,
+		"action":       "list_transit_firenet_spoke_policies",
+		"gateway_name": firewallManagementAccess.TransitFireNetGatewayName,
 	}
 
 	var data FirewallManagementAccessAPIResp
@@ -37,30 +38,13 @@ func (c *Client) GetFirewallManagementAccess(firewallManagementAccess *FirewallM
 		return nil, err
 	}
 
-	if len(data.Results) == 0 {
+	if len(data.Results) != 1 {
 		return nil, ErrNotFound
 	}
-	firewallManagementAccessList := data.Results
-	for i := range firewallManagementAccessList {
-		if firewallManagementAccessList[i].TransitFireNetGatewayName != firewallManagementAccess.TransitFireNetGatewayName {
-			continue
-		}
-		if firewallManagementAccessList[i].ManagementAccessResourceName == "no" {
-			return nil, ErrNotFound
-		}
-		firewallManagementAccess.ManagementAccessResourceName = firewallManagementAccessList[i].ManagementAccessResourceName
-		return firewallManagementAccess, nil
+	firewallManagementAccessResp := data.Results[0]
+	if firewallManagementAccessResp.ManagementAccessResourceName == "no" {
+		return nil, ErrNotFound
 	}
-	return nil, ErrNotFound
-}
-
-func (c *Client) DestroyFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) error {
-	form := map[string]string{
-		"CID":               c.CID,
-		"action":            "edit_transit_firenet_management_access",
-		"gateway_name":      firewallManagementAccess.TransitFireNetGatewayName,
-		"management_access": firewallManagementAccess.ManagementAccessResourceName,
-	}
-
-	return c.PostAPI(form["action"], form, BasicCheck)
+	firewallManagementAccess.ManagementAccessResourceName = firewallManagementAccessResp.ManagementAccessResourceName
+	return firewallManagementAccess, nil
 }

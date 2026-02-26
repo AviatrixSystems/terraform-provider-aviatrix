@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_distributed_firewalling_proxy_ca_config
 
+### This resource is deprecated from controller version 9.0.0+, please use aviatrix_dcf_mitm_ca instead.
+
 The **aviatrix_distributed_firewalling_proxy_ca_config** resource allows management of an Aviatrix Distributed Firewalling Proxy CA configuration. This resource is available as of provider version R3.1.1+.
 
 ## Example Usage

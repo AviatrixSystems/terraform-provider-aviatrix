@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_distributed_firewalling_origin_cert_enforcement_config
 
+### This resource is deprecated from controller version 8.2.0+, please use aviatrix_dcf_tls_profile instead
+
 The **aviatrix_distributed_firewalling_origin_cert_enforcement_config** resource allows management of an Aviatrix Distributed Firewalling Origin Cert Enforcement level configuration. This resource is available as of provider version R3.1.1+.
 
 ## Example Usage
