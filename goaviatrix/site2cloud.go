@@ -109,6 +109,7 @@ type EditSite2Cloud struct {
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
 	BackupRemoteIdentifier        string `form:"cert_based_s2c_ha_remote_id,omitempty"`
 	ProxyIdEnabled                string `form:"proxy_id_enabled,omitempty"`
+	CustomMap                     bool   `form:"custom_map,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -186,6 +187,7 @@ type EditSite2CloudConnDetail struct {
 	BackupRemoteGwLatitude         float64       `json:"remote_backup_latitude,omitempty"`
 	BackupRemoteGwLongitude        float64       `json:"remote_backup_longitude,omitempty"`
 	ProxyIdEnabled                 bool          `json:"proxy_id_enabled,omitempty"`
+	CustomMap                      bool          `json:"custom_map,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -470,6 +472,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier
 		site2cloud.Phase1LocalIdentifier = s2cConnDetail.Phase1LocalIdentifier
 		site2cloud.ProxyIdEnabled = s2cConnDetail.ProxyIdEnabled
+		site2cloud.CustomMap = s2cConnDetail.CustomMap
 		return site2cloud, nil
 	}
 

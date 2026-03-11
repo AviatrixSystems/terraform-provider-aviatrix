@@ -385,21 +385,25 @@ func transitInstanceOptionalEdgeSchema() map[string]*schema.Schema {
 					"gateway_ip": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "The gateway IP address associated with this interface.",
 					},
 					"ip_address": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "The static IP address assigned to this interface.",
 					},
 					"public_ip": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "The public IP address associated with this interface (if applicable).",
 					},
 					"dhcp": {
 						Type:        schema.TypeBool,
 						Optional:    true,
+						Default:     false,
 						Description: "Whether DHCP is enabled on this interface.",
 					},
 					"secondary_private_cidr_list": {
@@ -413,6 +417,7 @@ func transitInstanceOptionalEdgeSchema() map[string]*schema.Schema {
 					"underlay_cidr": {
 						Type:         schema.TypeString,
 						Optional:     true,
+						Default:      "",
 						Description:  "The underlay CIDR in the format of ipaddr/netmask for this interface.",
 						ValidateFunc: validation.IsCIDR,
 					},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,46 +12,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResourceAviatrixConfigFeatureSchema_FeatureNameValidation(t *testing.T) {
-	r := resourceAviatrixConfigFeature()
-	validate := r.Schema["feature_name"].ValidateFunc
-	if validate == nil {
-		t.Fatalf("expected feature_name ValidateFunc to be set")
+func TestAccAviatrixConfigFeature_InvalidFeatureNameValidation(t *testing.T) {
+	if os.Getenv("SKIP_CONFIG_FEATURE") == "yes" {
+		t.Skip("Skipping config feature acceptance tests as SKIP_CONFIG_FEATURE is set")
 	}
-
-	tests := []struct {
-		name        string
-		input       string
-		expectedErr bool
-	}{
-		{name: "valid feature", input: "k8s", expectedErr: false},
-		{name: "valid feature (case-insensitive)", input: "K8S", expectedErr: false},
-		{name: "invalid feature", input: "not_a_real_feature", expectedErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warns, errs := validate(tt.input, "feature_name")
-			assert.Empty(t, warns)
-			if tt.expectedErr {
-				assert.NotEmpty(t, errs)
-			} else {
-				assert.Empty(t, errs)
-			}
-		})
-	}
+	featureName := "invalid_feature"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConfigFeatureBasic(featureName, true),
+				ExpectError: regexp.MustCompile("invalid feature name: invalid_feature"),
+			},
+		},
+	})
 }
 
 func TestAccAviatrixConfigFeature_toggle(t *testing.T) {
 	if os.Getenv("SKIP_CONFIG_FEATURE") == "yes" {
 		t.Skip("Skipping config feature acceptance tests as SKIP_CONFIG_FEATURE is set")
 	}
-
-	featureName := os.Getenv("AVIATRIX_CONFIG_FEATURE_NAME")
-	if featureName == "" {
-		t.Skip("Skipping config feature acceptance tests: set AVIATRIX_CONFIG_FEATURE_NAME to a safe controller feature to toggle")
-	}
-
+	featureName := "microseg"
 	resourceName := "aviatrix_config_feature.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -132,4 +117,32 @@ func testAccConfigFeatureDestroy(featureName string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+func TestAccAviatrixConfigFeature_DocFeatureListMatchesAPI(t *testing.T) {
+	if os.Getenv("SKIP_CONFIG_FEATURE") == "yes" {
+		t.Skip("Skipping config feature acceptance tests as SKIP_CONFIG_FEATURE is set")
+	}
+	currentListInDocs := []string{"microseg", "cost_iq", "cai", "ipv6", "nfq_enforce_tls", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "dcf_on_firenet", "interface_mtu_based_clamping", "primary_gateway_deletion", "vrf"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProvidersVersionValidation,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "aviatrix_caller_identity" "test" {}`,
+				Check: func(s *terraform.State) error {
+					client := mustClient(testAccProviderVersionValidation.Meta())
+					apiFeatures, err := client.GetAllFeatureNames(context.Background())
+					if err != nil {
+						return err
+					}
+					assert.ElementsMatch(t, currentListInDocs, apiFeatures, "feature list in docs does not match feature list in API, please update the docs to match the API and update the list in this test to match the docs")
+					return nil
+				},
+			},
+		},
+	})
 }

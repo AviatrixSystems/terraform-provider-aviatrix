@@ -36,6 +36,7 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 						"description": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Description of the IP address.",
 						},
 					},

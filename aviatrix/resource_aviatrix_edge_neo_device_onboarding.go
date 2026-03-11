@@ -65,16 +65,19 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Enable DHCP.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Gateway IP.",
 						},
 						"ipv4_cidr": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "IPV4 CIDR.",
 						},
 						"dns_server_ips": {
@@ -88,6 +91,7 @@ func resourceAviatrixEdgeNEODeviceOnboarding() *schema.Resource {
 						"proxy_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Proxy server IP.",
 						},
 					},

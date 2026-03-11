@@ -80,6 +80,23 @@ resource "aviatrix_transit_group" "test_transit_group_azure" {
 ```
 
 ```hcl
+# Create an Aviatrix Azure Transit Group with private route table configured
+resource "aviatrix_transit_group" "test_transit_group_azure" {
+  group_name                 = "my-azure-transit-group"
+  cloud_type                 = 8
+  account_name               = "my-azure-account"
+  gw_type                   = "transit"
+  group_instance_size        = "Standard_B2ms"
+  vpc_id                     = "vnet_name:rg_name:resource_guid"
+  vpc_region                 = "West US"
+  private_route_table_config = [
+    "Foo_VNet_RTB_1:Bar_RG",
+    "Foo_VNet_RTB_2:Bar_RG",
+  ]
+}
+```
+
+```hcl
 # Create an Aviatrix Transit Group with advanced features
 resource "aviatrix_transit_group" "test_transit_group_advanced" {
   group_name          = "my-transit-group-advanced"
@@ -174,6 +191,10 @@ The following arguments are supported:
 * `enable_multi_tier_transit` - (Optional) Enable multi-tier transit. Valid values: true, false. Default: false.
 * `enable_segmentation` - (Optional) Enable segmentation (LAN segmentation). Valid values: true, false. Default: false.
 * `enable_gateway_load_balancer` - (Optional) Enable AWS Gateway Load Balancer. Only valid for AWS. Valid values: true, false. Default: false.
+
+### Optional - Azure Specific
+
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the transit group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).
 
 ### Optional - BGP Configuration
 

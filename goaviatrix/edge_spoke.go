@@ -20,6 +20,7 @@ type EdgeSpoke struct {
 	Type                               string `json:"type,omitempty"`
 	GwName                             string `json:"gateway_name,omitempty"`
 	SiteId                             string `json:"site_id,omitempty"`
+	GroupUUID                          string `json:"group_uuid,omitempty"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip,omitempty"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network,omitempty"`
 	DnsServerIp                        string `json:"dns_server_ip,omitempty"`
@@ -98,6 +99,7 @@ type EdgeSpokeResp struct {
 	SiteId                             string `json:"vpc_id"`
 	CloudType                          int    `json:"cloud_type"`
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
+	GroupUUID                          string `json:"group_uuid,omitempty"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
 	DnsServerIp                        string `json:"dns_server_ip"`
 	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary"`
@@ -161,6 +163,7 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	if err != nil {
 		return err
 	}
+	defer func() { _ = resp.Close() }()
 
 	var fileName string
 	if edgeSpoke.ZtpFileType == "iso" {
@@ -173,6 +176,7 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	if err != nil {
 		return err
 	}
+	defer func() { _ = outFile.Close() }()
 
 	_, err = io.Copy(outFile, resp)
 	if err != nil {
@@ -196,6 +200,56 @@ type EdgeSpokeHa struct {
 	NoProgressBar            bool   `form:"no_progress_bar,omitempty" json:"no_progress_bar,omitempty"`
 	ManagementEgressIPPrefix string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip,omitempty"`
 	CloudInit                bool   `form:"cloud_init,omitempty" json:"cloud_init,omitempty"`
+}
+
+func (c *Client) CreateEdgeSpokeInstance(ctx context.Context, edgeSpoke *EdgeSpoke) error {
+	edgeSpoke.Action = "create_mct_gateway"
+	edgeSpoke.CID = c.CID
+	edgeSpoke.Type = "spoke"
+
+	interfaces, err := json.Marshal(edgeSpoke.InterfaceList)
+	if err != nil {
+		return err
+	}
+
+	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	if len(edgeSpoke.VlanList) == 0 {
+		edgeSpoke.VlanList = []*EdgeSpokeVlan{}
+	}
+
+	vlan, err := json.Marshal(edgeSpoke.VlanList)
+	if err != nil {
+		return err
+	}
+
+	edgeSpoke.Vlan = b64.StdEncoding.EncodeToString(vlan)
+
+	resp, err := c.PostAPIContext2Download(ctx, edgeSpoke.Action, edgeSpoke, BasicCheck)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Close() }()
+
+	var fileName string
+	if edgeSpoke.ZtpFileType == "iso" {
+		fileName = edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + ".iso"
+	} else {
+		fileName = edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + "-cloud-init.txt"
+	}
+
+	outFile, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = outFile.Close() }()
+
+	_, err = io.Copy(outFile, resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CreateEdgeSpokeHa creates an HA edge spoke gateway

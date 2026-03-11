@@ -86,8 +86,8 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 		"enable_jumbo_frame": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     true,
-			Description: "Enable jumbo frame support.",
+			Computed:    true,
+			Description: "Enable jumbo frame support. Default is true for CSP gateways and false for Edge gateways (AEP, Equinix, Megaport, Self-managed).",
 		},
 		"enable_nat": {
 			Type:        schema.TypeBool,
@@ -131,9 +131,10 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			ValidateFunc: goaviatrix.ValidateASN,
 		},
 		"prepend_as_path": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+			Type:         schema.TypeList,
+			Optional:     true,
+			RequiredWith: []string{"local_as_number"},
+			Description:  "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
 				ValidateFunc: goaviatrix.ValidateASN,
@@ -290,8 +291,8 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	}
 
 	// Optional attributes
-	if _, ok := d.GetOk("customized_cidr_list"); ok {
-		spokeGroup.CustomizedCidrList = getStringSet(d, "customized_cidr_list")
+	if _, ok := d.GetOk("customized_spoke_vpc_routes"); ok {
+		spokeGroup.CustomizedCidrList = getStringSet(d, "customized_spoke_vpc_routes")
 	}
 	if v, ok := d.GetOk("vpc_region"); ok {
 		spokeGroup.VpcRegion = mustString(v)
@@ -427,7 +428,48 @@ func applyBgpCommunities(ctx context.Context, d *schema.ResourceData, client *go
 	return nil
 }
 
-// applyFeatureFlags applies feature flags (jumbo frame, GRO/GSO, NAT, VPC DNS Server, IPv6) to the spoke group.
+// applyJumboFrameForGroup applies jumbo frame settings for a gateway group (spoke or transit).
+// For edge gateways, default is false; for CSP gateways, default is true.
+// groupType is "spoke" or "transit" and is used only in log messages.
+//
+// GetOkExists is used so that an explicit enable_jumbo_frame=false in config is detected;
+// GetOk would treat bool false as "unset" and skip the disable API. On update, the
+// resource's d.HasChange("enable_jumbo_frame") block handles changes.
+// SA1019: GetOkExists is deprecated but required to distinguish unset vs false for optional bool; no SDK alternative yet.
+func applyJumboFrameForGroup(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, groupName string, isEdgeGateway bool, groupType string) error {
+	enableJumboFrame, jumboFrameSet := d.GetOkExists("enable_jumbo_frame") //nolint:staticcheck // SA1019
+	if jumboFrameSet {
+		if v, ok := enableJumboFrame.(bool); ok && v {
+			log.Printf("[INFO] Enabling Jumbo Frame for %s group: %s", groupType, groupName)
+			if err := client.EnableJumboFrameGatewayGroup(ctx, groupName); err != nil {
+				return fmt.Errorf("failed to enable jumbo frame: %w", err)
+			}
+		} else if ok && !v {
+			log.Printf("[INFO] Disabling Jumbo Frame for %s group: %s", groupType, groupName)
+			if err := client.DisableJumboFrameGatewayGroup(ctx, groupName); err != nil {
+				return fmt.Errorf("failed to disable jumbo frame: %w", err)
+			}
+		}
+	} else {
+		// User didn't set the value; no API call—rely on backend defaults (false for edge, true for CSP).
+		if isEdgeGateway {
+			log.Printf("[INFO] Jumbo Frame not set for edge %s group %s, relying on backend default (disabled)", groupType, groupName)
+		} else {
+			log.Printf("[INFO] Jumbo Frame not set for CSP %s group %s, relying on backend default (enabled)", groupType, groupName)
+		}
+	}
+	return nil
+}
+
+// applySpokeJumboFrame applies jumbo frame settings based on gateway type.
+// For edge gateways (EDGESPOKE), default is false; for CSP (SPOKE), default is true.
+func applySpokeJumboFrame(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, groupName string) error {
+	gwType := strings.ToUpper(getString(d, "gw_type"))
+	isEdgeGateway := gwType == "EDGESPOKE"
+	return applyJumboFrameForGroup(ctx, d, client, groupName, isEdgeGateway, "spoke")
+}
+
+// applyFeatureFlags applies feature flags (NAT, VPC DNS Server, IPv6) to the spoke group.
 func applyFeatureFlags(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, groupName string) error {
 	if getBool(d, "enable_nat") {
 		log.Printf("[INFO] Enabling NAT for spoke group: %s", groupName)
@@ -447,6 +489,13 @@ func applyFeatureFlags(ctx context.Context, d *schema.ResourceData, client *goav
 		log.Printf("[INFO] Enabling IPv6 for spoke group: %s", groupName)
 		if err := client.EnableIPv6GatewayGroup(ctx, groupName); err != nil {
 			return fmt.Errorf("failed to enable IPv6: %w", err)
+		}
+	}
+
+	if !getBool(d, "enable_gro_gso") {
+		log.Printf("[INFO] Disabling GRO/GSO for spoke group: %s", groupName)
+		if err := client.DisableGroGsoGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to disable GRO/GSO: %w", err)
 		}
 	}
 
@@ -563,6 +612,15 @@ func applySpokeSpecificSettings(ctx context.Context, d *schema.ResourceData, cli
 		}
 	}
 
+	if goaviatrix.IsCloudType(getInt(d, "cloud_type"), goaviatrix.AzureArmRelatedCloudTypes) {
+		routeTables := getStringSet(d, "private_route_table_config")
+		if len(routeTables) > 0 {
+			if err := client.EditPrivateRouteTableConfigForGatewayGroup(ctx, groupName, routeTables); err != nil {
+				return fmt.Errorf("could not edit private route table config: %w", err)
+			}
+		}
+	}
+
 	if getBool(d, "enable_auto_advertise_s2c_cidrs") {
 		log.Printf("[INFO] Enabling auto advertise s2c cidrs for spoke group: %s", groupName)
 		if err := client.EnableAutoAdvertiseS2CCidrsGatewayGroup(ctx, groupName); err != nil {
@@ -631,6 +689,10 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed to apply feature flags: %s", err)
 	}
 
+	if err := applySpokeJumboFrame(ctx, d, client, groupName); err != nil {
+		return diag.Errorf("failed to apply jumbo frame: %s", err)
+	}
+
 	if err := applyBgpTimers(ctx, d, client, groupName); err != nil {
 		return diag.Errorf("failed to apply BGP timers: %s", err)
 	}
@@ -686,13 +748,14 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 		mustSet(d, "group_uuid", spokeGroup.GroupUUID)
 	}
 
-	mustSet(d, "customized_cidr_list", spokeGroup.CustomizedCidrList)
+	mustSet(d, "customized_spoke_vpc_routes", spokeGroup.CustomizedCidrList)
 	mustSet(d, "explicitly_created", spokeGroup.ExplicitlyCreated)
 	mustSet(d, "vpc_region", spokeGroup.VpcRegion)
 	mustSet(d, "domain", spokeGroup.Domain)
 	mustSet(d, "include_cidr", spokeGroup.IncludeCidr)
 	mustSet(d, "enable_private_vpc_default_route", spokeGroup.EnablePrivateVpcDefaultRoute)
 	mustSet(d, "enable_skip_public_route_table_update", spokeGroup.EnableSkipPublicRouteTableUpdate)
+	mustSet(d, "private_route_table_config", spokeGroup.PrivateRouteTableConfig)
 
 	// Feature Flags
 	mustSet(d, "enable_jumbo_frame", spokeGroup.EnableJumboFrame)
@@ -1075,6 +1138,16 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 			if err != nil {
 				return diag.Errorf("could not disable skip public route update during spoke group update: %s", err)
 			}
+		}
+	}
+
+	// ============================================================================
+	// Private Route Table Config - API: edit_private_route_tables
+	// ============================================================================
+	if d.HasChange("private_route_table_config") && goaviatrix.IsCloudType(getInt(d, "cloud_type"), goaviatrix.AzureArmRelatedCloudTypes) {
+		routeTables := getStringSet(d, "private_route_table_config")
+		if err := client.EditPrivateRouteTableConfigForGatewayGroup(ctx, groupName, routeTables); err != nil {
+			return diag.Errorf("could not edit private route table config: %s", err)
 		}
 	}
 

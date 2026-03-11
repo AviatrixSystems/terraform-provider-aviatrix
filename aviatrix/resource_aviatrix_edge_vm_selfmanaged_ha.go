@@ -74,21 +74,25 @@ func resourceAviatrixEdgeVmSelfmanagedHa() *schema.Resource {
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Enable DHCP.",
 						},
 						"wan_public_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "WAN interface public IP.",
 						},
 						"ip_address": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Interface static IP address.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Gateway IP.",
 						},
 					},

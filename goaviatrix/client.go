@@ -362,6 +362,25 @@ func WithPollPayload(f AsyncPollPayloadFunc) AsyncOption {
 	return func(c *asyncCfg) { c.pollPayload = f }
 }
 
+// resultsToString extracts a string from a results field that may be a JSON string,
+// object, or other type. For objects it looks for a request_id key (used by async start).
+func resultsToString(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(raw, &m); err == nil {
+		if v, ok := m["request_id"].(string); ok {
+			return v
+		}
+	}
+	return ""
+}
+
 // PostAsyncAPI submits an async request and waits for completion.
 func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc, opts ...AsyncOption) error {
 	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc, opts...)
@@ -397,10 +416,11 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	_ = resp.Body.Close()
 	bodyString := buf.String()
 
+	// Controller async response uses "results" (plural), same as other API responses.
 	var data struct {
-		Return bool   `json:"return"`
-		Result string `json:"results"`
-		Reason string `json:"reason"`
+		Return bool            `json:"return"`
+		Result json.RawMessage `json:"results"`
+		Reason string          `json:"reason"`
 	}
 
 	if err = json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
@@ -418,7 +438,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 	}
 
-	requestID := data.Result
+	requestID := resultsToString(data.Result)
 
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
@@ -470,7 +490,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 
 		// Async API is done, return result of checkFunc
-		return checkFunc(action, "Post", data.Result, data.Return)
+		return checkFunc(action, "Post", resultsToString(data.Result), data.Return)
 	}
 
 	// Waited for too long and async API never finished

@@ -1,7 +1,9 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -106,6 +108,70 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.Async = true
 
 	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
+}
+
+// gwNameFromMap returns gw_name or ha_gw_name from a response-like map, or "" if neither is set.
+func gwNameFromMap(m map[string]interface{}) string {
+	if m == nil {
+		return ""
+	}
+	if name, ok := m["gw_name"].(string); ok && name != "" {
+		return name
+	}
+	if name, ok := m["ha_gw_name"].(string); ok && name != "" {
+		return name
+	}
+	return ""
+}
+
+func (c *Client) LaunchSpokeInstance(spoke *SpokeVpc) (string, error) {
+	spoke.CID = c.CID
+	spoke.Action = "create_mct_gateway"
+	spoke.Async = true
+
+	var gwName string
+	hook := WithResponseHook(func(raw map[string]interface{}) {
+		if name := gwNameFromMap(raw); name != "" {
+			gwName = name
+			return
+		}
+		if results, ok := raw["results"].(map[string]interface{}); ok {
+			if name := gwNameFromMap(results); name != "" {
+				gwName = name
+				return
+			}
+		}
+		if results, ok := raw["results"].(string); ok && results != "" {
+			var parsed map[string]interface{}
+			if json.Unmarshal([]byte(results), &parsed) == nil {
+				if name := gwNameFromMap(parsed); name != "" {
+					gwName = name
+					return
+				}
+			}
+			const prefix = "Successfully created Gateway "
+			if strings.HasPrefix(results, prefix) {
+				name := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(results, prefix), "."))
+				if name != "" {
+					gwName = name
+				}
+			}
+		}
+	})
+
+	err := c.PostAsyncAPI(spoke.Action, spoke, BasicCheck, hook)
+	if err != nil {
+		return "", err
+	}
+
+	if gwName != "" {
+		return gwName, nil
+	}
+	if spoke.GwName != "" {
+		return spoke.GwName, nil
+	}
+	log.Printf("[WARN] create_mct_gateway: gateway name not found in response; requested gw_name=%q", spoke.GwName)
+	return "", fmt.Errorf("gateway name not found in create_mct_gateway response (requested gw_name=%q)", spoke.GwName)
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {

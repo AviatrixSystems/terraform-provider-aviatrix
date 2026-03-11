@@ -1195,6 +1195,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			GwName:                        getString(d, "primary_cloud_gateway_name"),
 			VpcID:                         getString(d, "vpc_id"),
 			ConnName:                      getString(d, "connection_name"),
+			CustomMap:                     true,
 			RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
 			RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
 			RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),

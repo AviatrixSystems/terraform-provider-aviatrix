@@ -1000,6 +1000,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				Description: "Set of Azure route table selectors to treat as private route tables for the transit VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 			},
 		},

@@ -64,8 +64,8 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 		"enable_jumbo_frame": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     true,
-			Description: "Enable jumbo frame support.",
+			Computed:    true,
+			Description: "Enable jumbo frame support. Default is true for CSP gateways and false for Edge gateways (AEP, Equinix, Megaport, Self-managed).",
 		},
 		"enable_nat": {
 			Type:        schema.TypeBool,
@@ -320,8 +320,8 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	}
 
 	// Optional attributes
-	if _, ok := d.GetOk("customized_cidr_list"); ok {
-		transitGroup.CustomizedCidrList = getStringSet(d, "customized_cidr_list")
+	if _, ok := d.GetOk("customized_spoke_vpc_routes"); ok {
+		transitGroup.CustomizedCidrList = getStringSet(d, "customized_spoke_vpc_routes")
 	}
 	if v, ok := d.GetOk("vpc_region"); ok {
 		transitGroup.VpcRegion = mustString(v)
@@ -329,6 +329,7 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	if v, ok := d.GetOk("domain"); ok {
 		transitGroup.Domain = mustString(v)
 	}
+	transitGroup.PrivateRouteTableConfig = getStringSet(d, "private_route_table_config")
 
 	// Feature Flags
 	transitGroup.EnableNat = getBool(d, "enable_nat")
@@ -469,7 +470,15 @@ func applyTransitBgpCommunities(ctx context.Context, d *schema.ResourceData, cli
 	return nil
 }
 
-// applyTransitFeatureFlags applies feature flags (jumbo frame, GRO/GSO, NAT, VPC DNS Server, IPv6) to the transit group.
+// applyTransitJumboFrame applies jumbo frame settings based on cloud type.
+// For edge gateways, default is false; for CSP gateways, default is true.
+func applyTransitJumboFrame(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, groupName string) error {
+	cloudType := getInt(d, "cloud_type")
+	isEdgeGateway := goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes)
+	return applyJumboFrameForGroup(ctx, d, client, groupName, isEdgeGateway, "transit")
+}
+
+// applyTransitFeatureFlags applies feature flags (GRO/GSO, NAT, VPC DNS Server, IPv6) to the transit group.
 func applyTransitFeatureFlags(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, groupName string) error {
 	if getBool(d, "enable_nat") {
 		log.Printf("[INFO] Enabling NAT for transit group: %s", groupName)
@@ -489,14 +498,6 @@ func applyTransitFeatureFlags(ctx context.Context, d *schema.ResourceData, clien
 		log.Printf("[INFO] Enabling IPv6 for transit group: %s", groupName)
 		if err := client.EnableIPv6GatewayGroup(ctx, groupName); err != nil {
 			return fmt.Errorf("failed to enable IPv6: %w", err)
-		}
-	}
-
-	// Features with default=true: Disable if user explicitly sets to false
-	if !getBool(d, "enable_jumbo_frame") {
-		log.Printf("[INFO] Disabling Jumbo Frame for transit group: %s", groupName)
-		if err := client.DisableJumboFrameGatewayGroup(ctx, groupName); err != nil {
-			return fmt.Errorf("failed to disable jumbo frame: %w", err)
 		}
 	}
 
@@ -706,6 +707,10 @@ func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("failed to apply BGP communities: %s", err)
 	}
 
+	if err := applyTransitJumboFrame(ctx, d, client, groupName); err != nil {
+		return diag.Errorf("failed to apply jumbo frame: %s", err)
+	}
+
 	if err := applyTransitFeatureFlags(ctx, d, client, groupName); err != nil {
 		return diag.Errorf("failed to apply feature flags: %s", err)
 	}
@@ -769,10 +774,11 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 		mustSet(d, "group_uuid", transitGroup.GroupUUID)
 	}
 
-	mustSet(d, "customized_cidr_list", transitGroup.CustomizedCidrList)
+	mustSet(d, "customized_spoke_vpc_routes", transitGroup.CustomizedCidrList)
 	mustSet(d, "explicitly_created", transitGroup.ExplicitlyCreated)
 	mustSet(d, "vpc_region", transitGroup.VpcRegion)
 	mustSet(d, "domain", transitGroup.Domain)
+	mustSet(d, "private_route_table_config", transitGroup.PrivateRouteTableConfig)
 
 	// Feature Flags
 	mustSet(d, "enable_jumbo_frame", transitGroup.EnableJumboFrame)
@@ -906,6 +912,16 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 		err := client.SetGatewayGroupBgpCommunitiesSend(ctx, groupName, sendComm)
 		if err != nil {
 			return diag.Errorf("failed to update send BGP communities for group %s: %s", groupName, err)
+		}
+	}
+
+	// ============================================================================
+	// Private Route Table Config - API: edit_private_route_tables
+	// ============================================================================
+	if d.HasChange("private_route_table_config") && goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		routeTables := getStringSet(d, "private_route_table_config")
+		if err := client.EditPrivateRouteTableConfigForGatewayGroup(ctx, groupName, routeTables); err != nil {
+			return diag.Errorf("could not edit private route table config: %s", err)
 		}
 	}
 

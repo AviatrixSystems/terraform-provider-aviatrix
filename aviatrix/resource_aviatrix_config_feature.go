@@ -6,7 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixConfigFeature() *schema.Resource {
@@ -24,24 +25,6 @@ func resourceAviatrixConfigFeature() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Name of the feature to enable or disable.",
-				ValidateFunc: validation.StringInSlice([]string{
-					"microseg",
-					"cost_iq",
-					"cai",
-					"ipv6",
-					"nfq_enforce_tls",
-					"dcf_on_s2c",
-					"dcf_on_psf",
-					"dcf_stats_obs_sink",
-					"dcf_logs_obs_sink",
-					"k8s",
-					"sre_metrics_export",
-					"k8s_dcf_policies",
-					"dcf_on_firenet",
-					"primary_gateway_deletion",
-					"enable_k8s",
-					"enable_dcf_policies",
-				}, true),
 			},
 			"is_enabled": {
 				Type:        schema.TypeBool,
@@ -56,6 +39,11 @@ func resourceAviatrixConfigFeature() *schema.Resource {
 func resourceAviatrixConfigFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := mustClient(meta)
 	featureName := getString(d, "feature_name")
+	err := goaviatrix.ValidateFeatureName(ctx, client, featureName)
+	if err != nil {
+		return diag.Errorf("failed to validate feature name %s: %s", featureName, err)
+	}
+
 	isEnabled := getBool(d, "is_enabled")
 	if isEnabled {
 		err := client.EnableFeature(ctx, featureName)

@@ -73,9 +73,10 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 		spokeGateway.SingleAzHa = "disabled"
 	}
 
-	// EIP allocation
-	allocateNewEip := getBool(d, "allocate_new_eip")
-	if allocateNewEip {
+	// EIP allocation — only set reuse_eip when the user provides a specific EIP.
+	// The create_mct_gateway API treats reuse_eip as the actual IP to reuse;
+	// omitting it means a new EIP will be allocated.
+	if !getBool(d, "allocate_new_eip") {
 		spokeGateway.ReuseEip = "off"
 	} else {
 		spokeGateway.ReuseEip = "on"
@@ -122,7 +123,7 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 // validateSpokeInstanceConfiguration validates the spoke instance configuration.
 //
 //nolint:cyclop
-func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int) error {
+func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, vpcRegion string) error {
 	insaneMode := getBool(d, "insane_mode")
 	insaneModeAz := getString(d, "insane_mode_az")
 	insertionGateway := getBool(d, "insertion_gateway")
@@ -173,7 +174,9 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int) e
 	}
 
 	// CSP-specific required field validation
-	// For non-Edge cloud types, subnet and gw_size are required
+	if vpcRegion == "" {
+		return fmt.Errorf("'vpc_region' is required on the spoke group for CSP spoke instances")
+	}
 	if subnet == "" {
 		return fmt.Errorf("'subnet' is required for CSP spoke instances (AWS, Azure, GCP, OCI, AliCloud)")
 	}
@@ -315,17 +318,13 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 	cloudType := gatewayGroup.CloudType
 
 	// Validate configuration
-	if err := validateSpokeInstanceConfiguration(d, cloudType); err != nil {
+	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Determine if this is a primary gateway (gw_count == 0) or HA gateway (gw_count > 0)
-	gwCount := len(gatewayGroup.GwUUIDList)
-	isPrimaryGateway := gwCount == 0
-
 	// Handle edge spoke gateway creation
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		edgeGwName, err := createEdgeSpokeInstance(ctx, d, client, gatewayGroup, isPrimaryGateway)
+		edgeGwName, err := createEdgeSpokeInstance(ctx, d, client, gatewayGroup)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -377,58 +376,15 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 	}
 
 	// Create the spoke instance using the appropriate API based on gateway count
-	if isPrimaryGateway {
-		log.Printf("[INFO] Creating Primary Spoke Instance: %#v", spokeGateway)
-		err = client.LaunchSpokeVpc(spokeGateway)
-		if err != nil {
-			return diag.Errorf("failed to create primary spoke instance: %s", err)
-		}
-		d.SetId(gwName)
-	} else {
-		// Build HA gateway struct with proper fields for create_multicloud_ha_gateway API
-		spokeHaGateway := &goaviatrix.SpokeHaGateway{
-			GroupUUID:  groupUUID,
-			GwName:     gwName,
-			GwSize:     getString(d, "gw_size"),
-			Subnet:     spokeGateway.Subnet,
-			Zone:       getString(d, "zone"),
-			InsaneMode: spokeGateway.InsaneMode,
-			TagJSON:    spokeGateway.TagJson,
-		}
-
-		// Auto-generate HA gateway name if not provided
-		if gwName == "" {
-			spokeHaGateway.AutoGenHaGwName = "yes"
-		}
-
-		// Set EIP only if not allocating new one
-		if !getBool(d, "allocate_new_eip") {
-			spokeHaGateway.Eip = getString(d, "eip")
-		}
-
-		// OCI specific
-		spokeHaGateway.AvailabilityDomain = getString(d, "availability_domain")
-		spokeHaGateway.FaultDomain = getString(d, "fault_domain")
-
-		// Insertion gateway
-		spokeHaGateway.InsertionGateway = getBool(d, "insertion_gateway")
-
-		log.Printf("[INFO] Creating HA Spoke Instance: %#v", spokeHaGateway)
-		haGwName, err := client.CreateSpokeHaGw(spokeHaGateway)
-		if err != nil {
-			return diag.Errorf("failed to create HA spoke instance: %s", err)
-		}
-
-		// Set the resource ID after successful creation
-		if haGwName != "" {
-			d.SetId(haGwName)
-			gwName = haGwName
-		} else if gwName != "" {
-			d.SetId(gwName)
-		} else {
-			return diag.Errorf("failed to determine HA spoke instance gateway name")
-		}
+	log.Printf("[INFO] Creating new spoke instance: %#v", spokeGateway)
+	createdGwName, err := client.LaunchSpokeInstance(spokeGateway)
+	if err != nil {
+		return diag.Errorf("failed to create new spoke instance: %s", err)
 	}
+	if createdGwName != "" {
+		gwName = createdGwName
+	}
+	d.SetId(gwName)
 
 	// Apply post-creation configuration
 	if diags := configureSpokeInstancePostCreate(d, client, gwName); diags != nil {
@@ -439,7 +395,7 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 }
 
 // createEdgeSpokeInstance creates an edge spoke gateway (Equinix, AEP/NEO, Megaport, Self-managed)
-func createEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, gatewayGroup *goaviatrix.GatewayGroup, isPrimaryGateway bool) (string, error) {
+func createEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, gatewayGroup *goaviatrix.GatewayGroup) (string, error) {
 	cloudType := gatewayGroup.CloudType
 	gwName := getString(d, "gw_name")
 
@@ -473,60 +429,30 @@ func createEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client
 	// ZTP file settings
 	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 	ztpFileType := getString(d, "ztp_file_type")
-
-	if isPrimaryGateway {
-		// Create primary edge spoke gateway
-		edgeSpoke := &goaviatrix.EdgeSpoke{
-			GwName:                   gwName,
-			SiteId:                   gatewayGroup.VpcID,
-			InterfaceList:            interfaceList,
-			ManagementEgressIpPrefix: managementEgressIPPrefix,
-		}
-
-		// ZTP file download path is required for Equinix, Megaport, Self-managed edge gateways
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
-			edgeSpoke.ZtpFileDownloadPath = ztpFileDownloadPath
-
-			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-				edgeSpoke.ZtpFileType = ztpFileType
-			}
-		}
-
-		log.Printf("[INFO] Creating Primary Aviatrix Edge Spoke Instance: %#v", edgeSpoke)
-
-		err := client.CreateEdgeSpoke(ctx, edgeSpoke)
-		if err != nil {
-			return "", fmt.Errorf("failed to create primary Aviatrix Edge Spoke Instance: %w", err)
-		}
-		return gwName, nil
+	// Create edge spoke gateway (used for both primary and HA in the group)
+	edgeSpoke := &goaviatrix.EdgeSpoke{
+		GroupUUID:                gatewayGroup.GroupUUID,
+		GwName:                   gwName,
+		SiteId:                   gatewayGroup.VpcID,
+		InterfaceList:            interfaceList,
+		ManagementEgressIpPrefix: managementEgressIPPrefix,
 	}
 
-	{
-		// Create HA edge spoke gateway using group_uuid
-		edgeSpokeHa := &goaviatrix.EdgeSpokeHa{
-			GroupUUID:                gatewayGroup.GroupUUID,
-			SiteID:                   gatewayGroup.VpcID,
-			InterfaceList:            interfaceList,
-			ManagementEgressIPPrefix: managementEgressIPPrefix,
+	// ZTP file download path is required for Equinix, Megaport, Self-managed edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
+		edgeSpoke.ZtpFileDownloadPath = ztpFileDownloadPath
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+			edgeSpoke.ZtpFileType = ztpFileType
 		}
-
-		// ZTP file settings for HA
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
-			edgeSpokeHa.ZtpFileDownloadPath = ztpFileDownloadPath
-
-			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-				edgeSpokeHa.ZtpFileType = ztpFileType
-			}
-		}
-
-		log.Printf("[INFO] Creating HA Aviatrix Edge Spoke Instance: %#v", edgeSpokeHa)
-
-		haGwName, err := client.CreateEdgeSpokeHa(ctx, edgeSpokeHa)
-		if err != nil {
-			return "", fmt.Errorf("failed to create HA Aviatrix Edge Spoke Instance: %w", err)
-		}
-		return haGwName, nil
 	}
+
+	log.Printf("[INFO] Creating Aviatrix Edge Spoke Instance: %#v", edgeSpoke)
+
+	err := client.CreateEdgeSpokeInstance(ctx, edgeSpoke)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Aviatrix Edge Spoke Instance: %w", err)
+	}
+	return gwName, nil
 }
 
 // configureSpokeInstancePostCreate applies configuration that must be done after gateway creation.
@@ -798,7 +724,7 @@ func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.Resource
 	}
 	cloudType := gatewayGroup.CloudType
 
-	if err := validateSpokeInstanceConfiguration(d, cloudType); err != nil {
+	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion); err != nil {
 		return diag.FromErr(err)
 	}
 

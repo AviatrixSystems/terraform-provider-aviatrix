@@ -30,7 +30,7 @@ func GroupRequiredSchema() map[string]*schema.Schema {
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			Description:      "VPC-ID/VNet-Name of cloud provider.",
+			Description:      "VPC-ID/VNet-Name of cloud provider or Site-ID for edge providers.",
 			DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
 		},
 		"account_name": {
@@ -46,14 +46,14 @@ func GroupRequiredSchema() map[string]*schema.Schema {
 // These can be reused by other resources that share the same optional fields.
 func GroupOptionalSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customized_cidr_list": {
+		"customized_spoke_vpc_routes": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
 				ValidateFunc: validateCIDR,
 			},
-			Description: "Set of customized CIDRs for the gateway group.",
+			Description: "A list of comma-separated CIDRs to be customized for the spoke VPC routes.",
 		},
 		"vpc_region": {
 			Type:        schema.TypeString,
@@ -65,6 +65,13 @@ func GroupOptionalSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Network domain for the spoke group.",
+		},
+		"private_route_table_config": {
+			Type:        schema.TypeSet,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Optional:    true,
+			Computed:    true,
+			Description: "Set of Azure route table selectors to treat as private route tables for the group VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 		},
 	}
 }

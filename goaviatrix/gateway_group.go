@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 // GatewayGroup represents a Gateway Group resource
@@ -28,6 +29,7 @@ type GatewayGroup struct {
 	IncludeCidr                      []string `form:"include_cidr,omitempty" json:"include_cidr,omitempty"`
 	EnablePrivateVpcDefaultRoute     bool     `form:"private_vpc_default_enabled,omitempty" json:"private_vpc_default_enabled,omitempty"`
 	EnableSkipPublicRouteTableUpdate bool     `form:"skip_public_vpc_update_enabled,omitempty" json:"skip_public_vpc_update_enabled,omitempty"`
+	PrivateRouteTableConfig          []string `form:"private_route_table_config,omitempty" json:"private_route_table_config,omitempty"`
 
 	// Feature Flags
 	// Note: EnableJumboFrame and EnableGroGso do not have form tags because they must be set
@@ -36,7 +38,7 @@ type GatewayGroup struct {
 	EnableNat          bool `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	EnableIPv6         bool `form:"is_ipv6_enabled,omitempty" json:"is_ipv6_enabled,omitempty"`
 	EnableGroGso       bool `form:"gro_gso,omitempty" json:"gro_gso,omitempty"`
-	EnableVpcDNSServer bool `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns_server,omitempty"`
+	EnableVpcDNSServer bool `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns,omitempty"`
 
 	// BGP Configuration
 	EnableBgp                    bool     `form:"bgp_enabled,omitempty" json:"bgp_enabled,omitempty"`
@@ -102,6 +104,36 @@ type GatewayGroupResp struct {
 	Reason  string       `json:"reason"`
 }
 
+// getGatewayGroupDetailsResults is the API response shape for get_gateway_group_details.
+// The controller returns BGP config under "bgp_cfg" and spoke config under "spoke_cfg", not at top level.
+type getGatewayGroupDetailsResults struct {
+	GatewayGroup
+	BgpCfg *struct {
+		BgpLocalAsNum                string   `json:"bgp_local_as_num,omitempty"`
+		BgpPrependAsPath             string   `json:"bgp_prepend_as_path,omitempty"`
+		BgpEcmp                      bool     `json:"bgp_ecmp,omitempty"`
+		BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+		BgpPollingTime               int      `json:"bgp_polling_time,omitempty"`
+		BgpNeighborStatusPollingTime int      `json:"bgp_neighbor_status_polling_time,omitempty"`
+		BgpHoldTime                  int      `json:"bgp_hold_time,omitempty"`
+		LearnedCidrsApproval         bool     `json:"learned_cidrs_approval,omitempty"`
+		LearnedCidrsApprovalMode     string   `json:"learned_cidrs_approval_mode,omitempty"`
+		ApprovedLearnedCidrs         []string `json:"approved_learned_cidrs,omitempty"`
+		ActiveStandby                bool     `json:"active_standby,omitempty"`
+		ActiveStandbyPreemptive      bool     `json:"active_standby_preemptive,omitempty"`
+	} `json:"bgp_cfg,omitempty"`
+	SpokeCfg *struct {
+		DisableRoutePropagation bool `json:"disable_route_propagation,omitempty"`
+	} `json:"spoke_cfg,omitempty"`
+}
+
+// getGatewayGroupDetailsResp is the full response for get_gateway_group_details.
+type getGatewayGroupDetailsResp struct {
+	Return  bool                          `json:"return"`
+	Results getGatewayGroupDetailsResults `json:"results"`
+	Reason  string                        `json:"reason"`
+}
+
 // CreateGatewayGroup creates a new gateway group
 func (c *Client) CreateGatewayGroup(ctx context.Context, spokeGroup *GatewayGroup) error {
 	spokeGroup.Action = "create_gateway_group"
@@ -135,7 +167,7 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 		"group_uuid": groupUUID,
 	}
 
-	var resp GatewayGroupResp
+	var resp getGatewayGroupDetailsResp
 	err := c.GetAPIContext(ctx, &resp, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
@@ -145,7 +177,34 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 		return nil, fmt.Errorf("failed to get gateway group: %s", resp.Reason)
 	}
 
-	return &resp.Results, nil
+	grp := &resp.Results.GatewayGroup
+	if resp.Results.BgpCfg != nil {
+		if resp.Results.BgpCfg.BgpLocalAsNum != "" {
+			grp.LocalAsNumber = resp.Results.BgpCfg.BgpLocalAsNum
+		}
+		if resp.Results.BgpCfg.BgpPrependAsPath != "" {
+			grp.PrependAsPath = strings.Fields(resp.Results.BgpCfg.BgpPrependAsPath)
+		}
+		grp.BgpEcmp = resp.Results.BgpCfg.BgpEcmp
+		grp.SpokeBgpManualAdvertiseCidrs = resp.Results.BgpCfg.BgpManualSpokeAdvertiseCidrs
+		grp.BgpPollingTime = resp.Results.BgpCfg.BgpPollingTime
+		grp.BgpNeighborStatusPollingTime = resp.Results.BgpCfg.BgpNeighborStatusPollingTime
+		grp.BgpHoldTime = resp.Results.BgpCfg.BgpHoldTime
+		grp.EnableLearnedCidrsApproval = resp.Results.BgpCfg.LearnedCidrsApproval
+		if resp.Results.BgpCfg.LearnedCidrsApprovalMode != "" {
+			grp.LearnedCidrsApprovalMode = resp.Results.BgpCfg.LearnedCidrsApprovalMode
+		}
+		// approved_learned_cidrs are returned under bgp_cfg; set so refresh matches config and no diff
+		if resp.Results.BgpCfg.ApprovedLearnedCidrs != nil {
+			grp.ApprovedLearnedCidrs = resp.Results.BgpCfg.ApprovedLearnedCidrs
+		}
+		grp.EnableActiveStandby = resp.Results.BgpCfg.ActiveStandby
+		grp.EnableActiveStandbyPreemptive = resp.Results.BgpCfg.ActiveStandbyPreemptive
+	}
+	if resp.Results.SpokeCfg != nil {
+		grp.DisableRoutePropagation = resp.Results.SpokeCfg.DisableRoutePropagation
+	}
+	return grp, nil
 }
 
 // UpdateGatewayGroup updates an existing gateway group
@@ -209,6 +268,19 @@ func (c *Client) SetGatewayGroupBgpCommunitiesSend(ctx context.Context, groupNam
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
 }
 
+// EditPrivateRouteTableConfigForGatewayGroup edits the private route table config for a gateway group
+func (c *Client) EditPrivateRouteTableConfigForGatewayGroup(ctx context.Context, groupName string, routeTables []string) error {
+	action := "edit_private_route_tables"
+	form := map[string]interface{}{
+		"action":               action,
+		"CID":                  c.CID,
+		"gateway_name":         groupName,
+		"private_route_tables": strings.Join(routeTables, ","),
+	}
+
+	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
+}
+
 // EnableGatewayGroupSNat enables SNAT for a gateway group
 func (c *Client) EnableGatewayGroupSNat(ctx context.Context, groupName string) error {
 	form := map[string]string{
@@ -259,7 +331,7 @@ func (c *Client) SetBgpPollingTimeGatewayGroup(ctx context.Context, groupName st
 	form := map[string]interface{}{
 		"action":           action,
 		"CID":              c.CID,
-		"group_name":       groupName,
+		"gateway_name":     groupName,
 		"bgp_polling_time": pollingTime,
 	}
 
@@ -272,7 +344,7 @@ func (c *Client) SetBgpBfdPollingTimeGatewayGroup(ctx context.Context, groupName
 	form := map[string]interface{}{
 		"action":                           action,
 		"CID":                              c.CID,
-		"group_name":                       groupName,
+		"gateway_name":                     groupName,
 		"bgp_neighbor_status_polling_time": pollingTime,
 	}
 
@@ -285,7 +357,7 @@ func (c *Client) ChangeBgpHoldTimeGatewayGroup(ctx context.Context, groupName st
 	form := map[string]interface{}{
 		"action":        action,
 		"CID":           c.CID,
-		"group_name":    groupName,
+		"gateway_name":  groupName,
 		"bgp_hold_time": holdTime,
 	}
 
@@ -295,10 +367,10 @@ func (c *Client) ChangeBgpHoldTimeGatewayGroup(ctx context.Context, groupName st
 // SetLocalASNumberGatewayGroup sets the local AS number for a gateway group
 func (c *Client) SetLocalASNumberGatewayGroup(ctx context.Context, groupName, localAsNumber string) error {
 	form := map[string]string{
-		"action":          "edit_transit_local_as_number",
-		"CID":             c.CID,
-		"group_name":      groupName,
-		"local_as_number": localAsNumber,
+		"action":       "edit_transit_local_as_number",
+		"CID":          c.CID,
+		"gateway_name": groupName,
+		"local_as_num": localAsNumber,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
@@ -308,10 +380,11 @@ func (c *Client) SetLocalASNumberGatewayGroup(ctx context.Context, groupName, lo
 func (c *Client) SetPrependASPathGatewayGroup(ctx context.Context, groupName string, prependAsPath []string) error {
 	action := "edit_aviatrix_transit_advanced_config"
 	form := map[string]interface{}{
-		"action":          action,
-		"CID":             c.CID,
-		"group_name":      groupName,
-		"prepend_as_path": prependAsPath,
+		"action":              action,
+		"subaction":           "prepend_as_path",
+		"CID":                 c.CID,
+		"gateway_name":        groupName,
+		"bgp_prepend_as_path": prependAsPath,
 	}
 
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
@@ -458,10 +531,9 @@ func (c *Client) DisableSpokePreserveAsPathGatewayGroup(ctx context.Context, gro
 // EnableSpokeLearnedCidrsApprovalGatewayGroup enables learned CIDRs approval for a spoke gateway group
 func (c *Client) EnableSpokeLearnedCidrsApprovalGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":                 "enable_bgp_gateway_cidr_approval",
-		"CID":                    c.CID,
-		"group_name":             groupName,
-		"learned_cidrs_approval": "on",
+		"action":       "enable_bgp_gateway_cidr_approval",
+		"CID":          c.CID,
+		"gateway_name": groupName,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
@@ -470,10 +542,9 @@ func (c *Client) EnableSpokeLearnedCidrsApprovalGatewayGroup(ctx context.Context
 // DisableSpokeLearnedCidrsApprovalGatewayGroup disables learned CIDRs approval for a spoke gateway group
 func (c *Client) DisableSpokeLearnedCidrsApprovalGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":                 "disable_bgp_gateway_cidr_approval",
-		"CID":                    c.CID,
-		"group_name":             groupName,
-		"learned_cidrs_approval": "off",
+		"action":       "disable_bgp_gateway_cidr_approval",
+		"CID":          c.CID,
+		"gateway_name": groupName,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
@@ -483,10 +554,10 @@ func (c *Client) DisableSpokeLearnedCidrsApprovalGatewayGroup(ctx context.Contex
 func (c *Client) UpdateSpokePendingApprovedCidrsGatewayGroup(ctx context.Context, groupName string, approvedCidrs []string) error {
 	action := "set_bgp_gateway_approved_cidr_rules"
 	form := map[string]interface{}{
-		"action":                 action,
-		"CID":                    c.CID,
-		"group_name":             groupName,
-		"approved_learned_cidrs": approvedCidrs,
+		"action":       action,
+		"CID":          c.CID,
+		"gateway_name": groupName,
+		"cidr_rules":   approvedCidrs,
 	}
 
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
@@ -563,8 +634,9 @@ func (c *Client) DisableAutoAdvertiseS2CCidrsGatewayGroup(ctx context.Context, g
 func (c *Client) SetSpokeBgpManualAdvertisedNetworksGatewayGroup(ctx context.Context, groupName, cidrs string) error {
 	form := map[string]string{
 		"action":                           "edit_aviatrix_spoke_advanced_config",
+		"subaction":                        "bgp_manual_spoke",
 		"CID":                              c.CID,
-		"group_name":                       groupName,
+		"gateway_name":                     groupName,
 		"bgp_manual_spoke_advertise_cidrs": cidrs,
 	}
 

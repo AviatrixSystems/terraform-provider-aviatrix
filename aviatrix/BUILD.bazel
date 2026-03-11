@@ -300,7 +300,6 @@ go_test(
         "resource_aviatrix_dcf_mitm_ca_selection_test.go",
         "resource_aviatrix_dcf_mitm_ca_test.go",
         "resource_aviatrix_dcf_policy_group_test.go",
-        "resource_aviatrix_dcf_ruleset_default_value_test.go",
         "resource_aviatrix_dcf_ruleset_test.go",
         "resource_aviatrix_dcf_tls_profile_test.go",
         "resource_aviatrix_dcf_trustbundle_test.go",
@@ -394,6 +393,7 @@ go_test(
         "resource_aviatrix_transit_group_test.go",
         "resource_aviatrix_transit_instance_test.go",
         "resource_aviatrix_tunnel_test.go",
+        "resource_aviatrix_typeset_default_value_test.go",
         "resource_aviatrix_vgw_conn_test.go",
         "resource_aviatrix_vpc_test.go",
         "resource_aviatrix_vpn_cert_download_test.go",
@@ -415,5 +415,6 @@ go_test(
         "@com_github_hashicorp_terraform_plugin_sdk_v2//helper/schema",
         "@com_github_hashicorp_terraform_plugin_sdk_v2//terraform",
         "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
     ],
 )

@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ### Required
 * `feature_name` - (Required) Which feature to enable, this should be one of the following:
-"microseg", "cost_iq", "cai", "ipv6", "nfq_enforce_tls", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "dcf_on_firenet", "primary_gateway_deletion", "enable_k8s", "enable_dcf_policies",.
+"microseg", "cost_iq", "cai", "ipv6", "nfq_enforce_tls", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "dcf_on_firenet", "interface_mtu_based_clamping", "primary_gateway_deletion", "vrf".
 * `is_enabled` - (Required) If set to true, the feature is enabled, set to false the feature is disabled.
 
 ## Import

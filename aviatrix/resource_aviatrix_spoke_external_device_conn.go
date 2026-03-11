@@ -120,6 +120,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 			"local_subnet": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
 				Description:      "Local CIDRs joined as a string with ','. Optional for a 'static' type connection with proxy ID enabled",
 			},

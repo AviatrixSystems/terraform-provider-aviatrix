@@ -314,16 +314,19 @@ func spokeInstanceOptionalEdgeSchema() map[string]*schema.Schema {
 					"gateway_ip": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "Gateway IP address for the interface.",
 					},
 					"ip_address": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "Interface static IP address.",
 					},
 					"public_ip": {
 						Type:        schema.TypeString,
 						Optional:    true,
+						Default:     "",
 						Description: "WAN interface public IP.",
 					},
 					"dhcp": {

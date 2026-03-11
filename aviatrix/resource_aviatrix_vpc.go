@@ -294,7 +294,6 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: ValidateIPv6AccessType,
-				Default:      "EXTERNAL",
 				Description:  "IPv6 access type for the VPC: \"INTERNAL\" or \"EXTERNAL\". Only supported for GCP (4).",
 			},
 		},

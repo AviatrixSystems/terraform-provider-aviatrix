@@ -218,31 +218,37 @@ func resourceAviatrixEdgeVmSelfmanaged() *schema.Resource {
 						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Enable DHCP.",
 						},
 						"wan_public_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "WAN interface public IP.",
 						},
 						"ip_address": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Interface static IP address.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Gateway IP.",
 						},
 						"dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Primary DNS server IP.",
 						},
 						"secondary_dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Secondary DNS server IP.",
 						},
 					},

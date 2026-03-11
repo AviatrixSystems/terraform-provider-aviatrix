@@ -97,6 +97,7 @@ func enableDhcpSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
+		Default:     false,
 		Description: "Enable DHCP.",
 	}
 }
@@ -105,6 +106,7 @@ func optionalStringSchema(description string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
+		Default:     "",
 		Description: description,
 	}
 }
