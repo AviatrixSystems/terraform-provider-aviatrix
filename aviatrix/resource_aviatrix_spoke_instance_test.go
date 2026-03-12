@@ -124,42 +124,6 @@ func TestAccAviatrixSpokeInstance_update(t *testing.T) {
 	})
 }
 
-func TestAccAviatrixSpokeInstance_routeFeatures(t *testing.T) {
-	rName := acctest.RandString(5)
-	resourceName := "aviatrix_spoke_instance.test"
-
-	msgCommon := ". Set SKIP_SPOKE_INSTANCE to yes to skip Spoke Instance tests"
-
-	skipSpokeInstance := os.Getenv("SKIP_SPOKE_INSTANCE")
-	if skipSpokeInstance == "yes" {
-		t.Skip("Skipping Spoke Instance test as SKIP_SPOKE_INSTANCE is set")
-	}
-
-	awsGwSize := os.Getenv("AWS_GW_SIZE")
-	if awsGwSize == "" {
-		awsGwSize = "t3.micro"
-	}
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			preSpokeInstanceCheck(t, msgCommon)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSpokeInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpokeInstanceConfigRouteFeatures(rName, awsGwSize),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpokeInstanceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_private_vpc_default_route", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_skip_public_route_table_update", "true"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAviatrixSpokeInstance_filteredRoutes(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_spoke_instance.test"
@@ -403,41 +367,6 @@ resource "aviatrix_spoke_instance" "test" {
 	gw_size          = "%[5]s"
 	allocate_new_eip = true
 	single_az_ha     = true
-}
-	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		gwSize, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
-}
-
-func testAccSpokeInstanceConfigRouteFeatures(rName, gwSize string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_aws" {
-	account_name       = "tfa-aws-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
-}
-
-resource "aviatrix_spoke_group" "test" {
-	group_name          = "tfg-spoke-group-%[1]s"
-	cloud_type          = 1
-	gw_type             = "spoke"
-	group_instance_size = "%[5]s"
-	vpc_id              = "%[6]s"
-	account_name        = aviatrix_account.test_acc_aws.account_name
-	vpc_region          = "%[7]s"
-}
-
-resource "aviatrix_spoke_instance" "test" {
-	group_uuid                            = aviatrix_spoke_group.test.group_uuid
-	gw_name                               = "tfg-spoke-gw-%[1]s"
-	subnet                                = "%[8]s"
-	gw_size                               = "%[5]s"
-	allocate_new_eip                      = true
-	single_az_ha                          = true
-	enable_private_vpc_default_route      = true
-	enable_skip_public_route_table_update = true
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		gwSize, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))

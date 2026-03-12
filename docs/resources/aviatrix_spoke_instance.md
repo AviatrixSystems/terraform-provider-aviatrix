@@ -118,9 +118,6 @@ resource "aviatrix_spoke_instance" "aws_spoke_full" {
 
   # Route configuration
   filtered_spoke_vpc_routes         = "10.10.0.0/16,10.20.0.0/16"
-  included_advertised_spoke_routes  = "10.0.0.0/8"
-  enable_private_vpc_default_route  = true
-  enable_skip_public_route_table_update = true
 
   # Monitoring
   enable_monitor_gateway_subnets    = true
@@ -339,9 +336,6 @@ The following arguments are supported:
 ### Optional - Route Configuration
 
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma-separated CIDRs to be filtered from the spoke VPC route table.
-* `included_advertised_spoke_routes` - (Optional) A list of comma-separated CIDRs to be advertised to on-prem as 'Included CIDR List'.
-* `enable_private_vpc_default_route` - (Optional) Program default route in VPC private route table. Default: false.
-* `enable_skip_public_route_table_update` - (Optional) Skip programming VPC public route table. Default: false.
 * `enable_monitor_gateway_subnets` - (Optional) Enable monitor gateway subnet. Default: false.
 * `monitor_exclude_list` - (Optional) A set of monitored instance IDs to exclude.
 

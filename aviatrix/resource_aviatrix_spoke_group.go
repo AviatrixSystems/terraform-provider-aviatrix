@@ -253,17 +253,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 		},
 
 		// ============================================================================
-		// AWS SPECIFIC
-		// ============================================================================
-		"insane_mode": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			ForceNew:    true,
-			Description: "Enable Insane Mode for spoke gateway group. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
-		},
-
-		// ============================================================================
 		// GCP SPECIFIC
 		// ============================================================================
 		"enable_global_vpc": {
@@ -296,9 +285,6 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	}
 	if v, ok := d.GetOk("vpc_region"); ok {
 		spokeGroup.VpcRegion = mustString(v)
-	}
-	if v, ok := d.GetOk("domain"); ok {
-		spokeGroup.Domain = mustString(v)
 	}
 	if _, ok := d.GetOk("include_cidr"); ok {
 		spokeGroup.IncludeCidr = getStringSet(d, "include_cidr")
@@ -349,9 +335,6 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	spokeGroup.EnableActiveStandby = getBool(d, "enable_active_standby")
 	spokeGroup.EnableActiveStandbyPreemptive = getBool(d, "enable_active_standby_preemptive")
 
-	// AWS Specific
-	spokeGroup.InsaneMode = getBool(d, "insane_mode")
-
 	// GCP Specific
 	spokeGroup.EnableGlobalVpc = getBool(d, "enable_global_vpc")
 
@@ -374,10 +357,6 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 
 	if spokeGroup.EnableBgpOverLan && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("enable_bgp_over_lan is only valid for Azure related cloud types")
-	}
-
-	if spokeGroup.InsaneMode && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		return fmt.Errorf("insane_mode is only valid for AWS related cloud types")
 	}
 
 	if spokeGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -751,7 +730,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "customized_spoke_vpc_routes", spokeGroup.CustomizedCidrList)
 	mustSet(d, "explicitly_created", spokeGroup.ExplicitlyCreated)
 	mustSet(d, "vpc_region", spokeGroup.VpcRegion)
-	mustSet(d, "domain", spokeGroup.Domain)
 	mustSet(d, "include_cidr", spokeGroup.IncludeCidr)
 	mustSet(d, "enable_private_vpc_default_route", spokeGroup.EnablePrivateVpcDefaultRoute)
 	mustSet(d, "enable_skip_public_route_table_update", spokeGroup.EnableSkipPublicRouteTableUpdate)
@@ -811,9 +789,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	// Active-Standby
 	mustSet(d, "enable_active_standby", spokeGroup.EnableActiveStandby)
 	mustSet(d, "enable_active_standby_preemptive", spokeGroup.EnableActiveStandbyPreemptive)
-
-	// AWS Specific
-	mustSet(d, "insane_mode", spokeGroup.InsaneMode)
 
 	// GCP Specific
 	mustSet(d, "enable_global_vpc", spokeGroup.EnableGlobalVpc)

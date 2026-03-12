@@ -97,12 +97,6 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Description: "A list of comma-separated CIDRs to be filtered from the spoke VPC route table. " +
 				"When configured, filtering CIDR(s) or its subnet will be deleted from VPC routing tables as well as from spoke gateway's routing table.",
 		},
-		"included_advertised_spoke_routes": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "A list of comma-separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
-		},
 		"insane_mode": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -166,18 +160,6 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 		// ============================================================================
 		// ROUTE CONFIGURATION
 		// ============================================================================
-		"enable_private_vpc_default_route": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Program default route in VPC private route table.",
-		},
-		"enable_skip_public_route_table_update": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Skip programming VPC public route table.",
-		},
 		"enable_monitor_gateway_subnets": {
 			Type:     schema.TypeBool,
 			Optional: true,

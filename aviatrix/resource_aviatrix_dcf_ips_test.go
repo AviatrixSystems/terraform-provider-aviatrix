@@ -85,6 +85,7 @@ func TestAccAviatrixDCFIpsProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.custom_feeds_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.external_feeds_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.ignored_sids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.never_drop_sids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.informational", "alert"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.minor", "alert"),
 					resource.TestCheckResourceAttr(resourceName, "intrusion_actions.major", "alert_and_drop"),
@@ -97,6 +98,7 @@ func TestAccAviatrixDCFIpsProfile_basic(t *testing.T) {
 					testAccCheckDCFIpsProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "profile_name", profileNameUpdate),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "rule_feeds.0.never_drop_sids.#", "1"),
 				),
 			},
 			{
@@ -230,6 +232,7 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -259,6 +262,7 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules", "emerging-threats"]
     ignored_sids       = [100001, 100002, 100005]
+    never_drop_sids    = [100003]
   }
 
   intrusion_actions = {
@@ -288,6 +292,7 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003]
   }
 
   intrusion_actions = {
@@ -322,6 +327,7 @@ resource "aviatrix_dcf_ips_profile" "test" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003]
   }
 
   intrusion_actions = {
@@ -339,6 +345,7 @@ resource "aviatrix_dcf_ips_profile" "test2" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
     external_feeds_ids = ["emerging-threats"]
     ignored_sids       = [100005]
+    never_drop_sids    = []
   }
 
   intrusion_actions = {
@@ -376,6 +383,7 @@ resource "aviatrix_dcf_ips_profile" "test" {
 		custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.test_feed.uuid]
 		external_feeds_ids = ["suricata-rules"]
 		ignored_sids       = [100001, 100002]
+		never_drop_sids    = [100003]
 	}
 
 	intrusion_actions = {

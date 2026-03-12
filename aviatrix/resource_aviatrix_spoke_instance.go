@@ -77,9 +77,6 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 	// The create_mct_gateway API treats reuse_eip as the actual IP to reuse;
 	// omitting it means a new EIP will be allocated.
 	if !getBool(d, "allocate_new_eip") {
-		spokeGateway.ReuseEip = "off"
-	} else {
-		spokeGateway.ReuseEip = "on"
 		spokeGateway.Eip = getString(d, "eip")
 	}
 
@@ -133,8 +130,6 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 	customerManagedKeys := getString(d, "customer_managed_keys")
 	enableMonitorGatewaySubnets := getBool(d, "enable_monitor_gateway_subnets")
 	monitorExcludeList := getStringSet(d, "monitor_exclude_list")
-	enablePrivateVpcDefaultRoute := getBool(d, "enable_private_vpc_default_route")
-	enableSkipPublicRouteTableUpdate := getBool(d, "enable_skip_public_route_table_update")
 	enableSpotInstance := getBool(d, "enable_spot_instance")
 	deleteSpot := getBool(d, "delete_spot")
 	rxQueueSize := getString(d, "rx_queue_size")
@@ -242,15 +237,6 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) && insaneModeAz == "" {
 			return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS China (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 		}
-	}
-
-	// Route Configuration Validation
-	if enablePrivateVpcDefaultRoute && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
-	}
-
-	if enableSkipPublicRouteTableUpdate && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-		return fmt.Errorf("enable_skip_public_route_table_update is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
 
 	// Spot Instance Validation
@@ -375,7 +361,6 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 		spokeGateway.EncVolume = "no"
 	}
 
-	// Create the spoke instance using the appropriate API based on gateway count
 	log.Printf("[INFO] Creating new spoke instance: %#v", spokeGateway)
 	createdGwName, err := client.LaunchSpokeInstance(spokeGateway)
 	if err != nil {
@@ -481,36 +466,6 @@ func configureSpokeInstancePostCreate(d *schema.ResourceData, client *goaviatrix
 		}
 	}
 
-	// Handle included advertised spoke routes
-	if includedRoutes := getString(d, "included_advertised_spoke_routes"); includedRoutes != "" {
-		gateway := &goaviatrix.Gateway{
-			GwName:                gwName,
-			AdvertisedSpokeRoutes: strings.Split(includedRoutes, ","),
-		}
-		err := client.EditGatewayAdvertisedCidr(gateway)
-		if err != nil {
-			return diag.Errorf("failed to set included_advertised_spoke_routes: %s", err)
-		}
-	}
-
-	// Handle enable_private_vpc_default_route
-	if getBool(d, "enable_private_vpc_default_route") {
-		gateway := &goaviatrix.Gateway{GwName: gwName}
-		err := client.EnablePrivateVpcDefaultRoute(gateway)
-		if err != nil {
-			return diag.Errorf("failed to enable private VPC default route: %s", err)
-		}
-	}
-
-	// Handle enable_skip_public_route_table_update
-	if getBool(d, "enable_skip_public_route_table_update") {
-		gateway := &goaviatrix.Gateway{GwName: gwName}
-		err := client.EnableSkipPublicRouteUpdate(gateway)
-		if err != nil {
-			return diag.Errorf("failed to enable skip public route table update: %s", err)
-		}
-	}
-
 	// Handle monitor gateway subnets
 	if getBool(d, "enable_monitor_gateway_subnets") {
 		excludeList := getStringSet(d, "monitor_exclude_list")
@@ -579,8 +534,6 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "private_mode_lb_vpc_id", gateway.LbVpcId)
 	mustSet(d, "insane_mode", gateway.InsaneMode == "yes")
 	mustSet(d, "tunnel_detection_time", gateway.TunnelDetectionTime)
-	mustSet(d, "enable_private_vpc_default_route", gateway.PrivateVpcDefaultEnabled)
-	mustSet(d, "enable_skip_public_route_table_update", gateway.SkipPublicVpcUpdateEnabled)
 
 	// Spot instance
 	mustSet(d, "enable_spot_instance", gateway.EnableSpotInstance)
@@ -622,12 +575,6 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 		mustSet(d, "filtered_spoke_vpc_routes", strings.Join(gateway.FilteredSpokeVpcRoutes, ","))
 	} else {
 		mustSet(d, "filtered_spoke_vpc_routes", "")
-	}
-
-	if len(gateway.AdvertisedSpokeRoutes) > 0 {
-		mustSet(d, "included_advertised_spoke_routes", strings.Join(gateway.AdvertisedSpokeRoutes, ","))
-	} else {
-		mustSet(d, "included_advertised_spoke_routes", "")
 	}
 
 	// Computed attributes
@@ -790,55 +737,6 @@ func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.Resource
 		err := client.EditGatewayFilterRoutes(gateway)
 		if err != nil {
 			return diag.Errorf("failed to update filtered_spoke_vpc_routes: %s", err)
-		}
-	}
-
-	// Included Advertised Spoke Routes
-	if d.HasChange("included_advertised_spoke_routes") {
-		includedRoutes := getString(d, "included_advertised_spoke_routes")
-		var routes []string
-		if includedRoutes != "" {
-			routes = strings.Split(includedRoutes, ",")
-		}
-		gateway := &goaviatrix.Gateway{
-			GwName:                gwName,
-			AdvertisedSpokeRoutes: routes,
-		}
-		err := client.EditGatewayAdvertisedCidr(gateway)
-		if err != nil {
-			return diag.Errorf("failed to update included_advertised_spoke_routes: %s", err)
-		}
-	}
-
-	// Private VPC Default Route
-	if d.HasChange("enable_private_vpc_default_route") {
-		gateway := &goaviatrix.Gateway{GwName: gwName}
-		if getBool(d, "enable_private_vpc_default_route") {
-			err := client.EnablePrivateVpcDefaultRoute(gateway)
-			if err != nil {
-				return diag.Errorf("failed to enable Private VPC Default Route: %s", err)
-			}
-		} else {
-			err := client.DisablePrivateVpcDefaultRoute(gateway)
-			if err != nil {
-				return diag.Errorf("failed to disable Private VPC Default Route: %s", err)
-			}
-		}
-	}
-
-	// Skip Public Route Table Update
-	if d.HasChange("enable_skip_public_route_table_update") {
-		gateway := &goaviatrix.Gateway{GwName: gwName}
-		if getBool(d, "enable_skip_public_route_table_update") {
-			err := client.EnableSkipPublicRouteUpdate(gateway)
-			if err != nil {
-				return diag.Errorf("failed to enable Skip Public Route Table Update: %s", err)
-			}
-		} else {
-			err := client.DisableSkipPublicRouteUpdate(gateway)
-			if err != nil {
-				return diag.Errorf("failed to disable Skip Public Route Table Update: %s", err)
-			}
 		}
 	}
 

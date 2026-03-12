@@ -234,6 +234,67 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	return nil
 }
 
+// LaunchTransitInstance creates a transit gateway instance using the new create_mct_gateway API.
+// This API handles both primary and HA gateway creation based on the group state.
+func (c *Client) LaunchTransitInstance(gateway *TransitVpc) (string, error) {
+	gateway.CID = c.CID
+	gateway.Action = "create_mct_gateway"
+	gateway.Async = true
+
+	var gwName string
+	hook := WithResponseHook(func(raw map[string]interface{}) {
+		// Try top-level gw_name / ha_gw_name (from ADDITIONAL_OUTPUT_KEYS)
+		if name, ok := raw["gw_name"].(string); ok && name != "" {
+			gwName = name
+			return
+		}
+		if name, ok := raw["ha_gw_name"].(string); ok && name != "" {
+			gwName = name
+			return
+		}
+
+		// Fall back: parse "results" which may contain gw_name as JSON or in the text
+		if results, ok := raw["results"].(string); ok && results != "" {
+			// Try parsing as JSON object
+			var parsed map[string]interface{}
+			if err := json.Unmarshal([]byte(results), &parsed); err == nil {
+				if name, ok := parsed["gw_name"].(string); ok && name != "" {
+					gwName = name
+					return
+				}
+				if name, ok := parsed["ha_gw_name"].(string); ok && name != "" {
+					gwName = name
+					return
+				}
+			}
+
+			// Parse from "Successfully created Gateway <name>." text
+			const prefix = "Successfully created Gateway "
+			if strings.HasPrefix(results, prefix) {
+				name := strings.TrimPrefix(results, prefix)
+				name = strings.TrimSuffix(name, ".")
+				name = strings.TrimSpace(name)
+				if name != "" {
+					gwName = name
+				}
+			}
+		}
+	})
+
+	err := c.PostAsyncAPI(gateway.Action, gateway, BasicCheck, hook)
+	if err != nil {
+		return "", err
+	}
+
+	if gwName != "" {
+		return gwName, nil
+	}
+	if gateway.GwName != "" {
+		return gateway.GwName, nil
+	}
+	return "", fmt.Errorf("gateway name not found in create_mct_gateway response")
+}
+
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_peering_ha_gateway"

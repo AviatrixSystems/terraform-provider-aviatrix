@@ -3,7 +3,6 @@ package goaviatrix
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -110,20 +109,6 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
 }
 
-// gwNameFromMap returns gw_name or ha_gw_name from a response-like map, or "" if neither is set.
-func gwNameFromMap(m map[string]interface{}) string {
-	if m == nil {
-		return ""
-	}
-	if name, ok := m["gw_name"].(string); ok && name != "" {
-		return name
-	}
-	if name, ok := m["ha_gw_name"].(string); ok && name != "" {
-		return name
-	}
-	return ""
-}
-
 func (c *Client) LaunchSpokeInstance(spoke *SpokeVpc) (string, error) {
 	spoke.CID = c.CID
 	spoke.Action = "create_mct_gateway"
@@ -131,27 +116,37 @@ func (c *Client) LaunchSpokeInstance(spoke *SpokeVpc) (string, error) {
 
 	var gwName string
 	hook := WithResponseHook(func(raw map[string]interface{}) {
-		if name := gwNameFromMap(raw); name != "" {
+		// Try top-level gw_name / ha_gw_name (from ADDITIONAL_OUTPUT_KEYS)
+		if name, ok := raw["gw_name"].(string); ok && name != "" {
 			gwName = name
 			return
 		}
-		if results, ok := raw["results"].(map[string]interface{}); ok {
-			if name := gwNameFromMap(results); name != "" {
-				gwName = name
-				return
-			}
+		if name, ok := raw["ha_gw_name"].(string); ok && name != "" {
+			gwName = name
+			return
 		}
+
+		// Fall back: parse "results" which may contain gw_name as JSON or in the text
 		if results, ok := raw["results"].(string); ok && results != "" {
+			// Try parsing as JSON object
 			var parsed map[string]interface{}
-			if json.Unmarshal([]byte(results), &parsed) == nil {
-				if name := gwNameFromMap(parsed); name != "" {
+			if err := json.Unmarshal([]byte(results), &parsed); err == nil {
+				if name, ok := parsed["gw_name"].(string); ok && name != "" {
+					gwName = name
+					return
+				}
+				if name, ok := parsed["ha_gw_name"].(string); ok && name != "" {
 					gwName = name
 					return
 				}
 			}
+
+			// Parse from "Successfully created Gateway <name>." text
 			const prefix = "Successfully created Gateway "
 			if strings.HasPrefix(results, prefix) {
-				name := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(results, prefix), "."))
+				name := strings.TrimPrefix(results, prefix)
+				name = strings.TrimSuffix(name, ".")
+				name = strings.TrimSpace(name)
 				if name != "" {
 					gwName = name
 				}
@@ -170,8 +165,7 @@ func (c *Client) LaunchSpokeInstance(spoke *SpokeVpc) (string, error) {
 	if spoke.GwName != "" {
 		return spoke.GwName, nil
 	}
-	log.Printf("[WARN] create_mct_gateway: gateway name not found in response; requested gw_name=%q", spoke.GwName)
-	return "", fmt.Errorf("gateway name not found in create_mct_gateway response (requested gw_name=%q)", spoke.GwName)
+	return "", fmt.Errorf("gateway name not found in create_mct_gateway response")
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {

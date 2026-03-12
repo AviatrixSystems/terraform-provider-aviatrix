@@ -282,17 +282,6 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 		},
 
 		// ============================================================================
-		// AWS SPECIFIC
-		// ============================================================================
-		"insane_mode": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			ForceNew:    true,
-			Description: "Enable Insane Mode (High Performance Encryption) for transit gateway group. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
-		},
-
-		// ============================================================================
 		// GCP SPECIFIC
 		// ============================================================================
 		"enable_global_vpc": {
@@ -325,9 +314,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	}
 	if v, ok := d.GetOk("vpc_region"); ok {
 		transitGroup.VpcRegion = mustString(v)
-	}
-	if v, ok := d.GetOk("domain"); ok {
-		transitGroup.Domain = mustString(v)
 	}
 	transitGroup.PrivateRouteTableConfig = getStringSet(d, "private_route_table_config")
 
@@ -391,9 +377,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	transitGroup.EnableActiveStandby = getBool(d, "enable_active_standby")
 	transitGroup.EnableActiveStandbyPreemptive = getBool(d, "enable_active_standby_preemptive")
 
-	// AWS Specific
-	transitGroup.InsaneMode = getBool(d, "insane_mode")
-
 	// GCP Specific
 	transitGroup.EnableGlobalVpc = getBool(d, "enable_global_vpc")
 
@@ -408,10 +391,6 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 
 	if transitGroup.EnableBgpOverLan && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("enable_bgp_over_lan is only valid for Azure related cloud types")
-	}
-
-	if transitGroup.InsaneMode && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCI) {
-		return fmt.Errorf("insane_mode is only valid for AWS, GCP, Azure and OCI cloud types")
 	}
 
 	if transitGroup.EnableGatewayLoadBalancer && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -646,7 +625,11 @@ func applyTransitSpecificSettings(ctx context.Context, d *schema.ResourceData, c
 	if getBool(d, "enable_segmentation") {
 		log.Printf("[INFO] Enabling segmentation for transit group: %s", groupName)
 		if err := client.EnableSegmentationGatewayGroup(ctx, groupName); err != nil {
-			return fmt.Errorf("failed to enable segmentation: %w", err)
+			// Ignore "already enabled" error - can happen if group name was reused
+			if !strings.Contains(err.Error(), "already enabled") {
+				return fmt.Errorf("failed to enable segmentation: %w", err)
+			}
+			log.Printf("[INFO] Segmentation already enabled for transit group: %s, continuing", groupName)
 		}
 	}
 
@@ -654,6 +637,34 @@ func applyTransitSpecificSettings(ctx context.Context, d *schema.ResourceData, c
 		log.Printf("[INFO] Enabling advertise transit CIDR for transit group: %s", groupName)
 		if err := client.EnableAdvertiseTransitCidrGatewayGroup(ctx, groupName); err != nil {
 			return fmt.Errorf("failed to enable advertise transit CIDR: %w", err)
+		}
+	}
+
+	if getBool(d, "enable_multi_tier_transit") {
+		log.Printf("[INFO] Enabling multi-tier transit for transit group: %s", groupName)
+		if err := client.EnableMultiTierTransitGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to enable multi-tier transit: %w", err)
+		}
+	}
+
+	if getBool(d, "enable_transit_summarize_cidr_to_tgw") {
+		log.Printf("[INFO] Enabling transit summarize CIDR to TGW for transit group: %s", groupName)
+		if err := client.EnableTransitSummarizeCidrToTgwGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to enable transit summarize CIDR to TGW: %w", err)
+		}
+	}
+
+	if getBool(d, "enable_hybrid_connection") {
+		log.Printf("[INFO] Enabling hybrid connection for transit group: %s", groupName)
+		if err := client.EnableHybridConnectionGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to enable hybrid connection: %w", err)
+		}
+	}
+
+	if getBool(d, "enable_s2c_rx_balancing") {
+		log.Printf("[INFO] Enabling S2C RX balancing for transit group: %s", groupName)
+		if err := client.EnableS2cRxBalancingGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to enable S2C RX balancing: %w", err)
 		}
 	}
 
@@ -777,7 +788,6 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "customized_spoke_vpc_routes", transitGroup.CustomizedCidrList)
 	mustSet(d, "explicitly_created", transitGroup.ExplicitlyCreated)
 	mustSet(d, "vpc_region", transitGroup.VpcRegion)
-	mustSet(d, "domain", transitGroup.Domain)
 	mustSet(d, "private_route_table_config", transitGroup.PrivateRouteTableConfig)
 
 	// Feature Flags
@@ -844,9 +854,6 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	// Active-Standby
 	mustSet(d, "enable_active_standby", transitGroup.EnableActiveStandby)
 	mustSet(d, "enable_active_standby_preemptive", transitGroup.EnableActiveStandbyPreemptive)
-
-	// AWS Specific
-	mustSet(d, "insane_mode", transitGroup.InsaneMode)
 
 	// GCP Specific
 	mustSet(d, "enable_global_vpc", transitGroup.EnableGlobalVpc)
@@ -1441,6 +1448,14 @@ func resourceAviatrixTransitGroupDelete(ctx context.Context, d *schema.ResourceD
 	groupName := getString(d, "group_name")
 
 	log.Printf("[INFO] Deleting Transit Group: %s (UUID: %s)", groupName, groupUUID)
+
+	// Disable segmentation before deleting the group to allow re-creation with segmentation enabled
+	if getBool(d, "enable_segmentation") {
+		log.Printf("[INFO] Disabling segmentation for transit group before deletion: %s", groupName)
+		if err := client.DisableSegmentationGatewayGroup(ctx, groupName); err != nil {
+			log.Printf("[WARN] Failed to disable segmentation during transit group deletion: %s", err)
+		}
+	}
 
 	err := client.DeleteGatewayGroup(ctx, groupUUID)
 	if err != nil {

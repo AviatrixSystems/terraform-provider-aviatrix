@@ -21,7 +21,7 @@ type GatewayGroup struct {
 
 	// Optional
 	CustomizedCidrList               []string `form:"customized_cidr_list,omitempty" json:"customized_cidr_list,omitempty"`
-	S2cRxBalancing                   bool     `form:"s2c_rx_balancing,omitempty" json:"s2c_rx_balancing,omitempty"`
+	EnableS2cRxBalancing             bool     `form:"s2c_rx_balancing,omitempty" json:"s2c_rx_balancing,omitempty"`
 	ExplicitlyCreated                bool     `form:"explicitly_created,omitempty" json:"explicitly_created,omitempty"`
 	Subnet                           string   `form:"subnet,omitempty" json:"subnet,omitempty"`
 	VpcRegion                        string   `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
@@ -38,7 +38,7 @@ type GatewayGroup struct {
 	EnableNat          bool `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	EnableIPv6         bool `form:"is_ipv6_enabled,omitempty" json:"is_ipv6_enabled,omitempty"`
 	EnableGroGso       bool `form:"gro_gso,omitempty" json:"gro_gso,omitempty"`
-	EnableVpcDNSServer bool `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns,omitempty"`
+	EnableVpcDNSServer bool `form:"use_vpc_dns,omitempty" json:"use_vpc_dns,omitempty"`
 
 	// BGP Configuration
 	EnableBgp                    bool     `form:"bgp_enabled,omitempty" json:"bgp_enabled,omitempty"`
@@ -84,11 +84,10 @@ type GatewayGroup struct {
 	EnableFirenet                   bool `form:"firenet_enabled,omitempty" json:"firenet_enabled,omitempty"`
 	EnableTransitFirenet            bool `form:"transit_firenet_enabled,omitempty" json:"transit_firenet_enabled,omitempty"`
 	EnableAdvertiseTransitCidr      bool `form:"advertise_transit_cidr,omitempty" json:"advertise_transit_cidr,omitempty"`
-	EnableSegmentation              bool `form:"segmentation_enabled,omitempty" json:"segmentation_enabled,omitempty"`
-	EnableHybridConnection          bool `form:"enable_hybrid_connection,omitempty" json:"enable_hybrid_connection,omitempty"`
+	EnableSegmentation              bool `form:"segmentation_enabled,omitempty" json:"enable_domain,omitempty"`
+	EnableHybridConnection          bool `form:"enable_hybrid_connection,omitempty" json:"tgw_enabled,omitempty"`
 	EnableTransitSummarizeCidrToTgw bool `form:"transit_summarize_cidr_to_tgw,omitempty" json:"transit_summarize_cidr_to_tgw,omitempty"`
 	EnableMultiTierTransit          bool `form:"multi_tier_transit,omitempty" json:"multi_tier_transit,omitempty"`
-	EnableS2cRxBalancing            bool `form:"enable_s2c_rx_balancing,omitempty" json:"enable_s2c_rx_balancing,omitempty"`
 	EnableGatewayLoadBalancer       bool `form:"enable_gateway_load_balancer,omitempty" json:"enable_gateway_load_balancer,omitempty"`
 
 	// Computed (read-only)
@@ -105,10 +104,12 @@ type GatewayGroupResp struct {
 }
 
 // getGatewayGroupDetailsResults is the API response shape for get_gateway_group_details.
-// The controller returns BGP config under "bgp_cfg" and spoke config under "spoke_cfg", not at top level.
+// The controller returns BGP config under "bgp_cfg", spoke config under "spoke_cfg",
+// and transit config under "transit_cfg", not at top level.
 type getGatewayGroupDetailsResults struct {
 	GatewayGroup
 	BgpCfg *struct {
+		BgpEnabled                   bool     `json:"bgp_enabled,omitempty"`
 		BgpLocalAsNum                string   `json:"bgp_local_as_num,omitempty"`
 		BgpPrependAsPath             string   `json:"bgp_prepend_as_path,omitempty"`
 		BgpEcmp                      bool     `json:"bgp_ecmp,omitempty"`
@@ -125,6 +126,16 @@ type getGatewayGroupDetailsResults struct {
 	SpokeCfg *struct {
 		DisableRoutePropagation bool `json:"disable_route_propagation,omitempty"`
 	} `json:"spoke_cfg,omitempty"`
+	TransitCfg *struct {
+		AdvertiseTransitCidr bool `json:"advertise_transit_cidr,omitempty"`
+		ConnectedTransit     bool `json:"connected_transit,omitempty"`
+		EgressTransit        bool `json:"egress_transit,omitempty"`
+		MultitierTransit     bool `json:"multitier_transit,omitempty"`
+	} `json:"transit_cfg,omitempty"`
+	AwsCfg *struct {
+		SummarizeCidrToTgw bool `json:"summarize_cidr_to_tgw,omitempty"`
+		TgwEnabled         bool `json:"tgw_enabled,omitempty"`
+	} `json:"aws_cfg,omitempty"`
 }
 
 // getGatewayGroupDetailsResp is the full response for get_gateway_group_details.
@@ -203,6 +214,15 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 	}
 	if resp.Results.SpokeCfg != nil {
 		grp.DisableRoutePropagation = resp.Results.SpokeCfg.DisableRoutePropagation
+	}
+	if resp.Results.TransitCfg != nil {
+		grp.EnableAdvertiseTransitCidr = resp.Results.TransitCfg.AdvertiseTransitCidr
+		grp.EnableConnectedTransit = resp.Results.TransitCfg.ConnectedTransit
+		grp.EnableMultiTierTransit = resp.Results.TransitCfg.MultitierTransit
+	}
+	if resp.Results.AwsCfg != nil {
+		grp.EnableTransitSummarizeCidrToTgw = resp.Results.AwsCfg.SummarizeCidrToTgw
+		grp.EnableHybridConnection = resp.Results.AwsCfg.TgwEnabled
 	}
 	return grp, nil
 }
@@ -753,7 +773,7 @@ func (c *Client) UpdateTransitPendingApprovedCidrsGatewayGroup(ctx context.Conte
 // EnableConnectedTransitGatewayGroup enables connected transit for a gateway group
 func (c *Client) EnableConnectedTransitGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "enable_connected_transit",
+		"action":       "enable_connected_transit_on_gateway",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}
@@ -764,7 +784,7 @@ func (c *Client) EnableConnectedTransitGatewayGroup(ctx context.Context, groupNa
 // DisableConnectedTransitGatewayGroup disables connected transit for a gateway group
 func (c *Client) DisableConnectedTransitGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "disable_connected_transit",
+		"action":       "disable_connected_transit_on_gateway",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}
@@ -775,9 +795,9 @@ func (c *Client) DisableConnectedTransitGatewayGroup(ctx context.Context, groupN
 // EnableSegmentationGatewayGroup enables segmentation for a gateway group
 func (c *Client) EnableSegmentationGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "enable_segmentation",
-		"CID":          c.CID,
-		"gateway_name": groupName,
+		"action":               "enable_transit_gateway_for_multi_cloud_security_domain",
+		"CID":                  c.CID,
+		"transit_gateway_name": groupName,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
@@ -786,9 +806,9 @@ func (c *Client) EnableSegmentationGatewayGroup(ctx context.Context, groupName s
 // DisableSegmentationGatewayGroup disables segmentation for a gateway group
 func (c *Client) DisableSegmentationGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "disable_segmentation",
-		"CID":          c.CID,
-		"gateway_name": groupName,
+		"action":               "disable_transit_gateway_for_multi_cloud_security_domain",
+		"CID":                  c.CID,
+		"transit_gateway_name": groupName,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
@@ -817,10 +837,10 @@ func (c *Client) DisableAdvertiseTransitCidrGatewayGroup(ctx context.Context, gr
 }
 
 // SetTransitBgpManualAdvertisedNetworksGatewayGroup sets the transit BGP manual advertise CIDRs for a gateway group.
-// The cidrs parameter should be a comma-separated list of CIDR strings (e.g., "10.0.0.0/16,10.1.0.0/16").
 func (c *Client) SetTransitBgpManualAdvertisedNetworksGatewayGroup(ctx context.Context, groupName, cidrs string) error {
 	form := map[string]string{
 		"action":                           "edit_aviatrix_transit_advanced_config",
+		"subaction":                        "bgp_manual_spoke",
 		"CID":                              c.CID,
 		"gateway_name":                     groupName,
 		"bgp_manual_spoke_advertise_cidrs": cidrs,
@@ -832,7 +852,7 @@ func (c *Client) SetTransitBgpManualAdvertisedNetworksGatewayGroup(ctx context.C
 // EnableHybridConnectionGatewayGroup enables hybrid connection for a gateway group
 func (c *Client) EnableHybridConnectionGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "enable_hybrid_connection",
+		"action":       "enable_transit_gateway_interface_to_aws_tgw",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}
@@ -843,7 +863,7 @@ func (c *Client) EnableHybridConnectionGatewayGroup(ctx context.Context, groupNa
 // DisableHybridConnectionGatewayGroup disables hybrid connection for a gateway group
 func (c *Client) DisableHybridConnectionGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "disable_hybrid_connection",
+		"action":       "disable_transit_gateway_interface_to_aws_tgw",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}
@@ -876,7 +896,7 @@ func (c *Client) DisableTransitSummarizeCidrToTgwGatewayGroup(ctx context.Contex
 // EnableMultiTierTransitGatewayGroup enables multi-tier transit for a gateway group
 func (c *Client) EnableMultiTierTransitGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "enable_multi_tier_transit",
+		"action":       "enable_multitier_transit",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}
@@ -887,7 +907,7 @@ func (c *Client) EnableMultiTierTransitGatewayGroup(ctx context.Context, groupNa
 // DisableMultiTierTransitGatewayGroup disables multi-tier transit for a gateway group
 func (c *Client) DisableMultiTierTransitGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{
-		"action":       "disable_multi_tier_transit",
+		"action":       "disable_multitier_transit",
 		"CID":          c.CID,
 		"gateway_name": groupName,
 	}

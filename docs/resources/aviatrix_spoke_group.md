@@ -125,9 +125,6 @@ resource "aviatrix_spoke_group" "test_spoke_group_advanced" {
   enable_learned_cidrs_approval = true
   learned_cidrs_approval_mode   = "gateway"
   approved_learned_cidrs        = ["192.168.1.0/24"]
-
-  # Insane Mode
-  insane_mode = false
 }
 ```
 ```hcl
@@ -167,7 +164,6 @@ The following arguments are supported:
 ### Optional - General Settings
 
 * `customized_cidr_list` - (Optional) Set of customized CIDRs for the spoke group.
-* `domain` - (Optional) Network domain for the spoke group.
 * `include_cidr` - (Optional) Set of CIDRs to include for the spoke group.
 
 ### Optional - Feature Flags
@@ -217,10 +213,6 @@ The following arguments are supported:
 
 * `enable_active_standby` - (Optional) Enable Active-Standby mode. Valid values: true, false. Default: false.
 * `enable_active_standby_preemptive` - (Optional) Enable Active-Standby Preemptive mode. Valid only when `enable_active_standby` is true. Valid values: true, false. Default: false.
-
-### Optional - AWS Specific
-
-* `insane_mode` - (Optional) Enable Insane Mode (High Performance Encryption). Valid values: true, false. Default: false.
 
 ### Optional - GCP Specific
 

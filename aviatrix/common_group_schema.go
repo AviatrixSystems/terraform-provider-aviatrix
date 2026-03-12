@@ -61,11 +61,6 @@ func GroupOptionalSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Region of cloud provider. Required for CSP.",
 		},
-		"domain": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Network domain for the spoke group.",
-		},
 		"private_route_table_config": {
 			Type:        schema.TypeSet,
 			Elem:        &schema.Schema{Type: schema.TypeString},

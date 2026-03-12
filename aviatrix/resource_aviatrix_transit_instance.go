@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,21 +52,8 @@ func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.Resour
 	}
 
 	cloudType := transitGroup.CloudType
-	gwName := getString(d, "gw_name")
-
-	// Determine if this is a primary gateway (gw_count == 0) or HA gateway (gw_count > 0)
-	gwCount := len(transitGroup.GwUUIDList)
-	isPrimaryGateway := gwCount == 0
-
-	log.Printf("[DEBUG] Transit group %s: CloudType=%d, AccountName=%s, VpcID=%s, VpcRegion=%s, GwUUIDList=%v, isPrimaryGateway=%t",
-		groupUUID, cloudType, transitGroup.AccountName, transitGroup.VpcID, transitGroup.VpcRegion, transitGroup.GwUUIDList, isPrimaryGateway)
-
-	// Use group_name as gw_name if not provided (only for primary gateway)
-	// For HA gateway, allow auto-generation by leaving gw_name empty
-	if gwName == "" && isPrimaryGateway {
-		gwName = transitGroup.GroupName
-		mustSet(d, "gw_name", gwName)
-	}
+	log.Printf("[DEBUG] Transit group %s: CloudType=%d, AccountName=%s, VpcID=%s, VpcRegion=%s, GwUUIDList=%v",
+		groupUUID, cloudType, transitGroup.AccountName, transitGroup.VpcID, transitGroup.VpcRegion, transitGroup.GwUUIDList)
 
 	// Set computed values from the transit group
 	mustSet(d, "group_name", transitGroup.GroupName)
@@ -77,111 +63,44 @@ func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.Resour
 
 	// Create edge transit gateway for AEP, Equinix, Megaport, Self-managed
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		err := createEdgeTransitInstance(ctx, d, client, transitGroup, isPrimaryGateway)
+		err := createEdgeTransitInstance(ctx, d, client, transitGroup)
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		gwName := getString(d, "gw_name")
 		d.SetId(gwName)
 		return resourceAviatrixTransitInstanceRead(ctx, d, meta)
 	}
 
-	// CSP transit gateways
-	if isPrimaryGateway {
-		// Build and validate gateway configuration for primary CSP transit gateways
-		config, diagErr := buildTransitInstanceConfig(ctx, d, client, transitGroup)
-		if diagErr != nil {
-			return diagErr
-		}
+	// CSP transit gateways - use create_mct_gateway API
+	config, diagErr := buildTransitInstanceConfig(ctx, d, client, transitGroup)
+	if diagErr != nil {
+		return diagErr
+	}
 
-		log.Printf("[INFO] Creating Primary Aviatrix Transit Instance: %#v", config.gateway)
+	log.Printf("[INFO] Creating Aviatrix Transit Instance: %#v", config.gateway)
 
+	// Use the create_mct_gateway API which handles both primary and HA based on group state
+	createdGwName, err := client.LaunchTransitInstance(config.gateway)
+	if err != nil {
+		return diag.Errorf("failed to create Aviatrix Transit Instance: %v", err)
+	}
+
+	// Set the ID and gw_name to the returned gateway name
+	if createdGwName != "" {
+		d.SetId(createdGwName)
+		mustSet(d, "gw_name", createdGwName)
+	} else if config.gateway.GwName != "" {
 		d.SetId(config.gateway.GwName)
-		err = client.LaunchTransitVpc(config.gateway)
-		if err != nil {
-			return diag.Errorf("failed to create Aviatrix Transit Instance: %v", err)
-		}
-
-		// Configure post-creation settings
-		if diagErr = configureTransitInstancePostCreate(ctx, d, client, config); diagErr != nil {
-			return diagErr
-		}
 	} else {
-		// Create HA transit gateway using group_uuid
-		transitHaGateway := &goaviatrix.TransitHaGateway{
-			GroupUUID: groupUUID,
-			GwName:    gwName,
-			GwSize:    getString(d, "gw_size"),
-			Subnet:    getString(d, "subnet"),
-		}
-
-		// Zone for Azure
-		zone := getString(d, "zone")
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && zone != "" {
-			transitHaGateway.Subnet = fmt.Sprintf("%s~~%s~~", getString(d, "subnet"), zone)
-		}
-
-		// Zone for GCP
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-			transitHaGateway.Zone = transitGroup.VpcRegion
-		}
-
-		// OCI specific
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {
-			transitHaGateway.AvailabilityDomain = getString(d, "availability_domain")
-			transitHaGateway.FaultDomain = getString(d, "fault_domain")
-		}
-
-		// Insane mode
-		insaneModeAz := getString(d, "insane_mode_az")
-		if insaneModeAz != "" {
-			transitHaGateway.Subnet = strings.Join([]string{transitHaGateway.Subnet, insaneModeAz}, "~~")
-			transitHaGateway.InsaneMode = "yes"
-		}
-
-		// EIP
-		if !getBool(d, "allocate_new_eip") {
-			transitHaGateway.Eip = getString(d, "eip")
-		}
-
-		// Tags
-		if _, tagsOk := d.GetOk("tags"); tagsOk {
-			tagsMap, err := extractTags(d, cloudType)
-			if err == nil {
-				tagsJSON, err := TagsMapToJson(tagsMap)
-				if err == nil {
-					transitHaGateway.TagJSON = tagsJSON
-				}
-			}
-		}
-
-		// Auto-generate HA gateway name if not provided
-		if gwName == "" {
-			transitHaGateway.AutoGenHaGwName = "yes"
-		}
-
-		log.Printf("[INFO] Creating HA Aviatrix Transit Instance: %#v", transitHaGateway)
-
-		haGwName, err := client.CreateTransitHaGw(transitHaGateway)
-		if err != nil {
-			return diag.Errorf("failed to create HA Aviatrix Transit Instance: %v", err)
-		}
-
-		// Set the ID and gw_name to the returned HA gateway name or the provided name
-		if haGwName != "" {
-			d.SetId(haGwName)
-			mustSet(d, "gw_name", haGwName)
-		} else if gwName != "" {
-			d.SetId(gwName)
-		} else {
-			return diag.Errorf("failed to get HA gateway name from API response")
-		}
+		return diag.Errorf("failed to get gateway name from API response")
 	}
 
 	return resourceAviatrixTransitInstanceRead(ctx, d, meta)
 }
 
 // createEdgeTransitInstance creates an edge transit gateway (Equinix, AEP/NEO, Megaport, Self-managed)
-func createEdgeTransitInstance(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, transitGroup *goaviatrix.GatewayGroup, isPrimaryGateway bool) error {
+func createEdgeTransitInstance(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, transitGroup *goaviatrix.GatewayGroup) error {
 	cloudType := transitGroup.CloudType
 	gwName := getString(d, "gw_name")
 
@@ -206,91 +125,49 @@ func createEdgeTransitInstance(ctx context.Context, d *schema.ResourceData, clie
 	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 	ztpFileType := getString(d, "ztp_file_type")
 
-	if isPrimaryGateway {
-		// Create primary edge transit gateway
-		gateway := &goaviatrix.TransitVpc{
-			GroupUUID:                transitGroup.GroupUUID,
-			CloudType:                cloudType,
-			AccountName:              transitGroup.AccountName,
-			GwName:                   gwName,
-			VpcID:                    transitGroup.VpcID,
-			VpcSize:                  getString(d, "gw_size"),
-			Transit:                  true,
-			Interfaces:               interfacesList,
-			ManagementEgressIPPrefix: managementEgressIPPrefix,
-		}
+	// Create edge transit gateway using create_mct_gateway API
+	gateway := &goaviatrix.TransitVpc{
+		GroupUUID:                transitGroup.GroupUUID,
+		CloudType:                cloudType,
+		AccountName:              transitGroup.AccountName,
+		GwName:                   gwName,
+		VpcID:                    transitGroup.VpcID,
+		VpcSize:                  getString(d, "gw_size"),
+		Transit:                  true,
+		Interfaces:               interfacesList,
+		ManagementEgressIPPrefix: managementEgressIPPrefix,
+	}
 
-		// Interface mapping and device_id are required only for AEP/NEO edge gateway
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			interfaceMappingInput := getList(d, "interface_mapping")
-			interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
-			if err != nil {
-				return fmt.Errorf("failed to get the interface mapping details: %w", err)
-			}
-			gateway.InterfaceMapping = interfaceMapping
-			gateway.DeviceID = getString(d, "device_id")
-		}
-
-		// ZTP file download path is required for Equinix, Megaport, Self-managed edge gateways
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
-			gateway.ZtpFileDownloadPath = ztpFileDownloadPath
-
-			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-				gateway.ZtpFileType = ztpFileType
-			}
-		}
-
-		log.Printf("[INFO] Creating Primary Aviatrix Edge Transit Instance: %#v", gateway)
-
-		err = client.LaunchTransitVpc(gateway)
+	// Interface mapping and device_id are required only for AEP/NEO edge gateway
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
+		interfaceMappingInput := getList(d, "interface_mapping")
+		interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
 		if err != nil {
-			return fmt.Errorf("failed to create primary Aviatrix Edge Transit Instance: %w", err)
+			return fmt.Errorf("failed to get the interface mapping details: %w", err)
 		}
-	} else {
-		// Create HA edge transit gateway using group_uuid
-		// Encode interfaces for HA gateway
-		interfacesJSON, err := json.Marshal(interfacesList)
-		if err != nil {
-			return fmt.Errorf("failed to marshal interfaces: %w", err)
+		gateway.InterfaceMapping = interfaceMapping
+		gateway.DeviceID = getString(d, "device_id")
+	}
+
+	// ZTP file download path is required for Equinix, Megaport, Self-managed edge gateways
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
+		gateway.ZtpFileDownloadPath = ztpFileDownloadPath
+
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
+			gateway.ZtpFileType = ztpFileType
 		}
-		interfacesEncoded := b64.StdEncoding.EncodeToString(interfacesJSON)
+	}
 
-		transitHaGateway := &goaviatrix.TransitHaGateway{
-			GroupUUID:                transitGroup.GroupUUID,
-			CloudType:                cloudType,
-			GwName:                   gwName,
-			GwSize:                   getString(d, "gw_size"),
-			VpcID:                    transitGroup.VpcID,
-			Interfaces:               interfacesEncoded,
-			ManagementEgressIPPrefix: managementEgressIPPrefix,
-		}
+	log.Printf("[INFO] Creating Aviatrix Edge Transit Instance: %#v", gateway)
 
-		// Interface mapping and device_id are required only for AEP/NEO edge gateway
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGENEO) {
-			interfaceMappingInput := getList(d, "interface_mapping")
-			interfaceMapping, err := getInterfaceMappingDetails(interfaceMappingInput)
-			if err != nil {
-				return fmt.Errorf("failed to get the interface mapping details: %w", err)
-			}
-			transitHaGateway.InterfaceMapping = interfaceMapping
-			transitHaGateway.DeviceID = getString(d, "device_id")
-		}
+	createdGwName, err := client.LaunchTransitInstance(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to create Aviatrix Edge Transit Instance: %w", err)
+	}
 
-		// ZTP file settings for HA
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
-			transitHaGateway.ZtpFileDownloadPath = ztpFileDownloadPath
-
-			if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
-				transitHaGateway.ZtpFileType = ztpFileType
-			}
-		}
-
-		log.Printf("[INFO] Creating HA Aviatrix Edge Transit Instance: %#v", transitHaGateway)
-
-		_, err = client.CreateTransitHaGw(transitHaGateway)
-		if err != nil {
-			return fmt.Errorf("failed to create HA Aviatrix Edge Transit Instance: %w", err)
-		}
+	// Set the gw_name to the returned gateway name
+	if createdGwName != "" {
+		mustSet(d, "gw_name", createdGwName)
 	}
 
 	return nil

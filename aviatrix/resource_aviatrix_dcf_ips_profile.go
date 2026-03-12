@@ -57,6 +57,12 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 							Description: "List of rule SIDs to ignore.",
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
+						"never_drop_sids": {
+							Type:        schema.TypeSet,
+							Required:    true,
+							Description: "List of rule SIDs to never drop (alert only). Matching signatures will generate alerts but traffic will not be dropped.",
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
 					},
 				},
 			},
@@ -170,6 +176,7 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 			CustomFeedsIds:   []string{},
 			ExternalFeedsIds: []string{},
 			IgnoredSids:      []int{},
+			NeverDropSids:    []int{},
 		}
 	}
 
@@ -190,10 +197,16 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 		ignoredSids = expandIntList(mustSchemaSet(v).List())
 	}
 
+	var neverDropSids []int
+	if v, ok := ruleFeedsMap["never_drop_sids"]; ok && v != nil {
+		neverDropSids = expandIntList(mustSchemaSet(v).List())
+	}
+
 	return goaviatrix.IpsRuleFeeds{
 		CustomFeedsIds:   customFeedsIds,
 		ExternalFeedsIds: externalFeedsIds,
 		IgnoredSids:      ignoredSids,
+		NeverDropSids:    neverDropSids,
 	}
 }
 
@@ -203,6 +216,7 @@ func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []interface{} {
 			"custom_feeds_ids":   ruleFeeds.CustomFeedsIds,
 			"external_feeds_ids": ruleFeeds.ExternalFeedsIds,
 			"ignored_sids":       ruleFeeds.IgnoredSids,
+			"never_drop_sids":    ruleFeeds.NeverDropSids,
 		},
 	}
 }

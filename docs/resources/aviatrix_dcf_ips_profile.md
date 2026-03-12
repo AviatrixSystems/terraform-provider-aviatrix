@@ -21,6 +21,7 @@ resource "aviatrix_dcf_ips_profile" "custom_profile" {
     custom_feeds_ids   = [aviatrix_dcf_ips_rule_feed.custom_feed.uuid]
     external_feeds_ids = ["suricata-rules"]
     ignored_sids       = [100001, 100002]
+    never_drop_sids    = [100003, 100004]
   }
 
   intrusion_actions = {
@@ -43,7 +44,8 @@ The following arguments are supported:
 - `rule_feeds` – (Required) Rule feeds configuration block. If omitted, the profile will have no rule feeds by default.
     - `custom_feeds_ids` – (Required) List of custom rule feed UUIDs. Type: List(String). Can be empty.
     - `external_feeds_ids` – (Required) List of external rule feed IDs. Type: List(String). Can be empty.
-    - `ignored_sids` – (Required) List of rule SIDs to ignore. Type: List(Number). Can be empty.
+    - `ignored_sids` – (Optional) List of rule SIDs to ignore. Type: List(Number). Can be empty.
+    - `never_drop_sids` – (Optional) List of rule SIDs to never drop (alert only). Matching signatures will generate alerts but traffic will not be dropped. Use this when you want visibility on a signature without dropping (e.g., drop level is major and above but one major signature should only alert). Type: List(Number). Can be empty.
 - `intrusion_actions` – (Required) Actions for different severity levels. Type: Map(String). Valid values: `alert`, `alert_and_drop`.
     - Keys: `informational`, `minor`, `major`, `critical` – (Required) Action for each severity level. Type: String.
 
