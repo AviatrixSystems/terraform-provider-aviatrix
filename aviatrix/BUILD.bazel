@@ -81,7 +81,6 @@ go_library(
         "resource_aviatrix_datadog_agent.go",
         "resource_aviatrix_dcf_default_ips_profile.go",
         "resource_aviatrix_dcf_ips_profile.go",
-        "resource_aviatrix_dcf_ips_profile_vpc.go",
         "resource_aviatrix_dcf_ips_rule_feed.go",
         "resource_aviatrix_dcf_mitm_ca.go",
         "resource_aviatrix_dcf_mitm_ca_selection.go",
