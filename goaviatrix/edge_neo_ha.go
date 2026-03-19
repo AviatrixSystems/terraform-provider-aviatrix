@@ -25,6 +25,7 @@ type EdgeNEOHaResp struct {
 	DeviceId                 string              `json:"edge_csp_device_id"`
 	InterfaceList            []*EdgeNEOInterface `json:"interfaces"`
 	ManagementEgressIpPrefix string              `json:"mgmt_egress_ip"`
+	State                    string              `json:"vpc_state"`
 }
 
 type EdgeNEOHaListResp struct {

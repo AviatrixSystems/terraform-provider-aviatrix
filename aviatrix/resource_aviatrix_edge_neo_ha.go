@@ -188,6 +188,7 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 	mustSet(d, "primary_gw_name", edgeNEOHaResp.PrimaryGwName)
 	mustSet(d, "device_id", edgeNEOHaResp.DeviceId)
 	mustSet(d, "account_name", edgeNEOHaResp.AccountName)
+	mustSet(d, "state", edgeNEOHaResp.State)
 
 	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
 		mustSet(d, "management_egress_ip_prefix_list", nil)

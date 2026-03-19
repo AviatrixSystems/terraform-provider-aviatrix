@@ -129,6 +129,11 @@ func resourceAviatrixEdgePlatformHa() *schema.Resource {
 				Computed:    true,
 				Description: "Edge NEO account name.",
 			},
+			"state": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "State of Edge as a Spoke.",
+			},
 		},
 	}
 }
@@ -200,6 +205,7 @@ func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceD
 	mustSet(d, "primary_gw_name", edgeNEOHaResp.PrimaryGwName)
 	mustSet(d, "device_id", edgeNEOHaResp.DeviceId)
 	mustSet(d, "account_name", edgeNEOHaResp.AccountName)
+	mustSet(d, "state", edgeNEOHaResp.State)
 
 	if edgeNEOHaResp.ManagementEgressIpPrefix == "" {
 		mustSet(d, "management_egress_ip_prefix_list", nil)
