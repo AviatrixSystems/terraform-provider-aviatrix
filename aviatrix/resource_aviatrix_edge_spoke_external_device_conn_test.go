@@ -79,13 +79,13 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameBfd, "local_lan_ip", "10.220.86.182"),
 						resource.TestCheckResourceAttr(resourceNameBfd, "remote_lan_ip", "10.220.86.100"),
 						resource.TestCheckResourceAttr(resourceNameBfd, "enable_bfd", "true"),
-						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.transmit_interval", "400"),
-						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.receive_interval", "400"),
-						resource.TestCheckResourceAttr(resourceNameBfd, "bgo_bfd.0.multiplier", "5"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.transmit_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.receive_interval", "400"),
+						resource.TestCheckResourceAttr(resourceNameBfd, "bgp_bfd.0.multiplier", "5"),
 					),
 				},
 				{
-					ResourceName:      resourceName,
+					ResourceName:      resourceNameBfd,
 					ImportState:       true,
 					ImportStateVerify: true,
 				},
@@ -134,7 +134,7 @@ resource "aviatrix_edge_spoke_external_device_conn" "test-bfd" {
 	local_lan_ip      = "10.220.86.182"
 	remote_lan_ip     = "10.220.86.100"
 	enable_bfd        = true
-	bgo_bfd {
+	bgp_bfd {
 		transmit_interval = 400
 		receive_interval = 400
 		multiplier = 5
@@ -171,8 +171,9 @@ func testAccCheckEdgeSpokeExternalDeviceConnExists(resourceName string) resource
 			return err
 		}
 
-		if conn.ConnectionName+"~"+conn.VpcID != rs.Primary.ID {
-			return fmt.Errorf("edge as a spoke external device conn not found")
+		expectedID := conn.ConnectionName + "~" + conn.VpcID + "~" + conn.GwName
+		if expectedID != rs.Primary.ID {
+			return fmt.Errorf("edge as a spoke external device conn ID mismatch: expected %s, got %s", expectedID, rs.Primary.ID)
 		}
 
 		return nil
@@ -225,8 +226,6 @@ func TestEdgeSpokeExternalDeviceConnSchema_RemoteLanIPv6Fields(t *testing.T) {
 	assert.True(t, ok, "backup_remote_lan_ipv6_ip field should exist in schema")
 	assert.Equal(t, schema.TypeString, backupRemoteLanIPv6Field.Type)
 	assert.True(t, backupRemoteLanIPv6Field.Optional, "backup_remote_lan_ipv6_ip should be optional")
-	assert.True(t, backupRemoteLanIPv6Field.Computed, "backup_remote_lan_ipv6_ip should be computed")
-	assert.True(t, backupRemoteLanIPv6Field.ForceNew, "backup_remote_lan_ipv6_ip should be ForceNew")
 	assert.Contains(t, backupRemoteLanIPv6Field.Description, "Backup Remote LAN IPv6 address")
 }
 
@@ -267,4 +266,334 @@ func TestEdgeSpokeExternalDeviceConnSchema_EnableIPv6ForceNew(t *testing.T) {
 	assert.True(t, enableIPv6Field.Optional, "enable_ipv6 should be optional")
 	assert.True(t, enableIPv6Field.ForceNew, "enable_ipv6 should be ForceNew")
 	assert.Contains(t, enableIPv6Field.Description, "Enable IPv6")
+}
+
+func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
+	resource := resourceAviatrixEdgeSpokeExternalDeviceConn()
+
+	tests := []struct {
+		name        string
+		config      map[string]interface{}
+		haGwName    string
+		expectError bool
+		errorSubstr string
+		validate    func(t *testing.T, conn *goaviatrix.ExternalDeviceConn)
+	}{
+		{
+			name: "Valid HA config builds conn successfully",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+				"enable_edge_underlay":     false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.Equal(t, "site-123", conn.VpcID)
+				assert.Equal(t, "conn-test", conn.ConnectionName)
+				assert.Equal(t, "edge-gw-hagw", conn.GwName)
+				assert.Equal(t, "10.1.1.3", conn.LocalLanIP)
+				assert.Equal(t, "10.1.1.4", conn.RemoteLanIP)
+				assert.Equal(t, 65001, conn.BgpLocalAsNum)
+				assert.Equal(t, 65002, conn.BgpRemoteAsNum)
+			},
+		},
+		{
+			name: "Valid HA config with IPv6",
+			config: map[string]interface{}{
+				"site_id":                   "site-123",
+				"connection_name":           "conn-test",
+				"gw_name":                   "edge-gw",
+				"bgp_local_as_num":          "65001",
+				"backup_bgp_remote_as_num":  "65002",
+				"backup_local_lan_ip":       "10.1.1.3",
+				"backup_remote_lan_ip":      "10.1.1.4",
+				"backup_remote_lan_ipv6_ip": "2001:db8::2",
+				"connection_type":           "bgp",
+				"tunnel_protocol":           "LAN",
+				"enable_edge_underlay":      false,
+				"enable_ipv6":               true,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.True(t, conn.EnableIpv6)
+				assert.Equal(t, "2001:db8::2", conn.RemoteLanIPv6)
+			},
+		},
+		{
+			// backup_bgp_remote_as_num is now validated before backup_remote_lan_ip
+			name: "Fails when backup_bgp_remote_as_num is missing",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_bgp_remote_as_num",
+		},
+		{
+			name: "Fails when backup_bgp_remote_as_num is not a valid integer",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "not-a-number",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_bgp_remote_as_num",
+		},
+		{
+			name: "Fails when backup_remote_lan_ip is missing",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_remote_lan_ip",
+		},
+		{
+			name: "Fails when bgp_local_as_num is not a valid integer",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "not-a-number",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "bgp_local_as_num",
+		},
+		{
+			name: "Succeeds when bgp_local_as_num is empty",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.Equal(t, 0, conn.BgpLocalAsNum)
+			},
+		},
+		{
+			name: "Fails when enable_ipv6 but backup_remote_lan_ipv6_ip missing",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+				"enable_ipv6":              true,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_remote_lan_ipv6_ip",
+		},
+		{
+			name: "Includes backup_bgp_md5_key when set",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"bgp_local_as_num":         "65001",
+				"backup_bgp_remote_as_num": "65002",
+				"backup_local_lan_ip":      "10.1.1.3",
+				"backup_remote_lan_ip":     "10.1.1.4",
+				"backup_bgp_md5_key":       "secret-key",
+				"connection_type":          "bgp",
+				"tunnel_protocol":          "LAN",
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.Equal(t, "secret-key", conn.BgpMd5Key)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resource.Schema, tt.config)
+			conn, err := buildEdgeSpokeExternalDeviceConnForHa(d, tt.haGwName)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorSubstr != "" {
+					assert.Contains(t, err.Error(), tt.errorSubstr)
+				}
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.NotNil(t, conn)
+			if tt.validate != nil {
+				tt.validate(t, conn)
+			}
+		})
+	}
+}
+
+func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
+	resource := resourceAviatrixEdgeSpokeExternalDeviceConn()
+
+	tests := []struct {
+		name        string
+		config      map[string]interface{}
+		haGwName    string
+		expectError bool
+		errorSubstr string
+		validate    func(t *testing.T, conn *goaviatrix.ExternalDeviceConn)
+	}{
+		{
+			name: "Valid disable HA config - all backup fields empty",
+			config: map[string]interface{}{
+				"site_id":              "site-123",
+				"connection_name":      "conn-test",
+				"gw_name":              "edge-gw",
+				"connection_type":      "bgp",
+				"tunnel_protocol":      "LAN",
+				"enable_edge_underlay": false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.Equal(t, "site-123", conn.VpcID)
+				assert.Equal(t, "conn-test", conn.ConnectionName)
+				assert.Equal(t, "edge-gw-hagw", conn.GwName)
+				assert.False(t, conn.EnableEdgeUnderlay)
+			},
+		},
+		{
+			name: "Valid disable HA with edge underlay",
+			config: map[string]interface{}{
+				"site_id":              "site-123",
+				"connection_name":      "conn-test",
+				"gw_name":              "edge-gw",
+				"enable_edge_underlay": true,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: false,
+			validate: func(t *testing.T, conn *goaviatrix.ExternalDeviceConn) {
+				assert.True(t, conn.EnableEdgeUnderlay)
+			},
+		},
+		{
+			name: "Fails when backup_remote_lan_ip is set",
+			config: map[string]interface{}{
+				"site_id":              "site-123",
+				"connection_name":      "conn-test",
+				"gw_name":              "edge-gw",
+				"backup_remote_lan_ip": "10.1.1.4",
+				"enable_edge_underlay": false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_remote_lan_ip",
+		},
+		{
+			name: "Fails when backup_local_lan_ip is set",
+			config: map[string]interface{}{
+				"site_id":              "site-123",
+				"connection_name":      "conn-test",
+				"gw_name":              "edge-gw",
+				"backup_local_lan_ip":  "10.1.1.3",
+				"enable_edge_underlay": false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_remote_lan_ip",
+		},
+		{
+			name: "Fails when backup_bgp_remote_as_num is set",
+			config: map[string]interface{}{
+				"site_id":                  "site-123",
+				"connection_name":          "conn-test",
+				"gw_name":                  "edge-gw",
+				"backup_bgp_remote_as_num": "65002",
+				"enable_edge_underlay":     false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_bgp_remote_as_num",
+		},
+		{
+			name: "Fails when backup_remote_lan_ipv6_ip is set",
+			config: map[string]interface{}{
+				"site_id":                   "site-123",
+				"connection_name":           "conn-test",
+				"gw_name":                   "edge-gw",
+				"backup_remote_lan_ipv6_ip": "2001:db8::2",
+				"enable_edge_underlay":      false,
+			},
+			haGwName:    "edge-gw-hagw",
+			expectError: true,
+			errorSubstr: "backup_remote_lan_ipv6_ip",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resource.Schema, tt.config)
+			conn, err := buildEdgeSpokeExternalDeviceConnForDisableHa(d, tt.haGwName)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorSubstr != "" {
+					assert.Contains(t, err.Error(), tt.errorSubstr)
+				}
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.NotNil(t, conn)
+			if tt.validate != nil {
+				tt.validate(t, conn)
+			}
+		})
+	}
 }

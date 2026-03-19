@@ -430,12 +430,12 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("error creating tags for firewall instance: %w", err)
 	}
-	tagJson, err := TagsMapToJson(tags)
+	tagJSON, err := TagsMapToJson(tags)
 	if err != nil {
 		return fmt.Errorf("failed to add tags when creating firewall instance: %w", err)
 	}
 	firewallInstance.Tags = tags
-	firewallInstance.TagJson = tagJson
+	firewallInstance.TagJson = tagJSON
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (firewallInstance.AvailabilityDomain == "" || firewallInstance.FaultDomain == "") {
 		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
@@ -585,9 +585,14 @@ func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interfa
 		if err != nil {
 			return fmt.Errorf("failed to extract tags: %w", err)
 		}
+		tagJSON, err := TagsMapToJson(tags)
+		if err != nil {
+			return fmt.Errorf("failed to add tags when creating firewall instance: %w", err)
+		}
 		firewallInstance := &goaviatrix.FirewallInstance{
 			InstanceID: getString(d, "instance_id"),
 			Tags:       tags,
+			TagJson:    tagJSON,
 		}
 
 		log.Printf("[INFO] Updating firewall instance tags: %#v", firewallInstance)

@@ -225,12 +225,15 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
-func (c *Client) GetFirewallInstanceImages(vpcId string) (*[]FirewallInstanceImage, error) {
+func (c *Client) GetFirewallInstanceImages(vpcID string, versionCount int) (*[]FirewallInstanceImage, error) {
 	form := map[string]string{
 		"CID":       c.CID,
 		"action":    "list_firenet",
 		"subaction": "firewall_image",
-		"vpc_id":    vpcId,
+		"vpc_id":    vpcID,
+	}
+	if versionCount > 0 {
+		form["version_count"] = strconv.Itoa(versionCount)
 	}
 
 	var data FirewallInstanceImagesResp
@@ -247,13 +250,7 @@ func (c *Client) UpdateFirewallInstanceTags(firewallInstance *FirewallInstance) 
 	tags := &Tags{
 		ResourceName: firewallInstance.InstanceID,
 		Tags:         firewallInstance.Tags,
+		TagJson:      firewallInstance.TagJson,
 	}
-
-	tagList := make([]string, 0, len(firewallInstance.Tags))
-	for k, v := range firewallInstance.Tags {
-		tagList = append(tagList, k+":"+v)
-	}
-
-	tags.TagList = strings.Join(tagList, ",")
 	return c.UpdateTags(tags)
 }

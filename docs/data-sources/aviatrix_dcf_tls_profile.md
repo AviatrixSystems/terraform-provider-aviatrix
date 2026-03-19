@@ -1,5 +1,5 @@
 ---
-subcategory: "Distributed Cloud Firewall"
+subcategory: "Secured Networking"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_dcf_tls_profile"
 description: |-

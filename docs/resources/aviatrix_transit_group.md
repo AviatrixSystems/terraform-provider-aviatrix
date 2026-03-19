@@ -113,11 +113,10 @@ resource "aviatrix_transit_group" "test_transit_group_advanced" {
   enable_advertise_transit_cidr = true
 
   # BGP Configuration
-  enable_bgp                       = true
-  local_as_number                  = "65001"
-  prepend_as_path                  = ["65001", "65001"]
-  bgp_manual_spoke_advertise_cidrs = ["10.10.0.0/16", "10.20.0.0/16"]
-  enable_preserve_as_path          = true
+  enable_bgp              = true
+  local_as_number         = "65001"
+  prepend_as_path         = ["65001", "65001"]
+  enable_preserve_as_path = true
 
   # BGP Timers
   bgp_polling_time                    = 30
@@ -197,7 +196,6 @@ The following arguments are supported:
 * `enable_bgp` - (Optional) Enable BGP. Valid values: true, false. Default: false. **Note:** Changing this forces a new resource to be created.
 * `local_as_number` - (Optional) BGP local AS number. Required when `enable_bgp` is set to true.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend to the AS_Path field. Valid only when `local_as_number` is set. Example: ["65001", "65001"].
-* `bgp_manual_spoke_advertise_cidrs` - (Optional) Set of intended CIDRs to be advertised to spoke gateways via BGP. Example: ["10.1.0.0/16", "10.2.0.0/16"].
 * `enable_preserve_as_path` - (Optional) Preserve AS path when advertising manual summary CIDRs. Valid values: true, false. Default: false.
 * `enable_bgp_ecmp` - (Optional) Enable BGP ECMP. Valid values: true, false. Default: false.
 

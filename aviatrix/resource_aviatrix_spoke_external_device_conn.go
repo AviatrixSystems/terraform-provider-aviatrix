@@ -789,7 +789,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 				bgpRemoteIp = strings.Split(externalDeviceConn.RemoteTunnelCidr, ",")
 			}
 			if len(md5KeyList) != len(bgpRemoteIp) {
-				return fmt.Errorf("can't apply BGP MD5 authentication key since it is not set correctly for BGP connection: %s", externalDeviceConn.ConnectionName)
+				return fmt.Errorf("incorrect number of BGP MD5 authentication keys provided for BGP connection: %s. Please specify the same number of keys as the number of tunnel IPs and use \",\" to separate them", externalDeviceConn.ConnectionName)
 			}
 		}
 
@@ -802,7 +802,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 				backupBgpRemoteIp = strings.Split(externalDeviceConn.BackupRemoteTunnelCidr, ",")
 			}
 			if len(backupMd5KeyList) != len(backupBgpRemoteIp) {
-				return fmt.Errorf("can't apply Backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", externalDeviceConn.ConnectionName)
+				return fmt.Errorf("incorrect number of BGP MD5 authentication keys provided for BGP connection: %s. Please specify the same number of keys as the number of backup tunnel IPs and use \",\" to separate them", externalDeviceConn.ConnectionName)
 			}
 		}
 	}

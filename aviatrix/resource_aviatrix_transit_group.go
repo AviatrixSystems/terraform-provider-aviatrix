@@ -181,12 +181,6 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 		},
-		"bgp_manual_spoke_advertise_cidrs": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Set of CIDRs to manually advertise via BGP to spoke gateways.",
-		},
 		"enable_preserve_as_path": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -235,15 +229,6 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 			Description: "Enable BGP accept communities.",
-		},
-
-		// BGP over LAN
-		"enable_bgp_over_lan": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			ForceNew:    true,
-			Description: "Enable BGP over LAN. Only valid for Azure.",
 		},
 
 		// Learned CIDR Approval
@@ -345,10 +330,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 		transitGroup.PrependAsPath = getStringList(d, "prepend_as_path")
 	}
 
-	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
-		transitGroup.SpokeBgpManualAdvertiseCidrs = getStringSet(d, "bgp_manual_spoke_advertise_cidrs")
-	}
-
 	transitGroup.EnablePreserveAsPath = getBool(d, "enable_preserve_as_path")
 	transitGroup.BgpEcmp = getBool(d, "enable_bgp_ecmp")
 
@@ -360,9 +341,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	// BGP Communities
 	transitGroup.BgpSendCommunities = getBool(d, "bgp_send_communities")
 	transitGroup.BgpAcceptCommunities = getBool(d, "bgp_accept_communities")
-
-	// BGP over LAN
-	transitGroup.EnableBgpOverLan = getBool(d, "enable_bgp_over_lan")
 
 	// Learned CIDR Approval
 	transitGroup.EnableLearnedCidrsApproval = getBool(d, "enable_learned_cidrs_approval")
@@ -387,10 +365,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) error {
 	if transitGroup.EnableIPv6 && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 		return fmt.Errorf("enable_ipv6 is only valid for AWS (1) and Azure (8)")
-	}
-
-	if transitGroup.EnableBgpOverLan && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("enable_bgp_over_lan is only valid for Azure related cloud types")
 	}
 
 	if transitGroup.EnableGatewayLoadBalancer && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -668,16 +642,6 @@ func applyTransitSpecificSettings(ctx context.Context, d *schema.ResourceData, c
 		}
 	}
 
-	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
-		bgpManualSpokeAdvertiseCidrs := getStringSet(d, "bgp_manual_spoke_advertise_cidrs")
-		cidrs := strings.Join(bgpManualSpokeAdvertiseCidrs, ",")
-
-		log.Printf("[INFO] Setting BGP manual spoke advertise CIDRs for transit group: %s", groupName)
-		if err := client.SetTransitBgpManualAdvertisedNetworksGatewayGroup(ctx, groupName, cidrs); err != nil {
-			return fmt.Errorf("failed to set BGP manual spoke advertise CIDRs: %w", err)
-		}
-	}
-
 	if getBool(d, "enable_global_vpc") {
 		log.Printf("[INFO] Enabling global VPC for transit group: %s", groupName)
 		if err := client.EnableGlobalVpcGatewayGroup(ctx, groupName); err != nil {
@@ -813,7 +777,6 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "enable_bgp", transitGroup.EnableBgp)
 	mustSet(d, "local_as_number", transitGroup.LocalAsNumber)
 	mustSet(d, "prepend_as_path", transitGroup.PrependAsPath)
-	mustSet(d, "bgp_manual_spoke_advertise_cidrs", transitGroup.SpokeBgpManualAdvertiseCidrs)
 	mustSet(d, "enable_preserve_as_path", transitGroup.EnablePreserveAsPath)
 	mustSet(d, "enable_bgp_ecmp", transitGroup.BgpEcmp)
 
@@ -837,9 +800,6 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	// BGP Communities
 	mustSet(d, "bgp_send_communities", transitGroup.BgpSendCommunities)
 	mustSet(d, "bgp_accept_communities", transitGroup.BgpAcceptCommunities)
-
-	// BGP over LAN
-	mustSet(d, "enable_bgp_over_lan", transitGroup.EnableBgpOverLan)
 
 	// Learned CIDR Approval
 	mustSet(d, "enable_learned_cidrs_approval", transitGroup.EnableLearnedCidrsApproval)
@@ -1211,18 +1171,6 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return diag.Errorf("could not disable advertise transit CIDR during transit group update: %s", err)
 			}
-		}
-	}
-
-	// ============================================================================
-	// BGP Manual Spoke Advertise CIDRs - API: edit_aviatrix_transit_advanced_config
-	// ============================================================================
-	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
-		bgpManualSpokeAdvertiseCidrs := getStringSet(d, "bgp_manual_spoke_advertise_cidrs")
-		cidrs := strings.Join(bgpManualSpokeAdvertiseCidrs, ",")
-		err := client.SetTransitBgpManualAdvertisedNetworksGatewayGroup(ctx, groupName, cidrs)
-		if err != nil {
-			return diag.Errorf("failed to set BGP manual spoke advertise CIDRs during transit group update: %s", err)
 		}
 	}
 

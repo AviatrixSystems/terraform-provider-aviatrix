@@ -128,28 +128,27 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 			"ha_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_bgp_remote_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
-				ForceNew:     true,
+				ForceNew:     false,
 				Description:  "Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"backup_local_lan_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Backup Local LAN IP.",
 			},
 			"backup_remote_lan_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Backup Remote LAN IP.",
 			},
 			"prepend_as_path": {
@@ -251,7 +250,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Backup Remote LAN IPv6 address.",
 			},
 		},
@@ -341,7 +340,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 			return diag.Errorf("ha is not enabled, please set 'backup_remote_lan_ip' and 'backup_local_lan_ip' to empty")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 {
-			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
+			return diag.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please set 'backup_bgp_remote_as_num' to empty")
 		}
 		if externalDeviceConn.BackupRemoteLanIPv6 != "" {
 			return diag.Errorf("ha is not enabled, please set 'backup_remote_lan_ipv6_ip' to empty")
@@ -723,6 +722,16 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 			}
 		}
 	}
+
+	if d.HasChange("ha_enabled") {
+		enableHa := getBool(d, "ha_enabled")
+		if enableHa {
+			return resourceAviatrixEdgeSpokeExternalDeviceConnEnableHa(ctx, d, meta)
+		} else {
+			return resourceAviatrixEdgeSpokeExternalDeviceConnDisableHa(ctx, d, meta)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }
@@ -748,5 +757,164 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *s
 		}
 	}
 
+	return nil
+}
+
+// buildEdgeSpokeExternalDeviceConnForHa builds the ExternalDeviceConn for HA from resource data and validates required fields.
+// It is extracted for unit testing.
+func buildEdgeSpokeExternalDeviceConnForHa(d *schema.ResourceData, haGwName string) (*goaviatrix.ExternalDeviceConn, error) {
+	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+		VpcID:              getString(d, "site_id"),
+		ConnectionName:     getString(d, "connection_name"),
+		GwName:             haGwName,
+		ConnectionType:     getString(d, "connection_type"),
+		TunnelProtocol:     getString(d, "tunnel_protocol"),
+		EnableEdgeUnderlay: getBool(d, "enable_edge_underlay"),
+		LocalLanIP:         getString(d, "backup_local_lan_ip"),
+		RemoteLanIP:        getString(d, "backup_remote_lan_ip"),
+		BgpMd5Key:          getString(d, "backup_bgp_md5_key"),
+		EnableIpv6:         getBool(d, "enable_ipv6"),
+		RemoteLanIPv6:      getString(d, "backup_remote_lan_ipv6_ip"),
+	}
+
+	bgpLocalAsNumStr := getString(d, "bgp_local_as_num")
+	if bgpLocalAsNumStr != "" {
+		bgpLocalAsNum, err := strconv.Atoi(bgpLocalAsNumStr)
+		if err != nil {
+			return nil, fmt.Errorf("'bgp_local_as_num' must be a valid integer: %w", err)
+		}
+		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNum
+	}
+
+	bgpRemoteAsNumStr := getString(d, "backup_bgp_remote_as_num")
+	if bgpRemoteAsNumStr == "" {
+		return nil, fmt.Errorf("to enable HA, please specify 'backup_bgp_remote_as_num'")
+	}
+	bgpRemoteAsNum, err := strconv.Atoi(bgpRemoteAsNumStr)
+	if err != nil {
+		return nil, fmt.Errorf("'backup_bgp_remote_as_num' must be a valid integer: %w", err)
+	}
+	externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNum
+
+	if externalDeviceConn.RemoteLanIP == "" {
+		return nil, fmt.Errorf("to enable HA, please specify 'backup_remote_lan_ip'")
+	}
+
+	if externalDeviceConn.EnableIpv6 && externalDeviceConn.RemoteLanIPv6 == "" {
+		return nil, fmt.Errorf("to enable HA with IPv6, please specify 'backup_remote_lan_ipv6_ip'")
+	}
+
+	return externalDeviceConn, nil
+}
+
+func resourceAviatrixEdgeSpokeExternalDeviceConnEnableHa(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+	priGwName := getString(d, "gw_name")
+	// first read primary gateway details to get ha gateway name
+	primaryGateway, err := getGatewayDetails(client, priGwName)
+	if err != nil {
+		return diag.Errorf("could not get primary gateway details: %v", err)
+	}
+
+	haGwName := primaryGateway.HaGw.GwName
+	if haGwName == "" {
+		return diag.Errorf("primary gateway %s does not have a HA gateway", priGwName)
+	}
+
+	log.Printf("[INFO] Creating HA external device connection for %s on gateway %s", getString(d, "connection_name"), haGwName)
+	externalDeviceConn, err := buildEdgeSpokeExternalDeviceConnForHa(d, haGwName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	numberOfRetries := getInt(d, "number_of_retries")
+	retryInterval := getInt(d, "retry_interval")
+
+	var edgeExternalDeviceConn goaviatrix.EdgeExternalDeviceConn
+	if externalDeviceConn.EnableEdgeUnderlay {
+		edgeExternalDeviceConn = goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
+	}
+
+	for i := 0; ; i++ {
+		if externalDeviceConn.EnableEdgeUnderlay {
+			connName, connErr := client.CreateEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+			err = connErr
+			log.Printf("[DEBUG] Created underlay HA connection %s", connName)
+		} else {
+			err = client.CreateExternalDeviceConn(externalDeviceConn)
+		}
+
+		if err != nil {
+			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") {
+				return diag.Errorf("failed to enable HA for Edge as a Spoke external device connection: %s", err)
+			}
+		} else {
+			break
+		}
+		if i < numberOfRetries {
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+		} else {
+			d.SetId("")
+			return diag.Errorf("failed to enable HA for Edge as a Spoke external device connection: %s", err)
+		}
+	}
+	return nil
+}
+
+// buildEdgeSpokeExternalDeviceConnForDisableHa builds the ExternalDeviceConn for HA disable from resource data and validates
+// that backup fields are empty. It is extracted for unit testing.
+func buildEdgeSpokeExternalDeviceConnForDisableHa(d *schema.ResourceData, haGwName string) (*goaviatrix.ExternalDeviceConn, error) {
+	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+		VpcID:              getString(d, "site_id"),
+		ConnectionName:     getString(d, "connection_name"),
+		GwName:             haGwName,
+		EnableEdgeUnderlay: getBool(d, "enable_edge_underlay"),
+	}
+
+	if getString(d, "backup_remote_lan_ip") != "" || getString(d, "backup_local_lan_ip") != "" {
+		return nil, fmt.Errorf("to disable HA, please set 'backup_remote_lan_ip' and 'backup_local_lan_ip' to empty")
+	}
+	if getString(d, "backup_bgp_remote_as_num") != "" {
+		return nil, fmt.Errorf("to disable HA, please set 'backup_bgp_remote_as_num' to empty")
+	}
+	if getString(d, "backup_remote_lan_ipv6_ip") != "" {
+		return nil, fmt.Errorf("to disable HA, please set 'backup_remote_lan_ipv6_ip' to empty")
+	}
+
+	return externalDeviceConn, nil
+}
+
+func resourceAviatrixEdgeSpokeExternalDeviceConnDisableHa(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := mustClient(meta)
+
+	priGwName := getString(d, "gw_name")
+	// first read primary gateway details to get ha gateway name
+	primaryGateway, err := getGatewayDetails(client, priGwName)
+	if err != nil {
+		return diag.Errorf("could not get primary gateway details: %v", err)
+	}
+
+	haGwName := primaryGateway.HaGw.GwName
+	if haGwName == "" {
+		return diag.Errorf("primary gateway %s does not have a HA gateway", priGwName)
+	}
+	log.Printf("[INFO] Deleting HA external device connection for %s on gateway %s", getString(d, "connection_name"), haGwName)
+	externalDeviceConn, err := buildEdgeSpokeExternalDeviceConnForDisableHa(d, haGwName)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if externalDeviceConn.EnableEdgeUnderlay {
+		edgeExternalDeviceConn := goaviatrix.EdgeExternalDeviceConn(*externalDeviceConn)
+		err := client.DeleteEdgeExternalDeviceConn(&edgeExternalDeviceConn)
+		if err != nil {
+			return diag.Errorf("failed to delete HA external device connection: %s", err)
+		}
+	} else {
+		err := client.DeleteExternalDeviceConn(externalDeviceConn)
+		if err != nil {
+			return diag.Errorf("failed to delete HA external device connection: %s", err)
+		}
+	}
 	return nil
 }

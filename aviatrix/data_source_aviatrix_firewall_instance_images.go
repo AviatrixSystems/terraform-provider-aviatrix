@@ -17,6 +17,11 @@ func dataSourceAviatrixFirewallInstanceImages() *schema.Resource {
 				Required:    true,
 				Description: "VPC ID.",
 			},
+			"version_count": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Number of firewall image versions to list.",
+			},
 			"firewall_images": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -51,8 +56,12 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	client := mustClient(meta)
 
 	vpcId := getString(d, "vpc_id")
+	versionCount := 0
+	if d.Get("version_count") != nil {
+		versionCount = getInt(d, "version_count")
+	}
 
-	firewallInstanceImages, err := client.GetFirewallInstanceImages(vpcId)
+	firewallInstanceImages, err := client.GetFirewallInstanceImages(vpcId, versionCount)
 	if err != nil {
 		return fmt.Errorf("couldn't get firewall instance images: %w", err)
 	}

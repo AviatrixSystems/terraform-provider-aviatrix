@@ -93,9 +93,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Size of the gateway instance.",
-				DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress the diff if the old value is "UNKNOWN"
-					return old == "UNKNOWN"
+					if old == "UNKNOWN" {
+						return true
+					}
+					// Suppress case-insensitive differences (e.g., "LARGE" vs "large")
+					return strings.EqualFold(old, new)
 				},
 			},
 			"subnet": {
@@ -726,6 +730,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the transit gateway created.",
+			},
+			"ipv6_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "IPv6 address of the transit gateway created.",
+			},
+			"ha_ipv6_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "IPv6 address of the HA transit gateway created.",
 			},
 			"ha_cloud_instance_id": {
 				Type:        schema.TypeString,
@@ -2203,6 +2217,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		mustSet(d, "rx_queue_size", gw.RxQueueSize)
 		mustSet(d, "subnet", gw.VpcNet)
 
+		setGatewayIPv6IPState(d, gw)
 		var prependAsPath []string
 		for _, p := range strings.Split(gw.PrependASPath, " ") {
 			if p != "" {
@@ -2516,6 +2531,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return nil
 		}
 		mustSet(d, "ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
+		setGatewayHAIPv6IPState(d, gw)
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			mustSet(d, "ha_subnet", gw.HaGw.VpcNet)
 			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || mustString(zone) != "") {
@@ -4380,6 +4396,19 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if _, ok := d.GetOk("enable_jumbo_frame"); !ok {
 		_ = d.Set("enable_jumbo_frame", false)
 	}
+
+	// update the management egress IP prefix list
+	if _, ok := d.GetOk("management_egress_ip_prefix_list"); ok {
+		managementEgressIPPrefixList := getStringSet(d, "management_egress_ip_prefix_list")
+		if len(managementEgressIPPrefixList) > 0 {
+			gateway.ManagementEgressIPPrefix = strings.Join(managementEgressIPPrefixList, ",")
+		}
+		err = client.UpdateEdgeGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update the management egress IP prefix list: %w", err)
+		}
+	}
+
 	return nil
 }
 

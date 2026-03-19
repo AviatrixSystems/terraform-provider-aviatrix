@@ -759,12 +759,12 @@ func (c *Client) DisableTransitLearnedCidrsApprovalGatewayGroup(ctx context.Cont
 
 // UpdateTransitPendingApprovedCidrsGatewayGroup updates the approved learned CIDRs for a transit gateway group
 func (c *Client) UpdateTransitPendingApprovedCidrsGatewayGroup(ctx context.Context, groupName string, approvedCidrs []string) error {
-	action := "set_transit_gateway_approved_cidr_rules"
+	action := "set_bgp_gateway_approved_cidr_rules"
 	form := map[string]interface{}{
-		"action":                 action,
-		"CID":                    c.CID,
-		"gateway_name":           groupName,
-		"approved_learned_cidrs": approvedCidrs,
+		"action":       action,
+		"CID":          c.CID,
+		"gateway_name": groupName,
+		"cidr_rules":   approvedCidrs,
 	}
 
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)

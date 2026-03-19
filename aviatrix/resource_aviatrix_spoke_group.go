@@ -208,15 +208,6 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Description: "Enable BGP accept communities.",
 		},
 
-		// BGP over LAN
-		"enable_bgp_over_lan": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			ForceNew:    true,
-			Description: "Enable BGP over LAN. Only valid for Azure.",
-		},
-
 		// Learned CIDR Approval
 		"enable_learned_cidrs_approval": {
 			Type:        schema.TypeBool,
@@ -319,9 +310,6 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	spokeGroup.BgpSendCommunities = getBool(d, "bgp_send_communities")
 	spokeGroup.BgpAcceptCommunities = getBool(d, "bgp_accept_communities")
 
-	// BGP over LAN
-	spokeGroup.EnableBgpOverLan = getBool(d, "enable_bgp_over_lan")
-
 	// Learned CIDR Approval
 	spokeGroup.EnableLearnedCidrsApproval = getBool(d, "enable_learned_cidrs_approval")
 	if v, ok := d.GetOk("learned_cidrs_approval_mode"); ok {
@@ -353,10 +341,6 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 
 	if spokeGroup.EnableIPv6 && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 		return fmt.Errorf("enable_ipv6 is only valid for AWS (1) and Azure (8)")
-	}
-
-	if spokeGroup.EnableBgpOverLan && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("enable_bgp_over_lan is only valid for Azure related cloud types")
 	}
 
 	if spokeGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -772,9 +756,6 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	// BGP Communities
 	mustSet(d, "bgp_send_communities", spokeGroup.BgpSendCommunities)
 	mustSet(d, "bgp_accept_communities", spokeGroup.BgpAcceptCommunities)
-
-	// BGP over LAN
-	mustSet(d, "enable_bgp_over_lan", spokeGroup.EnableBgpOverLan)
 
 	// Learned CIDR Approval
 	mustSet(d, "enable_learned_cidrs_approval", spokeGroup.EnableLearnedCidrsApproval)

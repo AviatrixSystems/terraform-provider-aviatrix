@@ -494,7 +494,10 @@ func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.Tra
 
 	allocateNewEip := getBool(d, "allocate_new_eip")
 	if allocateNewEip {
-		gateway.ReuseEip = "off"
+		// Leave ReuseEip empty so it's omitted from the API request.
+		// Sending "off" causes "Invalid IP format off" - controller expects
+		// reuse_eip to be either empty (allocate new) or a valid IP (reuse).
+		gateway.ReuseEip = ""
 		return nil
 	}
 

@@ -63,6 +63,8 @@ type Interface struct {
 	Dhcp          bool    `json:"dhcp"`
 	IpAddr        string  `json:"ipaddr"`
 	GatewayIp     string  `json:"gateway_ip"`
+	IPv6Addr      string  `json:"ipv6_addr"`
+	GatewayIPv6IP string  `json:"gateway_ipv6_ip"`
 	DnsPrimary    string  `json:"dns_primary"`
 	DnsSecondary  string  `json:"dns_secondary"`
 	SubInterfaces []*Vlan `json:"subinterfaces"`

@@ -232,6 +232,8 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 		interface1["enable_dhcp"] = interface0.Dhcp
 		interface1["ip_address"] = interface0.IpAddr
 		interface1["gateway_ip"] = interface0.GatewayIp
+		interface1["ipv6_address"] = interface0.IPv6Addr
+		interface1["gateway_ipv6"] = interface0.GatewayIPv6IP
 		interface1["dns_server_ip"] = interface0.DnsPrimary
 		interface1["secondary_dns_server_ip"] = interface0.DnsSecondary
 

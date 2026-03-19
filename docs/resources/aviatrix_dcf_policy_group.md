@@ -20,7 +20,7 @@ The two terraform attachment points are:
 The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
 
 Steps to attach a policy group to one of the above attachment points:
-We need to get the attachment point ID based on its name (the name should be gloabally unique for each attachment point). In this example we will use the "TERRAFORM_BEFORE_UI_MANAGED" as the attachment point name to retrieve its ID and pass to the attach_to field in our policy group.
+We need to get the attachment point ID based on its name (the name should be globally unique for each attachment point). In this example we will use the "TERRAFORM_BEFORE_UI_MANAGED" as the attachment point name to retrieve its ID and pass to the attach_to field in our policy group.
 ```hcl
 data "aviatrix_dcf_attachment_point" "tf_before_ui" {
     name = "TERRAFORM_BEFORE_UI_MANAGED"

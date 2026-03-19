@@ -605,6 +605,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
 			},
+			"ipv6_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "IPv6 address of the spoke gateway created.",
+			},
 			"ha_cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -619,6 +624,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
+			},
+			"ha_ipv6_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "IPv6 address of the HA spoke gateway created.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
@@ -706,6 +716,24 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 			},
 		},
+	}
+}
+
+// setGatewayIPv6IPState writes ipv6_ip into the Terraform state when IPv6 is enabled and "" when it is disabled.
+func setGatewayIPv6IPState(d *schema.ResourceData, gw *goaviatrix.Gateway) {
+	if gw.EnableIPv6 {
+		mustSet(d, "ipv6_ip", gw.IPv6IP)
+	} else {
+		mustSet(d, "ipv6_ip", "")
+	}
+}
+
+// setGatewayIPv6IPState writes ha_ipv6_ip into the Terraform state when IPv6 is enabled and "" when it is disabled.
+func setGatewayHAIPv6IPState(d *schema.ResourceData, gw *goaviatrix.Gateway) {
+	if gw.EnableIPv6 {
+		mustSet(d, "ha_ipv6_ip", gw.HaGw.IPv6IP)
+	} else {
+		mustSet(d, "ha_ipv6_ip", "")
 	}
 }
 
@@ -1699,6 +1727,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	mustSet(d, "public_ip", gw.PublicIP)
 	mustSet(d, "enable_global_vpc", gw.EnableGlobalVpc)
 
+	setGatewayIPv6IPState(d, gw)
+
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
 		if err != nil {
@@ -1977,6 +2007,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		mustSet(d, "ha_image_version", gw.HaGw.ImageVersion)
 		mustSet(d, "ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 		mustSet(d, "ha_public_ip", gw.HaGw.PublicIP)
+		setGatewayHAIPv6IPState(d, gw)
 		if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			mustSet(d, "ha_insane_mode_az", gw.HaGw.GatewayZone)
 		} else {
