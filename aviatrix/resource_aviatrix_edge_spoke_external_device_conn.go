@@ -678,6 +678,89 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 		if err != nil {
 			return diag.Errorf("could not update BGP MD5 key: %s", err)
 		}
+	} else {
+		if d.HasChange("bgp_md5_key") {
+			if getString(d, "connection_type") != "bgp" {
+				return diag.Errorf("can't update BGP MD5 authentication key since it is only supported for BGP connection")
+			}
+
+			oldKey, newKey := d.GetChange("bgp_md5_key")
+			oldKeyStr := mustString(oldKey)
+			newKeyStr := mustString(newKey)
+			oldKeyList := strings.Split(oldKeyStr, ",")
+			newKeyList := strings.Split(newKeyStr, ",")
+			var bgpRemoteIP []string
+			if strings.ToUpper(getString(d, "tunnel_protocol")) == "LAN" {
+				bgpRemoteIP = strings.Split(getString(d, "remote_lan_ip"), ",")
+			} else {
+				bgpRemoteIP = strings.Split(getString(d, "remote_tunnel_cidr"), ",")
+			}
+			if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIP) {
+				return diag.Errorf("can't update BGP MD5 authentication key due to incorrect number of keys provided for BGP connection: %s. Please specify the same number of keys as the number of tunnel IPs and use \",\" to separate them", getString(d, "connection_name"))
+			}
+			for i, v := range bgpRemoteIP {
+				bgpMd5Key := ""
+				if newKeyStr != "" {
+					bgpMd5Key = newKeyList[i]
+				}
+				if newKeyStr != "" && oldKeyStr != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
+					continue
+				}
+				editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
+					GwName:         getString(d, "gw_name"),
+					ConnectionName: getString(d, "connection_name"),
+					BgpRemoteIP:    v,
+					BgpMd5Key:      bgpMd5Key,
+				}
+				err := client.EditBgpMd5Key(editBgpMd5Key)
+				if err != nil {
+					return diag.Errorf("failed to update BGP MD5 authentication key: %v", err)
+				}
+			}
+		}
+
+		if d.HasChange("backup_bgp_md5_key") {
+			if getString(d, "connection_type") != "bgp" {
+				return diag.Errorf("can't update backup BGP MD5 authentication key since it is only supported for BGP connection")
+			}
+			if !getBool(d, "ha_enabled") {
+				return diag.Errorf("can't update BGP backup MD5 authentication key since ha is not enabled")
+			}
+
+			oldKey, newKey := d.GetChange("backup_bgp_md5_key")
+			oldKeyStr := mustString(oldKey)
+			newKeyStr := mustString(newKey)
+			oldKeyList := strings.Split(oldKeyStr, ",")
+			newKeyList := strings.Split(newKeyStr, ",")
+			var bgpRemoteIP []string
+			if strings.ToUpper(getString(d, "tunnel_protocol")) == "LAN" {
+				bgpRemoteIP = strings.Split(getString(d, "backup_remote_lan_ip"), ",")
+			} else {
+				bgpRemoteIP = strings.Split(getString(d, "backup_remote_tunnel_cidr"), ",")
+			}
+			if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIP) {
+				return diag.Errorf("can't update backup BGP MD5 authentication key due to incorrect number of keys provided for BGP connection: %s. Please specify the same number of keys as the number of  backup tunnel IPs and use \",\" to separate them", getString(d, "connection_name"))
+			}
+			for i, v := range bgpRemoteIP {
+				bgpMd5Key := ""
+				if newKeyStr != "" {
+					bgpMd5Key = newKeyList[i]
+				}
+				if newKeyStr != "" && oldKeyStr != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
+					continue
+				}
+				editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
+					GwName:         getString(d, "gw_name"),
+					ConnectionName: getString(d, "connection_name"),
+					BgpRemoteIP:    v,
+					BgpMd5Key:      bgpMd5Key,
+				}
+				err := client.EditBgpMd5Key(editBgpMd5Key)
+				if err != nil {
+					return diag.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
+				}
+			}
+		}
 	}
 
 	if d.HasChange("manual_bgp_advertised_cidrs") {

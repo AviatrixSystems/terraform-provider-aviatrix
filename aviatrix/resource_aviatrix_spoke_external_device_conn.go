@@ -1429,7 +1429,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			bgpRemoteIp = strings.Split(getString(d, "remote_tunnel_cidr"), ",")
 		}
 		if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection: %s", getString(d, "connection_name"))
+			return fmt.Errorf("can't update BGP MD5 authentication key due to incorrect number of keys provided for BGP connection: %s. Please specify the same number of keys as the number of tunnel IPs and use \",\" to separate them", getString(d, "connection_name"))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
@@ -1485,7 +1485,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			bgpRemoteIp = strings.Split(getString(d, "backup_remote_tunnel_cidr"), ",")
 		}
 		if newKeyStr != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", getString(d, "connection_name"))
+			return fmt.Errorf("can't update backup BGP MD5 authentication key due to incorrect number of keys provided for BGP connection: %s. Please specify the same number of keys as the number of  backup tunnel IPs and use \",\" to separate them", getString(d, "connection_name"))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
