@@ -990,6 +990,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "BGP communities gateway accept configuration.",
 				Default:     false,
 			},
+			"gateway_override": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "BGP Multi-Exit Discriminator to SDN metric gateway override configuration.",
+				Default:     false,
+			},
 			"enable_ipv6": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -1560,6 +1566,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 		}
 
+		/* Set BGP MED to SDN metric per gateway */
+		override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+		gwOverride := getBool(d, "gateway_override")
+		if gwOverride != override || err != nil {
+			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
+			if err != nil {
+				return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+
 		if haSubnet != "" || haZone != "" {
 			// Enable HA
 			transitHaGw := &goaviatrix.TransitHaGateway{
@@ -2075,6 +2091,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
 		}
+		override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
+		}
+		mustSet(d, "gateway_override", override)
 	}
 
 	// edge cloud type
@@ -2643,6 +2664,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if sendComm != commSendCurr {
 			if err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm); err != nil {
 				return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+			}
+		}
+	}
+
+	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	if d.HasChange("gateway_override") {
+		gwOverride := getBool(d, "gateway_override")
+		if gwOverride != override || err != nil {
+			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
+			if err != nil {
+				return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
 			}
 		}
 	}
@@ -4322,6 +4354,15 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	if sendComm != commSendCurr {
 		if err := client.SetGatewayBgpCommunitiesSend(gateway.GwName, sendComm); err != nil {
 			return fmt.Errorf("failed to set send BGP communities for gateway %s: %w", gateway.GwName, err)
+		}
+	}
+
+	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	gwOverride := getBool(d, "gateway_override")
+	if gwOverride != override || err != nil {
+		err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
+		if err != nil {
+			return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
 		}
 	}
 
