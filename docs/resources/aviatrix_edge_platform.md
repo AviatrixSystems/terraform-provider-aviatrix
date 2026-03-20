@@ -86,10 +86,17 @@ The following arguments are supported:
 
     If you are deploying Edge Spoke, interface mapping is required. Please use the following mapping:
 
-    Dell:
+    Dell R450:
     ```
     WAN: eth3
     LAN: eth2
+    MGMT: eth0
+    ```
+
+    Dell R470:
+    ```
+    WAN: eth5
+    LAN: eth4
     MGMT: eth0
     ```
 
