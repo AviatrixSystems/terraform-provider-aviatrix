@@ -47,7 +47,7 @@ func resourceAviatrixAwsGuardDuty() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta interface{}) (err error) {
+func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta any) (err error) {
 	client := mustClient(meta)
 	guardDuty := marshalAwsGuardDutyInput(d)
 
@@ -64,7 +64,7 @@ func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta interface{}
 	return err
 }
 
-func resourceAviatrixAwsGuardDutyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsGuardDutyRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	accName := getString(d, "account_name")
@@ -98,7 +98,7 @@ func resourceAviatrixAwsGuardDutyRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixAwsGuardDutyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsGuardDutyUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	account := marshalAwsGuardDutyInput(d)
 
@@ -111,7 +111,7 @@ func resourceAviatrixAwsGuardDutyUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixAwsGuardDutyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsGuardDutyDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	account := marshalAwsGuardDutyInput(d)
 

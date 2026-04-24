@@ -52,7 +52,7 @@ func marshalAwsTgwIntraDomainInspectionInput(d *schema.ResourceData) *goaviatrix
 	}
 }
 
-func resourceAviatrixAwsTgwIntraDomainInspectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwIntraDomainInspectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	intraDomainInspection := marshalAwsTgwIntraDomainInspectionInput(d)
@@ -66,7 +66,7 @@ func resourceAviatrixAwsTgwIntraDomainInspectionCreate(ctx context.Context, d *s
 	return resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx, d, meta)
 }
 
-func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Get("tgw_name") == "" {
@@ -106,7 +106,7 @@ func resourceAviatrixAwsTgwIntraDomainInspectionRead(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixAwsTgwIntraDomainInspectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwIntraDomainInspectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	intraDomainInspection := marshalAwsTgwIntraDomainInspectionInput(d)

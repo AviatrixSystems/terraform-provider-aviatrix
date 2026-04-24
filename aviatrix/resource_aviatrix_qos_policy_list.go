@@ -79,7 +79,7 @@ func marshalQosPolicyListInput(d *schema.ResourceData) *goaviatrix.QosPolicyList
 	return &qosPolicyList
 }
 
-func resourceAviatrixQosPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	qosPolicyList := marshalQosPolicyListInput(d)
@@ -96,7 +96,7 @@ func resourceAviatrixQosPolicyListCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixQosPolicyListReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixQosPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixQosPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixQosPolicyListRead(ctx, d, meta)
@@ -104,7 +104,7 @@ func resourceAviatrixQosPolicyListReadIfRequired(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	qosPolicyResp, err := client.GetQosPolicyList(ctx)
@@ -116,11 +116,11 @@ func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("failed to read qos policy list: %s", err)
 	}
 
-	var policies []map[string]interface{}
+	var policies []map[string]any
 
 	for _, policyList := range *qosPolicyResp {
 		for _, policy := range policyList.Policies {
-			p := make(map[string]interface{})
+			p := make(map[string]any)
 			p["uuid"] = policy.UUID
 			p["name"] = policy.Name
 			p["dscp_values"] = policy.DscpValues
@@ -137,7 +137,7 @@ func resourceAviatrixQosPolicyListRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -154,7 +154,7 @@ func resourceAviatrixQosPolicyListUpdate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixQosPolicyListRead(ctx, d, meta)
 }
 
-func resourceAviatrixQosPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteQosPolicyList(ctx)

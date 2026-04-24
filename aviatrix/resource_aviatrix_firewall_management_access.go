@@ -37,7 +37,7 @@ func resourceAviatrixFirewallManagementAccess() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallManagementAccess := &goaviatrix.FirewallManagementAccess{
@@ -59,7 +59,7 @@ func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta
 	return resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFirewallManagementAccessReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFirewallManagementAccessReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFirewallManagementAccessRead(d, meta)
@@ -67,7 +67,7 @@ func resourceAviatrixFirewallManagementAccessReadIfRequired(d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixFirewallManagementAccessRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallManagementAccessRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitFireNetGatewayName := getString(d, "transit_firenet_gateway_name")
@@ -98,7 +98,7 @@ func resourceAviatrixFirewallManagementAccessRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAviatrixFirewallManagementAccessDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallManagementAccessDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallManagementAccess := &goaviatrix.FirewallManagementAccess{

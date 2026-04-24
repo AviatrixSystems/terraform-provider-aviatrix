@@ -48,7 +48,7 @@ The following arguments are supported:
 * `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name, resource group and GUID. Example: "Foo_VNet:Bar_RG:GUID".
 
 ### Optional
-* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG").
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
 
 ## Import
 

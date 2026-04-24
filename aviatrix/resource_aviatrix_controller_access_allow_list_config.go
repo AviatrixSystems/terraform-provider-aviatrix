@@ -72,7 +72,7 @@ func marshalControllerAccessAllowListConfigInput(d *schema.ResourceData) *goavia
 	return &allowList
 }
 
-func resourceAviatrixControllerAccessAllowListConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerAccessAllowListConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	allowList := marshalControllerAccessAllowListConfigInput(d)
@@ -89,7 +89,7 @@ func resourceAviatrixControllerAccessAllowListConfigCreate(ctx context.Context, 
 	return resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixControllerAccessAllowListConfigRead(ctx, d, meta)
@@ -97,7 +97,7 @@ func resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx context.C
 	return nil
 }
 
-func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -114,10 +114,10 @@ func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d 
 	}
 	mustSet(d, "enable_enforce", allowList.Enforce)
 
-	var al []interface{}
+	var al []any
 
 	for _, v0 := range allowList.AllowList {
-		v1 := make(map[string]interface{})
+		v1 := make(map[string]any)
 
 		v1["ip_address"] = v0.IpAddress
 		v1["description"] = v0.Description
@@ -132,7 +132,7 @@ func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d 
 	return nil
 }
 
-func resourceAviatrixControllerAccessAllowListConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerAccessAllowListConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -149,7 +149,7 @@ func resourceAviatrixControllerAccessAllowListConfigUpdate(ctx context.Context, 
 	return resourceAviatrixControllerAccessAllowListConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerAccessAllowListConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerAccessAllowListConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteControllerAccessAllowList(ctx)

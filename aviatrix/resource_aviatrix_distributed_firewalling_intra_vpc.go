@@ -51,7 +51,7 @@ func resourceAviatrixDistributedFirewallingIntraVpc() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDistributedFirewallingIntraVpcCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingIntraVpcCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	vpcList, err := marshalDistributedFirewallingIntraVpcListInput(d)
@@ -70,7 +70,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcCreate(ctx context.Context, d
 	return resourceAviatrixDistributedFirewallingIntraVpcReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixDistributedFirewallingIntraVpcReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingIntraVpcReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixDistributedFirewallingIntraVpcRead(ctx, d, meta)
@@ -78,7 +78,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcReadIfRequired(ctx context.Co
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	vpcList, err := client.GetDistributedFirewallingIntraVpc(ctx)
@@ -90,9 +90,9 @@ func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *
 		return diag.Errorf("failed to read Distributed-firewalling Intra VPC list: %s", err)
 	}
 
-	var vpcs []map[string]interface{}
+	var vpcs []map[string]any
 	for _, vpc := range vpcList.VPCs {
-		v := make(map[string]interface{})
+		v := make(map[string]any)
 		v["account_name"] = vpc.AccountName
 		v["vpc_id"] = vpc.VpcId
 		v["region"] = vpc.Region
@@ -108,7 +108,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcRead(ctx context.Context, d *
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingIntraVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingIntraVpcUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -127,7 +127,7 @@ func resourceAviatrixDistributedFirewallingIntraVpcUpdate(ctx context.Context, d
 	return resourceAviatrixDistributedFirewallingIntraVpcRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingIntraVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingIntraVpcDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteDistributedFirewallingIntraVpc(ctx)

@@ -59,7 +59,7 @@ func TestResourceAviatrixAccountDelete_CallsDeleteAccount(t *testing.T) {
 	}
 	defer func() { assert.Len(t, client.DeleteAccountCalls(), 1) }()
 
-	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]interface{}{
+	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]any{
 		"account_name": "unit_test_account",
 	})
 	res := resourceAviatrixAccountDelete(context.TODO(), d, client)
@@ -75,7 +75,7 @@ func TestResourceAviatrixAccountDelete_WhenDeleteAccountFails(t *testing.T) {
 	}
 	defer func() { assert.Len(t, client.DeleteAccountCalls(), 1) }()
 
-	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]interface{}{
+	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]any{
 		"account_name": "unit_test_account",
 	})
 	res := resourceAviatrixAccountDelete(context.TODO(), d, client)
@@ -101,7 +101,7 @@ func TestResourceAviatrixAccountRead_AccountWithAudit(t *testing.T) {
 	defer func() { assert.Len(t, client.GetAccountCalls(), 1) }()
 	defer func() { assert.Len(t, client.AuditAccountCalls(), 1) }()
 
-	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]interface{}{
+	d := schema.TestResourceDataRaw(t, resourceAviatrixAccount().Schema, map[string]any{
 		"account_name":  "unit_test_account",
 		"audit_account": true,
 	})

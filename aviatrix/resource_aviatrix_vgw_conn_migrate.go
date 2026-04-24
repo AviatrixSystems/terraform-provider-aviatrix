@@ -8,7 +8,7 @@ import (
 )
 
 func resourceAviatrixVGWConnMigrateState(
-	v int, is *terraform.InstanceState, _ interface{},
+	v int, is *terraform.InstanceState, _ any,
 ) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:

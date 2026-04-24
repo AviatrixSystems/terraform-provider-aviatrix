@@ -192,7 +192,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 	return smartGroup, nil
 }
 
-func resourceAviatrixSmartGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	smartGroup, err := marshalSmartGroupInput(d)
@@ -211,7 +211,7 @@ func resourceAviatrixSmartGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixSmartGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixSmartGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixSmartGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSmartGroupRead(ctx, d, meta)
@@ -219,7 +219,7 @@ func resourceAviatrixSmartGroupReadIfRequired(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -235,15 +235,15 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 	mustSet(d, "name", smartGroup.Name)
 
-	var expressions []interface{}
+	var expressions []any
 
 	for _, filter := range smartGroup.Selector.Expressions {
 		filterMap := goaviatrix.SmartGroupFilterToResource(filter)
 		expressions = append(expressions, filterMap)
 	}
 
-	selector := []interface{}{
-		map[string]interface{}{
+	selector := []any{
+		map[string]any{
 			"match_expressions": expressions,
 		},
 	}
@@ -254,7 +254,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -275,7 +275,7 @@ func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixSmartGroupRead(ctx, d, meta)
 }
 
-func resourceAviatrixSmartGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

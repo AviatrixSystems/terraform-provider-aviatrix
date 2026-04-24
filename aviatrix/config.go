@@ -107,7 +107,7 @@ func (c *Config) Client() (*goaviatrix.Client, error) {
 // mustClient asserts that the meta interface is a valid *goaviatrix.Client.
 // This is a helper to satisfy forcetypeassert lints while ensuring the
 // provider has its required API client.
-func mustClient(meta interface{}) *goaviatrix.Client {
+func mustClient(meta any) *goaviatrix.Client {
 	if client, ok := meta.(*goaviatrix.Client); ok && client != nil {
 		return client
 	}

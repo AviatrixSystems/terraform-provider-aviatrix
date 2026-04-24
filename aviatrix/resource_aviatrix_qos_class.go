@@ -49,7 +49,7 @@ func marshalQosClassInput(d *schema.ResourceData) *goaviatrix.QosClass {
 	return qosClass
 }
 
-func resourceAviatrixQosClassCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosClassCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	qosClass := marshalQosClassInput(d)
@@ -66,7 +66,7 @@ func resourceAviatrixQosClassCreate(ctx context.Context, d *schema.ResourceData,
 	return resourceAviatrixQosClassReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixQosClassReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixQosClassReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixQosClassRead(ctx, d, meta)
@@ -74,7 +74,7 @@ func resourceAviatrixQosClassReadIfRequired(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAviatrixQosClassRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosClassRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -94,7 +94,7 @@ func resourceAviatrixQosClassRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAviatrixQosClassUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosClassUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -112,7 +112,7 @@ func resourceAviatrixQosClassUpdate(ctx context.Context, d *schema.ResourceData,
 	return resourceAviatrixQosClassRead(ctx, d, meta)
 }
 
-func resourceAviatrixQosClassDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixQosClassDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

@@ -483,7 +483,7 @@ func marshalEdgeZededaInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 	return edgeCSP
 }
 
-func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -657,7 +657,7 @@ func resourceAviatrixEdgeZededaCreate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixEdgeZededaReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeZededaReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeZededaReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeZededaRead(ctx, d, meta)
@@ -665,7 +665,7 @@ func resourceAviatrixEdgeZededaReadIfRequired(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -745,10 +745,10 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "lan_interface_names", edgeCSPResp.LanInterface)
 	mustSet(d, "management_interface_names", edgeCSPResp.MgmtInterface)
 
-	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
+	var interfaces []map[string]any
+	var vlan []map[string]any
 	for _, if0 := range edgeCSPResp.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["wan_public_ip"] = if0.PublicIp
@@ -766,7 +766,7 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 
 		if if0.Type == "LAN" && if0.SubInterfaces != nil {
 			for _, v0 := range if0.SubInterfaces {
-				v1 := make(map[string]interface{})
+				v1 := make(map[string]any)
 				v1["parent_interface_name"] = v0.ParentInterface
 				v1["ip_address"] = v0.IpAddr
 				v1["gateway_ip"] = v0.GatewayIp
@@ -799,7 +799,7 @@ func resourceAviatrixEdgeZededaRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -1012,7 +1012,7 @@ func resourceAviatrixEdgeZededaUpdate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixEdgeZededaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeZededaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeZededaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

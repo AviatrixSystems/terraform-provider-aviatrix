@@ -11,7 +11,7 @@ import (
 )
 
 func resourceAviatrixAWSTgwMigrateState(
-	v int, is *terraform.InstanceState, _ interface{},
+	v int, is *terraform.InstanceState, _ any,
 ) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -46,7 +46,7 @@ func resourceAviatrixAWSTgwResourceV1() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixAWSTgwStateUpgradeV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
 		rawState["manage_transit_gateway_attachment"] = true
 	}
@@ -64,7 +64,7 @@ func resourceAviatrixAWSTgwResourceV2() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwStateUpgradeV2(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixAWSTgwStateUpgradeV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_security_domain"]; !ok {
 		rawState["manage_security_domain"] = true
 	}

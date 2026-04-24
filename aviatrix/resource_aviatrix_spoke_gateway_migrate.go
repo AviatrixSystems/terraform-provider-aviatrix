@@ -17,7 +17,7 @@ func resourceAviatrixSpokeGatewayResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeGatewayStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixSpokeGatewayStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
 		rawState["manage_transit_gateway_attachment"] = "true"
 	}
@@ -36,7 +36,7 @@ func resourceAviatrixSpokeGatewayResourceV1() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeGatewayStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixSpokeGatewayStateUpgradeV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_ha_gateway"]; !ok {
 		rawState["manage_ha_gateway"] = "true"
 	}

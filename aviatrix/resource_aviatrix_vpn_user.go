@@ -83,7 +83,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpnUser := &goaviatrix.VPNUser{
@@ -141,7 +141,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixVPNUserReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixVPNUserReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixVPNUserReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixVPNUserRead(d, meta)
@@ -149,7 +149,7 @@ func resourceAviatrixVPNUserReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	userName := getString(d, "user_name")
@@ -212,7 +212,7 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpnUser := &goaviatrix.VPNUser{
@@ -234,10 +234,10 @@ func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.HasChange("profiles") {
 			oldU, newU := d.GetChange("profiles")
 			if oldU == nil {
-				oldU = new([]interface{})
+				oldU = new([]any)
 			}
 			if newU == nil {
-				newU = new([]interface{})
+				newU = new([]any)
 			}
 			oldString := mustSlice(oldU)
 			newString := mustSlice(newU)
@@ -276,7 +276,7 @@ func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixVPNUserRead(d, meta)
 }
 
-func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpnUser := &goaviatrix.VPNUser{

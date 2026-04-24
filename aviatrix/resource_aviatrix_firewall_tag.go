@@ -49,7 +49,7 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{
@@ -96,7 +96,7 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixFirewallTagReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFirewallTagReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFirewallTagReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFirewallTagRead(d, meta)
@@ -104,7 +104,7 @@ func resourceAviatrixFirewallTagReadIfRequired(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	fTag := getString(d, "firewall_tag")
@@ -130,9 +130,9 @@ func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[TRACE] Reading cidr list for tag %s: %#v", firewallTag.Name, fwt)
 
 	if fwt != nil {
-		var cidrList []map[string]interface{}
+		var cidrList []map[string]any
 		for _, cidrMember := range fwt.CIDRList {
-			cm := make(map[string]interface{})
+			cm := make(map[string]any)
 			cm["cidr_tag_name"] = cidrMember.CIDRTag
 			cm["cidr"] = cidrMember.CIDR
 
@@ -147,7 +147,7 @@ func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{
@@ -178,7 +178,7 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixFirewallTagRead(d, meta)
 }
 
-func resourceAviatrixFirewallTagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallTagDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallTag := &goaviatrix.FirewallTag{

@@ -96,7 +96,7 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{

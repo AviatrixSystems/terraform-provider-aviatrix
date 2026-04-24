@@ -37,7 +37,7 @@ func resourceAviatrixRbacGroup() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	groupName := getString(d, "group_name")
@@ -68,7 +68,7 @@ func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) e
 	return resourceAviatrixRbacGroupReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixRbacGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	groupName := getString(d, "group_name")
 
@@ -86,7 +86,7 @@ func resourceAviatrixRbacGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceAviatrixRbacGroupRead(d, meta)
 }
 
-func resourceAviatrixRbacGroupReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixRbacGroupReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixRbacGroupRead(d, meta)
@@ -94,7 +94,7 @@ func resourceAviatrixRbacGroupReadIfRequired(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	groupName := getString(d, "group_name")
@@ -129,7 +129,7 @@ func resourceAviatrixRbacGroupRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAviatrixRbacGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	group := &goaviatrix.RbacGroup{

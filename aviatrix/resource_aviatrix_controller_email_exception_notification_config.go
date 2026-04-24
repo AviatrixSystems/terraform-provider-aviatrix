@@ -29,7 +29,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfig() *schema.Resour
 	}
 }
 
-func resourceAviatrixControllerEmailExceptionNotificationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailExceptionNotificationConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enableEmailExceptionNotification := getBool(d, "enable_email_exception_notification")
@@ -44,7 +44,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigCreate(ctx contex
 	return resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -61,7 +61,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx context.
 	return nil
 }
 
-func resourceAviatrixControllerEmailExceptionNotificationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailExceptionNotificationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("enable_email_exception_notification") {
@@ -74,7 +74,7 @@ func resourceAviatrixControllerEmailExceptionNotificationConfigUpdate(ctx contex
 	return resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerEmailExceptionNotificationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailExceptionNotificationConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.SetEmailExceptionNotification(ctx, true)

@@ -26,7 +26,7 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ any) error {
 			enableK8s := getBool(d, propertyEnableK8s)
 			enableDcfPolicies := getBool(d, propertyEnableDcfPolicies)
 
@@ -52,7 +52,7 @@ func resourceAviatrixK8sConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixK8sConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enableK8s := getBool(d, propertyEnableK8s)
@@ -86,7 +86,7 @@ func setK8sDcfPoliciesFeature(ctx context.Context, client *goaviatrix.Client, en
 	return nil
 }
 
-func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -110,7 +110,7 @@ func resourceAviatrixK8sConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enableK8s := getBool(d, propertyEnableK8s)
@@ -131,7 +131,7 @@ func resourceAviatrixK8sConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixK8sConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixK8sConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixK8sConfigDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if err := setK8sDcfPoliciesFeature(ctx, client, false); err != nil {

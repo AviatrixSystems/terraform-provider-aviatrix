@@ -436,7 +436,7 @@ func dataSourceAviatrixGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{

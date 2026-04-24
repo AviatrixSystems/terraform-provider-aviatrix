@@ -140,7 +140,6 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 	azureEipNameResourceGroup := getString(d, "azure_eip_name_resource_group")
 	zone := getString(d, "zone")
 	subnet := getString(d, "subnet")
-	gwSize := getString(d, "gw_size")
 	interfaces := getSet(d, "interfaces").List()
 	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 	ztpFileType := getString(d, "ztp_file_type")
@@ -175,13 +174,22 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 	if subnet == "" {
 		return fmt.Errorf("'subnet' is required for CSP spoke instances (AWS, Azure, GCP, OCI, AliCloud)")
 	}
-	if gwSize == "" {
-		return fmt.Errorf("'gw_size' is required for CSP spoke instances (AWS, Azure, GCP, OCI, AliCloud)")
+	// Zone Validation
+	if zone != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
+		return fmt.Errorf("'zone' is only valid for Azure (8), AzureGov (32), AzureChina (2048) and GCP (4)")
 	}
-
-	// Zone Validation - only valid for Azure
-	if zone != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("'zone' is only valid for Azure (8), AzureGov (32) and AzureChina (2048)")
+	if zone != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		if _, errs := validateAzureAZ(zone, "zone"); len(errs) > 0 {
+			return errs[0]
+		}
+	}
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
+		if zone == "" {
+			return fmt.Errorf("'zone' is required for GCP (4), e.g., 'us-east1-b'")
+		}
+		if _, errs := validateGCPZone(zone, "zone"); len(errs) > 0 {
+			return errs[0]
+		}
 	}
 
 	// Monitor Gateway Subnets Validation
@@ -277,7 +285,7 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 }
 
 // convertTagsMapToStringMap converts map[string]interface{} to map[string]string.
-func convertTagsMapToStringMap(tagsMap map[string]interface{}) map[string]string {
+func convertTagsMapToStringMap(tagsMap map[string]any) map[string]string {
 	result := make(map[string]string, len(tagsMap))
 	for k, v := range tagsMap {
 		result[k] = fmt.Sprintf("%v", v)
@@ -289,7 +297,7 @@ func convertTagsMapToStringMap(tagsMap map[string]interface{}) map[string]string
 // CRUD Operations
 // ============================================================================
 
-func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	groupUUID := getString(d, "group_uuid")
@@ -336,6 +344,14 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 		spokeGateway.Subnet = spokeGateway.Subnet + "~~" + insertionGatewayAz
 	}
 
+	// Handle GCP zone: API expects zone sent as both the "zone" and "vpc_region" fields.
+	// This mirrors the old aviatrix_spoke_gateway model behavior where vpc_reg = zone value.
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
+		zone := getString(d, "zone")
+		spokeGateway.Zone = zone
+		spokeGateway.VpcRegion = zone
+	}
+
 	// Handle Azure zone
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		zone := getString(d, "zone")
@@ -348,6 +364,15 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 	privateModeSubnetZone := getString(d, "private_mode_subnet_zone")
 	if privateModeSubnetZone != "" && spokeGateway.LbVpcId != "" {
 		spokeGateway.Subnet = spokeGateway.Subnet + "~~" + privateModeSubnetZone
+	}
+
+	// Append IPv6 CIDR to spokeGateway.Subnet
+	if gatewayGroup.EnableIPv6 {
+		updatedSubnet, subnetErr := validateAndConfigureSubnetWithIPv6Cidr(d, spokeGateway.Subnet, cloudType)
+		if subnetErr != nil {
+			return diag.FromErr(subnetErr)
+		}
+		spokeGateway.Subnet = updatedSubnet
 	}
 
 	// Handle Azure EIP
@@ -400,6 +425,20 @@ func createEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client
 			PublicIp:  mustString(if1["public_ip"]),
 			IpAddr:    mustString(if1["ip_address"]),
 			GatewayIp: mustString(if1["gateway_ip"]),
+		}
+		if v, ok := if1["ipv6_address"]; ok && v != nil {
+			ip := mustString(v)
+			if ip != "" {
+				if2.IPv6Addr = ip
+
+				// gateway_ipv6 only makes sense if ipv6_address is set
+				if gwv, ok := if1["gateway_ipv6"]; ok && gwv != nil {
+					gw := mustString(gwv)
+					if gw != "" {
+						if2.GatewayIPv6 = gw
+					}
+				}
+			}
 		}
 		interfaceList = append(interfaceList, if2)
 	}
@@ -499,7 +538,7 @@ func configureSpokeInstancePostCreate(d *schema.ResourceData, client *goaviatrix
 	return nil
 }
 
-func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gwName := d.Id()
@@ -570,6 +609,16 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "availability_domain", gateway.AvailabilityDomain)
 	mustSet(d, "fault_domain", gateway.FaultDomain)
 
+	// Zone read-back
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		mustSet(d, "zone", gateway.GatewayZone)
+	} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		_, zoneIsSet := d.GetOk("zone")
+		if zoneIsSet && gateway.GatewayZone != "AvailabilitySet" {
+			mustSet(d, "zone", "az-"+gateway.GatewayZone)
+		}
+	}
+
 	// Filtered and advertised routes
 	if len(gateway.FilteredSpokeVpcRoutes) > 0 {
 		mustSet(d, "filtered_spoke_vpc_routes", strings.Join(gateway.FilteredSpokeVpcRoutes, ","))
@@ -585,6 +634,7 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "eip", gateway.Eip)
 	mustSet(d, "software_version", gateway.SoftwareVersion)
 	mustSet(d, "image_version", gateway.ImageVersion)
+	setGatewayIPv6IPState(d, gateway)
 
 	// AWS specific
 	mustSet(d, "rx_queue_size", gateway.RxQueueSize)
@@ -626,15 +676,17 @@ func readEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *
 	mustSet(d, "ztp_file_type", edgeSpoke.ZtpFileType)
 
 	// Interfaces
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, iface := range edgeSpoke.InterfaceList {
-		ifaceMap := map[string]interface{}{
+		ifaceMap := map[string]any{
 			"logical_ifname": iface.IfName,
 			"type":           iface.Type,
 			"dhcp":           iface.Dhcp,
 			"public_ip":      iface.PublicIp,
 			"ip_address":     iface.IpAddr,
 			"gateway_ip":     iface.GatewayIp,
+			"ipv6_address":   iface.IPv6Addr,
+			"gateway_ipv6":   iface.GatewayIPv6,
 		}
 		interfaces = append(interfaces, ifaceMap)
 	}
@@ -656,7 +708,7 @@ func readEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *
 }
 
 //nolint:funlen,cyclop
-func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	gwName := d.Id()
 
@@ -856,7 +908,7 @@ func updateEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client
 	return nil
 }
 
-func resourceAviatrixSpokeInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gwName := d.Id()

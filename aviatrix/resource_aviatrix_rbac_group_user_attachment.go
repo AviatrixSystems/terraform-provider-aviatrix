@@ -37,7 +37,7 @@ func resourceAviatrixRbacGroupUserAttachment() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRbacGroupUserAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserAttachmentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupUserAttachment{
@@ -61,7 +61,7 @@ func resourceAviatrixRbacGroupUserAttachmentCreate(d *schema.ResourceData, meta 
 	return resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixRbacGroupUserAttachmentRead(d, meta)
@@ -69,7 +69,7 @@ func resourceAviatrixRbacGroupUserAttachmentReadIfRequired(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixRbacGroupUserAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserAttachmentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	groupName := getString(d, "group_name")
@@ -106,7 +106,7 @@ func resourceAviatrixRbacGroupUserAttachmentRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixRbacGroupUserAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupUserAttachment{

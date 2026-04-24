@@ -385,11 +385,17 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The EIP address of the HA Spoke Gateway.",
 			},
+			"private_route_table_config": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
+			},
 		},
 	}
 }
 
-func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -605,7 +611,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		mustSet(d, "enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 		mustSet(d, "disable_route_propagation", gw.DisableRoutePropagation)
 		var prependAsPath []string
-		for _, p := range strings.Split(gw.PrependASPath, " ") {
+		for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 			if p != "" {
 				prependAsPath = append(prependAsPath, p)
 			}
@@ -642,6 +648,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				log.Printf("[WARN] could not get Azure EIP name and resource group for the Spoke Gateway %s", gw.GwName)
 			}
 		}
+		mustSet(d, "private_route_table_config", gw.PrivateRouteTableConfig)
 	}
 
 	d.SetId(gateway.GwName)

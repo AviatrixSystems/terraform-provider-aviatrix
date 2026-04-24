@@ -36,7 +36,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfig() *schema
 	}
 }
 
-func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enforcementLevel := &goaviatrix.EnforcementLevel{
@@ -55,7 +55,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigCreate(ctx
 	return resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx, d, meta)
@@ -63,7 +63,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigReadIfRequ
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -91,7 +91,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx c
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -110,7 +110,7 @@ func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigUpdate(ctx
 	return resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingOriginCertEnforcementConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteEnforcementLevel(ctx)

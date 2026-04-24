@@ -61,7 +61,7 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
@@ -91,7 +91,7 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 	return resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAWSTgwDirectConnectReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSTgwDirectConnectReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
@@ -99,7 +99,7 @@ func resourceAviatrixAWSTgwDirectConnectReadIfRequired(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName := getString(d, "tgw_name")
@@ -146,7 +146,7 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
@@ -186,7 +186,7 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 
-func resourceAviatrixAWSTgwDirectConnectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 		TgwName:         getString(d, "tgw_name"),

@@ -76,7 +76,7 @@ func marshalCopilotSecurityGroupManagementConfigInput(d *schema.ResourceData) *g
 	return copilotSecurityGroupManagementConfig
 }
 
-func resourceAviatrixCopilotSecurityGroupManagementConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSecurityGroupManagementConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilotSecurityGroupManagementConfig := marshalCopilotSecurityGroupManagementConfigInput(d)
@@ -121,7 +121,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigCreate(ctx context.Cont
 	return resourceAviatrixCopilotSecurityGroupManagementConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixCopilotSecurityGroupManagementConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixCopilotSecurityGroupManagementConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx, d, meta)
@@ -129,7 +129,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigReadIfRequired(ctx cont
 	return nil
 }
 
-func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -161,7 +161,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Contex
 	return nil
 }
 
-func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilotSecurityGroupManagementConfig := marshalCopilotSecurityGroupManagementConfigInput(d)
@@ -237,7 +237,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Cont
 	return resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixCopilotSecurityGroupManagementConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSecurityGroupManagementConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableCopilotSecurityGroupManagement(ctx)

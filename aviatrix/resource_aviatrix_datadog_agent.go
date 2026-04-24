@@ -80,7 +80,7 @@ func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
 	return datadogAgent
 }
 
-func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetDatadogAgentStatus()
@@ -98,7 +98,7 @@ func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "datadog_agent" {
@@ -124,7 +124,7 @@ func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixDatadogAgentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDatadogAgentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableDatadogAgent(); err != nil {

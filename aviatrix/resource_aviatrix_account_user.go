@@ -38,7 +38,7 @@ func resourceAviatrixAccountUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of account user to be created. It can only include alphanumeric characters(lower case only), hyphens, dots or underscores. 1 to 80 in length. No spaces are allowed.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v := mustString(val)
 					for _, r := range v {
 						if unicode.IsUpper(r) {
@@ -53,7 +53,7 @@ func resourceAviatrixAccountUser() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUser{
@@ -78,7 +78,7 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixAccountUserReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAccountUserReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAccountUserReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAccountUserRead(d, meta)
@@ -86,7 +86,7 @@ func resourceAviatrixAccountUserReadIfRequired(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	userName := getString(d, "username")
@@ -120,7 +120,7 @@ func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUserEdit{
@@ -153,7 +153,7 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixAccountUserRead(d, meta)
 }
 
-func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	user := &goaviatrix.AccountUser{

@@ -17,7 +17,7 @@ func resourceAviatrixFireNetResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFireNetStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixFireNetStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_firewall_instance_association"]; !ok {
 		rawState["manage_firewall_instance_association"] = true
 	}

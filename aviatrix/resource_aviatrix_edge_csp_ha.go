@@ -152,7 +152,7 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 	return edgeCSPHa
 }
 
-func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeCSPHa := marshalEdgeCSPHaInput(d)
@@ -166,7 +166,7 @@ func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if getString(d, "primary_gw_name") == "" {
@@ -195,9 +195,9 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeCSPHaResp.ManagementEgressIpPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, if0 := range edgeCSPHaResp.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["wan_public_ip"] = if0.PublicIp
@@ -219,7 +219,7 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeCSPHa := marshalEdgeCSPHaInput(d)
@@ -244,7 +244,7 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeCSPHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeCSPHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

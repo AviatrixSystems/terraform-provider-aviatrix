@@ -54,7 +54,7 @@ func marshalSegmentationNetworkDomainAssociationInput(d *schema.ResourceData) *g
 	}
 }
 
-func resourceAviatrixSegmentationNetworkDomainAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainAssociationCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	association := marshalSegmentationNetworkDomainAssociationInput(d)
@@ -70,7 +70,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationCreate(d *schema.Resour
 	return resourceAviatrixSegmentationNetworkDomainAssociationReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSegmentationNetworkDomainAssociationReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSegmentationNetworkDomainAssociationReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSegmentationNetworkDomainAssociationRead(d, meta)
@@ -78,7 +78,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationReadIfRequired(d *schem
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	networkDomainName := getString(d, "network_domain_name")
@@ -114,7 +114,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.Resource
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainAssociationDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	association := marshalSegmentationNetworkDomainAssociationInput(d)

@@ -36,7 +36,7 @@ func resourceAviatrixDCFDefaultIpsProfile() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDCFDefaultIpsProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFDefaultIpsProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profiles := expandStringList(getSet(d, "default_ips_profile").List())
@@ -50,7 +50,7 @@ func resourceAviatrixDCFDefaultIpsProfileCreate(ctx context.Context, d *schema.R
 	return resourceAviatrixDCFDefaultIpsProfileRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFDefaultIpsProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFDefaultIpsProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != "dcf_default_ips_profile" {
@@ -72,7 +72,7 @@ func resourceAviatrixDCFDefaultIpsProfileRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAviatrixDCFDefaultIpsProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFDefaultIpsProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profiles := expandStringList(getSet(d, "default_ips_profile").List())
@@ -85,7 +85,7 @@ func resourceAviatrixDCFDefaultIpsProfileUpdate(ctx context.Context, d *schema.R
 	return resourceAviatrixDCFDefaultIpsProfileRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFDefaultIpsProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFDefaultIpsProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// Need to reset the default IPS profile to the system default, there must be a default profile

@@ -75,7 +75,7 @@ func TestGetDstWanInterfaces(t *testing.T) {
 func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 	tests := []struct {
 		name          string
-		resourceData  map[string]interface{}
+		resourceData  map[string]any
 		attachment    *goaviatrix.SpokeTransitAttachment
 		gateway       *goaviatrix.Gateway
 		expectErr     bool
@@ -85,8 +85,8 @@ func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 	}{
 		{
 			name: "Valid Edge Gateway with Logical Interfaces",
-			resourceData: map[string]interface{}{
-				"transit_gateway_logical_ifnames": []interface{}{"wan0", "wan1"},
+			resourceData: map[string]any{
+				"transit_gateway_logical_ifnames": []any{"wan0", "wan1"},
 			},
 			attachment: &goaviatrix.SpokeTransitAttachment{},
 			gateway: &goaviatrix.Gateway{
@@ -99,7 +99,7 @@ func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 		},
 		{
 			name:         "Missing transit_gateway_logical_ifnames",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				// No "transit_gateway_logical_ifnames"
 			},
 			attachment: &goaviatrix.SpokeTransitAttachment{},
@@ -111,7 +111,7 @@ func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 		},
 		{
 			name: "Invalid transit_gateway_logical_ifnames type",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"transit_gateway_logical_ifnames": "not-a-list",
 			},
 			attachment: &goaviatrix.SpokeTransitAttachment{},
@@ -146,12 +146,12 @@ func TestGetEdgeTransitLogicalIfNames(t *testing.T) {
 func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    map[string]interface{}
+		input    map[string]any
 		expected *goaviatrix.SpokeTransitAttachment
 	}{
 		{
 			name: "Basic configuration with enable_firenet_for_edge false",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"spoke_gw_name":               "test-spoke",
 				"transit_gw_name":             "test-transit",
 				"enable_over_private_network": true,
@@ -160,9 +160,9 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 				"enable_insane_mode":          true,
 				"insane_mode_tunnel_number":   5,
 				"disable_activemesh":          false,
-				"spoke_prepend_as_path":       []interface{}{"65001", "65002"},
-				"transit_prepend_as_path":     []interface{}{"65003", "65004"},
-				"edge_wan_interfaces":         []interface{}{"wan0", "wan1"},
+				"spoke_prepend_as_path":       []any{"65001", "65002"},
+				"transit_prepend_as_path":     []any{"65003", "65004"},
+				"edge_wan_interfaces":         []any{"wan0", "wan1"},
 			},
 			expected: &goaviatrix.SpokeTransitAttachment{
 				SpokeGwName:              "test-spoke",
@@ -180,7 +180,7 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 		},
 		{
 			name: "Configuration with enable_firenet_for_edge true",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"spoke_gw_name":               "test-spoke",
 				"transit_gw_name":             "test-transit",
 				"enable_over_private_network": true,
@@ -189,9 +189,9 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 				"enable_insane_mode":          false,
 				"insane_mode_tunnel_number":   0,
 				"disable_activemesh":          true,
-				"spoke_prepend_as_path":       []interface{}{},
-				"transit_prepend_as_path":     []interface{}{},
-				"edge_wan_interfaces":         []interface{}{},
+				"spoke_prepend_as_path":       []any{},
+				"transit_prepend_as_path":     []any{},
+				"edge_wan_interfaces":         []any{},
 			},
 			expected: &goaviatrix.SpokeTransitAttachment{
 				SpokeGwName:              "test-spoke",
@@ -209,12 +209,12 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 		},
 		{
 			name: "Default values",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"spoke_gw_name":           "test-spoke",
 				"transit_gw_name":         "test-transit",
-				"spoke_prepend_as_path":   []interface{}{},
-				"transit_prepend_as_path": []interface{}{},
-				"edge_wan_interfaces":     []interface{}{},
+				"spoke_prepend_as_path":   []any{},
+				"transit_prepend_as_path": []any{},
+				"edge_wan_interfaces":     []any{},
 			},
 			expected: &goaviatrix.SpokeTransitAttachment{
 				SpokeGwName:              "test-spoke",
@@ -310,7 +310,7 @@ func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t
 			}
 
 			// Create resource data with the value
-			d := schema.TestResourceDataRaw(t, schemaMap, map[string]interface{}{
+			d := schema.TestResourceDataRaw(t, schemaMap, map[string]any{
 				"spoke_gw_name":           tt.spokeGwName,
 				"transit_gw_name":         tt.transitGwName,
 				"enable_firenet_for_edge": tt.enableFirenet,
@@ -320,7 +320,7 @@ func TestResourceAviatrixEdgeSpokeTransitAttachmentUpdate_enableFirenetForEdge(t
 			d.SetId(tt.spokeGwName + "~" + tt.transitGwName)
 
 			// Verify the form would be constructed correctly (matching the update function logic)
-			form := map[string]interface{}{
+			form := map[string]any{
 				"CID":                     "test-cid",
 				"action":                  "edit_inter_transit_gateway_peering",
 				"gateway1":                getString(d, "spoke_gw_name"),

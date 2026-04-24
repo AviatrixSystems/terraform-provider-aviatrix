@@ -507,7 +507,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -775,7 +775,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		}
 
 		var prependAsPath []string
-		for _, p := range strings.Split(gw.PrependASPath, " ") {
+		for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 			if p != "" {
 				prependAsPath = append(prependAsPath, p)
 			}
@@ -791,9 +791,9 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		mustSet(d, "enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 			if len(gw.BgpLanInterfaces) != 0 {
-				var interfaces []map[string]interface{}
+				var interfaces []map[string]any
 				for _, bgpLanInterface := range gw.BgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = bgpLanInterface.VpcID
 					interfaceDict["subnet"] = bgpLanInterface.Subnet
 					interfaces = append(interfaces, interfaceDict)
@@ -804,9 +804,9 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			}
 
 			if len(gw.HaGw.HaBgpLanInterfaces) != 0 {
-				var haInterfaces []map[string]interface{}
+				var haInterfaces []map[string]any
 				for _, haBgpLanInterface := range gw.HaGw.HaBgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = haBgpLanInterface.VpcID
 					interfaceDict["subnet"] = haBgpLanInterface.Subnet
 					haInterfaces = append(haInterfaces, interfaceDict)

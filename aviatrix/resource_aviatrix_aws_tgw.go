@@ -98,7 +98,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgw := &goaviatrix.AWSTgw{
@@ -153,7 +153,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAWSTgwReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSTgwReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAWSTgwRead(d, meta)
@@ -161,7 +161,7 @@ func resourceAviatrixAWSTgwReadIfRequired(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName := getString(d, "tgw_name")
@@ -200,7 +200,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta any) error {
 	log.Printf("[INFO] Updating AWS TGW")
 
 	client := mustClient(meta)
@@ -245,7 +245,7 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixAWSTgwRead(d, meta)
 }
 
-func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	awsTgw := &goaviatrix.AWSTgw{
 		Name:                      getString(d, "tgw_name"),

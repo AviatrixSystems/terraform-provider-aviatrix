@@ -53,7 +53,7 @@ func marshalPeriodicPingInput(d *schema.ResourceData) *goaviatrix.PeriodicPing {
 	}
 }
 
-func resourceAviatrixPeriodicPingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixPeriodicPingCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	pp := marshalPeriodicPingInput(d)
@@ -69,7 +69,7 @@ func resourceAviatrixPeriodicPingCreate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixPeriodicPingReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixPeriodicPingReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixPeriodicPingReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixPeriodicPingRead(d, meta)
@@ -77,7 +77,7 @@ func resourceAviatrixPeriodicPingReadIfRequired(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixPeriodicPingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixPeriodicPingRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")
@@ -108,7 +108,7 @@ func resourceAviatrixPeriodicPingRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixPeriodicPingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixPeriodicPingDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	pp := marshalPeriodicPingInput(d)

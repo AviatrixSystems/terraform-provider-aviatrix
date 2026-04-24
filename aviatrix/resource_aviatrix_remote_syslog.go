@@ -143,7 +143,7 @@ func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 	return remoteSyslog
 }
 
-func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetRemoteSyslogStatus(getInt(d, "index"))
@@ -167,7 +167,7 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	server := getString(d, "server")
@@ -213,7 +213,7 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixRemoteSyslogDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRemoteSyslogDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableRemoteSyslog(getInt(d, "index")); err != nil {

@@ -119,7 +119,7 @@ func dataSourceAviatrixAccount() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	account := &goaviatrix.Account{

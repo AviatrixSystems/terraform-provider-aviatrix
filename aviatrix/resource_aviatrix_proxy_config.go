@@ -42,7 +42,7 @@ func resourceAviatrixProxyConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixProxyConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProxyConfigCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	proxy := marshalProxyConfigInput(d)
@@ -54,7 +54,7 @@ func resourceAviatrixProxyConfigCreate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixProxyConfigRead(d, meta)
 }
 
-func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -79,7 +79,7 @@ func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAviatrixProxyConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProxyConfigDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	err := client.DeleteProxyConfig()

@@ -180,7 +180,7 @@ func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa
 	return edgeEquinixHa
 }
 
-func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
@@ -194,7 +194,7 @@ func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixEdgeEquinixHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if getString(d, "primary_gw_name") == "" {
@@ -222,9 +222,9 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeEquinixHaResp.ManagementEgressIpPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, interface0 := range edgeEquinixHaResp.InterfaceList {
-		interface1 := make(map[string]interface{})
+		interface1 := make(map[string]any)
 		interface1["name"] = interface0.IfName
 		interface1["type"] = interface0.Type
 		interface1["wan_public_ip"] = interface0.PublicIp
@@ -248,7 +248,7 @@ func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
@@ -273,7 +273,7 @@ func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixEdgeEquinixHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeEquinixHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeEquinixHa := marshalEdgeEquinixHaInput(d)

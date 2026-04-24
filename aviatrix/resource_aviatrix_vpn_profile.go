@@ -84,7 +84,7 @@ func resourceAviatrixProfile() *schema.Resource {
 	}
 }
 
-func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProfileCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Creating Aviatrix Profile: %v %T", d.Get("users"), d.Get("users"))
@@ -143,7 +143,7 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixProfileReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixProfileReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixProfileReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixProfileRead(d, meta)
@@ -151,7 +151,7 @@ func resourceAviatrixProfileReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProfileRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	profileName := getString(d, "name")
@@ -202,9 +202,9 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	}
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
-	var Policies []map[string]interface{}
+	var Policies []map[string]any
 	for _, policy := range profile.Policy {
-		policyDict := make(map[string]interface{})
+		policyDict := make(map[string]any)
 		policyDict["action"] = policy.Action
 		policyDict["target"] = policy.Target
 		policyDict["proto"] = policy.Protocol
@@ -221,7 +221,7 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	profile := &goaviatrix.Profile{
@@ -275,10 +275,10 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] Users to be attached : %#v %#v ", oldU, newU)
 
 			if oldU == nil {
-				oldU = new([]interface{})
+				oldU = new([]any)
 			}
 			if newU == nil {
-				newU = new([]interface{})
+				newU = new([]any)
 			}
 			oldString := mustSlice(oldU)
 			newString := mustSlice(newU)
@@ -319,7 +319,7 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAviatrixProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixProfileDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	profile := &goaviatrix.Profile{

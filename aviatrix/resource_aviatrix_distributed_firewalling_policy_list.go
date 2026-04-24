@@ -237,7 +237,7 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 	return policyList, nil
 }
 
-func resourceAviatrixDistributedFirewallingPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyList, err := marshalDistributedFirewallingPolicyListInput(d)
@@ -256,7 +256,7 @@ func resourceAviatrixDistributedFirewallingPolicyListCreate(ctx context.Context,
 	return resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixDistributedFirewallingPolicyListRead(ctx, d, meta)
@@ -264,7 +264,7 @@ func resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx context.
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyList, err := client.GetDistributedFirewallingPolicyList(ctx)
@@ -276,12 +276,12 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		return diag.Errorf("failed to read Distributed-firewalling Policy List: %s", err)
 	}
 
-	var policies []map[string]interface{}
+	var policies []map[string]any
 	for _, policy := range policyList.Policies {
 		if policy.SystemResource {
 			continue
 		}
-		p := make(map[string]interface{})
+		p := make(map[string]any)
 		p["name"] = policy.Name
 		p["action"] = policy.Action
 		p["priority"] = policy.Priority
@@ -303,9 +303,9 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["decrypt_policy"] = policy.DecryptPolicy
 
 		if policy.Protocol != "ICMP" {
-			var portRanges []map[string]interface{}
+			var portRanges []map[string]any
 			for _, portRange := range policy.PortRanges {
-				portRangeMap := map[string]interface{}{
+				portRangeMap := map[string]any{
 					"hi": portRange.Hi,
 					"lo": portRange.Lo,
 				}
@@ -326,7 +326,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -345,7 +345,7 @@ func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context,
 	return resourceAviatrixDistributedFirewallingPolicyListRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteDistributedFirewallingPolicyList(ctx)

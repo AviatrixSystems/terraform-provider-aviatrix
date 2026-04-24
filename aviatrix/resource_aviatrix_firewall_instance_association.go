@@ -102,7 +102,7 @@ func marshalFirewallInstanceAssociationInput(d *schema.ResourceData) *goaviatrix
 	}
 }
 
-func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
@@ -154,7 +154,7 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	return resourceAviatrixFirewallInstanceAssociationReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFirewallInstanceAssociationReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFirewallInstanceAssociationReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFirewallInstanceAssociationRead(d, meta)
@@ -162,7 +162,7 @@ func resourceAviatrixFirewallInstanceAssociationReadIfRequired(d *schema.Resourc
 	return nil
 }
 
-func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcID := getString(d, "vpc_id")
@@ -233,7 +233,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAviatrixFirewallInstanceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceAssociationDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)

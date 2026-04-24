@@ -95,7 +95,7 @@ func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) 
 	return webGroup, nil
 }
 
-func resourceAviatrixWebGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixWebGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	webGroup, err := marshalWebGroupInput(d)
@@ -114,7 +114,7 @@ func resourceAviatrixWebGroupCreate(ctx context.Context, d *schema.ResourceData,
 	return resourceAviatrixWebGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixWebGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixWebGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixWebGroupRead(ctx, d, meta)
@@ -122,7 +122,7 @@ func resourceAviatrixWebGroupReadIfRequired(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -138,10 +138,10 @@ func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	mustSet(d, "name", webGroup.Name)
 
-	var expressions []interface{}
+	var expressions []any
 
 	for _, filter := range webGroup.Selector.Expressions {
-		filterMap := map[string]interface{}{
+		filterMap := map[string]any{
 			"snifilter": filter.SniFilter,
 			"urlfilter": filter.UrlFilter,
 		}
@@ -149,8 +149,8 @@ func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, m
 		expressions = append(expressions, filterMap)
 	}
 
-	selector := []interface{}{
-		map[string]interface{}{
+	selector := []any{
+		map[string]any{
 			"match_expressions": expressions,
 		},
 	}
@@ -161,7 +161,7 @@ func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAviatrixWebGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixWebGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -182,7 +182,7 @@ func resourceAviatrixWebGroupUpdate(ctx context.Context, d *schema.ResourceData,
 	return resourceAviatrixWebGroupRead(ctx, d, meta)
 }
 
-func resourceAviatrixWebGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixWebGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

@@ -140,7 +140,7 @@ func marshalEdgeVmSelfmanagedHaInput(d *schema.ResourceData) *goaviatrix.EdgeVmS
 	return edgeVmSelfmanagedHa
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeVmSelfmanagedHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeVmSelfmanagedHa := marshalEdgeVmSelfmanagedHaInput(d)
@@ -154,7 +154,7 @@ func resourceAviatrixEdgeVmSelfmanagedHaCreate(ctx context.Context, d *schema.Re
 	return resourceAviatrixEdgeVmSelfmanagedHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if getString(d, "primary_gw_name") == "" {
@@ -191,9 +191,9 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeVmSelfmanagedHaResp.ManagementEgressIPPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, if0 := range edgeVmSelfmanagedHaResp.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["wan_public_ip"] = if0.PublicIp
@@ -212,7 +212,7 @@ func resourceAviatrixEdgeVmSelfmanagedHaRead(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeVmSelfmanagedHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeVmSelfmanagedHa := marshalEdgeVmSelfmanagedHaInput(d)
@@ -237,7 +237,7 @@ func resourceAviatrixEdgeVmSelfmanagedHaUpdate(ctx context.Context, d *schema.Re
 	return resourceAviatrixEdgeVmSelfmanagedHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeVmSelfmanagedHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeVmSelfmanagedHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteEdgeSpoke(ctx, d.Id())

@@ -52,7 +52,7 @@ func dataSourceAviatrixFirewallInstanceImages() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcId := getString(d, "vpc_id")
@@ -66,9 +66,9 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("couldn't get firewall instance images: %w", err)
 	}
 
-	var images []map[string]interface{}
+	var images []map[string]any
 	for _, image := range *firewallInstanceImages {
-		fI := make(map[string]interface{})
+		fI := make(map[string]any)
 		fI["firewall_image"] = image.Image
 		versionList := image.Version
 		sort.Slice(versionList, func(i, j int) bool {

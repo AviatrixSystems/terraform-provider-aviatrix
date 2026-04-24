@@ -129,7 +129,7 @@ func dataSourceAviatrixFireNetFirewallManager() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "The firewall template configuration.",
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					m := mustMap(v)
 					idRaw, ok := m["firewall_id"]
 					if !ok {
@@ -167,7 +167,7 @@ func dataSourceAviatrixFireNetFirewallManager() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixFireNetFirewallManagerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixFireNetFirewallManagerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	firewallManager := &goaviatrix.FirewallManager{

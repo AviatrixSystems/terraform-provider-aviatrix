@@ -561,7 +561,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v, ok := val.(bool)
 					if !ok {
 						errs = append(errs, fmt.Errorf("expected %s to be a bool, got: %T", key, val))
@@ -732,13 +732,19 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Private IP address of the transit gateway created.",
 			},
 			"ipv6_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Description: "IPv6 address of the transit gateway created.",
 			},
 			"ha_ipv6_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Description: "IPv6 address of the HA transit gateway created.",
 			},
 			"ha_cloud_instance_id": {
@@ -1027,7 +1033,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	// Only force recreation for primary gateway's IPv6 CIDR changes
 	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
@@ -1037,7 +1043,7 @@ func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.Re
 	return nil
 }
 
-func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	cloudType := getInt(d, "cloud_type")
@@ -1068,7 +1074,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
-		if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+		// GetOkExists is used so that an explicit enable_jumbo_frame=false in config is detected;
+		// GetOk would treat bool false as "unset" and default to true, ignoring the user's intent.
+		// SA1019: GetOkExists is deprecated but required to distinguish unset vs false for optional bool; no SDK alternative yet.
+		if val, ok := d.GetOkExists("enable_jumbo_frame"); ok { //nolint:staticcheck // SA1019
 			enableJumboFrame, ok := val.(bool)
 			if !ok {
 				return fmt.Errorf("enable_jumbo_frame must be a boolean")
@@ -1568,8 +1577,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		/* Set BGP MED to SDN metric per gateway */
 		override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+		if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
+			return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric override status for gateway %s: %w", gateway.GwName, err)
+		}
 		gwOverride := getBool(d, "gateway_override")
-		if gwOverride != override || err != nil {
+		if err == nil && gwOverride != override {
 			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
 			if err != nil {
 				return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
@@ -2028,7 +2040,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTransitGatewayRead(d, meta)
@@ -2036,7 +2048,7 @@ func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
@@ -2092,10 +2104,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to set bgp_accept_communities: %w", err)
 		}
 		override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
 			return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
 		}
-		mustSet(d, "gateway_override", override)
+		if err == nil {
+			mustSet(d, "gateway_override", override)
+		}
 	}
 
 	// edge cloud type
@@ -2146,6 +2160,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			_ = d.Set("management_egress_ip_prefix_list", strings.Split(gw.ManagementEgressIPPrefix, ","))
 		}
 
+		setGatewayHAIPv6IPState(d, gw)
 		// set the ha_attributes to empty if ha_interfaces is not provided for edge
 		if len(gw.HaGw.Interfaces) == 0 {
 			mustSet(d, "ha_availability_domain", "")
@@ -2240,7 +2255,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		setGatewayIPv6IPState(d, gw)
 		var prependAsPath []string
-		for _, p := range strings.Split(gw.PrependASPath, " ") {
+		for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 			if p != "" {
 				prependAsPath = append(prependAsPath, p)
 			}
@@ -2263,9 +2278,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		mustSet(d, "enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 			if len(gw.BgpLanInterfaces) != 0 {
-				var interfaces []map[string]interface{}
+				var interfaces []map[string]any
 				for _, bgpLanInterface := range gw.BgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = bgpLanInterface.VpcID
 					interfaceDict["subnet"] = bgpLanInterface.Subnet
 					interfaces = append(interfaces, interfaceDict)
@@ -2276,9 +2291,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 
 			if len(gw.HaGw.HaBgpLanInterfaces) != 0 {
-				var haInterfaces []map[string]interface{}
+				var haInterfaces []map[string]any
 				for _, haBgpLanInterface := range gw.HaGw.HaBgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = haBgpLanInterface.VpcID
 					interfaceDict["subnet"] = haBgpLanInterface.Subnet
 					haInterfaces = append(haInterfaces, interfaceDict)
@@ -2528,6 +2543,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %w", gw.GwName, err)
 		}
 		mustSet(d, "enable_gro_gso", enableGroGso)
+		setGatewayHAIPv6IPState(d, gw)
 		if gw.HaGw.GwSize == "" {
 			mustSet(d, "ha_availability_domain", "")
 			mustSet(d, "ha_azure_eip_name_resource_group", "")
@@ -2552,7 +2568,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return nil
 		}
 		mustSet(d, "ha_subnet_ipv6_cidr", gw.HaGw.SubnetIPv6Cidr)
-		setGatewayHAIPv6IPState(d, gw)
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			mustSet(d, "ha_subnet", gw.HaGw.VpcNet)
 			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || mustString(zone) != "") {
@@ -2627,7 +2642,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -2669,9 +2684,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
-	if d.HasChange("gateway_override") {
+	if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
+		return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric override status for gateway %s: %w", gateway.GwName, err)
+	}
+	if err == nil && d.HasChange("gateway_override") {
 		gwOverride := getBool(d, "gateway_override")
-		if gwOverride != override || err != nil {
+		if gwOverride != override {
 			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
 			if err != nil {
 				return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
@@ -4109,7 +4127,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	return resourceAviatrixTransitGatewayRead(d, meta)
 }
 
-func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	cloudType := getInt(d, "cloud_type")
 
@@ -4297,7 +4315,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 
 	// for edge the enable_jumbo_frame is set to false by default if not explicitly set by the user
-	if val, ok := d.GetOk("enable_jumbo_frame"); ok {
+	// GetOkExists is used so that an explicit enable_jumbo_frame=true in config is detected;
+	// GetOk would treat bool false as "unset", which is harmless here since the default is also false,
+	// but using GetOkExists is consistent with the CSP path and the spoke_group implementation.
+	// SA1019: GetOkExists is deprecated but required to distinguish unset vs false for optional bool; no SDK alternative yet.
+	if val, ok := d.GetOkExists("enable_jumbo_frame"); ok { //nolint:staticcheck // SA1019
 		enableJumboFrame, ok := val.(bool)
 		if !ok {
 			return fmt.Errorf("enable_jumbo_frame must be a boolean")
@@ -4358,8 +4380,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 	}
 
 	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
+		return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric override status for gateway %s: %w", gateway.GwName, err)
+	}
 	gwOverride := getBool(d, "gateway_override")
-	if gwOverride != override || err != nil {
+	if err == nil && gwOverride != override {
 		err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
 		if err != nil {
 			return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
@@ -4454,11 +4479,11 @@ func createEdgeTransitGateway(d *schema.ResourceData, client *goaviatrix.Client,
 }
 
 // count the number of WAN interfaces in the interface config
-func countInterfaceTypes(interfaceList []interface{}) (int, error) {
+func countInterfaceTypes(interfaceList []any) (int, error) {
 	wanCount := 0
 	// Iterate over each interface in the list
 	for _, item := range interfaceList {
-		interfaceMap, ok := item.(map[string]interface{})
+		interfaceMap, ok := item.(map[string]any)
 		if !ok {
 			return 0, fmt.Errorf("invalid interface entry, expected a map")
 		}
@@ -4561,13 +4586,13 @@ func getInterfaceName(logicalIfName string, wanCount int) (string, error) {
 	return interfaceName, nil
 }
 
-func getEipMapDetails(eipMap []interface{}, wanCount int, cloudType int) (map[string][]goaviatrix.EipMap, error) {
+func getEipMapDetails(eipMap []any, wanCount int, cloudType int) (map[string][]goaviatrix.EipMap, error) {
 	// Create a map to structure the EIP data
 	eipMapStructured := make(map[string][]goaviatrix.EipMap)
 
 	// Populate the structured map
 	for _, eipDetails := range eipMap {
-		eip, ok := eipDetails.(map[string]interface{})
+		eip, ok := eipDetails.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", eipDetails)
 		}
@@ -4665,7 +4690,7 @@ func getTransitHaGatewayDetails(d *schema.ResourceData, wanCount int, cloudType 
 	return transitHaGw, nil
 }
 
-func createBackupLinkConfig(gwName string, peerBackupLogicalNames []interface{}, connectionType string, wanCount int, cloudType int) (string, error) {
+func createBackupLinkConfig(gwName string, peerBackupLogicalNames []any, connectionType string, wanCount int, cloudType int) (string, error) {
 	var peerBackupPorts []string
 	for _, logicalName := range peerBackupLogicalNames {
 		// convert the logical interface name to string
@@ -4714,12 +4739,12 @@ func createBackupLinkConfig(gwName string, peerBackupLogicalNames []interface{},
 }
 
 // set the interface mapping details for the gateway
-func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, error) {
+func getInterfaceMappingDetails(interfaceMappingInput []any) (string, error) {
 	interfaceMapping := map[string][]string{}
 	if len(interfaceMappingInput) > 0 {
 		// Set the interface mapping for ESXI devices
 		for _, value := range interfaceMappingInput {
-			mappingMap, ok := value.(map[string]interface{})
+			mappingMap, ok := value.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid type %T for interface mapping, expected a map", value)
 			}
@@ -4752,7 +4777,7 @@ func getInterfaceMappingDetails(interfaceMappingInput []interface{}) (string, er
 }
 
 // get the interface details from the interface config and cloud type
-func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error) {
+func getInterfaceDetails(interfaces []any, cloudType int) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)
 	if err != nil {
@@ -4760,7 +4785,7 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 	}
 	interfaceList := []goaviatrix.EdgeTransitInterface{}
 	for _, iface := range interfaces {
-		ifaceInfo, ok := iface.(map[string]interface{})
+		ifaceInfo, ok := iface.(map[string]any)
 		if !ok {
 			return "", fmt.Errorf("interface is not a map[string]interface{}")
 		}
@@ -4780,7 +4805,7 @@ func getInterfaceDetails(interfaces []interface{}, cloudType int) (string, error
 	return interfacesEncoded, nil
 }
 
-func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (goaviatrix.EdgeTransitInterface, error) {
+func parseInterface(ifaceInfo map[string]any, wanCount, cloudType int) (goaviatrix.EdgeTransitInterface, error) {
 	var (
 		logicalIfName, ifaceName, ifaceType, ifaceGatewayIP, ifaceIP, ifacePublicIP, ifaceUnderlayCidr string
 		ifaceDHCP                                                                                      bool
@@ -4828,7 +4853,7 @@ func parseInterface(ifaceInfo map[string]interface{}, wanCount, cloudType int) (
 	return ifaceData, nil
 }
 
-func getStringAttribute(data map[string]interface{}, key string) (string, error) {
+func getStringAttribute(data map[string]any, key string) (string, error) {
 	val, exists := data[key]
 	if !exists || val == nil {
 		return "", nil
@@ -4840,7 +4865,7 @@ func getStringAttribute(data map[string]interface{}, key string) (string, error)
 	return str, nil
 }
 
-func getBoolAttribute(data map[string]interface{}, key string) (bool, error) {
+func getBoolAttribute(data map[string]any, key string) (bool, error) {
 	val, exists := data[key]
 	if !exists || val == nil {
 		return false, nil
@@ -4852,12 +4877,12 @@ func getBoolAttribute(data map[string]interface{}, key string) (bool, error) {
 	return boolean, nil
 }
 
-func getStringListAttribute(data map[string]interface{}, key string) ([]string, error) {
+func getStringListAttribute(data map[string]any, key string) ([]string, error) {
 	val, exists := data[key]
 	if !exists || val == nil {
 		return nil, nil
 	}
-	list, ok := val.([]interface{})
+	list, ok := val.([]any)
 	if !ok {
 		return nil, fmt.Errorf("%s is not a valid list", key)
 	}
@@ -4874,11 +4899,11 @@ func getStringListAttribute(data map[string]interface{}, key string) ([]string, 
 	return result, nil
 }
 
-func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface, interfaceOrder []string) []map[string]interface{} {
-	interfaceList := make([]map[string]interface{}, 0)
+func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface, interfaceOrder []string) []map[string]any {
+	interfaceList := make([]map[string]any, 0)
 	sortedInterfaces := sortInterfacesByCustomOrder(interfaces, interfaceOrder)
 	for _, intf := range sortedInterfaces {
-		interfaceDict := make(map[string]interface{})
+		interfaceDict := make(map[string]any)
 		interfaceDict["logical_ifname"] = intf.LogicalIfName
 
 		if intf.PublicIp != "" {
@@ -4910,12 +4935,12 @@ func setInterfaceDetails(interfaces []goaviatrix.EdgeTransitInterface, interface
 	return interfaceList
 }
 
-func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) []map[string]interface{} {
-	interfaceMappingList := make([]map[string]interface{}, 0)
+func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) []map[string]any {
+	interfaceMappingList := make([]map[string]any, 0)
 	// sort the interface mapping by interface name. This will maintain the order of the interface mappings in the state
 	sortedInterfaceMappings := sortInterfaceMappingByCustomOrder(interfaceMapping)
 	for _, intf := range sortedInterfaceMappings {
-		interfaceMap := make(map[string]interface{})
+		interfaceMap := make(map[string]any)
 		interfaceMap["name"] = intf.Name
 		if intf.Type == "mgmt" {
 			interfaceMap["type"] = "MANAGEMENT"
@@ -4928,8 +4953,8 @@ func setInterfaceMappingDetails(interfaceMapping []goaviatrix.InterfaceMapping) 
 	return interfaceMappingList
 }
 
-func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation map[string]string) ([]map[string]interface{}, error) {
-	eipMapList := make([]map[string]interface{}, 0)
+func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation map[string]string) ([]map[string]any, error) {
+	eipMapList := make([]map[string]any, 0)
 	keys := make([]string, 0, len(eipMap))
 	for key := range eipMap {
 		keys = append(keys, key)
@@ -4954,7 +4979,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 		logicalIfName := fmt.Sprintf("%s%d", interfaceType, interfaceIndex)
 
 		for _, eip := range eipList {
-			eipMap := map[string]interface{}{
+			eipMap := map[string]any{
 				"logical_ifname": logicalIfName,
 				"private_ip":     eip.PrivateIP,
 				"public_ip":      eip.PublicIP,
@@ -4967,7 +4992,7 @@ func setEipMapDetails(eipMap map[string][]goaviatrix.EipMap, ifNameTranslation m
 
 // for EAT gateway, set the eip_map, bgp polling time, bgp neighbor status polling time, local_as_number and prepend_as_path after the transit is created. AEP gateways take ~15 mins to be up and running. Set these attributes to gateway default values when the transit is coming up.
 func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) error {
-	settings := map[string]interface{}{
+	settings := map[string]any{
 		"eip":                                  gw.PublicIP,
 		"cloud_instance_id":                    gw.CloudnGatewayInstID,
 		"security_group_id":                    gw.GwSecurityGroupID,
@@ -5007,7 +5032,7 @@ func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) erro
 	}
 
 	var prependAsPath []string
-	for _, p := range strings.Split(gw.PrependASPath, " ") {
+	for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 		if p != "" {
 			prependAsPath = append(prependAsPath, p)
 		}
@@ -5021,10 +5046,10 @@ func setGatewayResourceData(d *schema.ResourceData, gw *goaviatrix.Gateway) erro
 }
 
 // get the user provided interface order
-func getUserInterfaceOrder(interfaces []interface{}) ([]string, error) {
+func getUserInterfaceOrder(interfaces []any) ([]string, error) {
 	userInterfaceOrder := make([]string, 0)
 	for _, iface := range interfaces {
-		ifaceMap, ok := iface.(map[string]interface{})
+		ifaceMap, ok := iface.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("interface is not a map[string]interface{}")
 		}

@@ -109,7 +109,7 @@ func marshalCopilotSimpleDeploymentInput(d *schema.ResourceData) *goaviatrix.Cop
 	return copilotSimpleDeployment
 }
 
-func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilotSimpleDeployment := marshalCopilotSimpleDeploymentInput(d)
@@ -143,7 +143,7 @@ func resourceAviatrixCopilotSimpleDeploymentCreate(ctx context.Context, d *schem
 	return resourceAviatrixCopilotSimpleDeploymentReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixCopilotSimpleDeploymentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixCopilotSimpleDeploymentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixCopilotSimpleDeploymentRead(ctx, d, meta)
@@ -151,7 +151,7 @@ func resourceAviatrixCopilotSimpleDeploymentReadIfRequired(ctx context.Context, 
 	return nil
 }
 
-func resourceAviatrixCopilotSimpleDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSimpleDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilotAssociationStatus, err := client.GetCopilotAssociationStatus(ctx)
@@ -169,7 +169,7 @@ func resourceAviatrixCopilotSimpleDeploymentRead(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAviatrixCopilotSimpleDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotSimpleDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteCopilotSimple(ctx)

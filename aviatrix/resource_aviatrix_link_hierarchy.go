@@ -65,19 +65,19 @@ func resourceAviatrixLinkHierarchy() *schema.Resource {
 	}
 }
 
-func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]interface{} {
-	var links []map[string]interface{}
+func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]any {
+	var links []map[string]any
 	linksInput := getList(d, "links")
 
 	for n0, v0 := range linksInput {
-		link := make(map[string]interface{})
-		var wanLink []map[string]interface{}
+		link := make(map[string]any)
+		var wanLink []map[string]any
 
 		link["name"] = mustMap(v0)["name"]
 		wanLinkList := mustSchemaSet(d.Get("links." + strconv.Itoa(n0) + ".wan_link")).List()
 
 		for _, v1 := range wanLinkList {
-			wanTag := make(map[string]interface{})
+			wanTag := make(map[string]any)
 			wanTag["wan_tag"] = mustMap(v1)["wan_tag"]
 			wanLink = append(wanLink, wanTag)
 		}
@@ -87,14 +87,14 @@ func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]interface{} {
 		links = append(links, link)
 	}
 
-	linkHierarchy := make(map[string]interface{})
+	linkHierarchy := make(map[string]any)
 	linkHierarchy["name"] = getString(d, "name")
 	linkHierarchy["links"] = links
 
 	return linkHierarchy
 }
 
-func resourceAviatrixLinkHierarchyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixLinkHierarchyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	linkHierarchy := marshalLinkHierarchyInput(d)
@@ -111,7 +111,7 @@ func resourceAviatrixLinkHierarchyCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixLinkHierarchyReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixLinkHierarchyReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixLinkHierarchyReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixLinkHierarchyRead(ctx, d, meta)
@@ -119,7 +119,7 @@ func resourceAviatrixLinkHierarchyReadIfRequired(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -135,14 +135,14 @@ func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	mustSet(d, "name", linkHierarchy.Name)
 
-	var links []interface{}
+	var links []any
 
 	for _, l := range linkHierarchy.Links {
-		link := make(map[string]interface{})
-		var wanLinkList []map[string]interface{}
+		link := make(map[string]any)
+		var wanLinkList []map[string]any
 
 		for _, w := range l.WanLinkList {
-			wanLink := make(map[string]interface{})
+			wanLink := make(map[string]any)
 			wanLink["wan_tag"] = w.WanTag
 			wanLinkList = append(wanLinkList, wanLink)
 		}
@@ -159,7 +159,7 @@ func resourceAviatrixLinkHierarchyRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixLinkHierarchyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixLinkHierarchyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -177,7 +177,7 @@ func resourceAviatrixLinkHierarchyUpdate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixLinkHierarchyRead(ctx, d, meta)
 }
 
-func resourceAviatrixLinkHierarchyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixLinkHierarchyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

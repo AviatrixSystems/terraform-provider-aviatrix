@@ -28,7 +28,7 @@ func dataSourceAviatrixSpokeGatewayInspectionSubnets() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixSpokeGatewayInspectionSubnetsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixSpokeGatewayInspectionSubnetsRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")

@@ -57,7 +57,7 @@ func resourceAviatrixTunnel() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tunnel := &goaviatrix.Tunnel{
@@ -89,7 +89,7 @@ func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixTunnelReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTunnelReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTunnelReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTunnelRead(d, meta)
@@ -97,7 +97,7 @@ func resourceAviatrixTunnelReadIfRequired(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAviatrixTunnelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcName1 := getString(d, "gw_name1")
@@ -138,7 +138,7 @@ func resourceAviatrixTunnelRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAviatrixTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tunnel := &goaviatrix.Tunnel{
@@ -160,7 +160,7 @@ func resourceAviatrixTunnelUpdate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixTunnelRead(d, meta)
 }
 
-func resourceAviatrixTunnelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tunnel := &goaviatrix.Tunnel{

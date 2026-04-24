@@ -17,7 +17,7 @@ func resourceAviatrixVPNUserResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNUserStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixVPNUserStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_user_attachment"]; !ok {
 		rawState["manage_user_attachment"] = "false"
 	}

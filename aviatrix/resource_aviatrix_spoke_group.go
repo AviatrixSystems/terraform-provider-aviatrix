@@ -99,7 +99,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enable IPv6. Only valid for AWS and Azure.",
+			Description: "Enable IPv6. Valid AWS, Azure and GCP",
 		},
 		"enable_gro_gso": {
 			Type:        schema.TypeBool,
@@ -622,8 +622,13 @@ func applySpokeSpecificSettings(ctx context.Context, d *schema.ResourceData, cli
 // Spoke Group CRUD Operations
 // ============================================================================
 
-func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
+
+	// approved_learned_cidrs can only be set during update, not during create
+	if approvedLearnedCidrs := getStringSet(d, "approved_learned_cidrs"); len(approvedLearnedCidrs) > 0 {
+		return diag.Errorf("approved_learned_cidrs can only be set when the group has gateways present")
+	}
 
 	// Build the spoke group from resource data
 	spokeGroup := buildSpokeGroupFromResourceData(d)
@@ -676,7 +681,7 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 //nolint:cyclop,funlen
-func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// The resource ID is the group UUID
@@ -786,7 +791,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 //nolint:cyclop,funlen
-func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	groupName := getString(d, "group_name")
 	cloudType := getInt(d, "cloud_type")
@@ -808,7 +813,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// ============================================================================
 	if d.HasChange("group_instance_size") {
 		instanceSize := getString(d, "group_instance_size")
-		err := client.UpdateGatewayGroupSize(ctx, groupName, instanceSize)
+		err := client.UpdateGroupInstanceSize(ctx, groupName, instanceSize)
 		if err != nil {
 			return diag.Errorf("failed to update group_instance_size: %s", err)
 		}
@@ -1183,7 +1188,7 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
 }
 
-func resourceAviatrixSpokeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// The resource ID is the group UUID

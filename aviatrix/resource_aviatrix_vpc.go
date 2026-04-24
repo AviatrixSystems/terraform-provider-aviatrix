@@ -261,7 +261,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				ForceNew:    true,
 				Description: "IPv6 CIDR for the VPC. Required when enable_ipv6 is true for Azure (8). Optional for GCP (4).",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v := mustString(val)
 					ip, ipnet, err := net.ParseCIDR(v)
 					if err != nil {
@@ -300,7 +300,7 @@ func resourceAviatrixVpc() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
@@ -466,7 +466,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcName := getString(d, "name")
@@ -551,10 +551,10 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		mustSet(d, "azure_vnet_resource_id", azureVnetResourceId)
 	}
 
-	subnetsMap := make(map[string]map[string]interface{})
+	subnetsMap := make(map[string]map[string]any)
 	var subnetsKeyArray []string
 	for _, subnet := range vC.Subnets {
-		subnetInfo := make(map[string]interface{})
+		subnetInfo := make(map[string]any)
 		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetInfo["region"] = subnet.Region
 		}
@@ -576,7 +576,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		subnetsKeyArray = append(subnetsKeyArray, key)
 	}
 
-	var subnetsFromFile []map[string]interface{}
+	var subnetsFromFile []map[string]any
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		subnets := getList(d, "subnets")
 		for _, subnet := range subnets {
@@ -608,9 +608,9 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
 	}
 
-	var privateSubnets []map[string]interface{}
+	var privateSubnets []map[string]any
 	for _, subnet := range vC.PrivateSubnets {
-		subnetInfo := make(map[string]interface{})
+		subnetInfo := make(map[string]any)
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
 		subnetInfo["subnet_id"] = subnet.SubnetID
@@ -622,9 +622,9 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
 	}
 
-	var publicSubnets []map[string]interface{}
+	var publicSubnets []map[string]any
 	for _, subnet := range vC.PublicSubnets {
-		subnetInfo := make(map[string]interface{})
+		subnetInfo := make(map[string]any)
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
 		subnetInfo["subnet_id"] = subnet.SubnetID
@@ -690,7 +690,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{
@@ -717,7 +717,7 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{

@@ -114,7 +114,7 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 	return privateModeLb, nil
 }
 
-func resourceAviatrixPrivateModeLbCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeLbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	privateModeLb, err := marshalPrivateModeLb(d)
@@ -149,7 +149,7 @@ func resourceAviatrixPrivateModeLbCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixPrivateModeLbReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixPrivateModeLbReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixPrivateModeLbReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixPrivateModeLbRead(ctx, d, meta)
@@ -157,7 +157,7 @@ func resourceAviatrixPrivateModeLbReadIfRequired(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if _, ok := d.GetOk("vpc_id"); !ok {
@@ -206,7 +206,7 @@ func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixPrivateModeLbUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeLbUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	privateModeLb, err := marshalPrivateModeLb(d)
@@ -225,7 +225,7 @@ func resourceAviatrixPrivateModeLbUpdate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixPrivateModeLbRead(ctx, d, meta)
 }
 
-func resourceAviatrixPrivateModeLbDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeLbDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	vpcId := getString(d, "vpc_id")

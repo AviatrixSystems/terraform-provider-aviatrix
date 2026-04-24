@@ -161,7 +161,7 @@ func TestSetWanInterfaceNames(t *testing.T) {
 func TestSetExcludedResources(t *testing.T) {
 	tests := []struct {
 		name                  string
-		resourceData          map[string]interface{}
+		resourceData          map[string]any
 		expectedGateway1CIDRs string
 		expectedGateway2CIDRs string
 		expectedGateway1TGWs  string
@@ -170,11 +170,11 @@ func TestSetExcludedResources(t *testing.T) {
 	}{
 		{
 			name: "Valid excluded resources",
-			resourceData: map[string]interface{}{
-				"gateway1_excluded_network_cidrs":   []interface{}{"192.168.1.0/24", "192.168.2.0/24"},
-				"gateway2_excluded_network_cidrs":   []interface{}{"10.0.1.0/24"},
-				"gateway1_excluded_tgw_connections": []interface{}{"tgw-123", "tgw-456"},
-				"gateway2_excluded_tgw_connections": []interface{}{"tgw-789"},
+			resourceData: map[string]any{
+				"gateway1_excluded_network_cidrs":   []any{"192.168.1.0/24", "192.168.2.0/24"},
+				"gateway2_excluded_network_cidrs":   []any{"10.0.1.0/24"},
+				"gateway1_excluded_tgw_connections": []any{"tgw-123", "tgw-456"},
+				"gateway2_excluded_tgw_connections": []any{"tgw-789"},
 			},
 			expectedGateway1CIDRs: "192.168.1.0/24,192.168.2.0/24",
 			expectedGateway2CIDRs: "10.0.1.0/24",
@@ -184,11 +184,11 @@ func TestSetExcludedResources(t *testing.T) {
 		},
 		{
 			name: "Empty excluded resources",
-			resourceData: map[string]interface{}{
-				"gateway1_excluded_network_cidrs":   []interface{}{},
-				"gateway2_excluded_network_cidrs":   []interface{}{},
-				"gateway1_excluded_tgw_connections": []interface{}{},
-				"gateway2_excluded_tgw_connections": []interface{}{},
+			resourceData: map[string]any{
+				"gateway1_excluded_network_cidrs":   []any{},
+				"gateway2_excluded_network_cidrs":   []any{},
+				"gateway1_excluded_tgw_connections": []any{},
+				"gateway2_excluded_tgw_connections": []any{},
 			},
 			expectedGateway1CIDRs: "",
 			expectedGateway2CIDRs: "",
@@ -226,35 +226,35 @@ func TestSetExcludedResources(t *testing.T) {
 func TestGetBooleanValue(t *testing.T) {
 	tests := []struct {
 		name          string
-		inputData     map[string]interface{}
+		inputData     map[string]any
 		key           string
 		expectedValue bool
 		expectedError bool
 	}{
 		{
 			name:          "Valid boolean value (true)",
-			inputData:     map[string]interface{}{"enable_feature": true},
+			inputData:     map[string]any{"enable_feature": true},
 			key:           "enable_feature",
 			expectedValue: true,
 			expectedError: false,
 		},
 		{
 			name:          "Valid boolean value (false)",
-			inputData:     map[string]interface{}{"enable_feature": false},
+			inputData:     map[string]any{"enable_feature": false},
 			key:           "enable_feature",
 			expectedValue: false,
 			expectedError: false,
 		},
 		{
 			name:          "Missing key (should return error)",
-			inputData:     map[string]interface{}{},
+			inputData:     map[string]any{},
 			key:           "non_existent_key",
 			expectedValue: false,
 			expectedError: true,
 		},
 		{
 			name:          "Invalid type (string instead of bool)",
-			inputData:     map[string]interface{}{"invalid_type": "not_a_boolean"},
+			inputData:     map[string]any{"invalid_type": "not_a_boolean"},
 			key:           "invalid_type",
 			expectedValue: false,
 			expectedError: true,
@@ -335,14 +335,14 @@ func TestValidateTunnelCount(t *testing.T) {
 func TestGetNonEATPeeringOptions(t *testing.T) {
 	tests := []struct {
 		name          string
-		resourceData  map[string]interface{}
+		resourceData  map[string]any
 		expected      map[string]bool
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"enable_max_performance":                      true,
 				"enable_insane_mode_encryption_over_internet": false,
 				"enable_peering_over_private_network":         true,
@@ -383,7 +383,7 @@ func TestGetNonEATPeeringOptions(t *testing.T) {
 func TestSetNonEATPeeringOptions(t *testing.T) {
 	tests := []struct {
 		name                           string
-		resourceData                   map[string]interface{}
+		resourceData                   map[string]any
 		expectedError                  bool
 		expectedNoMaxPerformance       bool
 		expectedInsaneModeOverInternet bool
@@ -393,7 +393,7 @@ func TestSetNonEATPeeringOptions(t *testing.T) {
 	}{
 		{
 			name: "Valid Max Performance and Insane Mode",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"enable_max_performance":                      true,
 				"enable_insane_mode_encryption_over_internet": true,
 				"enable_peering_over_private_network":         false,
@@ -409,7 +409,7 @@ func TestSetNonEATPeeringOptions(t *testing.T) {
 		},
 		{
 			name: "Insane Mode with Peering Over Private Network Error",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"enable_max_performance":                      true,
 				"enable_insane_mode_encryption_over_internet": true,
 				"enable_peering_over_private_network":         true,
@@ -425,7 +425,7 @@ func TestSetNonEATPeeringOptions(t *testing.T) {
 		},
 		{
 			name: "Valid Single Tunnel Mode with Private Peering",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"enable_max_performance":                      false,
 				"enable_insane_mode_encryption_over_internet": false,
 				"enable_peering_over_private_network":         true,
@@ -470,15 +470,15 @@ func TestSetNonEATPeeringOptions(t *testing.T) {
 func TestGetStringListFromResource(t *testing.T) {
 	tests := []struct {
 		name          string
-		resourceData  map[string]interface{}
+		resourceData  map[string]any
 		key           string
 		expectedList  []string
 		expectedError error
 	}{
 		{
 			name: "Valid string list",
-			resourceData: map[string]interface{}{
-				"valid_list": []interface{}{"one", "two", "three"},
+			resourceData: map[string]any{
+				"valid_list": []any{"one", "two", "three"},
 			},
 			key:           "valid_list",
 			expectedList:  []string{"one", "two", "three"},
@@ -486,14 +486,14 @@ func TestGetStringListFromResource(t *testing.T) {
 		},
 		{
 			name:          "Key not present",
-			resourceData:  map[string]interface{}{},
+			resourceData:  map[string]any{},
 			key:           "missing_key",
 			expectedList:  nil,
 			expectedError: nil,
 		},
 		{
 			name: "Key exists but is not a list",
-			resourceData: map[string]interface{}{
+			resourceData: map[string]any{
 				"not_a_list": "string_value",
 			},
 			key:           "not_a_list",

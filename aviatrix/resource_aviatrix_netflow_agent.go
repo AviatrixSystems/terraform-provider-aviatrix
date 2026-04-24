@@ -92,7 +92,7 @@ func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
 	return netflowAgent
 }
 
-func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetNetflowAgentStatus()
@@ -110,7 +110,7 @@ func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "netflow_agent" {
@@ -140,7 +140,7 @@ func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixNetflowAgentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixNetflowAgentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableNetflowAgent(); err != nil {

@@ -56,7 +56,7 @@ func resourceAviatrixDCFIpsRuleFeed() *schema.Resource {
 
 // IPS Rule Feed CRUD operations
 
-func resourceAviatrixDCFIpsRuleFeedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsRuleFeedCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	ruleFeed := &goaviatrix.IpsRuleFeed{
@@ -73,7 +73,7 @@ func resourceAviatrixDCFIpsRuleFeedCreate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixDCFIpsRuleFeedRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	ruleFeed, err := client.GetIpsRuleFeed(ctx, d.Id())
@@ -92,7 +92,7 @@ func resourceAviatrixDCFIpsRuleFeedRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.HasChanges("feed_name", "file_content") {
 		return resourceAviatrixDCFIpsRuleFeedRead(ctx, d, meta)
 	}
@@ -112,7 +112,7 @@ func resourceAviatrixDCFIpsRuleFeedUpdate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixDCFIpsRuleFeedRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFIpsRuleFeedDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsRuleFeedDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteIpsRuleFeed(ctx, d.Id())

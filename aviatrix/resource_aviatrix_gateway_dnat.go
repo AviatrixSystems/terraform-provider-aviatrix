@@ -233,7 +233,7 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 	}
 }
 
-func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -274,7 +274,7 @@ func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixGatewayDNatReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixGatewayDNatReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixGatewayDNatReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixGatewayDNatRead(d, meta)
@@ -282,7 +282,7 @@ func resourceAviatrixGatewayDNatReadIfRequired(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")
@@ -315,12 +315,12 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %w", gw.GwName, err)
 		}
 		if len(gwDetail.DnatPolicy) != 0 {
-			var dnatPolicy []map[string]interface{}
-			var connectionPolicy []map[string]interface{}
-			var interfacePolicy []map[string]interface{}
+			var dnatPolicy []map[string]any
+			var connectionPolicy []map[string]any
+			var interfacePolicy []map[string]any
 
 			for _, policy := range gwDetail.DnatPolicy {
-				dP := make(map[string]interface{})
+				dP := make(map[string]any)
 				dP["src_cidr"] = policy.SrcIP
 				dP["src_port"] = policy.SrcPort
 				dP["dst_cidr"] = policy.DstIP
@@ -364,7 +364,7 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", getString(d, "gw_name"))
@@ -407,7 +407,7 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 	return resourceAviatrixGatewayDNatRead(d, meta)
 }
 
-func resourceAviatrixGatewayDNatDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	gateway := &goaviatrix.Gateway{
 		GatewayName: getString(d, "gw_name"),

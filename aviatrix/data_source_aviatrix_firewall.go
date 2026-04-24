@@ -77,7 +77,7 @@ func dataSourceAviatrixFirewall() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")
@@ -105,7 +105,7 @@ func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) er
 		mustSet(d, "base_log_enabled", true)
 	}
 
-	var policies []map[string]interface{}
+	var policies []map[string]any
 	for _, p := range fw.PolicyList {
 		policies = append(policies, goaviatrix.PolicyToMap(p))
 	}

@@ -43,7 +43,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDeploymentPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := mustClient(meta)
 
@@ -96,7 +96,7 @@ func validateDeploymentPolicyInput(providers *schema.Set, setDefaults bool) (dia
 	return nil, true
 }
 
-func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.ReplaceAll(client.ControllerIP, ".", "-") {
@@ -124,7 +124,7 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicyRead(ctx context.Cont
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDeploymentPolicyDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// These dummy values are required but will be ignored by the API when SetDefaults=true

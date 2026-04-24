@@ -54,6 +54,7 @@ func TestAccAviatrixTransitInstance_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceNameAws, "insane_mode", "false"),
 					),
 				},
 				{
@@ -89,6 +90,7 @@ func TestAccAviatrixTransitInstance_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_id", os.Getenv("AZURE_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameAzure, "subnet", os.Getenv("AZURE_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_reg", os.Getenv("AZURE_REGION")),
+						resource.TestCheckResourceAttr(resourceNameAzure, "insane_mode", "false"),
 					),
 				},
 				{
@@ -124,6 +126,7 @@ func TestAccAviatrixTransitInstance_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameGCP, "vpc_id", os.Getenv("GCP_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameGCP, "subnet", os.Getenv("GCP_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameGCP, "vpc_reg", os.Getenv("GCP_ZONE")),
+						resource.TestCheckResourceAttr(resourceNameGCP, "insane_mode", "false"),
 					),
 				},
 				{
@@ -159,6 +162,7 @@ func TestAccAviatrixTransitInstance_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_id", os.Getenv("OCI_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameOCI, "subnet", os.Getenv("OCI_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_reg", os.Getenv("OCI_REGION")),
+						resource.TestCheckResourceAttr(resourceNameOCI, "insane_mode", "false"),
 					),
 				},
 				{
@@ -171,6 +175,104 @@ func TestAccAviatrixTransitInstance_basic(t *testing.T) {
 	} else {
 		t.Log("Skipping Transit instance test in OCI as SKIP_TRANSIT_INSTANCE_OCI is set")
 	}
+}
+
+// TestAccAviatrixTransitInstance_insaneModeAWS creates a transit instance with insane_mode on AWS (Insane Mode subnet + AZ).
+func TestAccAviatrixTransitInstance_insaneModeAWS(t *testing.T) {
+	var gateway goaviatrix.Gateway
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_instance.test_transit_instance_aws_insane"
+
+	skipInstance := os.Getenv("SKIP_TRANSIT_INSTANCE")
+	if skipInstance == "yes" {
+		t.Skip("Skipping Transit instance test as SKIP_TRANSIT_INSTANCE is set")
+	}
+
+	skipInsane := os.Getenv("SKIP_TRANSIT_INSTANCE_INSANE_MODE")
+	if skipInsane == "yes" {
+		t.Skip("Skipping Transit instance Insane Mode test as SKIP_TRANSIT_INSTANCE_INSANE_MODE is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+
+	msgCommon := ". Set SKIP_TRANSIT_INSTANCE_INSANE_MODE to yes to skip Transit Instance Insane Mode tests"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAwsTransitInstanceInsaneModeCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitInstanceConfigAWSInsaneMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitInstanceExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfi-aws-insane-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID4")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "insane_mode_az", os.Getenv("AWS_AVAILABILITY_ZONE")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func preAwsTransitInstanceInsaneModeCheck(t *testing.T, msgCommon string) {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_REGION",
+		"AWS_AVAILABILITY_ZONE",
+		"AWS_INSANE_MODE_SUBNET",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+}
+
+func testAccTransitInstanceConfigAWSInsaneMode(rName string) string {
+	awsGwSize := os.Getenv("AWS_INSANE_MODE_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "c5.xlarge"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_instance" "test_transit_instance_aws_insane" {
+	cloud_type     = 1
+	account_name   = aviatrix_account.test_acc_aws.account_name
+	gw_name        = "tfi-aws-insane-%[1]s"
+	vpc_id         = "%[5]s"
+	vpc_reg        = "%[6]s"
+	gw_size        = "%[7]s"
+	subnet         = "%[8]s"
+	insane_mode    = true
+	insane_mode_az = "%[9]s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID4"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_INSANE_MODE_SUBNET"),
+		os.Getenv("AWS_AVAILABILITY_ZONE"))
 }
 
 func TestAccAviatrixTransitInstance_withTags(t *testing.T) {

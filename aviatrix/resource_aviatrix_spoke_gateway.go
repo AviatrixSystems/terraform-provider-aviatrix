@@ -464,7 +464,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v := mustBool(val)
 					if !v {
 						errs = append(errs, fmt.Errorf("expected %s to true to enable spot instance, got: %v", key, val))
@@ -606,8 +606,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Private IP address of the spoke gateway created.",
 			},
 			"ipv6_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Description: "IPv6 address of the spoke gateway created.",
 			},
 			"ha_cloud_instance_id": {
@@ -626,8 +629,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Private IP address of the spoke gateway created.",
 			},
 			"ha_ipv6_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Description: "IPv6 address of the HA spoke gateway created.",
 			},
 			"public_ip": {
@@ -725,21 +731,21 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 	}
 }
 
-// setGatewayIPv6IPState writes ipv6_ip into the Terraform state when IPv6 is enabled and "" when it is disabled.
+// setGatewayIPv6IPState writes ipv6_ip into the Terraform state when IPv6 is enabled and an empty list when it is disabled.
 func setGatewayIPv6IPState(d *schema.ResourceData, gw *goaviatrix.Gateway) {
 	if gw.EnableIPv6 {
 		mustSet(d, "ipv6_ip", gw.IPv6IP)
 	} else {
-		mustSet(d, "ipv6_ip", "")
+		mustSet(d, "ipv6_ip", []string{})
 	}
 }
 
-// setGatewayIPv6IPState writes ha_ipv6_ip into the Terraform state when IPv6 is enabled and "" when it is disabled.
+// setGatewayHAIPv6IPState writes ha_ipv6_ip into the Terraform state when IPv6 is enabled and an empty list when it is disabled.
 func setGatewayHAIPv6IPState(d *schema.ResourceData, gw *goaviatrix.Gateway) {
 	if gw.EnableIPv6 {
 		mustSet(d, "ha_ipv6_ip", gw.HaGw.IPv6IP)
 	} else {
-		mustSet(d, "ha_ipv6_ip", "")
+		mustSet(d, "ha_ipv6_ip", []string{})
 	}
 }
 
@@ -758,7 +764,7 @@ func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
 	return nil
 }
 
-func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	// Only force recreation for primary gateway's IPv6 CIDR changes
 	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
@@ -768,7 +774,7 @@ func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.SpokeVpc{
@@ -1244,8 +1250,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	/* Set BGP MED to SDN metric per gateway */
 	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
+	if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
+		return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric override status for gateway %s: %w", gateway.GwName, err)
+	}
 	gwOverride := getBool(d, "gateway_override")
-	if gwOverride != override || err != nil {
+	if err == nil && gwOverride != override {
 		err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
 		if err != nil {
 			return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
@@ -1642,7 +1651,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSpokeGatewayRead(d, meta)
@@ -1650,7 +1659,7 @@ func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
@@ -1763,7 +1772,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	mustSet(d, "enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 	mustSet(d, "disable_route_propagation", gw.DisableRoutePropagation)
 	var prependAsPath []string
-	for _, p := range strings.Split(gw.PrependASPath, " ") {
+	for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 		if p != "" {
 			prependAsPath = append(prependAsPath, p)
 		}
@@ -1958,7 +1967,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("failed to get GRO/GSO status of spoke gateway %s: %w", gw.GwName, err)
 	}
 	mustSet(d, "enable_gro_gso", enableGroGso)
-
+	setGatewayHAIPv6IPState(d, gw)
 	if getBool(d, "manage_ha_gateway") {
 		if gw.HaGw.GwSize == "" {
 			mustSet(d, "ha_availability_domain", "")
@@ -2023,7 +2032,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		mustSet(d, "ha_image_version", gw.HaGw.ImageVersion)
 		mustSet(d, "ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 		mustSet(d, "ha_public_ip", gw.HaGw.PublicIP)
-		setGatewayHAIPv6IPState(d, gw)
+
 		if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			mustSet(d, "ha_insane_mode_az", gw.HaGw.GatewayZone)
 		} else {
@@ -2066,14 +2075,16 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
 		return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
 	}
-	mustSet(d, "gateway_override", override)
+	if err == nil {
+		mustSet(d, "gateway_override", override)
+	}
 	return nil
 }
 
-func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -2134,9 +2145,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	override, err := client.GetGatewayBgpMedToSdnMetric(gateway.GwName)
-	if d.HasChange("gateway_override") {
+	if err != nil && !strings.Contains(err.Error(), "Enable bgp_med_to_sdn_metric feature flag") {
+		return fmt.Errorf("failed to get BGP Multi-Exit Discriminator to SDN metric override status for gateway %s: %w", gateway.GwName, err)
+	}
+	if err == nil && d.HasChange("gateway_override") {
 		gwOverride := getBool(d, "gateway_override")
-		if gwOverride != override || err != nil {
+		if gwOverride != override {
 			err := client.SetGatewayBgpMedToSdnMetric(gateway.GwName, gwOverride)
 			if err != nil {
 				return fmt.Errorf("failed to override BGP Multi-Exit Discriminator to SDN metric for gateway %s: %w", gateway.GwName, err)
@@ -3047,6 +3061,15 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixSpokeGatewayRead(d, meta)
 }
 
+// isHADeletionInProgress reports whether the error indicates the controller is
+// still cleaning up an HA gateway deletion. WARNING: this matches on controller
+// error message text — if those strings change, this retry will silently stop working.
+func isHADeletionInProgress(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, "in use") &&
+		(strings.Contains(msg, "HA Gateway Deletion") || strings.Contains(msg, "Please try again"))
+}
+
 func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	client := mustClient(meta)
 
@@ -3072,10 +3095,26 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 	}
 	gateway.GwName = getString(d, "gw_name")
 
-	err := client.DeleteGateway(gateway)
+	// Retry primary delete when controller is still completing HA gateway deletion.
+	// The controller may return "in use for operation HA Gateway Deletion" when
+	// aviatrix_spoke_ha_gateway was deleted separately and cleanup is still in progress.
+	const maxTries = 6
+	err := goaviatrix.Retry(goaviatrix.RetryConfig{
+		MaxTries: maxTries,
+		Backoff:  30 * time.Second,
+		BackoffFunc: func(d time.Duration) time.Duration {
+			return d + 30*time.Second
+		},
+		ShouldRetry: isHADeletionInProgress,
+		OnRetry: func(attempt int, backoff time.Duration, err error) {
+			log.Printf("[INFO] Primary gateway still in use for HA deletion, waiting %v before retry (attempt %d/%d)",
+				backoff, attempt, maxTries)
+		},
+	}, func() error {
+		return client.DeleteGateway(gateway)
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Spoke Gateway: %w", err)
 	}
-
 	return nil
 }

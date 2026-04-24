@@ -31,7 +31,7 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerBgpCommunitiesGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	bgpCommunities := getBool(d, "bgp_communities_global")
@@ -52,7 +52,7 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigCreate(ctx context.Cont
 	return resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -76,7 +76,7 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx context.Contex
 	return nil
 }
 
-func resourceAviatrixControllerBgpCommunitiesGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("bgp_communities_global") {
@@ -99,7 +99,7 @@ func resourceAviatrixControllerBgpCommunitiesGlobalConfigUpdate(ctx context.Cont
 	return resourceAviatrixControllerBgpCommunitiesGlobalConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpCommunitiesGlobalConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesGlobalConfigDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableControllerBgpCommunitiesGlobal(ctx)

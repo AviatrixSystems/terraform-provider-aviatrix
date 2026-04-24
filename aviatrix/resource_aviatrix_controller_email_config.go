@@ -71,7 +71,7 @@ func resourceAviatrixControllerEmailConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerEmailConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	emailConfiguration := &goaviatrix.EmailConfiguration{
@@ -101,7 +101,7 @@ func resourceAviatrixControllerEmailConfigCreate(ctx context.Context, d *schema.
 	return resourceAviatrixControllerEmailConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixControllerEmailConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixControllerEmailConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
@@ -109,7 +109,7 @@ func resourceAviatrixControllerEmailConfigReadIfRequired(ctx context.Context, d 
 	return nil
 }
 
-func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -134,7 +134,7 @@ func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChanges("admin_alert_email", "critical_alert_email", "security_event_email", "status_change_email") {
@@ -172,7 +172,7 @@ func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.
 	return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerEmailConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerEmailConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	emailConfiguration := &goaviatrix.EmailConfiguration{

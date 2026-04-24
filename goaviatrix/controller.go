@@ -60,38 +60,6 @@ type ResourceCounts struct {
 	Count int    `json:"Count"`
 }
 
-func (c *Client) EnableExceptionRule() error {
-	form := map[string]string{
-		"CID":    c.CID,
-		"action": "enable_fqdn_exception_rule",
-	}
-	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-func (c *Client) DisableExceptionRule() error {
-	form := map[string]string{
-		"CID":    c.CID,
-		"action": "disable_fqdn_exception_rule",
-	}
-	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-func (c *Client) GetExceptionRuleStatus() (bool, error) {
-	var data GetFqdnExceptionRuleResp
-	form := map[string]string{
-		"CID":    c.CID,
-		"action": "get_fqdn_exception_rule_status",
-	}
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
-	if err != nil {
-		return false, err
-	}
-	if data.Results == "disabled" {
-		return false, nil
-	}
-	return true, nil
-}
-
 func (c *Client) EnableSecurityGroupManagement(account string) error {
 	form := map[string]string{
 		"CID":                 c.CID,

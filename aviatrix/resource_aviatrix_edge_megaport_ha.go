@@ -159,7 +159,7 @@ func parseInterfaces(d *schema.ResourceData) ([]*goaviatrix.EdgeMegaportInterfac
 
 	var interfaces []*goaviatrix.EdgeMegaportInterface
 	for _, interface0 := range rawInterfaces.List() {
-		interface1, ok := interface0.(map[string]interface{})
+		interface1, ok := interface0.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("failed to parse interface")
 		}
@@ -172,7 +172,7 @@ func parseInterfaces(d *schema.ResourceData) ([]*goaviatrix.EdgeMegaportInterfac
 	return interfaces, nil
 }
 
-func assignInterfaceFields(interface1 map[string]interface{}, interface2 *goaviatrix.EdgeMegaportInterface) {
+func assignInterfaceFields(interface1 map[string]any, interface2 *goaviatrix.EdgeMegaportInterface) {
 	if logicalIfname, ok := interface1["logical_ifname"].(string); ok {
 		interface2.LogicalInterfaceName = logicalIfname
 	}
@@ -199,7 +199,7 @@ func assignInterfaceFields(interface1 map[string]interface{}, interface2 *goavia
 	}
 }
 
-func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
@@ -216,7 +216,7 @@ func resourceAviatrixEdgeMegaportHaCreate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixEdgeMegaportHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if primaryGwName := getString(d, "primary_gw_name"); primaryGwName == "" {
@@ -245,9 +245,9 @@ func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceD
 		_ = d.Set("management_egress_ip_prefix_list", strings.Split(edgeMegaportHaResp.ManagementEgressIPPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, interface0 := range edgeMegaportHaResp.InterfaceList {
-		interface1 := make(map[string]interface{})
+		interface1 := make(map[string]any)
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
 		interface1["wan_public_ip"] = interface0.PublicIP
 		interface1["tag"] = interface0.Tag
@@ -268,7 +268,7 @@ func resourceAviatrixEdgeMegaportHaRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeMegaportHa, err := marshalEdgeMegaportHaInput(d)
@@ -296,7 +296,7 @@ func resourceAviatrixEdgeMegaportHaUpdate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixEdgeMegaportHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeMegaportHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	accountName := getString(d, "account_name")
 	ztpFileDownloadPath := getString(d, "ztp_file_download_path")

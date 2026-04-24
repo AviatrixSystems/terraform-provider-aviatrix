@@ -132,7 +132,7 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	smartGroups, err := client.GetSmartGroups(ctx)
@@ -140,12 +140,12 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("could not get Aviatrix Smart Groups: %s", err)
 	}
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	for _, smartGroup := range smartGroups {
-		var expressions []interface{}
+		var expressions []any
 
 		for _, filter := range smartGroup.Selector.Expressions {
-			filterMap := map[string]interface{}{
+			filterMap := map[string]any{
 				goaviatrix.TypeKey:         filter.Type,
 				goaviatrix.CidrKey:         filter.CIDR,
 				goaviatrix.FqdnKey:         filter.FQDN,
@@ -166,13 +166,13 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 			expressions = append(expressions, filterMap)
 		}
 
-		selector := []interface{}{
-			map[string]interface{}{
+		selector := []any{
+			map[string]any{
 				"match_expressions": expressions,
 			},
 		}
 
-		smtGroup := map[string]interface{}{
+		smtGroup := map[string]any{
 			"name":     smartGroup.Name,
 			"uuid":     smartGroup.UUID,
 			"selector": selector,

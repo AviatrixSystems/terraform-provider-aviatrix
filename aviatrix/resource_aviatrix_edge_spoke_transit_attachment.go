@@ -164,7 +164,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 	return edgeSpokeTransitAttachment
 }
 
-func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
@@ -253,7 +253,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	return resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx, d, meta)
@@ -261,7 +261,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx context.Contex
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	spokeGwName := getString(d, "spoke_gw_name")
@@ -367,7 +367,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enableInsaneMode := getBool(d, "enable_insane_mode")
@@ -428,7 +428,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 	}
 
 	if d.HasChange("enable_firenet_for_edge") {
-		form := map[string]interface{}{
+		form := map[string]any{
 			"CID":                     client.CID,
 			"action":                  "edit_inter_transit_gateway_peering",
 			"gateway1":                spokeGwName,
@@ -447,7 +447,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 	return resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeSpokeTransitAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeTransitAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	attachment := &goaviatrix.SpokeTransitAttachment{

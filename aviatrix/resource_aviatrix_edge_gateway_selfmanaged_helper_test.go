@@ -14,7 +14,7 @@ import (
 func TestValidateIdentifierValue(t *testing.T) {
 	tests := []struct {
 		name      string
-		input     interface{}
+		input     any
 		expectErr bool
 	}{
 		{
@@ -65,20 +65,20 @@ func TestValidateIdentifierValue(t *testing.T) {
 func TestGetCustomInterfaceMapDetails(t *testing.T) {
 	tests := []struct {
 		name                string
-		input               []interface{}
+		input               []any
 		expected            map[string]goaviatrix.CustomInterfaceMap
 		expectErr           bool
 		expectedErrorString string
 	}{
 		{
 			name: "Valid input",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"logical_ifname":   "wan0",
 					"identifier_type":  "mac",
 					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname":   "mgmt0",
 					"identifier_type":  "pci",
 					"identifier_value": "0000:00:1f.2",
@@ -98,7 +98,7 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 		},
 		{
 			name: "Invalid input type",
-			input: []interface{}{
+			input: []any{
 				"invalid-entry",
 			},
 			expectErr:           true,
@@ -106,8 +106,8 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 		},
 		{
 			name: "Missing logical_ifname",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"identifier_type":  "mac",
 					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
@@ -117,8 +117,8 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 		},
 		{
 			name: "Missing identifier_type",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"logical_ifname":   "wan0",
 					"identifier_value": "00:1A:2B:3C:4D:5E",
 				},
@@ -128,8 +128,8 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 		},
 		{
 			name: "Missing identifier_value",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"logical_ifname":  "wan0",
 					"identifier_type": "mac",
 				},
@@ -139,7 +139,7 @@ func TestGetCustomInterfaceMapDetails(t *testing.T) {
 		},
 		{
 			name:      "Empty input",
-			input:     []interface{}{},
+			input:     []any{},
 			expected:  map[string]goaviatrix.CustomInterfaceMap{},
 			expectErr: false,
 		},
@@ -172,7 +172,7 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 		name                     string
 		customInterfaceMap       map[string]goaviatrix.CustomInterfaceMap
 		userCustomInterfaceOrder []string
-		expected                 []interface{}
+		expected                 []any
 		expectErr                bool
 		expectedError            string
 	}{
@@ -189,13 +189,13 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 				},
 			},
 			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
-			expected: []interface{}{
-				map[string]interface{}{
+			expected: []any{
+				map[string]any{
 					"logical_ifname":   "mgmt0",
 					"identifier_type":  "pci",
 					"identifier_value": "0000:00:1f.2",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname":   "wan0",
 					"identifier_type":  "mac",
 					"identifier_value": "00:1A:2B:3C:4D:5E",
@@ -252,13 +252,13 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 				},
 			},
 			userCustomInterfaceOrder: []string{"mgmt0", "wan0"},
-			expected: []interface{}{
-				map[string]interface{}{
+			expected: []any{
+				map[string]any{
 					"logical_ifname":   "mgmt0",
 					"identifier_type":  "pci",
 					"identifier_value": "0000:00:1f.2",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname":   "wan0",
 					"identifier_type":  "mac",
 					"identifier_value": "00:1A:2B:3C:4D:5E",
@@ -293,18 +293,18 @@ func TestSetCustomInterfaceMapping(t *testing.T) {
 func TestGetCustomInterfaceOrder(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         []interface{}
+		input         []any
 		expected      []string
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"logical_ifname": "wan0",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname": "mgmt0",
 				},
 			},
@@ -313,7 +313,7 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 		},
 		{
 			name: "Invalid type in mapping",
-			input: []interface{}{
+			input: []any{
 				"invalid_type",
 			},
 			expectErr:     true,
@@ -321,8 +321,8 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 		},
 		{
 			name: "Missing logical_ifname",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"identifier_type": "mac",
 				},
 			},
@@ -331,8 +331,8 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 		},
 		{
 			name: "Empty logical_ifname",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"logical_ifname": "",
 				},
 			},
@@ -366,14 +366,14 @@ func TestGetCustomInterfaceOrder(t *testing.T) {
 func TestBuildEdgeSpokeInterface(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         map[string]interface{}
+		input         map[string]any
 		expected      *goaviatrix.EdgeSpokeInterface
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input for non-LAN interface",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"name":          "eth0",
 				"type":          "WAN",
 				"enable_dhcp":   true,
@@ -399,7 +399,7 @@ func TestBuildEdgeSpokeInterface(t *testing.T) {
 		},
 		{
 			name: "Valid input for LAN interface",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"name":            "eth1",
 				"type":            "LAN",
 				"enable_dhcp":     false,
@@ -429,7 +429,7 @@ func TestBuildEdgeSpokeInterface(t *testing.T) {
 		},
 		{
 			name: "Missing required field: name",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"type":          "WAN",
 				"enable_dhcp":   true,
 				"wan_public_ip": "192.168.1.1",
@@ -442,7 +442,7 @@ func TestBuildEdgeSpokeInterface(t *testing.T) {
 		},
 		{
 			name: "Missing required field: type",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"name":          "eth0",
 				"enable_dhcp":   true,
 				"wan_public_ip": "192.168.1.1",
@@ -480,14 +480,14 @@ func TestBuildEdgeSpokeInterface(t *testing.T) {
 func TestPopulateLANFields(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         map[string]interface{}
+		input         map[string]any
 		expected      *goaviatrix.EdgeSpokeInterface
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"enable_vrrp":     true,
 				"vrrp_virtual_ip": "192.168.1.100",
 			},
@@ -499,7 +499,7 @@ func TestPopulateLANFields(t *testing.T) {
 		},
 		{
 			name: "Missing enable_vrrp field",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"vrrp_virtual_ip": "192.168.1.100",
 			},
 			expectErr:     true,
@@ -507,7 +507,7 @@ func TestPopulateLANFields(t *testing.T) {
 		},
 		{
 			name: "Missing vrrp_virtual_ip field",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"enable_vrrp": true,
 			},
 			expectErr:     true,
@@ -515,7 +515,7 @@ func TestPopulateLANFields(t *testing.T) {
 		},
 		{
 			name: "Invalid type for enable_vrrp",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"enable_vrrp":     "true",
 				"vrrp_virtual_ip": "192.168.1.100",
 			},
@@ -524,7 +524,7 @@ func TestPopulateLANFields(t *testing.T) {
 		},
 		{
 			name: "Invalid type for vrrp_virtual_ip",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"enable_vrrp":     true,
 				"vrrp_virtual_ip": 12345,
 			},
@@ -559,14 +559,14 @@ func TestPopulateLANFields(t *testing.T) {
 func TestBuildEdgeSpokeVlan(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         map[string]interface{}
+		input         map[string]any
 		expected      *goaviatrix.EdgeSpokeVlan
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"parent_interface_name": "eth0",
 				"ip_address":            "192.168.1.2",
 				"gateway_ip":            "192.168.1.254",
@@ -590,7 +590,7 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 		},
 		{
 			name: "Missing parent_interface_name",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"ip_address":      "192.168.1.2",
 				"gateway_ip":      "192.168.1.254",
 				"peer_ip_address": "192.168.1.3",
@@ -604,7 +604,7 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 		},
 		{
 			name: "Invalid type for vlan_id",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"parent_interface_name": "eth0",
 				"ip_address":            "192.168.1.2",
 				"gateway_ip":            "192.168.1.254",
@@ -619,7 +619,7 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 		},
 		{
 			name: "Missing ip_address",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"parent_interface_name": "eth0",
 				"gateway_ip":            "192.168.1.254",
 				"peer_ip_address":       "192.168.1.3",
@@ -662,21 +662,21 @@ func TestBuildEdgeSpokeVlan(t *testing.T) {
 func TestPopulateCustomInterfaceMapping(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         map[string]interface{}
+		input         map[string]any
 		expected      map[string]goaviatrix.CustomInterfaceMap
 		expectErr     bool
 		expectedError string
 	}{
 		{
 			name: "Valid input",
-			input: map[string]interface{}{
-				"custom_interface_mapping": []interface{}{
-					map[string]interface{}{
+			input: map[string]any{
+				"custom_interface_mapping": []any{
+					map[string]any{
 						"logical_ifname":   "wan0",
 						"identifier_type":  "mac",
 						"identifier_value": "00:1A:2B:3C:4D:5E",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"logical_ifname":   "mgmt0",
 						"identifier_type":  "pci",
 						"identifier_value": "0000:00:1f.2",
@@ -697,8 +697,8 @@ func TestPopulateCustomInterfaceMapping(t *testing.T) {
 		},
 		{
 			name: "Empty custom_interface_mapping",
-			input: map[string]interface{}{
-				"custom_interface_mapping": []interface{}{},
+			input: map[string]any{
+				"custom_interface_mapping": []any{},
 			},
 			expected:  nil,
 			expectErr: false,

@@ -84,7 +84,7 @@ func resourceAviatrixFireNet() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Creating an Aviatrix Firenet on vpc: %s", d.Get("vpc_id"))
@@ -170,7 +170,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFireNetReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFireNetReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFireNetRead(d, meta)
@@ -178,7 +178,7 @@ func resourceAviatrixFireNetReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFireNetRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcID := getString(d, "vpc_id")
@@ -214,7 +214,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Aviatrix FireNet: %#v", getString(d, "vpc_id"))
@@ -345,7 +345,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixFireNetRead(d, meta)
 }
 
-func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	fireNet := &goaviatrix.FireNet{

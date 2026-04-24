@@ -118,7 +118,7 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							ValidateDiagFunc: func(i interface{}, path cty.Path) diag.Diagnostics {
+							ValidateDiagFunc: func(i any, path cty.Path) diag.Diagnostics {
 								tags := mustMap(i)
 								for key, value := range tags {
 									if !clusterTagValueRegex.MatchString(key) {
@@ -167,7 +167,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 		if compartment, ok := clusterDetailsMap["compartment"]; ok {
 			resource.Compartment = mustString(compartment)
 		}
-		if tags, ok := clusterDetailsMap["tags"].(map[string]interface{}); ok {
+		if tags, ok := clusterDetailsMap["tags"].(map[string]any); ok {
 			for key, value := range tags {
 				resource.Tags = append(resource.Tags, goaviatrix.Tag{
 					Key:   key,
@@ -181,7 +181,7 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 	return kubernetesCluster, nil
 }
 
-func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	kubernetesCluster, err := marshalKubernetesClusterInput(d)
@@ -196,7 +196,7 @@ func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.Reso
 	return resourceAviatrixKubernetesClusterRead(ctx, d, meta)
 }
 
-func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	kubernetesCluster, err := client.GetKubernetesCluster(ctx, d.Id())
@@ -211,7 +211,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		mustSet(d, "kube_config", credential.KubeConfig)
 	}
 	if kubernetesCluster.Resource != nil {
-		details := make(map[string]interface{})
+		details := make(map[string]any)
 		resource := kubernetesCluster.Resource
 		details["account_name"] = resource.AccountName
 		details["account_id"] = resource.AccountId
@@ -229,19 +229,19 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 			details["compartment"] = resource.Compartment
 		}
 		if len(resource.Tags) > 0 {
-			tags := make(map[string]interface{})
+			tags := make(map[string]any)
 			for _, tag := range resource.Tags {
 				tags[tag.Key] = tag.Value
 			}
 			details["tags"] = tags
 		}
-		mustSet(d, "cluster_details", []map[string]interface{}{details})
+		mustSet(d, "cluster_details", []map[string]any{details})
 	}
 
 	return nil
 }
 
-func resourceAviatrixKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	kubernetesCluster, err := marshalKubernetesClusterInput(d)
@@ -254,7 +254,7 @@ func resourceAviatrixKubernetesClusterUpdate(ctx context.Context, d *schema.Reso
 	return resourceAviatrixKubernetesClusterRead(ctx, d, meta)
 }
 
-func resourceAviatrixKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteKubernetesCluster(ctx, d.Id())

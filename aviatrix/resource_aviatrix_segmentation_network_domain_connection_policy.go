@@ -49,7 +49,7 @@ func marshalSegmentationNetworkDomainConnectionPolicyInput(d *schema.ResourceDat
 	}
 }
 
-func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	policy := marshalSegmentationNetworkDomainConnectionPolicyInput(d)
@@ -76,7 +76,7 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyCreate(d *schema.R
 	return resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d, meta)
@@ -84,7 +84,7 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyReadIfRequired(d *
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domainName1 := getString(d, "domain_name_1")
@@ -121,7 +121,7 @@ func resourceAviatrixSegmentationNetworkDomainConnectionPolicyRead(d *schema.Res
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainConnectionPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainConnectionPolicyDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	policy := marshalSegmentationNetworkDomainConnectionPolicyInput(d)

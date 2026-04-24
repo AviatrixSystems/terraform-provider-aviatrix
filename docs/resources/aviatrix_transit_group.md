@@ -34,7 +34,7 @@ resource "aviatrix_transit_group" "test_transit_group_aws" {
 ```
 
 ```hcl
-# Create an Aviatrix AWS Transit Group with BGP enabled
+# Create an Aviatrix AWS Transit Group
 resource "aviatrix_transit_group" "test_transit_group_bgp" {
   group_name          = "my-transit-group-bgp"
   cloud_type          = 1
@@ -44,7 +44,6 @@ resource "aviatrix_transit_group" "test_transit_group_bgp" {
   vpc_id              = "vpc-abcd1234"
   vpc_region          = "us-west-1"
 
-  enable_bgp             = true
   local_as_number        = "65001"
   prepend_as_path        = ["65001", "65001"]
   bgp_polling_time       = 30
@@ -113,7 +112,6 @@ resource "aviatrix_transit_group" "test_transit_group_advanced" {
   enable_advertise_transit_cidr = true
 
   # BGP Configuration
-  enable_bgp              = true
   local_as_number         = "65001"
   prepend_as_path         = ["65001", "65001"]
   enable_preserve_as_path = true
@@ -189,12 +187,12 @@ The following arguments are supported:
 
 ### Optional - Azure Specific
 
-* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the transit group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the transit group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048). This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
 
 ### Optional - BGP Configuration
 
-* `enable_bgp` - (Optional) Enable BGP. Valid values: true, false. Default: false. **Note:** Changing this forces a new resource to be created.
-* `local_as_number` - (Optional) BGP local AS number. Required when `enable_bgp` is set to true.
+
+* `local_as_number` - (Optional) BGP local AS number.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend to the AS_Path field. Valid only when `local_as_number` is set. Example: ["65001", "65001"].
 * `enable_preserve_as_path` - (Optional) Preserve AS path when advertising manual summary CIDRs. Valid values: true, false. Default: false.
 * `enable_bgp_ecmp` - (Optional) Enable BGP ECMP. Valid values: true, false. Default: false.
@@ -250,7 +248,6 @@ $ terraform import aviatrix_transit_group.test <group_uuid>
 ## Notes
 
 * The `group_name` is used to identify the gateway group and must be unique within the controller.
-* BGP configuration options are only applicable when `enable_bgp` is set to true.
 * The `bgp_polling_time`, `bgp_neighbor_status_polling_time`, and `bgp_hold_time` fields will default to their respective values (50, 5, and 180 seconds) when the API returns 0.
 * The `learned_cidrs_approval_mode` will default to "gateway" when the API returns an empty string.
 * Active-Standby Preemptive mode can only be enabled when Active-Standby mode is already enabled.

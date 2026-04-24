@@ -485,7 +485,7 @@ func marshalEdgeMegaportInput(d *schema.ResourceData) (*goaviatrix.EdgeMegaport,
 	return edgeMegaport, nil
 }
 
-func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -664,7 +664,7 @@ func resourceAviatrixEdgeMegaportCreate(ctx context.Context, d *schema.ResourceD
 	return resourceAviatrixEdgeMegaportReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeMegaportReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeMegaportRead(ctx, d, meta)
@@ -672,7 +672,7 @@ func resourceAviatrixEdgeMegaportReadIfRequired(ctx context.Context, d *schema.R
 	return nil
 }
 
-func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -692,7 +692,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("could not read Edge Megaport: %v", err)
 	}
 
-	edgeMegaportFields := map[string]interface{}{
+	edgeMegaportFields := map[string]any{
 		"account_name":                           edgeMegaportResp.AccountName,
 		"gw_name":                                edgeMegaportResp.GwName,
 		"site_id":                                edgeMegaportResp.SiteId,
@@ -763,8 +763,8 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 		_ = d.Set("longitude", "")
 	}
 
-	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
+	var interfaces []map[string]any
+	var vlan []map[string]any
 	// get user interface order
 	userInterfaces := getList(d, "interfaces")
 
@@ -774,7 +774,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	}
 	interfaceList := sortSpokeInterfacesByCustomOrder(edgeMegaportResp.InterfaceList, userInterfaceOrder)
 	for _, interface0 := range interfaceList {
-		interface1 := make(map[string]interface{})
+		interface1 := make(map[string]any)
 		interface1["logical_ifname"] = interface0.LogicalInterfaceName
 		if interface0.PublicIP != "" {
 			interface1["wan_public_ip"] = interface0.PublicIP
@@ -806,7 +806,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 
 		if strings.HasPrefix(interface0.LogicalInterfaceName, "lan") && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
-				vlan1 := make(map[string]interface{})
+				vlan1 := make(map[string]any)
 				vlan1["parent_logical_interface_name"] = vlan0.ParentLogicalInterface
 				vlan1["ip_address"] = vlan0.IPAddr
 				vlan1["gateway_ip"] = vlan0.GatewayIP
@@ -833,9 +833,9 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// set interface mapping for megaport
-	var interfaceMapping []map[string]interface{}
+	var interfaceMapping []map[string]any
 	for _, interfaceMap := range edgeMegaportResp.InterfaceMapping {
-		interfaceMapping1 := make(map[string]interface{})
+		interfaceMapping1 := make(map[string]any)
 		interfaceMapping1["name"] = interfaceMap.Name
 		interfaceMapping1["type"] = interfaceMap.Type
 		interfaceMapping1["index"] = interfaceMap.Index
@@ -849,7 +849,7 @@ func resourceAviatrixEdgeMegaportRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -1076,7 +1076,7 @@ func resourceAviatrixEdgeMegaportUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceAviatrixEdgeMegaportRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeMegaportDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	accountName := getString(d, "account_name")
 	gwName := getString(d, "gw_name")

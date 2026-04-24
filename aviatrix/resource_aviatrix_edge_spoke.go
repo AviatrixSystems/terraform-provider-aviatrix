@@ -320,7 +320,7 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 	return edgeSpoke
 }
 
-func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -474,7 +474,7 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeSpokeReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeSpokeReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeSpokeRead(ctx, d, meta)
@@ -482,7 +482,7 @@ func resourceAviatrixEdgeSpokeReadIfRequired(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -563,10 +563,10 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	mustSet(d, "rx_queue_size", edgeSpoke.RxQueueSize)
 	mustSet(d, "state", edgeSpoke.State)
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 
 	for _, if0 := range edgeSpoke.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["enable_dhcp"] = if0.Dhcp
@@ -587,7 +587,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -777,7 +777,7 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeSpokeRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeSpokeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")

@@ -152,7 +152,7 @@ func marshalEdgeNEOHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	return edgeNEOHa
 }
 
-func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgeNEOHaInput(d)
@@ -166,7 +166,7 @@ func resourceAviatrixEdgeNEOHaCreate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if getString(d, "primary_gw_name") == "" {
@@ -196,9 +196,9 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, if0 := range edgeNEOHaResp.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["wan_public_ip"] = if0.PublicIp
@@ -220,7 +220,7 @@ func resourceAviatrixEdgeNEOHaRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgeNEOHaInput(d)
@@ -245,7 +245,7 @@ func resourceAviatrixEdgeNEOHaUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixEdgeNEOHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEOHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

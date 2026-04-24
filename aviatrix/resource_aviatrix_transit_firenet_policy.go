@@ -37,7 +37,7 @@ func resourceAviatrixTransitFireNetPolicy() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
@@ -59,7 +59,7 @@ func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta int
 	return resourceAviatrixTransitFireNetPolicyReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransitFireNetPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransitFireNetPolicyReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTransitFireNetPolicyRead(d, meta)
@@ -67,7 +67,7 @@ func resourceAviatrixTransitFireNetPolicyReadIfRequired(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitFireNetGatewayName := getString(d, "transit_firenet_gateway_name")
@@ -99,7 +99,7 @@ func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAviatrixTransitFireNetPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{

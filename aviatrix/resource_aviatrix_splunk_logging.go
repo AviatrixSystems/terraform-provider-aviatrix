@@ -69,7 +69,7 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetSplunkLoggingStatus()
@@ -80,7 +80,7 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	}
 }
 
-func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "splunk_logging" {
@@ -108,7 +108,7 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAviatrixSplunkLoggingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSplunkLoggingDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableSplunkLogging(); err != nil {

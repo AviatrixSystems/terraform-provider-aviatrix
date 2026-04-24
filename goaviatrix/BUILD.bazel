@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "account.go",
         "account_user.go",
+        "avx_http_error.go",
         "aws_guard_duty.go",
         "aws_peering.go",
         "aws_tgw.go",
@@ -81,7 +82,6 @@ go_library(
         "firewall_instance.go",
         "firewall_management_access.go",
         "firewall_tag.go",
-        "fqdn.go",
         "gateway.go",
         "gateway_bgp_communities_config.go",
         "gateway_bgp_med_to_sdn_metric_config.go",
@@ -106,6 +106,7 @@ go_library(
         "rbac_group_permission_attachment.go",
         "rbac_group_user_attachment.go",
         "remote_syslog.go",
+        "retry.go",
         "saml_endpoint.go",
         "security_domain.go",
         "segmentation.go",

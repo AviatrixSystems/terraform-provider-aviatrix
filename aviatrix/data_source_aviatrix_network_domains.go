@@ -87,17 +87,17 @@ func dataSourceAviatrixNetworkDomains() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixNetworkDomainsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixNetworkDomainsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	domainList, err := client.GetAllNetworkDomains(ctx)
 	if err != nil {
 		return diag.Errorf("could not get Aviatrix Network Domains: %s", err)
 	}
-	var result []map[string]interface{}
+	var result []map[string]any
 	for i, domain := range domainList {
 		domainList[i] = domain
-		tempDomain := map[string]interface{}{
+		tempDomain := map[string]any{
 			"name":                         domain.Name,
 			"tgw_name":                     domain.TgwName,
 			"route_table_id":               domain.RouteTableId,

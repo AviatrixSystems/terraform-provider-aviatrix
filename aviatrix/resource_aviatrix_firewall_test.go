@@ -171,12 +171,12 @@ func testAccCheckFirewallDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testResourceFirewallStateDataV0() map[string]interface{} {
-	return map[string]interface{}{}
+func testResourceFirewallStateDataV0() map[string]any {
+	return map[string]any{}
 }
 
-func testResourceFirewallStateDataV1() map[string]interface{} {
-	return map[string]interface{}{
+func testResourceFirewallStateDataV1() map[string]any {
+	return map[string]any{
 		"manage_firewall_policies": true,
 	}
 }
@@ -193,14 +193,14 @@ func TestResourceFirewallStateUpgradeV0(t *testing.T) {
 	}
 }
 
-func testResourceFirewallStateDataV0ManageAlreadySet() map[string]interface{} {
-	return map[string]interface{}{
+func testResourceFirewallStateDataV0ManageAlreadySet() map[string]any {
+	return map[string]any{
 		"manage_firewall_policies": false,
 	}
 }
 
-func testResourceFirewallStateDataV1ManageAlreadySet() map[string]interface{} {
-	return map[string]interface{}{
+func testResourceFirewallStateDataV1ManageAlreadySet() map[string]any {
+	return map[string]any{
 		"manage_firewall_policies": false,
 	}
 }

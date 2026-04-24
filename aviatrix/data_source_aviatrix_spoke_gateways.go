@@ -307,17 +307,17 @@ func dataSourceAviatrixSpokeGateways() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	SpokeGatewayList, err := client.GetSpokeGatewayList(ctx)
 	if err != nil {
 		return diag.Errorf("could not get Aviatrix Spoke Gateway List: %s", err)
 	}
-	var result []map[string]interface{}
+	var result []map[string]any
 	for i := range SpokeGatewayList {
 		gw := SpokeGatewayList[i]
-		spokeGateway := make(map[string]interface{})
+		spokeGateway := make(map[string]any)
 
 		spokeGateway["gw_name"] = gw.GwName
 		spokeGateway["cloud_type"] = gw.CloudType
@@ -451,7 +451,7 @@ func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.Resource
 		spokeGateway["disable_route_propagation"] = gw.DisableRoutePropagation
 		spokeGateway["local_as_number"] = gw.LocalASNumber
 		var prependAsPath []string
-		for _, p := range strings.Split(gw.PrependASPath, " ") {
+		for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 			if p != "" {
 				prependAsPath = append(prependAsPath, p)
 			}

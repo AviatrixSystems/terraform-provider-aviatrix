@@ -69,7 +69,7 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetFilebeatForwarderStatus()
@@ -80,7 +80,7 @@ func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interf
 	}
 }
 
-func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "filebeat_forwarder" {
@@ -107,7 +107,7 @@ func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixFilebeatForwarderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFilebeatForwarderDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableFilebeatForwarder(); err != nil {

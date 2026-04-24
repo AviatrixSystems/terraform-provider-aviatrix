@@ -230,7 +230,7 @@ func TestValidateCIDRRule(t *testing.T) {
 func TestValidateIPv6CIDR(t *testing.T) {
 	testCases := []struct {
 		name          string
-		input         interface{}
+		input         any
 		key           string
 		expectedError bool
 		errorContains string
@@ -334,7 +334,7 @@ func contains(s, substr string) bool {
 func TestValidateIPv6AccessTypeFunction(t *testing.T) {
 	testCases := []struct {
 		name          string
-		input         interface{}
+		input         any
 		key           string
 		expectedError bool
 		errorContains string

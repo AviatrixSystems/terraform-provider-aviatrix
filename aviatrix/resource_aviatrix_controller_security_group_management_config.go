@@ -34,7 +34,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfig() *schema.Resource 
 	}
 }
 
-func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	account := getString(d, "account_name")
@@ -72,7 +72,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 	return resourceAviatrixControllerSecurityGroupManagementConfigRead(d, meta)
 }
 
-func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	sgm, err := client.GetSecurityGroupManagementStatus()
@@ -90,7 +90,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.Resou
 	return nil
 }
 
-func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.HasChange("account_name") || d.HasChange("enable_security_group_management") {
@@ -114,6 +114,6 @@ func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.Res
 	return resourceAviatrixControllerSecurityGroupManagementConfigRead(d, meta)
 }
 
-func resourceAviatrixControllerSecurityGroupManagementConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerSecurityGroupManagementConfigDelete(d *schema.ResourceData, meta any) error {
 	return nil
 }

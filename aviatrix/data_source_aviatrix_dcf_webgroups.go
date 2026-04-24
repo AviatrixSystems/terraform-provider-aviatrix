@@ -52,7 +52,7 @@ func dataSourceAviatrixDcfWebgroups() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	name := getString(d, "name")
@@ -74,10 +74,10 @@ func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("could not set uuid: %s", err)
 	}
-	var expressions []interface{}
+	var expressions []any
 
 	for _, filter := range webGroup.Selector.Expressions {
-		filterMap := map[string]interface{}{
+		filterMap := map[string]any{
 			"snifilter": filter.SniFilter,
 			"urlfilter": filter.UrlFilter,
 		}
@@ -85,8 +85,8 @@ func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceD
 		expressions = append(expressions, filterMap)
 	}
 
-	selector := []interface{}{
-		map[string]interface{}{
+	selector := []any{
+		map[string]any{
 			"match_expressions": expressions,
 		},
 	}

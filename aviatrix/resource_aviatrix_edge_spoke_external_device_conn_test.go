@@ -273,7 +273,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      map[string]interface{}
+		config      map[string]any
 		haGwName    string
 		expectError bool
 		errorSubstr string
@@ -281,7 +281,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 	}{
 		{
 			name: "Valid HA config builds conn successfully",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -307,7 +307,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Valid HA config with IPv6",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                   "site-123",
 				"connection_name":           "conn-test",
 				"gw_name":                   "edge-gw",
@@ -331,7 +331,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		{
 			// backup_bgp_remote_as_num is now validated before backup_remote_lan_ip
 			name: "Fails when backup_bgp_remote_as_num is missing",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -348,7 +348,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_bgp_remote_as_num is not a valid integer",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -365,7 +365,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_remote_lan_ip is missing",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -382,7 +382,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Fails when bgp_local_as_num is not a valid integer",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -399,7 +399,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Succeeds when bgp_local_as_num is empty",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -418,7 +418,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Fails when enable_ipv6 but backup_remote_lan_ipv6_ip missing",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -436,7 +436,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForHa(t *testing.T) {
 		},
 		{
 			name: "Includes backup_bgp_md5_key when set",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -483,7 +483,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      map[string]interface{}
+		config      map[string]any
 		haGwName    string
 		expectError bool
 		errorSubstr string
@@ -491,7 +491,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 	}{
 		{
 			name: "Valid disable HA config - all backup fields empty",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":              "site-123",
 				"connection_name":      "conn-test",
 				"gw_name":              "edge-gw",
@@ -510,7 +510,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 		},
 		{
 			name: "Valid disable HA with edge underlay",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":              "site-123",
 				"connection_name":      "conn-test",
 				"gw_name":              "edge-gw",
@@ -524,7 +524,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_remote_lan_ip is set",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":              "site-123",
 				"connection_name":      "conn-test",
 				"gw_name":              "edge-gw",
@@ -537,7 +537,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_local_lan_ip is set",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":              "site-123",
 				"connection_name":      "conn-test",
 				"gw_name":              "edge-gw",
@@ -550,7 +550,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_bgp_remote_as_num is set",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                  "site-123",
 				"connection_name":          "conn-test",
 				"gw_name":                  "edge-gw",
@@ -563,7 +563,7 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 		},
 		{
 			name: "Fails when backup_remote_lan_ipv6_ip is set",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"site_id":                   "site-123",
 				"connection_name":           "conn-test",
 				"gw_name":                   "edge-gw",

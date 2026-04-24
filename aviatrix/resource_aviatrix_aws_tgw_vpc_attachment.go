@@ -95,7 +95,7 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
@@ -152,7 +152,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 	return resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAwsTgwVpcAttachmentRead(d, meta)
@@ -160,7 +160,7 @@ func resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName := getString(d, "tgw_name")
@@ -209,11 +209,11 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 		}
 		if getString(d, "route_tables") != "" {
 			routeTablesFromConfigList := strings.Split(getString(d, "route_tables"), ",")
-			for i := 0; i < len(routeTablesFromConfigList); i++ {
+			for i := range routeTablesFromConfigList {
 				routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
 			}
 			routeTablesFromReadList := strings.Split(aTVA.RouteTables, ",")
-			for i := 0; i < len(routeTablesFromReadList); i++ {
+			for i := range routeTablesFromReadList {
 				routeTablesFromReadList[i] = strings.TrimSpace(routeTablesFromReadList[i])
 			}
 			if (len(goaviatrix.Difference(routeTablesFromConfigList, routeTablesFromReadList)) != 0 ||
@@ -237,7 +237,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 	return fmt.Errorf("no Aviatrix Aws Tgw Vpc Attach found")
 }
 
-func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta any) error {
 	flag := false
 	defer func() { _ = resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
@@ -326,7 +326,7 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 	return resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{

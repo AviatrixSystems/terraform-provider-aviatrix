@@ -116,7 +116,7 @@ func marshalFirewallPolicyInput(d *schema.ResourceData) *goaviatrix.Firewall {
 	}
 }
 
-func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	fw := marshalFirewallPolicyInput(d)
@@ -137,7 +137,7 @@ func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta interface
 	return resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFirewallPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFirewallPolicyReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFirewallPolicyRead(d, meta)
@@ -145,7 +145,7 @@ func resourceAviatrixFirewallPolicyReadIfRequired(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")
@@ -211,7 +211,7 @@ func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixFirewallPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallPolicyDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	fw := marshalFirewallPolicyInput(d)

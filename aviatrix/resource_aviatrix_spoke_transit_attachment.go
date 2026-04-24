@@ -145,7 +145,7 @@ func recoverSpokeTransitAttachment(ctx context.Context, client *goaviatrix.Clien
 	return false
 }
 
-func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	attachment := marshalSpokeTransitAttachmentInput(d)
@@ -241,7 +241,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	return resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSpokeTransitAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSpokeTransitAttachmentReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
@@ -249,7 +249,7 @@ func resourceAviatrixSpokeTransitAttachmentReadIfRequired(d *schema.ResourceData
 	return nil
 }
 
-func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	spokeGwName := getString(d, "spoke_gw_name")
@@ -285,7 +285,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 
 	if attachment.RouteTables != "" {
 		var routeTables []string
-		for _, routeTable := range strings.Split(attachment.RouteTables, ",") {
+		for routeTable := range strings.SplitSeq(attachment.RouteTables, ",") {
 			routeTables = append(routeTables, strings.Split(routeTable, "~~")[0])
 		}
 
@@ -329,7 +329,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	if attachment.SpokeBgpEnabled {
 		if transitGatewayPeering.PrependAsPath1 != "" {
 			var prependAsPath []string
-			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
+			for str := range strings.SplitSeq(transitGatewayPeering.PrependAsPath1, " ") {
 				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 			}
 
@@ -341,7 +341,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 
 		if transitGatewayPeering.PrependAsPath2 != "" {
 			var prependAsPath []string
-			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
+			for str := range strings.SplitSeq(transitGatewayPeering.PrependAsPath2, " ") {
 				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 			}
 
@@ -359,7 +359,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if !getBool(d, "spoke_bgp_enabled") && d.HasChanges("spoke_prepend_as_path", "transit_prepend_as_path") {
@@ -417,7 +417,7 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta i
 	return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
 }
 
-func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{

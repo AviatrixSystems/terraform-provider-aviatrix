@@ -78,7 +78,7 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 	return tlsProfile, nil
 }
 
-func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	tlsProfile, err := marshalDCFTLSProfileInput(d)
@@ -95,7 +95,7 @@ func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -134,7 +134,7 @@ func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	tlsProfile, err := marshalDCFTLSProfileInput(d)
@@ -151,7 +151,7 @@ func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAviatrixDCFTLSProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTLSProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

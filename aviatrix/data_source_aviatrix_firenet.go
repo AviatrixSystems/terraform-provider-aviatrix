@@ -51,7 +51,7 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	fireNet := &goaviatrix.FireNet{

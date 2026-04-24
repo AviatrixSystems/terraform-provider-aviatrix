@@ -54,7 +54,7 @@ func resourceAviatrixPrivateModeMulticloudEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAviatrixPrivateModeMulticloudEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeMulticloudEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	privateModeMulticloudEndpoint := &goaviatrix.PrivateModeMulticloudEndpoint{
@@ -77,7 +77,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointCreate(ctx context.Context, d 
 	return resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixPrivateModeMulticloudEndpointRead(ctx, d, meta)
@@ -85,7 +85,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx context.Con
 	return nil
 }
 
-func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if _, ok := d.GetOk("vpc_id"); !ok {
@@ -113,7 +113,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *s
 	return nil
 }
 
-func resourceAviatrixPrivateModeMulticloudEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixPrivateModeMulticloudEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	vpcId := getString(d, "vpc_id")

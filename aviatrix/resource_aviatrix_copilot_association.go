@@ -33,7 +33,7 @@ func resourceAviatrixCopilotAssociation() *schema.Resource {
 	}
 }
 
-func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	addr := getString(d, "copilot_address")
@@ -46,7 +46,7 @@ func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.Res
 	return resourceAviatrixCopilotAssociationRead(ctx, d, meta)
 }
 
-func resourceAviatrixCopilotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilot, err := client.GetCopilotAssociationStatus(ctx)
@@ -62,7 +62,7 @@ func resourceAviatrixCopilotAssociationRead(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAviatrixCopilotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableCopilotAssociation(ctx)

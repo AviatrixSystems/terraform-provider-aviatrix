@@ -58,7 +58,7 @@ func marshalAzureVngConnInput(d *schema.ResourceData) *goaviatrix.AzureVngConn {
 	}
 }
 
-func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	azureVngConn := marshalAzureVngConnInput(d)
@@ -74,7 +74,7 @@ func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAzureVngConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAzureVngConnReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAzureVngConnRead(d, meta)
@@ -82,7 +82,7 @@ func resourceAviatrixAzureVngConnReadIfRequired(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -111,7 +111,7 @@ func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixAzureVngConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureVngConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcId := getString(d, "vpc_id")

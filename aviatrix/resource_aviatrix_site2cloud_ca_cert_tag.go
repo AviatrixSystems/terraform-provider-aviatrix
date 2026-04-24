@@ -72,7 +72,7 @@ func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	for _, v := range getSet(d, "ca_certificates").List() {
@@ -91,7 +91,7 @@ func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.Re
 	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
-func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	tagName := getString(d, "tag_name")
@@ -117,9 +117,9 @@ func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.Reso
 	}
 	mustSet(d, "tag_name", s2cCaCertTagResp.TagName)
 
-	var caCertInstances []map[string]interface{}
+	var caCertInstances []map[string]any
 	for _, certInstance := range s2cCaCertTagResp.CaCertificates {
-		instanceInfo := make(map[string]interface{})
+		instanceInfo := make(map[string]any)
 		instanceInfo["cert_content"] = certInstance.CertContent
 		instanceInfo["id"] = certInstance.ID
 		instanceInfo["unique_serial"] = certInstance.SerialNumber
@@ -137,7 +137,7 @@ func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	d.Partial(true)
 
@@ -182,7 +182,7 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.Re
 	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
-func resourceAviatrixSite2CloudCaCertTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSite2CloudCaCertTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	for _, cert := range getSet(d, "ca_certificates").List() {

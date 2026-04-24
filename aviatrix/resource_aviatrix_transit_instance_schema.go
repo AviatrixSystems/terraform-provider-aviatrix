@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,6 +56,13 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ValidateFunc: validation.IsCIDR,
 			Description:  "Public Subnet Name. Required for CSP transit gateways.",
 		},
+		"subnet_ipv6_cidr": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validateIPv6CIDR,
+			Description:  "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set. Only required on Azure and AWS Cloud.",
+		},
 		"allocate_new_eip": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -73,11 +81,24 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ValidateFunc: validation.IsIPAddress,
 			Description:  "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 		},
+		"ipv6_ip": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Description: "IPv6 address of the transit gateway created.",
+		},
 		"single_az_ha": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
 			Description: "Set to 'enabled' if this feature is desired.",
+		},
+		"insane_mode": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			ForceNew:    true,
+			Description: "Enable Insane Mode for Transit. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
 		},
 		"tags": {
 			Type:        schema.TypeMap,
@@ -223,7 +244,7 @@ func transitInstanceOptionalSpotSchema() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			ForceNew: true,
-			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 				v, ok := val.(bool)
 				if !ok {
 					errs = append(errs, fmt.Errorf("expected %s to be a bool, got: %T", key, val))
@@ -299,11 +320,11 @@ func transitInstanceOptionalAWSSchema() map[string]*schema.Schema {
 func transitInstanceOptionalAzureSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"zone": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validateAzureAZ,
-			Description:  "Availability Zone. Required for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+			Description: "Availability Zone. Required for GCP (4); use the GCP zone format, for example, 'us-east1-b'. " +
+				"Required for Azure (8), Azure GOV (32) and Azure CHINA (2048); must be in the form 'az-n', for example, 'az-2'.",
 		},
 		"azure_eip_name_resource_group": {
 			Type:         schema.TypeString,
@@ -601,36 +622,16 @@ func transitInstanceSchema() map[string]*schema.Schema {
 	schemaMap := make(map[string]*schema.Schema)
 
 	// Merge all schema functions
-	for k, v := range transitInstanceRequiredSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalBasicSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalRouteSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalFeatureSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalSpotSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalAWSSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalAzureSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalOCISchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceOptionalEdgeSchema() {
-		schemaMap[k] = v
-	}
-	for k, v := range transitInstanceComputedSchema() {
-		schemaMap[k] = v
-	}
+	maps.Copy(schemaMap, transitInstanceRequiredSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalBasicSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalRouteSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalFeatureSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalSpotSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalAWSSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalAzureSchema())
+	maps.Copy(schemaMap, transitInstanceOptionalOCISchema())
+	maps.Copy(schemaMap, transitInstanceOptionalEdgeSchema())
+	maps.Copy(schemaMap, transitInstanceComputedSchema())
 
 	return schemaMap
 }

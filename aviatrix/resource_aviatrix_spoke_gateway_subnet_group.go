@@ -63,7 +63,7 @@ func marshalSpokeGatewaySubnetGroupInput(d *schema.ResourceData) *goaviatrix.Spo
 	return spokeGatewaySubnetGroup
 }
 
-func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
@@ -85,7 +85,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schem
 	return resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSpokeGatewaySubnetGroupRead(ctx, d, meta)
@@ -93,7 +93,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx context.Context, 
 	return nil
 }
 
-func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	name := getString(d, "name")
@@ -135,7 +135,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	flag := false
 	defer resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 
@@ -152,7 +152,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schem
 	return resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixSpokeGatewaySubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSpokeGatewaySubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)

@@ -39,7 +39,7 @@ func dataSourceAviatrixDcfTrustbundle() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDcfTrustbundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDcfTrustbundleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	name := getString(d, "display_name")

@@ -65,7 +65,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	proxyCaConfig := &goaviatrix.ProxyCaConfig{
@@ -81,7 +81,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigCreate(ctx context.Conte
 	return resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -111,7 +111,7 @@ func resourceAviatrixDistributedFirewallingProxyCaConfigRead(ctx context.Context
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingProxyCaConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingProxyCaConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteCaCertificate(ctx)

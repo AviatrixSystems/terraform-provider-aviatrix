@@ -467,7 +467,7 @@ func marshalEdgeNEOInput(d *schema.ResourceData) *goaviatrix.EdgeNEO {
 	return edgeNEO
 }
 
-func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -641,7 +641,7 @@ func resourceAviatrixEdgeNEOCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourceAviatrixEdgeNEOReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeNEORead(ctx, d, meta)
@@ -649,7 +649,7 @@ func resourceAviatrixEdgeNEOReadIfRequired(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -727,10 +727,10 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	mustSet(d, "lan_interface_names", edgeNEOResp.LanInterface)
 	mustSet(d, "management_interface_names", edgeNEOResp.MgmtInterface)
 
-	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
+	var interfaces []map[string]any
+	var vlan []map[string]any
 	for _, interface0 := range edgeNEOResp.InterfaceList {
-		interface1 := make(map[string]interface{})
+		interface1 := make(map[string]any)
 		interface1["name"] = interface0.IfName
 		interface1["type"] = interface0.Type
 		interface1["wan_public_ip"] = interface0.PublicIp
@@ -748,7 +748,7 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 
 		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
-				vlan1 := make(map[string]interface{})
+				vlan1 := make(map[string]any)
 				vlan1["parent_interface_name"] = vlan0.ParentInterface
 				vlan1["ip_address"] = vlan0.IpAddr
 				vlan1["gateway_ip"] = vlan0.GatewayIp
@@ -781,7 +781,7 @@ func resourceAviatrixEdgeNEORead(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -987,7 +987,7 @@ func resourceAviatrixEdgeNEOUpdate(ctx context.Context, d *schema.ResourceData, 
 	return resourceAviatrixEdgeNEORead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeNEODelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

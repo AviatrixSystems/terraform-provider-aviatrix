@@ -33,7 +33,7 @@ func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
 	}
 }
 
-func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	speed := getString(d, "keepalive_speed")
@@ -46,7 +46,7 @@ func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -66,7 +66,7 @@ func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("keepalive_speed") {
@@ -80,7 +80,7 @@ func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceControllerGatewayKeepaliveConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControllerGatewayKeepaliveConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.SetGatewayKeepaliveConfig(ctx, "medium")
@@ -90,7 +90,7 @@ func resourceControllerGatewayKeepaliveConfigDelete(ctx context.Context, d *sche
 	return nil
 }
 
-func validateControllerGatewayKeepaliveSpeed(val interface{}, key string) (warns []string, errs []error) {
+func validateControllerGatewayKeepaliveSpeed(val any, key string) (warns []string, errs []error) {
 	v := mustString(val)
 	if !stringInSlice(v, []string{"slow", "medium", "fast"}) {
 		errs = append(errs, fmt.Errorf("%s must be one of slow, medium or fast", key))

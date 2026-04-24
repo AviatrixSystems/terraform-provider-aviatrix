@@ -39,6 +39,13 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ValidateFunc: validation.IsCIDR,
 			Description:  "Public Subnet CIDR for the gateway. Required for CSP spoke instances, not applicable for Edge.",
 		},
+		"subnet_ipv6_cidr": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validateIPv6CIDR,
+			Description:  "IPv6 CIDR for the subnet. Only used if enable_ipv6 flag is set. Only required on Azure and AWS Cloud.",
+		},
 		"gw_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -46,11 +53,11 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Description: "Size of the gateway instance. Required for CSP spoke instances, not applicable for Edge.",
 		},
 		"zone": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validateAzureAZ,
-			Description:  "Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+			Description: "Availability Zone. Required for GCP (4); use the GCP zone format, for example, 'us-east1-b'. " +
+				"For Azure (8), Azure GOV (32) and Azure CHINA (2048), must be in the form 'az-n', for example, 'az-2'.",
 		},
 		"allocate_new_eip": {
 			Type:        schema.TypeBool,
@@ -112,7 +119,7 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			ForceNew: true,
-			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 				v := mustBool(val)
 				if !v {
 					errs = append(errs, fmt.Errorf("expected %s to be true to enable spot instance, got: %v", key, val))
@@ -399,6 +406,12 @@ func spokeInstanceComputedSchema() map[string]*schema.Schema {
 			ForceNew:     true,
 			ValidateFunc: validation.IsIPAddress,
 			Description:  "Elastic IP address. Required when allocate_new_eip is false.",
+		},
+		"ipv6_ip": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Description: "IPv6 address of the spoke gateway created.",
 		},
 		"security_group_id": {
 			Type:        schema.TypeString,

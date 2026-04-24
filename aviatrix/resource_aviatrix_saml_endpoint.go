@@ -96,7 +96,7 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	samlEndpoint, err := GetAviatrixSamlEndpointInput(d)
@@ -116,7 +116,7 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSamlEndpointReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSamlEndpointReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSamlEndpointRead(d, meta)
@@ -124,7 +124,7 @@ func resourceAviatrixSamlEndpointReadIfRequired(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	endpointName := getString(d, "endpoint_name")
@@ -190,7 +190,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	samlEndpoint, err := GetAviatrixSamlEndpointInput(d)
@@ -206,7 +206,7 @@ func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}
 	return resourceAviatrixSamlEndpointRead(d, meta)
 }
 
-func resourceAviatrixSamlEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSamlEndpointDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	samlEndpoint := &goaviatrix.SamlEndpoint{

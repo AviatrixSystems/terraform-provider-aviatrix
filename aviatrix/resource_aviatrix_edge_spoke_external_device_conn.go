@@ -311,7 +311,7 @@ func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) (*goaviatri
 	return externalDeviceConn, nil
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
@@ -408,7 +408,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
-				bfd1, ok := bfd0.(map[string]interface{})
+				bfd1, ok := bfd0.(map[string]any)
 				if !ok {
 					return diag.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
 				}
@@ -461,7 +461,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
@@ -469,7 +469,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Conte
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -540,9 +540,9 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	}
 	mustSet(d, "enable_bfd", conn.EnableBfd)
 	if conn.EnableBfd {
-		var bgpBfdConfig []map[string]interface{}
+		var bgpBfdConfig []map[string]any
 		bfd := conn.BgpBfdConfig
-		bfdMap := make(map[string]interface{})
+		bfdMap := make(map[string]any)
 		if bfd.TransmitInterval != 0 {
 			bfdMap["transmit_interval"] = bfd.TransmitInterval
 		}
@@ -574,7 +574,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 
 	if conn.PrependAsPath != "" {
 		var prependAsPath []string
-		for _, str := range strings.Split(conn.PrependAsPath, " ") {
+		for str := range strings.SplitSeq(conn.PrependAsPath, " ") {
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 		}
 
@@ -599,7 +599,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	d.Partial(true)
 
@@ -819,7 +819,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnUpdate(ctx context.Context, d *s
 	return resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	externalDeviceConn, err := marshalEdgeSpokeExternalDeviceConnInput(d)
@@ -890,7 +890,7 @@ func buildEdgeSpokeExternalDeviceConnForHa(d *schema.ResourceData, haGwName stri
 	return externalDeviceConn, nil
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnEnableHa(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnEnableHa(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	priGwName := getString(d, "gw_name")
 	// first read primary gateway details to get ha gateway name
@@ -967,7 +967,7 @@ func buildEdgeSpokeExternalDeviceConnForDisableHa(d *schema.ResourceData, haGwNa
 	return externalDeviceConn, nil
 }
 
-func resourceAviatrixEdgeSpokeExternalDeviceConnDisableHa(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeSpokeExternalDeviceConnDisableHa(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	priGwName := getString(d, "gw_name")

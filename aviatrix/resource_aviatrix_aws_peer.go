@@ -85,7 +85,7 @@ func resourceAviatrixAWSPeer() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsPeer := &goaviatrix.AWSPeer{
@@ -122,7 +122,7 @@ func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixAWSPeerReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAWSPeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSPeerReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAWSPeerRead(d, meta)
@@ -130,7 +130,7 @@ func resourceAviatrixAWSPeerReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpcID1 := getString(d, "vpc_id1")
@@ -178,7 +178,7 @@ func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	awsPeer := &goaviatrix.AWSPeer{
 		VpcID1: getString(d, "vpc_id1"),

@@ -99,7 +99,7 @@ func marshalAwsTgwConnectPeerInput(d *schema.ResourceData) *goaviatrix.AwsTgwCon
 	}
 }
 
-func resourceAviatrixAwsTgwConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	peer := marshalAwsTgwConnectPeerInput(d)
@@ -114,7 +114,7 @@ func resourceAviatrixAwsTgwConnectPeerCreate(ctx context.Context, d *schema.Reso
 	return resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAwsTgwConnectPeerRead(ctx, d, meta)
@@ -122,7 +122,7 @@ func resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -169,7 +169,7 @@ func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAviatrixAwsTgwConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	peer := marshalAwsTgwConnectPeerInput(d)

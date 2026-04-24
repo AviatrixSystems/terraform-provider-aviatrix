@@ -33,7 +33,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	maxAsLimit := getInt(d, "max_as_limit")
@@ -46,7 +46,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(ctx context.Context, d 
 	return resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -66,7 +66,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *s
 	return nil
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("max_as_limit") {
@@ -80,7 +80,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d 
 	return nil
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableControllerBgpMaxAsLimit(ctx)

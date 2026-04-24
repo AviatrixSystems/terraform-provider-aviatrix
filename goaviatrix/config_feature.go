@@ -11,6 +11,10 @@ type FeatureStatus struct {
 	Enabled bool `json:"enabled"`
 }
 
+// These are features that we don't allow user to enable/disable via Terraform.
+// TODO: Remove "nfq_enforce_tls" from this list when we remove support for it in API AVX-75987.
+var FeatureNameExceptions = []string{"cai", "nfq_enforce_tls"}
+
 func (c *Client) EnableFeature(ctx context.Context, featureName string) error {
 	action := "enable_controller_feature"
 	form := map[string]string{
@@ -108,11 +112,15 @@ func (c *Client) GetAllFeatureNames(ctx context.Context) ([]string, error) {
 
 func ValidateFeatureName(ctx context.Context, c *Client, featureName string) error {
 	featureNames, err := c.GetAllFeatureNames(ctx)
+	// These are features that we don't allow user to enable/disable via Terraform. So we need to filter them out from valid list.
+	filtered := slices.DeleteFunc(slices.Clone(featureNames), func(f string) bool {
+		return slices.Contains(FeatureNameExceptions, f)
+	})
 	if err != nil {
 		return err
 	}
-	if !slices.Contains(featureNames, featureName) {
-		return fmt.Errorf("invalid feature name: %s. Valid feature names are: %s", featureName, strings.Join(featureNames, ", "))
+	if !slices.Contains(filtered, featureName) {
+		return fmt.Errorf("invalid feature name: %s. Valid feature names are: %s", featureName, strings.Join(filtered, ", "))
 	}
 	return nil
 }

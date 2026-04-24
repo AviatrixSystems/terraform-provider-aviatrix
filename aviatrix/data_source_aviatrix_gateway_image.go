@@ -32,7 +32,7 @@ func dataSourceAviatrixGatewayImage() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixGatewayImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixGatewayImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	cloudType := getInt(d, "cloud_type")

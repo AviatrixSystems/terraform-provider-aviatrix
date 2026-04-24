@@ -48,7 +48,7 @@ func marshalCentralizedTransitFireNetInput(d *schema.ResourceData) *goaviatrix.C
 	return centralizedTransitFirenet
 }
 
-func resourceAviatrixCentralizedTransitFireNetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCentralizedTransitFireNetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	centralizedTransitFirenet := marshalCentralizedTransitFireNetInput(d)
@@ -81,7 +81,7 @@ func resourceAviatrixCentralizedTransitFireNetCreate(ctx context.Context, d *sch
 	return resourceAviatrixCentralizedTransitFireNetReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixCentralizedTransitFireNetReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixCentralizedTransitFireNetReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixCentralizedTransitFireNetRead(ctx, d, meta)
@@ -89,7 +89,7 @@ func resourceAviatrixCentralizedTransitFireNetReadIfRequired(ctx context.Context
 	return nil
 }
 
-func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -116,7 +116,7 @@ func resourceAviatrixCentralizedTransitFireNetRead(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceAviatrixCentralizedTransitFireNetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCentralizedTransitFireNetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	centralizedFirenet := marshalCentralizedTransitFireNetInput(d)

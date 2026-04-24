@@ -111,7 +111,9 @@ func (c *Client) GetSpokeTransitAttachmentContext(ctx context.Context, spokeTran
 	}
 
 	log.Errorf("Couldn't find spoke transit attachment %s to transit %s", spokeTransitAttachment.SpokeGwName, transitGrpName)
-	return nil, fmt.Errorf("couldn't find attachment spoke %s to transit %s", spokeTransitAttachment.SpokeGwName, transitGrpName)
+	// ErrNotFound lets Terraform Read clear state on refresh when the spoke exists
+	// but is not attached to this transit (e.g. attach failed or was never applied).
+	return nil, ErrNotFound
 }
 
 func (c *Client) DeleteSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {

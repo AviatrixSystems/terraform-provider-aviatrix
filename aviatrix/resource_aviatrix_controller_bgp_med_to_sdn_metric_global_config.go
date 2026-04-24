@@ -39,7 +39,7 @@ func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfig() *schema.Resource 
 	}
 }
 
-func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	bgpMedToSdnMetric := getBool(d, "bgp_med_to_sdn_metric_global")
@@ -59,7 +59,7 @@ func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigCreate(ctx context.C
 	return resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != normalizeResourceIDName(client.ControllerIP) {
@@ -80,7 +80,7 @@ func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigRead(ctx context.Con
 	return nil
 }
 
-func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("bgp_med_to_sdn_metric_global") {
@@ -102,7 +102,7 @@ func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigUpdate(ctx context.C
 	return resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpMedToSdnMetricGlobalConfigDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableControllerBgpMedToSdnMetricGlobal(ctx)

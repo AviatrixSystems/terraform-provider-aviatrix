@@ -128,7 +128,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	for _, policyBlockInterface := range policyBlocks.List() {
 		var ok bool
 
-		policyBlockMap, ok := policyBlockInterface.(map[string]interface{})
+		policyBlockMap, ok := policyBlockInterface.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("policy_group_reference interface must be of type map[string]interface{}")
 		}
@@ -149,7 +149,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	for _, policyListInterface := range policyLists.List() {
 		var ok bool
 
-		policyListMap, ok := policyListInterface.(map[string]interface{})
+		policyListMap, ok := policyListInterface.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("ruleset_reference interface must be of type map[string]interface{}")
 		}
@@ -168,7 +168,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	}
 	for _, attachmentPointInterface := range attachmentPoints.List() {
 		var ok bool
-		attachmentPointMap, ok := attachmentPointInterface.(map[string]interface{})
+		attachmentPointMap, ok := attachmentPointInterface.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("attachment_point interface must be of type map[string]interface{}")
 		}
@@ -202,7 +202,7 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	return policyBlock, nil
 }
 
-func marshalSubPolicyBlockInput(subPolicyMap map[string]interface{}) (*goaviatrix.DCFSubPolicy, error) {
+func marshalSubPolicyBlockInput(subPolicyMap map[string]any) (*goaviatrix.DCFSubPolicy, error) {
 	var ok bool
 
 	subPolicy := &goaviatrix.DCFSubPolicy{}
@@ -221,7 +221,7 @@ func marshalSubPolicyBlockInput(subPolicyMap map[string]interface{}) (*goaviatri
 	return subPolicy, nil
 }
 
-func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix.DCFSubPolicy, error) {
+func marshalSubPolicyListInput(subPolicyMap map[string]any) (*goaviatrix.DCFSubPolicy, error) {
 	var ok bool
 
 	subPolicy := &goaviatrix.DCFSubPolicy{}
@@ -240,7 +240,7 @@ func marshalSubPolicyListInput(subPolicyMap map[string]interface{}) (*goaviatrix
 	return subPolicy, nil
 }
 
-func resourceAviatrixDCFPolicyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFPolicyGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
@@ -258,7 +258,7 @@ func resourceAviatrixDCFPolicyGroupCreate(ctx context.Context, d *schema.Resourc
 }
 
 //nolint:cyclop,funlen
-func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -295,7 +295,7 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 	}
 	for _, subPolicy := range policyBlock.SubPolicies {
 		if subPolicy.List != "" {
-			policyLists.Add(map[string]interface{}{
+			policyLists.Add(map[string]any{
 				"priority":    subPolicy.Priority,
 				"target_uuid": subPolicy.List,
 			})
@@ -303,7 +303,7 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 				return diag.Errorf("failed to set ruleset_reference during DCF Ruleset read: %s", err)
 			}
 		} else if subPolicy.Block != "" {
-			policyBlocks.Add(map[string]interface{}{
+			policyBlocks.Add(map[string]any{
 				"priority":    subPolicy.Priority,
 				"target_uuid": subPolicy.Block,
 			})
@@ -311,7 +311,7 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 				return diag.Errorf("failed to set policy_group_reference during DCF Policy Group read: %s", err)
 			}
 		} else if subPolicy.AttachmentPoint != (&goaviatrix.AttachmentPoint{}) {
-			policyAttachmentPoints.Add(map[string]interface{}{
+			policyAttachmentPoints.Add(map[string]any{
 				"name":        subPolicy.AttachmentPoint.Name,
 				"uuid":        subPolicy.AttachmentPoint.UUID,
 				"target_uuid": subPolicy.AttachmentPoint.TargetUUID,
@@ -328,7 +328,7 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixDCFPolicyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFPolicyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyBlock, err := marshalDCFPolicyBlockInput(d)
@@ -344,7 +344,7 @@ func resourceAviatrixDCFPolicyGroupUpdate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceAviatrixDCFPolicyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFPolicyGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

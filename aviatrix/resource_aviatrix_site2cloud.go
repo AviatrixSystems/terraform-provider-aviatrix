@@ -436,7 +436,7 @@ func getCSVFromStringList(d *schema.ResourceData, attributeName string) string {
 	return strings.Join(expandedList, ",")
 }
 
-func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	s2c := &goaviatrix.Site2Cloud{
@@ -849,7 +849,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSite2CloudReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSite2CloudReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSite2CloudRead(d, meta)
@@ -857,7 +857,7 @@ func resourceAviatrixSite2CloudReadIfRequired(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tunnelName := getString(d, "connection_name")
@@ -1041,7 +1041,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	editSite2cloud := &goaviatrix.EditSite2Cloud{
@@ -1338,7 +1338,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 
-func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	s2c := &goaviatrix.Site2Cloud{

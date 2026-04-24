@@ -73,7 +73,7 @@ func resourceAviatrixAzurePeer() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAzurePeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzurePeerCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	azurePeer := &goaviatrix.AzurePeer{
@@ -99,7 +99,7 @@ func resourceAviatrixAzurePeerCreate(d *schema.ResourceData, meta interface{}) e
 	return resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAzurePeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAzurePeerReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAzurePeerRead(d, meta)
@@ -107,7 +107,7 @@ func resourceAviatrixAzurePeerReadIfRequired(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vNet1 := getString(d, "vnet_name_resource_group1")
@@ -155,7 +155,7 @@ func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAviatrixAzurePeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzurePeerDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	azurePeer := &goaviatrix.AzurePeer{

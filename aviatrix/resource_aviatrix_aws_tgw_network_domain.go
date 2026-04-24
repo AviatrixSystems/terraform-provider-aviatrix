@@ -74,7 +74,7 @@ func marshalNetworkDomainInput(d *schema.ResourceData) *goaviatrix.SecurityDomai
 	return networkDomain
 }
 
-func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	networkDomain := marshalNetworkDomainInput(d)
@@ -104,7 +104,7 @@ func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.Re
 	return resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAwsTgwNetworkDomainRead(ctx, d, meta)
@@ -112,7 +112,7 @@ func resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx context.Context, d *s
 	return nil
 }
 
-func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	name := getString(d, "name")
@@ -153,7 +153,7 @@ func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixAwsTgwNetworkDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	networkDomain := &goaviatrix.SecurityDomain{

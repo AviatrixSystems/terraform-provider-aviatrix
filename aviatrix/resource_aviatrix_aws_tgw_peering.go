@@ -39,7 +39,7 @@ func resourceAviatrixAWSTgwPeering() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwPeering := &goaviatrix.AwsTgwPeering{
@@ -61,7 +61,7 @@ func resourceAviatrixAWSTgwPeeringCreate(d *schema.ResourceData, meta interface{
 	return resourceAviatrixAWSTgwPeeringReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAWSTgwPeeringReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSTgwPeeringReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAWSTgwPeeringRead(d, meta)
@@ -69,7 +69,7 @@ func resourceAviatrixAWSTgwPeeringReadIfRequired(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixAWSTgwPeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName1 := getString(d, "tgw_name1")
@@ -101,7 +101,7 @@ func resourceAviatrixAWSTgwPeeringRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAviatrixAWSTgwPeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwPeering := &goaviatrix.AwsTgwPeering{

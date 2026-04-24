@@ -36,7 +36,7 @@ func marshalSegmentationNetworkDomainInput(d *schema.ResourceData) *goaviatrix.S
 	}
 }
 
-func resourceAviatrixSegmentationNetworkDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domain := marshalSegmentationNetworkDomainInput(d)
@@ -52,7 +52,7 @@ func resourceAviatrixSegmentationNetworkDomainCreate(d *schema.ResourceData, met
 	return resourceAviatrixSegmentationNetworkDomainReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSegmentationNetworkDomainReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSegmentationNetworkDomainReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSegmentationNetworkDomainRead(d, meta)
@@ -60,7 +60,7 @@ func resourceAviatrixSegmentationNetworkDomainReadIfRequired(d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domainName := getString(d, "domain_name")
@@ -88,7 +88,7 @@ func resourceAviatrixSegmentationNetworkDomainRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAviatrixSegmentationNetworkDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSegmentationNetworkDomainDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domain := marshalSegmentationNetworkDomainInput(d)

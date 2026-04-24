@@ -53,7 +53,7 @@ func resourceAviatrixAWSTgwPeeringDomainConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwPeeringDomainConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringDomainConnCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domainConn := &goaviatrix.DomainConn{
@@ -77,7 +77,7 @@ func resourceAviatrixAWSTgwPeeringDomainConnCreate(d *schema.ResourceData, meta 
 	return resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAWSTgwPeeringDomainConnRead(d, meta)
@@ -85,7 +85,7 @@ func resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName1 := getString(d, "tgw_name1")
@@ -125,7 +125,7 @@ func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixAWSTgwPeeringDomainConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwPeeringDomainConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domainConn := &goaviatrix.DomainConn{

@@ -115,7 +115,7 @@ func TestParseFirewallTemplateConfig(t *testing.T) {
 		},
 		{
 			name:     "empty set",
-			input:    schema.NewSet(schema.HashResource(&schema.Resource{}), []interface{}{}),
+			input:    schema.NewSet(schema.HashResource(&schema.Resource{}), []any{}),
 			expected: nil,
 		},
 		{
@@ -127,14 +127,14 @@ func TestParseFirewallTemplateConfig(t *testing.T) {
 					"template_stack": {Type: schema.TypeString},
 					"route_table":    {Type: schema.TypeString},
 				},
-			}), []interface{}{
-				map[string]interface{}{
+			}), []any{
+				map[string]any{
 					"firewall_id":    "firewall1",
 					"template":       "template1",
 					"template_stack": "stack1",
 					"route_table":    "vrouter1",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"firewall_id":    "firewall2",
 					"template":       "template2",
 					"template_stack": "stack2",
@@ -163,8 +163,8 @@ func TestParseFirewallTemplateConfig(t *testing.T) {
 					"template_stack": {Type: schema.TypeString},
 					"route_table":    {Type: schema.TypeString},
 				},
-			}), []interface{}{
-				map[string]interface{}{
+			}), []any{
+				map[string]any{
 					"firewall_id": "firewall1",
 					"template":    "template1",
 					// missing template_stack and route_table

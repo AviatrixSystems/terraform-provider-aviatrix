@@ -35,7 +35,7 @@ func dataSourceAviatrixDcfLogProfile() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDcfLogProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDcfLogProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profileName := getString(d, "profile_name")

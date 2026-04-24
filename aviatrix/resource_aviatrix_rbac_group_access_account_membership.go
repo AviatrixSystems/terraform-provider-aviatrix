@@ -19,7 +19,7 @@ func resourceAviatrixRbacGroupAccessAccountMembership() *schema.Resource {
 		Delete: resourceAviatrixRbacGroupAccessAccountMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 				if d.Id() == "" {
 					return nil, fmt.Errorf("import requires group_name as ID")
 				}
@@ -53,7 +53,7 @@ func resourceAviatrixRbacGroupAccessAccountMembership() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRbacGroupAccessAccountMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupAccessAccountMembershipCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	group := getString(d, "group_name")
@@ -69,7 +69,7 @@ func resourceAviatrixRbacGroupAccessAccountMembershipCreate(d *schema.ResourceDa
 	return resourceAviatrixRbacGroupAccessAccountMembershipRead(d, meta)
 }
 
-func resourceAviatrixRbacGroupAccessAccountMembershipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupAccessAccountMembershipRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	group := getString(d, "group_name")
@@ -99,7 +99,7 @@ func resourceAviatrixRbacGroupAccessAccountMembershipRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAviatrixRbacGroupAccessAccountMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupAccessAccountMembershipUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	group := getString(d, "group_name")
 
@@ -113,7 +113,7 @@ func resourceAviatrixRbacGroupAccessAccountMembershipUpdate(d *schema.ResourceDa
 	return resourceAviatrixRbacGroupAccessAccountMembershipRead(d, meta)
 }
 
-func resourceAviatrixRbacGroupAccessAccountMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupAccessAccountMembershipDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if v, ok := d.GetOk("remove_access_accounts_on_destroy"); !ok || !mustBool(v) {

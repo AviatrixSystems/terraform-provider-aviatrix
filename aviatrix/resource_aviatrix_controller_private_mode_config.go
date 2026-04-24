@@ -33,7 +33,7 @@ func resourceAviatrixControllerPrivateModeConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enablePrivateMode := getBool(d, "enable_private_mode")
@@ -71,7 +71,7 @@ func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *s
 	return resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixControllerPrivateModeConfigRead(ctx, d, meta)
@@ -79,7 +79,7 @@ func resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx context.Conte
 	return nil
 }
 
-func resourceAviatrixControllerPrivateModeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerPrivateModeConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -97,7 +97,7 @@ func resourceAviatrixControllerPrivateModeConfigRead(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enablePrivateMode := getBool(d, "enable_private_mode")
@@ -132,7 +132,7 @@ func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *s
 	return resourceAviatrixControllerPrivateModeConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerPrivateModeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerPrivateModeConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisablePrivateMode(ctx)

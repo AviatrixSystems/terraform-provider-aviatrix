@@ -28,7 +28,7 @@ func getEdgeTransitLogicalIfNames(d *schema.ResourceData, transitGatewayDetails 
 		if !ok {
 			return fmt.Errorf("transit_gateway_logical_ifnames is required for all edge gateways")
 		}
-		if _, ok := transitInterfaceRaw.([]interface{}); !ok {
+		if _, ok := transitInterfaceRaw.([]any); !ok {
 			return fmt.Errorf("transit_gateway_logical_ifnames must be a list of strings")
 		}
 

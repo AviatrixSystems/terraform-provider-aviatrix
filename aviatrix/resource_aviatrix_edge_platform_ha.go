@@ -169,7 +169,7 @@ func marshalEdgePlatformHaInput(d *schema.ResourceData) *goaviatrix.EdgeNEOHa {
 	return edgeNEOHa
 }
 
-func resourceAviatrixEdgePlatformHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgePlatformHaInput(d)
@@ -183,7 +183,7 @@ func resourceAviatrixEdgePlatformHaCreate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if getString(d, "primary_gw_name") == "" {
@@ -213,9 +213,9 @@ func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceD
 		mustSet(d, "management_egress_ip_prefix_list", strings.Split(edgeNEOHaResp.ManagementEgressIpPrefix, ","))
 	}
 
-	var interfaces []map[string]interface{}
+	var interfaces []map[string]any
 	for _, if0 := range edgeNEOHaResp.InterfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["wan_public_ip"] = if0.PublicIp
@@ -239,7 +239,7 @@ func resourceAviatrixEdgePlatformHaRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixEdgePlatformHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEOHa := marshalEdgePlatformHaInput(d)
@@ -264,7 +264,7 @@ func resourceAviatrixEdgePlatformHaUpdate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixEdgePlatformHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgePlatformHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformHaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

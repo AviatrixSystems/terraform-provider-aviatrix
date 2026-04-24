@@ -32,7 +32,7 @@ func resourceAviatrixControllerPrivateOob() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerPrivateOobCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerPrivateOobCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	enablePrivateOob := getBool(d, "enable_private_oob")
@@ -49,7 +49,7 @@ func resourceAviatrixControllerPrivateOobCreate(d *schema.ResourceData, meta int
 	return resourceAviatrixControllerPrivateOobRead(d, meta)
 }
 
-func resourceAviatrixControllerPrivateOobRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerPrivateOobRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -69,7 +69,7 @@ func resourceAviatrixControllerPrivateOobRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAviatrixControllerPrivateOobUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerPrivateOobUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Aviatrix controller private oob")
@@ -92,7 +92,7 @@ func resourceAviatrixControllerPrivateOobUpdate(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAviatrixControllerPrivateOobDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerPrivateOobDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	err := client.DisablePrivateOob()

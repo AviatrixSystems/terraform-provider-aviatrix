@@ -414,7 +414,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v := mustBool(val)
 					if !v {
 						errs = append(errs, fmt.Errorf("expected %s to true to enable spot instance, got: %v", key, val))
@@ -601,7 +601,7 @@ func resourceAviatrixGateway() *schema.Resource {
 	}
 }
 
-func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -1274,7 +1274,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixGatewayReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixGatewayRead(d, meta)
@@ -1282,7 +1282,7 @@ func resourceAviatrixGatewayReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
@@ -1637,7 +1637,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", getString(d, "gw_name"))
@@ -2585,7 +2585,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixGatewayRead(d, meta)
 }
 
-func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	gateway := &goaviatrix.Gateway{
 		CloudType: getInt(d, "cloud_type"),

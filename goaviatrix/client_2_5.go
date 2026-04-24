@@ -22,21 +22,21 @@ func checkAndReturnAPIResp25(resp *http.Response, v interface{}, method, path st
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %q failed: %w", path, err)
+		return NewStatusErrorf(resp.StatusCode, "reading response body path %s failed: %w", path, err)
 	}
 	bodyString := buf.String()
 
 	if resp.StatusCode >= 300 || resp.StatusCode < 200 {
 		var apiError APIError
 		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&apiError); err != nil {
-			return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
+			return NewStatusErrorf(resp.StatusCode, "json Decode failed: %w\n Body: %s", err, bodyString)
 		}
-		return fmt.Errorf("HTTP %s %q failed: %v", method, path, apiError.Message)
+		return NewStatusErrorf(resp.StatusCode, "HTTP %s %q failed: %s", method, path, apiError.Message)
 	}
 
 	if v != nil {
 		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-			return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
+			return NewStatusErrorf(resp.StatusCode, "json Decode failed: %w\n Body: %s", err, bodyString)
 		}
 	}
 
@@ -69,7 +69,7 @@ func (c *Client) GetAPIContext25(ctx context.Context, v interface{}, path string
 	var resp *http.Response
 	for {
 		try++
-		resp, err = c.RequestContext25(ctx, "GET", Url, nil)
+		resp, err = c.requestContext25(ctx, "GET", Url, nil)
 		if err == nil {
 			break
 		}
@@ -86,7 +86,7 @@ func (c *Client) GetAPIContext25(ctx context.Context, v interface{}, path string
 		}).Warnf("HTTP GET request failed")
 
 		if try == maxTries {
-			return fmt.Errorf("HTTP Get %s failed: %w", path, err)
+			return NewStatusErrorf(resp.StatusCode, "HTTP Get %s failed: %w", path, err)
 		}
 
 		time.Sleep(backoff)
@@ -94,7 +94,7 @@ func (c *Client) GetAPIContext25(ctx context.Context, v interface{}, path string
 	}
 
 	if resp == nil || resp.Body == nil {
-		return fmt.Errorf("HTTP Get %s returned nil response/body", path)
+		return NewStatusErrorf(resp.StatusCode, "HTTP Get %s returned nil response/body", path)
 	}
 	defer resp.Body.Close()
 
@@ -119,16 +119,19 @@ func (c *Client) DeleteAPIContext25(ctx context.Context, path string, d interfac
 
 func (c *Client) DoAPIContext25(ctx context.Context, verb string, v interface{}, path string, d interface{}) error {
 	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, path)
-	resp, err := c.RequestContext25(ctx, verb, Url, d)
+	resp, err := c.requestContext25(ctx, verb, Url, d)
+	if resp == nil {
+		return fmt.Errorf("HTTP %s %q failed: response is nil", verb, path)
+	}
 	if err != nil {
-		return fmt.Errorf("HTTP %s %q failed: %w", verb, path, err)
+		return NewStatusErrorf(resp.StatusCode, "HTTP %s %s failed: %w", verb, path, err)
 	}
 	defer resp.Body.Close()
 	return checkAndReturnAPIResp25(resp, v, verb, path)
 }
 
-func (c *Client) RequestContext25(ctx context.Context, verb string, Url string, i interface{}) (*http.Response, error) {
-	log.Tracef("%s %s", verb, Url)
+func (c *Client) requestContext25(ctx context.Context, verb string, URL string, i interface{}) (*http.Response, error) {
+	log.Tracef("%s %s", verb, URL)
 
 	try, maxTries, backoff := 0, 2, 500*time.Millisecond
 	var req *http.Request
@@ -141,15 +144,15 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, Url string, 
 		if err != nil {
 			return nil, err
 		}
-		log.Tracef("%s %s Body: %s", verb, Url, body)
+		log.Tracef("%s %s Body: %s", verb, URL, body)
 		reader := bytes.NewReader(body)
 
-		req, err = http.NewRequestWithContext(ctx, verb, Url, reader)
+		req, err = http.NewRequestWithContext(ctx, verb, URL, reader)
 		if err == nil {
 			req.Header.Set("Content-Type", "application/json")
 		}
 	} else {
-		req, err = http.NewRequestWithContext(ctx, verb, Url, nil)
+		req, err = http.NewRequestWithContext(ctx, verb, URL, nil)
 	}
 
 	if err != nil {

@@ -32,7 +32,7 @@ func resourceAviatrixVPNUserAccelerator() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	elb := getString(d, "elb_name")
@@ -71,7 +71,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 	return resourceAviatrixVPNUserAcceleratorRead(d, meta)
 }
 
-func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	elbName := getString(d, "elb_name")
@@ -110,7 +110,7 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	elbName := getString(d, "elb_name")

@@ -193,7 +193,7 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	if !ok {
 		return nil, fmt.Errorf("ruleset rules must be of type *schema.Set")
 	}
-	policies := []interface{}{}
+	policies := []any{}
 	if policiesSet != nil {
 		policies = policiesSet.List()
 	}
@@ -201,7 +201,7 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	for _, policyInterface := range policies {
 		var ok bool
 
-		policyMap, ok := policyInterface.(map[string]interface{})
+		policyMap, ok := policyInterface.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("rules must be of type map[string]interface{}")
 		}
@@ -220,7 +220,7 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 }
 
 //nolint:funlen,cyclop
-func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy, error) {
+func marshalPolicyInput(policyMap map[string]any) (*goaviatrix.DCFPolicy, error) {
 	var ok bool
 	var err error
 	policy := &goaviatrix.DCFPolicy{}
@@ -302,13 +302,13 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 			return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 		}
 
-		portRanges, ok := policyMap["port_ranges"].([]interface{})
+		portRanges, ok := policyMap["port_ranges"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("port_ranges must be of type []interface{}")
 		}
 
 		for _, portRangeInterface := range portRanges {
-			portRangeMap, ok := portRangeInterface.(map[string]interface{})
+			portRangeMap, ok := portRangeInterface.(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("port_ranges items must be of type []interface{}")
 			}
@@ -344,7 +344,7 @@ func marshalPolicyInput(policyMap map[string]interface{}) (*goaviatrix.DCFPolicy
 	return policy, nil
 }
 
-func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]string, error) {
+func marshalSmartGroupsInput(policyMap map[string]any, key string) ([]string, error) {
 	var smartGroups []string
 
 	smartGroupsSet, ok := policyMap[key].(*schema.Set)
@@ -364,7 +364,7 @@ func marshalSmartGroupsInput(policyMap map[string]interface{}, key string) ([]st
 	return smartGroups, nil
 }
 
-func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyList, err := marshalDCFRulesetInput(d)
@@ -393,7 +393,7 @@ func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 //nolint:funlen,cyclop
-func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -407,12 +407,12 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("failed to read DCF Ruleset: %s", err)
 	}
 
-	var policies []map[string]interface{}
+	var policies []map[string]any
 	for _, policy := range policyList.Policies {
 		if policy.SystemResource {
 			continue
 		}
-		p := make(map[string]interface{})
+		p := make(map[string]any)
 		p["name"] = policy.Name
 		p["action"] = policy.Action
 		p["priority"] = policy.Priority
@@ -434,9 +434,9 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 		p["decrypt_policy"] = policy.DecryptPolicy
 
 		if policy.Protocol != "ICMP" {
-			var portRanges []map[string]interface{}
+			var portRanges []map[string]any
 			for _, portRange := range policy.PortRanges {
-				portRangeMap := map[string]interface{}{
+				portRangeMap := map[string]any{
 					"hi": portRange.Hi,
 					"lo": portRange.Lo,
 				}
@@ -462,7 +462,7 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyList, err := marshalDCFRulesetInput(d)
@@ -478,7 +478,7 @@ func resourceAviatrixDCFRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

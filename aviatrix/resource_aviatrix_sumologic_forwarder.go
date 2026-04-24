@@ -67,7 +67,7 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetSumologicForwarderStatus()
@@ -78,7 +78,7 @@ func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta inter
 	}
 }
 
-func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "sumologic_forwarder" {
@@ -105,7 +105,7 @@ func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAviatrixSumologicForwarderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSumologicForwarderDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableSumologicForwarder(); err != nil {

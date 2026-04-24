@@ -19,7 +19,7 @@ func resourceAviatrixRbacGroupUserMembership() *schema.Resource {
 		Delete: resourceAviatrixRbacGroupUserMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 				if d.Id() == "" {
 					return nil, fmt.Errorf("import requires group_name as ID")
 				}
@@ -53,7 +53,7 @@ func resourceAviatrixRbacGroupUserMembership() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRbacGroupUserMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserMembershipCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	group := getString(d, "group_name")
@@ -69,7 +69,7 @@ func resourceAviatrixRbacGroupUserMembershipCreate(d *schema.ResourceData, meta 
 	return resourceAviatrixRbacGroupUserMembershipRead(d, meta)
 }
 
-func resourceAviatrixRbacGroupUserMembershipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserMembershipRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	group := getString(d, "group_name")
@@ -99,7 +99,7 @@ func resourceAviatrixRbacGroupUserMembershipRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixRbacGroupUserMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserMembershipUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	group := getString(d, "group_name")
 
@@ -113,7 +113,7 @@ func resourceAviatrixRbacGroupUserMembershipUpdate(d *schema.ResourceData, meta 
 	return resourceAviatrixRbacGroupUserMembershipRead(d, meta)
 }
 
-func resourceAviatrixRbacGroupUserMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupUserMembershipDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if v, ok := d.GetOk("remove_users_on_destroy"); !ok || !mustBool(v) {

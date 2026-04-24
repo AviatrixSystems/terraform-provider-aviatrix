@@ -41,7 +41,7 @@ func dataSourceAviatrixControllerMetadata() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixControllerMetadataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixControllerMetadataRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	controllerMetadata, err := client.GetControllerMetadata(ctx)

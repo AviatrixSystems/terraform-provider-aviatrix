@@ -262,7 +262,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{
@@ -456,7 +456,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
-func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
@@ -574,7 +574,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta any) error {
 	if d.HasChange("firewall_image_id") {
 		return fmt.Errorf("can not change firewall_image_id")
 	}
@@ -605,7 +605,7 @@ func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interfa
 	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
-func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewallInstance := &goaviatrix.FirewallInstance{

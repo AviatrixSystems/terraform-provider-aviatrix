@@ -366,17 +366,17 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	TransitGatewayList, err := client.GetTransitGatewayList(ctx)
 	if err != nil {
 		return diag.Errorf("could not get Aviatrix Transit Gateway List: %s", err)
 	}
-	var result []map[string]interface{}
+	var result []map[string]any
 	for i := range TransitGatewayList {
 		gw := TransitGatewayList[i]
-		transitGateway := make(map[string]interface{})
+		transitGateway := make(map[string]any)
 		transitGateway["cloud_type"] = gw.CloudType
 		transitGateway["account_name"] = gw.AccountName
 		transitGateway["gw_name"] = gw.GwName
@@ -498,7 +498,7 @@ func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.Resour
 		}
 
 		var prependAsPath []string
-		for _, p := range strings.Split(gw.PrependASPath, " ") {
+		for p := range strings.SplitSeq(gw.PrependASPath, " ") {
 			if p != "" {
 				prependAsPath = append(prependAsPath, p)
 			}
@@ -511,9 +511,9 @@ func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.Resour
 		transitGateway["enable_bgp_over_lan"] = goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 			if len(gw.BgpLanInterfaces) != 0 {
-				var interfaces []map[string]interface{}
+				var interfaces []map[string]any
 				for _, bgpLanInterface := range gw.BgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = bgpLanInterface.VpcID
 					interfaceDict["subnet"] = bgpLanInterface.Subnet
 					interfaces = append(interfaces, interfaceDict)
@@ -522,9 +522,9 @@ func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.Resour
 			}
 
 			if len(gw.HaGw.HaBgpLanInterfaces) != 0 {
-				var haInterfaces []map[string]interface{}
+				var haInterfaces []map[string]any
 				for _, haBgpLanInterface := range gw.HaGw.HaBgpLanInterfaces {
-					interfaceDict := make(map[string]interface{})
+					interfaceDict := make(map[string]any)
 					interfaceDict["vpc_id"] = haBgpLanInterface.VpcID
 					interfaceDict["subnet"] = haBgpLanInterface.Subnet
 					haInterfaces = append(haInterfaces, interfaceDict)

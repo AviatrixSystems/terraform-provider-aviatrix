@@ -164,12 +164,12 @@ func testAccCheckFireNetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testResourceFireNetStateDataV0() map[string]interface{} {
-	return map[string]interface{}{}
+func testResourceFireNetStateDataV0() map[string]any {
+	return map[string]any{}
 }
 
-func testResourceFireNetStateDataV1() map[string]interface{} {
-	return map[string]interface{}{
+func testResourceFireNetStateDataV1() map[string]any {
+	return map[string]any{
 		"manage_firewall_instance_association": true,
 	}
 }

@@ -32,7 +32,7 @@ func dataSourceAviatrixEdgeGatewayWanInterfaceDiscovery() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixEdgeGatewayWanInterfaceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixEdgeGatewayWanInterfaceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")

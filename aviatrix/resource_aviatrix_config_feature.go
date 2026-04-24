@@ -36,7 +36,7 @@ func resourceAviatrixConfigFeature() *schema.Resource {
 	}
 }
 
-func resourceAviatrixConfigFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixConfigFeatureCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	featureName := getString(d, "feature_name")
 	err := goaviatrix.ValidateFeatureName(ctx, client, featureName)
@@ -61,7 +61,7 @@ func resourceAviatrixConfigFeatureCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixConfigFeatureRead(ctx, d, meta)
 }
 
-func resourceAviatrixConfigFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixConfigFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	featureName := strings.ToLower(getString(d, "feature_name"))
 	if featureName == "" {
@@ -80,7 +80,7 @@ func resourceAviatrixConfigFeatureRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixConfigFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixConfigFeatureDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	featureName := getString(d, "feature_name")
 	err := client.DisableFeature(ctx, featureName)

@@ -161,10 +161,6 @@ func Provider() *schema.Provider {
 			"aviatrix_firewall_management_access":                             resourceAviatrixFirewallManagementAccess(),
 			"aviatrix_firewall_policy":                                        resourceAviatrixFirewallPolicy(),
 			"aviatrix_firewall_tag":                                           resourceAviatrixFirewallTag(),
-			"aviatrix_fqdn":                                                   resourceAviatrixFQDN(),
-			"aviatrix_fqdn_global_config":                                     resourceAviatrixFQDNGlobalConfig(),
-			"aviatrix_fqdn_pass_through":                                      resourceAviatrixFQDNPassThrough(),
-			"aviatrix_fqdn_tag_rule":                                          resourceAviatrixFQDNTagRule(),
 			"aviatrix_gateway":                                                resourceAviatrixGateway(),
 			"aviatrix_gateway_dnat":                                           resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                           resourceAviatrixGatewaySNat(),
@@ -256,7 +252,7 @@ func Provider() *schema.Provider {
 }
 
 func envDefaultFunc(k string) schema.SchemaDefaultFunc {
-	return func() (interface{}, error) {
+	return func() (any, error) {
 		if v := os.Getenv(k); v != "" {
 			return v, nil
 		}
@@ -265,7 +261,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 	}
 }
 
-func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
+func aviatrixConfigure(d *schema.ResourceData) (any, error) {
 	config := Config{
 		ControllerIP: getString(d, "controller_ip"),
 		Username:     getString(d, "username"),
@@ -293,7 +289,7 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 	return client, nil
 }
 
-func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interface{}, error) {
+func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (any, error) {
 	config := Config{
 		ControllerIP: getString(d, "controller_ip"),
 		Username:     getString(d, "username"),
@@ -306,7 +302,7 @@ func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interfac
 	return config.Client()
 }
 
-func expandProviderIgnoreTags(l []interface{}) *goaviatrix.IgnoreTagsConfig {
+func expandProviderIgnoreTags(l []any) *goaviatrix.IgnoreTagsConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

@@ -95,7 +95,7 @@ func edgePlatformProxyProfileFromProxyProfile(proxy *proxyProfile) *goaviatrix.E
 	}
 }
 
-func resourceAviatrixEdgeProxyProfileConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeProxyProfileConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	proxy := marshalEdgeProxyProfileConfigInput(d)
@@ -108,7 +108,7 @@ func resourceAviatrixEdgeProxyProfileConfigCreate(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceAviatrixEdgeProxyProfileConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeProxyProfileConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	proxy := marshalEdgeProxyProfileConfigInput(d)
 
 	client := mustClient(meta)
@@ -150,7 +150,7 @@ func resourceAviatrixEdgeProxyProfileConfigUpdate(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceAviatrixEdgeProxyProfileConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeProxyProfileConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")
@@ -185,7 +185,7 @@ func resourceAviatrixEdgeProxyProfileConfigRead(ctx context.Context, d *schema.R
 	return nil
 }
 
-func resourceAviatrixEdgeProxyProfileConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeProxyProfileConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteEdgePlatformProxyProfile(ctx, getString(d, "account_name"), getString(d, "proxy_profile_name"))

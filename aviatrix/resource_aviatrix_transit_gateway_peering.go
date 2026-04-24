@@ -179,7 +179,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	flag := false
 	transitGatewayName1 := getString(d, "transit_gateway_name1")
@@ -215,7 +215,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		if !ok {
 			return fmt.Errorf("gateway1_logical_ifnames is required for edge gateway peering")
 		}
-		if _, ok := transit1InterfaceRaw.([]interface{}); !ok {
+		if _, ok := transit1InterfaceRaw.([]any); !ok {
 			return fmt.Errorf("gateway1_logical_ifnames must be a list of strings")
 		}
 		gw1LogicalIfNames := getStringList(d, "gateway1_logical_ifnames")
@@ -230,7 +230,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		if !ok {
 			return fmt.Errorf("gateway2_logical_ifnames is required for edge gateway peering")
 		}
-		if _, ok := transit2InterfaceRaw.([]interface{}); !ok {
+		if _, ok := transit2InterfaceRaw.([]any); !ok {
 			return fmt.Errorf("gateway2_logical_ifnames must be a list of strings")
 		}
 		gw2LogicalIfNames := getStringList(d, "gateway2_logical_ifnames")
@@ -280,7 +280,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	return resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransitGatewayPeeringReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransitGatewayPeeringReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTransitGatewayPeeringRead(d, meta)
@@ -288,7 +288,7 @@ func resourceAviatrixTransitGatewayPeeringReadIfRequired(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitGwName1 := getString(d, "transit_gateway_name1")
@@ -388,7 +388,7 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 
 	if transitGatewayPeering.PrependAsPath1 != "" {
 		var prependAsPath []string
-		for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
+		for str := range strings.SplitSeq(transitGatewayPeering.PrependAsPath1, " ") {
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 		}
 
@@ -399,7 +399,7 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	}
 	if transitGatewayPeering.PrependAsPath2 != "" {
 		var prependAsPath []string
-		for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
+		for str := range strings.SplitSeq(transitGatewayPeering.PrependAsPath2, " ") {
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 		}
 
@@ -436,7 +436,7 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -514,7 +514,7 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 	return resourceAviatrixTransitGatewayPeeringRead(d, meta)
 }
 
-func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{

@@ -80,7 +80,7 @@ func marshalDCFMitmCaInput(d *schema.ResourceData) *goaviatrix.MitmCaItemRequest
 	}
 }
 
-func resourceAviatrixDCFMitmCaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFMitmCaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	mitmCaRequest := marshalDCFMitmCaInput(d)
@@ -96,7 +96,7 @@ func resourceAviatrixDCFMitmCaCreate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixDCFMitmCaRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFMitmCaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFMitmCaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	caID := d.Id()
@@ -125,7 +125,7 @@ func resourceAviatrixDCFMitmCaRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixDCFMitmCaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFMitmCaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	caID := d.Id()
@@ -147,7 +147,7 @@ func resourceAviatrixDCFMitmCaUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceAviatrixDCFMitmCaRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFMitmCaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFMitmCaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	caID := d.Id()

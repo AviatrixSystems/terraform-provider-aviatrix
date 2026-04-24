@@ -18,34 +18,34 @@ import (
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
-var interfaces = []interface{}{
-	map[string]interface{}{
+var interfaces = []any{
+	map[string]any{
 		"gateway_ip":                  "192.168.20.1",
 		"ip_address":                  "192.168.20.11/24",
 		"logical_ifname":              "wan0",
-		"secondary_private_cidr_list": []interface{}{"192.168.19.16/29"},
+		"secondary_private_cidr_list": []any{"192.168.19.16/29"},
 	},
-	map[string]interface{}{
+	map[string]any{
 		"gateway_ip":                  "192.168.21.1",
 		"ip_address":                  "192.168.21.11/24",
 		"logical_ifname":              "wan1",
-		"secondary_private_cidr_list": []interface{}{"192.168.21.16/29"},
+		"secondary_private_cidr_list": []any{"192.168.21.16/29"},
 	},
-	map[string]interface{}{
+	map[string]any{
 		"dhcp":           true,
 		"logical_ifname": "mgmt0",
 	},
-	map[string]interface{}{
+	map[string]any{
 		"gateway_ip":     "192.168.22.1",
 		"ip_address":     "192.168.22.11/24",
 		"logical_ifname": "wan2",
 	},
-	map[string]interface{}{
+	map[string]any{
 		"gateway_ip":     "192.168.23.1",
 		"ip_address":     "192.168.23.11/24",
 		"logical_ifname": "wan3",
 	},
-	map[string]interface{}{
+	map[string]any{
 		"gateway_ip":     "169.254.100.1",
 		"ip_address":     "10.0.1.10/24",
 		"logical_ifname": "wan4",
@@ -1294,19 +1294,19 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_ipv6_insane" {
 func TestGetInterfaceMappingDetails(t *testing.T) {
 	tests := []struct {
 		name                  string
-		interfaceMappingInput []interface{}
+		interfaceMappingInput []any
 		expectedOutput        string
 		expectedError         error
 	}{
 		{
 			name: "Valid input for ESXI devices",
-			interfaceMappingInput: []interface{}{
-				map[string]interface{}{
+			interfaceMappingInput: []any{
+				map[string]any{
 					"name":  "eth0",
 					"type":  "MANAGEMENT",
 					"index": 0,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"name":  "eth1",
 					"type":  "WAN",
 					"index": 1,
@@ -1317,13 +1317,13 @@ func TestGetInterfaceMappingDetails(t *testing.T) {
 		},
 		{
 			name:                  "Empty input (default Dell device mapping)",
-			interfaceMappingInput: []interface{}{},
+			interfaceMappingInput: []any{},
 			expectedOutput:        `{"eth0":["mgmt","0"],"eth2":["wan","1"],"eth3":["wan","2"],"eth4":["wan","3"],"eth5":["wan","0"]}`,
 			expectedError:         nil,
 		},
 		{
 			name: "Invalid input type (non-map element)",
-			interfaceMappingInput: []interface{}{
+			interfaceMappingInput: []any{
 				"invalid_type", // This is not a map
 			},
 			expectedOutput: "",
@@ -1331,8 +1331,8 @@ func TestGetInterfaceMappingDetails(t *testing.T) {
 		},
 		{
 			name: "Invalid map fields (missing required keys)",
-			interfaceMappingInput: []interface{}{
-				map[string]interface{}{
+			interfaceMappingInput: []any{
+				map[string]any{
 					"name": "eth0", // Missing 'type' and 'index'
 				},
 			},
@@ -1431,7 +1431,7 @@ func TestGetInterfaceName(t *testing.T) {
 func TestGetEipMapDetails(t *testing.T) {
 	tests := []struct {
 		name        string
-		eipMap      []interface{}
+		eipMap      []any
 		wanCount    int
 		cloudType   int
 		expected    map[string][]goaviatrix.EipMap
@@ -1439,13 +1439,13 @@ func TestGetEipMapDetails(t *testing.T) {
 	}{
 		{
 			name: "Valid EIP map with WAN and MANAGEMENT interfaces for AEP",
-			eipMap: []interface{}{
-				map[string]interface{}{
+			eipMap: []any{
+				map[string]any{
 					"logical_ifname": "wan0",
 					"private_ip":     "192.168.0.10",
 					"public_ip":      "203.0.113.10",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname": "mgmt0",
 					"private_ip":     "192.168.1.10",
 					"public_ip":      "203.0.113.11",
@@ -1465,13 +1465,13 @@ func TestGetEipMapDetails(t *testing.T) {
 		},
 		{
 			name: "Valid EIP map with WAN and MANAGEMENT interfaces for Megaport",
-			eipMap: []interface{}{
-				map[string]interface{}{
+			eipMap: []any{
+				map[string]any{
 					"logical_ifname": "wan0",
 					"private_ip":     "192.168.0.10",
 					"public_ip":      "203.0.113.10",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"logical_ifname": "mgmt0",
 					"private_ip":     "192.168.1.10",
 					"public_ip":      "203.0.113.11",
@@ -1491,8 +1491,8 @@ func TestGetEipMapDetails(t *testing.T) {
 		},
 		{
 			name: "Invalid EIP map: missing logical interface name",
-			eipMap: []interface{}{
-				map[string]interface{}{
+			eipMap: []any{
+				map[string]any{
 					"private_ip": "192.168.0.10",
 					"public_ip":  "203.0.113.10",
 				},
@@ -1504,8 +1504,8 @@ func TestGetEipMapDetails(t *testing.T) {
 		},
 		{
 			name: "Invalid EIP map: invalid logical interface name",
-			eipMap: []interface{}{
-				map[string]interface{}{
+			eipMap: []any{
+				map[string]any{
 					"logical_ifname": 123,
 					"private_ip":     "192.168.0.10",
 					"public_ip":      "203.0.113.10",
@@ -1518,7 +1518,7 @@ func TestGetEipMapDetails(t *testing.T) {
 		},
 		{
 			name:        "Empty EIP map",
-			eipMap:      []interface{}{},
+			eipMap:      []any{},
 			wanCount:    3,
 			cloudType:   1048576,
 			expected:    map[string][]goaviatrix.EipMap{},
@@ -1587,7 +1587,7 @@ func TestSetEipMapDetails(t *testing.T) {
 		name              string
 		eipMap            map[string][]goaviatrix.EipMap
 		ifNameTranslation map[string]string
-		expectedResult    []map[string]interface{}
+		expectedResult    []map[string]any
 		expectedErr       string
 	}{
 		{
@@ -1605,7 +1605,7 @@ func TestSetEipMapDetails(t *testing.T) {
 				"eth0": "WAN.0",
 				"eth1": "WAN.1",
 			},
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"logical_ifname": "wan0",
 					"private_ip":     "192.168.1.10",
@@ -1641,7 +1641,7 @@ func TestSetEipMapDetails(t *testing.T) {
 			name:              "Empty EIP map",
 			eipMap:            map[string][]goaviatrix.EipMap{},
 			ifNameTranslation: map[string]string{},
-			expectedResult:    []map[string]interface{}{},
+			expectedResult:    []map[string]any{},
 			expectedErr:       "",
 		},
 	}
@@ -1665,8 +1665,8 @@ func TestSetInterfaceMappingDetails(t *testing.T) {
 	tests := []struct {
 		name              string
 		interfaceMapping  []goaviatrix.InterfaceMapping
-		expectedResult    []map[string]interface{}
-		expectedOrderFunc func([]map[string]interface{}) bool
+		expectedResult    []map[string]any
+		expectedOrderFunc func([]map[string]any) bool
 	}{
 		{
 			name: "Valid interface mapping with multiple interfaces",
@@ -1675,12 +1675,12 @@ func TestSetInterfaceMappingDetails(t *testing.T) {
 				{Name: "eth1", Type: "MANAGEMENT", Index: 1},
 				{Name: "eth2", Type: "WAN", Index: 2},
 			},
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{"name": "eth0", "type": "WAN", "index": 0},
 				{"name": "eth1", "type": "MANAGEMENT", "index": 1},
 				{"name": "eth2", "type": "WAN", "index": 2},
 			},
-			expectedOrderFunc: func(result []map[string]interface{}) bool {
+			expectedOrderFunc: func(result []map[string]any) bool {
 				// Check the order based on "name" for sorting
 				return result[0]["name"] == "eth0" && result[1]["name"] == "eth1" && result[2]["name"] == "eth2"
 			},
@@ -1688,8 +1688,8 @@ func TestSetInterfaceMappingDetails(t *testing.T) {
 		{
 			name:             "Empty interface mapping",
 			interfaceMapping: []goaviatrix.InterfaceMapping{},
-			expectedResult:   []map[string]interface{}{},
-			expectedOrderFunc: func(result []map[string]interface{}) bool {
+			expectedResult:   []map[string]any{},
+			expectedOrderFunc: func(result []map[string]any) bool {
 				return len(result) == 0
 			},
 		},
@@ -1714,14 +1714,14 @@ func TestSetInterfaceDetails(t *testing.T) {
 	tests := []struct {
 		name       string
 		interfaces []goaviatrix.EdgeTransitInterface
-		expected   []map[string]interface{}
+		expected   []map[string]any
 	}{
 		{
 			name: "Single WAN interface",
 			interfaces: []goaviatrix.EdgeTransitInterface{
 				{LogicalIfName: "wan0", PublicIp: "1.1.1.1", Dhcp: true, IpAddress: "10.0.0.1", GatewayIp: "10.0.0.254"},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname": "wan0",
 					"public_ip":      "1.1.1.1",
@@ -1739,7 +1739,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 				{LogicalIfName: "wan0", IpAddress: "10.0.0.2"},
 				{LogicalIfName: "wan1", IpAddress: "10.0.0.3"},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{"logical_ifname": "wan0", "ip_address": "10.0.0.2"},
 				{"logical_ifname": "wan1", "ip_address": "10.0.0.3"},
 				{"logical_ifname": "mgmt0", "dhcp": true},
@@ -1754,7 +1754,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 					SecondaryCIDRs: []string{"10.0.1.0/24", "10.0.2.0/24"},
 				},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname":              "mgmt0",
 					"secondary_private_cidr_list": []string{"10.0.1.0/24", "10.0.2.0/24"},
@@ -1764,7 +1764,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 		{
 			name:       "Empty interface list",
 			interfaces: []goaviatrix.EdgeTransitInterface{},
-			expected:   []map[string]interface{}{},
+			expected:   []map[string]any{},
 		},
 		{
 			name: "Ignore empty SecondaryCIDRs",
@@ -1774,7 +1774,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 					SecondaryCIDRs: []string{"", "10.0.3.0/24", ""},
 				},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname":              "wan0",
 					"secondary_private_cidr_list": []string{"10.0.3.0/24"},
@@ -1786,7 +1786,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 			interfaces: []goaviatrix.EdgeTransitInterface{
 				{LogicalIfName: "wan0", IpAddress: "192.168.1.10/24", GatewayIp: "169.254.100.1", UnderlayCidr: "169.254.100.2/30"},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname": "wan0",
 					"ip_address":     "192.168.1.10/24",
@@ -1800,7 +1800,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 			interfaces: []goaviatrix.EdgeTransitInterface{
 				{LogicalIfName: "wan1", IpAddress: "10.0.1.10/24", GatewayIp: "169.254.100.1", UnderlayCidr: "169.254.100.2/28"},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname": "wan1",
 					"ip_address":     "10.0.1.10/24",
@@ -1815,7 +1815,7 @@ func TestSetInterfaceDetails(t *testing.T) {
 				{LogicalIfName: "wan0", IpAddress: "192.168.1.10/24", GatewayIp: "192.168.1.1"},
 				{LogicalIfName: "wan1", IpAddress: "10.0.1.10/24", GatewayIp: "169.254.1.1", UnderlayCidr: "169.254.1.2/30"},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"logical_ifname": "wan0",
 					"ip_address":     "192.168.1.10/24",
@@ -1880,7 +1880,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 	tests := []struct {
 		name                   string
 		gwName                 string
-		peerBackupLogicalNames []interface{}
+		peerBackupLogicalNames []any
 		connectionType         string
 		wanCount               int
 		cloudType              int
@@ -1890,7 +1890,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Valid backup link config for AEP",
 			gwName:                 "gw1",
-			peerBackupLogicalNames: []interface{}{"wan0", "wan1"},
+			peerBackupLogicalNames: []any{"wan0", "wan1"},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
@@ -1900,7 +1900,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Valid backup link config for Megaport",
 			gwName:                 "gw2",
-			peerBackupLogicalNames: []interface{}{"wan2", "wan3"},
+			peerBackupLogicalNames: []any{"wan2", "wan3"},
 			connectionType:         "public",
 			wanCount:               4,
 			cloudType:              goaviatrix.EDGEMEGAPORT,
@@ -1910,7 +1910,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Invalid logical name in backup link config",
 			gwName:                 "gw3",
-			peerBackupLogicalNames: []interface{}{"wan0", "invalid_eth"},
+			peerBackupLogicalNames: []any{"wan0", "invalid_eth"},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
@@ -1920,7 +1920,7 @@ func TestCreateBackupLinkConfig(t *testing.T) {
 		{
 			name:                   "Empty logical names in backup link config",
 			gwName:                 "gw4",
-			peerBackupLogicalNames: []interface{}{},
+			peerBackupLogicalNames: []any{},
 			connectionType:         "private",
 			wanCount:               3,
 			cloudType:              goaviatrix.EDGENEO,
@@ -2018,7 +2018,7 @@ func TestCalculateInterfaceName(t *testing.T) {
 func TestParseInterface(t *testing.T) {
 	tests := []struct {
 		name      string
-		ifaceInfo map[string]interface{}
+		ifaceInfo map[string]any
 		wanCount  int
 		cloudType int
 		expected  goaviatrix.EdgeTransitInterface
@@ -2026,13 +2026,13 @@ func TestParseInterface(t *testing.T) {
 	}{
 		{
 			name: "Valid WAN interface",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname":              "wan0",
 				"gateway_ip":                  "192.168.1.1",
 				"ip_address":                  "192.168.1.2",
 				"public_ip":                   "203.0.113.1",
 				"dhcp":                        true,
-				"secondary_private_cidr_list": []interface{}{"10.0.0.0/16", "10.1.0.0/16"},
+				"secondary_private_cidr_list": []any{"10.0.0.0/16", "10.1.0.0/16"},
 			},
 			wanCount:  1,
 			cloudType: goaviatrix.EDGEMEGAPORT,
@@ -2048,7 +2048,7 @@ func TestParseInterface(t *testing.T) {
 		},
 		{
 			name: "WAN interface with underlay CIDR",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname": "wan1",
 				"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
 				"ip_address":     "192.168.2.10/24",
@@ -2066,7 +2066,7 @@ func TestParseInterface(t *testing.T) {
 		},
 		{
 			name: "WAN interface with link-local underlay CIDR typical range",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname": "wan2",
 				"gateway_ip":     "169.254.100.1", // Gateway IP within underlay_cidr subnet
 				"ip_address":     "10.0.1.10/24",
@@ -2084,7 +2084,7 @@ func TestParseInterface(t *testing.T) {
 		},
 		{
 			name: "WAN interface with point-to-point underlay CIDR",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname": "wan0",
 				"gateway_ip":     "169.254.1.1", // Gateway IP within underlay_cidr subnet
 				"ip_address":     "172.16.1.10/24",
@@ -2102,7 +2102,7 @@ func TestParseInterface(t *testing.T) {
 		},
 		{
 			name: "Valid MANAGEMENT interface",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname": "mgmt0",
 				"dhcp":           true,
 			},
@@ -2117,7 +2117,7 @@ func TestParseInterface(t *testing.T) {
 		},
 		{
 			name: "Invalid logical_ifname",
-			ifaceInfo: map[string]interface{}{
+			ifaceInfo: map[string]any{
 				"logical_ifname": 12345, // Invalid type
 			},
 			wanCount:  1,
@@ -2143,29 +2143,29 @@ func TestParseInterface(t *testing.T) {
 func TestGetUserInterfaceOrder(t *testing.T) {
 	tests := []struct {
 		name        string
-		interfaces  []interface{}
+		interfaces  []any
 		expected    []string
 		expectError bool
 	}{
 		{
 			name: "Valid interface list",
-			interfaces: []interface{}{
-				map[string]interface{}{"logical_ifname": "wan0"},
-				map[string]interface{}{"logical_ifname": "wan1"},
-				map[string]interface{}{"logical_ifname": "mgmt0"},
+			interfaces: []any{
+				map[string]any{"logical_ifname": "wan0"},
+				map[string]any{"logical_ifname": "wan1"},
+				map[string]any{"logical_ifname": "mgmt0"},
 			},
 			expected:    []string{"wan0", "wan1", "mgmt0"},
 			expectError: false,
 		},
 		{
 			name:        "Empty interface list",
-			interfaces:  []interface{}{},
+			interfaces:  []any{},
 			expected:    []string{},
 			expectError: false,
 		},
 		{
 			name: "Interface is not a map[string]interface{}",
-			interfaces: []interface{}{
+			interfaces: []any{
 				"invalid_entry",
 			},
 			expected:    nil,
@@ -2173,16 +2173,16 @@ func TestGetUserInterfaceOrder(t *testing.T) {
 		},
 		{
 			name: "Missing logical_ifname key",
-			interfaces: []interface{}{
-				map[string]interface{}{"interface_type": "WAN"},
+			interfaces: []any{
+				map[string]any{"interface_type": "WAN"},
 			},
 			expected:    nil,
 			expectError: true,
 		},
 		{
 			name: "Logical_ifname is not a string",
-			interfaces: []interface{}{
-				map[string]interface{}{"logical_ifname": 12345},
+			interfaces: []any{
+				map[string]any{"logical_ifname": 12345},
 			},
 			expected:    nil,
 			expectError: true,

@@ -69,7 +69,7 @@ func marshalAwsTgwConnectInput(d *schema.ResourceData) *goaviatrix.AwsTgwConnect
 	}
 }
 
-func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	connect := marshalAwsTgwConnectInput(d)
@@ -82,7 +82,7 @@ func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixAwsTgwConnectRead(ctx, d, meta)
 }
 
-func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -122,7 +122,7 @@ func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixAwsTgwConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwConnectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	connect := marshalAwsTgwConnectInput(d)

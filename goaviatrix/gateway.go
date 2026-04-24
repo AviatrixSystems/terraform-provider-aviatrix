@@ -121,7 +121,7 @@ type Gateway struct {
 	PbrSubnet                       string            `form:"pbr_subnet,omitempty"`
 	PrivateIP                       string            `form:"private_ip,omitempty" json:"private_ip,omitempty"`
 	PublicIP                        string            `form:"public_ip,omitempty" json:"public_ip,omitempty"`
-	IPv6IP                          string            `form:"ipv6_ip,omitempty" json:"ipv6_ip,omitempty"`
+	IPv6IP                          []string          `form:"ipv6_ip,omitempty" json:"ipv6_ip,omitempty"`
 	SamlEnabled                     string            `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
 	SandboxIP                       string            `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
 	SaveTemplate                    string            `form:"save_template,omitempty"`
@@ -250,7 +250,7 @@ type HaGateway struct {
 	VpcNet                   string                 `json:"public_subnet"`
 	PublicIP                 string                 `json:"public_ip"`
 	PrivateIP                string                 `json:"private_ip"`
-	IPv6IP                   string                 `form:"ipv6_ip,omitempty" json:"ipv6_ip,omitempty"`
+	IPv6IP                   []string               `form:"ipv6_ip,omitempty" json:"ipv6_ip,omitempty"`
 	ReuseEip                 string                 `json:"reuse_eip,omitempty"`
 	CloudnGatewayInstID      string                 `json:"cloudn_gateway_inst_id"`
 	GatewayZone              string                 `json:"gateway_zone"`

@@ -541,7 +541,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	var bgpSendCommunities *goaviatrix.BgpSendCommunities
@@ -936,7 +936,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
-				bfd1, ok := bfd0.(map[string]interface{})
+				bfd1, ok := bfd0.(map[string]any)
 				if !ok {
 					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
 				}
@@ -1075,7 +1075,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	return resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransitExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransitExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
@@ -1083,7 +1083,7 @@ func resourceAviatrixTransitExternalDeviceConnReadIfRequired(d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -1276,9 +1276,9 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		}
 		mustSet(d, "enable_bfd", conn.EnableBfd)
 		if conn.EnableBfd {
-			var bgpBfdConfig []map[string]interface{}
+			var bgpBfdConfig []map[string]any
 			bfd := conn.BgpBfdConfig
-			bfdMap := make(map[string]interface{})
+			bfdMap := make(map[string]any)
 			if bfd.TransmitInterval != 0 {
 				bfdMap["transmit_interval"] = bfd.TransmitInterval
 			}
@@ -1294,7 +1294,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 		if conn.PrependAsPath != "" {
 			var prependAsPath []string
-			for _, str := range strings.Split(conn.PrependAsPath, " ") {
+			for str := range strings.SplitSeq(conn.PrependAsPath, " ") {
 				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 			}
 
@@ -1341,7 +1341,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	d.Partial(true)
 
@@ -1711,7 +1711,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
-func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{

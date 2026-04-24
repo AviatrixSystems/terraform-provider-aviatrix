@@ -151,7 +151,7 @@ func marshalCopilotFaultTolerantDeploymentInput(d *schema.ResourceData) *goaviat
 	return copilotFaultTolerantDeployment
 }
 
-func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	copilotFaultTolerantDeployment := marshalCopilotFaultTolerantDeploymentInput(d)
@@ -189,7 +189,7 @@ func resourceAviatrixCopilotFaultTolerantDeploymentCreate(ctx context.Context, d
 	return resourceAviatrixCopilotFaultTolerantDeploymentReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixCopilotFaultTolerantDeploymentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixCopilotFaultTolerantDeploymentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx, d, meta)
@@ -197,7 +197,7 @@ func resourceAviatrixCopilotFaultTolerantDeploymentReadIfRequired(ctx context.Co
 	return nil
 }
 
-func resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -219,7 +219,7 @@ func resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx context.Context, d *
 	return nil
 }
 
-func resourceAviatrixCopilotFaultTolerantDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCopilotFaultTolerantDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteCopilotFaultTolerant(ctx)

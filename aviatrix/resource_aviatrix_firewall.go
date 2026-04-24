@@ -110,7 +110,7 @@ func resourceAviatrixFirewall() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewall := &goaviatrix.Firewall{
@@ -166,7 +166,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 	return resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixFirewallReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixFirewallReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixFirewallRead(d, meta)
@@ -174,7 +174,7 @@ func resourceAviatrixFirewallReadIfRequired(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")
@@ -201,7 +201,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
 
-	var policiesFromFile []map[string]interface{}
+	var policiesFromFile []map[string]any
 	if fw != nil {
 		if fw.BasePolicy == "allow-all" {
 			mustSet(d, "base_policy", "allow-all")
@@ -228,7 +228,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewall := &goaviatrix.Firewall{
@@ -305,7 +305,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceAviatrixFirewallRead(d, meta)
 }
 
-func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	firewall := &goaviatrix.Firewall{

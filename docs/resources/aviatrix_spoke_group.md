@@ -175,7 +175,7 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server. Valid values: true, false. Default: false.
 * `enable_private_vpc_default_route` - (Optional) Enable private VPC default route. Valid values: true, false. Default: false.
 * `enable_skip_public_route_table_update` - (Optional) Skip updating public route tables. Valid values: true, false. Default: false.
-* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).
+* `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048). This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
 
 ### Optional - BGP Configuration
 

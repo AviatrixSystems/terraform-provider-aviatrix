@@ -55,7 +55,7 @@ func resourceAviatrixAwsTgwTransitGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAwsTgwTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwTransitGatewayAttachmentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwTransitGwAttachment := &goaviatrix.AwsTgwTransitGwAttachment{
@@ -78,7 +78,7 @@ func resourceAviatrixAwsTgwTransitGatewayAttachmentCreate(d *schema.ResourceData
 	return resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d, meta)
@@ -86,7 +86,7 @@ func resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d *schema.Reso
 	return nil
 }
 
-func resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName := getString(d, "tgw_name")
@@ -122,7 +122,7 @@ func resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixAwsTgwTransitGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwTransitGatewayAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwTransitGwAttachment := &goaviatrix.AwsTgwTransitGwAttachment{

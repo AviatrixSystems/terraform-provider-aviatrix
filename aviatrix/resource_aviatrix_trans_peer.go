@@ -43,7 +43,7 @@ func resourceAviatrixTransPeer() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transPeer := &goaviatrix.TransPeer{
@@ -66,7 +66,7 @@ func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta interface{}) e
 	return resourceAviatrixTransPeerReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransPeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransPeerReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTransPeerRead(d, meta)
@@ -74,7 +74,7 @@ func resourceAviatrixTransPeerReadIfRequired(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	sourceGw := getString(d, "source")
@@ -111,7 +111,7 @@ func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAviatrixTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	transPeer := &goaviatrix.TransPeer{
 		Source:        getString(d, "source"),

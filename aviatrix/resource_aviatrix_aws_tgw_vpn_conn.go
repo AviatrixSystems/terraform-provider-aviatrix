@@ -171,7 +171,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
@@ -229,7 +229,7 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
-func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	tgwName := getString(d, "tgw_name")
@@ -285,10 +285,10 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("couldn't get Aviatrix AWS TGW VPN Connection tunnel information: %w", err)
 	}
 
-	var vpnTunnelData []map[string]interface{}
+	var vpnTunnelData []map[string]any
 	count := 1
 	for _, td := range AllVpnTunnelData.VpnTunnelData {
-		vtd := make(map[string]interface{})
+		vtd := make(map[string]any)
 		vtd["tunnel_name"] = "tunnel_" + strconv.Itoa(count)
 		vtd["status"] = td.Status
 		vtd["route_count"] = td.RouteCount
@@ -306,7 +306,7 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
@@ -342,7 +342,7 @@ func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
-func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
 		TgwName: getString(d, "tgw_name"),

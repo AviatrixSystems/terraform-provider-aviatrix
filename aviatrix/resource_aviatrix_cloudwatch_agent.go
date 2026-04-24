@@ -75,7 +75,7 @@ func marshalCloudwatchAgentInput(d *schema.ResourceData) *goaviatrix.CloudwatchA
 	return cloudwatchAgent
 }
 
-func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	_, err := client.GetCloudwatchAgentStatus()
@@ -93,7 +93,7 @@ func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.Id() != "cloudwatch_agent" {
@@ -120,7 +120,7 @@ func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAviatrixCloudwatchAgentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixCloudwatchAgentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if err := client.DisableCloudwatchAgent(); err != nil {

@@ -154,7 +154,7 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.SpokeHaGateway{
@@ -284,7 +284,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
 
-func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	var isImport bool
@@ -369,7 +369,7 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -418,7 +418,7 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
 
-func resourceAviatrixSpokeHaGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeHaGatewayDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{

@@ -11,7 +11,7 @@ import (
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
-func validateIdentifierValue(val interface{}, key string) (warns []string, errs []error) {
+func validateIdentifierValue(val any, key string) (warns []string, errs []error) {
 	value, ok := val.(string)
 	if !ok {
 		errs = append(errs, fmt.Errorf("%q must be a string, got: %T", key, val))
@@ -35,13 +35,13 @@ func validateIdentifierValue(val interface{}, key string) (warns []string, errs 
 	return warns, errs
 }
 
-func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string]goaviatrix.CustomInterfaceMap, error) {
+func getCustomInterfaceMapDetails(customInterfaceMap []any) (map[string]goaviatrix.CustomInterfaceMap, error) {
 	// Create a map to structure the Custom interface map data
 	customInterfaceMapStructured := make(map[string]goaviatrix.CustomInterfaceMap)
 
 	// Populate the structured map
 	for _, customInterfaceMap := range customInterfaceMap {
-		customInterface, ok := customInterfaceMap.(map[string]interface{})
+		customInterface, ok := customInterfaceMap.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", customInterfaceMap)
 		}
@@ -70,8 +70,8 @@ func getCustomInterfaceMapDetails(customInterfaceMap []interface{}) (map[string]
 	return customInterfaceMapStructured, nil
 }
 
-func setCustomInterfaceMapping(customInterfaceMap map[string]goaviatrix.CustomInterfaceMap, userCustomInterfaceOrder []string) ([]interface{}, error) {
-	var result []interface{}
+func setCustomInterfaceMapping(customInterfaceMap map[string]goaviatrix.CustomInterfaceMap, userCustomInterfaceOrder []string) ([]any, error) {
+	var result []any
 
 	// Iterate over the user-provided order
 	for _, logicalIfName := range userCustomInterfaceOrder {
@@ -88,7 +88,7 @@ func setCustomInterfaceMapping(customInterfaceMap map[string]goaviatrix.CustomIn
 			return nil, fmt.Errorf("identifier value cannot be empty for logical interface: %s", logicalIfName)
 		}
 
-		entry := map[string]interface{}{
+		entry := map[string]any{
 			"logical_ifname":   logicalIfName,
 			"identifier_type":  mapping.IdentifierType,
 			"identifier_value": mapping.IdentifierValue,
@@ -98,11 +98,11 @@ func setCustomInterfaceMapping(customInterfaceMap map[string]goaviatrix.CustomIn
 	return result, nil
 }
 
-func getCustomInterfaceOrder(userCustomInterfaceMapping []interface{}) ([]string, error) {
+func getCustomInterfaceOrder(userCustomInterfaceMapping []any) ([]string, error) {
 	var order []string
 
 	for _, mapping := range userCustomInterfaceMapping {
-		mappingMap, ok := mapping.(map[string]interface{})
+		mappingMap, ok := mapping.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid type: expected map[string]interface{}, got %T", mapping)
 		}
@@ -126,7 +126,7 @@ func populateInterfaces(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke)
 
 	interfaces := interfacesRaw.List()
 	for _, if0 := range interfaces {
-		if1, ok := if0.(map[string]interface{})
+		if1, ok := if0.(map[string]any)
 		if !ok {
 			return fmt.Errorf("failed to get interface: expected map[string]interface{}, got %T", if0)
 		}
@@ -141,7 +141,7 @@ func populateInterfaces(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke)
 	return nil
 }
 
-func buildEdgeSpokeInterface(if1 map[string]interface{}) (*goaviatrix.EdgeSpokeInterface, error) {
+func buildEdgeSpokeInterface(if1 map[string]any) (*goaviatrix.EdgeSpokeInterface, error) {
 	ifName, err := getStringFromMap(if1, "name")
 	if err != nil {
 		return nil, err
@@ -208,7 +208,7 @@ func buildEdgeSpokeInterface(if1 map[string]interface{}) (*goaviatrix.EdgeSpokeI
 	return if2, nil
 }
 
-func populateLANFields(if1 map[string]interface{}, if2 *goaviatrix.EdgeSpokeInterface) error {
+func populateLANFields(if1 map[string]any, if2 *goaviatrix.EdgeSpokeInterface) error {
 	enableVrrp, err := getBoolFromMap(if1, "enable_vrrp")
 	if err != nil {
 		return err
@@ -232,7 +232,7 @@ func populateVlans(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) erro
 
 	vlan := vlanRaw.List()
 	for _, vlan0 := range vlan {
-		vlan1, ok := vlan0.(map[string]interface{})
+		vlan1, ok := vlan0.(map[string]any)
 		if !ok {
 			return fmt.Errorf("failed to get vlan entry: expected map[string]interface{}, got %T", vlan0)
 		}
@@ -247,7 +247,7 @@ func populateVlans(d *schema.ResourceData, edgeSpoke *goaviatrix.EdgeSpoke) erro
 	return nil
 }
 
-func buildEdgeSpokeVlan(vlan1 map[string]interface{}) (*goaviatrix.EdgeSpokeVlan, error) {
+func buildEdgeSpokeVlan(vlan1 map[string]any) (*goaviatrix.EdgeSpokeVlan, error) {
 	parentInterface, err := getStringFromMap(vlan1, "parent_interface_name")
 	if err != nil {
 		return nil, err
@@ -313,7 +313,7 @@ func populateCustomInterfaceMapping(d *schema.ResourceData, edgeSpoke *goaviatri
 	return nil
 }
 
-func getStringFromMap(data map[string]interface{}, key string) (string, error) {
+func getStringFromMap(data map[string]any, key string) (string, error) {
 	value, ok := data[key].(string)
 	if !ok {
 		return "", fmt.Errorf("invalid type for '%s': expected string, got %T", key, data[key])
@@ -321,7 +321,7 @@ func getStringFromMap(data map[string]interface{}, key string) (string, error) {
 	return value, nil
 }
 
-func getBoolFromMap(data map[string]interface{}, key string) (bool, error) {
+func getBoolFromMap(data map[string]any, key string) (bool, error) {
 	value, ok := data[key].(bool)
 	if !ok {
 		return false, fmt.Errorf("invalid type for '%s': expected bool, got %T", key, data[key])
@@ -329,7 +329,7 @@ func getBoolFromMap(data map[string]interface{}, key string) (bool, error) {
 	return value, nil
 }
 
-func getIntFromMap(data map[string]interface{}, key string) (int, error) {
+func getIntFromMap(data map[string]any, key string) (int, error) {
 	value, ok := data[key].(int)
 	if !ok {
 		return 0, fmt.Errorf("invalid type for '%s': expected int, got %T", key, data[key])

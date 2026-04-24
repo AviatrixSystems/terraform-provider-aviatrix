@@ -37,7 +37,7 @@ func resourceAviatrixVPNCertDownload() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	downloadEnabled := getBool(d, "download_enabled")
@@ -71,7 +71,7 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 	return resourceAviatrixVPNCertDownloadRead(d, meta)
 }
 
-func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	vpnCertDownloadStatus, err := client.GetVPNCertDownloadStatus()
 	if err != nil {
@@ -84,7 +84,7 @@ func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta interface{
 }
 
 // for now, deleting gcp account will not delete the credential file
-func resourceAviatrixVPNCertDownloadDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVPNCertDownloadDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	err := client.DisableVPNCertDownload()
 	if err != nil {

@@ -55,7 +55,7 @@ func marshalGlobalVpcExcludedInstanceInput(d *schema.ResourceData) *goaviatrix.G
 	return globalVpcExcludedInstance
 }
 
-func resourceAviatrixGlobalVpcExcludedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcExcludedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	globalVpcExcludedInstance := marshalGlobalVpcExcludedInstanceInput(d)
@@ -72,7 +72,7 @@ func resourceAviatrixGlobalVpcExcludedInstanceCreate(ctx context.Context, d *sch
 	return resourceAviatrixGlobalVpcExcludedInstanceReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixGlobalVpcExcludedInstanceReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixGlobalVpcExcludedInstanceReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixGlobalVpcExcludedInstanceRead(ctx, d, meta)
@@ -80,7 +80,7 @@ func resourceAviatrixGlobalVpcExcludedInstanceReadIfRequired(ctx context.Context
 	return nil
 }
 
-func resourceAviatrixGlobalVpcExcludedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcExcludedInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -101,7 +101,7 @@ func resourceAviatrixGlobalVpcExcludedInstanceRead(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceAviatrixGlobalVpcExcludedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcExcludedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()
@@ -119,7 +119,7 @@ func resourceAviatrixGlobalVpcExcludedInstanceUpdate(ctx context.Context, d *sch
 	return resourceAviatrixGlobalVpcExcludedInstanceRead(ctx, d, meta)
 }
 
-func resourceAviatrixGlobalVpcExcludedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcExcludedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	uuid := d.Id()

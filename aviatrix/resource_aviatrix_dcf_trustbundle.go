@@ -71,7 +71,7 @@ func marshalDCFTrustBundleInput(d *schema.ResourceData) *goaviatrix.TrustBundleI
 	}
 }
 
-func resourceAviatrixDCFTrustBundleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTrustBundleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	trustBundleRequest := marshalDCFTrustBundleInput(d)
@@ -87,7 +87,7 @@ func resourceAviatrixDCFTrustBundleCreate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixDCFTrustBundleRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	bundleID := d.Id()
@@ -112,7 +112,7 @@ func resourceAviatrixDCFTrustBundleRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAviatrixDCFTrustBundleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTrustBundleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	bundleID := d.Id()
@@ -128,7 +128,7 @@ func resourceAviatrixDCFTrustBundleUpdate(ctx context.Context, d *schema.Resourc
 	return resourceAviatrixDCFTrustBundleRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFTrustBundleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFTrustBundleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	bundleID := d.Id()

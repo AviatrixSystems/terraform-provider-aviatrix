@@ -57,7 +57,7 @@ func resourceAviatrixAzureSpokeNativePeering() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAzureSpokeNativePeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	azureSpokeNativePeering := &goaviatrix.AzureSpokeNativePeering{
@@ -94,7 +94,7 @@ func resourceAviatrixAzureSpokeNativePeeringCreate(d *schema.ResourceData, meta 
 	return resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixAzureSpokeNativePeeringRead(d, meta)
@@ -102,7 +102,7 @@ func resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	transitGatewayName := getString(d, "transit_gateway_name")
@@ -142,7 +142,7 @@ func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixAzureSpokeNativePeeringUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	if d.HasChange("private_route_table_config") {
@@ -166,7 +166,7 @@ func resourceAviatrixAzureSpokeNativePeeringUpdate(d *schema.ResourceData, meta 
 	return resourceAviatrixAzureSpokeNativePeeringRead(d, meta)
 }
 
-func resourceAviatrixAzureSpokeNativePeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	azureSpokeNativePeering := &goaviatrix.AzureSpokeNativePeering{

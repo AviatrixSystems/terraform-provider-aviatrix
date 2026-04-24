@@ -61,7 +61,7 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 	}
 }
 
-func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	geoVPN := &goaviatrix.GeoVPN{
@@ -103,7 +103,7 @@ func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixGeoVPNReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixGeoVPNReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixGeoVPNReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixGeoVPNRead(d, meta)
@@ -111,7 +111,7 @@ func resourceAviatrixGeoVPNReadIfRequired(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	domainName := getString(d, "domain_name")
@@ -150,7 +150,7 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta any) error {
 	log.Printf("[INFO] Updating Aviatrix Geo VPN")
 
 	client := mustClient(meta)
@@ -168,10 +168,10 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("elb_dns_names") {
 		oldElb, newElb := d.GetChange("elb_dns_names")
 		if oldElb == nil {
-			oldElb = new([]interface{})
+			oldElb = new([]any)
 		}
 		if newElb == nil {
-			newElb = new([]interface{})
+			newElb = new([]any)
 		}
 		oldString := mustSlice(oldElb)
 		newString := mustSlice(newElb)
@@ -201,7 +201,7 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAviatrixGeoVPNRead(d, meta)
 }
 
-func resourceAviatrixGeoVPNDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGeoVPNDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	geoVPN := &goaviatrix.GeoVPN{

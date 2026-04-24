@@ -483,7 +483,7 @@ func marshalEdgeEquinixInput(d *schema.ResourceData) *goaviatrix.EdgeEquinix {
 	return edgeEquinix
 }
 
-func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -660,7 +660,7 @@ func resourceAviatrixEdgeEquinixCreate(ctx context.Context, d *schema.ResourceDa
 	return resourceAviatrixEdgeEquinixReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeEquinixReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeEquinixRead(ctx, d, meta)
@@ -668,7 +668,7 @@ func resourceAviatrixEdgeEquinixReadIfRequired(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -746,10 +746,10 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	mustSet(d, "rx_queue_size", edgeEquinixResp.RxQueueSize)
 	mustSet(d, "state", edgeEquinixResp.State)
 
-	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
+	var interfaces []map[string]any
+	var vlan []map[string]any
 	for _, interface0 := range edgeEquinixResp.InterfaceList {
-		interface1 := make(map[string]interface{})
+		interface1 := make(map[string]any)
 		interface1["name"] = interface0.IfName
 		interface1["type"] = interface0.Type
 		interface1["wan_public_ip"] = interface0.PublicIp
@@ -769,7 +769,7 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 
 		if interface0.Type == "LAN" && interface0.SubInterfaces != nil {
 			for _, vlan0 := range interface0.SubInterfaces {
-				vlan1 := make(map[string]interface{})
+				vlan1 := make(map[string]any)
 				vlan1["parent_interface_name"] = vlan0.ParentInterface
 				vlan1["ip_address"] = vlan0.IpAddr
 				vlan1["gateway_ip"] = vlan0.GatewayIp
@@ -802,7 +802,7 @@ func resourceAviatrixEdgeEquinixRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -1022,7 +1022,7 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 	return resourceAviatrixEdgeEquinixRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeEquinixDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")

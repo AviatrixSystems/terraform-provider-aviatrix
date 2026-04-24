@@ -55,7 +55,7 @@ func resourceAviatrixRbacGroupPermissionAttachment() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRbacGroupPermissionAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupPermissionAttachmentCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupPermissionAttachment{
@@ -79,7 +79,7 @@ func resourceAviatrixRbacGroupPermissionAttachmentCreate(d *schema.ResourceData,
 	return resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixRbacGroupPermissionAttachmentRead(d, meta)
@@ -87,7 +87,7 @@ func resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d *schema.Resou
 	return nil
 }
 
-func resourceAviatrixRbacGroupPermissionAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupPermissionAttachmentRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	groupName := getString(d, "group_name")
@@ -124,7 +124,7 @@ func resourceAviatrixRbacGroupPermissionAttachmentRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAviatrixRbacGroupPermissionAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixRbacGroupPermissionAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	attachment := &goaviatrix.RbacGroupPermissionAttachment{

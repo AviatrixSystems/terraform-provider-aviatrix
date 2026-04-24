@@ -46,7 +46,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRule() *schema.Resource 
 	}
 }
 
-func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	action := getString(d, "action")
@@ -70,7 +70,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleUpdate(ctx context.C
 	return resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	action := getString(d, "action")
@@ -95,7 +95,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleCreate(ctx context.C
 	return resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.ReplaceAll(client.ControllerIP, ".", "-") {
@@ -130,7 +130,7 @@ func resourceAviatrixDistributedFirewallingDefaultActionRuleRead(ctx context.Con
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingDefaultActionRuleDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingDefaultActionRuleDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	defaultActionRuleConfig := &goaviatrix.DistributedFirewallingDefaultActionRule{

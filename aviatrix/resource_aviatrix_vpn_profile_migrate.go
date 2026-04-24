@@ -17,7 +17,7 @@ func resourceAviatrixVPNProfileResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNProfileStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixVPNProfileStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if _, ok := rawState["manage_user_attachment"]; !ok {
 		rawState["manage_user_attachment"] = "true"
 	}

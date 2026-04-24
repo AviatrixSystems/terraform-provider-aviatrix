@@ -39,7 +39,7 @@ func dataSourceAviatrixDeviceInterfaces() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	deviceName := getString(d, "device_name")
@@ -49,9 +49,9 @@ func dataSourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("couldn't get device wan interfaces: %w", err)
 	}
 
-	var wanInterfaces []map[string]interface{}
+	var wanInterfaces []map[string]any
 	for _, wanInterface := range *deviceWanInterfaces {
-		wI := make(map[string]interface{})
+		wI := make(map[string]any)
 		wI["wan_primary_interface"] = wanInterface.Interface
 		wI["wan_primary_interface_public_ip"] = wanInterface.IP
 		wanInterfaces = append(wanInterfaces, wI)

@@ -417,7 +417,7 @@ func marshalEdgeGatewaySelfmanagedInput(d *schema.ResourceData) (*goaviatrix.Edg
 	return edgeSpoke, nil
 }
 
-func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -577,7 +577,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedCreate(ctx context.Context, d *schema
 	return resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgeGatewaySelfmanagedRead(ctx, d, meta)
@@ -585,7 +585,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedReadIfRequired(ctx context.Context, d
 	return nil
 }
 
-func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// handle import
@@ -672,11 +672,11 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 	mustSet(d, "rx_queue_size", edgeSpoke.RxQueueSize)
 	mustSet(d, "state", edgeSpoke.State)
 
-	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
+	var interfaces []map[string]any
+	var vlan []map[string]any
 	interfaceList := edgeSpoke.InterfaceList
 	for _, if0 := range interfaceList {
-		if1 := make(map[string]interface{})
+		if1 := make(map[string]any)
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
 		if1["enable_dhcp"] = if0.Dhcp
@@ -697,7 +697,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 
 		if if0.Type == "LAN" && if0.SubInterfaces != nil {
 			for _, vlan0 := range if0.SubInterfaces {
-				vlan1 := make(map[string]interface{})
+				vlan1 := make(map[string]any)
 				vlan1["parent_interface_name"] = vlan0.ParentInterface
 				vlan1["ip_address"] = vlan0.IpAddr
 				vlan1["gateway_ip"] = vlan0.GatewayIp
@@ -728,7 +728,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedRead(ctx context.Context, d *schema.R
 	return nil
 }
 
-func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// read configs
@@ -939,7 +939,7 @@ func resourceAviatrixEdgeGatewaySelfmanagedUpdate(ctx context.Context, d *schema
 	return resourceAviatrixEdgeGatewaySelfmanagedRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeGatewaySelfmanagedDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gwName := getString(d, "gw_name")

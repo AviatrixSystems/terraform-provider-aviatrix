@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixConfigFeature_InvalidFeatureNameValidation(t *testing.T) {
@@ -123,7 +126,8 @@ func TestAccAviatrixConfigFeature_DocFeatureListMatchesAPI(t *testing.T) {
 	if os.Getenv("SKIP_CONFIG_FEATURE") == "yes" {
 		t.Skip("Skipping config feature acceptance tests as SKIP_CONFIG_FEATURE is set")
 	}
-	currentListInDocs := []string{"microseg", "cost_iq", "cai", "ipv6", "nfq_enforce_tls", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "dcf_on_firenet", "interface_mtu_based_clamping", "primary_gateway_deletion", "vrf"}
+	// Make sure to always update the list in this test when adding a new feature name to the docs.
+	currentListInDocs := []string{"microseg", "cost_iq", "ipv6", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "dcf_on_firenet", "interface_mtu_based_clamping", "primary_gateway_deletion", "vrf"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -139,7 +143,10 @@ func TestAccAviatrixConfigFeature_DocFeatureListMatchesAPI(t *testing.T) {
 					if err != nil {
 						return err
 					}
-					assert.ElementsMatch(t, currentListInDocs, apiFeatures, "feature list in docs does not match feature list in API, please update the docs to match the API and update the list in this test to match the docs")
+					filtered := slices.DeleteFunc(slices.Clone(apiFeatures), func(f string) bool {
+						return slices.Contains(goaviatrix.FeatureNameExceptions, f)
+					})
+					assert.ElementsMatch(t, currentListInDocs, filtered, "feature list in docs does not match feature list in API, please update the docs to match the API and update the list in this test to match the docs")
 					return nil
 				},
 			},

@@ -113,7 +113,7 @@ func dataSourceAviatrixVpcTracker() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	vpcTracker, err := client.GetVpcTracker()
 	if err != nil {
@@ -121,9 +121,9 @@ func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) 
 	}
 	vpcTracker = filterVpcTrackerResult(d, vpcTracker)
 
-	var vpcList []map[string]interface{}
+	var vpcList []map[string]any
 	for _, vpc := range vpcTracker {
-		vpcList = append(vpcList, map[string]interface{}{
+		vpcList = append(vpcList, map[string]any{
 			"cloud_type":     vpc.CloudType,
 			"vpc_id":         vpc.VpcID,
 			"account_name":   vpc.AccountName,
@@ -175,10 +175,10 @@ func filterVpcTrackerResult(d *schema.ResourceData, vpcList []*goaviatrix.VpcTra
 	return filteredList
 }
 
-func vpcTrackerSubnetsToMaps(s []goaviatrix.VPCTrackerSubnet) []map[string]interface{} {
-	var m []map[string]interface{}
+func vpcTrackerSubnetsToMaps(s []goaviatrix.VPCTrackerSubnet) []map[string]any {
+	var m []map[string]any
 	for _, sn := range s {
-		m = append(m, map[string]interface{}{
+		m = append(m, map[string]any{
 			"region": sn.Region,
 			"name":   sn.Name,
 			"cidr":   sn.Cidr,

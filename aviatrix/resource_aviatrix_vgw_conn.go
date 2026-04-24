@@ -106,7 +106,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (err error) {
+func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta any) (err error) {
 	client := mustClient(meta)
 
 	vgwConn := &goaviatrix.VGWConn{
@@ -181,7 +181,7 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 	return resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixVGWConnRead(d, meta)
@@ -189,7 +189,7 @@ func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	connName := getString(d, "conn_name")
@@ -229,7 +229,7 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 
 	if vConn.PrependAsPath != "" {
 		var prependAsPath []string
-		for _, str := range strings.Split(vConn.PrependAsPath, " ") {
+		for str := range strings.SplitSeq(vConn.PrependAsPath, " ") {
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 		}
 
@@ -254,7 +254,7 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	d.Partial(true)
 
@@ -314,7 +314,7 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixVGWConnRead(d, meta)
 }
 
-func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vgwConn := &goaviatrix.VGWConn{

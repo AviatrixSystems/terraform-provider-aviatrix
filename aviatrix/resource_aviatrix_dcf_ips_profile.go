@@ -81,14 +81,14 @@ func resourceAviatrixDCFIpsProfile() *schema.Resource {
 }
 
 // validateIntrusionActionsKeys ensures only allowed keys are used in the intrusion_actions map.
-func validateIntrusionActionsKeys(val interface{}, _ string) (warns []string, errs []error) {
+func validateIntrusionActionsKeys(val any, _ string) (warns []string, errs []error) {
 	allowedKeys := map[string]struct{}{
 		"informational": {},
 		"minor":         {},
 		"major":         {},
 		"critical":      {},
 	}
-	m, ok := val.(map[string]interface{})
+	m, ok := val.(map[string]any)
 	if !ok {
 		errs = append(errs, errors.New("intrusion_actions must be a map"))
 		return
@@ -103,7 +103,7 @@ func validateIntrusionActionsKeys(val interface{}, _ string) (warns []string, er
 
 // IPS Profile CRUD operations
 
-func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profile := &goaviatrix.IpsProfile{
@@ -121,7 +121,7 @@ func resourceAviatrixDCFIpsProfileCreate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixDCFIpsProfileRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFIpsProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profile, err := client.GetIpsProfile(ctx, d.Id())
@@ -140,7 +140,7 @@ func resourceAviatrixDCFIpsProfileRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	profile := &goaviatrix.IpsProfile{
@@ -157,7 +157,7 @@ func resourceAviatrixDCFIpsProfileUpdate(ctx context.Context, d *schema.Resource
 	return resourceAviatrixDCFIpsProfileRead(ctx, d, meta)
 }
 
-func resourceAviatrixDCFIpsProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDCFIpsProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteIpsProfile(ctx, d.Id())
@@ -170,7 +170,7 @@ func resourceAviatrixDCFIpsProfileDelete(ctx context.Context, d *schema.Resource
 
 // Helper functions
 
-func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
+func expandRuleFeeds(ruleFeeds []any) goaviatrix.IpsRuleFeeds {
 	if len(ruleFeeds) == 0 {
 		return goaviatrix.IpsRuleFeeds{
 			CustomFeedsIds:   []string{},
@@ -210,9 +210,9 @@ func expandRuleFeeds(ruleFeeds []interface{}) goaviatrix.IpsRuleFeeds {
 	}
 }
 
-func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []interface{} {
-	return []interface{}{
-		map[string]interface{}{
+func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []any {
+	return []any{
+		map[string]any{
 			"custom_feeds_ids":   ruleFeeds.CustomFeedsIds,
 			"external_feeds_ids": ruleFeeds.ExternalFeedsIds,
 			"ignored_sids":       ruleFeeds.IgnoredSids,
@@ -221,7 +221,7 @@ func flattenRuleFeeds(ruleFeeds goaviatrix.IpsRuleFeeds) []interface{} {
 	}
 }
 
-func expandIntrusionActions(actions map[string]interface{}) map[string]string {
+func expandIntrusionActions(actions map[string]any) map[string]string {
 	result := make(map[string]string)
 	for k, v := range actions {
 		result[k] = mustString(v)

@@ -77,7 +77,7 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enable IPv6. Only valid for AWS and Azure.",
+			Description: "Enable IPv6. Valid AWS, Azure and GCP",
 		},
 		"enable_gro_gso": {
 			Type:        schema.TypeBool,
@@ -159,13 +159,6 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 		// ============================================================================
 		// BGP CONFIGURATION
 		// ============================================================================
-		"enable_bgp": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			ForceNew:    true,
-			Description: "Enable BGP for the transit group.",
-		},
 		"local_as_number": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -319,9 +312,6 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	transitGroup.EnableSegmentation = getBool(d, "enable_segmentation")
 	transitGroup.EnableGatewayLoadBalancer = getBool(d, "enable_gateway_load_balancer")
 
-	// BGP Configuration
-	transitGroup.EnableBgp = getBool(d, "enable_bgp")
-
 	// BGP AS Number Configuration
 	if v, ok := d.GetOk("local_as_number"); ok {
 		transitGroup.LocalAsNumber = mustString(v)
@@ -373,10 +363,6 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 
 	if transitGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("enable_global_vpc is only valid for GCP related cloud types")
-	}
-
-	if !transitGroup.EnableBgp && transitGroup.LocalAsNumber != "" {
-		return fmt.Errorf("local_as_number can only be set when enable_bgp is true")
 	}
 
 	if len(transitGroup.PrependAsPath) > 0 && transitGroup.LocalAsNumber == "" {
@@ -656,8 +642,13 @@ func applyTransitSpecificSettings(ctx context.Context, d *schema.ResourceData, c
 // Transit Group CRUD Operations
 // ============================================================================
 
-func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
+
+	// approved_learned_cidrs can only be set during update, not during create
+	if approvedLearnedCidrs := getStringSet(d, "approved_learned_cidrs"); len(approvedLearnedCidrs) > 0 {
+		return diag.Errorf("approved_learned_cidrs can only be set when the group has gateways present")
+	}
 
 	// Build the transit group from resource data
 	transitGroup := buildTransitGroupFromResourceData(d)
@@ -714,7 +705,7 @@ func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceD
 }
 
 //nolint:cyclop,funlen
-func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// The resource ID is the group UUID
@@ -774,7 +765,6 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "enable_gateway_load_balancer", transitGroup.EnableGatewayLoadBalancer)
 
 	// BGP Configuration
-	mustSet(d, "enable_bgp", transitGroup.EnableBgp)
 	mustSet(d, "local_as_number", transitGroup.LocalAsNumber)
 	mustSet(d, "prepend_as_path", transitGroup.PrependAsPath)
 	mustSet(d, "enable_preserve_as_path", transitGroup.EnablePreserveAsPath)
@@ -831,7 +821,7 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 }
 
 //nolint:cyclop,funlen
-func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	groupName := getString(d, "group_name")
 	cloudType := getInt(d, "cloud_type")
@@ -857,7 +847,7 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	// ============================================================================
 	if d.HasChange("group_instance_size") {
 		instanceSize := getString(d, "group_instance_size")
-		err := client.UpdateGatewayGroupSize(ctx, groupName, instanceSize)
+		err := client.UpdateGroupInstanceSize(ctx, groupName, instanceSize)
 		if err != nil {
 			return diag.Errorf("failed to update group_instance_size: %s", err)
 		}
@@ -1073,11 +1063,7 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	// Preserve AS Path - API: enable_transit_preserve_as_path / disable_transit_preserve_as_path
 	// ============================================================================
 	if d.HasChange("enable_preserve_as_path") {
-		enableBgp := getBool(d, "enable_bgp")
 		enablePreserveAsPath := getBool(d, "enable_preserve_as_path")
-		if enablePreserveAsPath && !enableBgp {
-			return diag.Errorf("enable_preserve_as_path is not supported for Non-BGP transit group during group update")
-		}
 		if !enablePreserveAsPath {
 			err := client.DisableTransitPreserveAsPathGatewayGroup(ctx, groupName)
 			if err != nil {
@@ -1388,7 +1374,7 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceAviatrixTransitGroupRead(ctx, d, meta)
 }
 
-func resourceAviatrixTransitGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// The resource ID is the group UUID

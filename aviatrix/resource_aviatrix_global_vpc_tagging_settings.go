@@ -47,7 +47,7 @@ func marshalGlobalVpcTaggingSettingsInput(d *schema.ResourceData) *goaviatrix.Gl
 	return globalVpcTaggingSettings
 }
 
-func resourceAviatrixGlobalVpcTaggingSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcTaggingSettingsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	globalVpcTaggingSettings := marshalGlobalVpcTaggingSettingsInput(d)
@@ -64,7 +64,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsCreate(ctx context.Context, d *sche
 	return resourceAviatrixGlobalVpcTaggingSettingsReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixGlobalVpcTaggingSettingsReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixGlobalVpcTaggingSettingsReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixGlobalVpcTaggingSettingsRead(ctx, d, meta)
@@ -72,7 +72,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsReadIfRequired(ctx context.Context,
 	return nil
 }
 
-func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -90,7 +90,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsRead(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceAviatrixGlobalVpcTaggingSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcTaggingSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	d.Partial(true)
@@ -107,7 +107,7 @@ func resourceAviatrixGlobalVpcTaggingSettingsUpdate(ctx context.Context, d *sche
 	return resourceAviatrixGlobalVpcTaggingSettingsRead(ctx, d, meta)
 }
 
-func resourceAviatrixGlobalVpcTaggingSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixGlobalVpcTaggingSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	globalVpcTaggingSettings := &goaviatrix.GlobalVpcTaggingSettings{

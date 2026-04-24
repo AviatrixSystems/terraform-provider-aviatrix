@@ -41,7 +41,7 @@ type transitInstanceConfig struct {
 	rxQueueSize               string
 }
 
-func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// Fetch transit group to get cloud_type, account_name, and vpc_id
@@ -195,6 +195,15 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 		return nil, err
 	}
 
+	// Append IPv6 CIDR to gateway.Subnet
+	if transitGroup.EnableIPv6 {
+		updatedSubnet, subnetErr := validateAndConfigureSubnetWithIPv6Cidr(d, gateway.Subnet, cloudType)
+		if subnetErr != nil {
+			return nil, diag.Errorf("%s", subnetErr.Error())
+		}
+		gateway.Subnet = updatedSubnet
+	}
+
 	// Validate and configure cloud-specific settings
 	if err := validateAndConfigureCloudSpecificSettings(d, gateway, cloudType, transitGroup); err != nil {
 		return nil, err
@@ -270,16 +279,29 @@ func validateAndConfigureBasicSettings(d *schema.ResourceData, gateway *goaviatr
 		gateway.SingleAzHa = "disabled"
 	}
 
-	// Zone for Azure
+	// Zone for Azure and GCP
 	zone := getString(d, "zone")
-	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && zone != "" {
-		return diag.Errorf("attribute 'zone' is only for use with Azure (8), Azure GOV (32) and Azure CHINA (2048)")
+	isAzure := goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes)
+	isGCP := goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)
+	if zone != "" && !isAzure && !isGCP {
+		return diag.Errorf("attribute 'zone' is only for use with Azure (8), Azure GOV (32), Azure CHINA (2048) and GCP (4)")
 	}
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && zone == "" {
-		return diag.Errorf("'zone' is required for Azure (8), Azure GOV (32) and Azure CHINA (2048)")
-	}
-	if zone != "" {
+	if isAzure {
+		if zone == "" {
+			return diag.Errorf("'zone' is required for Azure (8), Azure GOV (32) and Azure CHINA (2048)")
+		}
+		if _, errs := validateAzureAZ(zone, "zone"); len(errs) > 0 {
+			return diag.Errorf("%s", errs[0].Error())
+		}
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", getString(d, "subnet"), zone)
+	}
+	if isGCP {
+		if zone == "" {
+			return diag.Errorf("'zone' is required for GCP (4), e.g., 'us-east1-b'")
+		}
+		if _, errs := validateGCPZone(zone, "zone"); len(errs) > 0 {
+			return diag.Errorf("%s", errs[0].Error())
+		}
 	}
 
 	return nil
@@ -302,7 +324,11 @@ func validateAndConfigureCloudSpecificSettings(d *schema.ResourceData, gateway *
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 		gateway.VpcRegion = vpcRegion
 	} else if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-		gateway.Zone = vpcRegion
+		// For GCP, send user-specified zone as both "zone" and "vpc_region" fields,
+		// mirroring old aviatrix_transit_gateway model behavior.
+		zone := getString(d, "zone")
+		gateway.Zone = zone
+		gateway.VpcRegion = zone
 	}
 
 	// OCI specific
@@ -316,13 +342,39 @@ func validateAndConfigureCloudSpecificSettings(d *schema.ResourceData, gateway *
 	}
 
 	// Insane mode
+	insaneMode := getBool(d, "insane_mode")
 	insaneModeAz := getString(d, "insane_mode_az")
-	if insaneModeAz != "" {
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return diag.Errorf("'insane_mode_az' is only valid for AWS related clouds")
+
+	isAWS := goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes)
+	isSupportedInsaneCloud := goaviatrix.IsCloudType(
+		cloudType,
+		goaviatrix.AWSRelatedCloudTypes|
+			goaviatrix.GCPRelatedCloudTypes|
+			goaviatrix.AzureArmRelatedCloudTypes|
+			goaviatrix.OCIRelatedCloudTypes,
+	)
+
+	if insaneModeAz != "" && !isAWS {
+		return diag.Errorf("'insane_mode_az' is only valid for AWS related clouds")
+	}
+
+	enableInsane := insaneMode || insaneModeAz != ""
+
+	if enableInsane {
+		if !isSupportedInsaneCloud {
+			return diag.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
-		gateway.Subnet = strings.Join([]string{gateway.Subnet, insaneModeAz}, "~~")
+
+		if isAWS {
+			if insaneModeAz == "" {
+				return diag.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS China (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+			}
+			gateway.Subnet = gateway.Subnet + "~~" + insaneModeAz
+		}
+
 		gateway.InsaneMode = "yes"
+	} else {
+		gateway.InsaneMode = "no"
 	}
 
 	return nil
@@ -754,7 +806,7 @@ func configureExcludedAdvertisedSpokeRoutes(client *goaviatrix.Client, d *schema
 	return nil
 }
 
-func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
@@ -851,6 +903,7 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
 	mustSet(d, "enable_transit_firenet", gw.EnableTransitFirenet)
 
+	setGatewayIPv6IPState(d, gw)
 	if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		mustSet(d, "lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
 		mustSet(d, "lan_private_subnet", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
@@ -901,6 +954,10 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 		gw.GatewayZone != "AvailabilitySet" && gw.LbVpcId == "" {
 		mustSet(d, "zone", "az-"+gw.GatewayZone)
 	}
+	// Zone for GCP
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		mustSet(d, "zone", gw.GatewayZone)
+	}
 
 	// Azure EIP name resource group
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
@@ -936,12 +993,14 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 
 	// Insane mode
 	if gw.InsaneMode == "yes" {
+		mustSet(d, "insane_mode", true)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			mustSet(d, "insane_mode_az", gw.GatewayZone)
 		} else {
 			mustSet(d, "insane_mode_az", "")
 		}
 	} else {
+		mustSet(d, "insane_mode", false)
 		mustSet(d, "insane_mode_az", "")
 	}
 
@@ -1067,7 +1126,7 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAviatrixTransitInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{
@@ -1556,7 +1615,7 @@ func updateEdgeTransitInstanceEipMap(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceAviatrixTransitInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTransitInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{

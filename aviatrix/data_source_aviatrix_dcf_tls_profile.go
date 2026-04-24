@@ -43,7 +43,7 @@ func dataSourceAviatrixDCFTLSProfile() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	displayName := getString(d, "display_name")

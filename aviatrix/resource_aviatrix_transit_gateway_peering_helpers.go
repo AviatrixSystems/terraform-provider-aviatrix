@@ -87,7 +87,7 @@ func getStringListFromResource(d *schema.ResourceData, key string) ([]string, er
 	if !ok {
 		return nil, nil
 	}
-	interfaceList, ok := value.([]interface{})
+	interfaceList, ok := value.([]any)
 	if !ok {
 		return nil, fmt.Errorf("%s is not a list of strings", key)
 	}

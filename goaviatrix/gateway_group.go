@@ -108,7 +108,9 @@ type GatewayGroupResp struct {
 // and transit config under "transit_cfg", not at top level.
 type getGatewayGroupDetailsResults struct {
 	GatewayGroup
-	BgpCfg *struct {
+	PublicDNSServer     string `json:"public_dns_server,omitempty"`
+	TgwInterfaceEnabled bool   `json:"tgw_interface_enabled,omitempty"`
+	BgpCfg              *struct {
 		BgpEnabled                   bool     `json:"bgp_enabled,omitempty"`
 		BgpLocalAsNum                string   `json:"bgp_local_as_num,omitempty"`
 		BgpPrependAsPath             string   `json:"bgp_prepend_as_path,omitempty"`
@@ -122,9 +124,13 @@ type getGatewayGroupDetailsResults struct {
 		ApprovedLearnedCidrs         []string `json:"approved_learned_cidrs,omitempty"`
 		ActiveStandby                bool     `json:"active_standby,omitempty"`
 		ActiveStandbyPreemptive      bool     `json:"active_standby_preemptive,omitempty"`
+		PreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
 	} `json:"bgp_cfg,omitempty"`
 	SpokeCfg *struct {
-		DisableRoutePropagation bool `json:"disable_route_propagation,omitempty"`
+		DisableRoutePropagation    bool `json:"disable_route_propagation,omitempty"`
+		AutoAdvertiseS2cCidrs      bool `json:"auto_advertise_s2c_cidrs,omitempty"`
+		PrivateVpcDefaultEnabled   bool `json:"private_vpc_default_enabled,omitempty"`
+		SkipPublicVpcUpdateEnabled bool `json:"skip_public_vpc_update_enabled,omitempty"`
 	} `json:"spoke_cfg,omitempty"`
 	TransitCfg *struct {
 		AdvertiseTransitCidr bool `json:"advertise_transit_cidr,omitempty"`
@@ -134,8 +140,10 @@ type getGatewayGroupDetailsResults struct {
 	} `json:"transit_cfg,omitempty"`
 	AwsCfg *struct {
 		SummarizeCidrToTgw bool `json:"summarize_cidr_to_tgw,omitempty"`
-		TgwEnabled         bool `json:"tgw_enabled,omitempty"`
 	} `json:"aws_cfg,omitempty"`
+	GceCfg *struct {
+		GlobalVpc bool `json:"global_vpc,omitempty"`
+	} `json:"gce_cfg,omitempty"`
 }
 
 // getGatewayGroupDetailsResp is the full response for get_gateway_group_details.
@@ -189,6 +197,10 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 	}
 
 	grp := &resp.Results.GatewayGroup
+	// enable_vpc_dns_server: backend returns public_dns_server "vpc_dns" when enabled
+	if resp.Results.PublicDNSServer == "vpc_dns" {
+		grp.EnableVpcDNSServer = true
+	}
 	if resp.Results.BgpCfg != nil {
 		if resp.Results.BgpCfg.BgpLocalAsNum != "" {
 			grp.LocalAsNumber = resp.Results.BgpCfg.BgpLocalAsNum
@@ -211,9 +223,13 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 		}
 		grp.EnableActiveStandby = resp.Results.BgpCfg.ActiveStandby
 		grp.EnableActiveStandbyPreemptive = resp.Results.BgpCfg.ActiveStandbyPreemptive
+		grp.EnablePreserveAsPath = resp.Results.BgpCfg.PreserveAsPath
 	}
 	if resp.Results.SpokeCfg != nil {
 		grp.DisableRoutePropagation = resp.Results.SpokeCfg.DisableRoutePropagation
+		grp.EnableAutoAdvertiseS2cCidrs = resp.Results.SpokeCfg.AutoAdvertiseS2cCidrs
+		grp.EnablePrivateVpcDefaultRoute = resp.Results.SpokeCfg.PrivateVpcDefaultEnabled
+		grp.EnableSkipPublicRouteTableUpdate = resp.Results.SpokeCfg.SkipPublicVpcUpdateEnabled
 	}
 	if resp.Results.TransitCfg != nil {
 		grp.EnableAdvertiseTransitCidr = resp.Results.TransitCfg.AdvertiseTransitCidr
@@ -222,8 +238,11 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 	}
 	if resp.Results.AwsCfg != nil {
 		grp.EnableTransitSummarizeCidrToTgw = resp.Results.AwsCfg.SummarizeCidrToTgw
-		grp.EnableHybridConnection = resp.Results.AwsCfg.TgwEnabled
 	}
+	if resp.Results.GceCfg != nil {
+		grp.EnableGlobalVpc = resp.Results.GceCfg.GlobalVpc
+	}
+	grp.EnableHybridConnection = resp.Results.TgwInterfaceEnabled
 	return grp, nil
 }
 
@@ -250,13 +269,14 @@ func (c *Client) DeleteGatewayGroup(ctx context.Context, groupUUID string) error
 // Gateway Group Update APIs
 // ============================================================================
 
-// UpdateGatewayGroupSize updates the gateway group instance size (edit_gw_config)
-func (c *Client) UpdateGatewayGroupSize(ctx context.Context, groupName, instanceSize string) error {
+// UpdateGroupInstanceSize updates the instance size of an empty gateway group (edit_gw_config).
+// Only valid for groups with no member gateways; non-empty groups must be resized per-gateway.
+func (c *Client) UpdateGroupInstanceSize(ctx context.Context, groupName, instanceSize string) error {
 	form := map[string]string{
-		"action":              "edit_gw_config",
-		"CID":                 c.CID,
-		"gateway_name":        groupName,
-		"group_instance_size": instanceSize,
+		"action":  "edit_gw_config",
+		"CID":     c.CID,
+		"gw_name": groupName,
+		"gw_size": instanceSize,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)

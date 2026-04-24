@@ -144,7 +144,7 @@ func marshalEdgePlatformDeviceOnboardingInput(d *schema.ResourceData) *goaviatri
 	return edgeNEODevice
 }
 
-func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)
@@ -194,7 +194,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingCreate(ctx context.Context, d *
 	return resourceAviatrixEdgeNEODeviceOnboardingReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixEdgePlatformDeviceOnboardingReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDeviceOnboardingReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx, d, meta)
@@ -202,7 +202,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingReadIfRequired(ctx context.Cont
 	return nil
 }
 
-func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	accountName := getString(d, "account_name")
@@ -249,9 +249,9 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 	mustSet(d, "serial_number", edgeNEODeviceResp.SerialNumber)
 	mustSet(d, "hardware_model", edgeNEODeviceResp.HardwareModel)
 
-	var network []map[string]interface{}
+	var network []map[string]any
 	for _, network0 := range edgeNEODeviceResp.Network {
-		network1 := make(map[string]interface{})
+		network1 := make(map[string]any)
 		network1["interface_name"] = network0.InterfaceName
 		network1["enable_dhcp"] = network0.EnableDhcp
 		network1["gateway_ip"] = network0.GatewayIp
@@ -270,7 +270,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx context.Context, d *sc
 	return nil
 }
 
-func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)
@@ -325,7 +325,7 @@ func resourceAviatrixEdgePlatformDeviceOnboardingUpdate(ctx context.Context, d *
 	return resourceAviatrixEdgePlatformDeviceOnboardingRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgePlatformDeviceOnboardingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgePlatformDeviceOnboardingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	edgeNEODevice := marshalEdgePlatformDeviceOnboardingInput(d)

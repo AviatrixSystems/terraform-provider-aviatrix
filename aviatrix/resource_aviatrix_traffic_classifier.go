@@ -156,7 +156,7 @@ func marshalTrafficClassifierInput(d *schema.ResourceData) *goaviatrix.PolicyLis
 	return &policyList
 }
 
-func resourceAviatrixTrafficClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTrafficClassifierCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	policyList := marshalTrafficClassifierInput(d)
@@ -173,7 +173,7 @@ func resourceAviatrixTrafficClassifierCreate(ctx context.Context, d *schema.Reso
 	return resourceAviatrixTrafficClassifierReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixTrafficClassifierReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixTrafficClassifierReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixTrafficClassifierRead(ctx, d, meta)
@@ -181,7 +181,7 @@ func resourceAviatrixTrafficClassifierReadIfRequired(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	tcResp, err := client.GetTrafficClassifier(ctx)
@@ -193,11 +193,11 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("failed to read traffic classifier: %s", err)
 	}
 
-	var policies []map[string]interface{}
+	var policies []map[string]any
 
 	for _, policyList := range *tcResp {
 		for _, policy := range policyList.Policies {
-			p := make(map[string]interface{})
+			p := make(map[string]any)
 			p["uuid"] = policy.UUID
 			p["name"] = policy.Name
 			p["source_smart_group_uuids"] = policy.SrcSgs
@@ -211,9 +211,9 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 				p["protocol"] = policy.Protocol
 			}
 
-			var portRanges []map[string]interface{}
+			var portRanges []map[string]any
 			for _, pr := range policy.PortRanges {
-				p1 := make(map[string]interface{})
+				p1 := make(map[string]any)
 				p1["low"] = pr.Lo
 				p1["high"] = pr.Hi
 				portRanges = append(portRanges, p1)
@@ -231,7 +231,7 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAviatrixTrafficClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixTrafficClassifierDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DeleteTrafficClassifier(ctx)

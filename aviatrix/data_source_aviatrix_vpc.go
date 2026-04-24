@@ -185,7 +185,7 @@ func dataSourceAviatrixVpc() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	vpc := &goaviatrix.Vpc{

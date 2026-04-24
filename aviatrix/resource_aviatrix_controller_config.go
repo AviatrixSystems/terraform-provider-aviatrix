@@ -38,12 +38,6 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Description: "Switch for HTTP access. Default: false.",
 				Deprecated:  "HTTP access is no longer supported and will not be configured on the controller.",
 			},
-			"fqdn_exception_rule": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "A system-wide mode. Default: true.",
-			},
 			"target_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -183,7 +177,7 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta any) error {
 	var err error
 
 	client := mustClient(meta)
@@ -193,26 +187,6 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	defer func() { _ = resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	log.Printf("[INFO] Configuring Aviatrix controller : %#v", d)
-
-	fqdnExceptionRule := getBool(d, "fqdn_exception_rule")
-	if fqdnExceptionRule {
-		curStatus, _ := client.GetExceptionRuleStatus()
-		if curStatus {
-			log.Printf("[INFO] FQDN Exception Rule is already enabled")
-		} else {
-			err = client.EnableExceptionRule()
-		}
-	} else {
-		curStatus, _ := client.GetExceptionRuleStatus()
-		if !curStatus {
-			log.Printf("[INFO] FQDN Exception Rule is already disabled")
-		} else {
-			err = client.DisableExceptionRule()
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("failed to configure controller exception rule: %w", err)
-	}
 
 	backupConfiguration := getBool(d, "backup_configuration")
 	backupCloudType := getInt(d, "backup_cloud_type")
@@ -291,7 +265,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	return resourceAviatrixControllerConfigReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixControllerConfigReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixControllerConfigReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixControllerConfigRead(d, meta)
@@ -299,22 +273,13 @@ func resourceAviatrixControllerConfigReadIfRequired(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Getting controller %s configuration", d.Id())
 
-	res, err := client.GetExceptionRuleStatus()
-	if err != nil {
-		return fmt.Errorf("could not read Aviatrix Controller Exception Rule Status: %w", err)
-	}
-	if res {
-		mustSet(d, "fqdn_exception_rule", true)
-	} else {
-		mustSet(d, "fqdn_exception_rule", false)
-	}
-
 	var versionInfo *goaviatrix.VersionInfo
+	var err error
 	try, maxTries, backoff := 0, 3, 1000*time.Millisecond
 	for {
 		try++
@@ -385,28 +350,11 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	log.Printf("[INFO] Updating Controller configuration: %#v", d)
 	d.Partial(true)
-
-	if d.HasChange("fqdn_exception_rule") {
-		fqdnExceptionRule := getBool(d, "fqdn_exception_rule")
-		if fqdnExceptionRule {
-			err := client.EnableExceptionRule()
-			if err != nil {
-				log.Printf("[ERROR] Failed to enable exception rule on controller %s", d.Id())
-				return err
-			}
-		} else {
-			err := client.DisableExceptionRule()
-			if err != nil {
-				log.Printf("[ERROR] Failed to disable exception rule on controller %s", d.Id())
-				return err
-			}
-		}
-	}
 
 	backupConfiguration := getBool(d, "backup_configuration")
 	backupCloudType := getInt(d, "backup_cloud_type")
@@ -544,17 +492,8 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
 
-func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
-	mustSet(d, "fqdn_exception_rule", true)
-	curStatusException, _ := client.GetExceptionRuleStatus()
-	if !curStatusException {
-		err := client.EnableExceptionRule()
-		if err != nil {
-			log.Printf("[ERROR] Failed to enable exception rule on controller %s", d.Id())
-			return err
-		}
-	}
 	mustSet(d, "backup_configuration", false)
 	cloudnBackupConfig, _ := client.GetCloudnBackupConfig()
 	if cloudnBackupConfig.BackupConfiguration == "yes" {

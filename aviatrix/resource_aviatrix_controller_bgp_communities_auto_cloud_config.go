@@ -38,7 +38,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfig() *schema.Resource 
 	}
 }
 
-func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	autoCloud := getBool(d, "auto_cloud_enabled")
@@ -60,7 +60,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigCreate(ctx context.C
 	return resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -95,7 +95,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigRead(ctx context.Con
 	return nil
 }
 
-func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("auto_cloud_enabled") || d.HasChange("community_prefix") {
@@ -119,7 +119,7 @@ func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigUpdate(ctx context.C
 	return nil
 }
 
-func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigDelete(ctx context.Context, _ *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerBgpCommunitiesAutoCloudConfigDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableControllerBgpCommunitiesAutoCloud(ctx)

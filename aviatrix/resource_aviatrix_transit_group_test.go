@@ -320,7 +320,6 @@ func TestAccAviatrixTransitGroup_bgp(t *testing.T) {
 				Config: testAccTransitGroupConfigBgp(rName, awsGwSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_bgp", "true"),
 					resource.TestCheckResourceAttr(resourceName, "local_as_number", "65001"),
 				),
 			},
@@ -329,7 +328,6 @@ func TestAccAviatrixTransitGroup_bgp(t *testing.T) {
 				Config: testAccTransitGroupConfigBgpWithPrepend(rName, awsGwSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_bgp", "true"),
 					resource.TestCheckResourceAttr(resourceName, "local_as_number", "65001"),
 					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.0", "65001"),
@@ -897,7 +895,6 @@ resource "aviatrix_transit_group" "test" {
 	subnet              = "%s"
 	vpc_region          = "%s"
 	gw_name             = "tfg-transit-group-gw-%s"
-	enable_bgp          = true
 	local_as_number     = "65001"
 
 	enable_learned_cidrs_approval = %t
@@ -929,7 +926,6 @@ resource "aviatrix_transit_group" "test" {
 	vpc_region          = "%s"
 	gw_name             = "tfg-transit-group-gw-%s"
 
-	enable_bgp          = true
 	local_as_number     = "65001"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -958,7 +954,6 @@ resource "aviatrix_transit_group" "test" {
 	vpc_region          = "%s"
 	gw_name             = "tfg-transit-group-gw-%s"
 
-	enable_bgp          = true
 	local_as_number     = "65001"
 	prepend_as_path     = ["65001", "65001"]
 }

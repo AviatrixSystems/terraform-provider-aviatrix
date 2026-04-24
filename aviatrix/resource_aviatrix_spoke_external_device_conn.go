@@ -69,7 +69,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Default:     "bgp",
 				ForceNew:    true,
 				Description: "Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					v := mustString(val)
 					if v != "bgp" && v != "static" {
 						errs = append(errs, fmt.Errorf("%q must be either 'bgp' or 'static', got: %s", key, val))
@@ -501,7 +501,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	var bgpSendCommunities *goaviatrix.BgpSendCommunities
@@ -851,7 +851,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		// set bgp bfd using the config details provided by the user
 		if len(bgp_bfd) > 0 {
 			for _, bfd0 := range bgp_bfd {
-				bfd1, ok := bfd0.(map[string]interface{})
+				bfd1, ok := bfd0.(map[string]any)
 				if !ok {
 					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
 				}
@@ -987,7 +987,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	return resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixSpokeExternalDeviceConnRead(d, meta)
@@ -995,7 +995,7 @@ func resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	connectionName := getString(d, "connection_name")
@@ -1127,9 +1127,9 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		}
 		mustSet(d, "enable_bfd", conn.EnableBfd)
 		if conn.EnableBfd {
-			var bgpBfdConfig []map[string]interface{}
+			var bgpBfdConfig []map[string]any
 			bfd := conn.BgpBfdConfig
-			bfdMap := make(map[string]interface{})
+			bfdMap := make(map[string]any)
 			if bfd.TransmitInterval != 0 {
 				bfdMap["transmit_interval"] = bfd.TransmitInterval
 			}
@@ -1180,7 +1180,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 
 		if conn.PrependAsPath != "" {
 			var prependAsPath []string
-			for _, str := range strings.Split(conn.PrependAsPath, " ") {
+			for str := range strings.SplitSeq(conn.PrependAsPath, " ") {
 				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
 			}
 
@@ -1225,7 +1225,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 	d.Partial(true)
 
@@ -1572,7 +1572,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	return resourceAviatrixSpokeExternalDeviceConnRead(d, meta)
 }
 
-func resourceAviatrixSpokeExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeExternalDeviceConnDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{

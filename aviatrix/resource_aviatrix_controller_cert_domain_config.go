@@ -30,7 +30,7 @@ func resourceAviatrixControllerCertDomainConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	certDomain := getString(d, "cert_domain")
@@ -60,7 +60,7 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 	return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -77,7 +77,7 @@ func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("cert_domain") {
@@ -106,7 +106,7 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 	return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.SetCertDomain(ctx, "aviatrixnetwork.com")

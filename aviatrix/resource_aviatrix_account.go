@@ -441,7 +441,7 @@ func resourceAviatrixAccount() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	account := &goaviatrix.Account{
 		AccountName:                           getString(d, "account_name"),
@@ -753,7 +753,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourceAviatrixAccountRead(ctx, d, meta)
 }
 
-func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client, ok := meta.(goaviatrix.ClientInterface)
 	if !ok {
 		return diag.Errorf("internal error: meta is not a valid goaviatrix.ClientInterface")
@@ -873,7 +873,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 	defer client.InvalidateCache()
 	account := &goaviatrix.Account{
@@ -1100,7 +1100,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 // for now, deleting gcp account will not delete the credential file
-func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client, ok := meta.(goaviatrix.ClientInterface)
 	if !ok {
 		return diag.Errorf("internal error: meta is not a valid goaviatrix.ClientInterface")
@@ -1119,7 +1119,7 @@ func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 // Validate account number string is 12 digits
-func validateAwsAccountNumber(val interface{}, key string) (warns []string, errs []error) {
+func validateAwsAccountNumber(val any, key string) (warns []string, errs []error) {
 	v := mustString(val)
 	if len(v) != 12 {
 		errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))

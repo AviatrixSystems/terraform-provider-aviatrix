@@ -30,7 +30,7 @@ func resourceAviatrixDistributedFirewallingConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDistributedFirewallingConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	enableDFW := getBool(d, "enable_distributed_firewalling")
@@ -50,7 +50,7 @@ func resourceAviatrixDistributedFirewallingConfigCreate(ctx context.Context, d *
 	return resourceAviatrixDistributedFirewallingConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -67,7 +67,7 @@ func resourceAviatrixDistributedFirewallingConfigRead(ctx context.Context, d *sc
 	return nil
 }
 
-func resourceAviatrixDistributedFirewallingConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	if d.HasChange("enable_distributed_firewalling") {
@@ -89,7 +89,7 @@ func resourceAviatrixDistributedFirewallingConfigUpdate(ctx context.Context, d *
 	return resourceAviatrixDistributedFirewallingConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixDistributedFirewallingConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	err := client.DisableDistributedFirewalling(ctx)

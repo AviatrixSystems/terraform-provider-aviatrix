@@ -51,7 +51,7 @@ func marshalDeviceInterfaceConfigInput(d *schema.ResourceData) *goaviatrix.Devic
 	}
 }
 
-func resourceAviatrixDeviceInterfaceConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceInterfaceConfigCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	config := marshalDeviceInterfaceConfigInput(d)
@@ -67,7 +67,7 @@ func resourceAviatrixDeviceInterfaceConfigCreate(d *schema.ResourceData, meta in
 	return resourceAviatrixDeviceInterfaceConfigReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixDeviceInterfaceConfigReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixDeviceInterfaceConfigReadIfRequired(d *schema.ResourceData, meta any, flag *bool) error {
 	if !(*flag) {
 		*flag = true
 		return resourceAviatrixDeviceInterfaceConfigRead(d, meta)
@@ -75,7 +75,7 @@ func resourceAviatrixDeviceInterfaceConfigReadIfRequired(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	name := getString(d, "device_name")
@@ -102,7 +102,7 @@ func resourceAviatrixDeviceInterfaceConfigRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAviatrixDeviceInterfaceConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceInterfaceConfigUpdate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	config := marshalDeviceInterfaceConfigInput(d)
@@ -115,7 +115,7 @@ func resourceAviatrixDeviceInterfaceConfigUpdate(d *schema.ResourceData, meta in
 	return resourceAviatrixDeviceInterfaceConfigRead(d, meta)
 }
 
-func resourceAviatrixDeviceInterfaceConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceInterfaceConfigDelete(d *schema.ResourceData, meta any) error {
 	// This is intentionally left empty.
 	// There is no way to unconfigure/delete the WAN interface of a device.
 	// Due to backend design the ability to unconfigure/delete can not be added.

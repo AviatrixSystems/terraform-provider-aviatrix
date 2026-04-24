@@ -95,7 +95,7 @@ func IPv6SupportedOnCloudType(cloudType int) error {
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone
 // parameters.
-func validateAzureAZ(i interface{}, k string) (warnings []string, errors []error) {
+func validateAzureAZ(i any, k string) (warnings []string, errors []error) {
 	v, ok := i.(string)
 	if !ok {
 		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
@@ -110,27 +110,43 @@ func validateAzureAZ(i interface{}, k string) (warnings []string, errors []error
 	return warnings, errors
 }
 
+// gcpZoneRegex matches valid GCP zone names, e.g. "us-east1-b", "europe-west1-c".
+var gcpZoneRegex = regexp.MustCompile(`^[a-z][a-z0-9-]+-[a-z]$`)
+
+// validateGCPZone is a SchemaValidateFunc for GCP zone parameters.
+func validateGCPZone(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return warnings, errors
+	}
+	if !gcpZoneRegex.MatchString(v) {
+		errors = append(errors, fmt.Errorf("expected %s to be a valid GCP zone (e.g. 'us-east1-b'), got %q", k, v))
+	}
+	return warnings, errors
+}
+
 // validateCloudType is a SchemaValidateFunc for Cloud Type parameters.
-func validateCloudType(i interface{}, k string) (warnings []string, errors []error) {
+func validateCloudType(i any, k string) (warnings []string, errors []error) {
 	return validation.IntInSlice(goaviatrix.GetSupportedClouds())(i, k)
 }
 
 // validateSpokeGwType is a SchemaValidateFunc for Spoke Gateway Type parameters.
 // Accepts case-insensitive input, but normalizes to uppercase.
-func validateSpokeGwType(i interface{}, k string) (warnings []string, errors []error) {
+func validateSpokeGwType(i any, k string) (warnings []string, errors []error) {
 	validGwTypes := []string{"SPOKE", "EDGESPOKE", "STANDALONE"}
 	return validation.StringInSlice(validGwTypes, true)(i, k)
 }
 
 // validateTransitGwType is a SchemaValidateFunc for Transit Gateway Type parameters.
 // Accepts case-insensitive input, but normalizes to uppercase.
-func validateTransitGwType(i interface{}, k string) (warnings []string, errors []error) {
+func validateTransitGwType(i any, k string) (warnings []string, errors []error) {
 	validGwTypes := []string{"TRANSIT", "EDGETRANSIT", "STANDALONE"}
 	return validation.StringInSlice(validGwTypes, true)(i, k)
 }
 
 // normalizeGwType normalizes gateway type to uppercase.
-func normalizeGwType(val interface{}) string {
+func normalizeGwType(val any) string {
 	if val == nil {
 		return ""
 	}
@@ -147,8 +163,8 @@ func DiffSuppressFuncString(k, old, new string, d *schema.ResourceData) bool {
 	return goaviatrix.Equivalent(oldValue, newValue)
 }
 
-func captureErr(fn func(*schema.ResourceData, interface{}) error,
-	d *schema.ResourceData, meta interface{}, err *error,
+func captureErr(fn func(*schema.ResourceData, any) error,
+	d *schema.ResourceData, meta any, err *error,
 ) {
 	*err = fn(d, meta)
 }
@@ -211,12 +227,7 @@ func getStringSet(d *schema.ResourceData, k string) []string {
 }
 
 func stringInSlice(needle string, haystack []string) bool {
-	for _, element := range haystack {
-		if element == needle {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(haystack, needle)
 }
 
 var (
@@ -269,7 +280,7 @@ func TagsMapToJson(tagsMap map[string]string) (string, error) {
 }
 
 // validateAzureEipNameResourceGroup is a SchemaValidateFunc for Azure custom EIP name and resource group.
-func validateAzureEipNameResourceGroup(i interface{}, k string) (warnings []string, errors []error) {
+func validateAzureEipNameResourceGroup(i any, k string) (warnings []string, errors []error) {
 	v, ok := i.(string)
 	if !ok {
 		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
@@ -532,7 +543,7 @@ func sortSpokeInterfacesByCustomOrder(interfaces []goaviatrix.MegaportInterface,
 
 // ValidateCIDRRule validates that the string is a valid CIDR rule in the format:
 // a.b.c.d/x [ge y] [le z] where x <= y <= z <= 32
-func ValidateCIDRRule(v interface{}, k string) ([]string, []error) {
+func ValidateCIDRRule(v any, k string) ([]string, []error) {
 	cidrRuleStr, ok := v.(string)
 	if !ok {
 		return nil, []error{fmt.Errorf("%q must be a string, got %T", k, v)}
@@ -605,8 +616,8 @@ func expandStringSet(set *schema.Set) []string {
 	return out
 }
 
-func stringSliceToIfaceSlice(in []string) []interface{} {
-	out := make([]interface{}, len(in))
+func stringSliceToIfaceSlice(in []string) []any {
+	out := make([]any, len(in))
 	for i, s := range in {
 		out[i] = s
 	}
@@ -638,7 +649,7 @@ func testCheckStringSet(res, attr string, expected []string) resource.TestCheckF
 }
 
 // Helper function to expand string list from interface{}
-func expandStringList(list []interface{}) []string {
+func expandStringList(list []any) []string {
 	result := make([]string, 0, len(list))
 	for _, v := range list {
 		if v != nil {
@@ -649,7 +660,7 @@ func expandStringList(list []interface{}) []string {
 }
 
 // Helper function to expand int list from interface{}
-func expandIntList(list []interface{}) []int {
+func expandIntList(list []any) []int {
 	result := make([]int, 0, len(list))
 	for _, v := range list {
 		if v != nil {
@@ -659,7 +670,7 @@ func expandIntList(list []interface{}) []int {
 	return result
 }
 
-func mustSet(d *schema.ResourceData, key string, val interface{}) {
+func mustSet(d *schema.ResourceData, key string, val any) {
 	if err := d.Set(key, val); err != nil {
 		panic(fmt.Errorf("schema error: failed to set %q. This is a provider bug, check your schema definition: %w", key, err))
 	}
@@ -667,7 +678,7 @@ func mustSet(d *schema.ResourceData, key string, val interface{}) {
 
 // Getter allows helpers to work with both *schema.ResourceData and *schema.ResourceDiff
 type Getter interface {
-	Get(key string) interface{}
+	Get(key string) any
 }
 
 func getString(d Getter, key string) string {
@@ -706,9 +717,9 @@ func getFloat64(d Getter, key string) float64 {
 	return f
 }
 
-func getList(d Getter, key string) []interface{} {
+func getList(d Getter, key string) []any {
 	v := d.Get(key)
-	l, ok := v.([]interface{})
+	l, ok := v.([]any)
 	if !ok {
 		panic(fmt.Sprintf("internal error: key %q has type %T but expected []interface{}", key, v))
 	}
@@ -726,7 +737,7 @@ func getSet(d Getter, key string) *schema.Set {
 
 // mustString asserts that the given interface is a string.
 // Use this for type assertions outside of d.Get() context.
-func mustString(v interface{}) string {
+func mustString(v any) string {
 	s, ok := v.(string)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected string but got %T", v))
@@ -735,7 +746,7 @@ func mustString(v interface{}) string {
 }
 
 // mustInt asserts that the given interface is an int.
-func mustInt(v interface{}) int {
+func mustInt(v any) int {
 	i, ok := v.(int)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected int but got %T", v))
@@ -744,7 +755,7 @@ func mustInt(v interface{}) int {
 }
 
 // mustBool asserts that the given interface is a bool.
-func mustBool(v interface{}) bool {
+func mustBool(v any) bool {
 	b, ok := v.(bool)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected bool but got %T", v))
@@ -753,8 +764,8 @@ func mustBool(v interface{}) bool {
 }
 
 // mustMap asserts that the given interface is a map[string]interface{}.
-func mustMap(v interface{}) map[string]interface{} {
-	m, ok := v.(map[string]interface{})
+func mustMap(v any) map[string]any {
+	m, ok := v.(map[string]any)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected map[string]interface{} but got %T", v))
 	}
@@ -762,8 +773,8 @@ func mustMap(v interface{}) map[string]interface{} {
 }
 
 // mustSlice asserts that the given interface is a []interface{}.
-func mustSlice(v interface{}) []interface{} {
-	s, ok := v.([]interface{})
+func mustSlice(v any) []any {
+	s, ok := v.([]any)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected []interface{} but got %T", v))
 	}
@@ -772,7 +783,7 @@ func mustSlice(v interface{}) []interface{} {
 
 // mustSchemaSet asserts that the given interface is a *schema.Set.
 // Use this for type assertions outside of d.Get() context.
-func mustSchemaSet(v interface{}) *schema.Set {
+func mustSchemaSet(v any) *schema.Set {
 	s, ok := v.(*schema.Set)
 	if !ok {
 		panic(fmt.Sprintf("internal error: expected *schema.Set but got %T", v))
@@ -805,4 +816,18 @@ func isTimeoutOrConnectionError(err error) bool {
 	return strings.Contains(msg, "EOF") ||
 		strings.Contains(msg, "context deadline exceeded") ||
 		strings.Contains(msg, "connection reset")
+}
+
+func validateAndConfigureSubnetWithIPv6Cidr(d *schema.ResourceData, gatewaySubnet string, cloudType int) (string, error) {
+	gatewaySubnet = strings.TrimRight(gatewaySubnet, "~")
+
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWS|goaviatrix.Azure) {
+		subnetIPv6Cidr := getString(d, "subnet_ipv6_cidr")
+		if subnetIPv6Cidr == "" {
+			return "", fmt.Errorf("error creating gateway: subnet_ipv6_cidr must be set when enable_ipv6 is true and is enabled on %d", cloudType)
+		}
+		// Append IPv6 subnet CIDR
+		gatewaySubnet = gatewaySubnet + subnetSeparator + subnetIPv6Cidr
+	}
+	return gatewaySubnet, nil
 }

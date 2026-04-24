@@ -30,7 +30,7 @@ func resourceAviatrixDCFMitmCaSelection() *schema.Resource {
 	}
 }
 
-func resourceAviatrixCaDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCaDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// Creation means selecting the given CA as the active CA
@@ -48,7 +48,7 @@ func resourceAviatrixCaDeploymentCreate(ctx context.Context, d *schema.ResourceD
 	return resourceAviatrixCaDeploymentRead(ctx, d, meta)
 }
 
-func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	// Validate ID matches controller
@@ -85,7 +85,7 @@ func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceAviatrixCaDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCaDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	mitmCAID := getString(d, "mitm_ca_id")
@@ -100,7 +100,7 @@ func resourceAviatrixCaDeploymentUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceAviatrixCaDeploymentRead(ctx, d, meta)
 }
 
-func resourceAviatrixCaDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixCaDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	mitmCAID := goaviatrix.DCFMITMSystemCAID

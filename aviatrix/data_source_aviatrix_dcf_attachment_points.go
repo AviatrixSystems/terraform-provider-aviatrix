@@ -26,7 +26,7 @@ func dataSourceAviatrixDcfAttachmentPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixDcfAttachmentPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAviatrixDcfAttachmentPointsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
 	name := getString(d, "name")
