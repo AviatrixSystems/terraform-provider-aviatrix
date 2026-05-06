@@ -10,6 +10,8 @@ description: |-
 
 The **aviatrix_dcf_mitm_ca_selection** resource manages the selection of the active MITM (Man-in-the-Middle) Certificate Authority for Distributed Cloud Firewall. Only one CA can be active at a time, so selecting a new CA will automatically deactivate the previously active CA.
 
+~> **NOTE:** When this resource is destroyed, the system automatically renews the DCF system default CA and sets that as `active`. If the selection contains the system ca already as active, it will be renewed.
+
 ## Example Usage
 
 ### Select a MITM CA as Active
@@ -75,6 +77,5 @@ $ terraform import aviatrix_dcf_mitm_ca_selection.example 10-0-0-1
 
 * This is a singleton resource - only one `aviatrix_dcf_mitm_ca_selection` resource should exist per Aviatrix Controller.
 * When this resource is created or updated, the specified CA becomes `active` and the previously active CA becomes `inactive`.
-* When this resource is destroyed, the system automatically falls back to the built-in system CA.
 * The resource ID is derived from the controller IP address to ensure uniqueness per controller.
 

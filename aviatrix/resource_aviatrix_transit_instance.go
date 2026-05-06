@@ -61,6 +61,16 @@ func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.Resour
 	mustSet(d, "account_name", transitGroup.AccountName)
 	mustSet(d, "vpc_id", transitGroup.VpcID)
 
+	// Validate gw_size: not supported for Equinix/Megaport, required for all other types
+	gwSize := getString(d, "gw_size")
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+		if gwSize != "" {
+			return diag.Errorf("'gw_size' is not supported for Equinix or Megaport transit instances")
+		}
+	} else if gwSize == "" {
+		return diag.Errorf("'gw_size' is required for CSP gateways and other edge transit instances")
+	}
+
 	// Create edge transit gateway for AEP, Equinix, Megaport, Self-managed
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		err := createEdgeTransitInstance(ctx, d, client, transitGroup)

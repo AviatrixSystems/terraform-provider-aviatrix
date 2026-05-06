@@ -139,6 +139,7 @@ The following arguments are supported:
 
 * `kube_config` - (Optional) The kubeconfig file for the Kubernetes cluster. This is a sensitive value.
 * `use_csp_credentials` - (Optional) Whether to use the CSP credentials for the Kubernetes cluster. Valid values: true, false. Default value: false.
+* `gateway_tunnel_enabled` - (Optional) Whether to enable the gateway tunnel for the Kubernetes cluster. This is useful for clusters with private API servers that are reachable from a spoke gateway but not the controller. Valid values: true, false. Default value: false.
 
 * `cluster_details` - (Optional) If the cluster is not managed by the CSP, but created directly with tools like kops, information about the cluster itself have to be provided.
   For clusters managed by the CSP this should not be set.

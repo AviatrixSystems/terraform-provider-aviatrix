@@ -148,6 +148,7 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set to true if this feature is desired.",
 			},
 		},
@@ -281,6 +282,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta any) erro
 	}
 
 	d.SetId(spokeHaGwName)
+	mustSet(d, "gw_name", spokeHaGwName)
 	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
 

@@ -175,6 +175,7 @@ go_library(
         "resource_aviatrix_spoke_instance_schema.go",
         "resource_aviatrix_spoke_transit_attachment.go",
         "resource_aviatrix_sumologic_forwarder.go",
+        "resource_aviatrix_telix_profile.go",
         "resource_aviatrix_traffic_classifier.go",
         "resource_aviatrix_trans_peer.go",
         "resource_aviatrix_transit_external_device_conn.go",

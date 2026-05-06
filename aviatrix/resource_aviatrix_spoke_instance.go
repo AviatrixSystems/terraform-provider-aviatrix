@@ -144,8 +144,18 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 	ztpFileDownloadPath := getString(d, "ztp_file_download_path")
 	ztpFileType := getString(d, "ztp_file_type")
 
+	gwSize := getString(d, "gw_size")
+
 	// Edge-specific validation
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+			if gwSize != "" {
+				return fmt.Errorf("'gw_size' is not supported for Equinix or Megaport spoke instances")
+			}
+		} else if gwSize == "" {
+			return fmt.Errorf("'gw_size' is required for edge spoke instances other than Equinix and Megaport")
+		}
+
 		// Interfaces are required for edge spoke gateways
 		if len(interfaces) == 0 {
 			return fmt.Errorf("'interfaces' is required for Edge spoke instances")
@@ -165,6 +175,11 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 
 		// Return early for edge gateways - CSP validations don't apply
 		return nil
+	}
+
+	// CSP gateways require gw_size
+	if gwSize == "" {
+		return fmt.Errorf("'gw_size' is required for CSP spoke instances")
 	}
 
 	// CSP-specific required field validation

@@ -49,6 +49,11 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 					return oldTrimmed == newTrimmed
 				},
 			},
+			"gateway_tunnel_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Whether to enable gateway tunnel for the cluster.",
+			},
 			"cluster_details": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
@@ -141,20 +146,21 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 
 func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.KubernetesCluster, error) {
 	kubernetesCluster := &goaviatrix.KubernetesCluster{
-		ClusterId: getString(d, "cluster_id"),
+		ClusterID: getString(d, "cluster_id"),
 		Credential: &goaviatrix.KubernetesCredential{
 			UseCspCredentials: getBool(d, "use_csp_credentials"),
 			KubeConfig:        getString(d, "kube_config"),
 		},
+		GatewayTunnelEnabled: getBool(d, "gateway_tunnel_enabled"),
 	}
 
 	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
 		clusterDetailsMap := mustMap(mustSlice(clusterDetails)[0])
 		resource := goaviatrix.ClusterResource{
 			AccountName: mustString(clusterDetailsMap["account_name"]),
-			AccountId:   mustString(clusterDetailsMap["account_id"]),
+			AccountID:   mustString(clusterDetailsMap["account_id"]),
 			Name:        mustString(clusterDetailsMap["name"]),
-			VpcId:       mustString(clusterDetailsMap["vpc_id"]),
+			VpcID:       mustString(clusterDetailsMap["vpc_id"]),
 			Region:      mustString(clusterDetailsMap["region"]),
 			Version:     mustString(clusterDetailsMap["version"]),
 			Platform:    mustString(clusterDetailsMap["platform"]),
@@ -192,7 +198,7 @@ func resourceAviatrixKubernetesClusterCreate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("failed to create kubernetes cluster: %s", err)
 	}
 
-	d.SetId(kubernetesCluster.Id)
+	d.SetId(kubernetesCluster.ID)
 	return resourceAviatrixKubernetesClusterRead(ctx, d, meta)
 }
 
@@ -204,7 +210,8 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		d.SetId("")
 		return nil
 	}
-	mustSet(d, "cluster_id", kubernetesCluster.ClusterId)
+	mustSet(d, "cluster_id", kubernetesCluster.ClusterID)
+	mustSet(d, "gateway_tunnel_enabled", kubernetesCluster.GatewayTunnelEnabled)
 	if kubernetesCluster.Credential != nil {
 		credential := kubernetesCluster.Credential
 		mustSet(d, "use_csp_credentials", credential.UseCspCredentials)
@@ -214,9 +221,9 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		details := make(map[string]any)
 		resource := kubernetesCluster.Resource
 		details["account_name"] = resource.AccountName
-		details["account_id"] = resource.AccountId
+		details["account_id"] = resource.AccountID
 		details["name"] = resource.Name
-		details["vpc_id"] = resource.VpcId
+		details["vpc_id"] = resource.VpcID
 		details["region"] = resource.Region
 		details["version"] = resource.Version
 		details["platform"] = resource.Platform

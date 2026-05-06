@@ -7,10 +7,11 @@ import (
 )
 
 type KubernetesCluster struct {
-	Id         string                `json:"id,omitempty"`
-	ClusterId  string                `json:"cluster_id,omitempty"`
-	Credential *KubernetesCredential `json:"credential,omitempty"`
-	Resource   *ClusterResource      `json:"resource,omitempty"`
+	ID                   string                `json:"id,omitempty"`
+	ClusterID            string                `json:"cluster_id,omitempty"`
+	Credential           *KubernetesCredential `json:"credential,omitempty"`
+	Resource             *ClusterResource      `json:"resource,omitempty"`
+	GatewayTunnelEnabled bool                  `json:"gateway_tunnel_enabled,omitempty"`
 }
 
 type KubernetesCredential struct {
@@ -20,9 +21,9 @@ type KubernetesCredential struct {
 
 type ClusterResource struct {
 	Name        string `json:"name"`
-	VpcId       string `json:"vpc_id"`
+	VpcID       string `json:"vpc_id"`
 	Region      string `json:"region"`
-	AccountId   string `json:"account_id"`
+	AccountID   string `json:"account_id"`
 	AccountName string `json:"account_name"`
 	Project     string `json:"project,omitempty"`
 	Compartment string `json:"compartment,omitempty"`
@@ -47,7 +48,7 @@ func (c *Client) CreateKubernetesCluster(ctx context.Context, kubernetesCluster 
 		if !ok {
 			return errors.New("id not found in response")
 		}
-		kubernetesCluster.Id = id
+		kubernetesCluster.ID = id
 	}
 	return err
 }

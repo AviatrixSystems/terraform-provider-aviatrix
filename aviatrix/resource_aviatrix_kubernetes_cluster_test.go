@@ -80,7 +80,7 @@ func TestAccAviatrixKubernetesCluster_basic(t *testing.T) {
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id",
+						ClusterID: "test-cluster-id",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
@@ -114,7 +114,7 @@ func TestAccAviatrixKubernetesCluster_AWS_ARN(t *testing.T) {
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id",
+						ClusterID: "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster-id",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
@@ -150,7 +150,7 @@ EOT
 }`, ValidKubeconfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id2",
+						ClusterID: "test-cluster-id2",
 						Credential: &goaviatrix.KubernetesCredential{
 							KubeConfig: ValidKubeconfig + "\n",
 						},
@@ -226,15 +226,15 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id4",
+						ClusterID: "test-cluster-id4",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
 						Resource: &goaviatrix.ClusterResource{
 							Name:        "test-name",
 							Region:      "test-region",
-							VpcId:       "test-vpc",
-							AccountId:   "test-account-id",
+							VpcID:       "test-vpc",
+							AccountID:   "test-account-id",
 							AccountName: "test-account",
 							Platform:    "test-platform",
 							Version:     "test-version",
@@ -278,13 +278,14 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id6",
+						ClusterID: "test-cluster-id6",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "false"),
 				),
 			},
 			{
@@ -292,17 +293,56 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 					resource "aviatrix_kubernetes_cluster" "test" {
 						cluster_id = "test-cluster-id6"
 						use_csp_credentials = false
+						gateway_tunnel_enabled = true
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterId: "test-cluster-id6",
+						ClusterID: "test-cluster-id6",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: false,
 						},
+						GatewayTunnelEnabled: true,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAviatrixKubernetesCluster_gatewayTunnelEnabled(t *testing.T) {
+	if os.Getenv("SKIP_KUBERNETES_CLUSTER") == "yes" {
+		t.Skip("Skipping kubernetes cluster test as SKIP_KUBERNETES_CLUSTER is set")
+	}
+
+	resourceName := "aviatrix_kubernetes_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAviatrixKubernetesClusterDestroy(resourceName),
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "aviatrix_kubernetes_cluster" "test" {
+						cluster_id = "test-cluster-id-gw"
+						use_csp_credentials = true
+						gateway_tunnel_enabled = true
+					}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
+						ClusterID: "test-cluster-id-gw",
+						Credential: &goaviatrix.KubernetesCredential{
+							UseCspCredentials: true,
+						},
+						GatewayTunnelEnabled: true,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id-gw"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "true"),
 				),
 			},
 		},
@@ -355,7 +395,7 @@ func testAccCheckAviatrixKubernetesClusterExists(name string, expected goaviatri
 		if diff := cmp.Diff(expected, *actual,
 			// Ignore the ID field
 			cmp.FilterPath(func(path cmp.Path) bool {
-				return path.String() == "Id"
+				return path.String() == "ID"
 			}, cmp.Ignore())); len(diff) > 0 {
 			return fmt.Errorf("difference found between expected and actual cluster: %s", diff)
 		}

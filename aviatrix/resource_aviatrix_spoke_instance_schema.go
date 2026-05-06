@@ -50,7 +50,7 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Size of the gateway instance. Required for CSP spoke instances, not applicable for Edge.",
+			Description: "Size of the gateway instance. Required for CSP spoke instances and other edge spoke instances. Not supported for Equinix or Megaport.",
 		},
 		"zone": {
 			Type:     schema.TypeString,

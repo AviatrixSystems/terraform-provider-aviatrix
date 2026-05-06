@@ -23,8 +23,8 @@ func GroupRequiredSchema() map[string]*schema.Schema {
 		},
 		"group_instance_size": {
 			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Instance size for gateways in the group.",
+			Optional:    true,
+			Description: "Instance size for gateways in the group. Required for CSP gateways and other edge gateways. Not supported for Equinix or Megaport gateways.",
 		},
 		"vpc_id": {
 			Type:             schema.TypeString,

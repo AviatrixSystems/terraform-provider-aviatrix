@@ -24,8 +24,9 @@ func transitInstanceRequiredSchema() map[string]*schema.Schema {
 		},
 		"gw_size": {
 			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Size of the gateway instance.",
+			Optional:    true,
+			Computed:    true,
+			Description: "Size of the gateway instance. Required for CSP transit instances and other edge transit instances. Not supported for Equinix or Megaport.",
 			DiffSuppressFunc: func(_, old, _ string, _ *schema.ResourceData) bool {
 				// Suppress the diff if the old value is "UNKNOWN"
 				return old == "UNKNOWN"

@@ -91,8 +91,9 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"gw_size": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Size of the gateway instance.",
+				Optional:    true,
+				Computed:    true,
+				Description: "Size of the gateway instance. Required for all cloud types except Megaport Edge (cloud_type 1048576).",
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress the diff if the old value is "UNKNOWN"
 					if old == "UNKNOWN" {
@@ -1048,6 +1049,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 
 	cloudType := getInt(d, "cloud_type")
 	flag := false
+	// gw_size is required for all non-edge cloud types
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) && getString(d, "gw_size") == "" {
+		return fmt.Errorf("gw_size is required for cloud_type %d", cloudType)
+	}
 	// create edge transit gateway for AEP & Equinix
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		err := createEdgeTransitGateway(d, client, cloudType)

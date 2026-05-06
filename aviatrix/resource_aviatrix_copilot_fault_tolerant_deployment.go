@@ -213,7 +213,7 @@ func resourceAviatrixCopilotFaultTolerantDeploymentRead(ctx context.Context, d *
 		return diag.Errorf("could not get copilot association status: %v", err)
 	}
 	mustSet(d, "main_copilot_private_ip", copilotAssociationStatus.IP)
-	mustSet(d, "main_copilot_public_ip", copilotAssociationStatus.PublicIp)
+	mustSet(d, "main_copilot_public_ip", copilotAssociationStatus.PublicIP)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil

@@ -123,6 +123,7 @@ go_library(
         "spoke_vpc.go",
         "sumologic_forwarder.go",
         "tags.go",
+        "telix_profile.go",
         "traffic_classifier.go",
         "transit_external_device_conn.go",
         "transit_firenet_policy.go",

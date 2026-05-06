@@ -2,12 +2,15 @@ package goaviatrix
 
 import "context"
 
-func (c *Client) EnableCopilotAssociation(ctx context.Context, addr string) error {
+func (c *Client) EnableCopilotAssociation(ctx context.Context, addr, publicIP, fqdn string) error {
 	form := map[string]string{
 		"action":     "enable_copilot_association",
 		"CID":        c.CID,
 		"copilot_ip": addr,
-		"public_ip":  addr,
+		"public_ip":  publicIP,
+	}
+	if fqdn != "" {
+		form["copilot_fqdn"] = fqdn
 	}
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
 }
@@ -23,7 +26,8 @@ func (c *Client) DisableCopilotAssociation(ctx context.Context) error {
 type CopilotAssociationStatus struct {
 	Status   bool   `json:"status"`
 	IP       string `json:"ip"`
-	PublicIp string `json:"public_ip"`
+	PublicIP string `json:"public_ip,omitempty"`
+	FQDN     string `json:"fqdn,omitempty"`
 }
 
 func (c *Client) GetCopilotAssociationStatus(ctx context.Context) (*CopilotAssociationStatus, error) {
