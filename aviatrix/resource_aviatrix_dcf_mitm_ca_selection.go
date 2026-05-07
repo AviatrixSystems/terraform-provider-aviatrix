@@ -21,7 +21,7 @@ func resourceAviatrixDCFMitmCaSelection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"mitm_ca_id": {
+			"ca_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "DCF MITM CA ID that will be selected as the active CA. Only one CA can be active at a time, so selecting a new CA will automatically deactivate the current active CA.",
@@ -34,7 +34,7 @@ func resourceAviatrixCaDeploymentCreate(ctx context.Context, d *schema.ResourceD
 	client := mustClient(meta)
 
 	// Creation means selecting the given CA as the active CA
-	mitmCAID := getString(d, "mitm_ca_id")
+	mitmCAID := getString(d, "ca_id")
 
 	_, err := client.UpdateDCFMitmCa(ctx, mitmCAID, &goaviatrix.MitmCaPatchRequest{
 		State: goaviatrix.DCFMitmCaStateActive,
@@ -57,9 +57,9 @@ func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("ID %q does not match controller IP. Please provide correct ID for importing.", d.Id())
 	}
 
-	mitmCAID := getString(d, "mitm_ca_id")
+	mitmCAID := getString(d, "ca_id")
 
-	// During import, mitm_ca_id is empty, so we need to find the active CA
+	// During import, ca_id is empty, so we need to find the active CA
 	if mitmCAID == "" {
 		cas, err := client.ListDCFMitmCa(ctx)
 		if err != nil {
@@ -80,7 +80,7 @@ func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return diag.Errorf("failed to get DCF MITM CA: %s", err)
 	}
-	mustSet(d, "mitm_ca_id", mitmCa.CaID)
+	mustSet(d, "ca_id", mitmCa.CaID)
 
 	return nil
 }
@@ -88,7 +88,7 @@ func resourceAviatrixCaDeploymentRead(ctx context.Context, d *schema.ResourceDat
 func resourceAviatrixCaDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
-	mitmCAID := getString(d, "mitm_ca_id")
+	mitmCAID := getString(d, "ca_id")
 
 	_, err := client.UpdateDCFMitmCa(ctx, mitmCAID, &goaviatrix.MitmCaPatchRequest{
 		State: goaviatrix.DCFMitmCaStateActive,

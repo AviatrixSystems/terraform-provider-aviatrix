@@ -13,44 +13,32 @@ The **aviatrix_dcf_tls_profile** resource handles the creation and management of
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Distributed Firewalling TLS Profile with basic configuration
-resource "aviatrix_dcf_tls_profile" "basic" {
-  display_name           = "basic-tls-profile"
-  certificate_validation = "CERTIFICATE_VALIDATION_LOG_ONLY"
-  verify_sni            = true
-}
-```
-
-```hcl
-# Create an Aviatrix Distributed Firewalling TLS Profile with certificate enforcement
-resource "aviatrix_dcf_tls_profile" "enforce" {
-  display_name           = "enforce-tls-profile"
-  certificate_validation = "CERTIFICATE_VALIDATION_ENFORCE"
-  verify_sni            = true
-}
-```
-
-```hcl
 # Use a data source to get the bundle UUID by its name
 data "aviatrix_dcf_trustbundle" "bundle_sample" {
   display_name = "sample-bundle-1"
 }
 
-# Use the data source ID and Create an Aviatrix Distributed Firewalling TLS Profile with custom CA bundle
-resource "aviatrix_dcf_tls_profile" "with_ca_bundle" {
-  display_name           = "ca-bundle-tls-profile"
+# Create an Aviatrix Distributed Firewalling TLS Profile with log only cerificate validation
+resource "aviatrix_dcf_tls_profile" "basic" {
+  display_name           = "basic-tls-profile"
+  certificate_validation = "CERTIFICATE_VALIDATION_LOG_ONLY"
+  verify_sni            = false
+  ca_bundle_id          = data.aviatrix_dcf_trustbundle.bundle_sample.bundle_id
+}
+
+# Create an Aviatrix Distributed Firewalling TLS Profile with certificate enforcement
+resource "aviatrix_dcf_tls_profile" "enforce" {
+  display_name           = "enforce-tls-profile"
   certificate_validation = "CERTIFICATE_VALIDATION_ENFORCE"
   verify_sni            = true
-  ca_bundle_id          = data.aviatrxi_dcf_trustbundle.bundle_sample.id
+  ca_bundle_id          = data.aviatrix_dcf_trustbundle.bundle_sample.bundle_id
 }
-```
 
-```hcl
 # Create an Aviatrix Distributed Firewalling TLS Profile with no certificate validation
 resource "aviatrix_dcf_tls_profile" "no_validation" {
   display_name           = "no-validation-tls-profile"
   certificate_validation = "CERTIFICATE_VALIDATION_NONE"
-  verify_sni            = false
+  verify_sni            = true
 }
 ```
 
@@ -77,6 +65,9 @@ The `certificate_validation` parameter supports the following modes:
 * `CERTIFICATE_VALIDATION_LOG_ONLY` - Certificate validation is performed but only logged, traffic is not blocked
 * `CERTIFICATE_VALIDATION_ENFORCE` - Certificate validation is enforced and connections to origins with invalid certificates will
 be blocked.
+
+-> **NOTE** If `certificate_validation` mode is anything other than `CERTIFICATE_VALIDATION_NONE` the `ca_bundle_id` must be specified.
+
 ## Import
 
 **aviatrix_dcf_tls_profile** can be imported using the TLS profile UUID, e.g.

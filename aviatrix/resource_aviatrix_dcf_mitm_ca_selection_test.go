@@ -31,7 +31,7 @@ func TestAccAviatrixDCFMitmCaSelection_basic(t *testing.T) {
 				Config: testAccDCFMitmCaSelectionBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDCFMitmCaSelectionExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "mitm_ca_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_id"),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ resource "aviatrix_dcf_mitm_ca" "test" {
 }
 
 resource "aviatrix_dcf_mitm_ca_selection" "test" {
-  mitm_ca_id = aviatrix_dcf_mitm_ca.test.ca_id
+  ca_id = aviatrix_dcf_mitm_ca.test.ca_id
 }
 `, testMitmCaPrivateKey(), testMitmCaCertificate())
 }
@@ -104,7 +104,7 @@ resource "aviatrix_dcf_mitm_ca" "test2" {
 }
 
 resource "aviatrix_dcf_mitm_ca_selection" "test" {
-  mitm_ca_id = aviatrix_dcf_mitm_ca.test2.ca_id
+  ca_id = aviatrix_dcf_mitm_ca.test2.ca_id
 }
 `, testMitmCaPrivateKey(), testMitmCaCertificate(), testMitmCaPrivateKey(), testMitmCaCertificate())
 }

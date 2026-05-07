@@ -26,7 +26,7 @@ resource "aviatrix_dcf_mitm_ca" "example" {
 
 # Select the CA as the active MITM CA
 resource "aviatrix_dcf_mitm_ca_selection" "example" {
-  mitm_ca_id = aviatrix_dcf_mitm_ca.example.ca_id
+  ca_id = aviatrix_dcf_mitm_ca.example.ca_id
 }
 ```
 
@@ -45,9 +45,9 @@ resource "aviatrix_dcf_mitm_ca" "backup" {
   certificate_chain = file("${path.module}/backup-ca-cert.pem")
 }
 
-# Select primary CA as active (change mitm_ca_id to switch)
+# Select primary CA as active (change ca_id to switch)
 resource "aviatrix_dcf_mitm_ca_selection" "active" {
-  mitm_ca_id = aviatrix_dcf_mitm_ca.primary.ca_id
+  ca_id = aviatrix_dcf_mitm_ca.primary.ca_id
 }
 ```
 
@@ -57,7 +57,7 @@ The following arguments are supported:
 
 ### Required
 
-* `mitm_ca_id` - (Required) The UUID of the DCF MITM CA to select as the active CA. This can be obtained from the `ca_id` attribute of an `aviatrix_dcf_mitm_ca` resource.
+* `ca_id` - (Required) The UUID of the DCF MITM CA to select as the active CA. This can be obtained from the `ca_id` attribute of an `aviatrix_dcf_mitm_ca` resource.
 
 ## Attribute Reference
 
