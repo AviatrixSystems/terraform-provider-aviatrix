@@ -144,26 +144,28 @@ type TelixDestination struct {
 // TelixProfileItem is the summary view of a Telix export profile returned by
 // the list endpoint.
 type TelixProfileItem struct {
-	ProfileID   string            `json:"profile_id"`
-	DisplayName string            `json:"display_name"`
-	Enabled     bool              `json:"enabled"`
-	CreatedAt   time.Time         `json:"created_at"`
-	Sources     []string          `json:"sources"`
-	Destination TelixDestination  `json:"destination"`
-	Scope       TelixGatewayScope `json:"scope"`
+	ProfileID      string            `json:"profile_id"`
+	DisplayName    string            `json:"display_name"`
+	Enabled        bool              `json:"enabled"`
+	CreatedAt      time.Time         `json:"created_at"`
+	LastModifiedAt time.Time         `json:"last_modified_at"`
+	Sources        []string          `json:"sources"`
+	Destination    TelixDestination  `json:"destination"`
+	Scope          TelixGatewayScope `json:"scope"`
 }
 
 // TelixProfileDetail is the full detail view of a Telix export profile
 // returned by the get endpoint.
 type TelixProfileDetail struct {
-	ProfileID   string             `json:"profile_id"`
-	DisplayName string             `json:"display_name"`
-	Enabled     bool               `json:"enabled"`
-	Sources     []string           `json:"sources"`
-	Destination TelixDestination   `json:"destination"`
-	Scope       TelixGatewayScope  `json:"scope"`
-	Filters     *TelixFilterConfig `json:"filters,omitempty"`
-	CreatedAt   *time.Time         `json:"created_at,omitempty"`
+	ProfileID      string             `json:"profile_id"`
+	DisplayName    string             `json:"display_name"`
+	Enabled        bool               `json:"enabled"`
+	Sources        []string           `json:"sources"`
+	Destination    TelixDestination   `json:"destination"`
+	Scope          TelixGatewayScope  `json:"scope"`
+	Filters        *TelixFilterConfig `json:"filters,omitempty"`
+	CreatedAt      time.Time          `json:"created_at"`
+	LastModifiedAt time.Time          `json:"last_modified_at"`
 }
 
 // TelixProfileListResponse is the response body of the list endpoint.
