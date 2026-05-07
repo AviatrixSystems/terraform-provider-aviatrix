@@ -39,8 +39,8 @@ resource "aviatrix_spoke_transit_attachment" "test_attachment" {
 The following arguments are supported:
 
 ### Required
-* `spoke_gw_name` - (Required) Name of the spoke gateway to attach to transit network.
-* `transit_gw_name` - (Required) Name of the transit gateway to attach the spoke gateway to.
+* `spoke_gw_name` - (Required) Name of the spoke gateway or gateway group to attach to transit network.
+* `transit_gw_name` - (Required) Name of the transit gateway or gateway group to attach the spoke gateway to.
 
 ### Advanced Options
 * `route_tables` - (Optional) Learned routes will be propagated to these route tables. Example: ["rtb-212ff547","rtb-04539787"].

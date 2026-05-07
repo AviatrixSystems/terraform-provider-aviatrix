@@ -91,9 +91,10 @@ type GatewayGroup struct {
 	EnableGatewayLoadBalancer       bool `form:"enable_gateway_load_balancer,omitempty" json:"enable_gateway_load_balancer,omitempty"`
 
 	// Computed (read-only)
-	GwUUIDList []string `json:"gw_uuid_list,omitempty"`
-	VpcUUID    string   `json:"vpc_uuid,omitempty"`
-	VendorName string   `json:"vendor_name,omitempty"`
+	GwUUIDList         []string `json:"gw_uuid_list,omitempty"`
+	VpcUUID            string   `json:"vpc_uuid,omitempty"`
+	VendorName         string   `json:"vendor_name,omitempty"`
+	PrimaryGatewayName string   `json:"primary_gateway_name,omitempty"`
 }
 
 // GatewayGroupResp represents the API response for get gateway group
@@ -185,7 +186,29 @@ func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*Gatewa
 		"CID":        c.CID,
 		"group_uuid": groupUUID,
 	}
+	return c.getGatewayGroupDetails(ctx, form)
+}
 
+// GetGatewayGroupByName retrieves gateway group details by group name.
+// Returns ErrNotFound if no group with the given name exists.
+func (c *Client) GetGatewayGroupByName(ctx context.Context, groupName string) (*GatewayGroup, error) {
+	form := map[string]string{
+		"action":     "get_gateway_group_details_by_name",
+		"CID":        c.CID,
+		"group_name": groupName,
+	}
+	grp, err := c.getGatewayGroupDetails(ctx, form)
+	if err != nil {
+		msg := strings.ToLower(err.Error())
+		if strings.Contains(msg, "does not exist") || strings.Contains(msg, "not found") {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return grp, nil
+}
+
+func (c *Client) getGatewayGroupDetails(ctx context.Context, form map[string]string) (*GatewayGroup, error) {
 	var resp getGatewayGroupDetailsResp
 	err := c.GetAPIContext(ctx, &resp, form["action"], form, BasicCheck)
 	if err != nil {

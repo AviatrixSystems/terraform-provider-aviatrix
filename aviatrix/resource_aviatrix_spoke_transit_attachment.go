@@ -31,14 +31,14 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
-				Description:  "Name of the spoke gateway to attach to transit network.",
+				Description:  "Name of the spoke gateway or gateway group to attach to transit network.",
 			},
 			"transit_gw_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
-				Description:  "Name of the transit gateway to attach the spoke gateway to.",
+				Description:  "Name of the transit gateway or gateway group to attach the spoke gateway to.",
 			},
 			"route_tables": {
 				Type: schema.TypeSet,
@@ -103,6 +103,33 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 	}
 }
 
+// resolveGatewayName resolves name to an actual gateway name.
+// It first checks whether name is a gateway group; if so, it returns the
+// primary gateway name from the group's details. If name is not a group, it
+// verifies a gateway with that name exists and returns name as-is. Returns
+// an error if neither a matching group nor a gateway is found.
+func resolveGatewayName(ctx context.Context, client *goaviatrix.Client, name string) (string, error) {
+	group, err := client.GetGatewayGroupByName(ctx, name)
+	if err == nil {
+		if group.PrimaryGatewayName == "" {
+			return "", fmt.Errorf("gateway group %q has no primary gateway", name)
+		}
+		return group.PrimaryGatewayName, nil
+	}
+	if !errors.Is(err, goaviatrix.ErrNotFound) {
+		return "", fmt.Errorf("error looking up gateway group %q: %w", name, err)
+	}
+
+	// Not a group — verify it is a direct gateway name.
+	if _, err := client.GetGateway(&goaviatrix.Gateway{GwName: name}); err == nil {
+		return name, nil
+	} else if !errors.Is(err, goaviatrix.ErrNotFound) {
+		return "", fmt.Errorf("error looking up gateway %q: %w", name, err)
+	}
+
+	return "", fmt.Errorf("no gateway group or gateway found with name %q", name)
+}
+
 /*
  * recoverSpokeTransitAttachment checks if a spoke-transit attachment was
  * created on the controller despite a timeout or connection error. Polls
@@ -150,15 +177,27 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 
 	attachment := marshalSpokeTransitAttachmentInput(d)
 
-	spoke, err := client.GetGateway(&goaviatrix.Gateway{GwName: attachment.SpokeGwName})
+	ctx := context.Background()
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, attachment.SpokeGwName)
+	if err != nil {
+		return fmt.Errorf("could not resolve spoke_gw_name %q: %w", attachment.SpokeGwName, err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, attachment.TransitGwName)
+	if err != nil {
+		return fmt.Errorf("could not resolve transit_gw_name %q: %w", attachment.TransitGwName, err)
+	}
+	attachment.SpokeGwName = resolvedSpokeGwName
+	attachment.TransitGwName = resolvedTransitGwName
+
+	spoke, err := client.GetGateway(&goaviatrix.Gateway{GwName: resolvedSpokeGwName})
 	if err != nil {
 		return fmt.Errorf("could not find spoke gateway: %w", err)
 	}
 
 	// get transit gateway details
-	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
+	transitGatewayDetails, err := getGatewayDetails(client, resolvedTransitGwName)
 	if err != nil {
-		return fmt.Errorf("could not get transit gateway details for %s: %w", attachment.TransitGwName, err)
+		return fmt.Errorf("could not get transit gateway details for %s: %w", resolvedTransitGwName, err)
 	}
 	// get edge transit logical interface names
 	if err := getEdgeTransitLogicalIfNames(d, transitGatewayDetails, attachment); err != nil {
@@ -173,17 +212,17 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 		return fmt.Errorf("'tunnel_count' can only be specified with max performance enabled. Please set 'enable_max_performance' to true")
 	}
 
-	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
+	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	flag := false
 	defer func() { _ = resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	timeout := 15 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	attachCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
 	for {
 		try++
-		err := client.CreateSpokeTransitAttachment(ctx, attachment)
+		err := client.CreateSpokeTransitAttachment(attachCtx, attachment)
 		if err != nil {
 			if strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
 				// already joined, so we can break out of the loop
@@ -191,7 +230,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 			}
 			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
 				if try == maxTries {
-					return fmt.Errorf("could not attach spoke: %s to transit %s: %w", attachment.SpokeGwName, attachment.TransitGwName, err)
+					return fmt.Errorf("could not attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
 				}
 				time.Sleep(backoff)
 				// Double the backoff time after each failed try
@@ -209,7 +248,7 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 					break
 				}
 			}
-			return fmt.Errorf("failed to attach spoke: %s to transit %s: %w", attachment.SpokeGwName, attachment.TransitGwName, err)
+			return fmt.Errorf("failed to attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
 		}
 		break
 	}
@@ -254,7 +293,8 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 
 	spokeGwName := getString(d, "spoke_gw_name")
 	transitGwName := getString(d, "transit_gw_name")
-	if spokeGwName == "" || transitGwName == "" {
+	isImport := spokeGwName == "" || transitGwName == ""
+	if isImport {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no spoke_gw_name or transit_gw_name received. Import Id is %s", id)
 		d.SetId(id)
@@ -264,11 +304,23 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 		}
 		spokeGwName = parts[0]
 		transitGwName = parts[1]
+		mustSet(d, "spoke_gw_name", spokeGwName)
+		mustSet(d, "transit_gw_name", transitGwName)
+	}
+
+	ctx := context.Background()
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, spokeGwName)
+	if err != nil {
+		return fmt.Errorf("could not resolve spoke_gw_name %q: %w", spokeGwName, err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, transitGwName)
+	if err != nil {
+		return fmt.Errorf("could not resolve transit_gw_name %q: %w", transitGwName, err)
 	}
 
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   spokeGwName,
-		TransitGwName: transitGwName,
+		SpokeGwName:   resolvedSpokeGwName,
+		TransitGwName: resolvedTransitGwName,
 	}
 
 	attachment, err := client.GetSpokeTransitAttachment(spokeTransitAttachment)
@@ -279,8 +331,6 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 		}
 		return fmt.Errorf("could not find spoke_transit_attachment: %w", err)
 	}
-	mustSet(d, "spoke_gw_name", attachment.SpokeGwName)
-	mustSet(d, "transit_gw_name", attachment.TransitGwName)
 	mustSet(d, "spoke_bgp_enabled", attachment.SpokeBgpEnabled)
 
 	if attachment.RouteTables != "" {
@@ -296,8 +346,8 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 	}
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-		TransitGatewayName1: spokeGwName,
-		TransitGatewayName2: transitGwName,
+		TransitGatewayName1: resolvedSpokeGwName,
+		TransitGatewayName2: resolvedTransitGwName,
 	}
 
 	transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
@@ -307,16 +357,16 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 	}
 
 	// set the transit gateway logical interface names only for edge gateways
-	transitGateway, err := getGatewayDetails(client, transitGwName)
+	transitGateway, err := getGatewayDetails(client, resolvedTransitGwName)
 	if err != nil {
-		return fmt.Errorf("could not get transit gateway details for %s: %w", transitGwName, err)
+		return fmt.Errorf("could not get transit gateway details for %s: %w", resolvedTransitGwName, err)
 	}
 
 	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
 			logicalIfNames, err := getLogicalIfNames(transitGateway, attachment.TransitGatewayLogicalIfNames)
 			if err != nil {
-				return fmt.Errorf("could not get logical interface names for edge transit gateway %s: %w", transitGwName, err)
+				return fmt.Errorf("could not get logical interface names for edge transit gateway %s: %w", resolvedTransitGwName, err)
 			}
 			_ = d.Set("transit_gateway_logical_ifnames", logicalIfNames)
 		}
@@ -355,7 +405,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 		mustSet(d, "transit_prepend_as_path", nil)
 	}
 
-	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
+	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	return nil
 }
 
@@ -368,8 +418,15 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta a
 
 	d.Partial(true)
 
-	spokeGwName := getString(d, "spoke_gw_name")
-	transitGwName := getString(d, "transit_gw_name")
+	ctx := context.Background()
+	spokeGwName, err := resolveGatewayName(ctx, client, getString(d, "spoke_gw_name"))
+	if err != nil {
+		return fmt.Errorf("could not resolve spoke_gw_name: %w", err)
+	}
+	transitGwName, err := resolveGatewayName(ctx, client, getString(d, "transit_gw_name"))
+	if err != nil {
+		return fmt.Errorf("could not resolve transit_gw_name: %w", err)
+	}
 
 	if d.HasChange("spoke_prepend_as_path") {
 		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
@@ -420,13 +477,23 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta a
 func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
+	ctx := context.Background()
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, getString(d, "spoke_gw_name"))
+	if err != nil {
+		return fmt.Errorf("could not resolve spoke_gw_name: %w", err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, getString(d, "transit_gw_name"))
+	if err != nil {
+		return fmt.Errorf("could not resolve transit_gw_name: %w", err)
+	}
+
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   getString(d, "spoke_gw_name"),
-		TransitGwName: getString(d, "transit_gw_name"),
+		SpokeGwName:   resolvedSpokeGwName,
+		TransitGwName: resolvedTransitGwName,
 	}
 	if err := client.DeleteSpokeTransitAttachment(spokeTransitAttachment); err != nil {
-		return fmt.Errorf("could not detach spoke: %s from transit %s: %w", spokeTransitAttachment.SpokeGwName,
-			spokeTransitAttachment.TransitGwName, err)
+		return fmt.Errorf("could not detach spoke: %s from transit %s: %w", resolvedSpokeGwName,
+			resolvedTransitGwName, err)
 	}
 
 	return nil

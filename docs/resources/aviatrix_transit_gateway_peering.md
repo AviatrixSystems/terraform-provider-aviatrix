@@ -51,8 +51,8 @@ resource "aviatrix_transit_gateway_peering" "test_edge_transit_gateway_peering" 
 The following arguments are supported:
 
 ### Required
-* `transit_gateway_name1` - (Required) The first transit gateway name to make a peer pair.
-* `transit_gateway_name2` - (Required) The second transit gateway name to make a peer pair.
+* `transit_gateway_name1` - (Required) The first transit gateway or gateway group name to make a peer pair.
+* `transit_gateway_name2` - (Required) The second transit gateway or gateway group name to make a peer pair.
 
 ### Optional
 * `gateway1_excluded_network_cidrs` - (Optional) List of excluded network CIDRs for the first transit gateway.

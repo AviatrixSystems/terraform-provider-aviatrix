@@ -51,8 +51,8 @@ The following arguments are supported:
 
 ### Required
 
-* `spoke_gw_name` - (Required) Name of the Edge as a Spoke to attach to transit network.
-* `transit_gw_name` - (Required) Name of the transit gateway to attach the Edge as a Spoke to.
+* `spoke_gw_name` - (Required) Name of the Edge as a Spoke or gateway group to attach to transit network.
+* `transit_gw_name` - (Required) Name of the transit gateway or gateway group to attach the Edge as a Spoke to.
 
 ### Options
 

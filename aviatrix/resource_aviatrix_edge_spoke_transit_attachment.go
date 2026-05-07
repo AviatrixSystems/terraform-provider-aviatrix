@@ -29,13 +29,13 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the Edge as a Spoke to attach to the transit network.",
+				Description: "Name of the Edge as a Spoke or gateway group to attach to the transit network.",
 			},
 			"transit_gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the transit gateway to attach the Edge as a Spoke to.",
+				Description: "Name of the transit gateway or gateway group to attach the Edge as a Spoke to.",
 			},
 			"enable_over_private_network": {
 				Type:        schema.TypeBool,
@@ -169,8 +169,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 
 	attachment := marshalEdgeSpokeTransitAttachmentInput(d)
 
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, attachment.SpokeGwName)
+	if err != nil {
+		return diag.Errorf("could not resolve spoke_gw_name %q: %v", attachment.SpokeGwName, err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, attachment.TransitGwName)
+	if err != nil {
+		return diag.Errorf("could not resolve transit_gw_name %q: %v", attachment.TransitGwName, err)
+	}
+	attachment.SpokeGwName = resolvedSpokeGwName
+	attachment.TransitGwName = resolvedTransitGwName
+
 	// get edge spoke logical interface names
-	edgeSpoke, err := client.GetEdgeSpoke(ctx, attachment.SpokeGwName)
+	edgeSpoke, err := client.GetEdgeSpoke(ctx, resolvedSpokeGwName)
 	if err != nil {
 		return diag.Errorf("failed to get spoke gateway details: %v", err)
 	}
@@ -179,9 +190,9 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	}
 
 	// Get transit gateway details
-	transitGatewayDetails, err := getGatewayDetails(client, attachment.TransitGwName)
+	transitGatewayDetails, err := getGatewayDetails(client, resolvedTransitGwName)
 	if err != nil {
-		return diag.Errorf("could not get transit gateway details for %s: %v", attachment.TransitGwName, err)
+		return diag.Errorf("could not get transit gateway details for %s: %v", resolvedTransitGwName, err)
 	}
 	// get edge transit logical interface names
 	if err := getEdgeTransitLogicalIfNames(d, transitGatewayDetails, attachment); err != nil {
@@ -197,7 +208,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 		}
 	}
 
-	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
+	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	flag := false
 	defer resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 
@@ -213,7 +224,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 			}
 			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
 				!strings.Contains(err.Error(), "try again") {
-				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
 			}
 		} else {
 			break
@@ -222,14 +233,14 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 			time.Sleep(time.Duration(retryInterval) * time.Second)
 		} else {
 			d.SetId("")
-			return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+			return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
 		}
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {
 		transGwPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1: attachment.SpokeGwName,
-			TransitGatewayName2: attachment.TransitGwName,
+			TransitGatewayName1: resolvedSpokeGwName,
+			TransitGatewayName2: resolvedTransitGwName,
 		}
 
 		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.SpokePrependAsPath)
@@ -240,8 +251,8 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 
 	if len(attachment.TransitPrependAsPath) != 0 {
 		transGwPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1: attachment.TransitGwName,
-			TransitGatewayName2: attachment.SpokeGwName,
+			TransitGatewayName1: resolvedTransitGwName,
+			TransitGatewayName2: resolvedSpokeGwName,
 		}
 
 		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.TransitPrependAsPath)
@@ -274,15 +285,24 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		if len(parts) != 2 {
 			return diag.Errorf("import id is invalid, expecting spoke_gw_name~transit_gw_name, but received: %s", id)
 		}
-		mustSet(d, "spoke_gw_name", parts[0])
-		mustSet(d, "transit_gw_name", parts[1])
 		spokeGwName = parts[0]
 		transitGwName = parts[1]
+		mustSet(d, "spoke_gw_name", spokeGwName)
+		mustSet(d, "transit_gw_name", transitGwName)
+	}
+
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, spokeGwName)
+	if err != nil {
+		return diag.Errorf("could not resolve spoke_gw_name %q: %v", spokeGwName, err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, transitGwName)
+	if err != nil {
+		return diag.Errorf("could not resolve transit_gw_name %q: %v", transitGwName, err)
 	}
 
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   spokeGwName,
-		TransitGwName: transitGwName,
+		SpokeGwName:   resolvedSpokeGwName,
+		TransitGwName: resolvedTransitGwName,
 	}
 
 	attachment, err := client.GetEdgeSpokeTransitAttachment(ctx, spokeTransitAttachment)
@@ -315,9 +335,9 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		}
 	}
 
-	edgeSpoke, err := client.GetEdgeSpoke(ctx, spokeGwName)
+	edgeSpoke, err := client.GetEdgeSpoke(ctx, resolvedSpokeGwName)
 	if err != nil {
-		return diag.Errorf("couldn't get wan interfaces for edge gateway %s: %s", spokeGwName, err)
+		return diag.Errorf("couldn't get wan interfaces for edge gateway %s: %s", resolvedSpokeGwName, err)
 	}
 
 	if goaviatrix.IsCloudType(edgeSpoke.CloudType, goaviatrix.EDGEMEGAPORT) {
@@ -346,16 +366,16 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 		}
 	}
 
-	transitGateway, err := getGatewayDetails(client, transitGwName)
+	transitGateway, err := getGatewayDetails(client, resolvedTransitGwName)
 	if err != nil {
-		return diag.Errorf("could not get transit gateway details for %s: %v", transitGwName, err)
+		return diag.Errorf("could not get transit gateway details for %s: %v", resolvedTransitGwName, err)
 	}
 
 	if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		if len(attachment.TransitGatewayLogicalIfNames) > 0 {
 			logicalIfNames, err := getLogicalIfNames(transitGateway, attachment.TransitGatewayLogicalIfNames)
 			if err != nil {
-				return diag.Errorf("could not get logical interface names for edge transit gateway %s: %v", transitGwName, err)
+				return diag.Errorf("could not get logical interface names for edge transit gateway %s: %v", resolvedTransitGwName, err)
 			}
 			_ = d.Set("transit_gateway_logical_ifnames", logicalIfNames)
 		}
@@ -363,7 +383,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	if err := d.Set("disable_activemesh", attachment.DisableActivemesh); err != nil {
 		return diag.Errorf("error setting disable_activemesh: %v", err)
 	}
-	d.SetId(spokeGwName + "~" + transitGwName)
+	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	return nil
 }
 
@@ -385,8 +405,14 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 
 	d.Partial(true)
 
-	spokeGwName := getString(d, "spoke_gw_name")
-	transitGwName := getString(d, "transit_gw_name")
+	spokeGwName, err := resolveGatewayName(ctx, client, getString(d, "spoke_gw_name"))
+	if err != nil {
+		return diag.Errorf("could not resolve spoke_gw_name: %v", err)
+	}
+	transitGwName, err := resolveGatewayName(ctx, client, getString(d, "transit_gw_name"))
+	if err != nil {
+		return diag.Errorf("could not resolve transit_gw_name: %v", err)
+	}
 
 	if d.HasChange("spoke_prepend_as_path") {
 		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
@@ -450,13 +476,22 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 func resourceAviatrixEdgeSpokeTransitAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
+	resolvedSpokeGwName, err := resolveGatewayName(ctx, client, getString(d, "spoke_gw_name"))
+	if err != nil {
+		return diag.Errorf("could not resolve spoke_gw_name: %v", err)
+	}
+	resolvedTransitGwName, err := resolveGatewayName(ctx, client, getString(d, "transit_gw_name"))
+	if err != nil {
+		return diag.Errorf("could not resolve transit_gw_name: %v", err)
+	}
+
 	attachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   getString(d, "spoke_gw_name"),
-		TransitGwName: getString(d, "transit_gw_name"),
+		SpokeGwName:   resolvedSpokeGwName,
+		TransitGwName: resolvedTransitGwName,
 	}
 
 	if err := client.DeleteSpokeTransitAttachment(attachment); err != nil {
-		return diag.Errorf("could not detach Edge as a Spoke: %s from transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+		return diag.Errorf("could not detach Edge as a Spoke: %s from transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
 	}
 
 	return nil
