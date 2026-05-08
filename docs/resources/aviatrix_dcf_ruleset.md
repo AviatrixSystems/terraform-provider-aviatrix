@@ -20,7 +20,7 @@ The two terraform attachment points are:
 The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
 It is best to attach a policy_group to these above attachment_points, then place any ruleset in that policy_group, for easier management.
 
-Note: We cannot attach 2 objects to these attachment points, only one object can be attached to each. If we want to build out a tree of multiple objects, we can attach a policy group to the above attachment points, and then create child attachment points as needed under this group.
+~> **NOTE:** We cannot attach 2 objects to these attachment points, only one object can be attached to each. If we want to build out a tree of multiple objects, we can attach a policy group to the above attachment points, and then create child attachment points as needed under this group.
 
 Steps to attach a ruleset to one of the above attachment points or any other attachment point:
 
@@ -126,6 +126,8 @@ resource "aviatrix_dcf_ruleset" "test" {
   }
 }
 ```
+
+~> **NOTE:** Modifying a rule within an existing ruleset, `terraform plan` will show the ruleset as updated (`~`), and the changed rule will appear as removed (`---`) and re-added (`+++`). This is only how Terraform displays the diff — the rule is **not** deleted and recreated. The entire ruleset is updated atomically in a single operation, so there is **no enforcement gap** during the change.
 
 ## Argument Reference
 

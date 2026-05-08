@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -86,8 +87,7 @@ var dcfRuleElem = &schema.Resource{
 		},
 		"priority": {
 			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Required:    true,
 			Description: "Priority level of the rule",
 		},
 		"protocol": {
@@ -199,42 +199,51 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 	}
 }
 
-func getUUIDSFromRules(rules []any) (map[string]struct{}, error) {
+func getUUIDSFromRules(rules []goaviatrix.DCFPolicy) (map[string]struct{}, error) {
 	setUUID := make(map[string]struct{})
 	for _, rule := range rules {
-		ruleMap, ok := rule.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("rules must be of type map[string]any")
+		uuid := rule.UUID
+		if uuid != "" {
+			setUUID[uuid] = struct{}{}
 		}
-		uuid, ok := ruleMap["uuid"].(string)
-		if !ok {
-			return nil, fmt.Errorf("uuid must be of type string")
-		}
-		setUUID[uuid] = struct{}{}
 	}
 	return setUUID, nil
 }
 
-func buildNameToUUIDMapForUUIDNotInGivenSet(rules []any, givenSet map[string]struct{}) (map[string]string, error) {
+func buildNameToUUIDMapForUUIDNotInGivenSet(rules []goaviatrix.DCFPolicy, givenSet map[string]struct{}) (map[string]string, error) {
 	nameToUUIDMap := make(map[string]string)
-	for _, ruleInterface := range rules {
-		var ok bool
-
-		ruleMap, ok := ruleInterface.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("rules must be of type map[string]any")
-		}
-
-		rule, err := marshalPolicyInput(ruleMap)
-		if err != nil {
-			return nil, err
-		}
+	for _, rule := range rules {
 		// If the rule is not in the new set, then it might be an old rule that had attributes changed or a rule that was deleted, so we will add it to the map.
 		if _, exists := givenSet[rule.UUID]; !exists {
 			nameToUUIDMap[rule.Name] = rule.UUID
 		}
 	}
 	return nameToUUIDMap, nil
+}
+
+func sortRules(rules []goaviatrix.DCFPolicy) {
+	slices.SortFunc(rules, func(a goaviatrix.DCFPolicy, b goaviatrix.DCFPolicy) int {
+		return a.Priority - b.Priority
+	})
+}
+
+func marshalRulesList(rulesSet *schema.Set) ([]goaviatrix.DCFPolicy, error) {
+	if rulesSet == nil {
+		return []goaviatrix.DCFPolicy{}, nil
+	}
+	rules := []goaviatrix.DCFPolicy{}
+	for _, rule := range rulesSet.List() {
+		ruleMap, ok := rule.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("rules must be of type map[string]any")
+		}
+		rule, err := marshalPolicyInput(ruleMap)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, *rule)
+	}
+	return rules, nil
 }
 
 func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, error) {
@@ -273,14 +282,15 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	if !ok {
 		return nil, fmt.Errorf("ruleset rules must be of type *schema.Set")
 	}
-	newRules := []any{}
-	if newRulesSet != nil {
-		newRules = newRulesSet.List()
+	newRules, err := marshalRulesList(newRulesSet)
+	if err != nil {
+		return nil, err
 	}
-	oldRules := []any{}
-	if oldRulesSet != nil {
-		oldRules = oldRulesSet.List()
+	oldRules, err := marshalRulesList(oldRulesSet)
+	if err != nil {
+		return nil, err
 	}
+	sortRules(newRules)
 
 	// Build a set of UUIDs for the new rules.
 	newUUIDs, err := getUUIDSFromRules(newRules)
@@ -294,23 +304,14 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	}
 
 	policyList.Policies = []goaviatrix.DCFPolicy{}
-	for _, policyInterface := range newRules {
-		var ok bool
-
-		policyMap, ok := policyInterface.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("rules must be of type map[string]any")
-		}
-
-		policy, err := marshalPolicyInput(policyMap)
-		if err != nil {
-			return nil, err
-		}
+	for _, policy := range newRules {
 		// If the rule name exists in the mapped old rule name => UUID map, and that the new rule does not have a UUID, then we will set the UUID to the old rule UUID.
 		if policyUUID, exists := oldRuleNameToUUIDMap[policy.Name]; exists && policyUUID != "" {
 			policy.UUID = policyUUID
+			// delete the mapping so that we do not reuse it in case of a duplicate name
+			delete(oldRuleNameToUUIDMap, policy.Name)
 		}
-		policyList.Policies = append(policyList.Policies, *policy)
+		policyList.Policies = append(policyList.Policies, policy)
 	}
 
 	policyList.UUID = d.Id()
