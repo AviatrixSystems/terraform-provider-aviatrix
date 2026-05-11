@@ -22,6 +22,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	// maxErrorBody limits only the response body included in error messages.
+	// The full body is still preserved for JSON decoding.
+	maxErrorBody = 8 << 10 // 8 KiB
+)
+
 // LoginResp represents the response object from the `login` action
 type LoginResp struct {
 	Return  bool   `json:"return"`
@@ -499,15 +505,18 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 
 // checkAPIResp will decode the response and check for any errors with the provided checkFunc
 func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponseFunc) error {
-	var data APIResp
-	var b bytes.Buffer
-	_, err := b.ReadFrom(resp.Body)
+	if resp == nil || resp.Body == nil {
+		return fmt.Errorf("nil response/body for %q", action)
+	}
+
+	body, err := readBody(resp.Body)
 	if err != nil {
 		return fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
-	body := b.String()
-	if err = json.Unmarshal([]byte(body), &data); err != nil {
-		return fmt.Errorf("json Decode %q failed: %w\n Body: %s", action, err, body)
+
+	var data APIResp
+	if err = json.Unmarshal(body, &data); err != nil {
+		return fmt.Errorf("json Decode %q failed: %w\n Body: %s", action, err, bodyForError(body))
 	}
 
 	return checkFunc(action, "Post", data.Reason, data.Return)
@@ -516,23 +525,28 @@ func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponse
 // checkAndReturnAPIResp will decode the response and check for any errors with the provided checkFunc.
 // If there are no errors, the response will be put into the return value v.
 func checkAndReturnAPIResp(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) error {
-	var data APIResp
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(resp.Body)
+	if resp == nil || resp.Body == nil {
+		return fmt.Errorf("nil response/body for %q", action)
+	}
+
+	body, err := readBody(resp.Body)
 	if err != nil {
 		return fmt.Errorf("reading response body %q failed: %w", action, err)
 	}
-	bodyString := buf.String()
 
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("json decode into standard format failed: %w (body: %s)", err, bodyString)
+	var data APIResp
+	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&data); err != nil {
+		return fmt.Errorf("json decode into standard format failed: %w (body: %s)", err, bodyForError(body))
 	}
+
 	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
 		return err
 	}
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-		return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyString)
+
+	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&v); err != nil {
+		return fmt.Errorf("json Decode failed: %w\n Body: %s", err, bodyForError(body))
 	}
+
 	return nil
 }
 
@@ -541,6 +555,29 @@ func checkAndReturnAPIResp(resp *http.Response, v interface{}, method, action st
 // If no errors, we will decode into the user defined structure that is passed in
 func (c *Client) GetAPI(v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
 	return c.GetAPIContext(context.Background(), v, action, d, checkFunc)
+}
+
+// readBody reads the entire response body.
+// NOTE: No size limit is applied here because the API does not support pagination.
+// When pagination is added, a cap should be reintroduced.
+func readBody(r io.Reader) ([]byte, error) {
+	if r == nil {
+		return nil, fmt.Errorf("nil response body")
+	}
+	return io.ReadAll(r)
+}
+
+func bodyForError(body []byte) string {
+	if len(body) <= maxErrorBody {
+		return string(body)
+	}
+
+	return fmt.Sprintf(
+		"%s\n... response body truncated in error message: showing %d of %d bytes ...",
+		string(body[:maxErrorBody]),
+		maxErrorBody,
+		len(body),
+	)
 }
 
 // GetAPIContext makes a GET request to the Aviatrix API
@@ -598,18 +635,19 @@ func (c *Client) GetAPIContext(
 	}
 	defer resp.Body.Close()
 
-	const maxBody = 256 << 10 // 256 KiB
-	body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
+	body, readErr := readBody(resp.Body)
 	if readErr != nil {
 		return fmt.Errorf("read response body for %s failed: %w", action, readErr)
-	}
-	if len(body) > maxBody {
-		body = body[:maxBody]
 	}
 
 	var data APIResp
 	if err := json.Unmarshal(body, &data); err != nil {
-		return fmt.Errorf("json decode into standard format failed for %s: %w\nBody: %s", action, err, string(body))
+		return fmt.Errorf(
+			"json decode into standard format failed for %s: %w\nBody: %s",
+			action,
+			err,
+			bodyForError(body),
+		)
 	}
 
 	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
@@ -617,7 +655,12 @@ func (c *Client) GetAPIContext(
 	}
 
 	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("json decode into target failed for %s: %w\nBody: %s", action, err, string(body))
+		return fmt.Errorf(
+			"json decode into target failed for %s: %w\nBody: %s",
+			action,
+			err,
+			bodyForError(body),
+		)
 	}
 
 	return nil
@@ -796,21 +839,28 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 			return resp, err
 		}
 
-		buf := new(bytes.Buffer)
-		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+		if resp == nil || resp.Body == nil {
+			return resp, fmt.Errorf("nil response/body")
+		}
+
+		body, readErr := readBody(resp.Body)
+		if readErr != nil {
 			_ = resp.Body.Close()
-			return resp, readErr
+			return resp, fmt.Errorf("read response body failed: %w", readErr)
 		}
 		_ = resp.Body.Close()
 
-		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
-		resp.Body = io.NopCloser(buf)
+		// Replace resp.Body with a new ReadCloser so that other methods can read the body again.
+		resp.Body = io.NopCloser(bytes.NewReader(body))
 
 		if strings.Contains(resp.Header.Get("Content-Type"), "json") {
-			bodyString := buf.String()
 			data = new(APIResp)
-			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-				return resp, fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
+			if err := json.NewDecoder(bytes.NewReader(body)).Decode(data); err != nil {
+				return resp, fmt.Errorf(
+					"json Decode into standard format failed: %w\n Body: %s",
+					err,
+					bodyForError(body),
+				)
 			}
 
 			// Any error not related to expired CID should return
@@ -904,21 +954,28 @@ func (c *Client) RequestContextLogin(ctx context.Context, verb string, path stri
 			return resp, err
 		}
 
-		buf := new(bytes.Buffer)
-		if _, readErr := buf.ReadFrom(resp.Body); readErr != nil {
+		if resp == nil || resp.Body == nil {
+			return resp, fmt.Errorf("nil response/body")
+		}
+
+		body, readErr := readBody(resp.Body)
+		if readErr != nil {
 			_ = resp.Body.Close()
-			return resp, readErr
+			return resp, fmt.Errorf("read response body failed: %w", readErr)
 		}
 		_ = resp.Body.Close()
 
-		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
-		resp.Body = io.NopCloser(buf)
+		// Replace resp.Body with a new ReadCloser so that other methods can read the body again.
+		resp.Body = io.NopCloser(bytes.NewReader(body))
 
 		if strings.Contains(resp.Header.Get("Content-Type"), "json") {
-			bodyString := buf.String()
 			data = new(APIResp)
-			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-				return resp, fmt.Errorf("json Decode into standard format failed: %w\n Body: %s", err, bodyString)
+			if err := json.NewDecoder(bytes.NewReader(body)).Decode(data); err != nil {
+				return resp, fmt.Errorf(
+					"json Decode into standard format failed: %w\n Body: %s",
+					err,
+					bodyForError(body),
+				)
 			}
 
 			// Any error not related to expired CID should return
