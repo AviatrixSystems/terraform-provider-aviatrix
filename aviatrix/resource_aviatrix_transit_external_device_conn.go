@@ -243,12 +243,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_remote_gateway_ip": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ForceNew:     true,
-				Description:  "Backup remote gateway IP.",
-				ValidateFunc: validation.IsIPv4Address,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
+				Description: "Backup remote gateway IP.",
 			},
 			"backup_bgp_remote_as_num": {
 				Type:         schema.TypeString,
@@ -723,6 +722,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		} else {
 			if externalDeviceConn.BackupRemoteGatewayIP == "" {
 				return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
+			}
+			if backupIP := net.ParseIP(externalDeviceConn.BackupRemoteGatewayIP); backupIP == nil || backupIP.To4() == nil {
+				return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a valid IPv4 address, got: %s", externalDeviceConn.BackupRemoteGatewayIP)
 			}
 			remoteIP := strings.Split(externalDeviceConn.RemoteGatewayIP, ",")
 			if len(remoteIP) > 1 {

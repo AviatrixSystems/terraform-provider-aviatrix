@@ -1041,6 +1041,16 @@ func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.Re
 		return err
 	}
 
+	// When HA is being added/removed/replaced, ha_eip is recomputed by the
+	// controller. Without flagging it as new-computed, plan keeps the stale
+	// state value (e.g. "" from a non-HA gateway) and downstream resources that
+	// interpolate ha_eip into a validated IP field fail at plan time.
+	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") {
+		if err := d.SetNewComputed("ha_eip"); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2171,7 +2181,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 			mustSet(d, "ha_availability_domain", "")
 			mustSet(d, "ha_azure_eip_name_resource_group", "")
 			mustSet(d, "ha_cloud_instance_id", "")
-			mustSet(d, "ha_eip", "")
+			// Leave ha_eip unset (null) when HA is disabled so downstream
+			// resources referencing it see a known-null value at plan time
+			// instead of "" (which trips IPv4 validators on consumers).
 			mustSet(d, "ha_fault_domain", "")
 			mustSet(d, "ha_gw_name", "")
 			mustSet(d, "ha_gw_size", "")
@@ -2553,7 +2565,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 			mustSet(d, "ha_availability_domain", "")
 			mustSet(d, "ha_azure_eip_name_resource_group", "")
 			mustSet(d, "ha_cloud_instance_id", "")
-			mustSet(d, "ha_eip", "")
+			// Leave ha_eip unset (null) when HA is disabled so downstream
+			// resources referencing it see a known-null value at plan time
+			// instead of "" (which trips IPv4 validators on consumers).
 			mustSet(d, "ha_fault_domain", "")
 			mustSet(d, "ha_gw_name", "")
 			mustSet(d, "ha_gw_size", "")
