@@ -1,0 +1,87 @@
+---
+subcategory: "TGW Orchestrator"
+layout: "aviatrix"
+page_title: "Aviatrix: aviatrix_aws_tgw"
+description: |-
+  Creates and manages Aviatrix AWS TGWs
+---
+
+# aviatrix_aws_tgw
+
+The **aviatrix_aws_tgw** resource allows the creation and management of Aviatrix-created AWS TGWs.
+
+## Example Usage
+
+```hcl
+# Create an Aviatrix AWS TGW
+resource "aviatrix_aws_tgw" "test_aws_tgw" {
+  account_name                      = "devops"
+  aws_side_as_number                = "64512"
+  region                            = "us-east-1"
+  tgw_name                          = "test-AWS-TGW"
+}
+```
+```hcl
+# Create an Aviatrix AWSGov TGW
+resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
+  account_name                      = "devops"
+  cloud_type                        = 256
+  aws_side_as_number                = "64512"
+  region                            = "us-gov-east-1"
+  tgw_name                          = "test-AWSGov-TGW"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+### Required
+
+* `tgw_name` - (Required) Name of the AWS TGW to be created
+* `account_name` - (Required) Name of the cloud account in the Aviatrix controller.
+* `region` - (Required) AWS region of AWS TGW to be created in
+* `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-4294967294. Example: "65001".
+
+### Misc.
+
+* `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWSGov (256). Default value: 1.
+* `enable_multicast` - (Optional) Enable multicast. Default value: false. Valid values: true, false. Available in provider version R2.17+.
+* `cidrs` - (Optional) Set of TGW CIDRs. For example, `cidrs = ["10.0.10.0/24", "10.1.10.0/24"]`. Available as of provider version R2.18.1+.
+* `inspection_mode` - (Optional) Inspection mode. Valid values: "Domain-based", "Connection-based". Default value: "Domain-based". Available as of provider version R2.23+.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `tgw_id` - TGW ID. Available as of provider version R2.19+.
+
+The following arguments are deprecated:
+
+* `security_domains` - (Required if `manage_security_domain` is true) Security Domains to create together with AWS TGW's creation. Three default domains, along with the connections between them, are created automatically. These three domains can't be deleted, but the connection between any two of them can be.
+  * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
+  * `aviatrix_firewall` - (Optional) Set to true if the security domain is to be used as an Aviatrix Firewall Domain for the Aviatrix Firewall Network. Valid values: true, false. Default value: false.
+  * `native_egress` - (Optional) Set to true if the security domain is to be used as a native egress domain (for non-Aviatrix Firewall Network-based central Internet bound traffic). Valid values: true, false. Default value: false.
+  * `native_firewall` - (Optional) Set to true if the security domain is to be used as a native firewall domain (for non-Aviatrix Firewall Network-based firewall traffic inspection). Valid values: true, false. Default value: false.
+  * `connected_domains` - (Optional) A list of domains connected to the domain (name: `security_domain_name`) together with its creation.
+* `attached_vpc` - (Optional) A list of VPCs attached to the domain (name: `security_domain_name`) together with its creation. This list needs to be null for "Aviatrix_Edge_Domain".
+  * `vpc_region` - (Required) Region of the VPC, needs to be consistent with AWS TGW's region.
+  * `vpc_account_name` - (Required) Cloud account name of the VPC in the Aviatrix controller.
+  * `vpc_id` - (Required) VPC ID of the VPC to be attached to the security domain
+  * `subnets` - (Optional) Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, the Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment. Example: "subnet-214f5646,subnet-085e8c81a89d70846".
+  * `route_tables` - (Optional) Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables. Example: "rtb-212ff547,rtb-045397874c170c745".
+  * `customized_routes` - (Optional) Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
+  * `customized_route_advertisement` - (Optional) Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
+  * `disable_local_route_propagation` - (Optional) Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same security domain. Valid values: true, false. Default value: false.
+* `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
+* `manage_security_domain` - (Optional) This parameter is a switch used to determine whether or not to manage security domains using the **aviatrix_aws_tgw** resource. If this is set to false, creation and management of security domains must be done using the **aviatrix_aws_tgw_security_domain** resource. Valid values: true, false. Default value: true.
+* `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true, false. Default value: true.
+* `manage_vpc_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage VPC attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of VPCs must be done using the **aviatrix_aws_tgw_vpc_attachment** resource. Valid values: true, false. Default value: true.
+
+## Import
+
+**aws_tgw** can be imported using the `tgw_name`, e.g.
+
+```
+$ terraform import aviatrix_aws_tgw.test tgw_name
+```
