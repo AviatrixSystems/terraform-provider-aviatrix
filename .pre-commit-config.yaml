@@ -1,0 +1,52 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^vendor/
+      - id: end-of-file-fixer
+        exclude: ^vendor/
+      - id: check-yaml
+        exclude: ^vendor/
+      - id: check-added-large-files
+        exclude: ^vendor/
+  - repo: https://github.com/AleksaC/terraform-py
+    rev: v1.10.3
+    hooks:
+      - id: tf-fmt
+        exclude: ^vendor/
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.10.0
+    hooks:
+      - id: yamlfmt
+        exclude: ^vendor/
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.6
+    hooks:
+      - id: actionlint
+        exclude: ^vendor/
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        exclude: "^vendor/|.envrc"
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        exclude: ^vendor/
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.10.0-2
+    hooks:
+      - id: shfmt # prebuilt upstream executable
+        exclude: ^vendor/
+  - repo: local
+    hooks:
+      - id: gofumpt
+        name: gofumpt
+        language: golang
+        entry: gofumpt -w aviatrix/ goaviatrix/
+        files: "\\.go$"
+        exclude: ^vendor/
