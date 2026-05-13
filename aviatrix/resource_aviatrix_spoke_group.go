@@ -79,6 +79,17 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Skip public route table update. Only valid for AWS.",
 		},
+		"route_tables": {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			Optional: true,
+			Computed: true,
+			Description: "Managed route tables for spoke VPC route programming (learned/transit routes): AWS route table IDs (e.g. rtb-...) or Azure entries as \"<route_table_name>:<resource_group_name>\". " +
+				"Uses Controller API edit_managed_route_tables with the gateway group name. Only applicable for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048). " +
+				"Set `route_tables = []` to clear selective configuration.",
+		},
 
 		// ============================================================================
 		// FEATURE FLAGS
@@ -592,6 +603,15 @@ func applySpokeSpecificSettings(ctx context.Context, d *schema.ResourceData, cli
 		}
 	}
 
+	if _, ok := d.GetOk("route_tables"); ok {
+		if goaviatrix.IsCloudType(getInt(d, "cloud_type"), goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			managedRTBs := getStringSet(d, "route_tables")
+			if err := client.EditManagedRouteTablesForGatewayGroup(ctx, groupName, managedRTBs); err != nil {
+				return fmt.Errorf("could not edit managed route tables: %w", err)
+			}
+		}
+	}
+
 	if getBool(d, "enable_auto_advertise_s2c_cidrs") {
 		log.Printf("[INFO] Enabling auto advertise s2c cidrs for spoke group: %s", groupName)
 		if err := client.EnableAutoAdvertiseS2CCidrsGatewayGroup(ctx, groupName); err != nil {
@@ -636,6 +656,12 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 	// approved_learned_cidrs can only be set during update, not during create
 	if approvedLearnedCidrs := getStringSet(d, "approved_learned_cidrs"); len(approvedLearnedCidrs) > 0 {
 		return diag.Errorf("approved_learned_cidrs can only be set when the group has gateways present")
+	}
+
+	if _, ok := d.GetOk("route_tables"); ok {
+		if !goaviatrix.IsCloudType(getInt(d, "cloud_type"), goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return diag.Errorf("'route_tables' is only valid for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048)")
+		}
 	}
 
 	// Build the spoke group from resource data
@@ -731,6 +757,14 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "enable_private_vpc_default_route", spokeGroup.EnablePrivateVpcDefaultRoute)
 	mustSet(d, "enable_skip_public_route_table_update", spokeGroup.EnableSkipPublicRouteTableUpdate)
 	mustSet(d, "private_route_table_config", spokeGroup.PrivateRouteTableConfig)
+
+	if len(spokeGroup.SpokeRtbList) >= 0 {
+		rtbs := make([]string, 0, len(spokeGroup.SpokeRtbList))
+		for _, rt := range spokeGroup.SpokeRtbList {
+			rtbs = append(rtbs, strings.Split(rt, "~~")[0])
+		}
+		mustSet(d, "route_tables", rtbs)
+	}
 
 	// Feature Flags
 	mustSet(d, "enable_jumbo_frame", spokeGroup.EnableJumboFrame)
@@ -1117,6 +1151,19 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		routeTables := getStringSet(d, "private_route_table_config")
 		if err := client.EditPrivateRouteTableConfigForGatewayGroup(ctx, groupName, routeTables); err != nil {
 			return diag.Errorf("could not edit private route table config: %s", err)
+		}
+	}
+
+	// ============================================================================
+	// Managed route tables - API: edit_managed_route_tables (gateway group name)
+	// ============================================================================
+	if d.HasChange("route_tables") {
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return diag.Errorf("'route_tables' is only valid for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048)")
+		}
+		routeTables := getStringSet(d, "route_tables")
+		if err := client.EditManagedRouteTablesForGatewayGroup(ctx, groupName, routeTables); err != nil {
+			return diag.Errorf("could not edit managed route tables: %s", err)
 		}
 	}
 

@@ -30,6 +30,8 @@ type GatewayGroup struct {
 	EnablePrivateVpcDefaultRoute     bool     `form:"private_vpc_default_enabled,omitempty" json:"private_vpc_default_enabled,omitempty"`
 	EnableSkipPublicRouteTableUpdate bool     `form:"skip_public_vpc_update_enabled,omitempty" json:"skip_public_vpc_update_enabled,omitempty"`
 	PrivateRouteTableConfig          []string `form:"private_route_table_config,omitempty" json:"private_route_table_config,omitempty"`
+	// SpokeRtbList is selective/managed route tables (spoke_cfg.selected_csp_rtbls from get_gateway_group_details). Not used on create/update_gateway_group payloads.
+	SpokeRtbList []string `json:"spoke_rtb_list,omitempty"`
 
 	// Feature Flags
 	// Note: EnableJumboFrame and EnableGroGso do not have form tags because they must be set
@@ -128,10 +130,11 @@ type getGatewayGroupDetailsResults struct {
 		PreserveAsPath               bool     `json:"preserve_as_path,omitempty"`
 	} `json:"bgp_cfg,omitempty"`
 	SpokeCfg *struct {
-		DisableRoutePropagation    bool `json:"disable_route_propagation,omitempty"`
-		AutoAdvertiseS2cCidrs      bool `json:"auto_advertise_s2c_cidrs,omitempty"`
-		PrivateVpcDefaultEnabled   bool `json:"private_vpc_default_enabled,omitempty"`
-		SkipPublicVpcUpdateEnabled bool `json:"skip_public_vpc_update_enabled,omitempty"`
+		DisableRoutePropagation    bool     `json:"disable_route_propagation,omitempty"`
+		AutoAdvertiseS2cCidrs      bool     `json:"auto_advertise_s2c_cidrs,omitempty"`
+		PrivateVpcDefaultEnabled   bool     `json:"private_vpc_default_enabled,omitempty"`
+		SkipPublicVpcUpdateEnabled bool     `json:"skip_public_vpc_update_enabled,omitempty"`
+		SelectedCspRtbls           []string `json:"selected_csp_rtbls,omitempty"`
 	} `json:"spoke_cfg,omitempty"`
 	TransitCfg *struct {
 		AdvertiseTransitCidr bool `json:"advertise_transit_cidr,omitempty"`
@@ -253,6 +256,9 @@ func (c *Client) getGatewayGroupDetails(ctx context.Context, form map[string]str
 		grp.EnableAutoAdvertiseS2cCidrs = resp.Results.SpokeCfg.AutoAdvertiseS2cCidrs
 		grp.EnablePrivateVpcDefaultRoute = resp.Results.SpokeCfg.PrivateVpcDefaultEnabled
 		grp.EnableSkipPublicRouteTableUpdate = resp.Results.SpokeCfg.SkipPublicVpcUpdateEnabled
+		if resp.Results.SpokeCfg.SelectedCspRtbls != nil {
+			grp.SpokeRtbList = resp.Results.SpokeCfg.SelectedCspRtbls
+		}
 	}
 	if resp.Results.TransitCfg != nil {
 		grp.EnableAdvertiseTransitCidr = resp.Results.TransitCfg.AdvertiseTransitCidr
@@ -341,6 +347,20 @@ func (c *Client) EditPrivateRouteTableConfigForGatewayGroup(ctx context.Context,
 		"private_route_tables": strings.Join(routeTables, ","),
 	}
 
+	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
+}
+
+// EditManagedRouteTablesForGatewayGroup updates selective/managed route tables for a spoke gateway group (edit_managed_route_tables).
+// groupName is the gateway group name passed as gateway_name to the controller (same pattern as EditPrivateRouteTableConfigForGatewayGroup).
+// An empty slice sends an empty route_tables value to clear selective configuration.
+func (c *Client) EditManagedRouteTablesForGatewayGroup(ctx context.Context, groupName string, routeTables []string) error {
+	action := "edit_managed_route_tables"
+	form := map[string]interface{}{
+		"action":       action,
+		"CID":          c.CID,
+		"gateway_name": groupName,
+		"route_tables": strings.Join(routeTables, ","),
+	}
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
 }
 

@@ -391,6 +391,14 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 			},
+			"route_tables": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "Managed route tables for spoke VPC route programming (spoke_rtb_list from the controller): AWS route table IDs or Azure entries as \"<route_table_name>:<resource_group_name>\". Empty if not configured.",
+			},
 		},
 	}
 }
@@ -649,6 +657,16 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error 
 			}
 		}
 		mustSet(d, "private_route_table_config", gw.PrivateRouteTableConfig)
+
+		if len(gw.SpokeRtbList) > 0 {
+			rtbs := make([]string, 0, len(gw.SpokeRtbList))
+			for _, rt := range gw.SpokeRtbList {
+				rtbs = append(rtbs, strings.Split(rt, "~~")[0])
+			}
+			mustSet(d, "route_tables", rtbs)
+		} else {
+			mustSet(d, "route_tables", []string{})
+		}
 	}
 
 	d.SetId(gateway.GwName)

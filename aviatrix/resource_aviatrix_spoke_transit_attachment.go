@@ -45,8 +45,10 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Optional:    true,
-				ForceNew:    true,
+				Optional: true,
+				ForceNew: true,
+				Deprecated: "Use aviatrix_spoke_gateway or aviatrix_spoke_group resource to set route tables. " +
+					"This argument will be removed in a future major release.",
 				Description: "Learned routes will be propagated to these route tables.",
 			},
 			"tunnel_count": {
@@ -333,18 +335,6 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 	}
 	mustSet(d, "spoke_bgp_enabled", attachment.SpokeBgpEnabled)
 
-	if attachment.RouteTables != "" {
-		var routeTables []string
-		for routeTable := range strings.SplitSeq(attachment.RouteTables, ",") {
-			routeTables = append(routeTables, strings.Split(routeTable, "~~")[0])
-		}
-
-		err = d.Set("route_tables", routeTables)
-		if err != nil {
-			return fmt.Errorf("could not set route_tables: %w", err)
-		}
-	}
-
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: resolvedSpokeGwName,
 		TransitGatewayName2: resolvedTransitGwName,
@@ -503,7 +493,6 @@ func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.Spok
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
 		SpokeGwName:            getString(d, "spoke_gw_name"),
 		TransitGwName:          getString(d, "transit_gw_name"),
-		RouteTables:            strings.Join(getStringSet(d, "route_tables"), ","),
 		SpokePrependAsPath:     getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:   getStringList(d, "transit_prepend_as_path"),
 		InsaneModeTunnelNumber: getInt(d, "tunnel_count"),

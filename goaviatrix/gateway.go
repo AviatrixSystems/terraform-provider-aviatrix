@@ -241,6 +241,8 @@ type Gateway struct {
 	TunnelEncryptionCipher          string                              `json:"ph2_encryption_policy,omitempty"`
 	TunnelForwardSecrecy            string                              `json:"ph2_pfs_policy,omitempty"`
 	PrivateRouteTableConfig         []string                            `json:"private_route_table_config,omitempty"`
+	// SpokeRtbList is returned by list_vpcs_summary for spoke gateways (managed route tables / selective VPC programming).
+	SpokeRtbList []string `json:"spoke_rtb_list,omitempty"`
 }
 
 type HaGateway struct {
@@ -512,6 +514,20 @@ func (c *Client) EditPrivateRouteTableConfig(gateway *Gateway, routeTables []str
 		"CID":                  c.CID,
 		"gateway_name":         gateway.GwName,
 		"private_route_tables": strings.Join(routeTables, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+// EditManagedRouteTables updates spoke selective/managed route tables via edit_managed_route_tables (REST).
+// routeTables uses AWS route table IDs (e.g. rtb-...) or Azure entries as name:resource_group.
+// An empty slice sends an empty route_tables value to clear selective configuration (controller default applies).
+func (c *Client) EditManagedRouteTables(gateway *Gateway, routeTables []string) error {
+	log.Printf("[INFO] EditManagedRouteTables gateway=%s routeTables: %v", gateway.GwName, routeTables)
+	data := map[string]string{
+		"action":       "edit_managed_route_tables",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+		"route_tables": strings.Join(routeTables, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }

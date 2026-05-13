@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `insane_mode_az` - AZ of subnet being created for Insane Mode spoke gateway.
 * `private_ip` - Private IP address of the spoke gateway.
 * `public_ip` - Public IP of spoke gateway.
+* `route_tables` - Managed route tables for spoke VPC route programming (Controller `spoke_rtb_list`; same as resource `aviatrix_spoke_gateway.route_tables`). AWS route table IDs or Azure `name:resource_group` entries. Empty when selective managed route tables are not configured.
 * `security_group_id` - Security group used of the spoke gateway.
 * `single_az_ha` - Status of Single AZ HA of spoke gateway.
 * `single_ip_snat` - Status of Single IP Source NAT mode of the spoke gateway.

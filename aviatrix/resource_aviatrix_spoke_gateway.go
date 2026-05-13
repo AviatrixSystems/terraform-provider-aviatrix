@@ -727,6 +727,17 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 			},
+			"route_tables": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
+				Description: "Managed route tables for spoke VPC route programming (learned/transit routes): AWS route table IDs (e.g. rtb-...) or Azure entries as \"<route_table_name>:<resource_group_name>\". " +
+					"Uses Controller API edit_managed_route_tables. Only applicable for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048). " +
+					"Set `route_tables = []` to clear selective configuration.",
+			},
 		},
 	}
 }
@@ -829,6 +840,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 
 	if getBool(d, "enable_skip_public_route_table_update") && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("enable_skip_public_route_update is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
+	}
+
+	if _, ok := d.GetOk("route_tables"); ok {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("'route_tables' is only valid for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048)")
+		}
 	}
 
 	if _, hasSetZone := d.GetOk("zone"); !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && hasSetZone {
@@ -1648,12 +1665,21 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		routeTables := getStringSet(d, "private_route_table_config")
-		fmt.Println("######## routeTables", routeTables)
 		if len(routeTables) > 0 {
 			gw := &goaviatrix.Gateway{GwName: getString(d, "gw_name")}
 			err := client.EditPrivateRouteTableConfig(gw, routeTables)
 			if err != nil {
 				return fmt.Errorf("could not edit private route table config: %w", err)
+			}
+		}
+	}
+
+	if _, ok := d.GetOk("route_tables"); ok {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			gw := &goaviatrix.Gateway{GwName: getString(d, "gw_name")}
+			managedRTBs := getStringSet(d, "route_tables")
+			if err := client.EditManagedRouteTables(gw, managedRTBs); err != nil {
+				return fmt.Errorf("could not edit managed route tables: %w", err)
 			}
 		}
 	}
@@ -1706,6 +1732,13 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 	mustSet(d, "enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
 	mustSet(d, "enable_skip_public_route_table_update", gw.SkipPublicVpcUpdateEnabled)
 	mustSet(d, "private_route_table_config", gw.PrivateRouteTableConfig)
+	if len(gw.SpokeRtbList) >= 0 {
+		rtbs := make([]string, 0, len(gw.SpokeRtbList))
+		for _, rt := range gw.SpokeRtbList {
+			rtbs = append(rtbs, strings.Split(rt, "~~")[0])
+		}
+		mustSet(d, "route_tables", rtbs)
+	}
 	mustSet(d, "enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
 	mustSet(d, "eip", gw.PublicIP)
 	mustSet(d, "subnet", gw.VpcNet)
@@ -2175,6 +2208,16 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 		err := client.EditPrivateRouteTableConfig(gateway, routeTables)
 		if err != nil {
 			return fmt.Errorf("could not edit private route table config: %w", err)
+		}
+	}
+
+	if d.HasChange("route_tables") {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("'route_tables' is only valid for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048)")
+		}
+		routeTables := getStringSet(d, "route_tables")
+		if err := client.EditManagedRouteTables(gateway, routeTables); err != nil {
+			return fmt.Errorf("could not edit managed route tables: %w", err)
 		}
 	}
 
