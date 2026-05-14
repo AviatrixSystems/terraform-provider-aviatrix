@@ -376,6 +376,7 @@ go_test(
         "resource_aviatrix_spoke_ha_gateway_test.go",
         "resource_aviatrix_spoke_instance_test.go",
         "resource_aviatrix_spoke_transit_attachment_test.go",
+        "resource_aviatrix_telix_profile_test.go",
         "resource_aviatrix_traffic_classifier_test.go",
         "resource_aviatrix_trans_peer_test.go",
         "resource_aviatrix_transit_external_device_conn_test.go",

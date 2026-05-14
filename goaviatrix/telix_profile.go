@@ -68,10 +68,14 @@ type TelixTLSInputConfig struct {
 // TelixOtlpDestinationInput is the write-side representation of an OTLP
 // destination. Headers and TLS material may be supplied here but will be
 // redacted by the controller on subsequent reads.
+//
+// Headers uses *map[string]string so encoding/json can represent PATCH
+// semantics: nil omits "headers" (no change); a non-nil pointer to an empty
+// map emits "headers": {} (controller clears stored headers).
 type TelixOtlpDestinationInput struct {
 	Endpoint string               `json:"endpoint"`
 	Protocol string               `json:"protocol"`
-	Headers  map[string]string    `json:"headers,omitempty"`
+	Headers  *map[string]string   `json:"headers,omitempty"`
 	TLS      *TelixTLSInputConfig `json:"tls,omitempty"`
 }
 
