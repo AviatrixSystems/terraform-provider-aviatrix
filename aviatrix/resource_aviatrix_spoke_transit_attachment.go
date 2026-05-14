@@ -221,38 +221,24 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 	timeout := 15 * time.Minute
 	attachCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	try, maxTries, backoff := 0, 10, 1000*time.Millisecond
-	for {
-		try++
-		err := client.CreateSpokeTransitAttachment(attachCtx, attachment)
-		if err != nil {
-			if strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
-				// already joined, so we can break out of the loop
-				break
-			}
-			if strings.Contains(err.Error(), "is not up") || strings.Contains(err.Error(), "is not ready") {
-				if try == maxTries {
-					return fmt.Errorf("could not attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
-				}
-				time.Sleep(backoff)
-				// Double the backoff time after each failed try
-				backoff *= 2
-				continue
-			}
-			// On timeout or connection errors, check if the controller
-			// completed the operation despite the client not receiving
-			// a response (e.g. proxy timeout, context deadline exceeded).
-			// Use a fresh context since the original one may have expired.
+	err = client.CreateSpokeTransitAttachment(attachCtx, attachment)
+	if err != nil {
+		// Controller returns AVXERR-TRANSIT-0034 when the attachment
+		// already exists; treat as success so re-runs are idempotent.
+		if !strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
+			// On timeout/connection errors the controller may have
+			// already completed the operation. Probe with a fresh
+			// context before failing.
 			if isTimeoutOrConnectionError(err) {
 				recoveryCtx, recoveryCancel := context.WithTimeout(context.Background(), timeout)
 				defer recoveryCancel()
-				if recoverSpokeTransitAttachment(recoveryCtx, client, attachment) {
-					break
+				if !recoverSpokeTransitAttachment(recoveryCtx, client, attachment) {
+					return fmt.Errorf("failed to attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
 				}
+			} else {
+				return fmt.Errorf("failed to attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
 			}
-			return fmt.Errorf("failed to attach spoke: %s to transit %s: %w", resolvedSpokeGwName, resolvedTransitGwName, err)
 		}
-		break
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {

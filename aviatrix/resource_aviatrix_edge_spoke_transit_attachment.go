@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -93,13 +92,15 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     0,
-				Description: "Number of retries.",
+				Description: "Deprecated. No longer required — controller no longer rejects on gateway readiness.",
+				Deprecated:  "Field is a no-op: controller-side gateway-readiness gating has been removed, so retries are unnecessary. Will be removed in a future release.",
 			},
 			"retry_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     300,
-				Description: "Retry interval in seconds.",
+				Description: "Deprecated. No longer required — controller no longer rejects on gateway readiness.",
+				Deprecated:  "Field is a no-op: controller-side gateway-readiness gating has been removed, so retries are unnecessary. Will be removed in a future release.",
 			},
 			"edge_wan_interfaces": {
 				Type:        schema.TypeSet,
@@ -212,29 +213,12 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	flag := false
 	defer resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 
-	numberOfRetries := getInt(d, "number_of_retries")
-	retryInterval := getInt(d, "retry_interval")
-
-	for i := 0; ; i++ {
-		err := client.CreateSpokeTransitAttachment(ctx, attachment)
-		if err != nil {
-			if strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
-				// already joined, so we can break out of the loop
-				break
-			}
-			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
-				!strings.Contains(err.Error(), "try again") {
-				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
-			}
-		} else {
-			break
-		}
-		if i < numberOfRetries {
-			time.Sleep(time.Duration(retryInterval) * time.Second)
-		} else {
-			d.SetId("")
-			return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
-		}
+	err = client.CreateSpokeTransitAttachment(ctx, attachment)
+	if err != nil && !strings.Contains(err.Error(), "AVXERR-TRANSIT-0034") {
+		// AVXERR-TRANSIT-0034 means the attachment already exists;
+		// treat as success so re-runs are idempotent.
+		d.SetId("")
+		return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", resolvedSpokeGwName, resolvedTransitGwName, err)
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {

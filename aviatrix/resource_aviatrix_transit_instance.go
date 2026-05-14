@@ -100,10 +100,15 @@ func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.Resour
 	if createdGwName != "" {
 		d.SetId(createdGwName)
 		mustSet(d, "gw_name", createdGwName)
+		config.gateway.GwName = createdGwName
 	} else if config.gateway.GwName != "" {
 		d.SetId(config.gateway.GwName)
 	} else {
 		return diag.Errorf("failed to get gateway name from API response")
+	}
+
+	if diagErr := configureTransitInstancePostCreate(d, client, config); diagErr != nil {
+		return diagErr
 	}
 
 	return resourceAviatrixTransitInstanceRead(ctx, d, meta)
@@ -588,7 +593,7 @@ func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.Tra
 }
 
 // configureTransitInstancePostCreate configures settings after the transit instance is created
-func configureTransitInstancePostCreate(ctx context.Context, d *schema.ResourceData, client *goaviatrix.Client, config *transitInstanceConfig) diag.Diagnostics {
+func configureTransitInstancePostCreate(d *schema.ResourceData, client *goaviatrix.Client, config *transitInstanceConfig) diag.Diagnostics {
 	cloudType := getInt(d, "cloud_type")
 	gwName := getString(d, "gw_name")
 
