@@ -7,11 +7,12 @@ import (
 )
 
 type KubernetesCluster struct {
-	ID                   string                `json:"id,omitempty"`
-	ClusterID            string                `json:"cluster_id,omitempty"`
-	Credential           *KubernetesCredential `json:"credential,omitempty"`
-	Resource             *ClusterResource      `json:"resource,omitempty"`
-	GatewayTunnelEnabled bool                  `json:"gateway_tunnel_enabled,omitempty"`
+	ID                            string                `json:"id,omitempty"`
+	ClusterID                     string                `json:"cluster_id,omitempty"`
+	Credential                    *KubernetesCredential `json:"credential,omitempty"`
+	Resource                      *ClusterResource      `json:"resource,omitempty"`
+	GatewayTunnelEnabled          bool                  `json:"gateway_tunnel_enabled,omitempty"`
+	IntraClusterInspectionEnabled bool                  `json:"intra_cluster_inspection_enabled,omitempty"`
 }
 
 type KubernetesCredential struct {

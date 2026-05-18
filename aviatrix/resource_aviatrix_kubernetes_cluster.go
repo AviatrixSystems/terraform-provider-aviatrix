@@ -54,6 +54,11 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to enable gateway tunnel for the cluster.",
 			},
+			"intra_cluster_inspection_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Whether to enable intra-cluster (east-west) traffic inspection for this cluster. Requires controller feature k8s_network_policy.",
+			},
 			"cluster_details": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
@@ -151,7 +156,8 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 			UseCspCredentials: getBool(d, "use_csp_credentials"),
 			KubeConfig:        getString(d, "kube_config"),
 		},
-		GatewayTunnelEnabled: getBool(d, "gateway_tunnel_enabled"),
+		GatewayTunnelEnabled:          getBool(d, "gateway_tunnel_enabled"),
+		IntraClusterInspectionEnabled: getBool(d, "intra_cluster_inspection_enabled"),
 	}
 
 	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
@@ -212,6 +218,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 	}
 	mustSet(d, "cluster_id", kubernetesCluster.ClusterID)
 	mustSet(d, "gateway_tunnel_enabled", kubernetesCluster.GatewayTunnelEnabled)
+	mustSet(d, "intra_cluster_inspection_enabled", kubernetesCluster.IntraClusterInspectionEnabled)
 	if kubernetesCluster.Credential != nil {
 		credential := kubernetesCluster.Credential
 		mustSet(d, "use_csp_credentials", credential.UseCspCredentials)
