@@ -24,9 +24,28 @@ func resourceAviatrixTransitInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: resourceAviatrixTransitInstanceCustomizeDiff,
 
 		Schema: transitInstanceSchema(),
 	}
+}
+
+func resourceAviatrixTransitInstanceCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Id() == "" {
+		return nil
+	}
+
+	cloudType, ok := d.Get("cloud_type").(int)
+	if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+		return nil
+	}
+
+	gwSizeConfig := d.GetRawConfig().GetAttr("gw_size")
+	if gwSizeConfig.IsNull() || gwSizeConfig.AsString() == "" {
+		return fmt.Errorf("'gw_size' is required for this transit instance and cannot be removed from the configuration")
+	}
+
+	return nil
 }
 
 // transitInstanceConfig holds the configuration for creating a transit instance

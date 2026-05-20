@@ -22,6 +22,7 @@ func resourceAviatrixSpokeInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: resourceAviatrixSpokeInstanceCustomizeDiff,
 
 		Schema: MergeSchemaMaps(
 			// Required attributes
@@ -40,6 +41,22 @@ func resourceAviatrixSpokeInstance() *schema.Resource {
 			spokeInstanceComputedSchema(),
 		),
 	}
+}
+
+func resourceAviatrixSpokeInstanceCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Id() == "" {
+		return nil
+	}
+
+	gwSizeConfig := d.GetRawConfig().GetAttr("gw_size")
+	if gwSizeConfig.IsNull() || gwSizeConfig.AsString() == "" {
+		oldGwSize, _ := d.GetChange("gw_size")
+		if oldVal, ok := oldGwSize.(string); ok && oldVal != "" {
+			return fmt.Errorf("'gw_size' is required for this spoke instance and cannot be removed from the configuration")
+		}
+	}
+
+	return nil
 }
 
 // ============================================================================
