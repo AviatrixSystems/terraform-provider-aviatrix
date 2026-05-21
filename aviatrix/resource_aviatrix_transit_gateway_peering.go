@@ -266,7 +266,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		}
 	}()
 
-	const timeoutDuration = 180 * time.Second
+	const timeoutDuration = 15 * time.Minute
 	createCtx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancel()
 	err = client.CreateTransitGatewayPeering(createCtx, transitGatewayPeering)
