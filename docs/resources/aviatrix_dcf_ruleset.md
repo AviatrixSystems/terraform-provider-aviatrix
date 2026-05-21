@@ -119,6 +119,7 @@ resource "aviatrix_dcf_ruleset" "test" {
     ]
     flow_app_requirement     = "TLS_REQUIRED"
     decrypt_policy           = "DECRYPT_ALLOWED"
+    egress_path              = "EGRESS_PATH_LOCAL"
     port_ranges {
       hi = 50000
       lo = 49000
@@ -153,6 +154,7 @@ The following arguments are supported:
     * `logging` - (Optional) Whether to enable logging for packets that match the rule. Type: Boolean.
     * `uuid` - (Computed) UUID for the Rule.
     * `tls_profile` - (Optional) TLS profile UUID for the rule.
+    * `egress_path` - (Optional) Egress path for this rule. Must be one of `EGRESS_PATH_DEFAULT` or `EGRESS_PATH_LOCAL`. `EGRESS_PATH_DEFAULT` routes traffic through the spoke's configured egress transit (FireNet, TGW, etc.). `EGRESS_PATH_LOCAL` routes traffic out through the spoke gateway directly. Default: `EGRESS_PATH_DEFAULT`.
     * `log_profile` - (Optional) Logging profile UUID. Must be one of {"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}. The UUIDs correspod to: def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START, def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END, def000ad-7000-0000-0000-000000000003: DEF_LOG_PROFILE_ALL
 
 ## Import

@@ -32,6 +32,7 @@ type DCFPolicy struct {
 	Watch                  bool                   `json:"watch,omitempty"`
 	WebGroups              []string               `json:"web_filters,omitempty"`
 	LogProfile             string                 `json:"log_profile,omitempty"`
+	EgressPath             string                 `json:"egress_path,omitempty"`
 	Metadata               map[string]interface{} `json:"metadata,omitempty"`
 }
 

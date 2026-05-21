@@ -151,6 +151,16 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							// TODO(ACK): AVX-68895@everclear-CF2, implement API+datasource
 							ValidateFunc: validation.StringInSlice([]string{"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}, false),
 						},
+						"egress_path": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      EgressPathDefault,
+							ValidateFunc: validation.StringInSlice([]string{EgressPathDefault, EgressPathLocal}, false),
+							Description: "Egress path for this policy. Must be one of EGRESS_PATH_DEFAULT or EGRESS_PATH_LOCAL." +
+								"EGRESS_PATH_DEFAULT routes traffic through the spoke's configured egress transit (FireNet, TGW, etc.). " +
+								"EGRESS_PATH_LOCAL routes traffic out through the spoke gateway directly. " +
+								"Example: `egress_path = \"EGRESS_PATH_LOCAL\"`.",
+						},
 					},
 				},
 			},
@@ -172,6 +182,7 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			FlowAppRequirement:     mustString(policy["flow_app_requirement"]),
 			DecryptPolicy:          mustString(policy["decrypt_policy"]),
 			ExcludeSgOrchestration: mustBool(policy["exclude_sg_orchestration"]),
+			EgressPath:             mustString(policy["egress_path"]),
 		}
 
 		protocol := strings.ToUpper(mustString(policy["protocol"]))
@@ -314,6 +325,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 			p["port_ranges"] = portRanges
 		}
 		p["tls_profile"] = policy.TLSProfile
+		p["egress_path"] = policy.EgressPath
 
 		policies = append(policies, p)
 	}

@@ -26,6 +26,7 @@ func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 		"tls_profile":              "",
 		"uuid":                     "",
 		"log_profile":              "def000ad-7000-0000-0000-000000000001",
+		"egress_path":              "EGRESS_PATH_DEFAULT",
 		"src_smart_groups":         schema.NewSet(schema.HashString, []interface{}{"sg-1"}),
 		"dst_smart_groups":         schema.NewSet(schema.HashString, []interface{}{"sg-2"}),
 		"web_groups":               schema.NewSet(schema.HashString, []interface{}{}),

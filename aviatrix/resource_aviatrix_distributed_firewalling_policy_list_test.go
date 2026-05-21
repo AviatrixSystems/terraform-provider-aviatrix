@@ -38,6 +38,14 @@ func TestAccAviatrixDistributedFirewallingPolicyList_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policies.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.src_smart_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.dst_smart_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policies.0.egress_path", "EGRESS_PATH_DEFAULT"),
+				),
+			},
+			{
+				Config: testAccDistributedFirewallingPolicyListLocalEgress(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributedFirewallingPolicyListExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policies.0.egress_path", "EGRESS_PATH_LOCAL"),
 				),
 			},
 			{
@@ -76,6 +84,50 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
 		logging          = true
 		priority         = 0
 		protocol         = "TCP"
+		src_smart_groups = [
+		  aviatrix_smart_group.ad1.uuid
+		]
+		dst_smart_groups = [
+		  aviatrix_smart_group.ad2.uuid
+		]
+
+		port_ranges {
+		  hi = 10
+		  lo = 1
+		}
+  }
+}
+`
+}
+
+func testAccDistributedFirewallingPolicyListLocalEgress() string {
+	return `
+resource "aviatrix_smart_group" "ad1" {
+	name = "test-smart_group-1"
+	selector {
+		match_expressions {
+			cidr = "10.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_smart_group" "ad2" {
+	name = "test-smart-group-2"
+	selector {
+		match_expressions {
+			cidr = "11.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_distributed_firewalling_policy_list" "test" {
+	policies {
+		name             = "test-distributed-firewalling-policy"
+		action           = "PERMIT"
+		logging          = true
+		priority         = 0
+		protocol         = "TCP"
+		egress_path      = "EGRESS_PATH_LOCAL"
 		src_smart_groups = [
 		  aviatrix_smart_group.ad1.uuid
 		]
