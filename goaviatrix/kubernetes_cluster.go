@@ -21,18 +21,19 @@ type KubernetesCredential struct {
 }
 
 type ClusterResource struct {
-	Name        string `json:"name"`
-	VpcID       string `json:"vpc_id"`
-	Region      string `json:"region"`
-	AccountID   string `json:"account_id"`
-	AccountName string `json:"account_name"`
-	Project     string `json:"project,omitempty"`
-	Compartment string `json:"compartment,omitempty"`
-	Public      bool   `json:"public"`
-	Platform    string `json:"platform"`
-	Version     string `json:"version"`
-	NetworkMode string `json:"network_mode"`
-	Tags        []Tag  `json:"tags,omitempty"`
+	Name         string `json:"name"`
+	VpcID        string `json:"vpc_id"`
+	Region       string `json:"region"`
+	AccountID    string `json:"account_id"`
+	AccountName  string `json:"account_name"`
+	Project      string `json:"project,omitempty"`
+	Compartment  string `json:"compartment,omitempty"`
+	Public       bool   `json:"public"`
+	Platform     string `json:"platform"`
+	Version      string `json:"version"`
+	NetworkMode  string `json:"network_mode"`
+	EntraIDAuthn bool   `json:"entra_id_authn"`
+	Tags         []Tag  `json:"tags,omitempty"`
 }
 
 type Tag struct {

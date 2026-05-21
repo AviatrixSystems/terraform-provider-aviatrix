@@ -101,7 +101,9 @@ data "aviatrix_account" "azure" {
 resource "aviatrix_kubernetes_cluster" "my_cluster" {
   cluster_id = "my-cluster-id"
 
-  kube_config = var.kubeconfig
+  # Use the Aviatrix account's CSP credentials so the controller can
+  # acquire EntraID tokens for the cluster's API server at request time.
+  use_csp_credentials = true
 
   cluster_details {
     account_name           = data.aviatrix_account.azure.account_name
@@ -113,6 +115,7 @@ resource "aviatrix_kubernetes_cluster" "my_cluster" {
     platform               = "kops"
     version                = "1.30"
     network_mode           = "OVERLAY"
+    entra_id_authn         = true
     tags = {
       "type" = "prod"
     }
@@ -156,6 +159,14 @@ The following arguments are supported:
      For your reference you can for example use "kops" or "kubeadm" depending on how the cluster was built.
   * `version` - (Required) The Kubernetes version of the cluster.
   * `network_mode` - (Required) The network mode of the Kubernetes cluster. Valid values: "FLAT", "OVERLAY".
+  * `entra_id_authn` - (Optional) Whether the cluster authenticates clients via EntraID (Azure AD).
+     Applicable to AKS clusters.
+     This flag only takes effect when `use_csp_credentials` is set to `true`. Its behavior in combination with `use_csp_credentials` is:
+     * `use_csp_credentials = true` and `entra_id_authn = true`: the controller uses the CSP credentials to acquire an EntraID token at request time and injects it into API server requests.
+     * `use_csp_credentials = true` and `entra_id_authn = false`: the controller expects the AKS cluster to have **local accounts** enabled. In this mode Azure provides a long-lived TLS client certificate/key via the AKS API, and the controller uses that credential directly — no EntraID token is acquired.
+     * `kube_config` is set instead of `use_csp_credentials`: the controller uses the credentials from the kubeconfig as-is and does not call EntraID, regardless of this flag.
+
+     Valid values: true, false. Default value: false.
   * `project` - (Optional) If the cluster runs in GCP, the Project ID of the Kubernetes cluster.
      If the project is created with Terraform like below it would be `"test-project-id"`:
      ```hcl

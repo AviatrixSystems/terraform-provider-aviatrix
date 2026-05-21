@@ -112,6 +112,11 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 							Description:  "Network mode of the cluster. Possible values are FLAT, OVERLAY.",
 							ValidateFunc: validation.StringInSlice([]string{"FLAT", "OVERLAY"}, false),
 						},
+						"entra_id_authn": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether the cluster authenticates clients via EntraID (Azure AD). Applicable to AKS clusters.",
+						},
 						"project": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -163,15 +168,16 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
 		clusterDetailsMap := mustMap(mustSlice(clusterDetails)[0])
 		resource := goaviatrix.ClusterResource{
-			AccountName: mustString(clusterDetailsMap["account_name"]),
-			AccountID:   mustString(clusterDetailsMap["account_id"]),
-			Name:        mustString(clusterDetailsMap["name"]),
-			VpcID:       mustString(clusterDetailsMap["vpc_id"]),
-			Region:      mustString(clusterDetailsMap["region"]),
-			Version:     mustString(clusterDetailsMap["version"]),
-			Platform:    mustString(clusterDetailsMap["platform"]),
-			Public:      mustBool(clusterDetailsMap["is_publicly_accessible"]),
-			NetworkMode: mustString(clusterDetailsMap["network_mode"]),
+			AccountName:  mustString(clusterDetailsMap["account_name"]),
+			AccountID:    mustString(clusterDetailsMap["account_id"]),
+			Name:         mustString(clusterDetailsMap["name"]),
+			VpcID:        mustString(clusterDetailsMap["vpc_id"]),
+			Region:       mustString(clusterDetailsMap["region"]),
+			Version:      mustString(clusterDetailsMap["version"]),
+			Platform:     mustString(clusterDetailsMap["platform"]),
+			Public:       mustBool(clusterDetailsMap["is_publicly_accessible"]),
+			NetworkMode:  mustString(clusterDetailsMap["network_mode"]),
+			EntraIDAuthn: mustBool(clusterDetailsMap["entra_id_authn"]),
 		}
 		if project, ok := clusterDetailsMap["project"]; ok {
 			resource.Project = mustString(project)
@@ -236,6 +242,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 		details["platform"] = resource.Platform
 		details["is_publicly_accessible"] = resource.Public
 		details["network_mode"] = resource.NetworkMode
+		details["entra_id_authn"] = resource.EntraIDAuthn
 		if len(resource.Project) > 0 {
 			details["project"] = resource.Project
 		}

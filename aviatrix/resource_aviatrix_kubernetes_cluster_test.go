@@ -221,6 +221,7 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 						version = "test-version"
 						network_mode = "OVERLAY"
 						is_publicly_accessible = true
+						entra_id_authn = true
 						tags = {
 							"key1" = "value1"
 						}
@@ -234,15 +235,16 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 						},
 						IntraClusterInspectionEnabled: true,
 						Resource: &goaviatrix.ClusterResource{
-							Name:        "test-name",
-							Region:      "test-region",
-							VpcID:       "test-vpc",
-							AccountID:   "test-account-id",
-							AccountName: "test-account",
-							Platform:    "test-platform",
-							Version:     "test-version",
-							NetworkMode: "OVERLAY",
-							Public:      true,
+							Name:         "test-name",
+							Region:       "test-region",
+							VpcID:        "test-vpc",
+							AccountID:    "test-account-id",
+							AccountName:  "test-account",
+							Platform:     "test-platform",
+							Version:      "test-version",
+							NetworkMode:  "OVERLAY",
+							Public:       true,
+							EntraIDAuthn: true,
 							Tags: []goaviatrix.Tag{
 								{
 									Key:   "key1",
@@ -255,6 +257,7 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_details.0.account_name", "test-account"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_details.0.entra_id_authn", "true"),
 				),
 			},
 		},
