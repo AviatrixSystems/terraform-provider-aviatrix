@@ -342,9 +342,9 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 
 // validateSpokeGroupConfiguration validates the spoke group configuration for cloud-type and feature dependencies.
 func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error {
-	if goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		if spokeGroup.GroupInstanceSize != "" {
-			return fmt.Errorf("group_instance_size is not supported for Equinix or Megaport gateways")
+			return fmt.Errorf("group_instance_size is not supported for Equinix, Megaport or Self-managed gateways")
 		}
 	} else if spokeGroup.GroupInstanceSize == "" {
 		return fmt.Errorf("group_instance_size is required for CSP gateways and other edge gateways")

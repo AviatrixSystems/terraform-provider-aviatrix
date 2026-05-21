@@ -353,9 +353,9 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 
 // validateTransitGroupConfiguration validates the transit group configuration for cloud-type and feature dependencies.
 func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) error {
-	if goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		if transitGroup.GroupInstanceSize != "" {
-			return fmt.Errorf("group_instance_size is not supported for Equinix or Megaport gateways")
+			return fmt.Errorf("group_instance_size is not supported for Equinix, Megaport or Self-managed gateways")
 		}
 	} else if transitGroup.GroupInstanceSize == "" {
 		return fmt.Errorf("group_instance_size is required for CSP gateways and other edge gateways")
