@@ -30,6 +30,12 @@ func resourceAviatrixControllerSecurityGroupManagementConfig() *schema.Resource 
 				Required:    true,
 				Description: "Used to manage the Controller instance’s inbound rules from gateways.",
 			},
+			"gateway_egress_cidrs": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of egress CIDRs for private_network gateways that reach the controller through NAT gateways or firewalls.",
+			},
 		},
 	}
 }
@@ -68,6 +74,16 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 		}
 	}
 
+	if enableSecurityGroupManagement {
+		egressCidrs := getStringList(d, "gateway_egress_cidrs")
+		if len(egressCidrs) > 0 {
+			err := client.UpdateSecurityGroupGatewayEgressCidrs(strings.Join(egressCidrs, ","))
+			if err != nil {
+				return fmt.Errorf("failed to update gateway egress CIDRs: %w", err)
+			}
+		}
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerSecurityGroupManagementConfigRead(d, meta)
 }
@@ -82,6 +98,9 @@ func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.Resou
 	if sgm != nil {
 		mustSet(d, "enable_security_group_management", sgm.State == "Enabled")
 		mustSet(d, "account_name", sgm.AccountName)
+		if sgm.GatewayEgressCidrs != nil {
+			mustSet(d, "gateway_egress_cidrs", sgm.GatewayEgressCidrs)
+		}
 	} else {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
 	}
@@ -108,6 +127,15 @@ func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.Res
 			}
 		} else {
 			return resourceAviatrixControllerSecurityGroupManagementConfigCreate(d, meta)
+		}
+	}
+
+	if d.HasChange("gateway_egress_cidrs") {
+		egressCidrs := getStringList(d, "gateway_egress_cidrs")
+		cidrsStr := strings.Join(egressCidrs, ",")
+		err := client.UpdateSecurityGroupGatewayEgressCidrs(cidrsStr)
+		if err != nil {
+			return fmt.Errorf("failed to update gateway egress CIDRs on controller %s: %w", d.Id(), err)
 		}
 	}
 

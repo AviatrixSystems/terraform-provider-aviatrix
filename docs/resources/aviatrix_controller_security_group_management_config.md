@@ -33,6 +33,7 @@ The following arguments are supported:
 
 * `account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
 * `enable_security_group_management` - (Required) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false.
+* `gateway_egress_cidrs` - (Optional) List of egress CIDRs for private_network gateways that reach the controller through NAT gateways or firewalls. These CIDRs are added to the controller and CoPilot security group inbound rules.
 
 
 ## Import

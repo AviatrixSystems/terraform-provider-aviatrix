@@ -26,9 +26,10 @@ type GetSecurityGroupManagementResp struct {
 }
 
 type SecurityGroupInfo struct {
-	State       string `json:"state"`
-	AccountName string `json:"account_name"`
-	Response    string `json:"response"`
+	State              string   `json:"state"`
+	AccountName        string   `json:"account_name"`
+	Response           string   `json:"response"`
+	GatewayEgressCidrs []string `json:"gateway_egress_cidrs"`
 }
 
 type CloudnBackupConfiguration struct {
@@ -88,6 +89,15 @@ func (c *Client) GetSecurityGroupManagementStatus() (*SecurityGroupInfo, error) 
 		return nil, err
 	}
 	return &data.Results, nil
+}
+
+func (c *Client) UpdateSecurityGroupGatewayEgressCidrs(cidrs string) error {
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "update_controller_security_group_gateway_egress_cidrs",
+		"gateway_egress_cidrs": cidrs,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBackupConfiguration) error {
