@@ -55,6 +55,7 @@ type SpokeVpc struct {
 	EnableGlobalVpc              bool     `form:"global_vpc,omitempty"`
 	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
 	InsertionGateway             bool     `form:"insertion_gateway,omitempty"`
+	PrivateSubnetEgressTarget    string   `form:"private_subnet_egress_target,omitempty"`
 	TunnelEncryptionCipher       string   `form:"ph2_encryption_policy,omitempty"`
 	TunnelForwardSecrecy         string   `form:"ph2_pfs_policy,omitempty"`
 }

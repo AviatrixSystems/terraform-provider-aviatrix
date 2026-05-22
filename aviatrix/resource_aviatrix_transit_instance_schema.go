@@ -101,6 +101,12 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Enable Insane Mode for Transit. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
 		},
+		"private_subnet_egress_target": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "Egress target for the gateway subnet route table (e.g. NAT Gateway ID nat-xxx, Transit Gateway ID tgw-xxx). Required when the group has private_network enabled and the gateway uses HPE.",
+		},
 		"tags": {
 			Type:        schema.TypeMap,
 			Elem:        &schema.Schema{Type: schema.TypeString},

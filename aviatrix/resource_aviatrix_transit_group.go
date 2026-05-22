@@ -294,6 +294,7 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 		transitGroup.VpcRegion = mustString(v)
 	}
 	transitGroup.PrivateRouteTableConfig = getStringSet(d, "private_route_table_config")
+	transitGroup.PrivateNetwork = getBool(d, "private_network")
 
 	// Feature Flags
 	transitGroup.EnableNat = getBool(d, "enable_nat")
@@ -363,6 +364,10 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 
 	if transitGroup.EnableIPv6 && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 		return fmt.Errorf("enable_ipv6 is only valid for AWS (1) and Azure (8)")
+	}
+
+	if transitGroup.PrivateNetwork && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("private_network is only supported for AWS and Azure cloud types")
 	}
 
 	if transitGroup.EnableGatewayLoadBalancer && !goaviatrix.IsCloudType(transitGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -752,6 +757,7 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "explicitly_created", transitGroup.ExplicitlyCreated)
 	mustSet(d, "vpc_region", transitGroup.VpcRegion)
 	mustSet(d, "private_route_table_config", transitGroup.PrivateRouteTableConfig)
+	mustSet(d, "private_network", transitGroup.PrivateNetwork)
 
 	// Feature Flags
 	mustSet(d, "enable_jumbo_frame", transitGroup.EnableJumboFrame)

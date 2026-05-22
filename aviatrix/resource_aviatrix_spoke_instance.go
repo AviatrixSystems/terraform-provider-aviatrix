@@ -105,6 +105,9 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 		spokeGateway.InsaneMode = "no"
 	}
 
+	// Private subnet egress target
+	spokeGateway.PrivateSubnetEgressTarget = getString(d, "private_subnet_egress_target")
+
 	// Tags
 	if _, ok := d.GetOk("tags"); ok {
 		tagsMap := mustMap(d.Get("tags"))
@@ -277,6 +280,12 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) && insaneModeAz == "" {
 			return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS China (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 		}
+	}
+
+	// Private Subnet Egress Target Validation
+	privateSubnetEgressTarget := getString(d, "private_subnet_egress_target")
+	if privateSubnetEgressTarget != "" && !insaneMode {
+		return fmt.Errorf("'private_subnet_egress_target' requires 'insane_mode' to be enabled")
 	}
 
 	// Spot Instance Validation

@@ -294,6 +294,7 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 
 	spokeGroup.EnablePrivateVpcDefaultRoute = getBool(d, "enable_private_vpc_default_route")
 	spokeGroup.EnableSkipPublicRouteTableUpdate = getBool(d, "enable_skip_public_route_table_update")
+	spokeGroup.PrivateNetwork = getBool(d, "private_network")
 
 	// Feature Flags
 	spokeGroup.EnableNat = getBool(d, "enable_nat")
@@ -356,6 +357,10 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 
 	if spokeGroup.EnableSkipPublicRouteTableUpdate && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("enable_skip_public_route_table_update is only valid for AWS related cloud types")
+	}
+
+	if spokeGroup.PrivateNetwork && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("private_network is only supported for AWS and Azure cloud types")
 	}
 
 	if spokeGroup.EnableIPv6 && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
@@ -757,6 +762,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "enable_private_vpc_default_route", spokeGroup.EnablePrivateVpcDefaultRoute)
 	mustSet(d, "enable_skip_public_route_table_update", spokeGroup.EnableSkipPublicRouteTableUpdate)
 	mustSet(d, "private_route_table_config", spokeGroup.PrivateRouteTableConfig)
+	mustSet(d, "private_network", spokeGroup.PrivateNetwork)
 
 	if len(spokeGroup.SpokeRtbList) >= 0 {
 		rtbs := make([]string, 0, len(spokeGroup.SpokeRtbList))

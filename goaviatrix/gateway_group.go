@@ -20,6 +20,7 @@ type GatewayGroup struct {
 	AccountName       string `form:"account_name,omitempty" json:"account_name,omitempty"`
 
 	// Optional
+	PrivateNetwork                   bool     `form:"private_network,omitempty" json:"private_network,omitempty"`
 	CustomizedCidrList               []string `form:"customized_cidr_list,omitempty" json:"customized_cidr_list,omitempty"`
 	EnableS2cRxBalancing             bool     `form:"s2c_rx_balancing,omitempty" json:"s2c_rx_balancing,omitempty"`
 	ExplicitlyCreated                bool     `form:"explicitly_created,omitempty" json:"explicitly_created,omitempty"`

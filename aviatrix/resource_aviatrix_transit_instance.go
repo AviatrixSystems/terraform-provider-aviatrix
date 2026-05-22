@@ -214,14 +214,15 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 	vpcID := transitGroup.VpcID
 
 	gateway := &goaviatrix.TransitVpc{
-		GroupUUID:   transitGroup.GroupUUID,
-		CloudType:   cloudType,
-		AccountName: accountName,
-		GwName:      getString(d, "gw_name"),
-		VpcID:       vpcID,
-		VpcSize:     getString(d, "gw_size"),
-		Subnet:      getString(d, "subnet"),
-		Transit:     true,
+		GroupUUID:                 transitGroup.GroupUUID,
+		CloudType:                 cloudType,
+		AccountName:               accountName,
+		GwName:                    getString(d, "gw_name"),
+		VpcID:                     vpcID,
+		VpcSize:                   getString(d, "gw_size"),
+		Subnet:                    getString(d, "subnet"),
+		Transit:                   true,
+		PrivateSubnetEgressTarget: getString(d, "private_subnet_egress_target"),
 	}
 
 	// Validate and configure basic settings
@@ -409,6 +410,12 @@ func validateAndConfigureCloudSpecificSettings(d *schema.ResourceData, gateway *
 		gateway.InsaneMode = "yes"
 	} else {
 		gateway.InsaneMode = "no"
+	}
+
+	// Private subnet egress target validation
+	privateSubnetEgressTarget := getString(d, "private_subnet_egress_target")
+	if privateSubnetEgressTarget != "" && !enableInsane {
+		return diag.Errorf("'private_subnet_egress_target' requires 'insane_mode' to be enabled")
 	}
 
 	return nil

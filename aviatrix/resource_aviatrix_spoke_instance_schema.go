@@ -111,6 +111,12 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Enable Insane Mode for spoke gateway. Supported for AWS/AWSGov, GCP, Azure and OCI.",
 		},
+		"private_subnet_egress_target": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "Egress target for the gateway subnet route table (e.g. NAT Gateway ID nat-xxx, Transit Gateway ID tgw-xxx). Required when the group has private_network enabled and the gateway uses HPE.",
+		},
 
 		// ============================================================================
 		// SPOT INSTANCE (AWS and Azure)

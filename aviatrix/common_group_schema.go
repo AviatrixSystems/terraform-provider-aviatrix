@@ -46,6 +46,13 @@ func GroupRequiredSchema() map[string]*schema.Schema {
 // These can be reused by other resources that share the same optional fields.
 func GroupOptionalSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"private_network": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			ForceNew:    true,
+			Description: "Deploy gateways in this group without a public IP. When enabled, gateways reach the controller via the subnet's existing egress path (NAT Gateway, centralized firewall, etc.). Only supported for AWS and Azure. Cannot be changed after group creation.",
+		},
 		"customized_spoke_vpc_routes": {
 			Type:     schema.TypeSet,
 			Optional: true,
