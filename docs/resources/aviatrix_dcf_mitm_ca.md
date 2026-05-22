@@ -48,14 +48,6 @@ In addition to all arguments above, the following attributes are exported:
 * `state` - The state of the MITM CA (`active` or `inactive`). To activate a CA, use the `aviatrix_dcf_mitm_ca_selection` resource.
 * `origin` - The origin of the MITM CA, custom - Customer uploaded, aviatrix - system provided
 
-## Import
-
-**aviatrix_dcf_mitm_ca** can be imported using the `ca_id` (UUID), e.g.
-
-```
-$ terraform import aviatrix_dcf_mitm_ca.example 41984f8b-5a37-4272-89b3-57c79e9ff77c
-```
-
 ## Notes
 
 * The `key` and `certificate_chain` must be valid PEM formatted content.
