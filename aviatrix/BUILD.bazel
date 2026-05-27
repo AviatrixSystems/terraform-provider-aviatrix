@@ -13,6 +13,7 @@ go_library(
         "common_group_schema.go",
         "config.go",
         "data_source_aviatrix_account.go",
+        "data_source_aviatrix_attachment_vrf_status.go",
         "data_source_aviatrix_caller_identity.go",
         "data_source_aviatrix_controller_metadata.go",
         "data_source_aviatrix_dcf_attachment_points.go",

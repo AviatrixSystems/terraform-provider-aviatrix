@@ -141,6 +141,7 @@ go_library(
         "vpn_cert_download.go",
         "vpn_user.go",
         "vpn_user_accelerator.go",
+        "vrf_attachment.go",
         "web_group.go",
     ],
     importpath = "aviatrix.com/terraform-provider-aviatrix/goaviatrix",
