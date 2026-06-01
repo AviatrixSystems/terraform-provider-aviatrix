@@ -19,7 +19,8 @@ type DistributedFirewallingPolicy struct {
 	Protocol               string                            `json:"protocol"`
 	FlowAppRequirement     string                            `json:"flow_app_requirement,omitempty"`
 	DecryptPolicy          string                            `json:"decrypt_policy,omitempty"`
-	Watch                  bool                              `json:"watch,omitempty"`
+	Watch                  bool                              `json:"watch,omitempty"`       // Deprecated: use Enforcement.
+	Enforcement            string                            `json:"enforcement,omitempty"` // "ENFORCE" | "MONITOR" | "DISABLE"
 	ExcludeSgOrchestration bool                              `json:"exclude_sg_orchestration,omitempty"`
 	UUID                   string                            `json:"uuid,omitempty"`
 	SystemResource         bool                              `json:"system_resource,omitempty"`

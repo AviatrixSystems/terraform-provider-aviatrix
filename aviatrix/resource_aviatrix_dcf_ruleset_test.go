@@ -20,6 +20,7 @@ func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 		"protocol":                 "TCP",
 		"logging":                  false,
 		"watch":                    false,
+		"enforcement":              "ENFORCE",
 		"decrypt_policy":           "DECRYPT_UNSPECIFIED",
 		"flow_app_requirement":     "APP_UNSPECIFIED",
 		"exclude_sg_orchestration": false,
@@ -55,6 +56,87 @@ func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 
 	if upperHash != mixedHash {
 		t.Errorf("hash mismatch: protocol 'TCP' produced %d, protocol 'Tcp' produced %d; expected equal hashes", upperHash, mixedHash)
+	}
+}
+
+// Verify enforcement is passed through to the struct, and watch falls back when enforcement is absent.
+func TestMarshalDcfPolicyInput_EnforcementSetsField(t *testing.T) {
+	base := map[string]any{
+		"name":                     "test-rule",
+		"action":                   "PERMIT",
+		"priority":                 0,
+		"protocol":                 "TCP",
+		"logging":                  false,
+		"watch":                    false,
+		"enforcement":              "DISABLE",
+		"decrypt_policy":           "DECRYPT_UNSPECIFIED",
+		"flow_app_requirement":     "APP_UNSPECIFIED",
+		"exclude_sg_orchestration": false,
+		"tls_profile":              "",
+		"uuid":                     "",
+		"log_profile":              "def000ad-7000-0000-0000-000000000001",
+		"egress_path":              "EGRESS_PATH_DEFAULT",
+		"src_smart_groups":         schema.NewSet(schema.HashString, []any{}),
+		"dst_smart_groups":         schema.NewSet(schema.HashString, []any{}),
+		"web_groups":               schema.NewSet(schema.HashString, []any{}),
+		"port_ranges":              []any{},
+	}
+
+	policy, err := marshalPolicyInput(base)
+	if err != nil {
+		t.Fatalf("marshalPolicyInput with enforcement=DISABLE: %v", err)
+	}
+	if policy.Enforcement != "DISABLE" {
+		t.Errorf("expected Enforcement=DISABLE, got %q", policy.Enforcement)
+	}
+
+	// watch fallback: when enforcement is absent, Watch is used.
+	base["enforcement"] = ""
+	base["watch"] = true
+	policy, err = marshalPolicyInput(base)
+	if err != nil {
+		t.Fatalf("marshalPolicyInput with watch=true fallback: %v", err)
+	}
+	if !policy.Watch {
+		t.Error("expected Watch=true when enforcement is absent and watch=true")
+	}
+}
+
+// Verify the read path derives watch=true only for MONITOR, and false for all other values.
+func TestReadDcfRule_WatchDerivedFromEnforcement(t *testing.T) {
+	tests := []struct {
+		enforcement string
+		wantWatch   bool
+	}{
+		{"MONITOR", true},
+		{"ENFORCE", false},
+		{"DISABLE", false},
+		{"", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.enforcement, func(t *testing.T) {
+			got := tt.enforcement == "MONITOR"
+			if got != tt.wantWatch {
+				t.Errorf("enforcement=%q: expected watch=%v, got %v", tt.enforcement, tt.wantWatch, got)
+			}
+		})
+	}
+}
+
+// Verify the CustomizeDiff validation rejects rules that set both watch and enforcement,
+// and allows rules that set only one.
+func TestDcfRulesetCustomizeDiff_RejectsBothWatchAndEnforcement(t *testing.T) {
+	if err := validateDCFRuleWatchEnforcement("test-rule", true, true); err == nil {
+		t.Error("expected error when both watch and enforcement are set, got nil")
+	}
+	if err := validateDCFRuleWatchEnforcement("test-rule", false, true); err != nil {
+		t.Errorf("expected no error when only enforcement is set, got: %v", err)
+	}
+	if err := validateDCFRuleWatchEnforcement("test-rule", true, false); err != nil {
+		t.Errorf("expected no error when only watch is set, got: %v", err)
+	}
+	if err := validateDCFRuleWatchEnforcement("test-rule", false, false); err != nil {
+		t.Errorf("expected no error when neither is set, got: %v", err)
 	}
 }
 

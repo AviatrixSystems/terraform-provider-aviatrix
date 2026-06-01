@@ -126,7 +126,15 @@ var dcfRuleElem = &schema.Resource{
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Whether to enable watch mode for the rule.",
+			Deprecated:  "Use 'enforcement' instead. 'watch=true' maps to enforcement=MONITOR; 'watch=false' maps to enforcement=ENFORCE.",
+			Description: "Deprecated: use 'enforcement' instead.",
+		},
+		"enforcement": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "ENFORCE",
+			ValidateFunc: validation.StringInSlice([]string{"ENFORCE", "MONITOR", "DISABLE"}, false),
+			Description:  "Enforcement mode for the rule. Must be one of ENFORCE, MONITOR, or DISABLE.",
 		},
 		"web_groups": {
 			Type:        schema.TypeSet,
@@ -184,6 +192,7 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 		ReadWithoutTimeout:   resourceAviatrixDCFRulesetRead,
 		UpdateWithoutTimeout: resourceAviatrixDCFRulesetUpdate,
 		DeleteWithoutTimeout: resourceAviatrixDCFRulesetDelete,
+		CustomizeDiff:        resourceAviatrixDCFRulesetCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -407,9 +416,13 @@ func marshalPolicyInput(policyMap map[string]any) (*goaviatrix.DCFPolicy, error)
 		return nil, fmt.Errorf("logging must be of type bool")
 	}
 
-	policy.Watch, ok = policyMap["watch"].(bool)
-	if !ok {
-		return nil, fmt.Errorf("watch must be of type bool")
+	if enforcement, hasEnforcement := policyMap["enforcement"].(string); hasEnforcement && enforcement != "" {
+		policy.Enforcement = enforcement
+	} else {
+		policy.Watch, ok = policyMap["watch"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("watch must be of type bool")
+		}
 	}
 
 	policy.EgressPath, ok = policyMap["egress_path"].(string)
@@ -542,7 +555,8 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 		p["dst_smart_groups"] = policy.DstSmartGroups
 		p["web_groups"] = policy.WebGroups
 		p["logging"] = policy.Logging
-		p["watch"] = policy.Watch
+		p["enforcement"] = policy.Enforcement
+		p["watch"] = policy.Enforcement == "MONITOR"
 		p["uuid"] = policy.UUID
 		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
 		p["log_profile"] = policy.LogProfile
@@ -611,5 +625,34 @@ func resourceAviatrixDCFRulesetDelete(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed to delete DCF Ruleset: %v", err)
 	}
 
+	return nil
+}
+
+// validateDCFRuleWatchEnforcement returns an error if both watch and enforcement
+// are explicitly set on a rule. Extracted for unit testability.
+func validateDCFRuleWatchEnforcement(ruleName string, watchSet, enforcementSet bool) error {
+	if watchSet && enforcementSet {
+		return fmt.Errorf("rule %q: 'watch' and 'enforcement' cannot both be set; recommended to use 'enforcement' only", ruleName)
+	}
+	return nil
+}
+
+// CustomizeDiff is used to ensure both watch and enforcement are not set at the same time.
+// Can be removed once watch is removed from Terraform.
+func resourceAviatrixDCFRulesetCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	rawRules := d.GetRawConfig().GetAttr("rules")
+	if rawRules.IsNull() || !rawRules.IsKnown() {
+		return nil
+	}
+	for it := rawRules.ElementIterator(); it.Next(); {
+		_, val := it.Element()
+		rawEnforcement := val.GetAttr("enforcement")
+		rawWatch := val.GetAttr("watch")
+		enforcementSet := !rawEnforcement.IsNull() && rawEnforcement.IsKnown()
+		watchSet := !rawWatch.IsNull() && rawWatch.IsKnown()
+		if err := validateDCFRuleWatchEnforcement(val.GetAttr("name").AsString(), watchSet, enforcementSet); err != nil {
+			return err
+		}
+	}
 	return nil
 }

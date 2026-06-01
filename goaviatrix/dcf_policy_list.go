@@ -29,7 +29,8 @@ type DCFPolicy struct {
 	SystemResource         bool                   `json:"system_resource,omitempty"`
 	TLSProfile             string                 `json:"tls_profile,omitempty"`
 	UUID                   string                 `json:"uuid,omitempty"`
-	Watch                  bool                   `json:"watch,omitempty"`
+	Watch                  bool                   `json:"watch,omitempty"`       // Deprecated: use Enforcement.
+	Enforcement            string                 `json:"enforcement,omitempty"` // "ENFORCE" | "MONITOR" | "DISABLE"
 	WebGroups              []string               `json:"web_filters,omitempty"`
 	LogProfile             string                 `json:"log_profile,omitempty"`
 	EgressPath             string                 `json:"egress_path,omitempty"`

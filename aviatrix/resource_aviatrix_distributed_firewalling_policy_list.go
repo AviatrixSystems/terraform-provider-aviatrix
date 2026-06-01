@@ -23,6 +23,8 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: resourceAviatrixDistributedFirewallingPolicyListCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			"policies": {
 				Type:        schema.TypeList,
@@ -98,8 +100,16 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 						"watch": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Default:     false,
+							Computed:    true,
+							Deprecated:  "Use 'enforcement' instead. 'watch=true' maps to enforcement=MONITOR; 'watch=false' maps to enforcement=ENFORCE.",
 							Description: "Whether to enable watch mode for the policy.",
+						},
+						"enforcement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ENFORCE", "MONITOR", "DISABLE"}, false),
+							Description:  "Enforcement mode for the policy. Must be one of ENFORCE, MONITOR, or DISABLE.",
 						},
 						"exclude_sg_orchestration": {
 							Type:        schema.TypeBool,
@@ -208,7 +218,9 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.Logging = mustBool(logging)
 		}
 
-		if watch, watchOk := policy["watch"]; watchOk {
+		if enforcement, hasEnforcement := policy["enforcement"].(string); hasEnforcement && enforcement != "" {
+			distributedFirewallingPolicy.Enforcement = enforcement
+		} else if watch, watchOk := policy["watch"]; watchOk {
 			distributedFirewallingPolicy.Watch = mustBool(watch)
 		}
 
@@ -300,7 +312,8 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["dst_smart_groups"] = policy.DstSmartGroups
 		p["web_groups"] = policy.WebGroups
 		p["logging"] = policy.Logging
-		p["watch"] = policy.Watch
+		p["enforcement"] = policy.Enforcement
+		p["watch"] = policy.Enforcement == "MONITOR"
 		p["uuid"] = policy.UUID
 		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
 		p["log_profile"] = policy.LogProfile
@@ -355,6 +368,36 @@ func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context,
 
 	d.Partial(false)
 	return resourceAviatrixDistributedFirewallingPolicyListRead(ctx, d, meta)
+}
+
+// validateDistributedFirewallingPolicyWatchEnforcement returns an error if both
+// watch and enforcement are explicitly set on a policy. Extracted for unit testability.
+func validateDistributedFirewallingPolicyWatchEnforcement(index int, watchSet, enforcementSet bool) error {
+	if watchSet && enforcementSet {
+		return fmt.Errorf("policies[%d]: 'watch' and 'enforcement' cannot both be set; recommended to use 'enforcement' only", index)
+	}
+	return nil
+}
+
+// CustomizeDiff is used to ensure both watch and enforcement are not set at the same time.
+// Can be removed once watch is removed from Terraform.
+func resourceAviatrixDistributedFirewallingPolicyListCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	rawPolicies := d.GetRawConfig().GetAttr("policies")
+	if rawPolicies.IsNull() || !rawPolicies.IsKnown() {
+		return nil
+	}
+	i := 0
+	for it := rawPolicies.ElementIterator(); it.Next(); i++ {
+		_, val := it.Element()
+		rawEnforcement := val.GetAttr("enforcement")
+		rawWatch := val.GetAttr("watch")
+		enforcementSet := !rawEnforcement.IsNull() && rawEnforcement.IsKnown()
+		watchSet := !rawWatch.IsNull() && rawWatch.IsKnown()
+		if err := validateDistributedFirewallingPolicyWatchEnforcement(i, watchSet, enforcementSet); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func resourceAviatrixDistributedFirewallingPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
