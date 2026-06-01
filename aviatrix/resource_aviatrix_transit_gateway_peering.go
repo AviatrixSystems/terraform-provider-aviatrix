@@ -199,8 +199,6 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		DisableActivemesh:   getBool(d, "disable_activemesh"),
 	}
 
-	transitGatewayPeering.EnableOverPrivateNetwork = getBool(d, "enable_peering_over_private_network")
-
 	transitGatewayPeering.EnableJumboFrame = getBool(d, "jumbo_frame")
 
 	// insane_mode is optional for edge gateway peering
@@ -216,6 +214,15 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		return err
 	}
 	gateway2CloudType := gateway2Details.CloudType
+
+	if getBool(d, "enable_peering_over_private_network") {
+		if gateway1Details.PrivateNetwork || gateway2Details.PrivateNetwork {
+			transitGatewayPeering.PrivateIPPeering = "yes"
+		} else {
+			transitGatewayPeering.EnableOverPrivateNetwork = true
+		}
+	}
+
 	// Set source WAN interface names for gateway1
 	if goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		transit1InterfaceRaw, ok := d.GetOk("gateway1_logical_ifnames")

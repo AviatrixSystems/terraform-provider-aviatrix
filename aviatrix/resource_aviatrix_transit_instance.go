@@ -284,7 +284,7 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 
 	// Configure EIP allocation
 	privateModeInfo, _ := client.GetPrivateModeInfo(ctx)
-	if err := configureTransitInstanceEIP(d, gateway, privateModeInfo); err != nil {
+	if err := configureTransitInstanceEIP(d, gateway, privateModeInfo, transitGroup.PrivateNetwork); err != nil {
 		return nil, err
 	}
 
@@ -580,16 +580,13 @@ func configureTransitInstancePrivateMode(ctx context.Context, d *schema.Resource
 }
 
 // configureTransitInstanceEIP configures EIP allocation settings
-func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, privateModeInfo *goaviatrix.ControllerPrivateModeConfig) diag.Diagnostics {
+func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, privateModeInfo *goaviatrix.ControllerPrivateModeConfig, privateNetwork bool) diag.Diagnostics {
 	if privateModeInfo.EnablePrivateMode {
 		return nil
 	}
 
 	allocateNewEip := getBool(d, "allocate_new_eip")
-	if allocateNewEip {
-		// Leave ReuseEip empty so it's omitted from the API request.
-		// Sending "off" causes "Invalid IP format off" - controller expects
-		// reuse_eip to be either empty (allocate new) or a valid IP (reuse).
+	if allocateNewEip || privateNetwork {
 		gateway.ReuseEip = ""
 		return nil
 	}

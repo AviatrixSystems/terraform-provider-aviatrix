@@ -140,7 +140,7 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 // validateSpokeInstanceConfiguration validates the spoke instance configuration.
 //
 //nolint:cyclop
-func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, vpcRegion string) error {
+func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, vpcRegion string, privateNetwork bool) error {
 	insaneMode := getBool(d, "insane_mode")
 	insaneModeAz := getString(d, "insane_mode_az")
 	insertionGateway := getBool(d, "insertion_gateway")
@@ -313,7 +313,7 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 	}
 
 	// EIP Allocation Validation
-	if !allocateNewEip {
+	if !allocateNewEip && !privateNetwork {
 		if eip == "" {
 			return fmt.Errorf("'eip' must be set when 'allocate_new_eip' is false")
 		}
@@ -353,7 +353,7 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 	cloudType := gatewayGroup.CloudType
 
 	// Validate configuration
-	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion); err != nil {
+	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion, gatewayGroup.PrivateNetwork); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -764,7 +764,7 @@ func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.Resource
 	}
 	cloudType := gatewayGroup.CloudType
 
-	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion); err != nil {
+	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion, gatewayGroup.PrivateNetwork); err != nil {
 		return diag.FromErr(err)
 	}
 

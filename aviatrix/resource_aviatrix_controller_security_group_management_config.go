@@ -143,5 +143,12 @@ func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.Res
 }
 
 func resourceAviatrixControllerSecurityGroupManagementConfigDelete(d *schema.ResourceData, meta any) error {
+	client := mustClient(meta)
+
+	err := client.UpdateSecurityGroupGatewayEgressCidrs("")
+	if err != nil {
+		log.Printf("[WARN] failed to clear gateway egress CIDRs during delete: %v", err)
+	}
+
 	return nil
 }
