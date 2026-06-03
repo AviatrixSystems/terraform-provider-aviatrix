@@ -36,12 +36,16 @@ func resourceAviatrixTransitInstanceCustomizeDiff(_ context.Context, d *schema.R
 	}
 
 	cloudType, ok := d.Get("cloud_type").(int)
-	if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		return nil
 	}
 
 	gwSizeConfig := d.GetRawConfig().GetAttr("gw_size")
 	if gwSizeConfig.IsNull() || gwSizeConfig.AsString() == "" {
+		// For CSP and AEP, gw_size can be inherited from the group's group_instance_size
+		if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.CSPRelatedCloudTypes|goaviatrix.EDGENEO) {
+			return nil
+		}
 		return fmt.Errorf("'gw_size' is required for this transit instance and cannot be removed from the configuration")
 	}
 
@@ -80,14 +84,20 @@ func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.Resour
 	mustSet(d, "account_name", transitGroup.AccountName)
 	mustSet(d, "vpc_id", transitGroup.VpcID)
 
-	// Validate gw_size: not supported for Equinix/Megaport, required for all other types
+	// Validate gw_size: not supported for Equinix/Megaport/Self-managed, required for all other types
 	gwSize := getString(d, "gw_size")
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 		if gwSize != "" {
-			return diag.Errorf("'gw_size' is not supported for Equinix or Megaport transit instances")
+			return diag.Errorf("'gw_size' is not supported for Equinix, Megaport, or Self-managed transit instances")
 		}
 	} else if gwSize == "" {
-		return diag.Errorf("'gw_size' is required for CSP gateways and other edge transit instances")
+		// For CSP and AEP gateways, inherit gw_size from the group's group_instance_size
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.CSPRelatedCloudTypes|goaviatrix.EDGENEO) && transitGroup.GroupInstanceSize != "" {
+			gwSize = transitGroup.GroupInstanceSize
+			mustSet(d, "gw_size", gwSize)
+		} else {
+			return diag.Errorf("'gw_size' is required for CSP gateways and AEP transit instances")
+		}
 	}
 
 	// Create edge transit gateway for AEP, Equinix, Megaport, Self-managed

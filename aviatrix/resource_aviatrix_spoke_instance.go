@@ -48,8 +48,17 @@ func resourceAviatrixSpokeInstanceCustomizeDiff(_ context.Context, d *schema.Res
 		return nil
 	}
 
+	cloudType, ok := d.Get("cloud_type").(int)
+	if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
+		return nil
+	}
+
 	gwSizeConfig := d.GetRawConfig().GetAttr("gw_size")
 	if gwSizeConfig.IsNull() || gwSizeConfig.AsString() == "" {
+		// For CSP and AEP, gw_size can be inherited from the group's group_instance_size
+		if ok && goaviatrix.IsCloudType(cloudType, goaviatrix.CSPRelatedCloudTypes|goaviatrix.EDGENEO) {
+			return nil
+		}
 		oldGwSize, _ := d.GetChange("gw_size")
 		if oldVal, ok := oldGwSize.(string); ok && oldVal != "" {
 			return fmt.Errorf("'gw_size' is required for this spoke instance and cannot be removed from the configuration")
@@ -168,12 +177,12 @@ func validateSpokeInstanceConfiguration(d *schema.ResourceData, cloudType int, v
 
 	// Edge-specific validation
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.EdgeRelatedCloudTypes) {
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGEEQUINIX|goaviatrix.EDGEMEGAPORT|goaviatrix.EDGESELFMANAGED) {
 			if gwSize != "" {
-				return fmt.Errorf("'gw_size' is not supported for Equinix or Megaport spoke instances")
+				return fmt.Errorf("'gw_size' is not supported for Equinix, Megaport, or Self-managed spoke instances")
 			}
 		} else if gwSize == "" {
-			return fmt.Errorf("'gw_size' is required for edge spoke instances other than Equinix and Megaport")
+			return fmt.Errorf("'gw_size' is required for AEP spoke instances")
 		}
 
 		// Interfaces are required for edge spoke gateways
@@ -351,6 +360,13 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 	}
 
 	cloudType := gatewayGroup.CloudType
+
+	// For CSP and AEP spoke instances, inherit gw_size from the group if not explicitly set
+	if getString(d, "gw_size") == "" && gatewayGroup.GroupInstanceSize != "" {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.CSPRelatedCloudTypes|goaviatrix.EDGENEO) {
+			mustSet(d, "gw_size", gatewayGroup.GroupInstanceSize)
+		}
+	}
 
 	// Validate configuration
 	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion, gatewayGroup.PrivateNetwork); err != nil {
@@ -763,6 +779,13 @@ func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("failed to get gateway group for validation: %s", err)
 	}
 	cloudType := gatewayGroup.CloudType
+
+	// For CSP and AEP spoke instances, inherit gw_size from the group if not explicitly set
+	if getString(d, "gw_size") == "" && gatewayGroup.GroupInstanceSize != "" {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.CSPRelatedCloudTypes|goaviatrix.EDGENEO) {
+			mustSet(d, "gw_size", gatewayGroup.GroupInstanceSize)
+		}
+	}
 
 	if err := validateSpokeInstanceConfiguration(d, cloudType, gatewayGroup.VpcRegion, gatewayGroup.PrivateNetwork); err != nil {
 		return diag.FromErr(err)

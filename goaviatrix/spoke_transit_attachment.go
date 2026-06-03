@@ -31,6 +31,7 @@ type SpokeTransitAttachment struct {
 	TransitGatewayLogicalIfNames []string `form:"transit_gw_logical_ifnames,omitempty" json:"transit_gw_logical_ifnames,omitempty"`
 	DisableActivemesh            bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
 	EnableFirenetForEdge         bool     `form:"enable_firenet_for_edge,omitempty" json:"enable_firenet_for_edge"`
+	EnableAzAffinity             bool     `form:"enable_az_affinity,omitempty" json:"enable_az_affinity,omitempty"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {

@@ -124,6 +124,12 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable VPC DNS server.",
 		},
+		"enable_symmetric_routing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable symmetric routing for the spoke group. Only valid for AWS.",
+		},
 
 		// ============================================================================
 		// BGP CONFIGURATION
@@ -300,6 +306,7 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	spokeGroup.EnableNat = getBool(d, "enable_nat")
 	spokeGroup.EnableIPv6 = getBool(d, "enable_ipv6")
 	spokeGroup.EnableVpcDNSServer = getBool(d, "enable_vpc_dns_server")
+	spokeGroup.EnableSymmetricRouting = getBool(d, "enable_symmetric_routing")
 
 	// BGP Configuration
 	spokeGroup.EnableBgp = getBool(d, "enable_bgp")
@@ -365,6 +372,10 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 
 	if spokeGroup.EnableIPv6 && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 		return fmt.Errorf("enable_ipv6 is only valid for AWS (1) and Azure (8)")
+	}
+
+	if spokeGroup.EnableSymmetricRouting && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("enable_symmetric_routing is only valid for AWS related cloud types")
 	}
 
 	if spokeGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -778,6 +789,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "enable_ipv6", spokeGroup.EnableIPv6)
 	mustSet(d, "enable_gro_gso", spokeGroup.EnableGroGso)
 	mustSet(d, "enable_vpc_dns_server", spokeGroup.EnableVpcDNSServer)
+	mustSet(d, "enable_symmetric_routing", spokeGroup.EnableSymmetricRouting)
 
 	// BGP Configuration
 	mustSet(d, "enable_bgp", spokeGroup.EnableBgp)
@@ -1222,6 +1234,19 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 			if err != nil {
 				return diag.Errorf("failed to enable route propagation for spoke group %s during spoke group update: %v", groupName, err)
 			}
+		}
+	}
+
+	// ============================================================================
+	// Symmetric Routing - API: update_gateway_group (enable_symmetric_routing field)
+	// ============================================================================
+	if d.HasChange("enable_symmetric_routing") {
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return diag.Errorf("enable_symmetric_routing is only valid for AWS related cloud types")
+		}
+		enableSymmetricRouting := getBool(d, "enable_symmetric_routing")
+		if err := client.SetSymmetricRoutingGatewayGroup(ctx, groupUUID, enableSymmetricRouting); err != nil {
+			return diag.Errorf("could not update symmetric routing during spoke group update: %s", err)
 		}
 	}
 

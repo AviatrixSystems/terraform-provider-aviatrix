@@ -101,6 +101,12 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"enable_az_affinity": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable AZ affinity for spoke-transit attachment. Prefers same-AZ nexthop. Only valid for AWS with HPE enabled.",
+			},
 		},
 	}
 }
@@ -208,6 +214,15 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 
 	if !spoke.EnableBgp && (len(attachment.SpokePrependAsPath) != 0 || len(attachment.TransitPrependAsPath) != 0) {
 		return fmt.Errorf("'spoke_prepend_as_path' and 'transit_prepend_as_path' are only valid for BGP enabled spoke gateway")
+	}
+
+	if attachment.EnableAzAffinity {
+		if !goaviatrix.IsCloudType(spoke.CloudType, goaviatrix.AWSRelatedCloudTypes) || !goaviatrix.IsCloudType(transitGatewayDetails.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("enable_az_affinity is only supported when both spoke and transit gateways are AWS cloud type")
+		}
+		if spoke.InsaneMode != "yes" || transitGatewayDetails.InsaneMode != "yes" {
+			return fmt.Errorf("enable_az_affinity is only supported when both spoke and transit gateways have HPE enabled")
+		}
 	}
 
 	if attachment.NoMaxPerformance && attachment.InsaneModeTunnelNumber > 0 {
@@ -348,6 +363,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 		}
 	}
 	mustSet(d, "enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
+	mustSet(d, "enable_az_affinity", transitGatewayPeering.EnableAzAffinity)
 	if !transitGatewayPeering.NoMaxPerformance && transitGatewayPeering.InsaneModeTunnelCount > 0 {
 		mustSet(d, "tunnel_count", transitGatewayPeering.InsaneModeTunnelCount)
 	}
@@ -445,6 +461,17 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta a
 		}
 	}
 
+	if d.HasChange("enable_az_affinity") {
+		peering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: spokeGwName,
+			TransitGatewayName2: transitGwName,
+			EnableAzAffinity:    getBool(d, "enable_az_affinity"),
+		}
+		if err := client.UpdateTransitGatewayPeering(peering); err != nil {
+			return fmt.Errorf("could not update enable_az_affinity for spoke transit attachment: %w", err)
+		}
+	}
+
 	d.Partial(false)
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
@@ -483,6 +510,7 @@ func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.Spok
 		TransitPrependAsPath:   getStringList(d, "transit_prepend_as_path"),
 		InsaneModeTunnelNumber: getInt(d, "tunnel_count"),
 		NoMaxPerformance:       !getBool(d, "enable_max_performance"),
+		EnableAzAffinity:       getBool(d, "enable_az_affinity"),
 	}
 
 	return spokeTransitAttachment

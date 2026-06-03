@@ -175,6 +175,12 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				ForceNew:    true,
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
+			"enable_az_affinity": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable AZ affinity for transit-transit peering. Prefers same-AZ nexthop. Only valid for AWS with HPE enabled.",
+			},
 		},
 	}
 }
@@ -200,6 +206,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 	}
 
 	transitGatewayPeering.EnableJumboFrame = getBool(d, "jumbo_frame")
+	transitGatewayPeering.EnableAzAffinity = getBool(d, "enable_az_affinity")
 
 	// insane_mode is optional for edge gateway peering
 	transitGatewayPeering.EnableInsaneMode = getBool(d, "insane_mode")
@@ -214,6 +221,15 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		return err
 	}
 	gateway2CloudType := gateway2Details.CloudType
+
+	if getBool(d, "enable_az_affinity") {
+		if !goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.AWSRelatedCloudTypes) || !goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("enable_az_affinity is only supported when both transit gateways are AWS cloud type")
+		}
+		if gateway1Details.InsaneMode != "yes" || gateway2Details.InsaneMode != "yes" {
+			return fmt.Errorf("enable_az_affinity is only supported when both transit gateways have HPE enabled")
+		}
+	}
 
 	if getBool(d, "enable_peering_over_private_network") {
 		if gateway1Details.PrivateNetwork || gateway2Details.PrivateNetwork {
@@ -458,6 +474,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta any)
 	if err := d.Set("disable_activemesh", transitGatewayPeering.DisableActivemesh); err != nil {
 		return fmt.Errorf("error setting disable_activemesh: %w", err)
 	}
+	if err := d.Set("enable_az_affinity", transitGatewayPeering.EnableAzAffinity); err != nil {
+		return fmt.Errorf("failed to set enable_az_affinity: %w", err)
+	}
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil
 }
@@ -539,6 +558,13 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta an
 			return fmt.Errorf("could not update prepend_as_path2: %w", err)
 		}
 
+	}
+
+	if d.HasChange("enable_az_affinity") {
+		transitGatewayPeering.EnableAzAffinity = getBool(d, "enable_az_affinity")
+		if err := client.UpdateTransitGatewayPeering(transitGatewayPeering); err != nil {
+			return fmt.Errorf("failed to update enable_az_affinity: %w", err)
+		}
 	}
 
 	if d.HasChanges("gateway1_logical_ifnames") || d.HasChange("gateway2_logical_ifnames") {

@@ -186,3 +186,108 @@ func testAccCheckSpokeTransitAttachmentDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAviatrixSpokeTransitAttachment_azAffinity(t *testing.T) {
+	var spokeTransitAttachment goaviatrix.SpokeTransitAttachment
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_transit_attachment.test"
+
+	skipAcc := os.Getenv("SKIP_SPOKE_TRANSIT_ATTACHMENT")
+	if skipAcc == "yes" {
+		t.Skip("Skipping spoke transit attachment tests as 'SKIP_SPOKE_TRANSIT_ATTACHMENT' is set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_SPOKE_TRANSIT_ATTACHMENT' to 'yes' to skip spoke transit attachment tests")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeTransitAttachmentDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with az_affinity enabled
+			{
+				Config: testAccSpokeTransitAttachmentConfigAzAffinity(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeTransitAttachmentExists(resourceName, &spokeTransitAttachment),
+					resource.TestCheckResourceAttr(resourceName, "enable_az_affinity", "true"),
+				),
+			},
+			// Step 2: Disable az_affinity
+			{
+				Config: testAccSpokeTransitAttachmentConfigAzAffinity(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeTransitAttachmentExists(resourceName, &spokeTransitAttachment),
+					resource.TestCheckResourceAttr(resourceName, "enable_az_affinity", "false"),
+				),
+			},
+			// Step 3: Import verification
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpokeTransitAttachmentConfigAzAffinity(rName string, enableAzAffinity bool) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	cloud_type         = 1
+	account_name       = "tfa-%s"
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_vpc" "test" {
+	cloud_type           = 1
+	account_name         = aviatrix_account.test.account_name
+	region               = "us-west-1"
+	name                 = "aws-vpc-test-az-0"
+	cidr                 = "16.0.0.0/20"
+	aviatrix_transit_vpc = true
+}
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type     = 1
+	account_name   = aviatrix_account.test.account_name
+	gw_name        = "tft-az-%s"
+	vpc_id         = aviatrix_vpc.test.vpc_id
+	vpc_reg        = aviatrix_vpc.test.region
+	gw_size        = "c5.xlarge"
+	subnet         = join(".", [join(".", slice(split(".", aviatrix_vpc.test.public_subnets[0].cidr), 0, 3)), "128/26"])
+	insane_mode    = true
+	insane_mode_az = "us-west-1b"
+}
+resource "aviatrix_vpc" "test1" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	cidr         = "173.31.0.0/20"
+	name         = "aws-vpc-test-az-1"
+	region       = "us-east-1"
+}
+resource "aviatrix_spoke_gateway" "test" {
+	cloud_type     = 1
+	account_name   = aviatrix_account.test.account_name
+	gw_name        = "tfs-az-%s"
+	vpc_id         = aviatrix_vpc.test1.vpc_id
+	vpc_reg        = aviatrix_vpc.test1.region
+	gw_size        = "c5.xlarge"
+	subnet         = aviatrix_vpc.test1.public_subnets[0].cidr
+	insane_mode    = true
+	insane_mode_az = "us-east-1a"
+}
+resource "aviatrix_spoke_transit_attachment" "test" {
+	spoke_gw_name      = aviatrix_spoke_gateway.test.gw_name
+	transit_gw_name    = aviatrix_transit_gateway.test.gw_name
+	enable_az_affinity = %t
+}
+	`, rName,
+		os.Getenv("AWS_ACCOUNT_NUMBER"),
+		os.Getenv("AWS_ACCESS_KEY"),
+		os.Getenv("AWS_SECRET_KEY"),
+		rName, rName,
+		enableAzAffinity)
+}

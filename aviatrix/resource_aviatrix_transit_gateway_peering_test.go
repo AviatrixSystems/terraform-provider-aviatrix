@@ -721,3 +721,99 @@ resource "aviatrix_transit_gateway_peering" "test_insane_mode_default" {
 		rName, vpcID1, region1, subnet1,
 		rName, vpcID2, region2, subnet2)
 }
+
+func TestAccAviatrixTransitGatewayPeering_azAffinity(t *testing.T) {
+	rName := acctest.RandString(5)
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
+
+	resourceName := "aviatrix_transit_gateway_peering.test_az_affinity"
+
+	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Aviatrix transit gateway peering test as SKIP_TRANSIT_GATEWAY_PEERING is set")
+	}
+	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_PEERING to yes to skip Aviatrix transit gateway peering tests"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAvxTransitGatewayPeeringCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with az_affinity enabled
+			{
+				Config: testAccTransitGatewayPeeringConfigAzAffinity(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2, true),
+				Check: resource.ComposeTestCheckFunc(
+					tesAccCheckTransitGatewayPeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_az_affinity", "true"),
+				),
+			},
+			// Step 2: Disable az_affinity
+			{
+				Config: testAccTransitGatewayPeeringConfigAzAffinity(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2, false),
+				Check: resource.ComposeTestCheckFunc(
+					tesAccCheckTransitGatewayPeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_az_affinity", "false"),
+				),
+			},
+			// Step 3: Import verification
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringConfigAzAffinity(rName, vpcID1, region1, subnet1, vpcID2, region2, subnet2 string, enableAzAffinity bool) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_transit_gateway" "transitGw1" {
+	cloud_type         = 1
+	account_name       = aviatrix_account.test.account_name
+	gw_name            = "tfg-az-%s-1"
+	vpc_id             = "%s"
+	vpc_reg            = "%s"
+	gw_size            = "c5.xlarge"
+	subnet             = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway" "transitGw2" {
+	cloud_type         = 1
+	account_name       = aviatrix_account.test.account_name
+	gw_name            = "tfg-az-%s-2"
+	vpc_id             = "%s"
+	vpc_reg            = "%s"
+	gw_size            = "c5.xlarge"
+	subnet             = "%s"
+	enable_insane_mode = true
+}
+
+resource "aviatrix_transit_gateway_peering" "test_az_affinity" {
+	transit_gateway_name1 = aviatrix_transit_gateway.transitGw1.gw_name
+	transit_gateway_name2 = aviatrix_transit_gateway.transitGw2.gw_name
+	enable_az_affinity    = %t
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, vpcID1, region1, subnet1,
+		rName, vpcID2, region2, subnet2,
+		enableAzAffinity)
+}

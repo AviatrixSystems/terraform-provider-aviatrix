@@ -64,6 +64,7 @@ func TestAccAviatrixSpokeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "group_instance_size", awsGwSize),
 					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_nat", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_symmetric_routing", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_vpc_dns_server", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_polling_time", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_neighbor_status_polling_time", "5"),
@@ -667,6 +668,96 @@ resource "aviatrix_spoke_group" "test" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, gwSize, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_SUBNET"), os.Getenv("AWS_REGION"), rName)
+}
+
+func TestAccAviatrixSpokeGroup_symmetricRouting(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_group.test"
+
+	msgCommon := ". Set SKIP_SPOKE_GROUP to yes to skip Spoke Group tests"
+
+	skipSpokeGroup := os.Getenv("SKIP_SPOKE_GROUP")
+	if skipSpokeGroup == "yes" {
+		t.Skip("Skipping Spoke Group test as SKIP_SPOKE_GROUP is set")
+	}
+
+	awsGwSize := os.Getenv("AWS_GW_SIZE")
+	if awsGwSize == "" {
+		awsGwSize = "t3.micro"
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preSpokeGroupCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSpokeGroupDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create with symmetric routing disabled
+			{
+				Config: testAccSpokeGroupConfigBasic(rName, awsGwSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_symmetric_routing", "false"),
+				),
+			},
+			// Step 2: Enable symmetric routing
+			{
+				Config: testAccSpokeGroupConfigSymmetricRouting(rName, awsGwSize, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_symmetric_routing", "true"),
+				),
+			},
+			// Step 3: Disable symmetric routing
+			{
+				Config: testAccSpokeGroupConfigSymmetricRouting(rName, awsGwSize, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_symmetric_routing", "false"),
+				),
+			},
+			// Step 4: Import verification
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"gw_name",
+				},
+			},
+		},
+	})
+}
+
+func testAccSpokeGroupConfigSymmetricRouting(rName, gwSize string, enableSymmetricRouting bool) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+
+resource "aviatrix_spoke_group" "test" {
+	group_name               = "tfg-spoke-group-%s"
+	cloud_type               = 1
+	gw_type                  = "spoke"
+	group_instance_size      = "%s"
+	vpc_id                   = "%s"
+	account_name             = aviatrix_account.test_acc_aws.account_name
+	subnet                   = "%s"
+	vpc_region               = "%s"
+	gw_name                  = "tfg-spoke-group-gw-%s"
+
+	enable_symmetric_routing = %t
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, gwSize, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_SUBNET"), os.Getenv("AWS_REGION"), rName,
+		enableSymmetricRouting)
 }
 
 // ============================================================================

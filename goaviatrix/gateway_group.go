@@ -70,6 +70,9 @@ type GatewayGroup struct {
 	LearnedCidrsApprovalMode   string   `form:"learned_cidrs_approval_mode,omitempty" json:"learned_cidrs_approval_mode,omitempty"`
 	ApprovedLearnedCidrs       []string `form:"approved_learned_cidrs,omitempty" json:"approved_learned_cidrs,omitempty"`
 
+	// Symmetric Routing
+	EnableSymmetricRouting bool `form:"enable_symmetric_routing,omitempty" json:"enable_symmetric_routing,omitempty"`
+
 	// Active-Standby
 	EnableActiveStandby           bool `form:"active_standby,omitempty" json:"active_standby,omitempty"`
 	EnableActiveStandbyPreemptive bool `form:"active_standby_preemptive,omitempty" json:"active_standby_preemptive,omitempty"`
@@ -273,6 +276,7 @@ func (c *Client) getGatewayGroupDetails(ctx context.Context, form map[string]str
 		grp.EnableGlobalVpc = resp.Results.GceCfg.GlobalVpc
 	}
 	grp.EnableHybridConnection = resp.Results.TgwInterfaceEnabled
+	grp.EnableSymmetricRouting = resp.Results.EnableSymmetricRouting
 	return grp, nil
 }
 
@@ -769,6 +773,19 @@ func (c *Client) DisableGlobalVpcGatewayGroup(ctx context.Context, groupName str
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
+// SetSymmetricRoutingGatewayGroup enables or disables symmetric routing for a spoke gateway group
+func (c *Client) SetSymmetricRoutingGatewayGroup(ctx context.Context, groupUUID string, enable bool) error {
+	action := "update_gateway_group"
+	form := map[string]interface{}{
+		"action":                   action,
+		"CID":                      c.CID,
+		"group_uuid":               groupUUID,
+		"enable_symmetric_routing": enable,
+	}
+
+	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
 }
 
 // ============================================================================
