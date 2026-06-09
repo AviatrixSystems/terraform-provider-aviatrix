@@ -401,9 +401,9 @@ The following arguments are supported:
 
 ### Gateway Upgrade
 * `software_version` - (Optional/Computed) The software version of the gateway. If set, we will attempt to update the gateway to the specified version if current version is different. If left blank, the gateway upgrade can be managed with the `aviatrix_controller_config` resource. Type: String. Example: "6.5.821". Available as of provider version R2.20.0.
-* `image_version` - (Optional/Computed) The image version of the gateway. Use `aviatrix_gateway_image` data source to programmatically retrieve this value for the desired `software_version`. If set, we will attempt to update the gateway to the specified version if current version is different. If left blank, the gateway upgrades can be managed with the `aviatrix_controller_config` resource. Type: String. Example: "hvm-cloudx-aws-022021". Available as of provider version R2.20.0.
+* `image_version` - (Optional/Computed) This argument is deprecated and will be removed in an upcoming release. Gateway upgrades can be managed with the `aviatrix_controller_config` resource.
 * `ha_software_version` - (Optional/Computed) The software version of the HA gateway. If set, we will attempt to update the HA gateway to the specified version if current version is different. If left blank, the HA gateway upgrade can be managed with the `aviatrix_controller_config` resource. Type: String. Example: "6.5.821". Available as of provider version R2.20.0.
-* `ha_image_version` - (Optional/Computed) The image version of the HA gateway. Use `aviatrix_gateway_image` data source to programmatically retrieve this value for the desired `ha_software_version`. If set, we will attempt to update the HA gateway to the specified version if current version is different. If left blank, the gateway upgrades can be managed with the `aviatrix_controller_config` resource. Type: String. Example: "hvm-cloudx-aws-022021". Available as of provider version R2.20.0.
+* `ha_image_version` - (Optional/Computed) This argument is deprecated and will be removed in an upcoming release. Gateway upgrades can be managed with the `aviatrix_controller_config` resource.
 
 ### Misc.
 

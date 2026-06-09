@@ -704,6 +704,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed: true,
 				Description: "image_version can be used to set the desired image version of the gateway. " +
 					"If set, we will attempt to update the gateway to the specified version.",
+				Deprecated: "Image versions should not be manually specified.",
 			},
 			"ha_image_version": {
 				Type:     schema.TypeString,
@@ -711,6 +712,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed: true,
 				Description: "ha_image_version can be used to set the desired image version of the HA gateway. " +
 					"If set, we will attempt to update the gateway to the specified version.",
+				Deprecated: "Image versions should not be manually specified.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,

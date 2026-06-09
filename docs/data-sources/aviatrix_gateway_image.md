@@ -8,6 +8,10 @@ description: |-
 
 # aviatrix_gateway_image
 
+This data source is **deprecated** and will be removed in an upcoming release.
+Gateway image versions are automatically selected for the software version and
+should not be managed manually.
+
 The **aviatrix_gateway_image** data source provides the current image version that pairs with the given software version
 and cloud type.
 

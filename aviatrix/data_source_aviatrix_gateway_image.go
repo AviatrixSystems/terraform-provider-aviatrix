@@ -29,6 +29,10 @@ func dataSourceAviatrixGatewayImage() *schema.Resource {
 				Description: "Compatible image version for the given software_version.",
 			},
 		},
+
+		DeprecationMessage: "Deprecated since 9.0.10. " +
+			"Image versions should not be manually specified. " +
+			"This data source will be removed in an upcoming release.",
 	}
 }
 

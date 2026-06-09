@@ -539,6 +539,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed: true,
 				Description: "image_version can be used to set the desired image version of the gateway. " +
 					"If set, we will attempt to update the gateway to the specified version.",
+				Deprecated: "Image versions should not be manually specified.",
 			},
 			"peering_ha_image_version": {
 				Type:     schema.TypeString,
@@ -546,6 +547,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed: true,
 				Description: "peering_ha_image_version can be used to set the desired image version of the HA gateway. " +
 					"If set, we will attempt to update the gateway to the specified version.",
+				Deprecated: "Image versions should not be manually specified.",
 			},
 			"elb_dns_name": {
 				Type:        schema.TypeString,
