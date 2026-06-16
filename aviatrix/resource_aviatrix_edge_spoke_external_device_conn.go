@@ -363,6 +363,28 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		}
 	}
 
+	enableBFD := getBool(d, "enable_bfd")
+	externalDeviceConn.EnableBfd = enableBFD
+	bgpBfd := getList(d, "bgp_bfd")
+	if enableBFD {
+		if len(bgpBfd) > 0 {
+			for _, bfd0 := range bgpBfd {
+				bfd1, ok := bfd0.(map[string]any)
+				if !ok {
+					return diag.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
+				}
+				externalDeviceConn.BgpBfdConfig = goaviatrix.CreateBgpBfdConfig(bfd1)
+			}
+		} else {
+			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
+		}
+		externalDeviceConn.BfdTxIntv = externalDeviceConn.BgpBfdConfig.TransmitInterval
+		externalDeviceConn.BfdRxIntv = externalDeviceConn.BgpBfdConfig.ReceiveInterval
+		externalDeviceConn.BfdMultiplier = externalDeviceConn.BgpBfdConfig.Multiplier
+	} else if len(bgpBfd) > 0 {
+		return diag.Errorf("bgp_bfd config can't be set when BFD is disabled")
+	}
+
 	flag := false
 	defer resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 
@@ -395,37 +417,6 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 		} else {
 			d.SetId("")
 			return diag.Errorf("failed to create Edge as a Spoke external device connection: %s", err)
-		}
-	}
-
-	enableBFD := getBool(d, "enable_bfd")
-
-	externalDeviceConn.EnableBfd = enableBFD
-	bgp_bfd := getList(d, "bgp_bfd")
-
-	// set the bgp bfd config details only if the user has enabled BFD
-	if enableBFD {
-		// set bgp bfd using the config details provided by the user
-		if len(bgp_bfd) > 0 {
-			for _, bfd0 := range bgp_bfd {
-				bfd1, ok := bfd0.(map[string]any)
-				if !ok {
-					return diag.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
-				}
-				externalDeviceConn.BgpBfdConfig = goaviatrix.CreateBgpBfdConfig(bfd1)
-			}
-		} else {
-			// set the bgp bfd config using the default values
-			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
-		}
-		err := client.EditConnectionBgpBfd(externalDeviceConn)
-		if err != nil {
-			return diag.Errorf("could not update BGP BFD config: %v", err)
-		}
-	} else {
-		// if BFD is disabled and BGP BFD config is provided then throw an error
-		if len(bgp_bfd) > 0 {
-			return diag.Errorf("bgp_bfd config can't be set when BFD is disabled")
 		}
 	}
 

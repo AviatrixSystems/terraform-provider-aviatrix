@@ -59,8 +59,11 @@ type EdgeExternalDeviceConn struct {
 	EnableEdgeUnderlay         bool         `json:"edge_underlay,omitempty"`
 	RemoteCloudType            string       `json:"remote_cloud_type,omitempty"`
 	BgpMd5KeyChanged           bool         `json:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig               BgpBfdConfig `json:"bgp_bfd_params,omitempty"`
+	BgpBfdConfig               BgpBfdConfig `json:"-"`
 	EnableBfd                  bool         `json:"bgp_bfd_enabled,omitempty"`
+	BfdTxIntv                  int          `json:"bfd_tx_intv,omitempty"`
+	BfdRxIntv                  int          `json:"bfd_rx_intv,omitempty"`
+	BfdMultiplier              int          `json:"bfd_multiplier,omitempty"`
 	// Multihop must not use "omitempty"; It defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop        bool `form:"enable_bgp_multihop"`

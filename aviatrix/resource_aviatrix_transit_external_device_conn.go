@@ -880,6 +880,31 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("multihop can only be configured for BGP connections")
 	}
 
+	enableBFD := getBool(d, "enable_bfd")
+	if getString(d, "connection_type") != "bgp" && enableBFD {
+		return fmt.Errorf("BFD is only supported for BGP connection")
+	}
+	externalDeviceConn.EnableBfd = enableBFD
+	bgpBfd := getList(d, "bgp_bfd")
+	if enableBFD {
+		if len(bgpBfd) > 0 {
+			for _, bfd0 := range bgpBfd {
+				bfd1, ok := bfd0.(map[string]any)
+				if !ok {
+					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
+				}
+				externalDeviceConn.BgpBfdConfig = goaviatrix.CreateBgpBfdConfig(bfd1)
+			}
+		} else {
+			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
+		}
+		externalDeviceConn.BfdTxIntv = externalDeviceConn.BgpBfdConfig.TransmitInterval
+		externalDeviceConn.BfdRxIntv = externalDeviceConn.BgpBfdConfig.ReceiveInterval
+		externalDeviceConn.BfdMultiplier = externalDeviceConn.BgpBfdConfig.Multiplier
+	} else if len(bgpBfd) > 0 {
+		return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
+	}
+
 	flag := false
 	defer func() { _ = resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
@@ -924,40 +949,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		externalDeviceConn.ConnectionName = connName
 	}
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
-
-	enableBFD := getBool(d, "enable_bfd")
-
-	if getString(d, "connection_type") != "bgp" && enableBFD {
-		return fmt.Errorf("BFD is only supported for BGP connection")
-	}
-	externalDeviceConn.EnableBfd = enableBFD
-	bgp_bfd := getList(d, "bgp_bfd")
-
-	// set the bgp bfd config details only if the user has enabled BFD
-	if enableBFD {
-		// set bgp bfd using the config details provided by the user
-		if len(bgp_bfd) > 0 {
-			for _, bfd0 := range bgp_bfd {
-				bfd1, ok := bfd0.(map[string]any)
-				if !ok {
-					return fmt.Errorf("expected bgp_bfd to be a map, but got %T", bfd0)
-				}
-				externalDeviceConn.BgpBfdConfig = goaviatrix.CreateBgpBfdConfig(bfd1)
-			}
-		} else {
-			// set the bgp bfd config using the default values
-			externalDeviceConn.BgpBfdConfig = defaultBfdConfig
-		}
-		err := client.EditConnectionBgpBfd(externalDeviceConn)
-		if err != nil {
-			return fmt.Errorf("could not enable BGP BFD connection: %w", err)
-		}
-	} else {
-		// if BFD is disabled and BGP BFD config is provided then throw an error
-		if len(bgp_bfd) > 0 {
-			return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
-		}
-	}
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
 	if err != nil {

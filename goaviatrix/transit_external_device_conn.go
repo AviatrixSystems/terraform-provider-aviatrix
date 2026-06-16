@@ -92,8 +92,15 @@ type ExternalDeviceConn struct {
 	EnableEdgeUnderlay         bool         `form:"edge_underlay,omitempty"`
 	RemoteCloudType            string       `form:"remote_cloud_type,omitempty"`
 	BgpMd5KeyChanged           bool         `form:"bgp_md5_key_changed,omitempty"`
-	BgpBfdConfig               BgpBfdConfig `form:"bgp_bfd_params,omitempty"`
+	BgpBfdConfig               BgpBfdConfig `form:"-"`
 	EnableBfd                  bool         `form:"bgp_bfd_enabled,omitempty"`
+	// Flat BFD timing fields used at create time. ajg/form encodes nested
+	// structs as dotted keys ("bgp_bfd_params.tx_interval") which the
+	// controller does not parse, so the create path mirrors BgpBfdConfig
+	// onto these top-level form-tagged fields.
+	BfdTxIntv     int `form:"bfd_tx_intv,omitempty"`
+	BfdRxIntv     int `form:"bfd_rx_intv,omitempty"`
+	BfdMultiplier int `form:"bfd_multiplier,omitempty"`
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop        bool   `form:"enable_bgp_multihop"`
