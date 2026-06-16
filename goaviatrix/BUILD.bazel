@@ -160,11 +160,15 @@ go_test(
         "account_test.go",
         "check_test.go",
         "dcf_trustbundle_test.go",
+        "site2cloud_update_test.go",
         "spoke_ha_gateway_async_test.go",
         "spoke_transit_attachment_test.go",
         "transit_ha_gateway_async_test.go",
         "utils_test.go",
     ],
     embed = [":goaviatrix"],
-    deps = ["@com_github_stretchr_testify//assert"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
 )

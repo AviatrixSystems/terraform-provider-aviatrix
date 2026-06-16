@@ -1057,9 +1057,14 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta any) error {
 		if getBool(d, "custom_mapped") && getString(d, "local_subnet_cidr") != "" {
 			return fmt.Errorf("'local_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
-		editSite2cloud.CloudSubnetCidr = getString(d, "local_subnet_cidr")
-		editSite2cloud.CloudSubnetVirtual = getString(d, "local_subnet_virtual")
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		localEdit := &goaviatrix.EditSite2Cloud{
+			GwName:             editSite2cloud.GwName,
+			VpcID:              editSite2cloud.VpcID,
+			ConnName:           editSite2cloud.ConnName,
+			CloudSubnetCidr:    getString(d, "local_subnet_cidr"),
+			CloudSubnetVirtual: getString(d, "local_subnet_virtual"),
+		}
+		err := client.UpdateSite2Cloud(localEdit)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %w", err)
 		}
@@ -1075,9 +1080,14 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta any) error {
 		if getString(d, "connection_type") == "unmapped" && getString(d, "local_subnet_virtual") != "" {
 			return fmt.Errorf("'local_subnet_virtual' should be empty for connection type: ummapped")
 		}
-		editSite2cloud.CloudSubnetCidr = getString(d, "local_subnet_cidr")
-		editSite2cloud.CloudSubnetVirtual = getString(d, "local_subnet_virtual")
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		localVirtEdit := &goaviatrix.EditSite2Cloud{
+			GwName:             editSite2cloud.GwName,
+			VpcID:              editSite2cloud.VpcID,
+			ConnName:           editSite2cloud.ConnName,
+			CloudSubnetCidr:    getString(d, "local_subnet_cidr"),
+			CloudSubnetVirtual: getString(d, "local_subnet_virtual"),
+		}
+		err := client.UpdateSite2Cloud(localVirtEdit)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_virtual: %w", err)
 		}
@@ -1087,9 +1097,14 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta any) error {
 		if getBool(d, "custom_mapped") && getString(d, "remote_subnet_cidr") != "" {
 			return fmt.Errorf("'remote_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
-		editSite2cloud.RemoteSubnet = getString(d, "remote_subnet_cidr")
-		editSite2cloud.RemoteSubnetVirtual = getString(d, "remote_subnet_virtual")
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		remoteEdit := &goaviatrix.EditSite2Cloud{
+			GwName:              editSite2cloud.GwName,
+			VpcID:               editSite2cloud.VpcID,
+			ConnName:            editSite2cloud.ConnName,
+			RemoteSubnet:        getString(d, "remote_subnet_cidr"),
+			RemoteSubnetVirtual: getString(d, "remote_subnet_virtual"),
+		}
+		err := client.UpdateSite2Cloud(remoteEdit)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %w", err)
 		}
@@ -1105,9 +1120,14 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta any) error {
 		if getString(d, "connection_type") == "unmapped" && getString(d, "remote_subnet_virtual") != "" {
 			return fmt.Errorf("'remote_subnet_virtual' should be empty for connection type: ummapped")
 		}
-		editSite2cloud.RemoteSubnet = getString(d, "remote_subnet_cidr")
-		editSite2cloud.RemoteSubnetVirtual = getString(d, "remote_subnet_virtual")
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		remoteVirtEdit := &goaviatrix.EditSite2Cloud{
+			GwName:              editSite2cloud.GwName,
+			VpcID:               editSite2cloud.VpcID,
+			ConnName:            editSite2cloud.ConnName,
+			RemoteSubnet:        getString(d, "remote_subnet_cidr"),
+			RemoteSubnetVirtual: getString(d, "remote_subnet_virtual"),
+		}
+		err := client.UpdateSite2Cloud(remoteVirtEdit)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_virtual: %w", err)
 		}
