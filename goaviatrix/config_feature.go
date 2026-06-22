@@ -12,8 +12,7 @@ type FeatureStatus struct {
 }
 
 // These are features that we don't allow user to enable/disable via Terraform.
-// TODO: Remove "nfq_enforce_tls" from this list when we remove support for it in API AVX-75987.
-var FeatureNameExceptions = []string{"cai", "nfq_enforce_tls"}
+var FeatureNameExceptions = []string{"cai"}
 
 func (c *Client) EnableFeature(ctx context.Context, featureName string) error {
 	action := "enable_controller_feature"
