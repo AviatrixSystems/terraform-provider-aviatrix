@@ -1839,6 +1839,84 @@ func TestSetInterfaceDetails(t *testing.T) {
 	}
 }
 
+func TestFilterCloudManagedEdgeInterfaces(t *testing.T) {
+	wan0 := goaviatrix.EdgeTransitInterface{LogicalIfName: "wan0", IpAddress: "10.0.0.1/30", GatewayIp: "10.0.0.2"}
+	wan1 := goaviatrix.EdgeTransitInterface{LogicalIfName: "wan1", IpAddress: "10.0.0.5/30", GatewayIp: "10.0.0.6"}
+	mgmt0 := goaviatrix.EdgeTransitInterface{LogicalIfName: "mgmt0", IpAddress: "142.215.54.113/31", GatewayIp: "142.215.54.112"}
+
+	tests := []struct {
+		name      string
+		input     []goaviatrix.EdgeTransitInterface
+		cloudType int
+		expected  []goaviatrix.EdgeTransitInterface
+	}{
+		{
+			name:      "Equinix drops mgmt0 from read response",
+			input:     []goaviatrix.EdgeTransitInterface{wan0, mgmt0, wan1},
+			cloudType: goaviatrix.EDGEEQUINIX,
+			expected:  []goaviatrix.EdgeTransitInterface{wan0, wan1},
+		},
+		{
+			name:      "Equinix list without mgmt is unchanged",
+			input:     []goaviatrix.EdgeTransitInterface{wan0, wan1},
+			cloudType: goaviatrix.EDGEEQUINIX,
+			expected:  []goaviatrix.EdgeTransitInterface{wan0, wan1},
+		},
+		{
+			name:      "Non-Equinix cloud type passes mgmt0 through",
+			input:     []goaviatrix.EdgeTransitInterface{wan0, mgmt0, wan1},
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected:  []goaviatrix.EdgeTransitInterface{wan0, mgmt0, wan1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := filterCloudManagedEdgeInterfaces(tt.input, tt.cloudType)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFilterCloudManagedInterfaces(t *testing.T) {
+	wan0 := map[string]any{"logical_ifname": "wan0", "ip_address": "10.0.0.1/30", "gateway_ip": "10.0.0.2"}
+	wan1 := map[string]any{"logical_ifname": "wan1", "ip_address": "10.0.0.5/30", "gateway_ip": "10.0.0.6"}
+	mgmt0 := map[string]any{"logical_ifname": "mgmt0", "ip_address": "142.215.54.113/31", "gateway_ip": "142.215.54.112"}
+
+	tests := []struct {
+		name      string
+		input     []any
+		cloudType int
+		expected  []any
+	}{
+		{
+			name:      "Equinix drops mgmt0",
+			input:     []any{wan0, mgmt0, wan1},
+			cloudType: goaviatrix.EDGEEQUINIX,
+			expected:  []any{wan0, wan1},
+		},
+		{
+			name:      "Equinix list without mgmt is unchanged",
+			input:     []any{wan0, wan1},
+			cloudType: goaviatrix.EDGEEQUINIX,
+			expected:  []any{wan0, wan1},
+		},
+		{
+			name:      "Non-Equinix cloud type passes through",
+			input:     []any{wan0, mgmt0, wan1},
+			cloudType: goaviatrix.EDGEMEGAPORT,
+			expected:  []any{wan0, mgmt0, wan1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := filterCloudManagedInterfaces(tt.input, tt.cloudType)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestDeleteZtpFile(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "ztp_test")
 	if err != nil {

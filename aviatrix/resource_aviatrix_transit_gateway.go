@@ -2146,7 +2146,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 			if err != nil {
 				return fmt.Errorf("could not get user interface order: %w", err)
 			}
-			interfaces := setInterfaceDetails(gw.Interfaces, userInterfaceOrder)
+			gwInterfaces := filterCloudManagedEdgeInterfaces(gw.Interfaces, gw.CloudType)
+			interfaces := setInterfaceDetails(gwInterfaces, userInterfaceOrder)
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
@@ -2233,7 +2234,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 			if err != nil {
 				return fmt.Errorf("could not get user interface order: %w", err)
 			}
-			haInterfaces := setInterfaceDetails(gw.HaGw.Interfaces, userInterfaceOrder)
+			haGwInterfaces := filterCloudManagedEdgeInterfaces(gw.HaGw.Interfaces, gw.CloudType)
+			haInterfaces := setInterfaceDetails(haGwInterfaces, userInterfaceOrder)
 			if err = d.Set("ha_interfaces", haInterfaces); err != nil {
 				return fmt.Errorf("could not set interfaces into state: %w", err)
 			}
@@ -3229,6 +3231,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) erro
 		// update the edge transit gateway interfaces
 		if d.HasChanges("interfaces", "management_egress_ip_prefix_list") {
 			interfaceList := getList(d, "interfaces")
+			interfaceList = filterCloudManagedInterfaces(interfaceList, cloudType)
 
 			interfaces, err := getInterfaceDetails(interfaceList, cloudType)
 			if err != nil {
@@ -3330,6 +3333,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) erro
 			haInterfaceList := getList(d, "ha_interfaces")
 
 			if len(haInterfaceList) > 0 {
+				haInterfaceList = filterCloudManagedInterfaces(haInterfaceList, cloudType)
 				haInterfaces, err := getInterfaceDetails(haInterfaceList, cloudType)
 				if err != nil {
 					return fmt.Errorf("failed to get interface details: %w", err)
@@ -4797,7 +4801,57 @@ func getInterfaceMappingDetails(interfaceMappingInput []any) (string, error) {
 	return string(interfaceMappingJSON), nil
 }
 
-// get the interface details from the interface config and cloud type
+// isEquinixCloudManagedInterface reports whether the given logical interface
+// is managed by Equinix's cloud-init on EAT (i.e. mgmt0). The controller
+// rejects any such entry in update_edge_gateway with AVXERR-EDGE-0005, and
+// it should not enter terraform state because the user does not own it.
+func isEquinixCloudManagedInterface(logicalIfName string, cloudType int) bool {
+	return cloudType == goaviatrix.EDGEEQUINIX &&
+		strings.HasPrefix(logicalIfName, "mgmt")
+}
+
+// filterCloudManagedEdgeInterfaces drops interfaces from the controller
+// Read response that the cloud provider manages itself (so they never enter
+// terraform state). On Equinix EAT, mgmt0 is assigned by Equinix's
+// cloud-init and isn't a user-managed field; including it in state causes
+// spurious "delete mgmt0" plan diffs when the user's config omits it.
+func filterCloudManagedEdgeInterfaces(interfaces []goaviatrix.EdgeTransitInterface, cloudType int) []goaviatrix.EdgeTransitInterface {
+	filtered := make([]goaviatrix.EdgeTransitInterface, 0, len(interfaces))
+	for _, iface := range interfaces {
+		if isEquinixCloudManagedInterface(iface.LogicalIfName, cloudType) {
+			continue
+		}
+		filtered = append(filtered, iface)
+	}
+	return filtered
+}
+
+// filterCloudManagedInterfaces drops interface entries that the cloud
+// provider manages itself and that the controller rejects when present in
+// an update_edge_gateway payload. On Equinix EAT (mgmt is always over
+// public network for this resource — the schema has no
+// enable_management_over_private_network toggle), Equinix assigns mgmt0's
+// IP and the controller refuses any mgmt0 entry that carries ipaddr,
+// gateway_ip, or dhcp keys (AVXERR-EDGE-0005). The cloud-assigned mgmt0
+// still shows up in Read because the controller returns it; stripping it
+// here keeps the write payload valid without losing the read-side data.
+func filterCloudManagedInterfaces(interfaces []any, cloudType int) []any {
+	filtered := make([]any, 0, len(interfaces))
+	for _, iface := range interfaces {
+		ifaceInfo, ok := iface.(map[string]any)
+		if !ok {
+			filtered = append(filtered, iface)
+			continue
+		}
+		logicalIfName, _ := ifaceInfo["logical_ifname"].(string)
+		if isEquinixCloudManagedInterface(logicalIfName, cloudType) {
+			continue
+		}
+		filtered = append(filtered, iface)
+	}
+	return filtered
+}
+
 func getInterfaceDetails(interfaces []any, cloudType int) (string, error) {
 	// get the count of WAN and MANAGEMENT interfaces
 	wanCount, err := countInterfaceTypes(interfaces)

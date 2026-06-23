@@ -903,7 +903,8 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 			if err != nil {
 				return diag.Errorf("could not get user interface order: %v", err)
 			}
-			interfaces := setInterfaceDetails(gw.Interfaces, userInterfaceOrder)
+			gwInterfaces := filterCloudManagedEdgeInterfaces(gw.Interfaces, gw.CloudType)
+			interfaces := setInterfaceDetails(gwInterfaces, userInterfaceOrder)
 			if err = d.Set("interfaces", interfaces); err != nil {
 				return diag.Errorf("could not set interfaces into state: %v", err)
 			}
@@ -1598,6 +1599,7 @@ func updateEdgeTransitInstanceInterfaces(d *schema.ResourceData, client *goaviat
 	}
 
 	interfaceList := getSet(d, "interfaces").List()
+	interfaceList = filterCloudManagedInterfaces(interfaceList, cloudType)
 	interfaces, err := getInterfaceDetails(interfaceList, cloudType)
 	if err != nil {
 		return diag.Errorf("failed to get interface details: %v", err)
