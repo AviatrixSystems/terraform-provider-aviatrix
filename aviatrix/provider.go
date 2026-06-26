@@ -174,7 +174,6 @@ func Provider() *schema.Provider {
 			"aviatrix_periodic_ping":                                          resourceAviatrixPeriodicPing(),
 			"aviatrix_private_mode_lb":                                        resourceAviatrixPrivateModeLb(),
 			"aviatrix_private_mode_multicloud_endpoint":                       resourceAviatrixPrivateModeMulticloudEndpoint(),
-			"aviatrix_proxy_config":                                           resourceAviatrixProxyConfig(),
 			"aviatrix_qos_class":                                              resourceAviatrixQosClass(),
 			"aviatrix_qos_policy_list":                                        resourceAviatrixQosPolicyList(),
 			"aviatrix_rbac_group":                                             resourceAviatrixRbacGroup(),

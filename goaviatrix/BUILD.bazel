@@ -98,7 +98,6 @@ go_library(
         "private_mode_lb.go",
         "private_mode_multicloud_endpoint.go",
         "profile.go",
-        "proxy_config.go",
         "qos_class.go",
         "qos_policy_list.go",
         "rbac_goup_access_account_attachment.go",
