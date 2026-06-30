@@ -274,7 +274,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Set to true if this feature is desired.",
 			},
 			"allocate_new_eip": {
