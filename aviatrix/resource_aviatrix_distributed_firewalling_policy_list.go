@@ -40,7 +40,7 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 						"action": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
 							Description: "Action for the specified source and destination Smart Groups." +
 								"Must be one of PERMIT, DENY, or INTRUSION_DETECTION_PERMIT.",
 						},

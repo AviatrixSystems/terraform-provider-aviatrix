@@ -74,7 +74,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
 
   policies {
     name                     = "df-policy-1"
-    action                   = "DEEP_PACKET_INSPECTION_PERMIT"
+    action                   = "INTRUSION_DETECTION_PERMIT"
     priority                 = 1
     protocol                 = "ICMP"
     logging                  = false

@@ -24,7 +24,7 @@ var dcfRuleElem = &schema.Resource{
 		"action": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "DEEP_PACKET_INSPECTION_PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
+			ValidateFunc: validation.StringInSlice([]string{"DENY", "PERMIT", "INTRUSION_DETECTION_PERMIT"}, false),
 			Description: "Action for the specified source and destination Smart Groups. " +
 				"Must be one of INTRUSION_DETECTION_PERMIT, PERMIT or DENY.",
 		},
@@ -506,14 +506,6 @@ func resourceAviatrixDCFRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	var returnDiag diag.Diagnostics
-
-	for _, policy := range policyList.Policies {
-		if policy.Action == "DEEP_PACKET_INSPECTION_PERMIT" {
-			returnDiag = diag.Errorf("DEEP_PACKET_INSPECTION_PERMIT will no longer be a valid Action value in the next major release. Use INTRUSION_DETECTION_PERMIT and DECRYPT_ALLOWED instead")
-			returnDiag[0].Severity = diag.Warning
-			break
-		}
-	}
 
 	uuid, err := client.CreateDCFPolicyList(ctx, policyList)
 	if err != nil {

@@ -102,7 +102,7 @@ resource "aviatrix_dcf_ruleset" "test" {
 
   rules {
     name                     = "df-rule-1"
-    action                   = "DEEP_PACKET_INSPECTION_PERMIT"
+    action                   = "INTRUSION_DETECTION_PERMIT"
     priority                 = 1
     protocol                 = "ANY"
     logging                  = false
@@ -138,7 +138,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the ruleset
 * `rules` - (Optional) Set of rules.
     * `name` - (Required) Name of the rule.
-    * `action` - (Required) Action for the rule. Must be one of PERMIT, DENY, DEEP_PACKET_INSPECTION_PERMIT or INTRUSION_DETECTION_PERMIT.
+    * `action` - (Required) Action for the rule. Must be one of PERMIT, DENY, or INTRUSION_DETECTION_PERMIT.
     * `priority` - (Optional)  Priority for the rule. Default: 0. Type: Integer.
     * `protocol` - (Required) Protocol for the rule. Must be one of TCP, UDP, ICMP or ANY.
     * `src_smart_groups` - (Required) Set of Smart Group UUIDs for the source for the rule.
