@@ -788,7 +788,14 @@ func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.Reso
 	// controller. Without flagging it as new-computed, plan keeps the stale
 	// state value (e.g. "" from a non-HA gateway) and downstream resources that
 	// interpolate ha_eip into a validated IP field fail at plan time.
-	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") {
+	//
+	// Only do this when the user has NOT explicitly set ha_eip in config. A
+	// user-supplied (pre-allocated) ha_eip must be preserved in the plan so it
+	// flows through to the HA gateway create as reuse_eip; clobbering it with
+	// new-computed drops the value and the controller allocates a fresh EIP,
+	// causing a perpetual diff on reapply (AVX-78300).
+	haEipConfigured := !d.GetRawConfig().GetAttr("ha_eip").IsNull()
+	if !haEipConfigured && (d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az")) {
 		if err := d.SetNewComputed("ha_eip"); err != nil {
 			return err
 		}
