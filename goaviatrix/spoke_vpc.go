@@ -51,7 +51,6 @@ type SpokeVpc struct {
 	Async                        bool     `form:"async,omitempty"`
 	BgpOverLan                   bool     `form:"bgp_lan,omitempty"`
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 	EnableGlobalVpc              bool     `form:"global_vpc,omitempty"`
 	EnableIPv6                   bool     `json:"enable_ipv6,omitempty"`
 	InsertionGateway             bool     `form:"insertion_gateway,omitempty"`

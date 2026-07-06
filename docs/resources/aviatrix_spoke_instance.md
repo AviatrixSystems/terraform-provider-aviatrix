@@ -328,11 +328,6 @@ The following arguments are supported:
 * `tunnel_detection_time` - (Optional) The IPSec tunnel down detection time for the Spoke Gateway. Valid values: 20-600 seconds.
 * `insane_mode` - (Optional) Enable Insane Mode for spoke gateway. Supported for AWS/AWSGov, GCP, Azure and OCI. Default: false.
 
-### Optional - Private Mode
-
-* `private_mode_lb_vpc_id` - (Optional) Private Mode controller load balancer VPC ID. Required when private mode is enabled for the Controller.
-* `private_mode_subnet_zone` - (Optional) Subnet availability zone for Private Mode. Required when Private Mode is enabled on the Controller and cloud_type is AWS.
-
 ### Optional - Route Configuration
 
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma-separated CIDRs to be filtered from the spoke VPC route table.

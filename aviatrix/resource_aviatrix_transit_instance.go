@@ -287,14 +287,8 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 		return nil, err
 	}
 
-	// Configure private mode
-	if err := configureTransitInstancePrivateMode(ctx, d, gateway, cloudType, client); err != nil {
-		return nil, err
-	}
-
 	// Configure EIP allocation
-	privateModeInfo, _ := client.GetPrivateModeInfo(ctx)
-	if err := configureTransitInstanceEIP(d, gateway, privateModeInfo, transitGroup.PrivateNetwork); err != nil {
+	if err := configureTransitInstanceEIP(d, gateway, transitGroup.PrivateNetwork); err != nil {
 		return nil, err
 	}
 
@@ -558,43 +552,8 @@ func configureTransitInstanceTags(d *schema.ResourceData, gateway *goaviatrix.Tr
 	return nil
 }
 
-// configureTransitInstancePrivateMode configures private mode settings
-func configureTransitInstancePrivateMode(ctx context.Context, d *schema.ResourceData, gateway *goaviatrix.TransitVpc, cloudType int, client *goaviatrix.Client) diag.Diagnostics {
-	privateModeInfo, _ := client.GetPrivateModeInfo(ctx)
-
-	if privateModeInfo.EnablePrivateMode {
-		if privateModeSubnetZone, ok := d.GetOk("private_mode_subnet_zone"); ok {
-			gateway.Subnet = fmt.Sprintf("%s~~%s", gateway.Subnet, mustString(privateModeSubnetZone))
-		} else {
-			if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-				return diag.Errorf("%q must be set when creating a Transit Instance in AWS with Private Mode enabled on the Controller", "private_mode_subnet_zone")
-			}
-		}
-
-		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
-			if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-				return diag.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "private_mode_lb_vpc_id")
-			}
-			gateway.LbVpcID = getString(d, "private_mode_lb_vpc_id")
-		}
-	} else {
-		if _, ok := d.GetOk("private_mode_subnet_zone"); ok {
-			return diag.Errorf("%q is only valid when Private Mode is enabled on the Controller", "private_mode_subnet_zone")
-		}
-		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
-			return diag.Errorf("%q is only valid on when Private Mode is enabled", "private_mode_lb_vpc_id")
-		}
-	}
-
-	return nil
-}
-
 // configureTransitInstanceEIP configures EIP allocation settings
-func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, privateModeInfo *goaviatrix.ControllerPrivateModeConfig, privateNetwork bool) diag.Diagnostics {
-	if privateModeInfo.EnablePrivateMode {
-		return nil
-	}
-
+func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, privateNetwork bool) diag.Diagnostics {
 	allocateNewEip := getBool(d, "allocate_new_eip")
 	if allocateNewEip || privateNetwork {
 		gateway.ReuseEip = ""
@@ -1000,7 +959,7 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 
 	// Zone for Azure
 	if _, zoneIsSet := d.GetOk("zone"); goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) &&
-		gw.GatewayZone != "AvailabilitySet" && gw.LbVpcId == "" {
+		gw.GatewayZone != "AvailabilitySet" {
 		mustSet(d, "zone", "az-"+gw.GatewayZone)
 	}
 	// Zone for GCP
@@ -1158,18 +1117,6 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.DeleteSpot {
 			mustSet(d, "delete_spot", gw.DeleteSpot)
 		}
-	}
-
-	// Private mode
-	mustSet(d, "private_mode_lb_vpc_id", gw.LbVpcId)
-	if gw.LbVpcId != "" && gw.GatewayZone != "AvailabilitySet" {
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			mustSet(d, "private_mode_subnet_zone", gw.GatewayZone)
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			mustSet(d, "private_mode_subnet_zone", "az-"+gw.GatewayZone)
-		}
-	} else {
-		mustSet(d, "private_mode_subnet_zone", nil)
 	}
 
 	return nil

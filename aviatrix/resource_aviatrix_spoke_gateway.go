@@ -132,7 +132,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional: true,
 				Default:  true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return getBool(d, "enable_private_oob") || getString(d, "private_mode_lb_vpc_id") != ""
+					return getBool(d, "enable_private_oob")
 				},
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
@@ -382,24 +382,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Disables route propagation on BGP Spoke to attached Transit Gateway. Default: false.",
-			},
-			"private_mode_lb_vpc_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Description:   "Private Mode controller load balancer vpc_id.  Required when private mode is enabled for the Controller.",
-				ConflictsWith: []string{"allocate_new_eip"},
-			},
-			"private_mode_subnet_zone": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Subnet availability zone. Required when Private Mode is enabled on the Controller and cloud_type is AWS.",
-			},
-			"ha_private_mode_subnet_zone": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: " Private Mode HA subnet availability zone.",
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
@@ -832,13 +814,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		haAvailabilityDomain := getString(d, "ha_availability_domain")
 		haFaultDomain := getString(d, "ha_fault_domain")
 		haOobManagementSubnet := d.Get("ha_oob_management_subnet")
-		haPrivateModeSubnetZone := d.Get("ha_private_mode_subnet_zone")
 		haOobAvailabilityZone := d.Get("ha_oob_availability_zone")
 		haSoftwareVersion := d.Get("ha_software_version")
 		haOobImageVersion := d.Get("ha_image_version")
 		if haSubnet != "" || haZone != "" || haInsaneModeAz != "" || haEip != "" || haAzureEipNameResourceGroup != "" ||
 			haGwSize != "" || haAvailabilityDomain != "" || haFaultDomain != "" || haOobManagementSubnet != "" ||
-			haPrivateModeSubnetZone != "" || haOobAvailabilityZone != "" || haSoftwareVersion != "" || haOobImageVersion != "" {
+			haOobAvailabilityZone != "" || haSoftwareVersion != "" || haOobImageVersion != "" {
 			return fmt.Errorf("'manage_ha_gateway' is set to false. Please set it to true, or use 'aviatrix_spoke_ha_gateway' to manage spoke ha gateway")
 		}
 	}
@@ -1136,8 +1117,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		return fmt.Errorf("rx_queue_size only supports AWS related cloud types")
 	}
 
-	privateModeInfo, _ := client.GetPrivateModeInfo(context.Background())
-	if !enablePrivateOob && !privateModeInfo.EnablePrivateMode {
+	if !enablePrivateOob {
 		allocateNewEip := getBool(d, "allocate_new_eip")
 		if allocateNewEip {
 			gateway.ReuseEip = "off"
@@ -1163,31 +1143,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 				}
 				gateway.Eip = getString(d, "eip")
 			}
-		}
-	}
-
-	if privateModeInfo.EnablePrivateMode {
-		if privateModeSubnetZone, ok := d.GetOk("private_mode_subnet_zone"); ok {
-			gateway.Subnet = fmt.Sprintf("%s~~%s", gateway.Subnet, mustString(privateModeSubnetZone))
-		} else {
-			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				return fmt.Errorf("%q must be set when creating a Spoke Gateway in AWS with Private Mode enabled on the Controller", "private_mode_subnet_zone")
-			}
-		}
-
-		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
-			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-				return fmt.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "private_mode_lb_vpc_id")
-			}
-
-			gateway.LbVpcId = getString(d, "private_mode_lb_vpc_id")
-		}
-	} else {
-		if _, ok := d.GetOk("private_mode_subnet_zone"); ok {
-			return fmt.Errorf("%q is only valid when Private Mode is enabled on the Controller", "private_mode_subnet_zone")
-		}
-		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
-			return fmt.Errorf("%q is only valid when Private Mode is enabled", "private_mode_lb_vpc_id")
 		}
 	}
 
@@ -1325,14 +1280,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 			spokeHaGw.Subnet = haSubnet
 			spokeHaGw.AvailabilityDomain = haAvailabilityDomain
 			spokeHaGw.FaultDomain = haFaultDomain
-		}
-
-		if privateModeInfo.EnablePrivateMode {
-			haPrivateModeSubnetZone := getString(d, "ha_private_mode_subnet_zone")
-			if haPrivateModeSubnetZone == "" && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				return fmt.Errorf("%q must be set when creating a Spoke HA Gateway in AWS with Private Mode enabled on the Controller", "ha_private_mode_subnet_zone")
-			}
-			spokeHaGw.Subnet = haSubnet + subnetSeparator + haPrivateModeSubnetZone
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -1982,7 +1929,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		_, zoneIsSet := d.GetOk("zone")
-		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" && gw.LbVpcId == "" {
+		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
 			mustSet(d, "zone", "az-"+gw.GatewayZone)
 		}
 	}
@@ -2002,16 +1949,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.DeleteSpot {
 			mustSet(d, "delete_spot", gw.DeleteSpot)
 		}
-	}
-	mustSet(d, "private_mode_lb_vpc_id", gw.LbVpcId)
-	if gw.LbVpcId != "" && gw.GatewayZone != "AvailabilitySet" {
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			mustSet(d, "private_mode_subnet_zone", gw.GatewayZone)
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			mustSet(d, "private_mode_subnet_zone", "az-"+gw.GatewayZone)
-		}
-	} else {
-		mustSet(d, "private_mode_subnet_zone", nil)
 	}
 
 	enableGroGso, err := client.GetGroGsoStatus(gw)
@@ -2042,7 +1979,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 			mustSet(d, "ha_subnet_ipv6_cidr", "")
 			mustSet(d, "ha_zone", "")
 			mustSet(d, "ha_public_ip", "")
-			mustSet(d, "ha_private_mode_subnet_zone", "")
 			mustSet(d, "ha_bgp_lan_ip_list", nil)
 			return nil
 		}
@@ -2051,7 +1987,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			mustSet(d, "ha_subnet", gw.HaGw.VpcNet)
 			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || mustString(zone) != "") {
-				if gw.LbVpcId == "" && gw.HaGw.GatewayZone != "AvailabilitySet" {
+				if gw.HaGw.GatewayZone != "AvailabilitySet" {
 					mustSet(d, "ha_zone", "az-"+gw.HaGw.GatewayZone)
 				} else {
 					mustSet(d, "ha_zone", "")
@@ -2095,15 +2031,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 		if gw.HaGw.EnablePrivateOob {
 			mustSet(d, "ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, subnetSeparator)[0])
 			mustSet(d, "ha_oob_availability_zone", gw.HaGw.GatewayZone)
-		}
-		if gw.LbVpcId != "" && gw.GatewayZone != "AvailabilitySet" {
-			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				mustSet(d, "ha_private_mode_subnet_zone", gw.HaGw.GatewayZone)
-			} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-				mustSet(d, "ha_private_mode_subnet_zone", "az-"+gw.HaGw.GatewayZone)
-			}
-		} else {
-			mustSet(d, "ha_private_mode_subnet_zone", "")
 		}
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
@@ -2160,7 +2087,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 	if !manageHaGw && !d.HasChange("manage_ha_gateway") {
 		if d.HasChanges("ha_subnet", "ha_zone", "ha_gw_size", "ha_insane_mode_az", "ha_eip",
 			"ha_azure_eip_name_resource_group", "ha_availability_domain", "ha_fault_domain", "ha_oob_management_subnet",
-			"ha_private_mode_subnet_zone", "ha_oob_availability_zone", "ha_software_version", "ha_image_version") {
+			"ha_oob_availability_zone", "ha_software_version", "ha_image_version") {
 			return fmt.Errorf("'manage_ha_gateway' is set to false. Please set it to true, or use 'aviatrix_spoke_ha_gateway' to manage editing spoke ha gateway")
 		}
 	}
@@ -2285,7 +2212,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 		return fmt.Errorf("updating enable_private_oob is not allowed")
 	}
 	enablePrivateOob := getBool(d, "enable_private_oob")
-	privateModeInfo, _ := client.GetPrivateModeInfo(context.Background())
 	if !enablePrivateOob {
 		if d.HasChange("ha_oob_management_subnet") {
 			return fmt.Errorf("updating ha_oob_management_subnet is not allowed if private oob is disabled")
@@ -2293,11 +2219,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 
 		if d.HasChange("ha_oob_availability_zone") {
 			return fmt.Errorf("updating ha_oob_availability_zone is not allowed if private oob is disabled")
-		}
-	}
-	if !privateModeInfo.EnablePrivateMode {
-		if d.HasChange("ha_private_mode_subnet_zone") {
-			return fmt.Errorf("updating %q is not allowed if private mode is disabled", "ha_private_mode_subnet_zone")
 		}
 	}
 
@@ -2361,7 +2282,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 	newHaGwEnabled := false
 	if manageHaGw && (d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") || d.HasChange("ha_subnet_ipv6_cidr") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
-		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain")) {
 		haGwSize := getString(d, "ha_gw_size")
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
@@ -2429,7 +2349,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 			} else if oldSubnet != "" && newSubnet != "" {
 				changeHaGw = true
 			} else if enablePrivateOob && d.HasChanges("ha_oob_management_subnet", "ha_oob_availability_zone") ||
-				privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone") ||
 				d.HasChanges("ha_zone", "ha_availability_domain", "ha_fault_domain") {
 				changeHaGw = true
 			}
@@ -2492,17 +2411,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 				if haOobManagementSubnet != "" {
 					return fmt.Errorf("\"ha_oob_management_subnet\" must be empty if \"ha_subnet\" is empty")
 				}
-			}
-		}
-
-		if privateModeInfo.EnablePrivateMode {
-			if newHaGwEnabled || changeHaGw {
-				if _, ok := d.GetOk("ha_private_mode_subnet_zone"); !ok && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-					return fmt.Errorf("%q is required when creating a Spoke HA Gateway in AWS if private mode is enabled and %q is provided", "ha_private_mode_subnet_zone", "ha_subnet")
-				}
-
-				privateModeSubnetZone := getString(d, "ha_private_mode_subnet_zone")
-				spokeHaGw.Subnet += subnetSeparator + privateModeSubnetZone
 			}
 		}
 

@@ -127,11 +127,6 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 		spokeGateway.TagJson = tagsJSON
 	}
 
-	// Private mode
-	if lbVpcID := getString(d, "private_mode_lb_vpc_id"); lbVpcID != "" {
-		spokeGateway.LbVpcId = lbVpcID
-	}
-
 	// Encryption
 	if getBool(d, "enable_encrypt_volume") {
 		spokeGateway.EncVolume = "yes"
@@ -417,12 +412,6 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	// Handle private mode subnet zone
-	privateModeSubnetZone := getString(d, "private_mode_subnet_zone")
-	if privateModeSubnetZone != "" && spokeGateway.LbVpcId != "" {
-		spokeGateway.Subnet = spokeGateway.Subnet + "~~" + privateModeSubnetZone
-	}
-
 	// Append IPv6 CIDR to spokeGateway.Subnet
 	if gatewayGroup.EnableIPv6 {
 		updatedSubnet, subnetErr := validateAndConfigureSubnetWithIPv6Cidr(d, spokeGateway.Subnet, cloudType)
@@ -627,7 +616,6 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	// Basic optional attributes
 	mustSet(d, "allocate_new_eip", gateway.AllocateNewEipRead)
 	mustSet(d, "single_az_ha", gateway.SingleAZ == "yes")
-	mustSet(d, "private_mode_lb_vpc_id", gateway.LbVpcId)
 	mustSet(d, "insane_mode", gateway.InsaneMode == "yes")
 	mustSet(d, "tunnel_detection_time", gateway.TunnelDetectionTime)
 

@@ -78,18 +78,6 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "A map of tags to assign to the spoke gateway.",
 		},
-		"private_mode_lb_vpc_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Private Mode controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
-		},
-		"private_mode_subnet_zone": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Subnet availability zone for Private Mode. Required when Private Mode is enabled on the Controller and cloud_type is AWS.",
-		},
 		"tunnel_detection_time": {
 			Type:         schema.TypeInt,
 			Optional:     true,

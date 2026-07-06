@@ -65,7 +65,6 @@ type TransitVpc struct {
 	BgpLanSpecifySubnet          string              `form:"bgp_lan_subnet"`
 	Async                        bool                `form:"async,omitempty"`
 	BgpLanInterfacesCount        int                 `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcID                      string              `form:"lb_vpc_id,omitempty"`
 	Transit                      bool                `form:"transit,omitempty"`
 	DeviceID                     string              `form:"device_id,omitempty"`
 	SiteID                       string              `form:"site_id,omitempty"`

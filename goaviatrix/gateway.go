@@ -223,7 +223,6 @@ type Gateway struct {
 	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
 	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
 	RxQueueSize                     string                              `json:"rx_queue_size"`
-	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`

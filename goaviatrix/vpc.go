@@ -24,7 +24,6 @@ type Vpc struct {
 	PrivateSubnets         []SubnetInfo
 	PublicRoutesOnly       bool
 	ResourceGroup          string `json:"resource_group,omitempty"`
-	PrivateModeSubnets     bool
 	EnableIpv6             bool   `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
 	VpcIpv6Cidr            string `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
 	Ipv6AccessType         string `form:"ipv6_access_type,omitempty" json:"ipv6_access_type,omitempty"`
@@ -45,7 +44,6 @@ type VpcEdit struct {
 	Subnets                []SubnetInfo `json:"subnets,omitempty"`
 	PublicSubnets          []SubnetInfo `json:"public_subnets,omitempty"`
 	PrivateSubnets         []SubnetInfo `json:"private_subnets,omitempty"`
-	PrivateModeSubnets     bool         `json:"private_mode_subnets"`
 	EnableIpv6             bool         `form:"enable_ipv6,omitempty" json:"enable_ipv6,omitempty"`
 	VpcIpv6Cidr            string       `form:"vpc_ipv6_cidr,omitempty" json:"vpc_ipv6_cidr,omitempty"`
 }
@@ -113,10 +111,6 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	}
 	if vpc.ResourceGroup != "" {
 		form["resource_group"] = vpc.ResourceGroup
-	}
-
-	if vpc.PrivateModeSubnets {
-		form["private_mode_subnets"] = "true"
 	}
 
 	if vpc.EnableIpv6 {
@@ -226,7 +220,6 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	vpc.SubnetSize = data.Results.SubnetSize
 	vpc.NumOfSubnetPairs = data.Results.NumOfSubnetPairs
 	vpc.EnablePrivateOobSubnet = data.Results.EnablePrivateOobSubnet
-	vpc.PrivateModeSubnets = data.Results.PrivateModeSubnets
 	vpc.EnableIpv6 = data.Results.EnableIpv6
 	vpc.VpcIpv6Cidr = data.Results.VpcIpv6Cidr
 	return vpc, nil

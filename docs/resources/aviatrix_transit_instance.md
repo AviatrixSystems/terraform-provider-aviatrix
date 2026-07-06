@@ -293,11 +293,6 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the transit gateway.
 * `tunnel_detection_time` - (Optional) The IPSec tunnel down detection time for the Transit Gateway. Valid values: 20-600 seconds.
 
-### Optional - Private Mode
-
-* `private_mode_lb_vpc_id` - (Optional) Private Mode controller load balancer VPC ID. Required when private mode is enabled for the Controller.
-* `private_mode_subnet_zone` - (Optional) Subnet availability zone for Private Mode.
-
 ### Optional - Route Configuration
 
 * `customized_spoke_vpc_routes` - (Optional) A list of comma-separated CIDRs to be customized for the spoke VPC routes.

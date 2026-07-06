@@ -68,10 +68,6 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				// Suppress diff when private mode is enabled (allocate_new_eip is not applicable)
-				return getString(d, "private_mode_lb_vpc_id") != ""
-			},
 			Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 				"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 		},
@@ -119,19 +115,6 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(20, 600),
 			Description:  "The IPSec tunnel down detection time for the transit gateway.",
-		},
-		"private_mode_lb_vpc_id": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			Description:   "Private Mode Controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
-			ConflictsWith: []string{"allocate_new_eip"},
-		},
-		"private_mode_subnet_zone": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Private Mode subnet availability zone.",
 		},
 	}
 }

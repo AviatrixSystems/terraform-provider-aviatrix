@@ -242,21 +242,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
 }
 ```
 ```hcl
-#Create an Aviatrix AWS Spoke Gateway in Private Mode
-resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-  cloud_type               = 1
-  account_name             = "devops"
-  gw_name                  = "spoke"
-  gw_size                  = "t2.micro"
-  subnet                   = "10.190.224.0/20"
-  vpc_id                   = "vpc-abcd1234"
-  vpc_reg                  = "us-east-1"
-  private_mode_lb_vpc_id   = "vpc-abcdef"
-  private_mode_subnet_zone = "us-east-1a"
-  manage_ha_gateway        = false
-}
-```
-```hcl
 # Create an Aviatrix Azure Spoke Network Gateway with HA enabled and BGP over LAN enabled with multiple interfaces
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   cloud_type               = 8
@@ -418,9 +403,6 @@ The following arguments are supported:
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Spoke Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
 * `enable_bgp` - (Optional) Enable BGP for this spoke gateway. Only available for AWS and Azure. Valid values: true, false. Default value: false. Available in provider R2.21.0+.
 * `rx_queue_size` - (Optional) Gateway ethernet interface RX queue size. Applies on HA as well if enabled. Once set, can't be deleted or disabled. Available for AWS as of provider version R2.22+.
-* `private_mode_lb_vpc_id` - (Optional) VPC ID of Private Mode load balancer. Required when Private Mode is enabled on the Controller. Available in provider version R2.23+.
-* `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
-* `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
 * `enable_ipv6` - (Optional) To enable IPv6 CIDR in Spoke Gateway. Only AWS, Azure, AzureGov, AWSGov and GCP are supported.
 * `subnet_ipv6_cidr` - (Optional/Computed) The IPv6 CIDR block of the subnet used to create the Spoke Gateway. This argument is supported only on AWS, Azure, AzureGov, and AWSGov. Required when creating a gateway with `enable_ipv6` set to true. When enabling IPv6 on an existing gateway, this value will be computed from the controller. Changing this value while IPv6 is enabled will force recreation of the gateway.
 * `tunnel_encryption_cipher` - (Optional) Encryption ciphers for gateway peering tunnels. Config options are default (AES-126-GCM-96) or strong (AES-256-GCM-96).
