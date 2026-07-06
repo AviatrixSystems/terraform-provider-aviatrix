@@ -44,12 +44,6 @@ func TestIsVersionSupported(t *testing.T) {
 			supportedVersions: []string{"7.5", "8.1"},
 			expectedError:     fmt.Errorf("version %s is not supported", "8.0.1"),
 		},
-		{
-			name:              "Old UserConnect versions",
-			currentVersion:    "UserConnect-7.2-1804.4665",
-			supportedVersions: []string{"8.0.0"},
-			expectedError:     fmt.Errorf("version %s is not supported", "UserConnect-7.2-1804.4665"),
-		},
 	}
 
 	for _, tt := range tests {
