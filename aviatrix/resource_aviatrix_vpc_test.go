@@ -9,9 +9,102 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
+
+// configSubnet builds a "subnets" list element as Terraform hands it to the
+// resource, mirroring the schema keys resourceAviatrixVpc declares.
+func configSubnet(region, cidr, name string) map[string]any {
+	return map[string]any{
+		"region":           region,
+		"cidr":             cidr,
+		"name":             name,
+		"subnet_id":        "",
+		"ipv6_cidr":        "",
+		"ipv6_access_type": "",
+	}
+}
+
+// TestBuildSubnetsForStatePreservesConfigOrder is a regression test for
+// AVX-75737: a multi-region GCP VPC showed a spurious force-replacement on
+// every plan because the controller returns subnets grouped by region rather
+// than in configured order. buildSubnetsForState must echo configured subnets
+// back in configured order so the TypeList indices match and Terraform sees no
+// diff.
+func TestBuildSubnetsForStatePreservesConfigOrder(t *testing.T) {
+	// Configuration declares us-east1 subnets first, us-west1 second.
+	configured := []any{
+		configSubnet("us-east1", "172.16.1.0/24", "subnet-us-east1-1"),
+		configSubnet("us-east1", "172.16.2.0/24", "subnet-us-east1-2"),
+		configSubnet("us-west1", "172.16.3.0/24", "subnet-us-west1-1"),
+		configSubnet("us-west1", "172.16.4.0/24", "subnet-us-west1-2"),
+	}
+
+	// Controller returns them grouped with us-west1 first (a different order).
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Region: "us-west1", Cidr: "172.16.3.0/24", Name: "subnet-us-west1-1"},
+		{Region: "us-west1", Cidr: "172.16.4.0/24", Name: "subnet-us-west1-2"},
+		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-us-east1-1"},
+		{Region: "us-east1", Cidr: "172.16.2.0/24", Name: "subnet-us-east1-2"},
+	}
+
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured)
+
+	gotNames := make([]string, len(got))
+	for i, s := range got {
+		gotNames[i] = mustString(s["name"])
+	}
+	wantNames := []string{
+		"subnet-us-east1-1",
+		"subnet-us-east1-2",
+		"subnet-us-west1-1",
+		"subnet-us-west1-2",
+	}
+	assert.Equal(t, wantNames, gotNames, "subnets should be returned in configured order")
+
+	// The region and cidr must travel with the correct subnet.
+	assert.Equal(t, "us-east1", got[0]["region"])
+	assert.Equal(t, "172.16.1.0/24", got[0]["cidr"])
+	assert.Equal(t, "us-west1", got[2]["region"])
+	assert.Equal(t, "172.16.3.0/24", got[2]["cidr"])
+}
+
+// TestBuildSubnetsForStateImportUsesAPIOrder covers the import case where there
+// is no prior configuration: all subnets should still be emitted, in the
+// controller's order.
+func TestBuildSubnetsForStateImportUsesAPIOrder(t *testing.T) {
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Region: "us-west1", Cidr: "172.16.3.0/24", Name: "subnet-us-west1-1"},
+		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-us-east1-1"},
+	}
+
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, nil)
+
+	gotNames := make([]string, len(got))
+	for i, s := range got {
+		gotNames[i] = mustString(s["name"])
+	}
+	assert.Equal(t, []string{"subnet-us-west1-1", "subnet-us-east1-1"}, gotNames)
+}
+
+// TestBuildSubnetsForStateGCPExcludesSubnetID verifies GCP state elements omit
+// the AWS-only subnet_id key (the mismatch on this key was the original cause
+// of the config-order logic silently never matching).
+func TestBuildSubnetsForStateGCPExcludesSubnetID(t *testing.T) {
+	configured := []any{configSubnet("us-east1", "172.16.1.0/24", "subnet-1")}
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-1", SubnetID: "ignored-for-gcp"},
+	}
+
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured)
+
+	assert.Len(t, got, 1)
+	_, hasSubnetID := got[0]["subnet_id"]
+	assert.False(t, hasSubnetID, "GCP subnets must not carry subnet_id in state")
+	assert.Contains(t, got[0], "region")
+}
 
 func TestAccAviatrixVpc_basic(t *testing.T) {
 	var vpc goaviatrix.Vpc

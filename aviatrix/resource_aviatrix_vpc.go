@@ -544,60 +544,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "azure_vnet_resource_id", azureVnetResourceId)
 	}
 
-	subnetsMap := make(map[string]map[string]any)
-	var subnetsKeyArray []string
-	for _, subnet := range vC.Subnets {
-		subnetInfo := make(map[string]any)
-		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			subnetInfo["region"] = subnet.Region
-		}
-		subnetInfo["cidr"] = subnet.Cidr
-		subnetInfo["name"] = subnet.Name
-		if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			subnetInfo["subnet_id"] = subnet.SubnetID
-		}
-		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
-		subnetInfo["ipv6_access_type"] = subnet.IPv6AccessType
-
-		var key string
-		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			key = subnet.Region + "~" + subnet.Cidr + "~" + subnet.Name
-		} else {
-			key = subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
-		}
-		subnetsMap[key] = subnetInfo
-		subnetsKeyArray = append(subnetsKeyArray, key)
-	}
-
-	var subnetsFromFile []map[string]any
-	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		subnets := getList(d, "subnets")
-		for _, subnet := range subnets {
-			sub := mustMap(subnet)
-			subnetInfo := &goaviatrix.SubnetInfo{
-				Cidr:   mustString(sub["cidr"]),
-				Name:   mustString(sub["name"]),
-				Region: mustString(sub["region"]),
-			}
-
-			key := subnetInfo.Region + "~" + subnetInfo.Cidr + "~" + subnetInfo.Name
-			if val, ok := subnetsMap[key]; ok {
-				if goaviatrix.CompareMapOfInterface(sub, val) {
-					subnetsFromFile = append(subnetsFromFile, sub)
-					delete(subnetsMap, key)
-				}
-			}
-		}
-	}
-	if len(subnetsKeyArray) != 0 {
-		for i := 0; i < len(subnetsKeyArray); i++ {
-			if subnetsMap[subnetsKeyArray[i]] != nil {
-				subnetsFromFile = append(subnetsFromFile, subnetsMap[subnetsKeyArray[i]])
-			}
-		}
-	}
-
-	if err := d.Set("subnets", subnetsFromFile); err != nil {
+	subnetsForState := buildSubnetsForState(vC.CloudType, vC.Subnets, getList(d, "subnets"))
+	if err := d.Set("subnets", subnetsForState); err != nil {
 		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
 	}
 
@@ -680,6 +628,75 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 	}
 
 	return nil
+}
+
+// buildSubnetsForState converts the controller's view of a VPC's subnets into
+// the shape Terraform stores in the "subnets" attribute.
+//
+// "subnets" is a TypeList, which Terraform compares element by element by
+// index. The controller does not guarantee it returns subnets in the order
+// they were declared in the configuration (for GCP it commonly groups them by
+// region), so echoing the controller's order back into state produces a
+// spurious diff that force-replaces the VPC on every plan. To avoid this,
+// subnets present in the configuration are emitted first, in their configured
+// order; any remaining subnets (e.g. after an import, where there is no prior
+// configuration) follow in the controller's order.
+func buildSubnetsForState(cloudType int, apiSubnets []goaviatrix.SubnetInfo, configuredSubnets []any) []map[string]any {
+	isGCP := goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)
+
+	// Index the controller's subnets by their ForceNew identity (region, cidr
+	// and name uniquely identify a subnet within a VPC) so they can be looked
+	// up in configured order.
+	subnetsByKey := make(map[string]map[string]any, len(apiSubnets))
+	orderedKeys := make([]string, 0, len(apiSubnets))
+	for _, subnet := range apiSubnets {
+		subnetInfo := make(map[string]any)
+		if isGCP {
+			subnetInfo["region"] = subnet.Region
+		}
+		subnetInfo["cidr"] = subnet.Cidr
+		subnetInfo["name"] = subnet.Name
+		if !isGCP {
+			subnetInfo["subnet_id"] = subnet.SubnetID
+		}
+		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
+		subnetInfo["ipv6_access_type"] = subnet.IPv6AccessType
+
+		key := subnetIdentityKey(subnet.Region, subnet.Cidr, subnet.Name)
+		subnetsByKey[key] = subnetInfo
+		orderedKeys = append(orderedKeys, key)
+	}
+
+	var subnetsForState []map[string]any
+
+	// Emit configured subnets first, in configured order, so the TypeList
+	// indices line up with the config and Terraform sees no diff. Only GCP
+	// accepts user-defined subnets; other clouds leave "subnets" computed.
+	if isGCP {
+		for _, subnet := range configuredSubnets {
+			sub := mustMap(subnet)
+			key := subnetIdentityKey(mustString(sub["region"]), mustString(sub["cidr"]), mustString(sub["name"]))
+			if subnetInfo, ok := subnetsByKey[key]; ok {
+				subnetsForState = append(subnetsForState, subnetInfo)
+				delete(subnetsByKey, key)
+			}
+		}
+	}
+
+	// Append any subnets the controller returned that were not in the config
+	// (e.g. on import), preserving the controller's order for a stable result.
+	for _, key := range orderedKeys {
+		if subnetInfo, ok := subnetsByKey[key]; ok {
+			subnetsForState = append(subnetsForState, subnetInfo)
+			delete(subnetsByKey, key)
+		}
+	}
+
+	return subnetsForState
+}
+
+func subnetIdentityKey(region, cidr, name string) string {
+	return region + "~" + cidr + "~" + name
 }
 
 func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta any) error {
