@@ -20,6 +20,7 @@ description: |-
 | Issue | Description |
 | :--- | :--- |
 | AVX-78304 | Fixed a perpetual `terraform plan` diff (`single_az_ha = true -> false`) on `aviatrix_gateway` resources that did not set `single_az_ha` explicitly. The schema default now matches the Controller default. |
+| AVX-78064 | Fixed `aviatrix_transit_external_device_conn`, `aviatrix_spoke_external_device_conn`, and `aviatrix_edge_spoke_external_device_conn` being read back as HA-enabled when configured as a single non-HA connection with comma-separated multi-tunnel values (`remote_gateway_ip`, `local_tunnel_cidr`, `remote_tunnel_cidr`). On edge-as-transit gateways this caused a spurious destroy/recreate on the second `terraform plan`. |
 
 ## 9.1.0
 ### Notes:

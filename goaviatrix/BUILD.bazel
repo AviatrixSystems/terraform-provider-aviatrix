@@ -159,6 +159,7 @@ go_test(
         "site2cloud_update_test.go",
         "spoke_ha_gateway_async_test.go",
         "spoke_transit_attachment_test.go",
+        "transit_external_device_conn_test.go",
         "transit_ha_gateway_async_test.go",
         "utils_test.go",
     ],

@@ -215,7 +215,7 @@ func (c *Client) CreateExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 	return c.PostAPI(externalDeviceConn.Action, externalDeviceConn, BasicCheck)
 }
 
-func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn, localGateway *Gateway) (*ExternalDeviceConn, error) {
+func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn, localGateway *Gateway, priorHAEnabled bool) (*ExternalDeviceConn, error) {
 	params := map[string]string{
 		"CID":       c.CID,
 		"action":    "get_site2cloud_conn_detail",
@@ -252,7 +252,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	populateBgpSendCommunitiesInfo(externalDeviceConn, externalDeviceConnDetail)
 
 	if externalDeviceConn.TunnelProtocol != "LAN" {
-		populateNonLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber)
+		populateNonLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber, priorHAEnabled)
 	} else {
 		populateLANTunnelInfo(externalDeviceConn, externalDeviceConnDetail, backupBgpRemoteAsNumber)
 	}
@@ -522,21 +522,27 @@ func (c *Client) ConnectionBGPSendCommunities(bgpSendCommunities *BgpSendCommuni
 }
 
 // configureHAForTwoDevices configures HA settings when there are two external devices
-func configureHAForTwoDevices(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, remoteIP []string, backupBgpRemoteAsNumber int) {
+func configureHAForTwoDevices(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, remoteIP []string, backupBgpRemoteAsNumber int, priorHAEnabled bool) {
 	// Check if this is an edge transit gateway that supports proper HA
 	isEdgeTransitGateway := localGateway != nil && localGateway.EdgeGateway && localGateway.TransitVpc == "yes"
 
-	if isEdgeTransitGateway {
+	// Two tunnels to two different remote IPs is indistinguishable on the wire
+	// between genuine remote HA and a single non-HA connection carrying multiple
+	// tunnels. Only treat it as HA when prior state says so, otherwise an edge
+	// transit connection created as a single non-HA multi-tunnel connection gets
+	// misread as HA and forces a needless destroy/recreate. See AVX-78064.
+	if isEdgeTransitGateway && priorHAEnabled {
 		// Edge transit gateways support true HA with separate tunnel configurations
 		externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 		externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+		externalDeviceConn.BackupRemoteGatewayIP = remoteIP[1]
 		externalDeviceConn.HAEnabled = Enabled
 		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 	} else {
-		// Non-edge gateways treat dual devices as combined configuration (no true HA)
+		// Single non-HA connection with two tunnels, or a non-edge gateway:
+		// combine into one connection (no true HA).
 		externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
 		externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
 		externalDeviceConn.RemoteGatewayIP = join2(remoteIP[0], remoteIP[1])
@@ -646,21 +652,21 @@ func populateBgpSendCommunitiesInfo(externalDeviceConn *ExternalDeviceConn, exte
 }
 
 // populateNonLANTunnelInfo populates information for non-LAN tunnels including HA logic
-func populateNonLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int) {
+func populateNonLANTunnelInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int, priorHAEnabled bool) {
 	externalDeviceConn.DisableActivemesh = externalDeviceConnDetail.DisableActivemesh
 	externalDeviceConn.TunnelSrcIP = externalDeviceConnDetail.TunnelSrcIP
 
 	// extrnalDeviceConnDetail.HAEnabled returned from API indicate whether connection's local gateway has HA enabled
 	// We need to put whether remote HA is enabled in externalDeviceConn.HAEnabled
 	if externalDeviceConnDetail.HAEnabled == "enabled" {
-		configureLocalGatewayHAEnabled(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber)
+		configureLocalGatewayHAEnabled(externalDeviceConn, externalDeviceConnDetail, localGateway, backupBgpRemoteAsNumber, priorHAEnabled)
 	} else {
-		configureLocalGatewayHADisabled(externalDeviceConn, externalDeviceConnDetail, backupBgpRemoteAsNumber)
+		configureLocalGatewayHADisabled(externalDeviceConn, externalDeviceConnDetail, backupBgpRemoteAsNumber, priorHAEnabled)
 	}
 }
 
 // configureLocalGatewayHAEnabled configures HA when local gateway has HA enabled
-func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int) {
+func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, localGateway *Gateway, backupBgpRemoteAsNumber int, priorHAEnabled bool) {
 	nTunnels := len(externalDeviceConnDetail.Tunnels)
 	switch nTunnels {
 	case 2:
@@ -676,7 +682,7 @@ func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, exte
 			} else {
 				// two external devices, remote has HA
 				// activemesh is disabled, 2 straight tunnels only
-				configureHAForTwoDevices(externalDeviceConn, externalDeviceConnDetail, localGateway, remoteIP, backupBgpRemoteAsNumber)
+				configureHAForTwoDevices(externalDeviceConn, externalDeviceConnDetail, localGateway, remoteIP, backupBgpRemoteAsNumber, priorHAEnabled)
 			}
 		case 4:
 			if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
@@ -699,17 +705,38 @@ func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, exte
 }
 
 // configureLocalGatewayHADisabled configures HA when local gateway has HA disabled
-func configureLocalGatewayHADisabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, backupBgpRemoteAsNumber int) {
+func configureLocalGatewayHADisabled(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail, backupBgpRemoteAsNumber int, priorHAEnabled bool) {
 	// local gateway no HA
 	externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 	externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 	if len(externalDeviceConnDetail.Tunnels) == 2 {
-		// two external devices, remote has HA
-		externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-		externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-		externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-		externalDeviceConn.HAEnabled = Enabled
+		remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
+		switch {
+		case len(remoteIP) == 2 && remoteIP[0] == remoteIP[1]:
+			// one external device, two tunnels, no remote HA
+			externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+			externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+			externalDeviceConn.HAEnabled = Disabled
+		case !priorHAEnabled:
+			// Two tunnels to two different remote IPs, but the connection was
+			// created as a single non-HA connection carrying multiple tunnels
+			// (comma-separated remote_gateway_ip/tunnel_cidr). The wire shape is
+			// indistinguishable from genuine remote HA, so trust prior state and
+			// read it back as one non-HA connection. See AVX-78064.
+			externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+			externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+			// populateBasicConnectionInfo set RemoteGatewayIP to the primary IP
+			// only; restore the full comma-joined value so state does not drift.
+			externalDeviceConn.RemoteGatewayIP = externalDeviceConnDetail.RemoteGatewayIP
+			externalDeviceConn.HAEnabled = Disabled
+		default:
+			// two external devices, remote has HA
+			externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+			externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+			externalDeviceConn.BackupRemoteGatewayIP = remoteIP[1]
+			externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+			externalDeviceConn.HAEnabled = Enabled
+		}
 	} else {
 		// one external device, no remote HA
 		externalDeviceConn.HAEnabled = Disabled
