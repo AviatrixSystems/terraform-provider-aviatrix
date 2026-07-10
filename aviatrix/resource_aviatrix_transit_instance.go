@@ -980,7 +980,9 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	// VPC ID and allocate_new_eip by cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		mustSet(d, "vpc_id", strings.Split(gw.VpcID, "~~")[0])
-		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
+		if gw.PrivateNetwork {
+			mustSet(d, "allocate_new_eip", false)
+		} else if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			mustSet(d, "allocate_new_eip", true)
 		} else {
 			mustSet(d, "allocate_new_eip", false)
@@ -990,7 +992,11 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 		mustSet(d, "allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		mustSet(d, "vpc_id", gw.VpcID)
-		mustSet(d, "allocate_new_eip", gw.AllocateNewEipRead)
+		if gw.PrivateNetwork {
+			mustSet(d, "allocate_new_eip", false)
+		} else {
+			mustSet(d, "allocate_new_eip", gw.AllocateNewEipRead)
+		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		mustSet(d, "vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		mustSet(d, "allocate_new_eip", gw.AllocateNewEipRead)

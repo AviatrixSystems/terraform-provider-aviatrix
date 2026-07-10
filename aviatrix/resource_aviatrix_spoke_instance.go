@@ -614,7 +614,11 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "gw_size", gateway.GwSize)
 
 	// Basic optional attributes
-	mustSet(d, "allocate_new_eip", gateway.AllocateNewEipRead)
+	if gateway.PrivateNetwork {
+		mustSet(d, "allocate_new_eip", false)
+	} else {
+		mustSet(d, "allocate_new_eip", gateway.AllocateNewEipRead)
+	}
 	mustSet(d, "single_az_ha", gateway.SingleAZ == "yes")
 	mustSet(d, "insane_mode", gateway.InsaneMode == "yes")
 	mustSet(d, "tunnel_detection_time", gateway.TunnelDetectionTime)
