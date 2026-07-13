@@ -156,6 +156,7 @@ go_test(
         "account_test.go",
         "check_test.go",
         "dcf_trustbundle_test.go",
+        "gateway_group_test.go",
         "site2cloud_update_test.go",
         "spoke_ha_gateway_async_test.go",
         "spoke_transit_attachment_test.go",

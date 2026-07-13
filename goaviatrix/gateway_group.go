@@ -187,13 +187,25 @@ func (c *Client) CreateGatewayGroup(ctx context.Context, spokeGroup *GatewayGrou
 }
 
 // GetGatewayGroup retrieves gateway group details by UUID
+// Returns ErrNotFound if no group with the given UUID exists, or if the group's
+// backing VPC document is gone (a broken group, e.g. left behind by a rolled-back
+// instance launch - AVX-78638). Mapping to ErrNotFound lets the resource Read
+// clear the ID and recreate the group instead of getting stuck on every refresh.
 func (c *Client) GetGatewayGroup(ctx context.Context, groupUUID string) (*GatewayGroup, error) {
 	form := map[string]string{
 		"action":     "get_gateway_group_details",
 		"CID":        c.CID,
 		"group_uuid": groupUUID,
 	}
-	return c.getGatewayGroupDetails(ctx, form)
+	grp, err := c.getGatewayGroupDetails(ctx, form)
+	if err != nil {
+		msg := strings.ToLower(err.Error())
+		if strings.Contains(msg, "does not exist") || strings.Contains(msg, "not found") {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return grp, nil
 }
 
 // GetGatewayGroupByName retrieves gateway group details by group name.
