@@ -849,14 +849,17 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("bgp_bfd config can't be set when BFD is disabled")
 	}
 
-	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
-	flag := false
-	defer func() { _ = resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
-
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %w", err)
 	}
+
+	// Only register the resource in state once the controller confirms the
+	// connection was created. Calling SetId (or arming the deferred Read)
+	// before the create can leave a phantom state entry when the create fails.
+	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
+	flag := false
+	defer func() { _ = resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
 	if setPerConnCommunity {
 		err = client.ConnectionBGPSendCommunities(bgpSendCommunities)
@@ -1013,6 +1016,13 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta an
 
 	localGateway, err := getGatewayDetails(client, externalDeviceConn.GwName)
 	if err != nil {
+		// If the local gateway no longer exists, the connection cannot exist
+		// either. Treat it as gone so Terraform plans a fresh create instead of
+		// blocking every refresh with a hard error.
+		if errors.Is(err, goaviatrix.ErrNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("could not get local gateway details: %w", err)
 	}
 
