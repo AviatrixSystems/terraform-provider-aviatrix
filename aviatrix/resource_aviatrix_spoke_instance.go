@@ -680,7 +680,11 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "cloud_instance_id", gateway.CloudnGatewayInstID)
 	mustSet(d, "private_ip", gateway.PrivateIP)
 	mustSet(d, "public_ip", gateway.PublicIP)
-	mustSet(d, "eip", gateway.Eip)
+	// Use PublicIP (not gateway.Eip) so eip is always populated and reflects the
+	// gateway's actual IP. gateway.Eip is only set when a user pre-allocated an
+	// EIP (allocate_new_eip = false); with the default it is empty. This matches
+	// aviatrix_spoke_gateway and surfaces EIP drift correctly.
+	mustSet(d, "eip", gateway.PublicIP)
 	mustSet(d, "software_version", gateway.SoftwareVersion)
 	mustSet(d, "image_version", gateway.ImageVersion)
 	setGatewayIPv6IPState(d, gateway)
