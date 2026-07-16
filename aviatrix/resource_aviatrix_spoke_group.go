@@ -1271,6 +1271,37 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
+	// ============================================================================
+	// Customized Spoke VPC Routes - API: edit_gateway_custom_routes
+	// ============================================================================
+	// update_gateway_group only persists these CIDRs to the group object; the
+	// edit_gateway_* actions also re-program the gateway's VPC route tables. Both
+	// write include_cidr/customized_cidr_list through to the group object (the
+	// gateway delegates them to its group), so the Read converges. The group name
+	// is accepted as gateway_name and resolved to the group's primary gateway.
+	if d.HasChange("customized_spoke_vpc_routes") {
+		spokeGroup := &goaviatrix.Gateway{
+			GwName:                   groupName,
+			CustomizedSpokeVpcRoutes: getStringSet(d, "customized_spoke_vpc_routes"),
+		}
+		if err := client.EditGatewayCustomRoutes(spokeGroup); err != nil {
+			return diag.Errorf("failed to update customized_spoke_vpc_routes for spoke group %s: %s", groupName, err)
+		}
+	}
+
+	// ============================================================================
+	// Include CIDR (advertised spoke routes) - API: edit_gateway_advertised_cidr
+	// ============================================================================
+	if d.HasChange("include_cidr") {
+		spokeGroup := &goaviatrix.Gateway{
+			GwName:                groupName,
+			AdvertisedSpokeRoutes: getStringSet(d, "include_cidr"),
+		}
+		if err := client.EditGatewayAdvertisedCidr(spokeGroup); err != nil {
+			return diag.Errorf("failed to update include_cidr for spoke group %s: %s", groupName, err)
+		}
+	}
+
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
 }
 
