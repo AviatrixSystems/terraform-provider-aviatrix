@@ -236,17 +236,19 @@ func TestMarshalEdgeSpokeTransitAttachmentInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create a schema.ResourceData from the input
 			d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
-				"spoke_gw_name":               {Type: schema.TypeString, Required: true},
-				"transit_gw_name":             {Type: schema.TypeString, Required: true},
-				"enable_over_private_network": {Type: schema.TypeBool, Optional: true, Default: true},
-				"enable_jumbo_frame":          {Type: schema.TypeBool, Optional: true, Default: false},
-				"enable_firenet_for_edge":     {Type: schema.TypeBool, Optional: true, Default: false},
-				"enable_insane_mode":          {Type: schema.TypeBool, Optional: true, Default: false},
-				"insane_mode_tunnel_number":   {Type: schema.TypeInt, Optional: true, Default: 0},
-				"disable_activemesh":          {Type: schema.TypeBool, Optional: true, Default: false},
-				"spoke_prepend_as_path":       {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
-				"transit_prepend_as_path":     {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
-				"edge_wan_interfaces":         {Type: schema.TypeSet, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"spoke_gw_name":                 {Type: schema.TypeString, Required: true},
+				"transit_gw_name":               {Type: schema.TypeString, Required: true},
+				"enable_over_private_network":   {Type: schema.TypeBool, Optional: true, Default: true},
+				"enable_jumbo_frame":            {Type: schema.TypeBool, Optional: true, Default: false},
+				"enable_firenet_for_edge":       {Type: schema.TypeBool, Optional: true, Default: false},
+				"enable_insane_mode":            {Type: schema.TypeBool, Optional: true, Default: false},
+				"insane_mode_tunnel_number":     {Type: schema.TypeInt, Optional: true, Default: 0},
+				"disable_activemesh":            {Type: schema.TypeBool, Optional: true, Default: false},
+				"spoke_prepend_as_path":         {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"transit_prepend_as_path":       {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"edge_wan_interfaces":           {Type: schema.TypeSet, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"spoke_to_transit_filter_cidrs": {Type: schema.TypeSet, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
+				"transit_to_spoke_filter_cidrs": {Type: schema.TypeSet, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
 			}, tt.input)
 
 			result := marshalEdgeSpokeTransitAttachmentInput(d)

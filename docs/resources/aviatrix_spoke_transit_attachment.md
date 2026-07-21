@@ -34,6 +34,27 @@ resource "aviatrix_spoke_transit_attachment" "test_attachment" {
 }
 ```
 
+```hcl
+### Directional route filtering
+
+Use `spoke_to_transit_filter_cidrs` and `transit_to_spoke_filter_cidrs` to prevent specific IPv4 or IPv6 prefixes from being advertised across the attachment.
+
+In this example, the spoke does not advertise `10.10.0.0/16` to the transit gateway, and the transit gateway does not advertise `172.16.0.0/12` to the spoke. The filter lists can be updated without recreating the attachment.
+
+resource "aviatrix_spoke_transit_attachment" "filtered" {
+  spoke_gw_name   = "spoke-gw"
+  transit_gw_name = "transit-gw"
+
+  spoke_to_transit_filter_cidrs = [
+    "10.10.0.0/16",
+  ]
+
+  transit_to_spoke_filter_cidrs = [
+    "172.16.0.0/12",
+  ]
+}
+```
+
 ### Deprecated: `route_tables` on this resource
 
 The following pattern is **deprecated** (Terraform will emit a warning):
@@ -63,6 +84,8 @@ The following arguments are supported:
 * `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on spoke_gateway_name. Available as of provider version R2.23+.
 * `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on transit_gateway_name. Available as of provider version R2.23+.
 * `transit_gateway_logical_ifnames` - (Optional) Transit gateway logical interface names for edge gateways where the peering terminates. Required only for edge as a transit attachment.
+* `spoke_to_transit_filter_cidrs` - (Optional) Set of IPv4 or IPv6 CIDR prefixes to block from being advertised from the spoke gateway to the transit gateway. Changes are applied in place without recreating the attachment.
+* `transit_to_spoke_filter_cidrs` - (Optional) (Optional) Set of IPv4 or IPv6 CIDR prefixes to block from being advertised from the transit gateway to the spoke gateway. Changes are applied in place without recreating the attachment.
 
 ## Attribute Reference
 

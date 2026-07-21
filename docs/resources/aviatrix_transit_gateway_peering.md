@@ -21,6 +21,8 @@ resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
   gateway2_excluded_network_cidrs             = ["10.0.0.48/28"]
   gateway1_excluded_tgw_connections           = ["vpn_connection_a"]
   gateway2_excluded_tgw_connections           = ["vpn_connection_b"]
+  gateway1_to_gateway2_filter_cidrs           = ["10.1.0.0/24"]
+  gateway2_to_gateway1_filter_cidrs           = ["10.2.0.0/24"]
   prepend_as_path1                            = [
     "65001",
     "65001",
@@ -59,6 +61,8 @@ The following arguments are supported:
 * `gateway2_excluded_network_cidrs` - (Optional) List of excluded network CIDRs for the second transit gateway.
 * `gateway1_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the first transit gateway.
 * `gateway2_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the second transit gateway.
+* `gateway1_to_gateway2_filter_cidrs` - (Optional) List of IPv4 or IPv6 CIDR prefixes that gateway 1 does not advertise to gateway 2 through this peering. Changes are applied in place without recreating the peering.
+* `gateway2_to_gateway1_filter_cidrs` - (Optional) List of IPv4 or IPv6 CIDR prefixes that gateway 2 does not advertise to gateway 1 through this peering. Changes are applied in place without recreating the peering.
 * `prepend_as_path1` - (Optional) AS Path Prepend for BGP connection. Can only use the transit's own local AS number, repeated up to 25 times. Applies on transit_gateway_name1. Available in provider version R2.17.2+.
 * `prepend_as_path2` - (Optional) AS Path Prepend for BGP connection. Can only use the transit's own local AS number, repeated up to 25 times. Applies on transit_gateway_name2. Available in provider version R2.17.2+.
 * `enable_peering_over_private_network` - (Optional) Advanced option. Enable peering over private network. Only appears and applies to when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. Type: Boolean. Default: false. Available in provider version R2.17.1+.

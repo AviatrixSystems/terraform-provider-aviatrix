@@ -32,6 +32,12 @@ type SpokeTransitAttachment struct {
 	DisableActivemesh            bool     `form:"disable_activemesh,omitempty" json:"disable_activemesh,omitempty"`
 	EnableFirenetForEdge         bool     `form:"enable_firenet_for_edge,omitempty" json:"enable_firenet_for_edge"`
 	EnableAzAffinity             bool     `form:"enable_az_affinity,omitempty" json:"enable_az_affinity,omitempty"`
+	SpokeToTransitFilterCIDRs    string   `form:"spoke_to_transit_filter_cidrs,omitempty" json:"spoke_to_transit_filter_cidrs,omitempty"`
+	TransitToSpokeFilterCIDRs    string   `form:"transit_to_spoke_filter_cidrs,omitempty" json:"transit_to_spoke_filter_cidrs,omitempty"`
+	// Read-back (response-only) values parsed from the peering-details API so
+	// Terraform can detect out-of-band changes to the advertisement filters.
+	SpokeToTransitFilterCIDRsSlice []string
+	TransitToSpokeFilterCIDRsSlice []string
 }
 
 type EdgeSpokeTransitAttachmentResp struct {
@@ -55,7 +61,8 @@ type EdgeSpokeTransitAttachmentResults struct {
 }
 
 type SiteDetail struct {
-	ConnBgpPrependAsPath string `json:"conn_bgp_prepend_as_path"`
+	ConnBgpPrependAsPath string   `json:"conn_bgp_prepend_as_path"`
+	FilterCIDRs          []string `json:"filter_list"`
 }
 
 func (c *Client) CreateSpokeTransitAttachment(ctx context.Context, spokeTransitAttachment *SpokeTransitAttachment) error {
@@ -63,6 +70,46 @@ func (c *Client) CreateSpokeTransitAttachment(ctx context.Context, spokeTransitA
 	spokeTransitAttachment.CID = c.CID
 	spokeTransitAttachment.Action = action
 	return c.PostAPIContext2(ctx, nil, action, spokeTransitAttachment, BasicCheck)
+}
+
+// EditSpokeTransitAttachmentFilters updates the spoke-to-transit and
+// transit-to-spoke route advertisement filter CIDRs on an existing
+// spoke-transit attachment without recreating the attachment.
+func (c *Client) EditSpokeTransitAttachmentFilters(ctx context.Context, spokeTransitAttachment *SpokeTransitAttachment) error {
+	action := "edit_attach_spoke_to_transit_gw"
+	spokeTransitAttachment.CID = c.CID
+	spokeTransitAttachment.Action = action
+	return c.PostAPIContext2(ctx, nil, action, spokeTransitAttachment, BasicCheck)
+}
+
+// GetSpokeTransitAttachmentFilterCIDRs reads the advertisement filter cidrs for
+// a (non-edge) spoke-transit attachment from the peering-details API and maps
+// them onto the SpokeTransitAttachment model, so drift detection lives on the
+// attachment model rather than on the transit-peering struct. site_1 is the
+// spoke side (spoke->transit), site_2 the transit side (transit->spoke).
+func (c *Client) GetSpokeTransitAttachmentFilterCIDRs(spokeTransitAttachment *SpokeTransitAttachment) error {
+	form := map[string]string{
+		"action":   "get_inter_transit_gateway_peering_details",
+		"CID":      c.CID,
+		"gateway1": spokeTransitAttachment.SpokeGwName,
+		"gateway2": spokeTransitAttachment.TransitGwName,
+	}
+	check := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") || strings.Contains(reason, "not found") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		}
+		return nil
+	}
+	var data TransitGatewayPeeringDetailsAPIResp
+	if err := c.GetAPI(&data, form["action"], form, check); err != nil {
+		return err
+	}
+	spokeTransitAttachment.SpokeToTransitFilterCIDRsSlice = data.Results.Site1.FilterCIDRs
+	spokeTransitAttachment.TransitToSpokeFilterCIDRsSlice = data.Results.Site2.FilterCIDRs
+	return nil
 }
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
@@ -182,6 +229,11 @@ func (c *Client) GetEdgeSpokeTransitAttachment(ctx context.Context, spokeTransit
 	if data.Results.TransitGatewayLogicalIfNames != nil {
 		spokeTransitAttachment.TransitGatewayLogicalIfNames = data.Results.TransitGatewayLogicalIfNames
 	}
+
+	// advertisement filter cidrs, read back so Terraform can detect drift.
+	// site_1 is the spoke side (spoke->transit), site_2 the transit side.
+	spokeTransitAttachment.SpokeToTransitFilterCIDRsSlice = data.Results.Site1.FilterCIDRs
+	spokeTransitAttachment.TransitToSpokeFilterCIDRsSlice = data.Results.Site2.FilterCIDRs
 
 	return spokeTransitAttachment, nil
 }

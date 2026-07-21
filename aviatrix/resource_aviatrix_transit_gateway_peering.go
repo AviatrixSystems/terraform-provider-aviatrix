@@ -69,6 +69,22 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"gateway1_to_gateway2_filter_cidrs": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of directional (enhanced route filtering) CIDRs the first transit gateway does not advertise to the second transit gateway.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"gateway2_to_gateway1_filter_cidrs": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of directional (enhanced route filtering) CIDRs the second transit gateway does not advertise to the first transit gateway.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"prepend_as_path1": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -427,6 +443,28 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta any)
 	if err != nil {
 		return fmt.Errorf("could not write gateway2_excluded_tgw_connections to state: %w", err)
 	}
+	if err := setConfigValueIfEquivalent(
+		d,
+		"gateway1_to_gateway2_filter_cidrs",
+		getStringList(d, "gateway1_to_gateway2_filter_cidrs"),
+		transitGatewayPeering.Gateway1ToGateway2FilterCIDRsSlice,
+	); err != nil {
+		return fmt.Errorf(
+			"could not write gateway1_to_gateway2_filter_cidrs to state: %w",
+			err,
+		)
+	}
+	if err := setConfigValueIfEquivalent(
+		d,
+		"gateway2_to_gateway1_filter_cidrs",
+		getStringList(d, "gateway2_to_gateway1_filter_cidrs"),
+		transitGatewayPeering.Gateway2ToGateway1FilterCIDRsSlice,
+	); err != nil {
+		return fmt.Errorf(
+			"could not write gateway2_to_gateway1_filter_cidrs to state: %w",
+			err,
+		)
+	}
 
 	if transitGatewayPeering.PrependAsPath1 != "" {
 		var prependAsPath []string
@@ -501,7 +539,8 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta an
 		TransitGatewayName2: resolvedGwName2,
 	}
 	if d.HasChange("gateway1_excluded_network_cidrs") || d.HasChange("gateway2_excluded_network_cidrs") ||
-		d.HasChange("gateway1_excluded_tgw_connections") || d.HasChange("gateway2_excluded_tgw_connections") {
+		d.HasChange("gateway1_excluded_tgw_connections") || d.HasChange("gateway2_excluded_tgw_connections") ||
+		d.HasChange("gateway1_to_gateway2_filter_cidrs") || d.HasChange("gateway2_to_gateway1_filter_cidrs") {
 		var gw1Cidrs []string
 		for _, cidr := range getList(d, "gateway1_excluded_network_cidrs") {
 			gw1Cidrs = append(gw1Cidrs, mustString(cidr))
@@ -518,11 +557,24 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta an
 		for _, tgw := range getList(d, "gateway2_excluded_tgw_connections") {
 			gw2Tgws = append(gw2Tgws, mustString(tgw))
 		}
+		// Always send the current directional filter cidrs on an edit that
+		// touches any filter field, since edit_inter_transit_gateway_peering
+		// replaces (not merges) the configured filters.
+		var gw1ToGw2FilterCIDRs []string
+		for _, cidr := range getList(d, "gateway1_to_gateway2_filter_cidrs") {
+			gw1ToGw2FilterCIDRs = append(gw1ToGw2FilterCIDRs, mustString(cidr))
+		}
+		var gw2ToGw1FilterCIDRs []string
+		for _, cidr := range getList(d, "gateway2_to_gateway1_filter_cidrs") {
+			gw2ToGw1FilterCIDRs = append(gw2ToGw1FilterCIDRs, mustString(cidr))
+		}
 
 		transitGatewayPeering.Gateway1ExcludedCIDRs = strings.Join(gw1Cidrs, ",")
 		transitGatewayPeering.Gateway2ExcludedCIDRs = strings.Join(gw2Cidrs, ",")
 		transitGatewayPeering.Gateway1ExcludedTGWConnections = strings.Join(gw1Tgws, ",")
 		transitGatewayPeering.Gateway2ExcludedTGWConnections = strings.Join(gw2Tgws, ",")
+		transitGatewayPeering.Gateway1ToGateway2FilterCIDRs = strings.Join(gw1ToGw2FilterCIDRs, ",")
+		transitGatewayPeering.Gateway2ToGateway1FilterCIDRs = strings.Join(gw2ToGw1FilterCIDRs, ",")
 
 		log.Printf("[INFO] Updating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
 		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)

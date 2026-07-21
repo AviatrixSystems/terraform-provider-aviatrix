@@ -13,6 +13,8 @@ type TransitGatewayPeering struct {
 	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway2,omitempty"`
 	Gateway1ExcludedCIDRs               string `form:"src_filter_list,omitempty" json:"src_filter_list,omitempty"`
 	Gateway2ExcludedCIDRs               string `form:"dst_filter_list,omitempty" json:"dst_filter_list,omitempty"`
+	Gateway1ToGateway2FilterCIDRs       string `form:"src_to_dst_filter_cidrs,omitempty" json:"src_to_dst_filter_cidrs,omitempty"`
+	Gateway2ToGateway1FilterCIDRs       string `form:"dst_to_src_filter_cidrs,omitempty" json:"dst_to_src_filter_cidrs,omitempty"`
 	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty" json:"source_exclude_connections,omitempty"`
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty" json:"destination_exclude_connections,omitempty"`
 	PrivateIPPeering                    string `form:"private_ip_peering,omitempty" json:"private_ip_peering,omitempty"`
@@ -21,6 +23,8 @@ type TransitGatewayPeering struct {
 	TunnelCount                         int    `form:"tunnel_count,omitempty" json:"tunnel_count,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
+	Gateway1ToGateway2FilterCIDRsSlice  []string
+	Gateway2ToGateway1FilterCIDRsSlice  []string
 	Gateway1ExcludedTGWConnectionsSlice []string
 	Gateway2ExcludedTGWConnectionsSlice []string
 	PrependAsPath1                      string
@@ -88,6 +92,10 @@ type TransitGatewayPeeringDetailsResults struct {
 
 type TransitGatewayPeeringDetail struct {
 	ExcludedCIDRs          []string `json:"exclude_filter_list"`
+	DirectionalFilterCIDRs []string `json:"directional_filter_list"`
+	// FilterCIDRs carries the spoke-transit advertisement filter cidrs for a
+	// site on a spoke-transit peering (not populated for transit-transit).
+	FilterCIDRs            []string `json:"filter_list"`
 	ExcludedTGWConnections []string `json:"exclude_connections"`
 	ConnBGPPrependAsPath   string   `json:"conn_bgp_prepend_as_path"`
 }
@@ -163,11 +171,17 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	if data.Results.Site1.ExcludedCIDRs != nil {
 		transitGatewayPeering.Gateway1ExcludedCIDRsSlice = data.Results.Site1.ExcludedCIDRs
 	}
+	if data.Results.Site1.DirectionalFilterCIDRs != nil {
+		transitGatewayPeering.Gateway1ToGateway2FilterCIDRsSlice = data.Results.Site1.DirectionalFilterCIDRs
+	}
 	if data.Results.Site1.ExcludedTGWConnections != nil {
 		transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
 	}
 	if data.Results.Site2.ExcludedCIDRs != nil {
 		transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
+	}
+	if data.Results.Site2.DirectionalFilterCIDRs != nil {
+		transitGatewayPeering.Gateway2ToGateway1FilterCIDRsSlice = data.Results.Site2.DirectionalFilterCIDRs
 	}
 	if data.Results.Site2.ExcludedTGWConnections != nil {
 		transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections

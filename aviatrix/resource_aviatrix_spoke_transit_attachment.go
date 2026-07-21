@@ -107,6 +107,26 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Enable AZ affinity for spoke-transit attachment. Prefers same-AZ nexthop. Only valid for AWS with HPE enabled.",
 			},
+			"spoke_to_transit_filter_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Description: "CIDRs the spoke must not advertise to the transit on this peering. " +
+					"Updates are applied in-place without recreating the attachment.",
+			},
+			"transit_to_spoke_filter_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Description: "CIDRs the transit must not advertise to the spoke on this peering. " +
+					"Updates are applied in-place without recreating the attachment.",
+			},
 		},
 	}
 }
@@ -280,6 +300,15 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta a
 		}
 	}
 
+	if attachment.SpokeToTransitFilterCIDRs != "" || attachment.TransitToSpokeFilterCIDRs != "" {
+		filterCtx, filterCancel := context.WithTimeout(context.Background(), timeout)
+		defer filterCancel()
+		if err := client.EditSpokeTransitAttachmentFilters(filterCtx, attachment); err != nil {
+			return fmt.Errorf("could not set spoke-transit filter cidrs for %s~%s: %w",
+				resolvedSpokeGwName, resolvedTransitGwName, err)
+		}
+	}
+
 	return resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 }
 
@@ -397,6 +426,24 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta any
 		mustSet(d, "transit_prepend_as_path", nil)
 	}
 
+	// Read back the advertisement filter cidrs so out-of-band changes are
+	// detected. These are spoke-transit attachment values, so fetch them from
+	// the peering-details API and map them onto the SpokeTransitAttachment
+	// model rather than onto the transit-peering struct.
+	attachment.SpokeGwName = resolvedSpokeGwName
+	attachment.TransitGwName = resolvedTransitGwName
+	if err := client.GetSpokeTransitAttachmentFilterCIDRs(attachment); err != nil {
+		return fmt.Errorf("could not read spoke-transit filter cidrs: %w", err)
+	}
+	s2tFromConfig := getStringSet(d, "spoke_to_transit_filter_cidrs")
+	if err := setConfigValueIfEquivalent(d, "spoke_to_transit_filter_cidrs", s2tFromConfig, attachment.SpokeToTransitFilterCIDRsSlice); err != nil {
+		return fmt.Errorf("could not write spoke_to_transit_filter_cidrs to state: %w", err)
+	}
+	t2sFromConfig := getStringSet(d, "transit_to_spoke_filter_cidrs")
+	if err := setConfigValueIfEquivalent(d, "transit_to_spoke_filter_cidrs", t2sFromConfig, attachment.TransitToSpokeFilterCIDRsSlice); err != nil {
+		return fmt.Errorf("could not write transit_to_spoke_filter_cidrs to state: %w", err)
+	}
+
 	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	return nil
 }
@@ -472,6 +519,21 @@ func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta a
 		}
 	}
 
+	if d.HasChanges("spoke_to_transit_filter_cidrs", "transit_to_spoke_filter_cidrs") {
+		filterCtx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+		defer cancel()
+		attachment := &goaviatrix.SpokeTransitAttachment{
+			SpokeGwName:               spokeGwName,
+			TransitGwName:             transitGwName,
+			SpokeToTransitFilterCIDRs: strings.Join(getStringSet(d, "spoke_to_transit_filter_cidrs"), ","),
+			TransitToSpokeFilterCIDRs: strings.Join(getStringSet(d, "transit_to_spoke_filter_cidrs"), ","),
+		}
+		if err := client.EditSpokeTransitAttachmentFilters(filterCtx, attachment); err != nil {
+			return fmt.Errorf("could not update spoke-transit filter cidrs for %s~%s: %w",
+				spokeGwName, transitGwName, err)
+		}
+	}
+
 	d.Partial(false)
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
@@ -504,13 +566,15 @@ func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta a
 
 func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.SpokeTransitAttachment {
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:            getString(d, "spoke_gw_name"),
-		TransitGwName:          getString(d, "transit_gw_name"),
-		SpokePrependAsPath:     getStringList(d, "spoke_prepend_as_path"),
-		TransitPrependAsPath:   getStringList(d, "transit_prepend_as_path"),
-		InsaneModeTunnelNumber: getInt(d, "tunnel_count"),
-		NoMaxPerformance:       !getBool(d, "enable_max_performance"),
-		EnableAzAffinity:       getBool(d, "enable_az_affinity"),
+		SpokeGwName:               getString(d, "spoke_gw_name"),
+		TransitGwName:             getString(d, "transit_gw_name"),
+		SpokePrependAsPath:        getStringList(d, "spoke_prepend_as_path"),
+		TransitPrependAsPath:      getStringList(d, "transit_prepend_as_path"),
+		InsaneModeTunnelNumber:    getInt(d, "tunnel_count"),
+		NoMaxPerformance:          !getBool(d, "enable_max_performance"),
+		SpokeToTransitFilterCIDRs: strings.Join(getStringSet(d, "spoke_to_transit_filter_cidrs"), ","),
+		TransitToSpokeFilterCIDRs: strings.Join(getStringSet(d, "transit_to_spoke_filter_cidrs"), ","),
+		EnableAzAffinity:          getBool(d, "enable_az_affinity"),
 	}
 
 	return spokeTransitAttachment

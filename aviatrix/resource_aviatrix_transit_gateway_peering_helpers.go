@@ -216,6 +216,19 @@ func setExcludedResources(d *schema.ResourceData, transitGatewayPeering *goaviat
 	}
 	transitGatewayPeering.Gateway2ExcludedTGWConnections = strings.Join(gw2Tgws, ",")
 
+	// Set directional (enhanced route filtering) CIDRs
+	gw1ToGw2FilterCIDRs, err := getStringListFromResource(d, "gateway1_to_gateway2_filter_cidrs")
+	if err != nil {
+		return err
+	}
+	transitGatewayPeering.Gateway1ToGateway2FilterCIDRs = strings.Join(gw1ToGw2FilterCIDRs, ",")
+
+	gw2ToGw1FilterCIDRs, err := getStringListFromResource(d, "gateway2_to_gateway1_filter_cidrs")
+	if err != nil {
+		return err
+	}
+	transitGatewayPeering.Gateway2ToGateway1FilterCIDRs = strings.Join(gw2ToGw1FilterCIDRs, ",")
+
 	return nil
 }
 

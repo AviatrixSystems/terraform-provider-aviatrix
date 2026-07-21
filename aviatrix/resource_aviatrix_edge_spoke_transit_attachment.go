@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -143,23 +144,45 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Disable ActiveMesh, no crossing tunnels",
 			},
+			"spoke_to_transit_filter_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Description: "CIDRs the edge spoke must not advertise to the transit on this peering. " +
+					"Updates are applied in-place without recreating the attachment.",
+			},
+			"transit_to_spoke_filter_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Description: "CIDRs the transit must not advertise to the edge spoke on this peering. " +
+					"Updates are applied in-place without recreating the attachment.",
+			},
 		},
 	}
 }
 
 func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.SpokeTransitAttachment {
 	edgeSpokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:              getString(d, "spoke_gw_name"),
-		TransitGwName:            getString(d, "transit_gw_name"),
-		EnableOverPrivateNetwork: getBool(d, "enable_over_private_network"),
-		EnableJumboFrame:         getBool(d, "enable_jumbo_frame"),
-		EnableFirenetForEdge:     getBool(d, "enable_firenet_for_edge"),
-		EnableInsaneMode:         getBool(d, "enable_insane_mode"),
-		InsaneModeTunnelNumber:   getInt(d, "insane_mode_tunnel_number"),
-		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
-		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
-		EdgeWanInterfaces:        strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
-		DisableActivemesh:        getBool(d, "disable_activemesh"),
+		SpokeGwName:               getString(d, "spoke_gw_name"),
+		TransitGwName:             getString(d, "transit_gw_name"),
+		EnableOverPrivateNetwork:  getBool(d, "enable_over_private_network"),
+		EnableJumboFrame:          getBool(d, "enable_jumbo_frame"),
+		EnableFirenetForEdge:      getBool(d, "enable_firenet_for_edge"),
+		EnableInsaneMode:          getBool(d, "enable_insane_mode"),
+		InsaneModeTunnelNumber:    getInt(d, "insane_mode_tunnel_number"),
+		SpokePrependAsPath:        getStringList(d, "spoke_prepend_as_path"),
+		TransitPrependAsPath:      getStringList(d, "transit_prepend_as_path"),
+		EdgeWanInterfaces:         strings.Join(getStringSet(d, "edge_wan_interfaces"), ","),
+		DisableActivemesh:         getBool(d, "disable_activemesh"),
+		SpokeToTransitFilterCIDRs: strings.Join(getStringSet(d, "spoke_to_transit_filter_cidrs"), ","),
+		TransitToSpokeFilterCIDRs: strings.Join(getStringSet(d, "transit_to_spoke_filter_cidrs"), ","),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -245,6 +268,12 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 		}
 	}
 
+	if attachment.SpokeToTransitFilterCIDRs != "" || attachment.TransitToSpokeFilterCIDRs != "" {
+		if err := client.EditSpokeTransitAttachmentFilters(ctx, attachment); err != nil {
+			return diag.Errorf("could not set edge-spoke-transit filter cidrs for %s~%s: %v",
+				resolvedSpokeGwName, resolvedTransitGwName, err)
+		}
+	}
 	return resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -367,6 +396,18 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	if err := d.Set("disable_activemesh", attachment.DisableActivemesh); err != nil {
 		return diag.Errorf("error setting disable_activemesh: %v", err)
 	}
+
+	// Read back the advertisement filter cidrs so out-of-band changes are
+	// detected. Preserve config ordering when the sets are equivalent.
+	s2tFromConfig := getStringSet(d, "spoke_to_transit_filter_cidrs")
+	if err := setConfigValueIfEquivalent(d, "spoke_to_transit_filter_cidrs", s2tFromConfig, attachment.SpokeToTransitFilterCIDRsSlice); err != nil {
+		return diag.Errorf("could not write spoke_to_transit_filter_cidrs to state: %v", err)
+	}
+	t2sFromConfig := getStringSet(d, "transit_to_spoke_filter_cidrs")
+	if err := setConfigValueIfEquivalent(d, "transit_to_spoke_filter_cidrs", t2sFromConfig, attachment.TransitToSpokeFilterCIDRsSlice); err != nil {
+		return diag.Errorf("could not write transit_to_spoke_filter_cidrs to state: %v", err)
+	}
+
 	d.SetId(resolvedSpokeGwName + "~" + resolvedTransitGwName)
 	return nil
 }
@@ -449,6 +490,19 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 		err := client.PostAPI("edit_inter_transit_gateway_peering", form, goaviatrix.BasicCheck)
 		if err != nil {
 			return diag.Errorf("could not update enable_firenet_for_edge for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
+		}
+	}
+
+	if d.HasChanges("spoke_to_transit_filter_cidrs", "transit_to_spoke_filter_cidrs") {
+		attachment := &goaviatrix.SpokeTransitAttachment{
+			SpokeGwName:               spokeGwName,
+			TransitGwName:             transitGwName,
+			SpokeToTransitFilterCIDRs: strings.Join(getStringSet(d, "spoke_to_transit_filter_cidrs"), ","),
+			TransitToSpokeFilterCIDRs: strings.Join(getStringSet(d, "transit_to_spoke_filter_cidrs"), ","),
+		}
+		if err := client.EditSpokeTransitAttachmentFilters(ctx, attachment); err != nil {
+			return diag.Errorf("could not update edge-spoke-transit filter cidrs for %s~%s: %v",
+				spokeGwName, transitGwName, err)
 		}
 	}
 
