@@ -54,14 +54,11 @@ func resourceAviatrixTransitInstanceCustomizeDiff(_ context.Context, d *schema.R
 
 // transitInstanceConfig holds the configuration for creating a transit instance
 type transitInstanceConfig struct {
-	gateway                   *goaviatrix.TransitVpc
-	singleAZ                  bool
-	enableFireNet             bool
-	enableTransitFireNet      bool
-	enableGatewayLoadBalancer bool
-	enableMonitorSubnets      bool
-	excludedInstances         []string
-	rxQueueSize               string
+	gateway              *goaviatrix.TransitVpc
+	singleAZ             bool
+	enableMonitorSubnets bool
+	excludedInstances    []string
+	rxQueueSize          string
 }
 
 func resourceAviatrixTransitInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -254,9 +251,11 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 		return nil, err
 	}
 
-	// Validate and configure feature flags
-	enableFireNet, enableTransitFireNet, enableGatewayLoadBalancer, err := validateAndConfigureFeatureFlags(d, gateway, cloudType)
-	if err != nil {
+	// Validate and configure the GCP Transit FireNet LAN launch params. FireNet
+	// enable/disable is managed on the transit group (AVX-78640); the controller
+	// applies the group's desired state when the primary instance launches, and
+	// for GCP it needs these LAN params at launch time.
+	if err := validateAndConfigureTransitFireNetLan(d, gateway, cloudType, transitGroup.EnableTransitFirenet); err != nil {
 		return nil, err
 	}
 
@@ -293,14 +292,11 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 	}
 
 	return &transitInstanceConfig{
-		gateway:                   gateway,
-		singleAZ:                  getBool(d, "single_az_ha"),
-		enableFireNet:             enableFireNet,
-		enableTransitFireNet:      enableTransitFireNet,
-		enableGatewayLoadBalancer: enableGatewayLoadBalancer,
-		enableMonitorSubnets:      enableMonitorSubnets,
-		excludedInstances:         excludedInstances,
-		rxQueueSize:               rxQueueSize,
+		gateway:              gateway,
+		singleAZ:             getBool(d, "single_az_ha"),
+		enableMonitorSubnets: enableMonitorSubnets,
+		excludedInstances:    excludedInstances,
+		rxQueueSize:          rxQueueSize,
 	}, nil
 }
 
@@ -425,46 +421,28 @@ func validateAndConfigureCloudSpecificSettings(d *schema.ResourceData, gateway *
 	return nil
 }
 
-// validateAndConfigureFeatureFlags validates and configures feature flags (FireNet, Transit FireNet, GWLB)
-func validateAndConfigureFeatureFlags(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, cloudType int) (bool, bool, bool, diag.Diagnostics) {
-	enableFireNet := getBool(d, "enable_firenet")
-	enableTransitFireNet := getBool(d, "enable_transit_firenet")
-	enableGatewayLoadBalancer := getBool(d, "enable_gateway_load_balancer")
+// validateAndConfigureTransitFireNetLan validates the GCP Transit FireNet LAN launch
+// params and folds them into the launch. FireNet enable/disable itself is a group-level
+// setting on aviatrix_transit_group (AVX-78640) and is applied by the controller when
+// the primary instance launches; only the GCP LAN params live on the instance because
+// they must be supplied at launch time. transitFireNet is the group's desired state.
+func validateAndConfigureTransitFireNetLan(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, cloudType int, transitFireNet bool) diag.Diagnostics {
 	lanVpcID := getString(d, "lan_vpc_id")
 	lanPrivateSubnet := getString(d, "lan_private_subnet")
 
-	if enableFireNet && enableTransitFireNet {
-		return false, false, false, diag.Errorf("can't enable firenet function and transit firenet function at the same time")
-	}
-
-	if enableTransitFireNet {
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			return false, false, false, diag.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), Azure China (2048)")
+	if transitFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
+		if lanVpcID == "" || lanPrivateSubnet == "" {
+			return diag.Errorf("'lan_vpc_id' and 'lan_private_subnet' are required when 'cloud_type' = 4 (GCP) and the transit group has 'enable_transit_firenet' = true")
 		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			gateway.EnableTransitFireNet = true
-		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-			if lanVpcID == "" || lanPrivateSubnet == "" {
-				return false, false, false, diag.Errorf("'lan_vpc_id' and 'lan_private_subnet' are required when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
-			}
-			gateway.LanVpcID = lanVpcID
-			gateway.LanPrivateSubnet = lanPrivateSubnet
-		}
+		gateway.LanVpcID = lanVpcID
+		gateway.LanPrivateSubnet = lanPrivateSubnet
 	}
 
-	if (!enableTransitFireNet || !goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)) && (lanVpcID != "" || lanPrivateSubnet != "") {
-		return false, false, false, diag.Errorf("'lan_vpc_id' and 'lan_private_subnet' are only valid when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
+	if (!transitFireNet || !goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)) && (lanVpcID != "" || lanPrivateSubnet != "") {
+		return diag.Errorf("'lan_vpc_id' and 'lan_private_subnet' are only valid when 'cloud_type' = 4 (GCP) and the transit group has 'enable_transit_firenet' = true")
 	}
 
-	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
-		return false, false, false, diag.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
-	}
-	if enableGatewayLoadBalancer && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWS) {
-		return false, false, false, diag.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1)")
-	}
-
-	return enableFireNet, enableTransitFireNet, enableGatewayLoadBalancer, nil
+	return nil
 }
 
 // validateAndConfigureMonitoring validates and configures monitoring settings
@@ -488,7 +466,7 @@ func validateAndConfigureMonitoring(d *schema.ResourceData, cloudType int) (bool
 // validateAndConfigureBgpOverLan validates and configures BGP over LAN settings
 func validateAndConfigureBgpOverLan(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, cloudType int) diag.Diagnostics {
 	bgpOverLan := getBool(d, "enable_bgp_over_lan")
-	if bgpOverLan && !(goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP)) {
+	if bgpOverLan && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP) {
 		return diag.Errorf("'enable_bgp_over_lan' is only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
 
@@ -586,7 +564,6 @@ func configureTransitInstanceEIP(d *schema.ResourceData, gateway *goaviatrix.Tra
 
 // configureTransitInstancePostCreate configures settings after the transit instance is created
 func configureTransitInstancePostCreate(d *schema.ResourceData, client *goaviatrix.Client, config *transitInstanceConfig) diag.Diagnostics {
-	cloudType := getInt(d, "cloud_type")
 	gwName := getString(d, "gw_name")
 
 	// Disable single AZ HA if not enabled
@@ -596,19 +573,8 @@ func configureTransitInstancePostCreate(d *schema.ResourceData, client *goaviatr
 		}
 	}
 
-	// Enable FireNet
-	if config.enableFireNet {
-		if err := enableTransitInstanceFireNet(client, config.gateway, config.enableGatewayLoadBalancer); err != nil {
-			return err
-		}
-	}
-
-	// Enable Transit FireNet for AWS/OCI
-	if config.enableTransitFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-		if err := enableTransitInstanceTransitFireNet(client, gwName, config.enableGatewayLoadBalancer); err != nil {
-			return err
-		}
-	}
+	// FireNet / Transit FireNet is enabled at the group level (AVX-78640); the
+	// controller applies the group's desired state as the primary instance launches.
 
 	// Configure routing settings
 	if err := configureTransitInstanceRouting(client, d, config.gateway); err != nil {
@@ -652,37 +618,6 @@ func disableTransitInstanceSingleAZHA(client *goaviatrix.Client, gwName string) 
 	log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 	if err := client.DisableSingleAZGateway(singleAZGateway); err != nil {
 		return diag.Errorf("failed to disable single AZ GW HA: %v", err)
-	}
-	return nil
-}
-
-// enableTransitInstanceFireNet enables FireNet for the transit instance
-func enableTransitInstanceFireNet(client *goaviatrix.Client, gateway *goaviatrix.TransitVpc, enableGatewayLoadBalancer bool) diag.Diagnostics {
-	if enableGatewayLoadBalancer {
-		if err := client.EnableGatewayFireNetInterfacesWithGWLB(gateway); err != nil {
-			return diag.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %v", err)
-		}
-	} else {
-		if err := client.EnableGatewayFireNetInterfaces(gateway); err != nil {
-			return diag.Errorf("failed to enable transit GW for FireNet Interfaces: %v", err)
-		}
-	}
-	return nil
-}
-
-// enableTransitInstanceTransitFireNet enables Transit FireNet for the transit instance
-func enableTransitInstanceTransitFireNet(client *goaviatrix.Client, gwName string, enableGatewayLoadBalancer bool) diag.Diagnostics {
-	gwTransitFireNet := &goaviatrix.Gateway{
-		GwName: gwName,
-	}
-	if enableGatewayLoadBalancer {
-		if err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet); err != nil {
-			return diag.Errorf("failed to enable transit firenet with Gateway Load Balancer enabled: %v", err)
-		}
-	} else {
-		if err := client.EnableTransitFireNet(gwTransitFireNet); err != nil {
-			return diag.Errorf("failed to enable transit firenet for %s due to %v", gwTransitFireNet.GwName, err)
-		}
 	}
 	return nil
 }
@@ -907,11 +842,10 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "rx_queue_size", gw.RxQueueSize)
 	mustSet(d, "subnet", gw.VpcNet)
 	mustSet(d, "tunnel_detection_time", gw.TunnelDetectionTime)
-	mustSet(d, "enable_firenet", gw.EnableFirenet)
-	mustSet(d, "enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
-	mustSet(d, "enable_transit_firenet", gw.EnableTransitFirenet)
 
 	setGatewayIPv6IPState(d, gw)
+	// FireNet is group-level (AVX-78640); only the GCP Transit FireNet LAN launch
+	// params live on the instance, so read them back when the gateway has it enabled.
 	if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		mustSet(d, "lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
 		mustSet(d, "lan_private_subnet", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
@@ -1140,7 +1074,7 @@ func resourceAviatrixTransitInstanceUpdate(ctx context.Context, d *schema.Resour
 	d.Partial(true)
 
 	// Check for non-updatable fields
-	if err := validateTransitInstanceUpdateRestrictions(d, gateway); err != nil {
+	if err := validateTransitInstanceUpdateRestrictions(d); err != nil {
 		return err
 	}
 
@@ -1197,7 +1131,7 @@ func resourceAviatrixTransitInstanceUpdate(ctx context.Context, d *schema.Resour
 }
 
 // validateTransitInstanceUpdateRestrictions checks for non-updatable fields
-func validateTransitInstanceUpdateRestrictions(d *schema.ResourceData, gateway *goaviatrix.Gateway) diag.Diagnostics {
+func validateTransitInstanceUpdateRestrictions(d *schema.ResourceData) diag.Diagnostics {
 	if d.HasChange("allocate_new_eip") {
 		return diag.Errorf("updating allocate_new_eip is not allowed")
 	}
@@ -1212,12 +1146,6 @@ func validateTransitInstanceUpdateRestrictions(d *schema.ResourceData, gateway *
 	}
 	if d.HasChange("lan_private_subnet") {
 		return diag.Errorf("updating lan_private_subnet is not allowed")
-	}
-	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSChina|goaviatrix.AzureChina) {
-		return diag.Errorf("editing 'enable_firenet' in AWSChina (1024) and AzureChina (2048) is not supported")
-	}
-	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		return diag.Errorf("editing 'enable_transit_firenet' in GCP (4), Azure (8), AzureGov (32) and AzureChina (2048) is not supported")
 	}
 	return nil
 }

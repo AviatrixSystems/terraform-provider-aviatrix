@@ -3,6 +3,11 @@
 
 package goaviatrix
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Cloud provider ids
 // The value is corresponding to cloudn repro definition for cloud type bit, e.g. AWS is AWS_CLOUD_TYPE_BIT
 const (
@@ -78,6 +83,41 @@ func GetSupportedClouds() []int {
 		EDGEMEGAPORT,
 		EDGESELFMANAGED,
 	}
+}
+
+// cloudTypeNames maps each single cloud-type bit to its display name, ordered by
+// bit value so generated messages read low-to-high (AWS (1), GCP (4), ...).
+var cloudTypeNames = []struct {
+	bit  int
+	name string
+}{
+	{AWS, "AWS"},
+	{GCP, "GCP"},
+	{Azure, "Azure"},
+	{OCI, "OCI"},
+	{AzureGov, "AzureGov"},
+	{AWSGov, "AWSGov"},
+	{AWSChina, "AWSChina"},
+	{AzureChina, "AzureChina"},
+	{EDGESELFMANAGED, "Edge Self-Managed"},
+	{AliCloud, "AliCloud"},
+	{EDGECSP, "Edge CSP"},
+	{EDGENEO, "Edge NEO"},
+	{EDGEEQUINIX, "Edge Equinix"},
+	{EDGEMEGAPORT, "Edge Megaport"},
+}
+
+// CloudTypesToString renders a cloud-type bitmask as a human-readable list such as
+// "AWS (1), GCP (4), Azure (8)", listing each cloud set in the mask with its numeric
+// value. Use it in validation error messages instead of hand-maintaining the mapping.
+func CloudTypesToString(mask int) string {
+	var parts []string
+	for _, ct := range cloudTypeNames {
+		if mask&ct.bit != 0 {
+			parts = append(parts, fmt.Sprintf("%s (%d)", ct.name, ct.bit))
+		}
+	}
+	return strings.Join(parts, ", ")
 }
 
 // VendorToCloudType Convert vendor name to cloud_type

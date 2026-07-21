@@ -394,6 +394,11 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 		return fmt.Errorf("can't enable firenet and transit firenet at the same time")
 	}
 
+	transitFireNetClouds := goaviatrix.AWSRelatedCloudTypes | goaviatrix.GCPRelatedCloudTypes | goaviatrix.AzureArmRelatedCloudTypes | goaviatrix.OCIRelatedCloudTypes
+	if transitGroup.EnableTransitFirenet && !goaviatrix.IsCloudType(transitGroup.CloudType, transitFireNetClouds) {
+		return fmt.Errorf("'enable_transit_firenet' is only supported in %s", goaviatrix.CloudTypesToString(transitFireNetClouds))
+	}
+
 	if transitGroup.EnableGatewayLoadBalancer && !transitGroup.EnableFirenet && !transitGroup.EnableTransitFirenet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
@@ -854,6 +859,19 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 
 	if getBool(d, "enable_firenet") && getBool(d, "enable_transit_firenet") {
 		return diag.Errorf("can't enable firenet and transit firenet at the same time")
+	}
+
+	transitFireNetClouds := goaviatrix.AWSRelatedCloudTypes | goaviatrix.GCPRelatedCloudTypes | goaviatrix.AzureArmRelatedCloudTypes | goaviatrix.OCIRelatedCloudTypes
+	if getBool(d, "enable_transit_firenet") && !goaviatrix.IsCloudType(cloudType, transitFireNetClouds) {
+		return diag.Errorf("'enable_transit_firenet' is only supported in %s", goaviatrix.CloudTypesToString(transitFireNetClouds))
+	}
+
+	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSChina|goaviatrix.AzureChina) {
+		return diag.Errorf("editing 'enable_firenet' in %s is not supported", goaviatrix.CloudTypesToString(goaviatrix.AWSChina|goaviatrix.AzureChina))
+	}
+
+	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return diag.Errorf("editing 'enable_transit_firenet' in %s is not supported", goaviatrix.CloudTypesToString(goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes))
 	}
 
 	// ============================================================================

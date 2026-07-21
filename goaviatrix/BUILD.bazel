@@ -155,6 +155,7 @@ go_test(
     srcs = [
         "account_test.go",
         "check_test.go",
+        "const_test.go",
         "dcf_trustbundle_test.go",
         "gateway_group_test.go",
         "site2cloud_update_test.go",

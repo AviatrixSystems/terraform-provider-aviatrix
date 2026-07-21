@@ -403,81 +403,9 @@ func TestAccAviatrixTransitInstance_withBgpManualSpokeAdvertiseCidrs(t *testing.
 	})
 }
 
-func TestAccAviatrixTransitInstance_withFireNet(t *testing.T) {
-	var gateway goaviatrix.Gateway
-
-	rName := acctest.RandString(5)
-	resourceName := "aviatrix_transit_instance.test_transit_instance_firenet"
-
-	skipInstance := os.Getenv("SKIP_TRANSIT_INSTANCE")
-	if skipInstance == "yes" {
-		t.Skip("Skipping Transit instance test as SKIP_TRANSIT_INSTANCE is set")
-	}
-
-	skipInstanceAWS := os.Getenv("SKIP_TRANSIT_INSTANCE_AWS")
-	if skipInstanceAWS == "yes" {
-		t.Skip("Skipping Transit instance FireNet test as SKIP_TRANSIT_INSTANCE_AWS is set")
-	}
-
-	msgCommon := ". Set SKIP_TRANSIT_INSTANCE_AWS to yes to skip Transit Instance tests in AWS"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			preGatewayCheck(t, msgCommon)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTransitInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTransitInstanceConfigWithFireNet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitInstanceExists(resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfi-firenet-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enable_firenet", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAviatrixTransitInstance_withTransitFireNet(t *testing.T) {
-	var gateway goaviatrix.Gateway
-
-	rName := acctest.RandString(5)
-	resourceName := "aviatrix_transit_instance.test_transit_instance_transit_firenet"
-
-	skipInstance := os.Getenv("SKIP_TRANSIT_INSTANCE")
-	if skipInstance == "yes" {
-		t.Skip("Skipping Transit instance test as SKIP_TRANSIT_INSTANCE is set")
-	}
-
-	skipInstanceAWS := os.Getenv("SKIP_TRANSIT_INSTANCE_AWS")
-	if skipInstanceAWS == "yes" {
-		t.Skip("Skipping Transit instance Transit FireNet test as SKIP_TRANSIT_INSTANCE_AWS is set")
-	}
-
-	msgCommon := ". Set SKIP_TRANSIT_INSTANCE_AWS to yes to skip Transit Instance tests in AWS"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			preGatewayCheck(t, msgCommon)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTransitInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTransitInstanceConfigWithTransitFireNet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitInstanceExists(resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfi-tfirenet-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enable_transit_firenet", "true"),
-				),
-			},
-		},
-	})
-}
+// FireNet / Transit FireNet coverage lives on aviatrix_transit_group (AVX-78640) —
+// see TestAccAviatrixTransitGroup_firenet / _transitFirenet / _firenetToggle /
+// _transitFirenetGWLB. It is no longer an aviatrix_transit_instance attribute.
 
 func testAccTransitInstanceConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
@@ -681,56 +609,6 @@ resource "aviatrix_transit_instance" "test_transit_instance_bgp" {
 	subnet       = "%[7]s"
 
 	bgp_manual_spoke_advertise_cidrs = "10.10.0.0/16,10.20.0.0/16"
-}
-	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
-}
-
-func testAccTransitInstanceConfigWithFireNet(rName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_aws" {
-	account_name       = "tfa-aws-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
-}
-resource "aviatrix_transit_instance" "test_transit_instance_firenet" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test_acc_aws.account_name
-	gw_name      = "tfi-firenet-%[1]s"
-	vpc_id       = "%[5]s"
-	vpc_reg      = "%[6]s"
-	gw_size      = "c5.xlarge"
-	subnet       = "%[7]s"
-
-	enable_firenet = true
-}
-	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
-}
-
-func testAccTransitInstanceConfigWithTransitFireNet(rName string) string {
-	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_aws" {
-	account_name       = "tfa-aws-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
-}
-resource "aviatrix_transit_instance" "test_transit_instance_transit_firenet" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test_acc_aws.account_name
-	gw_name      = "tfi-tfirenet-%[1]s"
-	vpc_id       = "%[5]s"
-	vpc_reg      = "%[6]s"
-	gw_size      = "c5.xlarge"
-	subnet       = "%[7]s"
-
-	enable_transit_firenet = true
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))

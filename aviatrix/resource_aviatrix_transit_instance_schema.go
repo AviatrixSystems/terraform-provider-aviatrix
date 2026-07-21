@@ -177,18 +177,11 @@ func transitInstanceOptionalRouteSchema() map[string]*schema.Schema {
 // transitInstanceOptionalFeatureSchema returns feature flag optional schema attributes.
 func transitInstanceOptionalFeatureSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"enable_transit_firenet": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Specify whether to enable transit firenet interfaces or not.",
-		},
-		"enable_firenet": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Specify whether to enable firenet interfaces or not.",
-		},
+		// enable_transit_firenet, enable_firenet and enable_gateway_load_balancer are
+		// group-level settings, managed on aviatrix_transit_group (AVX-78640). FireNet
+		// applies to every gateway in the group, so it must not be set per instance.
+		// lan_vpc_id / lan_private_subnet remain here as GCP Transit FireNet launch-time
+		// params consumed when the primary instance is launched.
 		"lan_vpc_id": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -199,14 +192,6 @@ func transitInstanceOptionalFeatureSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "LAN Private Subnet. Only used for GCP Transit FireNet.",
-		},
-		"enable_gateway_load_balancer": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-			Description: "Enable firenet interfaces with AWS Gateway Load Balancer. Only valid when `enable_firenet` or `enable_transit_firenet`" +
-				" are set to true and `cloud_type` = 1 (AWS). Currently AWS Gateway Load Balancer is only supported " +
-				"in AWS regions us-west-2 and us-east-1. Valid values: true or false. Default value: false.",
 		},
 		"enable_bgp_over_lan": {
 			Type:        schema.TypeBool,

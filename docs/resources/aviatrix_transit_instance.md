@@ -303,11 +303,8 @@ The following arguments are supported:
 
 ### Optional - Feature Flags
 
-* `enable_transit_firenet` - (Optional) Enable transit firenet interfaces. Default: false.
-* `enable_firenet` - (Optional) Enable firenet interfaces. Default: false.
-* `lan_vpc_id` - (Optional) LAN VPC ID. Only used for GCP Transit FireNet.
-* `lan_private_subnet` - (Optional) LAN Private Subnet. Only used for GCP Transit FireNet.
-* `enable_gateway_load_balancer` - (Optional) Enable firenet interfaces with AWS Gateway Load Balancer. Default: false.
+* `lan_vpc_id` - (Optional) LAN VPC ID. Only used for GCP Transit FireNet, and required when the transit group has `enable_transit_firenet = true` on GCP.
+* `lan_private_subnet` - (Optional) LAN Private Subnet. Only used for GCP Transit FireNet, and required when the transit group has `enable_transit_firenet = true` on GCP.
 * `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface for "BGP over LAN" functionality. Only valid for GCP and Azure. Default: false.
 * `bgp_lan_interfaces_count` - (Optional) Number of interfaces for BGP over LAN enabled Azure transit.
 
