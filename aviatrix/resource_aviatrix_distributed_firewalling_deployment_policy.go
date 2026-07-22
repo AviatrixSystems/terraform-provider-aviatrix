@@ -30,6 +30,14 @@ func resourceAviatrixDistributedFirewallingDeploymentPolicy() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				// Hash on the uppercased value so that provider names are
+				// treated case-insensitively. This prevents a spurious diff for
+				// existing customers whose state stores lowercase values while
+				// the API returns uppercase on read.
+				Set: func(i any) int {
+					str, _ := i.(string)
+					return schema.HashString(strings.ToUpper(str))
+				},
 			},
 			"set_defaults": {
 				Type:     schema.TypeBool,
