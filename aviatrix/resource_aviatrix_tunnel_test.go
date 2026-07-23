@@ -8,10 +8,51 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
+
+// tunnelID must produce the ID in the user-configured gw_name1~gw_name2 order.
+// GetTunnel may return the pair keyed by group name or in sorted order, but the
+// ID has to stay anchored to the config so Read doesn't flip it and make
+// Terraform think the resource moved. This pins that ordering contract.
+func TestTunnelID(t *testing.T) {
+	tunnelSchema := map[string]*schema.Schema{
+		"gw_name1": {Type: schema.TypeString},
+		"gw_name2": {Type: schema.TypeString},
+	}
+	tests := []struct {
+		name     string
+		gwName1  string
+		gwName2  string
+		expected string
+	}{
+		{
+			name:     "preserves configured order",
+			gwName1:  "gw-b",
+			gwName2:  "gw-a",
+			expected: "gw-b~gw-a",
+		},
+		{
+			name:     "individual gateway names",
+			gwName1:  "spoke1-gw1-east1a",
+			gwName2:  "spoke2-gw1-east1a",
+			expected: "spoke1-gw1-east1a~spoke2-gw1-east1a",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, tunnelSchema, map[string]any{
+				"gw_name1": tt.gwName1,
+				"gw_name2": tt.gwName2,
+			})
+			assert.Equal(t, tt.expected, tunnelID(d))
+		})
+	}
+}
 
 func preGateway2Check(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)

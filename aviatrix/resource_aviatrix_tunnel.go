@@ -57,6 +57,14 @@ func resourceAviatrixTunnel() *schema.Resource {
 	}
 }
 
+// tunnelID builds the resource ID from the configured gateway names, in the
+// gw_name1~gw_name2 order the user set. The backend may key or sort the pair
+// differently (group names, sorted order); anchoring the ID to the config keeps
+// it stable across reads so Terraform doesn't see the resource move.
+func tunnelID(d *schema.ResourceData) string {
+	return getString(d, "gw_name1") + "~" + getString(d, "gw_name2")
+}
+
 func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
@@ -77,7 +85,7 @@ func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta any) error {
 
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
 
-	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
+	d.SetId(tunnelID(d))
 	flag := false
 	defer func() { _ = resourceAviatrixTunnelReadIfRequired(d, meta, &flag) }() //nolint:errcheck // read on deferred path
 
@@ -134,7 +142,7 @@ func resourceAviatrixTunnelRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "enable_ha", false)
 	}
 
-	d.SetId(tun.VpcName1 + "~" + tun.VpcName2)
+	d.SetId(tunnelID(d))
 	return nil
 }
 
@@ -156,7 +164,7 @@ func resourceAviatrixTunnelUpdate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to update Aviatrix Tunnel: %w", err)
 	}
 
-	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
+	d.SetId(tunnelID(d))
 	return resourceAviatrixTunnelRead(d, meta)
 }
 
