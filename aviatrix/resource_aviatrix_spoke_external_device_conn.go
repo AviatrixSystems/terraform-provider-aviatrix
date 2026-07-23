@@ -997,15 +997,14 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta an
 	connectionName := getString(d, "connection_name")
 	vpcID := getString(d, "vpc_id")
 	if connectionName == "" || vpcID == "" {
-		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		parts := strings.Split(id, "~")
-		if len(parts) != 2 {
-			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+		if err := handleExternalDeviceConnImport(d, client); err != nil {
+			return err
 		}
-		mustSet(d, "connection_name", parts[0])
-		mustSet(d, "vpc_id", parts[1])
-		d.SetId(id)
+		// handleExternalDeviceConnImport clears the ID when the connection no
+		// longer exists, in which case the resource is gone from state.
+		if d.Id() == "" {
+			return nil
+		}
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{

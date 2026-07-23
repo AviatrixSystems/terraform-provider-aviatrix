@@ -803,3 +803,87 @@ resource "aviatrix_transit_external_device_conn" "test_proxy_id" {
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
 }
+
+func TestParseExternalDeviceConnImportID(t *testing.T) {
+	tests := []struct {
+		name             string
+		id               string
+		expectedConnName string
+		expectedVpcID    string
+		expectErr        bool
+	}{
+		{
+			name:             "valid id",
+			id:               "conn-1~vpc-abc123",
+			expectedConnName: "conn-1",
+			expectedVpcID:    "vpc-abc123",
+		},
+		{
+			name:             "vpc id containing tilde is preserved",
+			id:               "conn-1~vpc~with~tilde",
+			expectedConnName: "conn-1",
+			expectedVpcID:    "vpc~with~tilde",
+		},
+		{
+			name:      "missing separator",
+			id:        "conn-1",
+			expectErr: true,
+		},
+		{
+			name:      "empty id",
+			id:        "",
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			connName, vpcID, err := parseExternalDeviceConnImportID(tt.id)
+			if tt.expectErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedConnName, connName)
+			assert.Equal(t, tt.expectedVpcID, vpcID)
+		})
+	}
+}
+
+// externalDeviceConnTestSchema returns the minimal schema needed to build a
+// *schema.ResourceData for exercising handleExternalDeviceConnImport.
+func externalDeviceConnTestSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"connection_name": {Type: schema.TypeString, Optional: true},
+		"vpc_id":          {Type: schema.TypeString, Optional: true},
+		"gw_name":         {Type: schema.TypeString, Optional: true},
+	}
+}
+
+func TestHandleExternalDeviceConnImport(t *testing.T) {
+	t.Run("import with malformed id returns error", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, externalDeviceConnTestSchema(), map[string]any{})
+		d.SetId("no-separator")
+
+		err := handleExternalDeviceConnImport(d, nil)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("import with gw_name already set does not probe", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, externalDeviceConnTestSchema(), map[string]any{
+			"gw_name": "gw-preset",
+		})
+		d.SetId("conn-1~vpc-abc123")
+
+		// gw_name is already known, so the client probe is skipped and nil is
+		// safe.
+		err := handleExternalDeviceConnImport(d, nil)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "conn-1", getString(d, "connection_name"))
+		assert.Equal(t, "vpc-abc123", getString(d, "vpc_id"))
+		assert.Equal(t, "gw-preset", getString(d, "gw_name"))
+		assert.Equal(t, "conn-1~vpc-abc123", d.Id())
+	})
+}

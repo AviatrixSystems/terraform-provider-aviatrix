@@ -1082,15 +1082,14 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	connectionName := getString(d, "connection_name")
 	vpcID := getString(d, "vpc_id")
 	if connectionName == "" || vpcID == "" {
-		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		parts := strings.SplitN(id, "~", 2)
-		if len(parts) != 2 {
-			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+		if err := handleExternalDeviceConnImport(d, client); err != nil {
+			return err
 		}
-		mustSet(d, "connection_name", parts[0])
-		mustSet(d, "vpc_id", parts[1])
-		d.SetId(id)
+		// handleExternalDeviceConnImport clears the ID when the connection no
+		// longer exists, in which case the resource is gone from state.
+		if d.Id() == "" {
+			return nil
+		}
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
@@ -1729,5 +1728,61 @@ func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, met
 		}
 	}
 
+	return nil
+}
+
+// parseExternalDeviceConnImportID splits a terraform import ID of the form
+// "connection_name~vpc_id" into its two components. It returns an error when
+// the ID is not in the expected form. It is shared by the spoke and transit
+// external device connection resources.
+func parseExternalDeviceConnImportID(id string) (connectionName, vpcID string, err error) {
+	parts := strings.SplitN(id, "~", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+	}
+	return parts[0], parts[1], nil
+}
+
+// handleExternalDeviceConnImport populates the resource data from a terraform
+// import ID. Callers should only invoke it on an import, i.e. when
+// 'connection_name' or 'vpc_id' is not already set. It is shared by the spoke
+// and transit external device connection resources.
+//
+// On import the ID only carries 'connection_name~vpc_id', so 'gw_name' is
+// unknown at this point. It is not needed to query the connection detail (only
+// 'conn_name' and 'vpc_id' are), and the API returns it in the response, so
+// this probes for it and stores it so getGatewayDetails downstream has a
+// gateway name to work with.
+//
+// When the connection no longer exists it clears the ID (d.SetId("")) and
+// returns a nil error, so callers should check d.Id() afterwards and return
+// early when it has been cleared.
+func handleExternalDeviceConnImport(d *schema.ResourceData, client *goaviatrix.Client) error {
+	id := d.Id()
+	log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
+	connectionName, vpcID, err := parseExternalDeviceConnImportID(id)
+	if err != nil {
+		return err
+	}
+	mustSet(d, "connection_name", connectionName)
+	mustSet(d, "vpc_id", vpcID)
+	d.SetId(id)
+
+	if getString(d, "gw_name") != "" {
+		return nil
+	}
+
+	probe := &goaviatrix.ExternalDeviceConn{
+		VpcID:          vpcID,
+		ConnectionName: connectionName,
+	}
+	// Only 'gw_name' is read from this probe. The 'priorHAEnabled' flag and
+	// 'localGateway' only affect HA tunnel-CIDR parsing, not 'gw_name', so
+	// pass false/nil here.
+	probeConn, err := client.GetExternalDeviceConnDetail(probe, nil, false)
+	if err != nil {
+		return fmt.Errorf("couldn't find Aviatrix external device conn: %w, conn_name=%q vpc_id=%q", err, connectionName, vpcID)
+	}
+	mustSet(d, "gw_name", probeConn.GwName)
 	return nil
 }
