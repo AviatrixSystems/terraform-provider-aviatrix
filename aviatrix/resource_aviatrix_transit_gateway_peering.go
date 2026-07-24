@@ -166,6 +166,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
+				ForceNew:    true,
 				Description: "Enable HPE mode for peering with Edge Transit",
 			},
 			"gateway1_logical_ifnames": {
@@ -224,9 +225,6 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 	transitGatewayPeering.EnableJumboFrame = getBool(d, "jumbo_frame")
 	transitGatewayPeering.EnableAzAffinity = getBool(d, "enable_az_affinity")
 
-	// insane_mode is optional for edge gateway peering
-	transitGatewayPeering.EnableInsaneMode = getBool(d, "insane_mode")
-
 	gateway1Details, err := getGatewayDetails(client, resolvedGwName1)
 	if err != nil {
 		return err
@@ -237,6 +235,18 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		return err
 	}
 	gateway2CloudType := gateway2Details.CloudType
+
+	// insane_mode is an edge-only peering option (HPE mode for Edge Transit).
+	// For a regular CSP transit peering it is not a valid option and the
+	// controller rejects it with AVXERR-TRANSIT-0320 "invalid option
+	// insane_mode"; high-perf there is expressed via
+	// enable_insane_mode_encryption_over_internet + tunnel_count. Only forward
+	// insane_mode when at least one side is an edge gateway.
+	isEdgePeering := goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.EdgeRelatedCloudTypes) ||
+		goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.EdgeRelatedCloudTypes)
+	if isEdgePeering {
+		transitGatewayPeering.EnableInsaneMode = getBool(d, "insane_mode")
+	}
 
 	if getBool(d, "enable_az_affinity") {
 		if !goaviatrix.IsCloudType(gateway1CloudType, goaviatrix.AWSRelatedCloudTypes) || !goaviatrix.IsCloudType(gateway2CloudType, goaviatrix.AWSRelatedCloudTypes) {
