@@ -76,8 +76,16 @@ func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta any) 
 	if transitFireNetGatewayName == "" || inspectedResourceName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no transit firenet name or inspected resource name received. Import Id is %s", id)
-		mustSet(d, "transit_firenet_gateway_name", strings.Split(id, "~")[0])
-		mustSet(d, "inspected_resource_name", strings.Split(id, "~")[1])
+		// Split only on the first "~" since "inspected_resource_name" can itself contain "~~"
+		// (e.g. "SPOKE_SUBNET_GROUP:<gw_name>~~<subnet_group_name>"), and a naive Split on every
+		// "~" would truncate/mangle the inspected resource name and cause import to fail with
+		// "Cannot import non-existent remote object".
+		parts := strings.SplitN(id, "~", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid ID, expected ID transit_firenet_gateway_name~inspected_resource_name, instead got %s", id)
+		}
+		mustSet(d, "transit_firenet_gateway_name", parts[0])
+		mustSet(d, "inspected_resource_name", parts[1])
 		d.SetId(id)
 	}
 
