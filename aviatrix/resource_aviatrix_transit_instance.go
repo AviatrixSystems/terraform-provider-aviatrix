@@ -1033,7 +1033,11 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	}
 
 	// Tags
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+	// Only overwrite state when the backend actually returns tags. list_vpcs_summary
+	// does not return tags for HA gateway instances, so gw.Tags is nil for them;
+	// unconditionally setting would wipe the create-time tags from state and produce
+	// a perpetual "+ tags" plan diff (AVX-79035). This mirrors aviatrix_spoke_instance.
+	if gw.Tags != nil && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
 		if err := d.Set("tags", tags); err != nil {
 			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
