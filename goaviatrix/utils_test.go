@@ -1,7 +1,10 @@
 package goaviatrix
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -181,4 +184,86 @@ func TestProcessZtpFileContent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWriteTransitInstanceZtpFile(t *testing.T) {
+	dir := t.TempDir()
+	// Raw ISO bytes and the JSON-wrapped base64 payload the controller returns.
+	rawISO := []byte{0x00, 0x01, 0x02, 0xFF, 0xAB}
+	isoResults, _ := json.Marshal(map[string]string{"text": base64.StdEncoding.EncodeToString(rawISO)})
+	cloudInit := "#cloud-config\nhostname: spk-1\n"
+	cloudInitResults, _ := json.Marshal(map[string]string{"text": cloudInit})
+
+	c := &Client{}
+
+	t.Run("Self-managed ISO is base64-decoded to binary", func(t *testing.T) {
+		gw := &TransitVpc{
+			CloudType:           EDGESELFMANAGED,
+			GwName:              "gw-iso",
+			VpcID:               "site-iso",
+			ZtpFileType:         "iso",
+			ZtpFileDownloadPath: dir,
+		}
+		err := c.writeTransitInstanceZtpFile(gw, string(isoResults))
+		assert.NoError(t, err)
+
+		got, err := os.ReadFile(filepath.Join(dir, "gw-iso-site-iso.iso"))
+		assert.NoError(t, err)
+		assert.Equal(t, rawISO, got)
+	})
+
+	t.Run("Self-managed non-ISO writes text cloud-init", func(t *testing.T) {
+		gw := &TransitVpc{
+			CloudType:           EDGESELFMANAGED,
+			GwName:              "gw-txt",
+			VpcID:               "site-txt",
+			ZtpFileType:         "cloud_init",
+			ZtpFileDownloadPath: dir,
+		}
+		err := c.writeTransitInstanceZtpFile(gw, string(cloudInitResults))
+		assert.NoError(t, err)
+
+		got, err := os.ReadFile(filepath.Join(dir, "gw-txt-site-txt-cloud-init.txt"))
+		assert.NoError(t, err)
+		assert.Equal(t, cloudInit, string(got))
+	})
+
+	t.Run("Equinix writes text cloud-init", func(t *testing.T) {
+		gw := &TransitVpc{
+			CloudType:           EDGEEQUINIX,
+			GwName:              "gw-eqx",
+			VpcID:               "site-eqx",
+			ZtpFileDownloadPath: dir,
+		}
+		err := c.writeTransitInstanceZtpFile(gw, string(cloudInitResults))
+		assert.NoError(t, err)
+
+		got, err := os.ReadFile(filepath.Join(dir, "gw-eqx-site-eqx-cloud-init.txt"))
+		assert.NoError(t, err)
+		assert.Equal(t, cloudInit, string(got))
+	})
+
+	t.Run("Non-edge cloud type is a no-op", func(t *testing.T) {
+		gw := &TransitVpc{
+			CloudType:           AWS,
+			GwName:              "gw-aws",
+			VpcID:               "vpc-aws",
+			ZtpFileDownloadPath: dir,
+		}
+		err := c.writeTransitInstanceZtpFile(gw, "")
+		assert.NoError(t, err)
+	})
+
+	t.Run("Empty results for edge gateway errors", func(t *testing.T) {
+		gw := &TransitVpc{
+			CloudType:           EDGESELFMANAGED,
+			GwName:              "gw-empty",
+			VpcID:               "site-empty",
+			ZtpFileType:         "iso",
+			ZtpFileDownloadPath: dir,
+		}
+		err := c.writeTransitInstanceZtpFile(gw, "")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "no ZTP content found")
+	})
 }

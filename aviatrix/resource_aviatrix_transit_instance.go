@@ -196,6 +196,10 @@ func createEdgeTransitInstance(ctx context.Context, d *schema.ResourceData, clie
 
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.EDGESELFMANAGED) {
 			gateway.ZtpFileType = ztpFileType
+			// The controller generates an ISO only when gw_registration_method is
+			// "iso"; without this it defaults to cloud-init. Mirrors the legacy
+			// aviatrix_transit_gateway resource. AVX-79383.
+			gateway.GatewayRegistrationMethod = ztpFileType
 		}
 	}
 

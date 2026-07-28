@@ -26,6 +26,7 @@ type EdgeSpoke struct {
 	DnsServerIp                        string `json:"dns_server_ip,omitempty"`
 	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary,omitempty"`
 	ZtpFileType                        string `json:"ztp_file_type,omitempty"`
+	GatewayRegistrationMethod          string `json:"gw_registration_method,omitempty"`
 	ZtpFileDownloadPath                string
 	ActiveStandby                      string `json:"active_standby,omitempty"`
 	EnableEdgeActiveStandby            bool   `json:"enable_active_standby,omitempty"`
@@ -225,31 +226,34 @@ func (c *Client) CreateEdgeSpokeInstance(ctx context.Context, edgeSpoke *EdgeSpo
 
 	edgeSpoke.Vlan = b64.StdEncoding.EncodeToString(vlan)
 
-	resp, err := c.PostAPIContext2Download(ctx, edgeSpoke.Action, edgeSpoke, BasicCheck)
-	if err != nil {
+	// create_mct_gateway returns the ZTP content JSON-encoded in "results"
+	// ({"text": ...}), not as a raw file stream. Decode it and, for self-managed
+	// ISO, base64-decode to binary — mirroring CreateEdgeSpokeHa and
+	// LaunchTransitInstance's ISO vs cloud-init handling. AVX-79383.
+	type CreateEdgeSpokeInstanceResp struct {
+		Return bool   `json:"return"`
+		Result string `json:"results"`
+		Reason string `json:"reason"`
+	}
+
+	var data CreateEdgeSpokeInstanceResp
+	if err := c.PostAPIContext2(ctx, &data, edgeSpoke.Action, edgeSpoke, BasicCheck); err != nil {
 		return err
 	}
-	defer func() { _ = resp.Close() }()
 
-	var fileName string
+	// Self-managed ISO: base64-decode and write binary.
 	if edgeSpoke.ZtpFileType == "iso" {
-		fileName = edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + ".iso"
-	} else {
-		fileName = edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + "-cloud-init.txt"
+		fileName := edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + ".iso"
+		return createZtpFileISO(fileName, data.Result)
 	}
 
-	outFile, err := os.Create(fileName)
+	// cloud-init: write text.
+	fileName := edgeSpoke.ZtpFileDownloadPath + "/" + edgeSpoke.GwName + "-" + edgeSpoke.SiteId + "-cloud-init.txt"
+	fileContent, err := processZtpFileContent(data.Result)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = outFile.Close() }()
-
-	_, err = io.Copy(outFile, resp)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return createZtpFile(fileName, fileContent)
 }
 
 // CreateEdgeSpokeHa creates an HA edge spoke gateway

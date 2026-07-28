@@ -242,7 +242,13 @@ func (c *Client) LaunchTransitInstance(gateway *TransitVpc) (string, error) {
 	gateway.Async = true
 
 	var gwName string
+	// Raw "results" payload ({"text": ...}) used to write the edge ZTP file.
+	var ztpResults string
 	hook := WithResponseHook(func(raw map[string]interface{}) {
+		if results, ok := raw["results"].(string); ok && results != "" {
+			ztpResults = results
+		}
+
 		// Try top-level gw_name / ha_gw_name (from ADDITIONAL_OUTPUT_KEYS)
 		if name, ok := raw["gw_name"].(string); ok && name != "" {
 			gwName = name
@@ -286,6 +292,12 @@ func (c *Client) LaunchTransitInstance(gateway *TransitVpc) (string, error) {
 		return "", err
 	}
 
+	// AVX-79383: write the ZTP file for edge gateways. Self-managed ISO must be
+	// base64-decoded to binary; everything else is written as text cloud-init.
+	if err := c.writeTransitInstanceZtpFile(gateway, ztpResults); err != nil {
+		return "", err
+	}
+
 	if gwName != "" {
 		return gwName, nil
 	}
@@ -293,6 +305,32 @@ func (c *Client) LaunchTransitInstance(gateway *TransitVpc) (string, error) {
 		return gateway.GwName, nil
 	}
 	return "", fmt.Errorf("gateway name not found in create_mct_gateway response")
+}
+
+// writeTransitInstanceZtpFile writes the edge ZTP file from the create_mct_gateway
+// "results" payload, mirroring LaunchTransitVpc's ISO vs cloud-init handling.
+// No-op for non-edge cloud types.
+func (c *Client) writeTransitInstanceZtpFile(gateway *TransitVpc, ztpResults string) error {
+	if !IsCloudType(gateway.CloudType, EDGEEQUINIX|EDGEMEGAPORT|EDGESELFMANAGED) {
+		return nil
+	}
+	if ztpResults == "" {
+		return fmt.Errorf("no ZTP content found in create_mct_gateway response for gateway %s", gateway.GwName)
+	}
+
+	// Self-managed ISO: base64-decode and write binary.
+	if IsCloudType(gateway.CloudType, EDGESELFMANAGED) && gateway.ZtpFileType == "iso" {
+		fileName := gateway.ZtpFileDownloadPath + "/" + gateway.GwName + "-" + gateway.VpcID + ".iso"
+		return createZtpFileISO(fileName, ztpResults)
+	}
+
+	// Equinix/Megaport and non-ISO Self-managed: write text cloud-init.
+	fileName := getFileName(gateway.ZtpFileDownloadPath, gateway.GwName, gateway.VpcID)
+	fileContent, err := processZtpFileContent(ztpResults)
+	if err != nil {
+		return err
+	}
+	return createZtpFile(fileName, fileContent)
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
