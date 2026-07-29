@@ -173,3 +173,99 @@ func TestConfigureLocalGatewayHADisabled(t *testing.T) {
 		assert.Empty(t, conn.BackupRemoteGatewayIP)
 	})
 }
+
+// TestConfigureLocalGatewayHAEnabled covers the local-gateway-HA-enabled path
+// (populateNonLANTunnelInfo -> configureLocalGatewayHAEnabled).
+func TestConfigureLocalGatewayHAEnabled(t *testing.T) {
+	const (
+		ip1            = "48.194.108.37"
+		ip2            = "20.81.31.86"
+		localTunnel1   = "169.254.201.1/30"
+		localTunnel2   = "169.254.202.1/30"
+		remoteTunnel1  = "169.254.201.2/30"
+		remoteTunnel2  = "169.254.202.2/30"
+		backupRemoteAS = 65001
+	)
+
+	t.Run("two tunnels, single remote IP, no remote HA (AVX-79490)", func(t *testing.T) {
+		detail := EditExternalDeviceConnDetail{
+			RemoteGatewayIP:        ip1,
+			LocalTunnelCidr:        localTunnel1,
+			BackupLocalTunnelCidr:  localTunnel2,
+			RemoteTunnelCidr:       remoteTunnel1,
+			BackupRemoteTunnelCidr: remoteTunnel2,
+			Tunnels:                twoTunnels(),
+		}
+		conn := &ExternalDeviceConn{}
+		configureLocalGatewayHAEnabled(conn, detail, &Gateway{}, backupRemoteAS, false)
+
+		assert.Equal(t, Disabled, conn.HAEnabled)
+		assert.Equal(t, localTunnel1+","+localTunnel2, conn.LocalTunnelCidr)
+		assert.Equal(t, remoteTunnel1+","+remoteTunnel2, conn.RemoteTunnelCidr)
+		assert.Empty(t, conn.BackupRemoteGatewayIP)
+		assert.Empty(t, conn.BackupLocalTunnelCidr)
+		assert.Empty(t, conn.BackupRemoteTunnelCidr)
+	})
+
+	t.Run("two tunnels, duplicated remote IP, no remote HA", func(t *testing.T) {
+		detail := EditExternalDeviceConnDetail{
+			RemoteGatewayIP:        ip1 + "," + ip1,
+			LocalTunnelCidr:        localTunnel1,
+			BackupLocalTunnelCidr:  localTunnel2,
+			RemoteTunnelCidr:       remoteTunnel1,
+			BackupRemoteTunnelCidr: remoteTunnel2,
+			Tunnels:                twoTunnels(),
+		}
+		conn := &ExternalDeviceConn{}
+		configureLocalGatewayHAEnabled(conn, detail, &Gateway{}, backupRemoteAS, false)
+
+		assert.Equal(t, Disabled, conn.HAEnabled)
+		assert.Equal(t, localTunnel1+","+localTunnel2, conn.LocalTunnelCidr)
+		assert.Equal(t, remoteTunnel1+","+remoteTunnel2, conn.RemoteTunnelCidr)
+		assert.Empty(t, conn.BackupRemoteGatewayIP)
+		assert.Empty(t, conn.BackupLocalTunnelCidr)
+		assert.Empty(t, conn.BackupRemoteTunnelCidr)
+	})
+
+	t.Run("two tunnels, two different IPs, remote HA with edge transit", func(t *testing.T) {
+		detail := EditExternalDeviceConnDetail{
+			RemoteGatewayIP:        ip1 + "," + ip2,
+			LocalTunnelCidr:        localTunnel1,
+			BackupLocalTunnelCidr:  localTunnel2,
+			RemoteTunnelCidr:       remoteTunnel1,
+			BackupRemoteTunnelCidr: remoteTunnel2,
+			Tunnels:                twoTunnels(),
+		}
+		conn := &ExternalDeviceConn{}
+		configureLocalGatewayHAEnabled(conn, detail, edgeTransitGateway(), backupRemoteAS, true)
+
+		assert.Equal(t, Enabled, conn.HAEnabled)
+		assert.Equal(t, ip2, conn.BackupRemoteGatewayIP)
+		assert.Equal(t, localTunnel1, conn.LocalTunnelCidr)
+		assert.Equal(t, localTunnel2, conn.BackupLocalTunnelCidr)
+		assert.Equal(t, remoteTunnel1, conn.RemoteTunnelCidr)
+		assert.Equal(t, remoteTunnel2, conn.BackupRemoteTunnelCidr)
+		assert.Equal(t, backupRemoteAS, conn.BackupBgpRemoteAsNum)
+	})
+
+	t.Run("four tunnels, activemesh enabled, remote HA", func(t *testing.T) {
+		detail := EditExternalDeviceConnDetail{
+			RemoteGatewayIP:        ip1 + "," + ip2,
+			LocalTunnelCidr:        localTunnel1,
+			BackupLocalTunnelCidr:  localTunnel2,
+			RemoteTunnelCidr:       remoteTunnel1,
+			BackupRemoteTunnelCidr: remoteTunnel2,
+			Tunnels:                []TunnelInfo{{}, {}, {}, {}},
+		}
+		conn := &ExternalDeviceConn{}
+		configureLocalGatewayHAEnabled(conn, detail, &Gateway{}, backupRemoteAS, true)
+
+		assert.Equal(t, Enabled, conn.HAEnabled)
+		assert.Equal(t, ip2, conn.BackupRemoteGatewayIP)
+		assert.Equal(t, localTunnel1, conn.LocalTunnelCidr)
+		assert.Equal(t, localTunnel2, conn.BackupLocalTunnelCidr)
+		assert.Equal(t, remoteTunnel1, conn.RemoteTunnelCidr)
+		assert.Equal(t, remoteTunnel2, conn.BackupRemoteTunnelCidr)
+		assert.Equal(t, backupRemoteAS, conn.BackupBgpRemoteAsNum)
+	})
+}

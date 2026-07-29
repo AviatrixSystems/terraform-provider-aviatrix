@@ -673,9 +673,14 @@ func configureLocalGatewayHAEnabled(externalDeviceConn *ExternalDeviceConn, exte
 		remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
 		nIPs := len(remoteIP)
 		switch nIPs {
+		case 1:
+			// one external device (single IP), no remote HA
+			externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
+			externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
+			externalDeviceConn.HAEnabled = Disabled
 		case 2:
 			if remoteIP[0] == remoteIP[1] {
-				// one external device, no remote HA
+				// one external device (duplicated IP), no remote HA
 				externalDeviceConn.LocalTunnelCidr = join2(externalDeviceConnDetail.LocalTunnelCidr, externalDeviceConnDetail.BackupLocalTunnelCidr)
 				externalDeviceConn.RemoteTunnelCidr = join2(externalDeviceConnDetail.RemoteTunnelCidr, externalDeviceConnDetail.BackupRemoteTunnelCidr)
 				externalDeviceConn.HAEnabled = Disabled
