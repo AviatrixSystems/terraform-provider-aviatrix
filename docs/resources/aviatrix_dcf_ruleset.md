@@ -13,11 +13,12 @@ Make sure to use one of the terraform attachment points to attach your terraform
 
 ## Example Usage
 
-The two terraform attachment points are:
+The three terraform attachment points are:
 - TERRAFORM_BEFORE_UI_MANAGED - Rulesets will be created before the rulessets mentioned in the UI
 - TERRAFORM_AFTER_UI_MANAGED - Rulesets will be created after the rulesets mentioned in the UI.
+- TERRAFORM_AFTER_K8S_MANAGED - Rulesets will be created after the K8s managed rules
 
-The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
+The base terraform objects created in terraform should be attached to one of the above three attachment points, using data sources.
 It is best to attach a policy_group to these above attachment_points, then place any ruleset in that policy_group, for easier management.
 
 ~> **NOTE:** We cannot attach 2 objects to these attachment points, only one object can be attached to each. If we want to build out a tree of multiple objects, we can attach a policy group to the above attachment points, and then create child attachment points as needed under this group.

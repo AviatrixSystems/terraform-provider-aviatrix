@@ -13,11 +13,12 @@ Make sure to use one of the terraform attachment points to attach your terraform
 
 ## Example Usage
 
-The two terraform attachment points are:
+The three terraform attachment points are:
 - TERRAFORM_BEFORE_UI_MANAGED - Policy Groups will be created before the rulesets mentioned in the UI
 - TERRAFORM_AFTER_UI_MANAGED - Policy Groups will be created after the rulesets mentioned in the UI
+- TERRAFORM_AFTER_K8S_MANAGED - Policy Groups will be created after the K8s managed rules
 
-The base terraform objects created in terraform should be attached to one of the above two attachment points, using data sources.
+The base terraform objects created in terraform should be attached to one of the above three attachment points, using data sources.
 
 Steps to attach a policy group to one of the above attachment points:
 We need to get the attachment point ID based on its name (the name should be globally unique for each attachment point). In this example we will use the "TERRAFORM_BEFORE_UI_MANAGED" as the attachment point name to retrieve its ID and pass to the attach_to field in our policy group.
