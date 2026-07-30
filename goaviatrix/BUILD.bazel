@@ -168,6 +168,7 @@ go_test(
     ],
     embed = [":goaviatrix"],
     deps = [
+        "@com_github_ajg_form//:form",
         "@com_github_stretchr_testify//assert",
         "@com_github_stretchr_testify//require",
     ],

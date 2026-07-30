@@ -93,14 +93,18 @@ type ExternalDeviceConn struct {
 	RemoteCloudType            string       `form:"remote_cloud_type,omitempty"`
 	BgpMd5KeyChanged           bool         `form:"bgp_md5_key_changed,omitempty"`
 	BgpBfdConfig               BgpBfdConfig `form:"-"`
-	EnableBfd                  bool         `form:"bgp_bfd_enabled,omitempty"`
+	// Form field names must match the connect_transit_gw_to_external_device
+	// argparse args (enable_bfd / bfd_*_interval / bfd_detect_multiplier);
+	// otherwise the controller drops them and BFD is silently not configured.
+	// AVX-79351.
+	EnableBfd bool `form:"enable_bfd,omitempty"`
 	// Flat BFD timing fields used at create time. ajg/form encodes nested
 	// structs as dotted keys ("bgp_bfd_params.tx_interval") which the
 	// controller does not parse, so the create path mirrors BgpBfdConfig
 	// onto these top-level form-tagged fields.
-	BfdTxIntv     int `form:"bfd_tx_intv,omitempty"`
-	BfdRxIntv     int `form:"bfd_rx_intv,omitempty"`
-	BfdMultiplier int `form:"bfd_multiplier,omitempty"`
+	BfdTxIntv     int `form:"bfd_transmit_interval,omitempty"`
+	BfdRxIntv     int `form:"bfd_receive_interval,omitempty"`
+	BfdMultiplier int `form:"bfd_detect_multiplier,omitempty"`
 	// Multihop must not use "omitempty", it defaults to true and omitempty
 	// breaks that.
 	EnableBgpMultihop        bool   `form:"enable_bgp_multihop"`

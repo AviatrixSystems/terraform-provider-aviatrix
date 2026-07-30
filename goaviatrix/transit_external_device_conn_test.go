@@ -3,8 +3,36 @@ package goaviatrix
 import (
 	"testing"
 
+	"github.com/ajg/form"
 	"github.com/stretchr/testify/assert"
 )
+
+// TestExternalDeviceConnBfdFormFieldNames guards the wire field names the
+// connect_transit_gw_to_external_device create request sends. The controller
+// argparse args are enable_bfd / bfd_transmit_interval / bfd_receive_interval /
+// bfd_detect_multiplier; if the form tags drift from those, the controller
+// silently drops BFD and it is never configured (AVX-79351).
+func TestExternalDeviceConnBfdFormFieldNames(t *testing.T) {
+	conn := &ExternalDeviceConn{
+		EnableBfd:     true,
+		BfdTxIntv:     300,
+		BfdRxIntv:     300,
+		BfdMultiplier: 3,
+	}
+	vals, err := form.EncodeToValues(conn)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "true", vals.Get("enable_bfd"))
+	assert.Equal(t, "300", vals.Get("bfd_transmit_interval"))
+	assert.Equal(t, "300", vals.Get("bfd_receive_interval"))
+	assert.Equal(t, "3", vals.Get("bfd_detect_multiplier"))
+
+	// The pre-AVX-79351 names must no longer be emitted.
+	assert.Empty(t, vals.Get("bgp_bfd_enabled"))
+	assert.Empty(t, vals.Get("bfd_tx_intv"))
+	assert.Empty(t, vals.Get("bfd_rx_intv"))
+	assert.Empty(t, vals.Get("bfd_multiplier"))
+}
 
 // twoTunnels returns a 2-element Tunnels slice; only the length is consulted by
 // the HA-classification helpers under test.
