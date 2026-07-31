@@ -63,5 +63,5 @@ func (c *Client) GetGatewayBgpCommunities(gwName string) (bool, bool, error) {
 		send = false
 	}
 
-	return accept, send, nil
+	return send, accept, nil
 }
