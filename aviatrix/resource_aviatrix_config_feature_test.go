@@ -126,8 +126,30 @@ func TestAccAviatrixConfigFeature_DocFeatureListMatchesAPI(t *testing.T) {
 	if os.Getenv("SKIP_CONFIG_FEATURE") == "yes" {
 		t.Skip("Skipping config feature acceptance tests as SKIP_CONFIG_FEATURE is set")
 	}
-	// Make sure to always update the list in this test when adding a new feature name to the docs.
-	currentListInDocs := []string{"microseg", "cost_iq", "ipv6", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "k8s_network_policy", "dcf_on_firenet", "interface_mtu_based_clamping", "primary_gateway_deletion", "vrf"}
+	// Make sure to always update the list in this test when adding a new feature name to the docs in aviatrix_config_feature.md
+	currentListInDocs := []string{
+		// keep-sorted start
+		"conduit_tunnel_status_coalescing",
+		"cost_iq",
+		"dcf_logs_obs_sink",
+		"dcf_on_firenet",
+		"dcf_on_psf",
+		"dcf_on_s2c",
+		"dcf_stats_obs_sink",
+		"interface_mtu_based_clamping",
+		"ipv6",
+		"k8s",
+		"k8s_dcf_policies",
+		"k8s_network_policy",
+		"microseg",
+		"partitioned_event_dispatch",
+		"replace_gw_make_before_break",
+		"s2c_am4_0",
+		"smart_gateway",
+		"sre_metrics_export",
+		"vrf",
+		// keep-sorted end
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

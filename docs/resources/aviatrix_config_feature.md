@@ -28,7 +28,25 @@ The following arguments are supported:
 
 ### Required
 * `feature_name` - (Required) Which feature to enable, this should be one of the following:
-"microseg", "cost_iq", "ipv6", "dcf_on_s2c", "dcf_on_psf", "dcf_stats_obs_sink", "dcf_logs_obs_sink", "k8s", "sre_metrics_export", "k8s_dcf_policies", "k8s_network_policy", "dcf_on_firenet", "interface_mtu_based_clamping", "conduit_tunnel_status_coalescing", "vrf".
+  * `conduit_tunnel_status_coalescing`
+  * `cost_iq`
+  * `dcf_logs_obs_sink`
+  * `dcf_on_firenet`
+  * `dcf_on_psf`
+  * `dcf_on_s2c`
+  * `dcf_stats_obs_sink`
+  * `interface_mtu_based_clamping`
+  * `ipv6`
+  * `k8s`
+  * `k8s_dcf_policies`
+  * `k8s_network_policy`
+  * `microseg`
+  * `partitioned_event_dispatch`
+  * `replace_gw_make_before_break`
+  * `s2c_am4_0`
+  * `smart_gateway`
+  * `sre_metrics_export`
+  * `vrf`
 * `is_enabled` - (Required) If set to true, the feature is enabled, set to false the feature is disabled.
 
 ## Import
