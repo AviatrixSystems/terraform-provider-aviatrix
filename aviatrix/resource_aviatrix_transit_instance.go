@@ -363,11 +363,12 @@ func validateAndConfigureCloudSpecificSettings(d *schema.ResourceData, gateway *
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 		gateway.VpcRegion = vpcRegion
 	} else if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
-		// For GCP, send user-specified zone as both "zone" and "vpc_region" fields,
-		// mirroring old aviatrix_transit_gateway model behavior.
+		// For GCP, send the zone in "zone" and the plain region in "vpc_region".
+		// Sending the zone as vpc_region breaks the controller's per-region sizing
+		// check (AVX-79942), since supported_gw_sizes is keyed by region, not zone.
 		zone := getString(d, "zone")
 		gateway.Zone = zone
-		gateway.VpcRegion = zone
+		gateway.VpcRegion = gcpRegionFromZone(zone)
 	}
 
 	// OCI specific

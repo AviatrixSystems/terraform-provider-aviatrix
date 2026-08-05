@@ -396,12 +396,14 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 		spokeGateway.Subnet = spokeGateway.Subnet + "~~" + insertionGatewayAz
 	}
 
-	// Handle GCP zone: API expects zone sent as both the "zone" and "vpc_region" fields.
-	// This mirrors the old aviatrix_spoke_gateway model behavior where vpc_reg = zone value.
+	// Handle GCP zone: the API expects the GCP zone in the "zone" field, and the
+	// plain region in "vpc_region". Sending the zone as vpc_region breaks the
+	// controller's per-region sizing check (AVX-79942), since supported_gw_sizes
+	// is keyed by region, not zone.
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 		zone := getString(d, "zone")
 		spokeGateway.Zone = zone
-		spokeGateway.VpcRegion = zone
+		spokeGateway.VpcRegion = gcpRegionFromZone(zone)
 	}
 
 	// Handle Azure zone

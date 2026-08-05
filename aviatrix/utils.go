@@ -126,6 +126,16 @@ func validateGCPZone(i any, k string) (warnings []string, errors []error) {
 	return warnings, errors
 }
 
+// gcpRegionFromZone derives the GCP region from a GCP zone by stripping the
+// trailing "-<letter>" zone designator (e.g. "us-east1-b" -> "us-east1").
+// Returns the input unchanged if it is not in the GCP zone format.
+func gcpRegionFromZone(zone string) string {
+	if !gcpZoneRegex.MatchString(zone) {
+		return zone
+	}
+	return zone[:strings.LastIndex(zone, "-")]
+}
+
 // validateCloudType is a SchemaValidateFunc for Cloud Type parameters.
 func validateCloudType(i any, k string) (warnings []string, errors []error) {
 	return validation.IntInSlice(goaviatrix.GetSupportedClouds())(i, k)

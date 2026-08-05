@@ -480,3 +480,23 @@ func TestIsTimeoutOrConnectionError(t *testing.T) {
 		})
 	}
 }
+
+func TestGcpRegionFromZone(t *testing.T) {
+	tests := []struct {
+		name     string
+		zone     string
+		expected string
+	}{
+		{name: "us-east1-b", zone: "us-east1-b", expected: "us-east1"},
+		{name: "us-west1-c", zone: "us-west1-c", expected: "us-west1"},
+		{name: "europe-west1-a", zone: "europe-west1-a", expected: "europe-west1"},
+		{name: "already a region", zone: "us-east1", expected: "us-east1"},
+		{name: "empty string", zone: "", expected: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, gcpRegionFromZone(tt.zone))
+		})
+	}
+}
