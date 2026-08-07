@@ -196,7 +196,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 
 	var instanceInfo *goaviatrix.FirewallInstanceInfo
 	for _, v := range fireNetDetail.FirewallInstance {
-		if v.GwName == firenetGwName && v.InstanceID == instanceID {
+		if v.InstanceID == instanceID {
 			instanceInfo = &v
 			break
 		}
@@ -206,7 +206,9 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 		return nil
 	}
 	mustSet(d, "vpc_id", vpcID)
-	mustSet(d, "firenet_gw_name", instanceInfo.GwName)
+	if instanceInfo.GwName != "" {
+		mustSet(d, "firenet_gw_name", instanceInfo.GwName)
+	}
 	mustSet(d, "instance_id", instanceInfo.InstanceID)
 	mustSet(d, "attached", instanceInfo.Enabled)
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
@@ -227,7 +229,11 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 		}
 	}
 
-	id := fmt.Sprintf("%s~~%s~~%s", vpcID, instanceInfo.GwName, instanceInfo.InstanceID)
+	gwName := instanceInfo.GwName
+	if gwName == "" {
+		gwName = firenetGwName
+	}
+	id := fmt.Sprintf("%s~~%s~~%s", vpcID, gwName, instanceInfo.InstanceID)
 	d.SetId(id)
 
 	return nil

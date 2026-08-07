@@ -133,8 +133,7 @@ func testAccCheckFirewallInstanceAssociationExists(n string) resource.TestCheckF
 
 		var instanceInfo *goaviatrix.FirewallInstanceInfo
 		for _, v := range fireNetDetail.FirewallInstance {
-			if v.GwName == rs.Primary.Attributes["firenet_gw_name"] &&
-				v.InstanceID == rs.Primary.Attributes["instance_id"] {
+			if v.InstanceID == rs.Primary.Attributes["instance_id"] {
 				instanceInfo = &v
 			}
 		}
