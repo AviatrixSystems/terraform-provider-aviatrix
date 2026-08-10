@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -237,6 +238,24 @@ func (c *Client) UpdateTransitGatewayPeeringTunnelCount(transitGatewayPeering *T
 	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
 
 	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
+}
+
+// UpdateEdgeSpokeTransitPeeringTunnelCount sets the HPE tunnel count on an
+// edge-spoke-transit peering. tunnelCount is sent as a string because the
+// controller edit handler gates on `if tunnel_count:` and only the string "0"
+// is truthy there — 0 means "use the max tunnels for the instance size". The
+// int-based structs cannot express this: the form encoder emits an empty value
+// for int 0, which the controller reads as falsy and silently ignores
+// (AVX-55065).
+func (c *Client) UpdateEdgeSpokeTransitPeeringTunnelCount(gateway1, gateway2 string, tunnelCount int) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_inter_transit_gateway_peering",
+		"gateway1":     gateway1,
+		"gateway2":     gateway2,
+		"tunnel_count": strconv.Itoa(tunnelCount),
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
