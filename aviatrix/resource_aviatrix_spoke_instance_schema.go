@@ -215,8 +215,13 @@ func spokeInstanceOptionalAWSSchema() map[string]*schema.Schema {
 			Description: "Enable to create an insertion gateway. Only valid for AWS.",
 		},
 		"insertion_gateway_az": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			// Computed so terraform import does not force a replacement: the
+			// controller does not expose this per-gateway, so Read cannot set it.
+			// Marking it Computed lets Terraform treat "state has nothing to
+			// compare against" as a no-op instead of a ForceNew diff.
+			Computed:    true,
 			ForceNew:    true,
 			Description: "AZ for insertion gateway. Required when insertion_gateway is enabled.",
 		},

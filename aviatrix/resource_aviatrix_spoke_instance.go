@@ -619,6 +619,17 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "subnet", gateway.VpcNet)
 	mustSet(d, "gw_size", gateway.GwSize)
 
+	// group_uuid is Required+ForceNew but not Computed, so nothing re-derives it
+	// automatically. Resolve it from the owning group's name on every read so it
+	// survives terraform import (Read-only path) and can never silently drift.
+	if err := setGroupUUIDFromGatewayName(ctx, client, d, gateway.GroupName); err != nil {
+		return diag.Errorf("failed to resolve group_uuid for spoke instance %s: %s", gateway.GwName, err)
+	}
+
+	// insertion_gateway is Optional+ForceNew (AWS-only). Read it back so an
+	// imported gateway does not force a replacement on the next plan.
+	mustSet(d, "insertion_gateway", gateway.InsertionGateway)
+
 	// Basic optional attributes
 	if gateway.PrivateNetwork {
 		mustSet(d, "allocate_new_eip", false)
@@ -627,6 +638,14 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 	mustSet(d, "single_az_ha", gateway.SingleAZ == "yes")
 	mustSet(d, "insane_mode", gateway.InsaneMode == "yes")
+	// insane_mode_az is Optional+ForceNew (AWS-only). Mirror transit's read-back:
+	// the insane-mode ENI's AZ is the gateway zone. Without this an imported AWS
+	// insane-mode spoke forces a replacement on the next plan.
+	if gateway.InsaneMode == "yes" && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		mustSet(d, "insane_mode_az", gateway.GatewayZone)
+	} else {
+		mustSet(d, "insane_mode_az", "")
+	}
 	mustSet(d, "tunnel_detection_time", gateway.TunnelDetectionTime)
 
 	// Spot instance
@@ -722,6 +741,12 @@ func readEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *
 
 	// Basic attributes
 	mustSet(d, "gw_name", edgeSpoke.GwName)
+
+	// group_uuid is Required+ForceNew but not Computed; derive it from the owning
+	// group's name so edge spoke imports survive (same as the CSP path above).
+	if err := setGroupUUIDFromGatewayName(ctx, client, d, gateway.GroupName); err != nil {
+		return diag.Errorf("failed to resolve group_uuid for edge spoke instance %s: %s", gateway.GwName, err)
+	}
 
 	// Management egress IP prefix list
 	prefix := edgeSpoke.ManagementEgressIpPrefix

@@ -788,6 +788,17 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "gw_name", gw.GwName)
 	mustSet(d, "gw_size", gw.GwSize)
 
+	// group_name is Computed; group_uuid is Required+ForceNew but not Computed,
+	// so nothing re-derives it. Resolve both from the owning group's name on
+	// every read so they survive terraform import (Read-only path) and cannot
+	// silently drift.
+	if gw.GroupName != "" {
+		mustSet(d, "group_name", gw.GroupName)
+	}
+	if err := setGroupUUIDFromGatewayName(ctx, client, d, gw.GroupName); err != nil {
+		return diag.Errorf("failed to resolve group_uuid for transit instance %s: %s", gw.GwName, err)
+	}
+
 	// Edge cloud type
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.EdgeRelatedCloudTypes) {
 		mustSet(d, "vpc_id", gw.VpcID)
