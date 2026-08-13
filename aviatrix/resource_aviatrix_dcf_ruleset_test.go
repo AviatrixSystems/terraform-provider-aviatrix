@@ -12,6 +12,263 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+// dcfRulesetTestRule returns the raw config value for one rule, so old/new
+// variants used in diff tests only differ in the fields the test cares about.
+func dcfRulesetTestRule(logging bool, lo, hi int) map[string]interface{} {
+	return dcfRulesetTestRuleWithPortRange(logging, map[string]interface{}{"lo": lo, "hi": hi})
+}
+
+// dcfRulesetTestRuleHiOmitted is like dcfRulesetTestRule but leaves "hi" out
+// of port_ranges entirely, as a user relying on single-port shorthand would.
+func dcfRulesetTestRuleHiOmitted(logging bool, lo int) map[string]interface{} {
+	return dcfRulesetTestRuleWithPortRange(logging, map[string]interface{}{"lo": lo})
+}
+
+func dcfRulesetTestRuleWithPortRange(logging bool, portRange map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"name":                     "test-rule-1",
+		"action":                   "PERMIT",
+		"priority":                 2,
+		"protocol":                 "TCP",
+		"logging":                  logging,
+		"decrypt_policy":           "DECRYPT_UNSPECIFIED",
+		"flow_app_requirement":     "APP_UNSPECIFIED",
+		"exclude_sg_orchestration": true,
+		"tls_profile":              "",
+		"log_profile":              "def000ad-7000-0000-0000-000000000001",
+		"egress_path":              "EGRESS_PATH_DEFAULT",
+		"src_smart_groups":         []interface{}{"def000ad-0000-0000-0000-000000000000"},
+		"dst_smart_groups":         []interface{}{"def000ad-0000-0000-0000-000000000000"},
+		"web_groups":               []interface{}{},
+		"port_ranges": []interface{}{
+			portRange,
+		},
+	}
+}
+
+// TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiEqualsLo is a regression test,
+// run entirely offline (no controller/acceptance test needed), for the bug
+// where updating any field on a rule whose port_ranges had hi == lo produced a
+// third, nameless "phantom" rule in the plan and failed apply.
+//
+// Root cause: the old hi DiffSuppressFunc suppressed hi's diff whenever
+// old(hi) == lo, which is also exactly what happens when the whole rule is
+// being removed from the TypeSet (its hi diffs toward its zero value). When a
+// DiffSuppressFunc fires on an attribute inside a set element, the SDK does
+// not drop the diff -- it replaces it with a bare {Old, New: Old} NOOP and
+// loses whatever NewRemoved flag the field originally had (see
+// helper/schema/schema.go's diff(), the "make it a NOOP" branch). So instead
+// of hi being cleanly removed alongside every other field of the deleted
+// rule, it silently survives, and Terraform's later state reconstruction
+// resurrects the dead rule as an extra, nameless "phantom" block containing
+// just that leftover hi (and the still-computed uuid).
+//
+// This test builds a "prior state" (as if already applied, with a real UUID)
+// for a single rule with lo == hi, then diffs it against a new config that
+// only changes "logging" -- forcing the whole rule to be replaced (removed +
+// re-added) via the set-hash mechanism. It checks two layers:
+//  1. The raw InstanceDiff: lo must be cleanly removed, and hi must never be
+//     left behind as a leftover no-op diff entry (hi being Computed means its
+//     removal may simply produce no diff entry at all, same as uuid -- that's
+//     fine; a retained no-op is the bug).
+//  2. The reconstructed "planned new state" (via InstanceDiff.Apply, the same
+//     shim Terraform core uses to turn this diff into a plan): exactly one
+//     named rule must survive, with no nameless phantom slot alongside it.
+func TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiEqualsLo(t *testing.T) {
+	checkNoPhantomRuleOnUpdate(t, dcfRulesetTestRule(true, 443, 443), dcfRulesetTestRule(false, 443, 443))
+}
+
+// TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiGreaterThanLo is a sanity
+// check for the "normal" case (hi > lo), which never triggered the old
+// DiffSuppressFunc bug (that suppressor only fired when old(hi) == lo). It
+// guards against a regression in the other direction: that making hi
+// Optional+Computed didn't somehow break ordinary multi-port ranges.
+func TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiGreaterThanLo(t *testing.T) {
+	checkNoPhantomRuleOnUpdate(t, dcfRulesetTestRule(true, 3000, 8000), dcfRulesetTestRule(false, 3000, 8000))
+}
+
+// TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiOmitted covers the
+// single-port shorthand where "hi" is left out of config entirely (letting
+// it default to whatever the backend/state already has for lo). This is the
+// other long-standing production pattern that the fix (making hi
+// Optional+Computed instead of relying on a DiffSuppressFunc) has to keep
+// working, alongside the explicit hi == lo case above.
+func TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiOmitted(t *testing.T) {
+	checkNoPhantomRuleOnUpdate(t, dcfRulesetTestRuleHiOmitted(true, 443), dcfRulesetTestRuleHiOmitted(false, 443))
+}
+
+// TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiIsZero covers a rule whose
+// hi is explicitly set to the literal sentinel value 0 (as opposed to being
+// omitted from config, or being defaulted to lo). "hi": 0 is a distinct
+// state/config combination from "hi omitted" -- Terraform tracks "not present
+// in config" separately from "present in config with the zero value" -- so
+// it needs its own coverage rather than being assumed equivalent to the
+// omitted case above.
+func TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiIsZero(t *testing.T) {
+	checkNoPhantomRuleOnUpdate(t, dcfRulesetTestRule(true, 443, 0), dcfRulesetTestRule(false, 443, 0))
+}
+
+// checkNoPhantomRuleOnUpdate is a regression check, run entirely offline (no
+// controller/acceptance test needed), for the bug where updating any field on
+// a rule whose port_ranges had hi == lo produced a third, nameless "phantom"
+// rule in the plan and failed apply.
+//
+// Root cause: the old hi DiffSuppressFunc suppressed hi's diff whenever
+// old(hi) == lo, which is also exactly what happens when the whole rule is
+// being removed from the TypeSet (its hi diffs toward its zero value). When a
+// DiffSuppressFunc fires on an attribute inside a set element, the SDK does
+// not drop the diff -- it replaces it with a bare {Old, New: Old} NOOP and
+// loses whatever NewRemoved flag the field originally had (see
+// helper/schema/schema.go's diff(), the "make it a NOOP" branch). So instead
+// of hi being cleanly removed alongside every other field of the deleted
+// rule, it silently survives, and Terraform's later state reconstruction
+// resurrects the dead rule as an extra, nameless "phantom" block containing
+// just that leftover hi (and the still-computed uuid).
+//
+// oldRule and newRule should differ only in the field being updated (e.g.
+// "logging"), so the rule's port_ranges stays fixed across the update -- that
+// is what forces the whole rule to be replaced (removed + re-added) via the
+// set-hash mechanism while isolating the effect of the specific hi/lo
+// combination under test. It checks two layers:
+//  1. The raw InstanceDiff: lo must be cleanly removed, and hi must never be
+//     left behind as a leftover no-op diff entry (hi being Computed means its
+//     removal may simply produce no diff entry at all, same as uuid -- that's
+//     fine; a retained no-op is the bug).
+//  2. The reconstructed "planned new state" (via InstanceDiff.Apply, the same
+//     shim Terraform core uses to turn this diff into a plan): exactly one
+//     named rule must survive, with no nameless phantom slot alongside it.
+func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interface{}) {
+	// Use a plain *schema.Resource with no CustomizeDiff: the phantom-rule bug
+	// lives entirely in the TypeSet hashing/diffing machinery, not in
+	// resourceAviatrixDCFRulesetCustomizeDiff, and CustomizeDiff needs a real
+	// raw cty config that TestResourceDataRaw/NewResourceConfigRaw don't
+	// populate.
+	testResource := &schema.Resource{Schema: resourceAviatrixDCFRuleset().Schema}
+
+	oldRaw := map[string]interface{}{
+		"name": "test-ruleset",
+		"rules": []interface{}{
+			oldRule,
+		},
+	}
+	d := schema.TestResourceDataRaw(t, testResource.Schema, oldRaw)
+	// ResourceData.State() returns nil unless an ID is set, since a resource
+	// with no ID is considered not to exist yet. TestResourceDataRaw never
+	// sets one (it only models raw config), so set a fake one to represent
+	// "already applied."
+	d.SetId("test-ruleset-id")
+	oldState := d.State()
+	if oldState == nil {
+		t.Fatal("expected a non-nil state from TestResourceDataRaw")
+	}
+
+	// Simulate the backend having already assigned a real UUID to the rule,
+	// as would be true for any previously-applied resource.
+	var ruleCode string
+	for k, v := range oldState.Attributes {
+		if strings.HasSuffix(k, ".name") && v == "test-rule-1" {
+			ruleCode = strings.TrimSuffix(k, ".name")
+		}
+	}
+	if ruleCode == "" {
+		t.Fatalf("could not find the rule's set code in old state attributes: %#v", oldState.Attributes)
+	}
+	oldState.Attributes[ruleCode+".uuid"] = "93d4d7eb-b77c-4179-985d-f2c85bf818c5"
+
+	newRaw := map[string]interface{}{
+		"name": "test-ruleset",
+		"rules": []interface{}{
+			// newRule should only differ from oldRule in a field like
+			// "logging"; keeping port_ranges fixed forces the rule's set
+			// hashcode to change, so the SDK removes this (old) code and
+			// adds a new one for the updated rule.
+			newRule,
+		},
+	}
+	newConfig := terraform.NewResourceConfigRaw(newRaw)
+
+	instanceDiff, err := testResource.Diff(context.Background(), oldState, newConfig, nil)
+	if err != nil {
+		t.Fatalf("Diff returned an error: %v", err)
+	}
+	if instanceDiff == nil || len(instanceDiff.Attributes) == 0 {
+		t.Fatal("expected a non-empty diff since logging changed")
+	}
+
+	loKey := ruleCode + ".port_ranges.0.lo"
+	hiKey := ruleCode + ".port_ranges.0.hi"
+
+	loAttr, ok := instanceDiff.Attributes[loKey]
+	if !ok {
+		t.Fatalf("expected a diff entry for %q (the removed rule's lo), attributes: %#v", loKey, instanceDiff.Attributes)
+	}
+	if !loAttr.NewRemoved {
+		t.Fatalf("sanity check failed: %q should be NewRemoved since the whole rule is being removed, got %#v", loKey, loAttr)
+	}
+
+	// hi is Computed, so like its sibling uuid a removed Computed field
+	// produces *no* diff entry at all (schema.go's diffString returns nil for
+	// "removed && schema.Computed") -- that's fine and expected, it's the
+	// same mechanism that already lets uuid disappear cleanly. What must
+	// never happen is a leftover NOOP entry (Old == New == the old value,
+	// NewRemoved == false): that's the exact signature of the phantom-rule
+	// bug, where the old DiffSuppressFunc fired on removal and the SDK
+	// silently replaced the removal with a no-op instead of dropping it.
+	if hiAttr, ok := instanceDiff.Attributes[hiKey]; ok && !hiAttr.NewRemoved {
+		t.Errorf("%q is present but not marked NewRemoved (got %#v) -- "+
+			"this is the phantom-rule bug: because hi == lo, the DiffSuppressFunc "+
+			"fired on removal and the SDK silently replaced the removal with a "+
+			"NOOP, leaving a dead rule slot behind", hiKey, hiAttr)
+	}
+
+	// The checks above operate one layer below where the actual phantom rule
+	// appears in `terraform plan`. That third rule is materialized when
+	// Terraform reconstructs the "planned new state" from this same flat
+	// diff -- InstanceDiff.Apply is the (legacy, but still used) function
+	// that does that reconstruction. Its TypeSet handling
+	// (terraform/diff.go's applyBlockDiff) decides whether to keep a set
+	// element's code by scanning for *any* diff attribute under that code
+	// that is not NewRemoved (see the "this must be a diff to keep" branch).
+	// The leftover, non-removed hi NOOP is exactly such an attribute, so the
+	// dead rule's code gets kept -- resurrecting it as a nameless rule. This
+	// step reproduces that directly, with no controller and no Terraform
+	// core involved: just the same SDK-shim function core relies on.
+	newAttrs, err := instanceDiff.Apply(oldState.Attributes, testResource.CoreConfigSchema())
+	if err != nil {
+		t.Fatalf("InstanceDiff.Apply (state reconstruction) returned an error: %v", err)
+	}
+
+	ruleCodes := map[string]bool{}
+	namedRuleCodes := map[string]bool{}
+	for k, v := range newAttrs {
+		const prefix = "rules."
+		if !strings.HasPrefix(k, prefix) || strings.HasSuffix(k, ".#") {
+			continue
+		}
+		rest := strings.TrimPrefix(k, prefix)
+		dot := strings.Index(rest, ".")
+		if dot < 0 {
+			continue
+		}
+		code := rest[:dot]
+		ruleCodes[code] = true
+		if strings.HasSuffix(k, ".name") && v != "" {
+			namedRuleCodes[code] = true
+		}
+	}
+
+	for code := range ruleCodes {
+		if !namedRuleCodes[code] {
+			t.Errorf("reconstructed planned state has a rule slot %q with no name -- "+
+				"this is the phantom rule that shows up in `terraform plan` and fails "+
+				"apply; full reconstructed attributes: %#v", code, newAttrs)
+		}
+	}
+	if got := len(namedRuleCodes); got != 1 {
+		t.Errorf("expected exactly 1 named rule to survive into the planned new state, got %d: %v", got, namedRuleCodes)
+	}
+}
+
 func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 	basRule := map[string]interface{}{
 		"name":                     "test-rule",
