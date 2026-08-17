@@ -99,12 +99,7 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 		spokeGateway.SingleAzHa = "disabled"
 	}
 
-	// EIP allocation — only set reuse_eip when the user provides a specific EIP.
-	// The create_mct_gateway API treats reuse_eip as the actual IP to reuse;
-	// omitting it means a new EIP will be allocated.
-	if !getBool(d, "allocate_new_eip") {
-		spokeGateway.Eip = getString(d, "eip")
-	}
+	configureSpokeInstanceEIP(d, spokeGateway, gatewayGroup.PrivateNetwork)
 
 	// Insane mode
 	insaneMode := getBool(d, "insane_mode")
@@ -139,6 +134,28 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 	}
 
 	return spokeGateway, nil
+}
+
+// configureSpokeInstanceEIP sets the address the controller must reuse instead of
+// allocating a new one. create_mct_gateway maps this to reuse_eip, and Azure
+// expects "<eip_name>:<resource_group>:<ip_address>", where the first two parts
+// come from azure_eip_name_resource_group.
+//
+// A private-network gateway has no public IP, so allocate_new_eip, eip and
+// azure_eip_name_resource_group carry no meaning for it and nothing is sent.
+// This mirrors configureTransitInstanceEIP.
+func configureSpokeInstanceEIP(d *schema.ResourceData, spokeGateway *goaviatrix.SpokeVpc, privateNetwork bool) {
+	if privateNetwork || getBool(d, "allocate_new_eip") {
+		spokeGateway.Eip = ""
+		return
+	}
+
+	eip := getString(d, "eip")
+	if goaviatrix.IsCloudType(spokeGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		spokeGateway.Eip = getString(d, "azure_eip_name_resource_group") + ":" + eip
+		return
+	}
+	spokeGateway.Eip = eip
 }
 
 // validateSpokeInstanceConfiguration validates the spoke instance configuration.
@@ -421,12 +438,6 @@ func resourceAviatrixSpokeInstanceCreate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(subnetErr)
 		}
 		spokeGateway.Subnet = updatedSubnet
-	}
-
-	// Handle Azure EIP
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && !getBool(d, "allocate_new_eip") {
-		azureEipName := getString(d, "azure_eip_name_resource_group")
-		spokeGateway.Eip = azureEipName + ":" + spokeGateway.Eip
 	}
 
 	// Handle encryption - explicitly set to "no" for AWS if not enabled (same as spoke_gateway)
