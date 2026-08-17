@@ -82,7 +82,10 @@ func checkResourceSchema(t *testing.T, resourceName, path string, schemas map[st
 				if fieldSchema.Required {
 					continue
 				}
-				if fieldSchema.Computed && !fieldSchema.Optional {
+				if fieldSchema.Computed {
+					// Computed fields derive their value from the server (Read path).
+					// Optional+Computed fields without Default are valid when the
+					// server is the source of truth (e.g. enforcement, watch).
 					continue
 				}
 				assert.NotNilf(t, fieldSchema.Default, "%s.%s: field %q is optional but missing Default, please add a Default value to the field", resourceName, fieldPath, fieldName)

@@ -125,14 +125,14 @@ var dcfRuleElem = &schema.Resource{
 		"watch": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Deprecated:  "Use 'enforcement' instead. 'watch=true' maps to enforcement=MONITOR; 'watch=false' maps to enforcement=ENFORCE.",
 			Description: "Deprecated: use 'enforcement' instead.",
 		},
 		"enforcement": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Default:      "ENFORCE",
+			Computed:     true,
 			ValidateFunc: validation.StringInSlice([]string{"ENFORCE", "MONITOR", "DISABLE"}, false),
 			Description:  "Enforcement mode for the rule. Must be one of ENFORCE, MONITOR, or DISABLE.",
 		},
