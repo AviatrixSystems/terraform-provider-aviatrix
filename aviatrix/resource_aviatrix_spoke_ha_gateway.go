@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -14,10 +15,11 @@ import (
 
 func resourceAviatrixSpokeHaGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixSpokeHaGatewayCreate,
-		Read:   resourceAviatrixSpokeHaGatewayRead,
-		Update: resourceAviatrixSpokeHaGatewayUpdate,
-		Delete: resourceAviatrixSpokeHaGatewayDelete,
+		Create:        resourceAviatrixSpokeHaGatewayCreate,
+		Read:          resourceAviatrixSpokeHaGatewayRead,
+		Update:        resourceAviatrixSpokeHaGatewayUpdate,
+		Delete:        resourceAviatrixSpokeHaGatewayDelete,
+		CustomizeDiff: resourceAviatrixSpokeHaGatewayCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
@@ -153,6 +155,51 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 			},
 		},
 	}
+}
+
+// resourceAviatrixSpokeHaGatewayCustomizeDiff keeps an unset gw_size in sync
+// with the primary gateway. gw_size is optional; when it is not set in the
+// configuration the HA gateway is meant to follow the primary gateway's size.
+// The controller only applied this at creation, so resizing the primary later
+// silently left the HA gateway on its old size (AVX-36730). Planning the HA
+// gw_size to the primary's current size surfaces that drift and drives a resize
+// on the next apply.
+func resourceAviatrixSpokeHaGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	// On create the controller initializes gw_size from the primary gateway.
+	if d.Id() == "" {
+		return nil
+	}
+
+	// Honor an explicitly configured gw_size; only unset gw_size follows primary.
+	gwSizeConfig := d.GetRawConfig().GetAttr("gw_size")
+	// Skip when gw_size is unknown at plan time (e.g. interpolated from another
+	// resource not yet created); AsString() would panic on an unknown value.
+	if !gwSizeConfig.IsKnown() {
+		return nil
+	}
+	if !gwSizeConfig.IsNull() && gwSizeConfig.AsString() != "" {
+		return nil
+	}
+
+	primaryGwName, _ := d.Get("primary_gw_name").(string)
+	if primaryGwName == "" {
+		return nil
+	}
+
+	client := mustClient(meta)
+	primaryGw, err := client.GetGateway(&goaviatrix.Gateway{GwName: primaryGwName})
+	if err != nil {
+		// Don't block planning if the primary can't be read right now.
+		log.Printf("[WARN] spoke ha gateway: could not read primary gateway %q to sync gw_size: %v", primaryGwName, err)
+		return nil
+	}
+
+	if primaryGw.GwSize != "" {
+		if err := d.SetNew("gw_size", primaryGw.GwSize); err != nil {
+			return fmt.Errorf("failed to sync gw_size from primary gateway %q: %w", primaryGwName, err)
+		}
+	}
+	return nil
 }
 
 func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta any) error {
