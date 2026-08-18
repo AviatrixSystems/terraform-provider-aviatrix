@@ -2568,7 +2568,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta any) error {
 		}
 		err := client.SetRxQueueSize(gw)
 		if err != nil {
-			return fmt.Errorf("could not modify rx queue size for gateway: %s during gateway update: %w", gw.GatewayName, err)
+			return fmt.Errorf("could not modify rx queue size for gateway: %s during gateway update: %w", gw.GwName, err)
 		}
 		if haSubnet != "" || haZone != "" {
 			haGwRxQueueSize := &goaviatrix.Gateway{
