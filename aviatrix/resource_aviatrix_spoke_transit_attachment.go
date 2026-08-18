@@ -25,18 +25,21 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
+		// spoke_gw_name/transit_gw_name replacement is decided in CustomizeDiff
+		// so switching between an instance name and its group name (which resolve
+		// to the same gateway) does not force a disruptive detach/re-attach.
+		CustomizeDiff: resourceAviatrixSpokeTransitAttachmentCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			"spoke_gw_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 				Description:  "Name of the spoke gateway or gateway group to attach to transit network.",
 			},
 			"transit_gw_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 				Description:  "Name of the transit gateway or gateway group to attach the spoke gateway to.",
 			},
@@ -156,6 +159,55 @@ func resolveGatewayName(ctx context.Context, client *goaviatrix.Client, name str
 	}
 
 	return "", fmt.Errorf("no gateway group or gateway found with name %q", name)
+}
+
+// resourceAviatrixSpokeTransitAttachmentCustomizeDiff decides whether a change
+// to spoke_gw_name/transit_gw_name should force replacement. Because an instance
+// name and its gateway-group name resolve to the same underlying gateway (via
+// resolveGatewayName), the raw config-vs-state string diff alone must not trigger
+// ForceNew: only a change that resolves to a genuinely different gateway is a real
+// gateway swap. If resolution fails (e.g. plan-time, gateway not yet created) we
+// fall back to ForceNew to preserve the original replace-on-change behavior.
+func resourceAviatrixSpokeTransitAttachmentCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	// New resource: nothing to compare against, let create proceed.
+	if d.Id() == "" {
+		return nil
+	}
+
+	client := mustClient(meta)
+
+	for _, key := range []string{"spoke_gw_name", "transit_gw_name"} {
+		if !d.HasChange(key) {
+			continue
+		}
+
+		oldVal, newVal := d.GetChange(key)
+		oldName, newName := mustString(oldVal), mustString(newVal)
+
+		resolvedOld, err := resolveGatewayName(ctx, client, oldName)
+		if err != nil {
+			if ferr := d.ForceNew(key); ferr != nil {
+				return ferr
+			}
+			continue
+		}
+		resolvedNew, err := resolveGatewayName(ctx, client, newName)
+		if err != nil {
+			if ferr := d.ForceNew(key); ferr != nil {
+				return ferr
+			}
+			continue
+		}
+
+		// Names resolve to different gateways: a real swap, force replacement.
+		if resolvedOld != resolvedNew {
+			if ferr := d.ForceNew(key); ferr != nil {
+				return ferr
+			}
+		}
+	}
+
+	return nil
 }
 
 /*

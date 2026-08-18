@@ -74,8 +74,8 @@ Use **`edit_managed_route_tables`** on **`edit_gw_config`** after the attachment
 The following arguments are supported:
 
 ### Required
-* `spoke_gw_name` - (Required) Name of the spoke gateway or gateway group to attach to transit network.
-* `transit_gw_name` - (Required) Name of the transit gateway or gateway group to attach the spoke gateway to.
+* `spoke_gw_name` - (Required) Name of the spoke gateway or gateway group to attach to transit network. Switching between a gateway name and its group name (both resolving to the same gateway) is applied in place without recreating the attachment; changing to a different gateway forces recreation.
+* `transit_gw_name` - (Required) Name of the transit gateway or gateway group to attach the spoke gateway to. Switching between a gateway name and its group name (both resolving to the same gateway) is applied in place without recreating the attachment; changing to a different gateway forces recreation.
 
 ### Advanced Options
 * `route_tables` - (Optional, **Deprecated**) Learned routes will be propagated to these route tables. Example: `["rtb-212ff547","rtb-04539787"]`. **Deprecated:** use Controller **`edit_gw_config`** with **`edit_managed_route_tables`** after attach; this argument will be removed in a future major release.
