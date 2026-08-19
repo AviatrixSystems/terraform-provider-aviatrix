@@ -395,6 +395,7 @@ go_test(
     ],
     data = glob(["test-data/**"]),
     embed = [":aviatrix"],
+    tags = ["requires-network"],
     deps = [
         "//go/aviatrix.com/terraform-provider-aviatrix/goaviatrix",
         "@com_github_google_go_cmp//cmp",

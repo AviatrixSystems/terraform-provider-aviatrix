@@ -98,10 +98,10 @@ func TestAccDataSourceAviatrixSmartGroups_k8s(t *testing.T) {
 			{
 				Config: testAccDataSourceAviatrixSmartGroupsConfigK8s(clusterId1, namespace1, service1, clusterId2, namespace2, pod2),
 				Check: resource.ComposeTestCheckFunc(
-					expect(resourceName, "."+goaviatrix.K8sClusterIdKey, clusterId1),
+					expect(resourceName, "."+goaviatrix.K8sClusterIDKey, clusterId1),
 					expect(resourceName, "."+goaviatrix.K8sNamespaceKey, namespace1),
 					expect(resourceName, "."+goaviatrix.K8sServiceKey, service1),
-					expect(resourceName, "."+goaviatrix.K8sClusterIdKey, clusterId2),
+					expect(resourceName, "."+goaviatrix.K8sClusterIDKey, clusterId2),
 					expect(resourceName, "."+goaviatrix.K8sNamespaceKey, namespace2),
 					expect(resourceName, "."+goaviatrix.K8sPodNameKey, pod2),
 					expect(resourceName, "."+goaviatrix.TypeKey, "k8s"),

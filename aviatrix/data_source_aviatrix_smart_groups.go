@@ -57,12 +57,12 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Computed:    true,
 													Description: "Type of resource this expression matches.",
 												},
-												goaviatrix.ResIdKey: {
+												goaviatrix.ResIDKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Resource ID this expression matches.",
 												},
-												goaviatrix.AccountIdKey: {
+												goaviatrix.AccountIDKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Account ID this expression matches.",
@@ -93,7 +93,13 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Elem:        &schema.Schema{Type: schema.TypeString},
 													Description: "Map of tags this expression matches.",
 												},
-												goaviatrix.K8sClusterIdKey: {
+												goaviatrix.NamespaceTagsPrefix: {
+													Type:        schema.TypeMap,
+													Computed:    true,
+													Elem:        &schema.Schema{Type: schema.TypeString},
+													Description: "Map of Kubernetes namespace labels this expression matches.",
+												},
+												goaviatrix.K8sClusterIDKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
 													Description: "Kubernetes Cluster ID this expression matches.",
@@ -146,21 +152,22 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 
 		for _, filter := range smartGroup.Selector.Expressions {
 			filterMap := map[string]any{
-				goaviatrix.TypeKey:         filter.Type,
-				goaviatrix.CidrKey:         filter.CIDR,
-				goaviatrix.FqdnKey:         filter.FQDN,
-				goaviatrix.SiteKey:         filter.Site,
-				goaviatrix.ResIdKey:        filter.ResId,
-				goaviatrix.AccountIdKey:    filter.AccountId,
-				goaviatrix.AccountNameKey:  filter.AccountName,
-				goaviatrix.NameKey:         filter.Name,
-				goaviatrix.RegionKey:       filter.Region,
-				goaviatrix.ZoneKey:         filter.Zone,
-				goaviatrix.TagsPrefix:      filter.Tags,
-				goaviatrix.K8sClusterIdKey: filter.K8sClusterId,
-				goaviatrix.K8sNamespaceKey: filter.K8sNamespace,
-				goaviatrix.K8sServiceKey:   filter.K8sService,
-				goaviatrix.K8sPodNameKey:   filter.K8sPodName,
+				goaviatrix.TypeKey:             filter.Type,
+				goaviatrix.CidrKey:             filter.CIDR,
+				goaviatrix.FqdnKey:             filter.FQDN,
+				goaviatrix.SiteKey:             filter.Site,
+				goaviatrix.ResIDKey:            filter.ResID,
+				goaviatrix.AccountIDKey:        filter.AccountID,
+				goaviatrix.AccountNameKey:      filter.AccountName,
+				goaviatrix.NameKey:             filter.Name,
+				goaviatrix.RegionKey:           filter.Region,
+				goaviatrix.ZoneKey:             filter.Zone,
+				goaviatrix.TagsPrefix:          filter.Tags,
+				goaviatrix.NamespaceTagsPrefix: filter.NamespaceTags,
+				goaviatrix.K8sClusterIDKey:     filter.K8sClusterID,
+				goaviatrix.K8sNamespaceKey:     filter.K8sNamespace,
+				goaviatrix.K8sServiceKey:       filter.K8sService,
+				goaviatrix.K8sPodNameKey:       filter.K8sPodName,
 			}
 
 			expressions = append(expressions, filterMap)

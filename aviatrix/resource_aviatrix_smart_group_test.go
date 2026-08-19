@@ -139,6 +139,68 @@ resource "aviatrix_smart_group" "k8s" {
 `
 }
 
+func TestAccAviatrixSmartGroup_k8s_namespacetags(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_SMART_GROUP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
+	}
+	resourceName := "aviatrix_smart_group.k8s_namespacetags"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProvidersVersionValidation,
+		CheckDestroy: testAccSmartGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmartGroupK8sNamespaceTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmartGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "k8s-namespacetags-smart-group"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "k8s"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.k8s_cluster_id", "test-cluster-id"),
+					// Namespace labels and resource labels are independent maps.
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.namespacetags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.namespacetags.dept", "310"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.tags.app", "web"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSmartGroupK8sNamespaceTags() string {
+	return `
+resource "aviatrix_smart_group" "k8s_namespacetags" {
+	name = "k8s-namespacetags-smart-group"
+
+	selector {
+		match_expressions {
+			type           = "k8s"
+			k8s_cluster_id = "test-cluster-id"
+
+			namespacetags = {
+				dept = "310"
+			}
+
+			tags = {
+				app = "web"
+			}
+		}
+	}
+}
+`
+}
+
 func TestAccAviatrixSmartGroup_reject_bad_k8s_combinations(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_SMART_GROUP")
 	if skipAcc == "yes" {

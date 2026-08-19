@@ -67,7 +67,7 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Optional:    true,
 										Description: "Type of resource this expression matches.",
 									},
-									goaviatrix.K8sClusterIdKey: {
+									goaviatrix.K8sClusterIDKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Kubernetes Cluster ID this expression matches.",
@@ -90,12 +90,12 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										ValidateFunc: validation.StringMatch(dns1123FmtRe, "must be a valid Kubernetes Namespace name"),
 										Description:  "Name of the Kubernetes Namespace this expression matches.",
 									},
-									goaviatrix.ResIdKey: {
+									goaviatrix.ResIDKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Resource ID this expression matches.",
 									},
-									goaviatrix.AccountIdKey: {
+									goaviatrix.AccountIDKey: {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Description: "Account ID this expression matches.",
@@ -125,6 +125,12 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Optional:    true,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "Map of tags this expression matches.",
+									},
+									goaviatrix.NamespaceTagsPrefix: {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Map of Kubernetes namespace labels this expression matches. Only valid when type is k8s.",
 									},
 									goaviatrix.ExtArgsPrefix: {
 										Type:        schema.TypeMap,
@@ -185,6 +191,13 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 				tags[key] = mustString(value)
 			}
 			filter.Tags = tags
+		}
+		if nsTagsMap, ok := selectorInfo[goaviatrix.NamespaceTagsPrefix]; ok {
+			nsTags := make(map[string]string)
+			for key, value := range mustMap(nsTagsMap) {
+				nsTags[key] = mustString(value)
+			}
+			filter.NamespaceTags = nsTags
 		}
 		smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 	}
