@@ -1307,6 +1307,21 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// ============================================================================
+	// Customized spoke VPC routes - API: edit_gateway_custom_routes
+	// Group-level setting; applied to gateways as they are launched. On an empty
+	// group the controller stores it and applies it at first gateway launch.
+	// ============================================================================
+	if d.HasChange("customized_spoke_vpc_routes") {
+		gateway := &goaviatrix.Gateway{
+			GwName:                   groupName,
+			CustomizedSpokeVpcRoutes: getStringSet(d, "customized_spoke_vpc_routes"),
+		}
+		if err := client.EditGatewayCustomRoutes(gateway); err != nil {
+			return diag.Errorf("could not update customized spoke VPC routes during transit group update: %s", err)
+		}
+	}
+
+	// ============================================================================
 	// FireNet and Transit FireNet - API: enable_gateway_firenet_interfaces / enable_gateway_for_transit_firenet
 	// ============================================================================
 	enableFireNet := getBool(d, "enable_firenet")

@@ -104,7 +104,6 @@ resource "aviatrix_transit_instance" "aws_transit_full" {
   gw_size                          = "c5.xlarge"
 
   # Route configuration
-  customized_spoke_vpc_routes      = "10.10.0.0/16,10.20.0.0/16"
   filtered_spoke_vpc_routes        = "10.30.0.0/16"
   excluded_advertised_spoke_routes = "10.40.0.0/16"
 
@@ -295,7 +294,6 @@ The following arguments are supported:
 
 ### Optional - Route Configuration
 
-* `customized_spoke_vpc_routes` - (Optional) A list of comma-separated CIDRs to be customized for the spoke VPC routes.
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma-separated CIDRs to be filtered from the spoke VPC route table.
 * `excluded_advertised_spoke_routes` - (Optional) A list of comma-separated CIDRs to be advertised to on-prem as 'Excluded CIDR List'.
 * `customized_transit_vpc_routes` - (Optional) A set of CIDRs to be customized for the transit VPC routes.

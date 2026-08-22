@@ -3,7 +3,6 @@ package goaviatrix
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -55,6 +54,6 @@ func TestGetGatewayGroupPropagatesOtherErrors(t *testing.T) {
 
 	_, err := client.GetGatewayGroup(context.Background(), "some-uuid")
 	require.Error(t, err)
-	assert.False(t, errors.Is(err, ErrNotFound),
+	assert.NotErrorIs(t, err, ErrNotFound,
 		"unexpected ErrNotFound for a non-not-found failure: %v", err)
 }

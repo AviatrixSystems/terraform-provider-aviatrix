@@ -640,11 +640,6 @@ func configureTransitInstanceRouting(client *goaviatrix.Client, d *schema.Resour
 		}
 	}
 
-	// Customized spoke vpc routes
-	if err := configureCustomizedSpokeVpcRoutes(client, d, gwName); err != nil {
-		return err
-	}
-
 	// Filtered spoke vpc routes
 	if err := configureFilteredSpokeVpcRoutes(client, d, gwName); err != nil {
 		return err
@@ -663,34 +658,6 @@ func configureTransitInstanceRouting(client *goaviatrix.Client, d *schema.Resour
 	if len(customizedTransitVpcRoutes) != 0 {
 		if err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizedTransitVpcRoutes); err != nil {
 			return diag.Errorf("couldn't update transit instance customized vpc route: %v", err)
-		}
-	}
-
-	return nil
-}
-
-// configureCustomizedSpokeVpcRoutes configures customized spoke VPC routes with retry logic
-func configureCustomizedSpokeVpcRoutes(client *goaviatrix.Client, d *schema.ResourceData, gwName string) diag.Diagnostics {
-	customizedSpokeVpcRoutes := getString(d, "customized_spoke_vpc_routes")
-	if customizedSpokeVpcRoutes == "" {
-		return nil
-	}
-
-	transitGateway := &goaviatrix.Gateway{
-		GwName:                   gwName,
-		CustomizedSpokeVpcRoutes: strings.Split(customizedSpokeVpcRoutes, ","),
-	}
-
-	for i := 0; ; i++ {
-		log.Printf("[INFO] Editing customized routes of transit instance: %s ", transitGateway.GwName)
-		err := client.EditGatewayCustomRoutes(transitGateway)
-		if err == nil {
-			break
-		}
-		if i <= 10 && strings.Contains(err.Error(), "when it is down") {
-			time.Sleep(10 * time.Second)
-		} else {
-			return diag.Errorf("failed to customize spoke vpc routes of transit instance: %s due to: %v", transitGateway.GwName, err)
 		}
 	}
 
@@ -966,23 +933,6 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	} else {
 		mustSet(d, "insane_mode", false)
 		mustSet(d, "insane_mode_az", "")
-	}
-
-	// Customized spoke vpc routes
-	if len(gw.CustomizedSpokeVpcRoutes) != 0 {
-		if customizedRoutes := getString(d, "customized_spoke_vpc_routes"); customizedRoutes != "" {
-			customizedRoutesArray := strings.Split(customizedRoutes, ",")
-			if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
-				len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
-				mustSet(d, "customized_spoke_vpc_routes", customizedRoutes)
-			} else {
-				mustSet(d, "customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
-			}
-		} else {
-			mustSet(d, "customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
-		}
-	} else {
-		mustSet(d, "customized_spoke_vpc_routes", "")
 	}
 
 	// Filtered spoke vpc routes
@@ -1262,13 +1212,6 @@ func updateTransitInstanceRouting(d *schema.ResourceData, client *goaviatrix.Cli
 		}
 	}
 
-	// Customized spoke vpc routes
-	if d.HasChange("customized_spoke_vpc_routes") {
-		if err := updateTransitInstanceCustomizedSpokeRoutes(d, client, gwName); err != nil {
-			return err
-		}
-	}
-
 	// Filtered spoke vpc routes
 	if d.HasChange("filtered_spoke_vpc_routes") {
 		if err := updateTransitInstanceFilteredSpokeRoutes(d, client, gwName); err != nil {
@@ -1294,21 +1237,6 @@ func updateTransitInstanceRouting(d *schema.ResourceData, client *goaviatrix.Cli
 		}
 	}
 
-	return nil
-}
-
-// updateTransitInstanceCustomizedSpokeRoutes updates customized spoke VPC routes
-func updateTransitInstanceCustomizedSpokeRoutes(d *schema.ResourceData, client *goaviatrix.Client, gwName string) diag.Diagnostics {
-	transitGateway := &goaviatrix.Gateway{
-		GwName:                   gwName,
-		CustomizedSpokeVpcRoutes: strings.Split(getString(d, "customized_spoke_vpc_routes"), ","),
-	}
-	if getString(d, "customized_spoke_vpc_routes") == "" {
-		transitGateway.CustomizedSpokeVpcRoutes = []string{""}
-	}
-	if err := client.EditGatewayCustomRoutes(transitGateway); err != nil {
-		return diag.Errorf("failed to update customized spoke vpc routes: %v", err)
-	}
 	return nil
 }
 

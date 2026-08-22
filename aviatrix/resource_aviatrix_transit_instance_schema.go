@@ -126,14 +126,6 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 // transitInstanceOptionalRouteSchema returns route-related optional schema attributes.
 func transitInstanceOptionalRouteSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customized_spoke_vpc_routes": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "",
-			Description: "A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, " +
-				"it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. " +
-				"It applies to all spoke gateways attached to this transit gateway.",
-		},
 		"filtered_spoke_vpc_routes": {
 			Type:     schema.TypeString,
 			Optional: true,

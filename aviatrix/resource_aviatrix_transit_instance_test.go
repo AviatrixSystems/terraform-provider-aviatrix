@@ -356,7 +356,6 @@ func TestAccAviatrixTransitInstance_withRoutes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitInstanceExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfi-routes-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "customized_spoke_vpc_routes", "10.0.0.0/16,10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "filtered_spoke_vpc_routes", "192.168.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "excluded_advertised_spoke_routes", "172.16.0.0/16"),
 				),
@@ -581,7 +580,6 @@ resource "aviatrix_transit_instance" "test_transit_instance_routes" {
 	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
 
-	customized_spoke_vpc_routes        = "10.0.0.0/16,10.1.0.0/16"
 	filtered_spoke_vpc_routes          = "192.168.0.0/16"
 	excluded_advertised_spoke_routes   = "172.16.0.0/16"
 }

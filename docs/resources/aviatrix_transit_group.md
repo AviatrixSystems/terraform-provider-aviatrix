@@ -160,10 +160,6 @@ The following arguments are supported:
 * `account_name` - (Required) Name of the Cloud-Account in Aviatrix controller.
 * `vpc_region` - (Required) VPC region for CSP deployments. Optional for edge deployments (gw_type = "EDGETRANSIT").
 
-### Optional - General Settings
-
-* `customized_cidr_list` - (Optional) Set of customized CIDRs for the transit group.
-
 ### Optional - Feature Flags
 
 * `enable_nat` - (Optional) Enable NAT (aka single_ip_snat). Valid values: true, false. Default: false.
@@ -180,6 +176,7 @@ The following arguments are supported:
 * `enable_firenet` - (Optional) Enable FireNet on this group. FireNet is the Aviatrix firewall-network solution that steers traffic through a dedicated firewall VPC/VNet of third-party next-generation firewall (NGFW) instances for inspection; the gateways in this group act as the FireNet gateways that forward traffic to and from those firewalls. This is a group-level setting and applies to every gateway in the group. Cannot be enabled together with `enable_transit_firenet`. Editing is not supported in AWS China (1024) and Azure China (2048). Valid values: true, false. Default: false.
 * `enable_transit_firenet` - (Optional) Enable Transit FireNet on this group. Transit FireNet inspects traffic through firewall instances deployed alongside the transit gateways themselves, so both east-west (VPC/VNet-to-VPC/VNet) and north-south (to/from on-prem and the internet) traffic transiting the group is sent to the firewalls without a separate firewall VPC/VNet. This is a group-level setting and applies to every gateway in the group. Only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024) and Azure China (2048). Cannot be enabled together with `enable_firenet`. Editing is not supported in GCP (4), Azure (8), AzureGov (32) and Azure China (2048). On GCP, set `lan_vpc_id` and `lan_private_subnet` on the corresponding `aviatrix_transit_instance` when this is enabled. Valid values: true, false. Default: false.
 * `enable_advertise_transit_cidr` - (Optional) Enable advertise transit CIDR. Valid values: true, false. Default: false.
+* `customized_spoke_vpc_routes` - (Optional) A set of comma-separated CIDRs to be customized for the spoke VPC routes. When configured, it replaces all learned routes in the VPC routing tables (including RFC1918 and non-RFC1918 CIDRs) for all spoke gateways attached to this transit group. Can be set on an empty group; it is applied to gateways as they are launched into the group.
 * `enable_transit_summarize_cidr_to_tgw` - (Optional) Enable transit summarize CIDR to TGW. Valid values: true, false. Default: false.
 * `enable_multi_tier_transit` - (Optional) Enable multi-tier transit. Valid values: true, false. Default: false.
 * `enable_segmentation` - (Optional) Enable segmentation (LAN segmentation). Valid values: true, false. Default: false.
