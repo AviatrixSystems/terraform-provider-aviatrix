@@ -1327,9 +1327,18 @@ func updateTransitInstanceRxQueueSize(d *schema.ResourceData, client *goaviatrix
 		return nil
 	}
 
+	rxQueueSize := getString(d, "rx_queue_size")
+	// Skip when the new value is empty: with rx_queue_size Computed the
+	// controller may report a value the config never set, and sending an empty
+	// string to unset it is rejected with a generic "Invalid configuration."
+	// (AVX-80581).
+	if rxQueueSize == "" {
+		return nil
+	}
+
 	gwRxQueueSize := &goaviatrix.Gateway{
 		GwName:      getString(d, "gw_name"),
-		RxQueueSize: getString(d, "rx_queue_size"),
+		RxQueueSize: rxQueueSize,
 	}
 	if err := client.SetRxQueueSize(gwRxQueueSize); err != nil {
 		return diag.Errorf("could not update rx queue size: %v", err)

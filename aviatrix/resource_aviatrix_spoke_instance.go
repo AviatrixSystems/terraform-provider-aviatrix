@@ -919,13 +919,19 @@ func resourceAviatrixSpokeInstanceUpdate(ctx context.Context, d *schema.Resource
 	// RX Queue Size
 	if d.HasChange("rx_queue_size") {
 		rxQueueSize := getString(d, "rx_queue_size")
-		gateway := &goaviatrix.Gateway{
-			GwName:      gwName,
-			RxQueueSize: rxQueueSize,
-		}
-		err := client.SetRxQueueSize(gateway)
-		if err != nil {
-			return diag.Errorf("failed to update rx_queue_size: %s", err)
+		// Skip when the new value is empty: with rx_queue_size Computed the
+		// controller may report a value the config never set, and sending an
+		// empty string to unset it is rejected with a generic "Invalid
+		// configuration." (AVX-80581).
+		if rxQueueSize != "" {
+			gateway := &goaviatrix.Gateway{
+				GwName:      gwName,
+				RxQueueSize: rxQueueSize,
+			}
+			err := client.SetRxQueueSize(gateway)
+			if err != nil {
+				return diag.Errorf("failed to update rx_queue_size: %s", err)
+			}
 		}
 	}
 

@@ -256,8 +256,10 @@ func transitInstanceOptionalAWSSchema() map[string]*schema.Schema {
 			Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled.",
 		},
 		"rx_queue_size": {
-			Type:         schema.TypeString,
-			Optional:     true,
+			Type:     schema.TypeString,
+			Optional: true,
+			// Computed: controller may populate this on its own; avoid phantom diffs (AVX-80581).
+			Computed:     true,
 			ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K", "8K", "16K"}, false),
 			Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only. Applies on HA as well if enabled.",
 		},

@@ -226,8 +226,10 @@ func spokeInstanceOptionalAWSSchema() map[string]*schema.Schema {
 			Description: "AZ for insertion gateway. Required when insertion_gateway is enabled.",
 		},
 		"rx_queue_size": {
-			Type:         schema.TypeString,
-			Optional:     true,
+			Type:     schema.TypeString,
+			Optional: true,
+			// Computed: controller may populate this on its own; avoid phantom diffs (AVX-80581).
+			Computed:     true,
 			ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K"}, false),
 			Description:  "Gateway ethernet interface RX queue size. Valid values: 1K, 2K, 4K. Applies on HA different than spoke_gateway resource.",
 		},
