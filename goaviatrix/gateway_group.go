@@ -287,7 +287,14 @@ func (c *Client) getGatewayGroupDetails(ctx context.Context, form map[string]str
 	if resp.Results.GceCfg != nil {
 		grp.EnableGlobalVpc = resp.Results.GceCfg.GlobalVpc
 	}
-	grp.EnableHybridConnection = resp.Results.TgwInterfaceEnabled
+	// enable_hybrid_connection: for a group with gateways the live value is derived
+	// from per-gateway tgw_config and returned as tgw_enabled (already unmarshalled
+	// into grp.EnableHybridConnection). tgw_interface_enabled is only written for an
+	// empty group as a "remember intent" placeholder, so fall back to it only when the
+	// group has no gateways. (AVX-80646)
+	if len(grp.GwUUIDList) == 0 {
+		grp.EnableHybridConnection = resp.Results.TgwInterfaceEnabled
+	}
 	grp.EnableSymmetricRouting = resp.Results.EnableSymmetricRouting
 	return grp, nil
 }

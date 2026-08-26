@@ -842,6 +842,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	// Computed attributes
 	mustSet(d, "gw_uuid_list", spokeGroup.GwUUIDList)
 	mustSet(d, "vpc_uuid", spokeGroup.VpcUUID)
+	mustSet(d, "vendor_name", spokeGroup.VendorName)
 
 	// Use GroupUUID as the resource ID
 	if spokeGroup.GroupUUID != "" {

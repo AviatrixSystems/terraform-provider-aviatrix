@@ -1513,8 +1513,22 @@ func resourceAviatrixTransitInstanceDelete(ctx context.Context, d *schema.Resour
 
 	log.Printf("[INFO] Deleting Aviatrix Transit Instance: %#v", gateway)
 
-	err := client.DeleteGateway(gateway)
-	if err != nil {
+	// FireNet is group-level (AVX-78640). When the group has FireNet enabled the
+	// controller attaches TGW FireNet interfaces to each member and rejects
+	// delete_container until they are disassociated (AVXERR-GATEWAY-0097). Mirror
+	// the legacy aviatrix_transit_gateway delete and disable this member's FireNet
+	// interfaces first. (AVX-80657)
+	transitGroup, err := client.GetGatewayGroup(ctx, getString(d, "group_uuid"))
+	if err != nil && !errors.Is(err, goaviatrix.ErrNotFound) {
+		return diag.Errorf("failed to get gateway group before deleting transit instance %s: %v", gateway.GwName, err)
+	}
+	if transitGroup != nil && transitGroup.EnableFirenet {
+		if err := client.DisableGatewayFireNetInterfaces(&goaviatrix.TransitVpc{GwName: gateway.GwName}); err != nil {
+			return diag.Errorf("failed to disable TGW FireNet interfaces for transit instance %s: %v", gateway.GwName, err)
+		}
+	}
+
+	if err := client.DeleteGateway(gateway); err != nil {
 		return diag.Errorf("failed to delete Aviatrix Transit Instance: %v", err)
 	}
 
