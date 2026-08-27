@@ -84,9 +84,6 @@ func telixProfileSchema() map[string]*schema.Schema {
 	return resourceAviatrixTelixProfile().Schema
 }
 
-func ptrString(s string) *string { return &s }
-func ptrBool(b bool) *bool       { return &b }
-
 func ptrOtlpHeaders(m map[string]string) *map[string]string {
 	mm := m
 	return &mm
@@ -123,7 +120,7 @@ func TestMarshalTelixProfileCreateRequest(t *testing.T) {
 			want: &goaviatrix.TelixProfileCreateRequest{
 				DisplayName: "minimal",
 				Sources:     []string{goaviatrix.TelixTelemetrySourceDcfLogs},
-				Enabled:     ptrBool(true),
+				Enabled:     new(true),
 				Destination: goaviatrix.TelixDestinationInput{
 					Otlp: goaviatrix.TelixOtlpDestinationInput{
 						Endpoint: "otel.example.com:4317",
@@ -182,18 +179,18 @@ func TestMarshalTelixProfileCreateRequest(t *testing.T) {
 			want: &goaviatrix.TelixProfileCreateRequest{
 				DisplayName: "secure",
 				Sources:     []string{goaviatrix.TelixTelemetrySourceDcfLogs},
-				Enabled:     ptrBool(true),
+				Enabled:     new(true),
 				Destination: goaviatrix.TelixDestinationInput{
 					Otlp: goaviatrix.TelixOtlpDestinationInput{
 						Endpoint: "https://collector/v1/logs",
 						Protocol: goaviatrix.TelixOtlpProtocolHTTP,
 						Headers:  ptrOtlpHeaders(map[string]string{"X-Auth": "tok"}),
 						TLS: &goaviatrix.TelixTLSInputConfig{
-							CaCertificatePem:     ptrString(testTelixCAPem),
-							ClientCertificatePem: ptrString(testTelixClientCertPem),
-							ClientPrivateKeyPem:  ptrString(testTelixClientKeyPem),
-							ServerNameOverride:   ptrString("collector"),
-							InsecureSkipVerify:   ptrBool(false),
+							CaCertificatePem:     new(testTelixCAPem),
+							ClientCertificatePem: new(testTelixClientCertPem),
+							ClientPrivateKeyPem:  new(testTelixClientKeyPem),
+							ServerNameOverride:   new("collector"),
+							InsecureSkipVerify:   new(false),
 						},
 					},
 				},
@@ -481,11 +478,11 @@ func TestFlattenTelixProfileDetail_PreservesSecretsInState(t *testing.T) {
 			Otlp: goaviatrix.TelixOtlpDestination{
 				Endpoint:   "otel.example.com:4317",
 				Protocol:   goaviatrix.TelixOtlpProtocolGRPC,
-				HasHeaders: ptrBool(true),
+				HasHeaders: new(true),
 				TLS: &goaviatrix.TelixTLSConfig{
-					HasCaCertificate:     ptrBool(true),
-					HasClientCertificate: ptrBool(true),
-					HasClientPrivateKey:  ptrBool(true),
+					HasCaCertificate:     new(true),
+					HasClientCertificate: new(true),
+					HasClientPrivateKey:  new(true),
 				},
 			},
 		},
@@ -580,11 +577,11 @@ func TestFlattenTelixProfileDetail_ExternalDeletion(t *testing.T) {
 			Otlp: goaviatrix.TelixOtlpDestination{
 				Endpoint:   "otel.example.com:4317",
 				Protocol:   goaviatrix.TelixOtlpProtocolGRPC,
-				HasHeaders: ptrBool(false),
+				HasHeaders: new(false),
 				TLS: &goaviatrix.TelixTLSConfig{
-					HasCaCertificate:     ptrBool(false),
-					HasClientCertificate: ptrBool(false),
-					HasClientPrivateKey:  ptrBool(false),
+					HasCaCertificate:     new(false),
+					HasClientCertificate: new(false),
+					HasClientPrivateKey:  new(false),
 				},
 			},
 		},

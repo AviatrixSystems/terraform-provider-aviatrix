@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"strings"
 	"testing"
@@ -14,18 +15,18 @@ import (
 
 // dcfRulesetTestRule returns the raw config value for one rule, so old/new
 // variants used in diff tests only differ in the fields the test cares about.
-func dcfRulesetTestRule(logging bool, lo, hi int) map[string]interface{} {
-	return dcfRulesetTestRuleWithPortRange(logging, map[string]interface{}{"lo": lo, "hi": hi})
+func dcfRulesetTestRule(logging bool, lo, hi int) map[string]any {
+	return dcfRulesetTestRuleWithPortRange(logging, map[string]any{"lo": lo, "hi": hi})
 }
 
 // dcfRulesetTestRuleHiOmitted is like dcfRulesetTestRule but leaves "hi" out
 // of port_ranges entirely, as a user relying on single-port shorthand would.
-func dcfRulesetTestRuleHiOmitted(logging bool, lo int) map[string]interface{} {
-	return dcfRulesetTestRuleWithPortRange(logging, map[string]interface{}{"lo": lo})
+func dcfRulesetTestRuleHiOmitted(logging bool, lo int) map[string]any {
+	return dcfRulesetTestRuleWithPortRange(logging, map[string]any{"lo": lo})
 }
 
-func dcfRulesetTestRuleWithPortRange(logging bool, portRange map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
+func dcfRulesetTestRuleWithPortRange(logging bool, portRange map[string]any) map[string]any {
+	return map[string]any{
 		"name":                     "test-rule-1",
 		"action":                   "PERMIT",
 		"priority":                 2,
@@ -37,10 +38,10 @@ func dcfRulesetTestRuleWithPortRange(logging bool, portRange map[string]interfac
 		"tls_profile":              "",
 		"log_profile":              "def000ad-7000-0000-0000-000000000001",
 		"egress_path":              "EGRESS_PATH_DEFAULT",
-		"src_smart_groups":         []interface{}{"def000ad-0000-0000-0000-000000000000"},
-		"dst_smart_groups":         []interface{}{"def000ad-0000-0000-0000-000000000000"},
-		"web_groups":               []interface{}{},
-		"port_ranges": []interface{}{
+		"src_smart_groups":         []any{"def000ad-0000-0000-0000-000000000000"},
+		"dst_smart_groups":         []any{"def000ad-0000-0000-0000-000000000000"},
+		"web_groups":               []any{},
+		"port_ranges": []any{
 			portRange,
 		},
 	}
@@ -137,7 +138,7 @@ func TestDcfRulesetDiff_NoPhantomRuleWhenPortRangeHiIsZero(t *testing.T) {
 //  2. The reconstructed "planned new state" (via InstanceDiff.Apply, the same
 //     shim Terraform core uses to turn this diff into a plan): exactly one
 //     named rule must survive, with no nameless phantom slot alongside it.
-func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interface{}) {
+func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]any) {
 	// Use a plain *schema.Resource with no CustomizeDiff: the phantom-rule bug
 	// lives entirely in the TypeSet hashing/diffing machinery, not in
 	// resourceAviatrixDCFRulesetCustomizeDiff, and CustomizeDiff needs a real
@@ -145,9 +146,9 @@ func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interf
 	// populate.
 	testResource := &schema.Resource{Schema: resourceAviatrixDCFRuleset().Schema}
 
-	oldRaw := map[string]interface{}{
+	oldRaw := map[string]any{
 		"name": "test-ruleset",
-		"rules": []interface{}{
+		"rules": []any{
 			oldRule,
 		},
 	}
@@ -175,9 +176,9 @@ func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interf
 	}
 	oldState.Attributes[ruleCode+".uuid"] = "93d4d7eb-b77c-4179-985d-f2c85bf818c5"
 
-	newRaw := map[string]interface{}{
+	newRaw := map[string]any{
 		"name": "test-ruleset",
-		"rules": []interface{}{
+		"rules": []any{
 			// newRule should only differ from oldRule in a field like
 			// "logging"; keeping port_ranges fixed forces the rule's set
 			// hashcode to change, so the SDK removes this (old) code and
@@ -246,11 +247,11 @@ func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interf
 			continue
 		}
 		rest := strings.TrimPrefix(k, prefix)
-		dot := strings.Index(rest, ".")
-		if dot < 0 {
+		before, _, ok0 := strings.Cut(rest, ".")
+		if !ok0 {
 			continue
 		}
-		code := rest[:dot]
+		code := before
 		ruleCodes[code] = true
 		if strings.HasSuffix(k, ".name") && v != "" {
 			namedRuleCodes[code] = true
@@ -270,7 +271,7 @@ func checkNoPhantomRuleOnUpdate(t *testing.T, oldRule, newRule map[string]interf
 }
 
 func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
-	basRule := map[string]interface{}{
+	basRule := map[string]any{
 		"name":                     "test-rule",
 		"action":                   "PERMIT",
 		"priority":                 0,
@@ -285,18 +286,16 @@ func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 		"uuid":                     "",
 		"log_profile":              "def000ad-7000-0000-0000-000000000001",
 		"egress_path":              "EGRESS_PATH_DEFAULT",
-		"src_smart_groups":         schema.NewSet(schema.HashString, []interface{}{"sg-1"}),
-		"dst_smart_groups":         schema.NewSet(schema.HashString, []interface{}{"sg-2"}),
-		"web_groups":               schema.NewSet(schema.HashString, []interface{}{}),
-		"port_ranges":              []interface{}{},
+		"src_smart_groups":         schema.NewSet(schema.HashString, []any{"sg-1"}),
+		"dst_smart_groups":         schema.NewSet(schema.HashString, []any{"sg-2"}),
+		"web_groups":               schema.NewSet(schema.HashString, []any{}),
+		"port_ranges":              []any{},
 	}
 
 	upperHash := dcfRuleSetHash(basRule)
 
-	lowercaseRule := make(map[string]interface{}, len(basRule))
-	for k, v := range basRule {
-		lowercaseRule[k] = v
-	}
+	lowercaseRule := make(map[string]any, len(basRule))
+	maps.Copy(lowercaseRule, basRule)
 	lowercaseRule["protocol"] = "tcp"
 	lowerHash := dcfRuleSetHash(lowercaseRule)
 
@@ -304,10 +303,8 @@ func TestDcfRuleSetHash_protocolCaseInsensitive(t *testing.T) {
 		t.Errorf("hash mismatch: protocol 'TCP' produced %d, protocol 'tcp' produced %d; expected equal hashes", upperHash, lowerHash)
 	}
 
-	mixedRule := make(map[string]interface{}, len(basRule))
-	for k, v := range basRule {
-		mixedRule[k] = v
-	}
+	mixedRule := make(map[string]any, len(basRule))
+	maps.Copy(mixedRule, basRule)
 	mixedRule["protocol"] = "Tcp"
 	mixedHash := dcfRuleSetHash(mixedRule)
 

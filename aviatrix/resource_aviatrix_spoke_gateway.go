@@ -3052,7 +3052,7 @@ func isHADeletionInProgress(err error) bool {
 		(strings.Contains(msg, "HA Gateway Deletion") || strings.Contains(msg, "Please try again"))
 }
 
-func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
 
 	gateway := &goaviatrix.Gateway{

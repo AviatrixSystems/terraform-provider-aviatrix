@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -170,15 +171,13 @@ var dcfRuleElem = &schema.Resource{
 // dcfRuleSetHash normalizes the "protocol" field to uppercase before hashing
 // so that case-only differences (e.g. "tcp" vs "TCP") don't cause Terraform to
 // detect a spurious diff and trigger an unnecessary update.
-func dcfRuleSetHash(v interface{}) int {
-	raw, ok := v.(map[string]interface{})
+func dcfRuleSetHash(v any) int {
+	raw, ok := v.(map[string]any)
 	if !ok {
 		return 0
 	}
-	normalized := make(map[string]interface{}, len(raw))
-	for k, val := range raw {
-		normalized[k] = val
-	}
+	normalized := make(map[string]any, len(raw))
+	maps.Copy(normalized, raw)
 	if protocol, ok := normalized["protocol"].(string); ok {
 		normalized["protocol"] = strings.ToUpper(protocol)
 	}
