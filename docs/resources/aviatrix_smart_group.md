@@ -33,7 +33,7 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
     # All pods and services in namespaces labelled team=payments
     match_expressions {
       type          = "k8s"
-      namespacetags = {
+      k8s_namespace_tags = {
         team = "payments"
       }
     }
@@ -183,7 +183,7 @@ The following arguments are supported:
     * `external` - (Optional) - Specifies an external feed, currently either "geo" or "threatiq".
     * `ext_args` - (Optional) - Map of the arguments associated with the external feed such as "country_iso_code" for the "geo" feed.
     * `tags` - (Optional) - Map of tags this expression matches.
-    * `namespacetags` - (Optional) - Map of Kubernetes namespace labels this expression matches. Where `tags` matches the labels on the workload itself, `namespacetags` matches the labels on the namespace containing it.
+    * `k8s_namespace_tags` - (Optional) - Map of Kubernetes namespace labels this expression matches. Where `tags` matches the labels on the workload itself, `k8s_namespace_tags` matches the labels on the namespace containing it.
       This property can only be used when `type` is set to `"k8s"`, and must not be used when `k8s_service` or `k8s_pod` is set.
 
 ## Attribute Reference

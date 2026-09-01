@@ -126,7 +126,7 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "Map of tags this expression matches.",
 									},
-									goaviatrix.NamespaceTagsPrefix: {
+									goaviatrix.K8sNamespaceTagsPrefix: {
 										Type:        schema.TypeMap,
 										Optional:    true,
 										Elem:        &schema.Schema{Type: schema.TypeString},
@@ -192,12 +192,12 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 			}
 			filter.Tags = tags
 		}
-		if nsTagsMap, ok := selectorInfo[goaviatrix.NamespaceTagsPrefix]; ok {
+		if nsTagsMap, ok := selectorInfo[goaviatrix.K8sNamespaceTagsPrefix]; ok {
 			nsTags := make(map[string]string)
 			for key, value := range mustMap(nsTagsMap) {
 				nsTags[key] = mustString(value)
 			}
-			filter.NamespaceTags = nsTags
+			filter.K8sNamespaceTags = nsTags
 		}
 		smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 	}

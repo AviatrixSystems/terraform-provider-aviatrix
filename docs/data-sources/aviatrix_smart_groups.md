@@ -37,7 +37,7 @@ The following attributes are exported:
             * `region` - Region this expression matches.
             * `zone` - Zone this expression matches.
             * `tags` - Map of tags this expression matches.
-            * `namespacetags` - Map of Kubernetes namespace labels this expression matches.
+            * `k8s_namespace_tags` - Map of Kubernetes namespace labels this expression matches.
             * `k8s_cluster_id` - Resource ID of the Kubernetes cluster this expression matches.
             * `k8s_namespace` - Kubernetes namespace this expression matches.
             * `k8s_service` - Kubernetes service name this expression matches.

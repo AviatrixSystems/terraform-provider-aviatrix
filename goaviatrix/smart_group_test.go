@@ -21,31 +21,31 @@ func roundTrip(filter *SmartGroupMatchExpression) *SmartGroupMatchExpression {
 
 // Both maps are populated so that either one leaking into the other, or either
 // losing its separating dot, shows up here.
-func TestSmartGroupRoundTrip_typedRowKeepsTagsAndNamespaceTags(t *testing.T) {
+func TestSmartGroupRoundTrip_typedRowKeepsTagsAndK8sNamespaceTags(t *testing.T) {
 	got := roundTrip(&SmartGroupMatchExpression{
-		Type:          "k8s",
-		K8sClusterID:  "cluster1",
-		Tags:          map[string]string{"app": "web"},
-		NamespaceTags: map[string]string{"dept": "310"},
+		Type:             "k8s",
+		K8sClusterID:     "cluster1",
+		Tags:             map[string]string{"app": "web"},
+		K8sNamespaceTags: map[string]string{"dept": "310"},
 	})
 
 	assert.Equal(t, "k8s", got.Type)
 	assert.Equal(t, "cluster1", got.K8sClusterID)
 	assert.Equal(t, map[string]string{"app": "web"}, got.Tags)
-	assert.Equal(t, map[string]string{"dept": "310"}, got.NamespaceTags)
+	assert.Equal(t, map[string]string{"dept": "310"}, got.K8sNamespaceTags)
 }
 
 // The resource and data source read the maps whole instead of flattening them to
 // dotted keys, so that direction needs its own case.
 func TestSmartGroupFilterToResource_keepsBothMapsWhole(t *testing.T) {
 	got := SmartGroupFilterToResource(&SmartGroupMatchExpression{
-		Type:          "k8s",
-		Tags:          map[string]string{"app": "web"},
-		NamespaceTags: map[string]string{"dept": "310"},
+		Type:             "k8s",
+		Tags:             map[string]string{"app": "web"},
+		K8sNamespaceTags: map[string]string{"dept": "310"},
 	})
 
 	assert.Equal(t, map[string]string{"app": "web"}, got[TagsPrefix])
-	assert.Equal(t, map[string]string{"dept": "310"}, got[NamespaceTagsPrefix])
+	assert.Equal(t, map[string]string{"dept": "310"}, got[K8sNamespaceTagsPrefix])
 }
 
 // An external feed defines its own argument names, so external takes precedence
@@ -53,18 +53,18 @@ func TestSmartGroupFilterToResource_keepsBothMapsWhole(t *testing.T) {
 // un-prefixed into a map.
 func TestSmartGroupRoundTrip_externalTakesPrecedenceOverType(t *testing.T) {
 	got := roundTrip(&SmartGroupMatchExpression{
-		External:      "geo",
-		Type:          "k8s",
-		ExtArgs:       map[string]string{"country_iso_code": "AU"},
-		NamespaceTags: map[string]string{"dept": "310"},
+		External:         "geo",
+		Type:             "k8s",
+		ExtArgs:          map[string]string{"country_iso_code": "AU"},
+		K8sNamespaceTags: map[string]string{"dept": "310"},
 	})
 
 	assert.Equal(t, "geo", got.External)
-	assert.Empty(t, got.NamespaceTags)
+	assert.Empty(t, got.K8sNamespaceTags)
 	assert.Empty(t, got.Type)
 	assert.Equal(t, map[string]string{
-		"country_iso_code":   "AU",
-		"namespacetags.dept": "310",
-		"type":               "k8s",
+		"country_iso_code":        "AU",
+		"k8s_namespace_tags.dept": "310",
+		"type":                    "k8s",
 	}, got.ExtArgs)
 }

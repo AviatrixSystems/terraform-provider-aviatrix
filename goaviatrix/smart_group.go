@@ -8,25 +8,25 @@ import (
 )
 
 type SmartGroupMatchExpression struct {
-	CIDR          string `json:"cidr,omitempty"`
-	FQDN          string `json:"fqdn,omitempty"`
-	Type          string `json:"type,omitempty"`
-	Site          string `json:"site,omitempty"`
-	ResID         string `json:"res_id,omitempty"`
-	AccountID     string `json:"account_id,omitempty"`
-	AccountName   string `json:"account_name,omitempty"`
-	Name          string `json:"name,omitempty"`
-	Region        string `json:"region,omitempty"`
-	Zone          string `json:"zone,omitempty"`
-	K8sService    string `json:"k8s_service,omitempty"`
-	K8sNamespace  string `json:"k8s_namespace,omitempty"`
-	K8sClusterID  string `json:"k8s_cluster_id,omitempty"`
-	K8sPodName    string `json:"k8s_pod,omitempty"`
-	S2C           string `json:"s2c,omitempty"`
-	External      string `json:"external,omitempty"`
-	Tags          map[string]string
-	NamespaceTags map[string]string
-	ExtArgs       map[string]string
+	CIDR             string `json:"cidr,omitempty"`
+	FQDN             string `json:"fqdn,omitempty"`
+	Type             string `json:"type,omitempty"`
+	Site             string `json:"site,omitempty"`
+	ResID            string `json:"res_id,omitempty"`
+	AccountID        string `json:"account_id,omitempty"`
+	AccountName      string `json:"account_name,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Region           string `json:"region,omitempty"`
+	Zone             string `json:"zone,omitempty"`
+	K8sService       string `json:"k8s_service,omitempty"`
+	K8sNamespace     string `json:"k8s_namespace,omitempty"`
+	K8sClusterID     string `json:"k8s_cluster_id,omitempty"`
+	K8sPodName       string `json:"k8s_pod,omitempty"`
+	S2C              string `json:"s2c,omitempty"`
+	External         string `json:"external,omitempty"`
+	Tags             map[string]string
+	K8sNamespaceTags map[string]string
+	ExtArgs          map[string]string
 }
 
 type SmartGroupSelector struct {
@@ -59,25 +59,25 @@ type SmartGroupResp struct {
 }
 
 const (
-	TagsPrefix          = "tags"
-	NamespaceTagsPrefix = "namespacetags"
-	ExtArgsPrefix       = "ext_args"
-	CidrKey             = "cidr"
-	FqdnKey             = "fqdn"
-	TypeKey             = "type"
-	SiteKey             = "site"
-	ResIDKey            = "res_id"
-	AccountIDKey        = "account_id"
-	AccountNameKey      = "account_name"
-	NameKey             = "name"
-	RegionKey           = "region"
-	ZoneKey             = "zone"
-	K8sClusterIDKey     = "k8s_cluster_id"
-	K8sNamespaceKey     = "k8s_namespace"
-	K8sServiceKey       = "k8s_service"
-	K8sPodNameKey       = "k8s_pod"
-	S2CKey              = "s2c"
-	ExternalKey         = "external"
+	TagsPrefix             = "tags"
+	K8sNamespaceTagsPrefix = "k8s_namespace_tags"
+	ExtArgsPrefix          = "ext_args"
+	CidrKey                = "cidr"
+	FqdnKey                = "fqdn"
+	TypeKey                = "type"
+	SiteKey                = "site"
+	ResIDKey               = "res_id"
+	AccountIDKey           = "account_id"
+	AccountNameKey         = "account_name"
+	NameKey                = "name"
+	RegionKey              = "region"
+	ZoneKey                = "zone"
+	K8sClusterIDKey        = "k8s_cluster_id"
+	K8sNamespaceKey        = "k8s_namespace"
+	K8sServiceKey          = "k8s_service"
+	K8sPodNameKey          = "k8s_pod"
+	S2CKey                 = "s2c"
+	ExternalKey            = "external"
 
 	AnyKey      = "any"
 	AllKey      = "all"
@@ -145,7 +145,7 @@ func SmartGroupFilterToAPIMap(filter *SmartGroupMatchExpression) map[string]inte
 }
 
 // smartGroupFilterToMapBasic is underlying function to SmartGroupFilterToResource and SmartGroupFiltertoAPIMap
-// The keepMaps argument dictates how the map keys ("tags", "namespacetags" and "ext_args") are translated for each case.
+// The keepMaps argument dictates how the map keys ("tags", "k8s_namespace_tags" and "ext_args") are translated for each case.
 func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool) map[string]interface{} {
 	filterMap := make(map[string]interface{})
 
@@ -169,8 +169,8 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 		if len(filter.Tags) > 0 {
 			filterMap[TagsPrefix] = filter.Tags
 		}
-		if len(filter.NamespaceTags) > 0 {
-			filterMap[NamespaceTagsPrefix] = filter.NamespaceTags
+		if len(filter.K8sNamespaceTags) > 0 {
+			filterMap[K8sNamespaceTagsPrefix] = filter.K8sNamespaceTags
 		}
 		if len(filter.ExtArgs) > 0 {
 			filterMap[ExtArgsPrefix] = filter.ExtArgs
@@ -181,9 +181,9 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 				filterMap[fmt.Sprintf("%s.%s", TagsPrefix, key)] = value
 			}
 		}
-		if len(filter.NamespaceTags) > 0 {
-			for key, value := range filter.NamespaceTags {
-				filterMap[fmt.Sprintf("%s.%s", NamespaceTagsPrefix, key)] = value
+		if len(filter.K8sNamespaceTags) > 0 {
+			for key, value := range filter.K8sNamespaceTags {
+				filterMap[fmt.Sprintf("%s.%s", K8sNamespaceTagsPrefix, key)] = value
 			}
 		}
 		if len(filter.ExtArgs) > 0 {
@@ -332,8 +332,8 @@ func createSmartGroup(smartGroupResult SmartGroupResult) *SmartGroup {
 			if tags := prefixedValues(filterMap, TagsPrefix); len(tags) > 0 {
 				filter.Tags = tags
 			}
-			if nsTags := prefixedValues(filterMap, NamespaceTagsPrefix); len(nsTags) > 0 {
-				filter.NamespaceTags = nsTags
+			if nsTags := prefixedValues(filterMap, K8sNamespaceTagsPrefix); len(nsTags) > 0 {
+				filter.K8sNamespaceTags = nsTags
 			}
 		}
 

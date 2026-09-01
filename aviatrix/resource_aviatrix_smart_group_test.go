@@ -139,12 +139,12 @@ resource "aviatrix_smart_group" "k8s" {
 `
 }
 
-func TestAccAviatrixSmartGroup_k8s_namespacetags(t *testing.T) {
+func TestAccAviatrixSmartGroup_k8s_namespace_tags(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_SMART_GROUP")
 	if skipAcc == "yes" {
 		t.Skip("Skipping Smart Group test as SKIP_SMART_GROUP is set")
 	}
-	resourceName := "aviatrix_smart_group.k8s_namespacetags"
+	resourceName := "aviatrix_smart_group.k8s_namespace_tags"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -157,14 +157,14 @@ func TestAccAviatrixSmartGroup_k8s_namespacetags(t *testing.T) {
 				Config: testAccSmartGroupK8sNamespaceTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSmartGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "k8s-namespacetags-smart-group"),
+					resource.TestCheckResourceAttr(resourceName, "name", "k8s-namespace-tags-smart-group"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "k8s"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.k8s_cluster_id", "test-cluster-id"),
 					// Namespace labels and resource labels are independent maps.
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.namespacetags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.namespacetags.dept", "310"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.k8s_namespace_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.k8s_namespace_tags.dept", "310"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.tags.app", "web"),
 				),
@@ -180,15 +180,15 @@ func TestAccAviatrixSmartGroup_k8s_namespacetags(t *testing.T) {
 
 func testAccSmartGroupK8sNamespaceTags() string {
 	return `
-resource "aviatrix_smart_group" "k8s_namespacetags" {
-	name = "k8s-namespacetags-smart-group"
+resource "aviatrix_smart_group" "k8s_namespace_tags" {
+	name = "k8s-namespace-tags-smart-group"
 
 	selector {
 		match_expressions {
 			type           = "k8s"
 			k8s_cluster_id = "test-cluster-id"
 
-			namespacetags = {
+			k8s_namespace_tags = {
 				dept = "310"
 			}
 

@@ -93,7 +93,7 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Elem:        &schema.Schema{Type: schema.TypeString},
 													Description: "Map of tags this expression matches.",
 												},
-												goaviatrix.NamespaceTagsPrefix: {
+												goaviatrix.K8sNamespaceTagsPrefix: {
 													Type:        schema.TypeMap,
 													Computed:    true,
 													Elem:        &schema.Schema{Type: schema.TypeString},
@@ -152,22 +152,22 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 
 		for _, filter := range smartGroup.Selector.Expressions {
 			filterMap := map[string]any{
-				goaviatrix.TypeKey:             filter.Type,
-				goaviatrix.CidrKey:             filter.CIDR,
-				goaviatrix.FqdnKey:             filter.FQDN,
-				goaviatrix.SiteKey:             filter.Site,
-				goaviatrix.ResIDKey:            filter.ResID,
-				goaviatrix.AccountIDKey:        filter.AccountID,
-				goaviatrix.AccountNameKey:      filter.AccountName,
-				goaviatrix.NameKey:             filter.Name,
-				goaviatrix.RegionKey:           filter.Region,
-				goaviatrix.ZoneKey:             filter.Zone,
-				goaviatrix.TagsPrefix:          filter.Tags,
-				goaviatrix.NamespaceTagsPrefix: filter.NamespaceTags,
-				goaviatrix.K8sClusterIDKey:     filter.K8sClusterID,
-				goaviatrix.K8sNamespaceKey:     filter.K8sNamespace,
-				goaviatrix.K8sServiceKey:       filter.K8sService,
-				goaviatrix.K8sPodNameKey:       filter.K8sPodName,
+				goaviatrix.TypeKey:                filter.Type,
+				goaviatrix.CidrKey:                filter.CIDR,
+				goaviatrix.FqdnKey:                filter.FQDN,
+				goaviatrix.SiteKey:                filter.Site,
+				goaviatrix.ResIDKey:               filter.ResID,
+				goaviatrix.AccountIDKey:           filter.AccountID,
+				goaviatrix.AccountNameKey:         filter.AccountName,
+				goaviatrix.NameKey:                filter.Name,
+				goaviatrix.RegionKey:              filter.Region,
+				goaviatrix.ZoneKey:                filter.Zone,
+				goaviatrix.TagsPrefix:             filter.Tags,
+				goaviatrix.K8sNamespaceTagsPrefix: filter.K8sNamespaceTags,
+				goaviatrix.K8sClusterIDKey:        filter.K8sClusterID,
+				goaviatrix.K8sNamespaceKey:        filter.K8sNamespace,
+				goaviatrix.K8sServiceKey:          filter.K8sService,
+				goaviatrix.K8sPodNameKey:          filter.K8sPodName,
 			}
 
 			expressions = append(expressions, filterMap)
