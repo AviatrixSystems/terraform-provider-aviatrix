@@ -188,7 +188,7 @@ type EditBgpMd5Key struct {
 	CID            string `form:"CID,omitempty"`
 	ConnectionName string `form:"conn_name,omitempty"`
 	GwName         string `form:"gateway_name,omitempty"`
-	BgpMd5Key      string `form:"bgp_md5_key,omitempty"`
+	BgpMd5Key      string `form:"bgp_md5_key"` // bgp_md5_key accept empty string to clear the key
 	BgpRemoteIP    string `form:"bgp_remote_ip,omitempty"`
 }
 

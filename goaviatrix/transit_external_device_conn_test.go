@@ -7,6 +7,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestEditBgpMd5KeyEmptyValueSent verifies that an empty BgpMd5Key is still
+// sent over the wire as "bgp_md5_key=" (not omitted). Without this the
+// controller never receives the clear request and the stale key persists.
+func TestEditBgpMd5KeyEmptyValueSent(t *testing.T) {
+	t.Run("empty key is sent", func(t *testing.T) {
+		edit := &EditBgpMd5Key{
+			ConnectionName: "conn1",
+			GwName:         "gw1",
+			BgpMd5Key:      "",
+			BgpRemoteIP:    "10.0.0.1",
+		}
+		vals, err := form.EncodeToValues(edit)
+		assert.NoError(t, err)
+		assert.True(t, vals.Has("bgp_md5_key"), "bgp_md5_key must be present even when empty")
+		assert.Equal(t, "", vals.Get("bgp_md5_key"))
+	})
+
+	t.Run("non-empty key is sent normally", func(t *testing.T) {
+		edit := &EditBgpMd5Key{
+			ConnectionName: "conn1",
+			GwName:         "gw1",
+			BgpMd5Key:      "secret123",
+			BgpRemoteIP:    "10.0.0.1",
+		}
+		vals, err := form.EncodeToValues(edit)
+		assert.NoError(t, err)
+		assert.Equal(t, "secret123", vals.Get("bgp_md5_key"))
+	})
+}
+
 // TestExternalDeviceConnBfdFormFieldNames guards the wire field names the
 // connect_transit_gw_to_external_device create request sends. The controller
 // argparse args are enable_bfd / bfd_transmit_interval / bfd_receive_interval /
