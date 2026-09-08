@@ -247,15 +247,23 @@ func (c *Client) UpdateTransitGatewayPeeringTunnelCount(transitGatewayPeering *T
 // int-based structs cannot express this: the form encoder emits an empty value
 // for int 0, which the controller reads as falsy and silently ignores
 // (AVX-55065).
-func (c *Client) UpdateEdgeSpokeTransitPeeringTunnelCount(gateway1, gateway2 string, tunnelCount int) error {
+//
+// The edit is run asynchronously: the controller drains, rebuilds and undrains
+// every member gateway of the peering serially, which for an edge HA peering
+// takes several minutes and overruns the synchronous request timeout. Running
+// it sync made Terraform report success (or time out) before the rebuild
+// finished, so the tunnel count appeared unchanged (AVX-55065 follow-up). The
+// async path submits the task and polls check_task_status until it completes.
+func (c *Client) UpdateEdgeSpokeTransitPeeringTunnelCount(ctx context.Context, gateway1, gateway2 string, tunnelCount int) error {
 	form := map[string]string{
 		"CID":          c.CID,
 		"action":       "edit_inter_transit_gateway_peering",
 		"gateway1":     gateway1,
 		"gateway2":     gateway2,
 		"tunnel_count": strconv.Itoa(tunnelCount),
+		"async":        "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPIContext(ctx, form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {

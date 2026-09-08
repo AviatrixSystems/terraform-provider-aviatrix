@@ -466,7 +466,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentUpdate(ctx context.Context, d *sc
 	}
 
 	if d.HasChange("insane_mode_tunnel_number") {
-		err := client.UpdateEdgeSpokeTransitPeeringTunnelCount(spokeGwName, transitGwName, insaneModeTunnelNumber)
+		err := client.UpdateEdgeSpokeTransitPeeringTunnelCount(ctx, spokeGwName, transitGwName, insaneModeTunnelNumber)
 		if err != nil {
 			return diag.Errorf("could not update insane_mode_tunnel_number for edge spoke transit attachment: %v : %v", spokeGwName+"~"+transitGwName, err)
 		}

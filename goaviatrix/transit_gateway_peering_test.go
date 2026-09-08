@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -29,6 +30,16 @@ func TestUpdateEdgeSpokeTransitPeeringTunnelCount(t *testing.T) {
 		// since require's FailNow must run on the test goroutine (testifylint go-require).
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		assert.NoError(t, r.ParseForm())
+
+		// The edit runs async: the initial POST submits the task and gets a
+		// request_id back in "results"; the client then polls check_task_status
+		// until it returns. Report the poll as done immediately so the method
+		// completes, and only capture the initial submit's form for assertions.
+		if r.Form.Get("action") == "check_task_status" {
+			assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"return": true, "results": "done"}))
+			return
+		}
+
 		captured = make(map[string]string)
 		for k, v := range r.Form {
 			if len(v) > 0 {
@@ -40,7 +51,8 @@ func TestUpdateEdgeSpokeTransitPeeringTunnelCount(t *testing.T) {
 		if _, ok := r.Form["tunnel_count"]; ok {
 			captured["__tunnel_count_present"] = "yes"
 		}
-		assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"return": true, "results": "success"}))
+		// "results" carries the async request_id used for the follow-up poll.
+		assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"return": true, "results": "req-123"}))
 	}))
 	defer server.Close()
 
@@ -62,12 +74,15 @@ func TestUpdateEdgeSpokeTransitPeeringTunnelCount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			captured = nil
-			require.NoError(t, client.UpdateEdgeSpokeTransitPeeringTunnelCount("spoke-gw", "transit-gw", tt.tunnelCount))
+			require.NoError(t, client.UpdateEdgeSpokeTransitPeeringTunnelCount(context.Background(), "spoke-gw", "transit-gw", tt.tunnelCount))
 
 			assert.Equal(t, "edit_inter_transit_gateway_peering", captured["action"])
 			assert.Equal(t, "spoke-gw", captured["gateway1"])
 			assert.Equal(t, "transit-gw", captured["gateway2"])
 			assert.Equal(t, "test-cid", captured["CID"])
+			// The edit must be submitted asynchronously so the multi-gateway
+			// drain/rebuild does not overrun the request timeout (AVX-55065).
+			assert.Equal(t, "true", captured["async"], "edit must be submitted async")
 			// The literal string value must be sent; for 0 this is the crux of
 			// the fix (an int 0 would arrive as an empty, controller-ignored value).
 			assert.Equal(t, "yes", captured["__tunnel_count_present"], "tunnel_count key must be present")
