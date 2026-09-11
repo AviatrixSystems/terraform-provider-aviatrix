@@ -42,6 +42,8 @@ const (
 	AliCloudRelatedCloudTypes = AliCloud
 	EdgeRelatedCloudTypes     = EDGEEQUINIX | EDGENEO | EDGEMEGAPORT | EDGESELFMANAGED
 	CSPRelatedCloudTypes      = AWSRelatedCloudTypes | GCPRelatedCloudTypes | AzureArmRelatedCloudTypes | OCIRelatedCloudTypes | AliCloudRelatedCloudTypes
+	// Cloud types for which symmetric routing is supported by the Controller.
+	SymmetricRoutingSupportedCloudTypes = AWSRelatedCloudTypes | AzureArmRelatedCloudTypes
 )
 
 // The value is corresponding to cloudn repro definition of the same name

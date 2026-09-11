@@ -811,3 +811,41 @@ func testAccCheckSpokeGroupDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// TestValidateSpokeGroupConfigurationSymmetricRouting verifies that
+// enable_symmetric_routing is accepted for AWS and Azure related cloud types
+// and rejected for every other cloud type (GCP/OCI are not yet supported by
+// the Controller). This is a pure unit test and does not require TF_ACC.
+func TestValidateSpokeGroupConfigurationSymmetricRouting(t *testing.T) {
+	cases := []struct {
+		name      string
+		cloudType int
+		wantErr   bool
+	}{
+		{"AWS", goaviatrix.AWS, false},
+		{"AWSGov", goaviatrix.AWSGov, false},
+		{"AWSChina", goaviatrix.AWSChina, false},
+		{"Azure", goaviatrix.Azure, false},
+		{"AzureGov", goaviatrix.AzureGov, false},
+		{"AzureChina", goaviatrix.AzureChina, false},
+		{"GCP", goaviatrix.GCP, true},
+		{"OCI", goaviatrix.OCI, true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			spokeGroup := &goaviatrix.GatewayGroup{
+				CloudType:              tc.cloudType,
+				GroupInstanceSize:      "t3.micro",
+				EnableSymmetricRouting: true,
+			}
+			err := validateSpokeGroupConfiguration(spokeGroup)
+			if tc.wantErr && err == nil {
+				t.Fatalf("expected error for cloud type %s, got nil", tc.name)
+			}
+			if !tc.wantErr && err != nil {
+				t.Fatalf("unexpected error for cloud type %s: %v", tc.name, err)
+			}
+		})
+	}
+}

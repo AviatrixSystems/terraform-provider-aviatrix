@@ -128,7 +128,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enable symmetric routing for the spoke group. Only valid for AWS.",
+			Description: "Enable symmetric routing for the spoke group. Only valid for AWS and Azure.",
 		},
 
 		// ============================================================================
@@ -374,8 +374,8 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 		return fmt.Errorf("enable_ipv6 is only valid for AWS (1) and Azure (8)")
 	}
 
-	if spokeGroup.EnableSymmetricRouting && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		return fmt.Errorf("enable_symmetric_routing is only valid for AWS related cloud types")
+	if spokeGroup.EnableSymmetricRouting && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.SymmetricRoutingSupportedCloudTypes) {
+		return fmt.Errorf("enable_symmetric_routing is only valid for AWS and Azure related cloud types")
 	}
 
 	if spokeGroup.EnableGlobalVpc && !goaviatrix.IsCloudType(spokeGroup.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -1242,8 +1242,8 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Symmetric Routing - API: update_gateway_group (enable_symmetric_routing field)
 	// ============================================================================
 	if d.HasChange("enable_symmetric_routing") {
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return diag.Errorf("enable_symmetric_routing is only valid for AWS related cloud types")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.SymmetricRoutingSupportedCloudTypes) {
+			return diag.Errorf("enable_symmetric_routing is only valid for AWS and Azure related cloud types")
 		}
 		enableSymmetricRouting := getBool(d, "enable_symmetric_routing")
 		if err := client.SetSymmetricRoutingGatewayGroup(ctx, groupUUID, enableSymmetricRouting); err != nil {
