@@ -591,8 +591,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "If set true, the spot instance will be deleted on eviction. Otherwise, the instance will be deallocated on eviction. Only supports Azure.",
 			},
 			"rx_queue_size": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed so the controller-discovered value does not surface as a
+				// phantom plan diff when the config omits rx_queue_size (AVX-80334).
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K", "8K", "16K"}, false),
 				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only. Applies on HA as well if enabled.",
 			},
@@ -3970,25 +3973,32 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) erro
 	}
 
 	if d.HasChange("rx_queue_size") {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return fmt.Errorf("could not update rx_queue_size since it only supports AWS related cloud types")
-		}
-		gw := &goaviatrix.Gateway{
-			GwName:      gateway.GwName,
-			RxQueueSize: getString(d, "rx_queue_size"),
-		}
-		err := client.SetRxQueueSize(gw)
-		if err != nil {
-			return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %w", gw.GwName, err)
-		}
-		if haSubnet != "" || haZone != "" {
-			haGwRxQueueSize := &goaviatrix.Gateway{
-				GwName:      getString(d, "gw_name") + "-hagw",
-				RxQueueSize: getString(d, "rx_queue_size"),
+		rxQueueSize := getString(d, "rx_queue_size")
+		// Skip when the new value is empty. With rx_queue_size Computed the config
+		// omitting it no longer plans a diff, but a genuine clear would still send
+		// an empty value the controller rejects with a generic "Invalid
+		// configuration." (AVX-80334).
+		if rxQueueSize != "" {
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				return fmt.Errorf("could not update rx_queue_size since it only supports AWS related cloud types")
 			}
-			err := client.SetRxQueueSize(haGwRxQueueSize)
+			gw := &goaviatrix.Gateway{
+				GwName:      gateway.GwName,
+				RxQueueSize: rxQueueSize,
+			}
+			err := client.SetRxQueueSize(gw)
 			if err != nil {
-				return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %w", haGwRxQueueSize.GwName, err)
+				return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %w", gw.GwName, err)
+			}
+			if haSubnet != "" || haZone != "" {
+				haGwRxQueueSize := &goaviatrix.Gateway{
+					GwName:      getString(d, "gw_name") + "-hagw",
+					RxQueueSize: rxQueueSize,
+				}
+				err := client.SetRxQueueSize(haGwRxQueueSize)
+				if err != nil {
+					return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %w", haGwRxQueueSize.GwName, err)
+				}
 			}
 		}
 	}
