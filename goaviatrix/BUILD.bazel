@@ -75,6 +75,7 @@ go_library(
         "edge_platform_proxy_profile.go",
         "edge_spoke.go",
         "edge_vm_selfmanaged_ha.go",
+        "external_connection.go",
         "filebeat_forwarder.go",
         "firenet.go",
         "firewall.go",

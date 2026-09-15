@@ -152,6 +152,7 @@ func Provider() *schema.Provider {
 			"aviatrix_edge_vm_selfmanaged_ha":                                 resourceAviatrixEdgeVmSelfmanagedHa(),
 			"aviatrix_edge_zededa":                                            resourceAviatrixEdgeZededa(),
 			"aviatrix_edge_zededa_ha":                                         resourceAviatrixEdgeZededaHa(),
+			"aviatrix_external_connection":                                    resourceAviatrixExternalConnection(),
 			"aviatrix_filebeat_forwarder":                                     resourceAviatrixFilebeatForwarder(),
 			"aviatrix_firenet":                                                resourceAviatrixFireNet(),
 			"aviatrix_firewall":                                               resourceAviatrixFirewall(),
