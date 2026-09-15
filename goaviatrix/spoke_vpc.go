@@ -34,6 +34,7 @@ type SpokeVpc struct {
 	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
 	InsaneMode                   string `form:"insane_mode,omitempty"`
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
+	ExtendedZone                 string `form:"extended_zone,omitempty" json:"extended_zone,omitempty"`
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
 	CustomerManagedKeys          string `form:"cmk,omitempty"`

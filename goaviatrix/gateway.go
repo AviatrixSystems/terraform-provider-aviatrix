@@ -210,37 +210,39 @@ type Gateway struct {
 	HaGw                            HaGateway                           `json:"hagw_details"`
 	AvailabilityDomain              string                              `form:"availability_domain,omitempty"`
 	FaultDomain                     string                              `form:"fault_domain,omitempty" json:"fault_domain"`
-	EnableSpotInstance              bool                                `form:"spot_instance,omitempty" json:"spot_instance"`
-	SpotPrice                       string                              `form:"spot_price,omitempty" json:"spot_price"`
-	DeleteSpot                      bool                                `form:"delete_spot,omitempty" json:"delete_spot"`
-	ImageVersion                    string                              `json:"gw_image_name"`
-	SoftwareVersion                 string                              `json:"gw_software_version"`
-	TransitVpc                      string                              `json:"transit_vpc"`
-	EnableBgp                       bool                                `json:"bgp_enabled,omitempty"`
-	BgpLanInterfaces                []BundleVpcLanInfo                  `json:"gce_bgp_lan_info,omitempty"`
-	Async                           bool                                `form:"async,omitempty"`
-	DisableRoutePropagation         bool                                `json:"disable_route_propagation,omitempty"`
-	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
-	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
-	RxQueueSize                     string                              `json:"rx_queue_size"`
-	Compress                        bool                                `form:"compress,omitempty"`
-	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
-	EnableGlobalVpc                 bool                                `json:"global_vpc,omitempty"`
-	DeviceID                        string                              `json:"edge_csp_device_id,omitempty"`
-	Interfaces                      []EdgeTransitInterface              `json:"interfaces,omitempty"`
-	InterfaceMapping                []InterfaceMapping                  `json:"interface_mapping,omitempty"`
-	BackupLinkInfo                  map[string]BackupLinkInfo           `json:"backup_link_info,omitempty"`
-	EipMap                          map[string][]EipMap                 `json:"eip_map,omitempty"`
-	LogicalEipMap                   map[string][]EipMap                 `json:"logical_intf_eip_map,omitempty"`
-	IfNamesTranslation              map[string]string                   `json:"ifnames_translation,omitempty"`
-	ManagementEgressIPPrefix        string                              `json:"mgmt_egress_ip,omitempty"`
-	EdgeGateway                     bool                                `json:"edge_gateway,omitempty"`
-	EnableIPv6                      bool                                `json:"enable_ipv6,omitempty"`
-	InsertionGateway                bool                                `json:"insertion_gateway,omitempty"`
-	SubnetIPv6Cidr                  string                              `json:"gw_subnet_ipv6_cidr,omitempty"`
-	TunnelEncryptionCipher          string                              `json:"ph2_encryption_policy,omitempty"`
-	TunnelForwardSecrecy            string                              `json:"ph2_pfs_policy,omitempty"`
-	PrivateRouteTableConfig         []string                            `json:"private_route_table_config,omitempty"`
+	// ExtendedZone is returned by list_vpcs_summary for Azure/Azure GOV/Azure CHINA gateways.
+	ExtendedZone             string                    `json:"extended_zone,omitempty"`
+	EnableSpotInstance       bool                      `form:"spot_instance,omitempty" json:"spot_instance"`
+	SpotPrice                string                    `form:"spot_price,omitempty" json:"spot_price"`
+	DeleteSpot               bool                      `form:"delete_spot,omitempty" json:"delete_spot"`
+	ImageVersion             string                    `json:"gw_image_name"`
+	SoftwareVersion          string                    `json:"gw_software_version"`
+	TransitVpc               string                    `json:"transit_vpc"`
+	EnableBgp                bool                      `json:"bgp_enabled,omitempty"`
+	BgpLanInterfaces         []BundleVpcLanInfo        `json:"gce_bgp_lan_info,omitempty"`
+	Async                    bool                      `form:"async,omitempty"`
+	DisableRoutePropagation  bool                      `json:"disable_route_propagation,omitempty"`
+	EnableS2CRxBalancing     bool                      `json:"s2c_rx_balancing,omitempty"`
+	BgpLanInterfacesCount    int                       `json:"bgp_over_lan_intf_cnt,omitempty"`
+	RxQueueSize              string                    `json:"rx_queue_size"`
+	Compress                 bool                      `form:"compress,omitempty"`
+	PrimaryGwName            string                    `json:"primary_gw_name,omitempty"`
+	EnableGlobalVpc          bool                      `json:"global_vpc,omitempty"`
+	DeviceID                 string                    `json:"edge_csp_device_id,omitempty"`
+	Interfaces               []EdgeTransitInterface    `json:"interfaces,omitempty"`
+	InterfaceMapping         []InterfaceMapping        `json:"interface_mapping,omitempty"`
+	BackupLinkInfo           map[string]BackupLinkInfo `json:"backup_link_info,omitempty"`
+	EipMap                   map[string][]EipMap       `json:"eip_map,omitempty"`
+	LogicalEipMap            map[string][]EipMap       `json:"logical_intf_eip_map,omitempty"`
+	IfNamesTranslation       map[string]string         `json:"ifnames_translation,omitempty"`
+	ManagementEgressIPPrefix string                    `json:"mgmt_egress_ip,omitempty"`
+	EdgeGateway              bool                      `json:"edge_gateway,omitempty"`
+	EnableIPv6               bool                      `json:"enable_ipv6,omitempty"`
+	InsertionGateway         bool                      `json:"insertion_gateway,omitempty"`
+	SubnetIPv6Cidr           string                    `json:"gw_subnet_ipv6_cidr,omitempty"`
+	TunnelEncryptionCipher   string                    `json:"ph2_encryption_policy,omitempty"`
+	TunnelForwardSecrecy     string                    `json:"ph2_pfs_policy,omitempty"`
+	PrivateRouteTableConfig  []string                  `json:"private_route_table_config,omitempty"`
 	// SpokeRtbList is returned by list_vpcs_summary for spoke gateways (managed route tables / selective VPC programming).
 	SpokeRtbList []string `json:"spoke_rtb_list,omitempty"`
 }
@@ -261,6 +263,7 @@ type HaGateway struct {
 	OobManagementSubnet      string                 `json:"oob_mgmt_subnet"`
 	GwSecurityGroupID        string                 `json:"gw_security_group_id"`
 	FaultDomain              string                 `json:"fault_domain"`
+	ExtendedZone             string                 `json:"extended_zone,omitempty"`
 	ImageVersion             string                 `json:"gw_image_name"`
 	SoftwareVersion          string                 `json:"gw_software_version"`
 	HaBgpLanInterfaces       []BundleVpcLanInfo     `json:"gce_ha_bgp_lan_info,omitempty"`

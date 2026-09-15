@@ -228,6 +228,16 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "HA fault domain for OCI.",
 			},
+			"extended_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).",
+			},
+			"ha_extended_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Extended Zone of the HA gateway. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).",
+			},
 			"software_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -530,6 +540,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error 
 			mustSet(d, "fault_domain", gw.FaultDomain)
 		}
 
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			mustSet(d, "extended_zone", gw.ExtendedZone)
+		}
+
 		haGateway := &goaviatrix.Gateway{
 			AccountName: getString(d, "account_name"),
 			GwName:      getString(d, "gw_name") + "-hagw",
@@ -560,6 +574,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error 
 			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 				mustSet(d, "ha_availability_domain", haGw.GatewayZone)
 				mustSet(d, "ha_fault_domain", haGw.FaultDomain)
+			}
+
+			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				mustSet(d, "ha_extended_zone", haGw.ExtendedZone)
 			}
 
 			if haGw.EnablePrivateOob {

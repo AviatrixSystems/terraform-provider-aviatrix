@@ -42,6 +42,7 @@ type TransitVpc struct {
 	AllocateNewEipRead           bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                          string `form:"eip,omitempty"`
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
+	ExtendedZone                 string `form:"extended_zone,omitempty" json:"extended_zone,omitempty"`
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EnableTransitFireNet         bool   `form:"firenet,omitempty"`

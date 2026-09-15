@@ -55,6 +55,7 @@ type FirewallInstance struct {
 	TagJson              string
 	AvailabilityDomain   string `form:"availability_domain,omitempty"`
 	FaultDomain          string `form:"fault_domain,omitempty" json:"fault_domain"`
+	ExtendedZone         string `form:"extended_zone,omitempty" json:"extended_zone,omitempty"`
 }
 
 type FirewallInstanceResp struct {
@@ -162,6 +163,9 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 		form["cloud_type"] = strconv.Itoa(OCI)
 		form["availability_domain"] = firewallInstance.AvailabilityDomain
 		form["fault_domain"] = firewallInstance.FaultDomain
+	}
+	if firewallInstance.ExtendedZone != "" {
+		form["extended_zone"] = firewallInstance.ExtendedZone
 	}
 
 	var data FirewallInstanceCreateResp

@@ -117,6 +117,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ValidateFunc: validateAzureAZ,
 				Description:  "Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
 			},
+			"extended_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).",
+			},
 			"subnet_ipv6_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -1128,6 +1134,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 			gateway.Subnet = fmt.Sprintf("%s~~%s~~", getString(d, "subnet"), zone)
 		}
 
+		extendedZone := getString(d, "extended_zone")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && extendedZone != "" {
+			return fmt.Errorf("attribute 'extended_zone' is only for use with Azure (8), Azure GOV (32) and Azure CHINA (2048)")
+		}
+		gateway.ExtendedZone = extendedZone
+
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.VpcID = getString(d, "vpc_id")
 			if gateway.VpcID == "" {
@@ -1577,6 +1589,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 				GwName:        getString(d, "gw_name") + "-hagw",
 				Subnet:        haSubnet,
 				Zone:          haZone,
+				ExtendedZone:  extendedZone,
 				Eip:           getString(d, "ha_eip"),
 				InsaneMode:    "no",
 				BgpLanVpcID:   strings.Join(haBgpLanVpcID, ","),
@@ -2783,6 +2796,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) erro
 			PrimaryGwName: getString(d, "gw_name"),
 			GwName:        getString(d, "gw_name") + "-hagw",
 			InsaneMode:    "no",
+			ExtendedZone:  getString(d, "extended_zone"),
 		}
 
 		if getBool(d, "enable_bgp_over_lan") {

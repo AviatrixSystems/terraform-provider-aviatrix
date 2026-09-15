@@ -57,6 +57,12 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Availability Zone. Required for GCP gateway, example: 'us-west1-c'. Optional for Azure / Azure GOV / Azure CHINA gateway in the form 'az-n', example: 'az-2'.",
 			},
+			"extended_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Extended Zone. Only available for Azure / Azure GOV / Azure CHINA gateway.",
+			},
 			"insane_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -211,6 +217,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta any) erro
 		GwSize:             getString(d, "gw_size"),
 		Subnet:             getString(d, "subnet"),
 		Zone:               getString(d, "zone"),
+		ExtendedZone:       getString(d, "extended_zone"),
 		AvailabilityDomain: getString(d, "availability_domain"),
 		FaultDomain:        getString(d, "fault_domain"),
 		Eip:                getString(d, "eip"),
@@ -238,6 +245,10 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta any) erro
 		if gateway.Zone != "" || gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
 			return fmt.Errorf("'zone', 'availability_domain' and 'fault_domain' are required to be empty for creating an AWS related cloud type spoke ha gateway")
 		}
+	}
+
+	if !goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gateway.ExtendedZone != "" {
+		return fmt.Errorf("'extended_zone' is only valid for Azure (8), Azure GOV (32) and Azure CHINA (2048) related cloud types")
 	}
 
 	azureEipName, azureEipNameOk := d.GetOk("azure_eip_name_resource_group")

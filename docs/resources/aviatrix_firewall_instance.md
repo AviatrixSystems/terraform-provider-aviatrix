@@ -75,6 +75,7 @@ The following arguments are supported:
 * `egress_vpc_id` - (Optional) Egress VPC ID. Required for GCP. Available as of provider version R2.18.1+.
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `extended_zone` - (Optional) Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).
 
 -> **NOTE:** Please use the data source `aviatrix_firewall_instance_images` to get the information for `firewall_image`, `firewall_image_version` and `firewall_size`.
 

@@ -79,6 +79,8 @@ In addition to all arguments above, the following attributes are exported:
 * `fault_domain` - Fault domain for OCI.
 * `ha_availability_domain` - HA gateway availability domain for OCI.
 * `ha_fault_domain` - HA gateway fault domain for OCI.
+* `extended_zone` - Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).
+* `ha_extended_zone` - Extended Zone of the HA gateway. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).
 * `software_version` - The software version of the gateway.
 * `image_version` - The image version of the gateway.
 * `ha_software_version` - The software version of the HA gateway.

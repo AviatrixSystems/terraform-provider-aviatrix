@@ -211,6 +211,12 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Fault domain for OCI.",
 			},
+			"extended_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).",
+			},
 			"firewall_image_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -294,6 +300,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta any) er
 		UserData:             getString(d, "user_data"),
 		AvailabilityDomain:   getString(d, "availability_domain"),
 		FaultDomain:          getString(d, "fault_domain"),
+		ExtendedZone:         getString(d, "extended_zone"),
 	}
 
 	// For additional config validation we try to get the cloud_type from the given
@@ -315,6 +322,10 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta any) er
 		}
 	}
 	firewallInstance.CloudType = cloudType
+
+	if _, hasSetExtendedZone := d.GetOk("extended_zone"); !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && hasSetExtendedZone {
+		return fmt.Errorf("attribute 'extended_zone' is only valid for Azure (8), Azure GOV (32) and Azure CHINA (2048)")
+	}
 
 	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
 		if firewallInstance.ManagementSubnet == "" {

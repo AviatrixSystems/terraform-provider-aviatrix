@@ -114,6 +114,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validateAzureAZ,
 				Description:  "Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
 			},
+			"extended_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Extended Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048).",
+			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -850,6 +856,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", getString(d, "subnet"), getString(d, "zone"))
 	}
 
+	if _, hasSetExtendedZone := d.GetOk("extended_zone"); !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && hasSetExtendedZone {
+		return fmt.Errorf("attribute 'extended_zone' is only valid for Azure (8), Azure GOV (32) and Azure CHINA (2048)")
+	}
+	gateway.ExtendedZone = getString(d, "extended_zone")
+
 	enableSNat := getBool(d, "single_ip_snat")
 	if enableSNat {
 		gateway.EnableNat = "yes"
@@ -1262,6 +1273,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 			GwName:        getString(d, "gw_name") + "-hagw",
 			Subnet:        haSubnet,
 			Zone:          haZone,
+			ExtendedZone:  getString(d, "extended_zone"),
 			Eip:           getString(d, "ha_eip"),
 			InsaneMode:    "no",
 		}
@@ -2298,6 +2310,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 			GwName:        getString(d, "gw_name") + "-hagw",
 			GwSize:        haGwSize,
 			InsaneMode:    "no",
+			ExtendedZone:  getString(d, "extended_zone"),
 		}
 
 		haEip := getString(d, "ha_eip")

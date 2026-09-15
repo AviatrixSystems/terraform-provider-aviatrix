@@ -19,6 +19,7 @@ type SpokeHaGateway struct {
 	Subnet                string `form:"gw_subnet,omitempty" json:"gw_subnet"`
 	VpcRegion             string `form:"region,omitempty" json:"region"`
 	Zone                  string `form:"zone,omitempty" json:"zone"`
+	ExtendedZone          string `form:"extended_zone,omitempty" json:"extended_zone,omitempty"`
 	AvailabilityDomain    string `form:"availability_domain,omitempty" json:"availability_domain"`
 	FaultDomain           string `form:"fault_domain,omitempty" json:"fault_domain"`
 	BgpLanVpcID           string `form:"bgp_lan_vpc,omitempty" json:"bgp_lan_vpc"`
