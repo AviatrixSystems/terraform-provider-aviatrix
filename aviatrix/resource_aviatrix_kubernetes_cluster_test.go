@@ -35,6 +35,17 @@ users:
   user:
     token: thisisnotasecret`
 
+	// GatewayTunnelFeatureConfig enables the k8s_gateway_tunnel controller feature, which
+	// gates gateway_tunnel_enabled. Tests that set the flag must prepend this
+	// and depend on it, so the feature is enabled before the cluster is created and switched
+	// back off when terraform destroys the test resources.
+	GatewayTunnelFeatureConfig = `
+					resource "aviatrix_config_feature" "k8s_gateway_tunnel" {
+						feature_name = "k8s_gateway_tunnel"
+						is_enabled   = true
+					}
+				`
+
 	InvalidKubeconfig = `apiVersion: v1
 clusters:
 - cluster:
@@ -297,11 +308,12 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 				),
 			},
 			{
-				Config: `
+				Config: GatewayTunnelFeatureConfig + `
 					resource "aviatrix_kubernetes_cluster" "test" {
 						cluster_id = "test-cluster-id6"
 						use_csp_credentials = false
 						gateway_tunnel_enabled = true
+						depends_on = [aviatrix_config_feature.k8s_gateway_tunnel]
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
@@ -319,12 +331,13 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 				),
 			},
 			{
-				Config: `
+				Config: GatewayTunnelFeatureConfig + `
 					resource "aviatrix_kubernetes_cluster" "test" {
 						cluster_id = "test-cluster-id6"
 						use_csp_credentials = false
 						gateway_tunnel_enabled = true
 						intra_cluster_inspection_enabled = true
+						depends_on = [aviatrix_config_feature.k8s_gateway_tunnel]
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
@@ -359,11 +372,12 @@ func TestAccAviatrixKubernetesCluster_gatewayTunnelEnabled(t *testing.T) {
 		CheckDestroy: testAccCheckAviatrixKubernetesClusterDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: GatewayTunnelFeatureConfig + `
 					resource "aviatrix_kubernetes_cluster" "test" {
 						cluster_id = "test-cluster-id-gw"
 						use_csp_credentials = true
 						gateway_tunnel_enabled = true
+						depends_on = [aviatrix_config_feature.k8s_gateway_tunnel]
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(

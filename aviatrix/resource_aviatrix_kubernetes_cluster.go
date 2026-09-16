@@ -52,7 +52,7 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 			"gateway_tunnel_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Whether to enable gateway tunnel for the cluster.",
+				Description: "Whether to enable gateway tunnel for the cluster. Requires controller feature k8s_gateway_tunnel.",
 			},
 			"intra_cluster_inspection_enabled": {
 				Type:        schema.TypeBool,

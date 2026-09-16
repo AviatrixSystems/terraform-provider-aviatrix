@@ -39,6 +39,7 @@ The following arguments are supported:
   * `ipv6`
   * `k8s`
   * `k8s_dcf_policies`
+  * `k8s_gateway_tunnel`
   * `k8s_network_policy`
   * `microseg`
   * `partitioned_event_dispatch`
