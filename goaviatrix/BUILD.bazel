@@ -168,6 +168,7 @@ go_test(
         "transit_ha_gateway_async_test.go",
         "tunnel_test.go",
         "utils_test.go",
+        "vpc_test.go",
     ],
     embed = [":goaviatrix"],
     deps = [

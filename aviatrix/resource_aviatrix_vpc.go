@@ -544,34 +544,35 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "azure_vnet_resource_id", azureVnetResourceId)
 	}
 
-	subnetsForState := buildSubnetsForState(vC.CloudType, vC.Subnets, getList(d, "subnets"))
+	// GetVpc sources subnets from the controller DB, which is not reconciled
+	// against the cloud, so subnets deleted directly in Azure still show up and
+	// no drift is reported (AVX-67843). For Azure FireNet VPCs, read the live
+	// VNet subnet names so the build helpers can drop any subnet that no longer
+	// exists and the removal surfaces as drift on the next plan.
+	var liveNames map[string]bool
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && vC.AviatrixFireNetVpc == "yes" {
+		names, err := client.GetVpcAzureLiveSubnetNames(vpc)
+		if err != nil {
+			return fmt.Errorf("could not list live Azure subnets to detect drift: %w", err)
+		}
+		// Only reconcile when the live read returned subnets. An empty result is
+		// ambiguous (transient API/permission failure vs. a truly empty VNet);
+		// filtering on it would wipe every subnet from state and report false
+		// drift, so leave liveNames nil in that case to disable filtering.
+		if len(names) > 0 {
+			liveNames = names
+		}
+	}
+
+	subnetsForState := buildSubnetsForState(vC.CloudType, vC.Subnets, getList(d, "subnets"), liveNames)
+	privateSubnets := buildDbSubnetsForState(vC.PrivateSubnets, liveNames)
+	publicSubnets := buildDbSubnetsForState(vC.PublicSubnets, liveNames)
+
 	if err := d.Set("subnets", subnetsForState); err != nil {
 		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
 	}
-
-	var privateSubnets []map[string]any
-	for _, subnet := range vC.PrivateSubnets {
-		subnetInfo := make(map[string]any)
-		subnetInfo["cidr"] = subnet.Cidr
-		subnetInfo["name"] = subnet.Name
-		subnetInfo["subnet_id"] = subnet.SubnetID
-		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
-
-		privateSubnets = append(privateSubnets, subnetInfo)
-	}
 	if err := d.Set("private_subnets", privateSubnets); err != nil {
 		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
-	}
-
-	var publicSubnets []map[string]any
-	for _, subnet := range vC.PublicSubnets {
-		subnetInfo := make(map[string]any)
-		subnetInfo["cidr"] = subnet.Cidr
-		subnetInfo["name"] = subnet.Name
-		subnetInfo["subnet_id"] = subnet.SubnetID
-		subnetInfo["ipv6_cidr"] = subnet.IPv6Cidr
-
-		publicSubnets = append(publicSubnets, subnetInfo)
 	}
 	if err := d.Set("public_subnets", publicSubnets); err != nil {
 		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
@@ -641,7 +642,12 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta any) error {
 // subnets present in the configuration are emitted first, in their configured
 // order; any remaining subnets (e.g. after an import, where there is no prior
 // configuration) follow in the controller's order.
-func buildSubnetsForState(cloudType int, apiSubnets []goaviatrix.SubnetInfo, configuredSubnets []any) []map[string]any {
+//
+// The controller DB is not reconciled against the cloud, so a subnet deleted
+// out-of-band still appears in apiSubnets. When liveNames is non-nil, any
+// subnet whose name is absent from it is dropped so the removal surfaces as
+// drift (AVX-67843); a nil liveNames disables filtering.
+func buildSubnetsForState(cloudType int, apiSubnets []goaviatrix.SubnetInfo, configuredSubnets []any, liveNames map[string]bool) []map[string]any {
 	isGCP := goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)
 
 	// Index the controller's subnets by their ForceNew identity (region, cidr
@@ -650,6 +656,9 @@ func buildSubnetsForState(cloudType int, apiSubnets []goaviatrix.SubnetInfo, con
 	subnetsByKey := make(map[string]map[string]any, len(apiSubnets))
 	orderedKeys := make([]string, 0, len(apiSubnets))
 	for _, subnet := range apiSubnets {
+		if liveNames != nil && !liveNames[subnet.Name] {
+			continue
+		}
 		subnetInfo := make(map[string]any)
 		if isGCP {
 			subnetInfo["region"] = subnet.Region
@@ -697,6 +706,27 @@ func buildSubnetsForState(cloudType int, apiSubnets []goaviatrix.SubnetInfo, con
 
 func subnetIdentityKey(region, cidr, name string) string {
 	return region + "~" + cidr + "~" + name
+}
+
+// buildDbSubnetsForState converts the controller's private/public subnet lists
+// into the shape Terraform stores, preserving the controller's order. When
+// liveNames is non-nil, subnets whose name is absent from it are dropped so
+// out-of-band deletions surface as drift (AVX-67843); a nil liveNames disables
+// filtering.
+func buildDbSubnetsForState(apiSubnets []goaviatrix.SubnetInfo, liveNames map[string]bool) []map[string]any {
+	var subnets []map[string]any
+	for _, subnet := range apiSubnets {
+		if liveNames != nil && !liveNames[subnet.Name] {
+			continue
+		}
+		subnets = append(subnets, map[string]any{
+			"cidr":      subnet.Cidr,
+			"name":      subnet.Name,
+			"subnet_id": subnet.SubnetID,
+			"ipv6_cidr": subnet.IPv6Cidr,
+		})
+	}
+	return subnets
 }
 
 func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta any) error {

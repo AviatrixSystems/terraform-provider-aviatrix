@@ -225,6 +225,47 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	return vpc, nil
 }
 
+// GetVpcAzureLiveSubnetNames returns the set of subnet names that currently
+// exist in the VPC's cloud network, keyed by name.
+//
+// GetVpc reads subnets from the controller DB, which is not reconciled against
+// the cloud, so subnets deleted directly in the cloud still appear there
+// (AVX-67843). This queries live cloud state (list_vpc_all_subnets) so the Read
+// path can drop stale subnets from Terraform state and surface the drift.
+func (c *Client) GetVpcAzureLiveSubnetNames(vpc *Vpc) (map[string]bool, error) {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "list_vpc_all_subnets",
+		"vpc_id":       vpc.VpcID,
+		"account_name": vpc.AccountName,
+		"cloud_type":   strconv.Itoa(vpc.CloudType),
+		"vpc_region":   vpc.Region,
+	}
+	type subnet struct {
+		Name string `json:"name"`
+	}
+	type RespResults struct {
+		SubnetList []subnet `json:"subnet_list"`
+	}
+	type Resp struct {
+		Return  bool        `json:"return"`
+		Results RespResults `json:"results"`
+		Reason  string      `json:"reason"`
+	}
+	var data Resp
+	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
+		return nil, err
+	}
+
+	liveNames := make(map[string]bool)
+	for _, s := range data.Results.SubnetList {
+		if s.Name != "" {
+			liveNames[s.Name] = true
+		}
+	}
+	return liveNames, nil
+}
+
 func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
 	form := map[string]string{
 		"CID":          c.CID,

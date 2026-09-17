@@ -50,7 +50,7 @@ func TestBuildSubnetsForStatePreservesConfigOrder(t *testing.T) {
 		{Region: "us-east1", Cidr: "172.16.2.0/24", Name: "subnet-us-east1-2"},
 	}
 
-	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured)
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured, nil)
 
 	gotNames := make([]string, len(got))
 	for i, s := range got {
@@ -80,7 +80,7 @@ func TestBuildSubnetsForStateImportUsesAPIOrder(t *testing.T) {
 		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-us-east1-1"},
 	}
 
-	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, nil)
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, nil, nil)
 
 	gotNames := make([]string, len(got))
 	for i, s := range got {
@@ -98,12 +98,113 @@ func TestBuildSubnetsForStateGCPExcludesSubnetID(t *testing.T) {
 		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-1", SubnetID: "ignored-for-gcp"},
 	}
 
-	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured)
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured, nil)
 
 	assert.Len(t, got, 1)
 	_, hasSubnetID := got[0]["subnet_id"]
 	assert.False(t, hasSubnetID, "GCP subnets must not carry subnet_id in state")
 	assert.Contains(t, got[0], "region")
+}
+
+// TestBuildDbSubnetsForStateDropsDeleted is a regression test for AVX-67843: a
+// subnet deleted directly in Azure must be removed from state so the drift is
+// surfaced, while surviving subnets keep their order.
+func TestBuildDbSubnetsForStateDropsDeleted(t *testing.T) {
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Cidr: "10.30.0.0/28", Name: "vnet-Public-FW-ingress-egress-1"},
+		{Cidr: "10.30.0.16/28", Name: "vnet-Public-FW-ingress-egress-2"},
+		{Cidr: "10.30.0.32/28", Name: "vnet-Public-gateway-and-firewall-mgmt-1"},
+	}
+	// The second subnet was deleted out-of-band, so it is absent from the cloud.
+	liveNames := map[string]bool{
+		"vnet-Public-FW-ingress-egress-1":         true,
+		"vnet-Public-gateway-and-firewall-mgmt-1": true,
+	}
+
+	got := buildDbSubnetsForState(apiSubnets, liveNames)
+
+	gotNames := make([]string, len(got))
+	for i, s := range got {
+		gotNames[i] = mustString(s["name"])
+	}
+	assert.Equal(t, []string{
+		"vnet-Public-FW-ingress-egress-1",
+		"vnet-Public-gateway-and-firewall-mgmt-1",
+	}, gotNames, "deleted subnet must be dropped, survivors keep order")
+}
+
+// TestBuildDbSubnetsForStateKeepsAllWhenIntact verifies no state churn when
+// every tracked subnet still exists in the cloud.
+func TestBuildDbSubnetsForStateKeepsAllWhenIntact(t *testing.T) {
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Cidr: "10.30.0.0/28", Name: "subnet-1"},
+		{Cidr: "10.30.0.16/28", Name: "subnet-2"},
+	}
+	liveNames := map[string]bool{"subnet-1": true, "subnet-2": true}
+
+	got := buildDbSubnetsForState(apiSubnets, liveNames)
+
+	assert.Len(t, got, 2)
+	assert.Equal(t, "subnet-1", mustString(got[0]["name"]))
+	assert.Equal(t, "subnet-2", mustString(got[1]["name"]))
+}
+
+// TestBuildDbSubnetsForStateNilLiveNamesKeepsAll verifies a nil liveNames
+// disables filtering (every non-Azure-firenet path passes nil): all subnets are
+// returned, in controller order, with every field carried through unchanged.
+// Guards the passthrough contract so the drift filtering never leaks into the
+// clouds that don't opt in.
+func TestBuildDbSubnetsForStateNilLiveNamesKeepsAll(t *testing.T) {
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Cidr: "10.30.0.0/28", Name: "subnet-1", SubnetID: "sn-1", IPv6Cidr: "fd00::/64"},
+		{Cidr: "10.30.0.16/28", Name: "subnet-2", SubnetID: "sn-2", IPv6Cidr: "fd00::1/64"},
+	}
+
+	got := buildDbSubnetsForState(apiSubnets, nil)
+
+	want := []map[string]any{
+		{"cidr": "10.30.0.0/28", "name": "subnet-1", "subnet_id": "sn-1", "ipv6_cidr": "fd00::/64"},
+		{"cidr": "10.30.0.16/28", "name": "subnet-2", "subnet_id": "sn-2", "ipv6_cidr": "fd00::1/64"},
+	}
+	assert.Equal(t, want, got, "nil liveNames must return every subnet unchanged, in order")
+}
+
+// TestBuildDbSubnetsForStateNilLiveNamesNeverFilters is a stronger guard on the
+// passthrough contract: even a subnet whose name would be dropped under
+// filtering must survive when liveNames is nil, so a future change that starts
+// passing a non-nil map for a non-Azure-firenet cloud can't silently prune
+// state.
+func TestBuildDbSubnetsForStateNilLiveNamesNeverFilters(t *testing.T) {
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Cidr: "10.30.0.0/28", Name: "subnet-kept"},
+		{Cidr: "10.30.0.16/28", Name: "subnet-that-would-be-dropped"},
+	}
+
+	got := buildDbSubnetsForState(apiSubnets, nil)
+
+	assert.Len(t, got, 2, "nil liveNames must not drop any subnet")
+}
+
+// TestBuildSubnetsForStateNilLiveNamesKeepsAll mirrors the passthrough guard for
+// the "subnets" build path: with nil liveNames (every non-Azure-firenet cloud),
+// the GCP config-ordered subnets are returned untouched.
+func TestBuildSubnetsForStateNilLiveNamesKeepsAll(t *testing.T) {
+	configured := []any{
+		configSubnet("us-east1", "172.16.1.0/24", "subnet-1"),
+		configSubnet("us-east1", "172.16.2.0/24", "subnet-2"),
+	}
+	apiSubnets := []goaviatrix.SubnetInfo{
+		{Region: "us-east1", Cidr: "172.16.1.0/24", Name: "subnet-1"},
+		{Region: "us-east1", Cidr: "172.16.2.0/24", Name: "subnet-2"},
+	}
+
+	got := buildSubnetsForState(goaviatrix.GCP, apiSubnets, configured, nil)
+
+	gotNames := make([]string, len(got))
+	for i, s := range got {
+		gotNames[i] = mustString(s["name"])
+	}
+	assert.Equal(t, []string{"subnet-1", "subnet-2"}, gotNames, "nil liveNames must not drop any subnet")
 }
 
 func TestAccAviatrixVpc_basic(t *testing.T) {
