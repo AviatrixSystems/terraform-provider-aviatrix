@@ -1023,6 +1023,26 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Set of Azure route table selectors to treat as private route tables for the transit VNet. Each entry is in the format \"<route_table_name>:<resource_group_name>\". Only applicable for Azure (8), AzureGov (32) and AzureChina (2048).",
 			},
+			"arm_spoke_lb_frontend_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Frontend IP of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.",
+			},
+			"arm_spoke_lb_subnet_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Subnet ID of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.",
+			},
+			"arm_spoke_lb_gw_rtb_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Route table ID associated with the Azure load balancer subnet for ARM/Azure-native spoke routing.",
+			},
+			"arm_spoke_lb_subnet_managed_by_aviatrix": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the Azure load balancer subnet for ARM/Azure-native spoke routing is managed by Aviatrix.",
+			},
 		},
 	}
 }
@@ -2074,6 +2094,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 	mustSet(d, "tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
 	mustSet(d, "tunnel_forward_secrecy", gw.TunnelForwardSecrecy)
 	mustSet(d, "private_route_table_config", gw.PrivateRouteTableConfig)
+	mustSet(d, "arm_spoke_lb_frontend_ip", gw.ArmSpokeLBFrontendIP)
+	mustSet(d, "arm_spoke_lb_subnet_id", gw.ArmSpokeLBSubnetID)
+	mustSet(d, "arm_spoke_lb_gw_rtb_id", gw.ArmSpokeLBGwRtbID)
+	mustSet(d, "arm_spoke_lb_subnet_managed_by_aviatrix", gw.ArmSpokeLBSubnetManagedByAviatrix)
 
 	// gateway bgp communities should be set only after the gateway is created and the gateway size is known.
 	// This will allow the AEP EAT gateways to be created before setting the communities.

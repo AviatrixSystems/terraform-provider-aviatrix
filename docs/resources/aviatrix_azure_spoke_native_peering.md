@@ -50,6 +50,11 @@ The following arguments are supported:
 ### Optional
 * `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
 
+### Attributes Reference
+In addition to all arguments above, the following attributes are exported:
+
+* `all_vpc_route_tables` - All route tables discovered in the native spoke VNet.
+
 ## Import
 
 **azure_spoke_native_peering** can be imported using the `transit_gateway_name`, `spoke_account_name` and `spoke_vpc_id`, e.g.

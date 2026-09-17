@@ -12,6 +12,7 @@ type AzureSpokeNativePeering struct {
 	SpokeRegion             string   `form:"region,omitempty"`
 	SpokeVpcID              string   `form:"vpc_id,omitempty"`
 	PrivateRouteTableConfig []string `form:"private_route_table_config,omitempty"`
+	AllVpcRouteTables       []string `json:"all_vpc_route_tables,omitempty"`
 }
 
 type AzureSpokeNativePeeringAPIResp struct {
@@ -26,6 +27,7 @@ type AzureSpokeNativePeeringEdit struct {
 	Region                  string   `json:"region"`
 	VpcID                   string   `json:"vpc_id"`
 	PrivateRouteTableConfig []string `json:"private_route_table_config"`
+	AllVpcRouteTables       []string `json:"all_vpc_route_tables"`
 }
 
 func (c *Client) CreateAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
@@ -62,6 +64,7 @@ func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeN
 		}
 		azureSpokeNativePeering.SpokeRegion = peeringList[i].Region
 		azureSpokeNativePeering.PrivateRouteTableConfig = peeringList[i].PrivateRouteTableConfig
+		azureSpokeNativePeering.AllVpcRouteTables = peeringList[i].AllVpcRouteTables
 		return azureSpokeNativePeering, nil
 	}
 	return nil, ErrNotFound

@@ -513,6 +513,26 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The EIP address of the HA Transit Gateway.",
 			},
+			"arm_spoke_lb_frontend_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Frontend IP of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.",
+			},
+			"arm_spoke_lb_subnet_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Subnet ID of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.",
+			},
+			"arm_spoke_lb_gw_rtb_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Route table ID associated with the Azure load balancer subnet for ARM/Azure-native spoke routing.",
+			},
+			"arm_spoke_lb_subnet_managed_by_aviatrix": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the Azure load balancer subnet for ARM/Azure-native spoke routing is managed by Aviatrix.",
+			},
 		},
 	}
 }
@@ -887,6 +907,10 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) erro
 			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
 		}
 		mustSet(d, "lan_interface_cidr", lanCidr)
+		mustSet(d, "arm_spoke_lb_frontend_ip", gw.ArmSpokeLBFrontendIP)
+		mustSet(d, "arm_spoke_lb_subnet_id", gw.ArmSpokeLBSubnetID)
+		mustSet(d, "arm_spoke_lb_gw_rtb_id", gw.ArmSpokeLBGwRtbID)
+		mustSet(d, "arm_spoke_lb_subnet_managed_by_aviatrix", gw.ArmSpokeLBSubnetManagedByAviatrix)
 	}
 
 	d.SetId(gateway.GwName)

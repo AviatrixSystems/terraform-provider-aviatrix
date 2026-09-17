@@ -245,6 +245,11 @@ type Gateway struct {
 	PrivateRouteTableConfig  []string                  `json:"private_route_table_config,omitempty"`
 	// SpokeRtbList is returned by list_vpcs_summary for spoke gateways (managed route tables / selective VPC programming).
 	SpokeRtbList []string `json:"spoke_rtb_list,omitempty"`
+	// ARM native spoke LB fields are returned by list_vpcs_summary for Azure transit gateways.
+	ArmSpokeLBFrontendIP              string `json:"arm_spoke_lb_frontend_ip,omitempty"`
+	ArmSpokeLBSubnetID                string `json:"arm_spoke_lb_subnet_id,omitempty"`
+	ArmSpokeLBGwRtbID                 string `json:"arm_spoke_lb_gw_rtb_id,omitempty"`
+	ArmSpokeLBSubnetManagedByAviatrix bool   `json:"arm_spoke_lb_subnet_managed_by_aviatrix,omitempty"`
 }
 
 type HaGateway struct {

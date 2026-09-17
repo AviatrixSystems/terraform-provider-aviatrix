@@ -53,6 +53,12 @@ func resourceAviatrixAzureSpokeNativePeering() *schema.Resource {
 				Computed:    true,
 				Description: "Private route table configuration.",
 			},
+			"all_vpc_route_tables": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "All route tables in the native spoke VNet.",
+			},
 		},
 	}
 }
@@ -137,6 +143,7 @@ func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta an
 	mustSet(d, "spoke_region", azureSpokeNativePeering.SpokeRegion)
 	mustSet(d, "spoke_vpc_id", azureSpokeNativePeering.SpokeVpcID)
 	mustSet(d, "private_route_table_config", azureSpokeNativePeering.PrivateRouteTableConfig)
+	mustSet(d, "all_vpc_route_tables", azureSpokeNativePeering.AllVpcRouteTables)
 
 	d.SetId(azureSpokeNativePeering.TransitGatewayName + "~" + azureSpokeNativePeering.SpokeAccountName + "~" + azureSpokeNativePeering.SpokeVpcID)
 	return nil

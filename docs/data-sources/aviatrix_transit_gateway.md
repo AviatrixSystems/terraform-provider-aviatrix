@@ -121,6 +121,10 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device HA connection creation. Only supports GCP and Azure.
 * `eip` - The EIP address of the Transit Gateway.
 * `ha_eip` - The EIP address of the HA Transit Gateway.
+* `arm_spoke_lb_frontend_ip` - Frontend IP of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.
+* `arm_spoke_lb_subnet_id` - Subnet ID of the Azure load balancer used for ARM/Azure-native spoke routing on this transit gateway.
+* `arm_spoke_lb_gw_rtb_id` - Route table ID associated with the Azure load balancer subnet for ARM/Azure-native spoke routing.
+* `arm_spoke_lb_subnet_managed_by_aviatrix` - Whether the Azure load balancer subnet for ARM/Azure-native spoke routing is managed by Aviatrix.
 
 The following argument is deprecated:
 
