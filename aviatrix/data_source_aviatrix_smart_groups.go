@@ -87,6 +87,21 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Computed:    true,
 													Description: "Zone this expression matches.",
 												},
+												goaviatrix.ResourceGroupKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Azure resource group this expression matches.",
+												},
+												goaviatrix.ServiceNameKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "AWS service name this VPC endpoint expression matches.",
+												},
+												goaviatrix.ServiceRegionKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "AWS service region this VPC endpoint expression matches.",
+												},
 												goaviatrix.TagsPrefix: {
 													Type:        schema.TypeMap,
 													Computed:    true,
@@ -151,26 +166,7 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 		var expressions []any
 
 		for _, filter := range smartGroup.Selector.Expressions {
-			filterMap := map[string]any{
-				goaviatrix.TypeKey:                filter.Type,
-				goaviatrix.CidrKey:                filter.CIDR,
-				goaviatrix.FqdnKey:                filter.FQDN,
-				goaviatrix.SiteKey:                filter.Site,
-				goaviatrix.ResIDKey:               filter.ResID,
-				goaviatrix.AccountIDKey:           filter.AccountID,
-				goaviatrix.AccountNameKey:         filter.AccountName,
-				goaviatrix.NameKey:                filter.Name,
-				goaviatrix.RegionKey:              filter.Region,
-				goaviatrix.ZoneKey:                filter.Zone,
-				goaviatrix.TagsPrefix:             filter.Tags,
-				goaviatrix.K8sNamespaceTagsPrefix: filter.K8sNamespaceTags,
-				goaviatrix.K8sClusterIDKey:        filter.K8sClusterID,
-				goaviatrix.K8sNamespaceKey:        filter.K8sNamespace,
-				goaviatrix.K8sServiceKey:          filter.K8sService,
-				goaviatrix.K8sPodNameKey:          filter.K8sPodName,
-			}
-
-			expressions = append(expressions, filterMap)
+			expressions = append(expressions, smartGroupDataSourceMatchExpression(filter))
 		}
 
 		selector := []any{
@@ -193,4 +189,28 @@ func dataSourceAviatrixSmartGroupsRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
+}
+
+func smartGroupDataSourceMatchExpression(filter *goaviatrix.SmartGroupMatchExpression) map[string]any {
+	return map[string]any{
+		goaviatrix.TypeKey:                filter.Type,
+		goaviatrix.CidrKey:                filter.CIDR,
+		goaviatrix.FqdnKey:                filter.FQDN,
+		goaviatrix.SiteKey:                filter.Site,
+		goaviatrix.ResIDKey:               filter.ResID,
+		goaviatrix.AccountIDKey:           filter.AccountID,
+		goaviatrix.AccountNameKey:         filter.AccountName,
+		goaviatrix.NameKey:                filter.Name,
+		goaviatrix.RegionKey:              filter.Region,
+		goaviatrix.ZoneKey:                filter.Zone,
+		goaviatrix.ResourceGroupKey:       filter.ResourceGroup,
+		goaviatrix.ServiceNameKey:         filter.ServiceName,
+		goaviatrix.ServiceRegionKey:       filter.ServiceRegion,
+		goaviatrix.TagsPrefix:             filter.Tags,
+		goaviatrix.K8sNamespaceTagsPrefix: filter.K8sNamespaceTags,
+		goaviatrix.K8sClusterIDKey:        filter.K8sClusterID,
+		goaviatrix.K8sNamespaceKey:        filter.K8sNamespace,
+		goaviatrix.K8sServiceKey:          filter.K8sService,
+		goaviatrix.K8sPodNameKey:          filter.K8sPodName,
+	}
 }

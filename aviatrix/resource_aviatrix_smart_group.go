@@ -120,6 +120,21 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Optional:    true,
 										Description: "Zone this expression matches.",
 									},
+									goaviatrix.ResourceGroupKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Azure resource group this expression matches.",
+									},
+									goaviatrix.ServiceNameKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "AWS service name this VPC endpoint expression matches.",
+									},
+									goaviatrix.ServiceRegionKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "AWS service region this VPC endpoint expression matches.",
+									},
 									goaviatrix.TagsPrefix: {
 										Type:        schema.TypeMap,
 										Optional:    true,

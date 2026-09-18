@@ -18,6 +18,9 @@ type SmartGroupMatchExpression struct {
 	Name             string `json:"name,omitempty"`
 	Region           string `json:"region,omitempty"`
 	Zone             string `json:"zone,omitempty"`
+	ResourceGroup    string `json:"resource_group,omitempty"`
+	ServiceName      string `json:"service_name,omitempty"`
+	ServiceRegion    string `json:"service_region,omitempty"`
 	K8sService       string `json:"k8s_service,omitempty"`
 	K8sNamespace     string `json:"k8s_namespace,omitempty"`
 	K8sClusterID     string `json:"k8s_cluster_id,omitempty"`
@@ -72,6 +75,9 @@ const (
 	NameKey                = "name"
 	RegionKey              = "region"
 	ZoneKey                = "zone"
+	ResourceGroupKey       = "resource_group"
+	ServiceNameKey         = "service_name"
+	ServiceRegionKey       = "service_region"
 	K8sClusterIDKey        = "k8s_cluster_id"
 	K8sNamespaceKey        = "k8s_namespace"
 	K8sServiceKey          = "k8s_service"
@@ -98,6 +104,9 @@ func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupM
 	setFilterInterface(&smartGroup.Name, filterMap, NameKey)
 	setFilterInterface(&smartGroup.Region, filterMap, RegionKey)
 	setFilterInterface(&smartGroup.Zone, filterMap, ZoneKey)
+	setFilterInterface(&smartGroup.ResourceGroup, filterMap, ResourceGroupKey)
+	setFilterInterface(&smartGroup.ServiceName, filterMap, ServiceNameKey)
+	setFilterInterface(&smartGroup.ServiceRegion, filterMap, ServiceRegionKey)
 	setFilterInterface(&smartGroup.K8sClusterID, filterMap, K8sClusterIDKey)
 	setFilterInterface(&smartGroup.K8sNamespace, filterMap, K8sNamespaceKey)
 	setFilterInterface(&smartGroup.K8sService, filterMap, K8sServiceKey)
@@ -159,6 +168,9 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 	setFilter(filter.Name, filterMap, NameKey)
 	setFilter(filter.Region, filterMap, RegionKey)
 	setFilter(filter.Zone, filterMap, ZoneKey)
+	setFilter(filter.ResourceGroup, filterMap, ResourceGroupKey)
+	setFilter(filter.ServiceName, filterMap, ServiceNameKey)
+	setFilter(filter.ServiceRegion, filterMap, ServiceRegionKey)
 	setFilter(filter.K8sClusterID, filterMap, K8sClusterIDKey)
 	setFilter(filter.K8sNamespace, filterMap, K8sNamespaceKey)
 	setFilter(filter.K8sService, filterMap, K8sServiceKey)

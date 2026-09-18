@@ -8,10 +8,55 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
+
+func TestSmartGroupsDataSourceSchemaResourceGroupAndVpcEndpointSelectors(t *testing.T) {
+	dataSourceSchema := dataSourceAviatrixSmartGroups().Schema
+	smartGroups, ok := dataSourceSchema["smart_groups"].Elem.(*schema.Resource)
+	require.True(t, ok)
+	selector, ok := smartGroups.Schema["selector"].Elem.(*schema.Resource)
+	require.True(t, ok)
+	matchExpressions, ok := selector.Schema["match_expressions"].Elem.(*schema.Resource)
+	require.True(t, ok)
+
+	for _, key := range []string{
+		goaviatrix.ResourceGroupKey,
+		goaviatrix.ServiceNameKey,
+		goaviatrix.ServiceRegionKey,
+	} {
+		require.Contains(t, matchExpressions.Schema, key)
+	}
+}
+
+func TestSmartGroupDataSourceMatchExpressionResourceGroupAndVpcEndpointSelectors(t *testing.T) {
+	azureResource := smartGroupDataSourceMatchExpression(&goaviatrix.SmartGroupMatchExpression{
+		Type:          "vm",
+		ResourceGroup: "my-resource-group",
+	})
+	require.Equal(t, "vm", azureResource[goaviatrix.TypeKey])
+	require.Equal(t, "my-resource-group", azureResource[goaviatrix.ResourceGroupKey])
+
+	azureEndpoint := smartGroupDataSourceMatchExpression(&goaviatrix.SmartGroupMatchExpression{
+		Type:          "vpc_endpoint",
+		ResourceGroup: "my-private-endpoint-resource-group",
+	})
+	require.Equal(t, "vpc_endpoint", azureEndpoint[goaviatrix.TypeKey])
+	require.Equal(t, "my-private-endpoint-resource-group", azureEndpoint[goaviatrix.ResourceGroupKey])
+
+	aws := smartGroupDataSourceMatchExpression(&goaviatrix.SmartGroupMatchExpression{
+		Type:          "vpc_endpoint",
+		ServiceName:   "com.amazonaws.us-east-1.s3",
+		ServiceRegion: "us-east-1",
+	})
+	require.Equal(t, "vpc_endpoint", aws[goaviatrix.TypeKey])
+	require.Equal(t, "com.amazonaws.us-east-1.s3", aws[goaviatrix.ServiceNameKey])
+	require.Equal(t, "us-east-1", aws[goaviatrix.ServiceRegionKey])
+}
 
 func TestAccDataSourceAviatrixSmartGroups_basic(t *testing.T) {
 	resourceName := "data.aviatrix_smart_groups.test"

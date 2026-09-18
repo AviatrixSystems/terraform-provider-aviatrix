@@ -162,13 +162,16 @@ The following arguments are supported:
     * `cidr` - (Optional) - CIDR block or IP Address this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
     * `fqdn` - (Optional) - FQDN address this expression matches. `fqdn` cannot be used with any other filters in the same `match_expressions` block.
     * `site` - (Optional) - Edge Site-ID this expression matches. `site` cannot be used with any other filters in the same `match_expressions` block.
-    * `type` - (Optional) - Type of resource this expression matches. If not using the external selector it must be one of "vm", "vpc", "subnet" or "k8s". `type` is required when `cidr`, `fqdn` and `site` are all not used.
+    * `type` - (Optional) - Type of resource this expression matches. If not using the external selector it must be one of "vm", "vpc", "subnet", "k8s", "k8s_node", "serverless" or "vpc_endpoint". `type` is required when `cidr`, `fqdn` and `site` are all not used.
     * `res_id` - (Optional) - Resource ID this expression matches.
     * `account_id` - (Optional) - Account ID this expression matches.
     * `account_name` - (Optional) - Account name this expression matches.
     * `name` - (Optional) - Name this expression matches.
     * `region` - (Optional) - Region this expression matches.
     * `zone` - (Optional) - Zone this expression matches.
+    * `resource_group` - (Optional) - Azure resource group this expression matches.
+    * `service_name` - (Optional) - AWS service name this VPC endpoint expression matches.
+    * `service_region` - (Optional) - AWS service region this VPC endpoint expression matches.
     * `k8s_cluster_id` - (Optional) - Resource ID of the Kubernetes cluster this expression matches. The resource ID can be found in the `cluster_id` attribute of the `aviatrix_kubernetes_cluster` resource.
       This property can only be used when `type` is set to `"k8s"`.
     * `k8s_namespace` - (Optional) - Kubernetes namespace this expression matches.

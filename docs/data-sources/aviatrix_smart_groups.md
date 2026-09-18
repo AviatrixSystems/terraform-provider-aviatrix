@@ -36,6 +36,9 @@ The following attributes are exported:
             * `name` - Name this expression matches.
             * `region` - Region this expression matches.
             * `zone` - Zone this expression matches.
+            * `resource_group` - Azure resource group this expression matches.
+            * `service_name` - AWS service name this VPC endpoint expression matches.
+            * `service_region` - AWS service region this VPC endpoint expression matches.
             * `tags` - Map of tags this expression matches.
             * `k8s_namespace_tags` - Map of Kubernetes namespace labels this expression matches.
             * `k8s_cluster_id` - Resource ID of the Kubernetes cluster this expression matches.

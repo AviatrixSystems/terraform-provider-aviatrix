@@ -9,8 +9,64 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
+
+func TestSmartGroupSchemaResourceGroupAndVpcEndpointSelectors(t *testing.T) {
+	resourceSchema := resourceAviatrixSmartGroup().Schema
+	selector, ok := resourceSchema["selector"].Elem.(*schema.Resource)
+	require.True(t, ok)
+	matchExpressions, ok := selector.Schema["match_expressions"].Elem.(*schema.Resource)
+	require.True(t, ok)
+
+	for _, key := range []string{
+		goaviatrix.ResourceGroupKey,
+		goaviatrix.ServiceNameKey,
+		goaviatrix.ServiceRegionKey,
+	} {
+		require.Contains(t, matchExpressions.Schema, key)
+	}
+}
+
+func TestMarshalSmartGroupInputResourceGroupAndVpcEndpointSelectors(t *testing.T) {
+	resourceSchema := resourceAviatrixSmartGroup().Schema
+	data := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"name": "private-endpoints",
+		"selector": []any{
+			map[string]any{
+				"match_expressions": []any{
+					map[string]any{
+						goaviatrix.TypeKey:          "vm",
+						goaviatrix.ResourceGroupKey: "my-resource-group",
+					},
+					map[string]any{
+						goaviatrix.TypeKey:          "vpc_endpoint",
+						goaviatrix.ResourceGroupKey: "my-private-endpoint-resource-group",
+					},
+					map[string]any{
+						goaviatrix.TypeKey:          "vpc_endpoint",
+						goaviatrix.ServiceNameKey:   "com.amazonaws.us-east-1.s3",
+						goaviatrix.ServiceRegionKey: "us-east-1",
+					},
+				},
+			},
+		},
+	})
+
+	smartGroup, err := marshalSmartGroupInput(data)
+	require.NoError(t, err)
+	require.Len(t, smartGroup.Selector.Expressions, 3)
+	require.Equal(t, "vm", smartGroup.Selector.Expressions[0].Type)
+	require.Equal(t, "my-resource-group", smartGroup.Selector.Expressions[0].ResourceGroup)
+	require.Equal(t, "vpc_endpoint", smartGroup.Selector.Expressions[1].Type)
+	require.Equal(t, "my-private-endpoint-resource-group", smartGroup.Selector.Expressions[1].ResourceGroup)
+	require.Equal(t, "com.amazonaws.us-east-1.s3", smartGroup.Selector.Expressions[2].ServiceName)
+	require.Equal(t, "us-east-1", smartGroup.Selector.Expressions[2].ServiceRegion)
+}
 
 func TestAccAviatrixSmartGroup_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_SMART_GROUP")
