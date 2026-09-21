@@ -686,6 +686,35 @@ func mustSet(d *schema.ResourceData, key string, val any) {
 	}
 }
 
+// setGatewayTagsState sets the "tags" attribute from the tag set the controller
+// has recorded for the gateway, which excludes tags added outside Terraform.
+//
+// State is left alone on an error, and when the controller returns no recorded
+// set. Overwriting in either case wipes the create-time tags and produces a
+// standing "+ tags" diff (AVX-79035).
+func setGatewayTagsState(
+	d *schema.ResourceData,
+	client *goaviatrix.Client,
+	gw *goaviatrix.Gateway,
+	ignoreTagsConfig *goaviatrix.IgnoreTagsConfig,
+) {
+	if !goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return
+	}
+	configured, err := client.GetConfiguredGatewayTags(gw.GwName)
+	if err != nil {
+		log.Printf("[WARN] Error getting tags for (%s): %s", d.Id(), err)
+		return
+	}
+	if configured == nil {
+		return
+	}
+	tags := goaviatrix.KeyValueTags(configured).IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("tags", tags); err != nil {
+		log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
+	}
+}
+
 // Getter allows helpers to work with both *schema.ResourceData and *schema.ResourceDiff
 type Getter interface {
 	Get(key string) any

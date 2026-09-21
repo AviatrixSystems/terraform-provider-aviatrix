@@ -124,6 +124,38 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	return tagList, nil
 }
 
+// gatewayTagInfoResp is the part of the get_gateway_info response holding the
+// custom tags recorded on the gateway record.
+type gatewayTagInfoResp struct {
+	Return  bool `json:"return"`
+	Results struct {
+		TagInfo struct {
+			UsrTags map[string]string `json:"usr_tags"`
+		} `json:"tag_info"`
+	} `json:"results"`
+	Reason string `json:"reason"`
+}
+
+// GetConfiguredGatewayTags returns the custom tags the controller has recorded
+// for a gateway, read from tag_info on the gateway record. Unlike GetTags, the
+// result excludes tags added outside the controller.
+//
+// A nil return means the record holds no recorded set, which is not the same as
+// an empty one.
+func (c *Client) GetConfiguredGatewayTags(gwName string) (map[string]string, error) {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "get_gateway_info",
+		"gateway_name": gwName,
+	}
+	var resp gatewayTagInfoResp
+	if err := c.GetAPI(&resp, form["action"], form, BasicCheck); err != nil {
+		return nil, err
+	}
+
+	return resp.Results.TagInfo.UsrTags, nil
+}
+
 func (c *Client) DeleteTags(tags *Tags) error {
 	params := map[string]string{
 		"action":        "delete_resource_tag",

@@ -729,9 +729,7 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "rx_queue_size", gateway.RxQueueSize)
 
 	// Tags
-	if gateway.Tags != nil {
-		mustSet(d, "tags", gateway.Tags)
-	}
+	setGatewayTagsState(d, client, gateway, nil)
 
 	return nil
 }

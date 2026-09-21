@@ -1917,12 +1917,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("setting 'monitor_exclude_list' to state: %w", err)
 	}
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-		if err := d.Set("tags", tags); err != nil {
-			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-		}
-	}
+	setGatewayTagsState(d, client, gw, ignoreTagsConfig)
 
 	var spokeBgpManualAdvertiseCidrs []string
 	if val, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {

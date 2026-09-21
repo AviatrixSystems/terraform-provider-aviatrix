@@ -2518,12 +2518,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 		}
 		mustSet(d, "lan_interface_cidr", lanCidr)
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-			if err := d.Set("tags", tags); err != nil {
-				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-			}
-		}
+		setGatewayTagsState(d, client, gw, ignoreTagsConfig)
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			if gw.GatewayZone != "" {

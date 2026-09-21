@@ -1484,12 +1484,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "insane_mode_az", "")
 	}
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-		if err := d.Set("tags", tags); err != nil {
-			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-		}
-	}
+	setGatewayTagsState(d, client, gw, ignoreTagsConfig)
 
 	if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
 		mustSet(d, "name_servers", gw.NameServers)
