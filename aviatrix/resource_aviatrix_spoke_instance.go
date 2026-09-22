@@ -609,6 +609,11 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("resource ID (gateway name) is empty")
 	}
 
+	// During terraform import only the resource ID is populated; config-derived
+	// attributes such as gw_name are still empty. Detect that so ForceNew
+	// attributes (zone) get read back into state even before they exist in config.
+	isImport := getString(d, "gw_name") == ""
+
 	log.Printf("[INFO] Reading Spoke Instance: %s", gwName)
 
 	gateway, err := client.GetGateway(&goaviatrix.Gateway{GwName: gwName})
@@ -698,8 +703,11 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		mustSet(d, "zone", gateway.GatewayZone)
 	} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		// Read zone back on import too, not just when it is already in state,
+		// so an AZ-pinned gateway adopted via an import block does not force a
+		// destructive replace on the next plan (AVX-81778).
 		_, zoneIsSet := d.GetOk("zone")
-		if zoneIsSet && gateway.GatewayZone != "AvailabilitySet" {
+		if (isImport || zoneIsSet) && gateway.GatewayZone != "AvailabilitySet" {
 			mustSet(d, "zone", "az-"+gateway.GatewayZone)
 		}
 	}
