@@ -715,6 +715,26 @@ func setGatewayTagsState(
 	}
 }
 
+// setGroupInstanceSizeState populates group_instance_size for a spoke/transit
+// group. For an empty group the controller's stored group size is authoritative.
+// For a non-empty group that stored value goes stale the moment a member is
+// resized per-gateway (aviatrix_spoke_instance.gw_size), so reflect the live
+// primary member's real size instead — otherwise the field permanently diverges
+// from config and every apply proposes a disruptive full-group resize (AVX-81791).
+func setGroupInstanceSizeState(d *schema.ResourceData, client *goaviatrix.Client, grp *goaviatrix.GatewayGroup) {
+	size := grp.GroupInstanceSize
+	if len(grp.GwUUIDList) > 0 && grp.PrimaryGatewayName != "" {
+		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: grp.PrimaryGatewayName})
+		if err != nil {
+			log.Printf("[WARN] group %s: could not read primary member %s size, using stored group size: %s",
+				grp.GroupName, grp.PrimaryGatewayName, err)
+		} else if gw.GwSize != "" {
+			size = gw.GwSize
+		}
+	}
+	mustSet(d, "group_instance_size", size)
+}
+
 // Getter allows helpers to work with both *schema.ResourceData and *schema.ResourceDiff
 type Getter interface {
 	Get(key string) any

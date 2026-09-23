@@ -757,7 +757,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	// Normalize gw_type by removing "GwGroupType." prefix if present
 	gwType := strings.TrimPrefix(spokeGroup.GwType, "GwGroupType.")
 	mustSet(d, "gw_type", gwType)
-	mustSet(d, "group_instance_size", spokeGroup.GroupInstanceSize)
+	setGroupInstanceSizeState(d, client, spokeGroup)
 	mustSet(d, "vpc_id", spokeGroup.VpcID)
 	mustSet(d, "account_name", spokeGroup.AccountName)
 
@@ -873,10 +873,20 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// Gateway Size - API: edit_gw_config
 	// ============================================================================
 	if d.HasChange("group_instance_size") {
-		instanceSize := getString(d, "group_instance_size")
-		err := client.UpdateGroupInstanceSize(ctx, groupName, instanceSize)
+		// edit_gw_config resizes the group's launch size and is only valid for an
+		// empty group. On a non-empty group the controller reboots the live member
+		// even when the size is unchanged (AVX-81791); members are resized
+		// per-gateway via aviatrix_spoke_instance.gw_size instead. Skip the call for
+		// non-empty groups — Read syncs group_instance_size from the live member.
+		grp, err := client.GetGatewayGroup(ctx, groupUUID)
 		if err != nil {
-			return diag.Errorf("failed to update group_instance_size: %s", err)
+			return diag.Errorf("failed to read group %s before resize: %s", groupUUID, err)
+		}
+		if len(grp.GwUUIDList) == 0 {
+			instanceSize := getString(d, "group_instance_size")
+			if err := client.UpdateGroupInstanceSize(ctx, groupName, instanceSize); err != nil {
+				return diag.Errorf("failed to update group_instance_size: %s", err)
+			}
 		}
 	}
 
