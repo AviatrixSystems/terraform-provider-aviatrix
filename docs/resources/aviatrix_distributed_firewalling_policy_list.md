@@ -125,6 +125,8 @@ The following arguments are supported:
     * `uuid` - (Computed) UUID for the Policy.
     * `tls_profile` - (Optional) TLS profile UUID for the policy.
     * `egress_path` - (Optional) Egress path for this policy. Must be one of `EGRESS_PATH_DEFAULT` or `EGRESS_PATH_LOCAL`. `EGRESS_PATH_DEFAULT` routes traffic through the spoke's configured egress transit (FireNet, TGW, etc.). `EGRESS_PATH_LOCAL` routes traffic out through the spoke gateway directly. Default: `EGRESS_PATH_DEFAULT`.
+
+      ~> **Version requirement**: `EGRESS_PATH_LOCAL` requires all in-scope spoke gateways to be running Aviatrix 10.1 or later. Rules attached to older gateways are silently ignored and traffic exits via the default egress path. Terraform emits a plan-time warning whenever this value is set — verify gateway versions before applying.
     * `log_profile` - (Optional) Logging profile UUID. Must be one of {"def000ad-7000-0000-0000-000000000001", "def000ad-7000-0000-0000-000000000002", "def000ad-7000-0000-0000-000000000003"}. The UUIDs correspod to: def000ad-7000-0000-0000-000000000001: DEF_LOG_PROFILE_START, def000ad-7000-0000-0000-000000000002: DEF_LOG_PROFILE_END, def000ad-7000-0000-0000-000000000003: DEF_LOG_PROFILE_ALL
 
 ## Import

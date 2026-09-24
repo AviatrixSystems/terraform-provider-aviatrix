@@ -662,7 +662,7 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		mustSet(d, "insane_mode_az", "")
 	}
-	mustSet(d, "tunnel_detection_time", gateway.TunnelDetectionTime)
+	setTunnelDetectionTimeState(d, client, gateway.GwName, gateway.TunnelDetectionTime)
 
 	// Spot instance
 	mustSet(d, "enable_spot_instance", gateway.EnableSpotInstance)

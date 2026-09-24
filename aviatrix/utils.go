@@ -155,6 +155,23 @@ func validateTransitGwType(i any, k string) (warnings []string, errors []error) 
 	return validation.StringInSlice(validGwTypes, true)(i, k)
 }
 
+// validateEgressPath validates the enum for DCF policy `egress_path` fields and
+// emits a plan-time warning whenever the value is EGRESS_PATH_LOCAL. Local
+// egress is enforced only on spoke gateways running Aviatrix 10.1 or later;
+// older gateways silently ignore the setting and traffic falls back to the
+// default egress path. The provider has no way to check per-gateway versions
+// at plan time (see AVX-79886), so the warning is unconditional.
+func validateEgressPath(i any, k string) (warnings []string, errors []error) {
+	warnings, errors = validation.StringInSlice([]string{EgressPathDefault, EgressPathLocal}, false)(i, k)
+	if len(errors) == 0 && i == EgressPathLocal {
+		warnings = append(warnings,
+			fmt.Sprintf("%s = %q: local egress is enforced only on spoke gateways running Aviatrix 10.1 or later. "+
+				"Older gateways silently ignore this setting and traffic exits via the default egress path. "+
+				"Verify the versions of all in-scope spoke gateways before applying.", k, EgressPathLocal))
+	}
+	return warnings, errors
+}
+
 // normalizeGwType normalizes gateway type to uppercase.
 func normalizeGwType(val any) string {
 	if val == nil {
@@ -701,7 +718,14 @@ func setGatewayTagsState(
 	if !goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		return
 	}
-	configured, err := client.GetConfiguredGatewayTags(gw.GwName)
+	// HA instances share the primary's controller-recorded tag set; get_gateway_info
+	// for an HA gateway carries no tag_info of its own, so resolve tags from the
+	// primary to avoid a standing "+ tags" diff on HA instances (AVX-81779).
+	tagGwName := gw.GwName
+	if gw.PrimaryGwName != "" {
+		tagGwName = gw.PrimaryGwName
+	}
+	configured, err := client.GetConfiguredGatewayTags(tagGwName)
 	if err != nil {
 		log.Printf("[WARN] Error getting tags for (%s): %s", d.Id(), err)
 		return
@@ -713,6 +737,20 @@ func setGatewayTagsState(
 	if err := d.Set("tags", tags); err != nil {
 		log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 	}
+}
+
+// setTunnelDetectionTimeState sets tunnel_detection_time from the dedicated
+// per-gateway endpoint. The bulk list_vpcs_summary field is only populated for
+// primary-role gateways, so HA instances otherwise read back 0 and show a
+// standing diff (AVX-81779). Falls back to the summary value on error so a read
+// is never worse off than before.
+func setTunnelDetectionTimeState(d *schema.ResourceData, client *goaviatrix.Client, gwName string, summaryValue int) {
+	detectionTime, err := client.GetTunnelDetectionTime(gwName)
+	if err != nil {
+		log.Printf("[WARN] Error reading tunnel_detection_time for (%s), using summary value: %s", gwName, err)
+		detectionTime = summaryValue
+	}
+	mustSet(d, "tunnel_detection_time", detectionTime)
 }
 
 // setGroupInstanceSizeState populates group_instance_size for a spoke/transit

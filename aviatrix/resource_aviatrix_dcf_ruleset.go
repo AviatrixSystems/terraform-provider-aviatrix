@@ -159,10 +159,11 @@ var dcfRuleElem = &schema.Resource{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      EgressPathDefault,
-			ValidateFunc: validation.StringInSlice([]string{EgressPathDefault, EgressPathLocal}, false),
+			ValidateFunc: validateEgressPath,
 			Description: "Egress path for this rule. Must be one of EGRESS_PATH_DEFAULT or EGRESS_PATH_LOCAL." +
 				"EGRESS_PATH_DEFAULT routes traffic through the spoke's configured egress transit (FireNet, TGW, etc.). " +
 				"EGRESS_PATH_LOCAL routes traffic out through the spoke gateway directly. " +
+				"**Requires Aviatrix 10.1 or later on all in-scope spoke gateways; older gateways will silently ignore this setting and traffic will exit via the default egress path.** " +
 				"Example: `egress_path = \"EGRESS_PATH_LOCAL\"`.",
 		},
 	},

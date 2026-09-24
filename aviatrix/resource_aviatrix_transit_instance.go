@@ -853,7 +853,7 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "software_version", gw.SoftwareVersion)
 	mustSet(d, "rx_queue_size", gw.RxQueueSize)
 	mustSet(d, "subnet", gw.VpcNet)
-	mustSet(d, "tunnel_detection_time", gw.TunnelDetectionTime)
+	setTunnelDetectionTimeState(d, client, gw.GwName, gw.TunnelDetectionTime)
 
 	setGatewayIPv6IPState(d, gw)
 	// FireNet is group-level (AVX-78640); only the GCP Transit FireNet LAN launch

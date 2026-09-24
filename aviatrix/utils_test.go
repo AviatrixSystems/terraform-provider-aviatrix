@@ -500,3 +500,27 @@ func TestGcpRegionFromZone(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateEgressPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		val      any
+		wantErr  bool
+		wantWarn bool
+	}{
+		{name: "default is valid and quiet", val: EgressPathDefault, wantErr: false, wantWarn: false},
+		{name: "local is valid but warns", val: EgressPathLocal, wantErr: false, wantWarn: true},
+		{name: "unknown value errors", val: "EGRESS_PATH_MIDDLE", wantErr: true, wantWarn: false},
+		{name: "empty string errors", val: "", wantErr: true, wantWarn: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			warnings, errors := validateEgressPath(tt.val, "egress_path")
+			assert.Equal(t, tt.wantErr, len(errors) > 0, "errors: %v", errors)
+			assert.Equal(t, tt.wantWarn, len(warnings) > 0, "warnings: %v", warnings)
+			if tt.wantWarn {
+				assert.Contains(t, warnings[0], "10.1")
+			}
+		})
+	}
+}
