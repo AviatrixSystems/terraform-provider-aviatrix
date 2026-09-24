@@ -290,6 +290,11 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 		return nil, err
 	}
 
+	// Configure EBS volume encryption
+	if err := configureTransitInstanceEncryption(d, gateway, cloudType); err != nil {
+		return nil, err
+	}
+
 	// Configure EIP allocation
 	if err := configureTransitInstanceEIP(d, gateway, transitGroup.PrivateNetwork); err != nil {
 		return nil, err
@@ -531,6 +536,30 @@ func configureTransitInstanceTags(d *schema.ResourceData, gateway *goaviatrix.Tr
 			return diag.Errorf("failed to add tags when creating transit instance: %v", err)
 		}
 		gateway.TagJson = tagsJSON
+	}
+	return nil
+}
+
+// configureTransitInstanceEncryption validates and configures EBS volume encryption.
+// The ConnectContainer API accepts enc_volume/cmk when group_uuid is set; encryption
+// is only supported on AWS related clouds. Mirrors the spoke instance behavior.
+func configureTransitInstanceEncryption(d *schema.ResourceData, gateway *goaviatrix.TransitVpc, cloudType int) diag.Diagnostics {
+	enableEncryptVolume := getBool(d, "enable_encrypt_volume")
+	customerManagedKeys := getString(d, "customer_managed_keys")
+	isAWS := goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes)
+
+	if customerManagedKeys != "" && !enableEncryptVolume {
+		return diag.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+	}
+	if enableEncryptVolume && !isAWS {
+		return diag.Errorf("'enable_encrypt_volume' is only supported for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
+	}
+
+	if enableEncryptVolume {
+		gateway.EncVolume = "yes"
+		gateway.CustomerManagedKeys = customerManagedKeys
+	} else if isAWS {
+		gateway.EncVolume = "no"
 	}
 	return nil
 }
@@ -1001,6 +1030,9 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	// Tags
 	setGatewayTagsState(d, client, gw, ignoreTagsConfig)
 
+	// Encryption
+	mustSet(d, "enable_encrypt_volume", gw.EnableEncryptVolume)
+
 	// OCI specific
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		if gw.GatewayZone != "" {
@@ -1084,6 +1116,11 @@ func resourceAviatrixTransitInstanceUpdate(ctx context.Context, d *schema.Resour
 
 	// Update BGP over LAN
 	if err := updateTransitInstanceBgpOverLan(d, client, gateway); err != nil {
+		return err
+	}
+
+	// Update EBS volume encryption
+	if err := updateTransitInstanceEncryptVolume(d, client, gateway); err != nil {
 		return err
 	}
 
@@ -1377,6 +1414,30 @@ func updateTransitInstanceBgpOverLan(d *schema.ResourceData, client *goaviatrix.
 		return diag.Errorf("could not modify BGP over LAN interface count for transit: %s during gateway update: %v", gw.GwName, err)
 	}
 
+	return nil
+}
+
+// updateTransitInstanceEncryptVolume enables EBS volume encryption on update.
+// Encryption cannot be disabled once enabled, and customer_managed_keys can only
+// change together with enable_encrypt_volume. Mirrors the spoke instance behavior.
+func updateTransitInstanceEncryptVolume(d *schema.ResourceData, client *goaviatrix.Client, gateway *goaviatrix.Gateway) diag.Diagnostics {
+	if d.HasChange("enable_encrypt_volume") {
+		if !getBool(d, "enable_encrypt_volume") {
+			return diag.Errorf("cannot disable encrypt volume for gateway: %s", gateway.GwName)
+		}
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return diag.Errorf("'enable_encrypt_volume' is only supported for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
+		}
+		gwEncVolume := &goaviatrix.Gateway{
+			GwName:              gateway.GwName,
+			CustomerManagedKeys: getString(d, "customer_managed_keys"),
+		}
+		if err := client.EnableEncryptVolume(gwEncVolume); err != nil {
+			return diag.Errorf("failed to enable encrypt gateway volume for %s: %v", gwEncVolume.GwName, err)
+		}
+	} else if d.HasChange("customer_managed_keys") {
+		return diag.Errorf("updating customer_managed_keys only is not allowed")
+	}
 	return nil
 }
 

@@ -116,6 +116,22 @@ func transitInstanceOptionalBasicSchema() map[string]*schema.Schema {
 			ValidateFunc: validation.IntBetween(20, 600),
 			Description:  "The IPSec tunnel down detection time for the transit gateway.",
 		},
+
+		// ============================================================================
+		// ENCRYPTION
+		// ============================================================================
+		"enable_encrypt_volume": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable EBS volume encryption for Gateway. Only supports AWS and AWSGov.",
+		},
+		"customer_managed_keys": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			Description: "Customer managed key ID for EBS volume encryption.",
+		},
 	}
 }
 

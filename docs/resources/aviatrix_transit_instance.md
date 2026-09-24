@@ -312,6 +312,11 @@ The following arguments are supported:
 * `spot_price` - (Optional) Price for spot instance. Required when `enable_spot_instance` is true.
 * `delete_spot` - (Optional) If true, the spot instance will be deleted on eviction. Only supports Azure.
 
+### Optional - Encryption (AWS only)
+
+* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS and AWSGov. Default: false.
+* `customer_managed_keys` - (Optional) Customer managed key ID for EBS volume encryption.
+
 ### Optional - AWS Specific
 
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled.
