@@ -21,7 +21,7 @@ func TestEditBgpMd5KeyEmptyValueSent(t *testing.T) {
 		vals, err := form.EncodeToValues(edit)
 		assert.NoError(t, err)
 		assert.True(t, vals.Has("bgp_md5_key"), "bgp_md5_key must be present even when empty")
-		assert.Equal(t, "", vals.Get("bgp_md5_key"))
+		assert.Empty(t, vals.Get("bgp_md5_key"))
 	})
 
 	t.Run("non-empty key is sent normally", func(t *testing.T) {

@@ -208,6 +208,8 @@ type TunnelInfo struct {
 	GwName         string `json:"gw_name"`
 	TunnelStatus   string `json:"tunnel_status"`
 	TunnelProtocol string `json:"tunnel_protocol"`
+	BgpLocalIP     string `json:"bgp_local_ip"`
+	BgpRemoteIP    string `json:"bgp_remote_ip"`
 }
 
 type AlgorithmInfo struct {
