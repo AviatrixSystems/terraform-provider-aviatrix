@@ -31,6 +31,11 @@ func dataSourceAviatrixDcfLogProfile() *schema.Resource {
 				Computed:    true,
 				Description: "Tells us if the logging of session start is enabled.",
 			},
+			"tls_visibility": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Tells us if TLS visibility is enabled for this log profile.",
+			},
 		},
 	}
 }
@@ -64,6 +69,10 @@ func dataSourceAviatrixDcfLogProfileRead(ctx context.Context, d *schema.Resource
 	err = d.Set("session_start", logProfile.SessionStart)
 	if err != nil {
 		return diag.Errorf("could not set session_start: %s", err)
+	}
+	err = d.Set("tls_visibility", logProfile.TLSVisibility)
+	if err != nil {
+		return diag.Errorf("could not set tls_visibility: %s", err)
 	}
 
 	d.SetId(logProfile.ProfileID)

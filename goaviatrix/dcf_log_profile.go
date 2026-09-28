@@ -5,10 +5,11 @@ import (
 )
 
 type LogProfile struct {
-	ProfileName  string `json:"profile_name"`
-	ProfileID    string `json:"profile_id"`
-	SessionEnd   bool   `json:"session_end"`
-	SessionStart bool   `json:"session_start"`
+	ProfileName   string `json:"profile_name"`
+	ProfileID     string `json:"profile_id"`
+	SessionEnd    bool   `json:"session_end"`
+	SessionStart  bool   `json:"session_start"`
+	TLSVisibility bool   `json:"tls_visibility"`
 }
 
 func (c *Client) GetLogProfileByName(ctx context.Context, profileName string) (*LogProfile, error) {
