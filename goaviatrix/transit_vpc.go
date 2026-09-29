@@ -76,6 +76,7 @@ type TransitVpc struct {
 	ZtpFileDownloadPath          string              `json:"-"`
 	ZtpFileType                  string              `json:"ztp_file_type,omitempty"`
 	GatewayRegistrationMethod    string              `json:"gw_registration_method,omitempty"`
+	BackupLinkConfig             string              `json:"backup_link_config,omitempty"`
 	ManagementEgressIPPrefix     string              `json:"mgmt_egress_ip,omitempty"`
 	JumboFrame                   bool                `json:"jumbo_frame,omitempty"`
 	EnableIPv6                   bool                `json:"enable_ipv6,omitempty"`

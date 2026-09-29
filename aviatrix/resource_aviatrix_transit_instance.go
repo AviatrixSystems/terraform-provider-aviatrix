@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -177,6 +178,24 @@ func createEdgeTransitInstance(ctx context.Context, d *schema.ResourceData, clie
 		Transit:                  true,
 		Interfaces:               interfacesList,
 		ManagementEgressIPPrefix: managementEgressIPPrefix,
+	}
+
+	// The controller requires BackupLinkConfig when creating the HA (peer)
+	// transit gateway and rejects the request without it (AVXERR-TRANSIT-0024).
+	// When peer_backup_logical_ifname is provided, construct BackupLinkConfig
+	// the same way as the legacy aviatrix_transit_gateway resource. AVX-82135.
+	peerBackupLogicalName := getList(d, "peer_backup_logical_ifname")
+	if len(peerBackupLogicalName) > 0 {
+		wanCount, err := countInterfaceTypes(interfaces)
+		if err != nil {
+			return fmt.Errorf("failed to count WAN interfaces: %w", err)
+		}
+		connectionType := getString(d, "peer_connection_type")
+		backupLinkConfig, err := createBackupLinkConfig(gwName, peerBackupLogicalName, connectionType, wanCount, cloudType)
+		if err != nil {
+			return fmt.Errorf("failed to create backup link configuration: %w", err)
+		}
+		gateway.BackupLinkConfig = b64.StdEncoding.EncodeToString([]byte(backupLinkConfig))
 	}
 
 	// Interface mapping and device_id are required only for AEP/NEO edge gateway
