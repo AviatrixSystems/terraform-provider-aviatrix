@@ -163,7 +163,8 @@ The following arguments are supported:
 
 ### Optional - General Settings
 
-* `customized_cidr_list` - (Optional) Set of customized CIDRs for the spoke group.
+* `customized_spoke_vpc_routes` - (Optional) Set of customized CIDRs for the spoke group.
+* `private_network` - (Optional) Deploy gateways without a public IP. Gateways reach the controller via the subnet's existing egress path. AWS and Azure only. Valid values: true, false. Default: false. **Note:** Changing this forces a new resource to be created.
 * `include_cidr` - (Optional) Set of CIDRs to include for the spoke group.
 
 ### Optional - Feature Flags
@@ -177,6 +178,7 @@ The following arguments are supported:
 * `enable_skip_public_route_table_update` - (Optional) Skip updating public route tables. Valid values: true, false. Default: false.
 * `private_route_table_config` - (Optional) Set of Azure route table selectors to treat as private route tables for the spoke group VNet. Each entry in the list is in the format of "<route_table_name>:<resource_group_name>" (for example: "Foo_VNet_RTB_1:Bar_RG"). Only applicable for Azure (8), AzureGov (32) and AzureChina (2048). This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
 * `route_tables` - (Optional) Managed route tables for selective VPC route programming on the spoke group (Controller API **edit_managed_route_tables** using the gateway group name). Use AWS route table IDs (for example `rtb-212ff547`) or Azure entries as `"<route_table_name>:<resource_group_name>"`. Only applicable for AWS (1), AWSGov (256), AWSChina (1024), Azure (8), AzureGov (32) and AzureChina (2048). Same semantics as [`aviatrix_spoke_gateway.route_tables`](aviatrix_spoke_gateway.md): set `route_tables = []` to clear; This attribute is computed: if not specified in the Terraform configuration, the existing value configured in the backend system is preserved and used.
+* `enable_symmetric_routing` - (Optional) Enable symmetric routing. AWS and Azure only. Valid values: true, false. Default: false.
 
 ### Optional - BGP Configuration
 
@@ -199,10 +201,6 @@ The following arguments are supported:
 
 * `bgp_send_communities` - (Optional) Send BGP communities. Valid values: true, false. Default: false.
 * `bgp_accept_communities` - (Optional) Accept BGP communities. Valid values: true, false. Default: false.
-
-### Optional - BGP over LAN
-
-* `enable_bgp_over_lan` - (Optional) Enable BGP over LAN. Valid values: true, false. Default: false.
 
 ### Optional - Learned CIDR Approval
 

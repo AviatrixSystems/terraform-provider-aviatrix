@@ -168,6 +168,7 @@ The following arguments are supported:
 * `enable_gro_gso` - (Optional) Enable GRO/GSO. Valid values: true, false. Default: true.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server. Valid values: true, false. Default: false.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive balancing. Valid values: true, false. Default: false.
+* `private_network` - (Optional) Deploy gateways without a public IP. Gateways reach the controller via the subnet's existing egress path. AWS and Azure only. Valid values: true, false. Default: false. **Note:** Changing this forces a new resource to be created.
 
 ### Optional - Transit-Specific Features
 
@@ -204,10 +205,6 @@ The following arguments are supported:
 
 * `bgp_send_communities` - (Optional) Send BGP communities. Valid values: true, false. Default: false.
 * `bgp_accept_communities` - (Optional) Accept BGP communities. Valid values: true, false. Default: false.
-
-### Optional - BGP over LAN
-
-* `enable_bgp_over_lan` - (Optional) Enable BGP over LAN. Valid values: true, false. Default: false. **Note:** Changing this forces a new resource to be created.
 
 ### Optional - Learned CIDR Approval
 
