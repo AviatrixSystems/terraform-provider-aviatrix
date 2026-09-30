@@ -85,7 +85,7 @@ var dcfRuleElem = &schema.Resource{
 						Optional:     true,
 						Computed:     true,
 						ValidateFunc: validation.IntAtLeast(0),
-						Description:  "Upper bound of port range. Defaults to the value of lo when not set.",
+						Description:  "Upper bound of port range.",
 					},
 				},
 			},
@@ -182,6 +182,21 @@ func dcfRuleSetHash(v any) int {
 	maps.Copy(normalized, raw)
 	if protocol, ok := normalized["protocol"].(string); ok {
 		normalized["protocol"] = strings.ToUpper(protocol)
+	}
+	if enforcement, ok := normalized["enforcement"].(string); ok && enforcement != "" {
+		// enforcement was explicitly configured; derive watch from it the
+		// same way Read does, so the deprecated watch field can't disagree.
+		normalized["watch"] = enforcement == "MONITOR"
+	} else if watch, ok := normalized["watch"].(bool); ok {
+		// enforcement is unset (its zero value is always "", since real
+		// enforcement values are never empty per validation) — derive it
+		// from watch instead, matching the documented deprecation mapping:
+		// watch=true -> MONITOR, watch=false -> ENFORCE.
+		if watch {
+			normalized["enforcement"] = "MONITOR"
+		} else {
+			normalized["enforcement"] = "ENFORCE"
+		}
 	}
 	return schema.HashResource(dcfRuleElem)(normalized)
 }
