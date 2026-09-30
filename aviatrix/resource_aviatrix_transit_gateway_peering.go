@@ -257,7 +257,12 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta an
 		}
 	}
 
-	if getBool(d, "enable_peering_over_private_network") {
+	// over_private_network is an edge-only peering option. For a CSP-to-CSP
+	// peering the controller rejects it with AVXERR-TRANSIT-0320 "invalid option
+	// over_private_network"; there, private peering is expressed via
+	// private_ip_peering, which setNonEATPeeringOptions sets below. Only forward
+	// over_private_network when at least one side is an edge gateway. AVX-82054.
+	if isEdgePeering && getBool(d, "enable_peering_over_private_network") {
 		if gateway1Details.PrivateNetwork || gateway2Details.PrivateNetwork {
 			transitGatewayPeering.PrivateIPPeering = "yes"
 		} else {
