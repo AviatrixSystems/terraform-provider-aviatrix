@@ -1,6 +1,9 @@
 package goaviatrix
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,12 +17,11 @@ import (
 func TestGetVpcAzureLiveSubnetNamesParsesList(t *testing.T) {
 	client := newTestClient(t, map[string]any{
 		"return": true,
-		"results": map[string]any{
-			"subnet_list": []map[string]any{
-				{"name": "vnet-Public-FW-ingress-egress-1"},
-				{"name": "vnet-Public-gateway-and-firewall-mgmt-1"},
-				{"name": ""},
-			},
+		"results": []map[string]any{
+			{"cidr": "10.0.0.0/28", "name": "vnet-Public-FW-ingress-egress-1", "str": "10.0.0.0/28~~vnet-Public-FW-ingress-egress-1"},
+			{"cidr": "10.0.0.0/28", "name": "vnet-Public-FW-ingress-egress-1", "str": "10.0.0.0/28~~az-1~~vnet-Public-FW-ingress-egress-1"},
+			{"cidr": "10.0.0.32/28", "name": "vnet-Public-gateway-and-firewall-mgmt-1", "str": "10.0.0.32/28~~vnet-Public-gateway-and-firewall-mgmt-1"},
+			{"name": ""},
 		},
 	})
 
@@ -37,7 +39,7 @@ func TestGetVpcAzureLiveSubnetNamesParsesList(t *testing.T) {
 func TestGetVpcAzureLiveSubnetNamesEmptyList(t *testing.T) {
 	client := newTestClient(t, map[string]any{
 		"return":  true,
-		"results": map[string]any{"subnet_list": []map[string]any{}},
+		"results": []map[string]any{},
 	})
 
 	got, err := client.GetVpcAzureLiveSubnetNames(&Vpc{VpcID: "vnet:rg:uuid"})
@@ -57,4 +59,23 @@ func TestGetVpcAzureLiveSubnetNamesPropagatesError(t *testing.T) {
 
 	_, err := client.GetVpcAzureLiveSubnetNames(&Vpc{VpcID: "vnet:rg:uuid"})
 	require.Error(t, err)
+}
+
+// TestGetVpcAzureLiveSubnetNamesRequestsJSONFormat verifies the request asks
+// for json_format, since without it the controller returns "cidr~~name"
+// strings rather than objects carrying a name field.
+func TestGetVpcAzureLiveSubnetNamesRequestsJSONFormat(t *testing.T) {
+	var gotJSONFormat string
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotJSONFormat = r.URL.Query().Get("json_format")
+		if err := json.NewEncoder(w).Encode(map[string]any{"return": true, "results": []map[string]any{}}); err != nil {
+			t.Errorf("Encode failed: %v", err)
+		}
+	}))
+	t.Cleanup(server.Close)
+	client := &Client{HTTPClient: server.Client(), CID: "test-cid", baseURL: server.URL}
+
+	_, err := client.GetVpcAzureLiveSubnetNames(&Vpc{VpcID: "vnet:rg:uuid"})
+	require.NoError(t, err)
+	assert.Equal(t, "true", gotJSONFormat)
 }

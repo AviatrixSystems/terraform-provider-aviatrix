@@ -169,7 +169,7 @@ The following arguments are supported:
 
 ### Optional - Feature Flags
 
-* `enable_nat` - (Optional) Enable NAT. Valid values: true, false. Default: false.
+* `enable_nat` - (Optional) Enable NAT. While an `aviatrix_spoke_group_transparent_inspection` resource exists for the group, transparent inspection manages SNAT and this value is ignored; changing it from true to false during that time is rejected. Valid values: true, false. Default: false.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frame support. Valid values: true, false. Default: true.
 * `enable_ipv6` - (Optional) Enable IPv6. Valid values: true, false. Default: false.
 * `enable_gro_gso` - (Optional) Enable GRO/GSO. Valid values: true, false. Default: true.

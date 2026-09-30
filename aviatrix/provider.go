@@ -191,6 +191,7 @@ func Provider() *schema.Provider {
 			"aviatrix_smart_group":                                            resourceAviatrixSmartGroup(),
 			"aviatrix_splunk_logging":                                         resourceAviatrixSplunkLogging(),
 			"aviatrix_spoke_group":                                            resourceAviatrixSpokeGroup(),
+			"aviatrix_spoke_group_transparent_inspection":                     resourceAviatrixSpokeGroupTransparentInspection(),
 			"aviatrix_spoke_gateway":                                          resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_instance":                                         resourceAviatrixSpokeInstance(),
 			"aviatrix_spoke_ha_gateway":                                       resourceAviatrixSpokeHaGateway(),

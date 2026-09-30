@@ -662,6 +662,21 @@ func applySpokeSpecificSettings(ctx context.Context, d *schema.ResourceData, cli
 	return nil
 }
 
+// spokeGroupTransparentInspectionEnabled reports whether transparent inspection
+// is enabled for the VPC of an AWS spoke group. Transparent inspection enables
+// SNAT on the group, so no status call is made for a group with NAT disabled.
+func spokeGroupTransparentInspectionEnabled(ctx context.Context, client *goaviatrix.Client, group *goaviatrix.GatewayGroup) (bool, error) {
+	if !group.EnableNat || group.CloudType != goaviatrix.AWS ||
+		!strings.EqualFold(strings.TrimPrefix(group.GwType, "GwGroupType."), "SPOKE") {
+		return false, nil
+	}
+	enabled, err := client.IsGatewayInsertionEnabled(ctx, strings.Split(group.VpcID, subnetSeparator)[0])
+	if err != nil {
+		return false, fmt.Errorf("failed to get transparent inspection status for spoke group %s: %w", group.GroupName, err)
+	}
+	return enabled, nil
+}
+
 // ============================================================================
 // Spoke Group CRUD Operations
 // ============================================================================
@@ -785,7 +800,13 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	// Feature Flags
 	mustSet(d, "enable_jumbo_frame", spokeGroup.EnableJumboFrame)
-	mustSet(d, "enable_nat", spokeGroup.EnableNat)
+	transparentInspectionEnabled, err := spokeGroupTransparentInspectionEnabled(ctx, client, spokeGroup)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !transparentInspectionEnabled {
+		mustSet(d, "enable_nat", spokeGroup.EnableNat)
+	}
 	mustSet(d, "enable_ipv6", spokeGroup.EnableIPv6)
 	mustSet(d, "enable_gro_gso", spokeGroup.EnableGroGso)
 	mustSet(d, "enable_vpc_dns_server", spokeGroup.EnableVpcDNSServer)
@@ -913,16 +934,29 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	// NAT (SNAT) - API: enable_snat / disable_snat
 	// ============================================================================
 	if d.HasChange("enable_nat") {
-		enableSNat := getBool(d, "enable_nat")
-		if enableSNat {
-			err := client.EnableGatewayGroupSNat(ctx, groupName)
-			if err != nil {
-				return diag.Errorf("failed to enable NAT for spoke group: %s", err)
+		group, err := client.GetGatewayGroup(ctx, groupUUID)
+		if err != nil {
+			return diag.Errorf("failed to read spoke group before updating NAT: %s", err)
+		}
+		transparentInspectionEnabled, err := spokeGroupTransparentInspectionEnabled(ctx, client, group)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if getBool(d, "enable_nat") {
+			if !transparentInspectionEnabled {
+				if err := client.EnableGatewayGroupSNat(ctx, groupName); err != nil {
+					return diag.Errorf("failed to enable NAT for spoke group: %s", err)
+				}
 			}
 		} else {
-			err := client.DisableGatewayGroupSNat(ctx, groupName)
-			if err != nil {
-				return diag.Errorf("failed to disable NAT for spoke group: %s", err)
+			if transparentInspectionEnabled {
+				return diag.Errorf("enable_nat cannot be set to false while transparent inspection is enabled for spoke group %s; "+
+					"remove the aviatrix_spoke_group_transparent_inspection resource first", groupName)
+			}
+			if group.EnableNat {
+				if err := client.DisableGatewayGroupSNat(ctx, groupName); err != nil {
+					return diag.Errorf("failed to disable NAT for spoke group: %s", err)
+				}
 			}
 		}
 	}

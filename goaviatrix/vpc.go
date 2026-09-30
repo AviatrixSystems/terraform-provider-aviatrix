@@ -240,17 +240,15 @@ func (c *Client) GetVpcAzureLiveSubnetNames(vpc *Vpc) (map[string]bool, error) {
 		"account_name": vpc.AccountName,
 		"cloud_type":   strconv.Itoa(vpc.CloudType),
 		"vpc_region":   vpc.Region,
+		"json_format":  "true",
 	}
 	type subnet struct {
 		Name string `json:"name"`
 	}
-	type RespResults struct {
-		SubnetList []subnet `json:"subnet_list"`
-	}
 	type Resp struct {
-		Return  bool        `json:"return"`
-		Results RespResults `json:"results"`
-		Reason  string      `json:"reason"`
+		Return  bool     `json:"return"`
+		Results []subnet `json:"results"`
+		Reason  string   `json:"reason"`
 	}
 	var data Resp
 	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
@@ -258,7 +256,7 @@ func (c *Client) GetVpcAzureLiveSubnetNames(vpc *Vpc) (map[string]bool, error) {
 	}
 
 	liveNames := make(map[string]bool)
-	for _, s := range data.Results.SubnetList {
+	for _, s := range data.Results {
 		if s.Name != "" {
 			liveNames[s.Name] = true
 		}
