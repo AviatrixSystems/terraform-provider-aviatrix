@@ -121,6 +121,9 @@ resource "aviatrix_spoke_group" "test_spoke_group_advanced" {
   enable_private_vpc_default_route    = true
   enable_skip_public_route_table_update = false
 
+  # Smart Gateway (needs the underlay mesh)
+  enable_route_resolver = true
+
   # Learned CIDR Approval
   enable_learned_cidrs_approval = true
   learned_cidrs_approval_mode   = "gateway"
@@ -172,6 +175,7 @@ The following arguments are supported:
 * `enable_nat` - (Optional) Enable NAT. While an `aviatrix_spoke_group_transparent_inspection` resource exists for the group, transparent inspection manages SNAT and this value is ignored; changing it from true to false during that time is rejected. Valid values: true, false. Default: false.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frame support. Valid values: true, false. Default: true.
 * `enable_ipv6` - (Optional) Enable IPv6. Valid values: true, false. Default: false.
+* `enable_route_resolver` - (Optional) Enable the Smart Gateway route resolver on this group. Unset keeps the controller's value. Requires the underlay mesh from [`aviatrix_smart_gateway_fabric`](aviatrix_smart_gateway_fabric.md). The controller sets the resolver only on a group that has a gateway, so `true` on a new group takes effect on the next apply after its first instance exists; the first apply shows a warning.
 * `enable_gro_gso` - (Optional) Enable GRO/GSO. Valid values: true, false. Default: true.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server. Valid values: true, false. Default: false.
 * `enable_private_vpc_default_route` - (Optional) Enable private VPC default route. Valid values: true, false. Default: false.

@@ -23,6 +23,7 @@ func resourceAviatrixTransitGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: resourceAviatrixTransitGroupCustomizeDiff,
 
 		Schema: MergeSchemaMaps(
 			// Required attributes from group schema
@@ -91,6 +92,7 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable VPC DNS server.",
 		},
+		smartGatewayResolverAttr: smartGatewayResolverSchema(),
 		"enable_s2c_rx_balancing": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -676,6 +678,10 @@ func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	if err := checkSmartGatewayResolverBeforeCreate(ctx, d, client, normalizeGwType(d.Get("gw_type")) != "STANDALONE"); err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Create the transit group
 	log.Printf("[INFO] Creating Transit Group: %#v", transitGroup)
 	if err := client.CreateGatewayGroup(ctx, transitGroup); err != nil {
@@ -719,7 +725,19 @@ func resourceAviatrixTransitGroupCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("failed to apply transit-specific settings: %s", err)
 	}
 
+	if err := applySmartGatewayResolver(ctx, d, client, groupName); err != nil {
+		return append(resourceAviatrixTransitGroupRead(ctx, d, meta), smartGatewayResolverCreateWarning(err))
+	}
+
 	return resourceAviatrixTransitGroupRead(ctx, d, meta)
+}
+
+func resourceAviatrixTransitGroupCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown("gw_type") {
+		return nil
+	}
+	standalone := normalizeGwType(d.Get("gw_type")) == "STANDALONE"
+	return validateSmartGatewayResolverDiff(d, standalone, "on a standalone group")
 }
 
 //nolint:cyclop,funlen
@@ -771,6 +789,7 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "enable_gro_gso", transitGroup.EnableGroGso)
 	mustSet(d, "enable_vpc_dns_server", transitGroup.EnableVpcDNSServer)
 	mustSet(d, "enable_s2c_rx_balancing", transitGroup.EnableS2cRxBalancing)
+	readSmartGatewayResolver(ctx, d, client, transitGroup.GroupName)
 
 	// Transit-specific features
 	mustSet(d, "enable_hybrid_connection", transitGroup.EnableHybridConnection)
@@ -1098,6 +1117,15 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return diag.Errorf("could not disable ipv6 during transit group update: %s", err)
 			}
+		}
+	}
+
+	// ============================================================================
+	// Smart Gateway route resolver - API: enable_smart_gw_resolver / disable_smart_gw_resolver
+	// ============================================================================
+	if d.HasChange(smartGatewayResolverAttr) {
+		if err := applySmartGatewayResolver(ctx, d, client, groupName); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 

@@ -136,6 +136,9 @@ resource "aviatrix_transit_group" "test_transit_group_advanced" {
   enable_ipv6                         = false
   enable_vpc_dns_server               = true
 
+  # Smart Gateway (needs the underlay mesh)
+  enable_route_resolver = true
+
   # Learned CIDR Approval
   enable_learned_cidrs_approval = true
   learned_cidrs_approval_mode   = "gateway"
@@ -165,6 +168,7 @@ The following arguments are supported:
 * `enable_nat` - (Optional) Enable NAT (aka single_ip_snat). Valid values: true, false. Default: false.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frame support. Valid values: true, false. Default: true.
 * `enable_ipv6` - (Optional) Enable IPv6. Only valid for AWS and Azure. Valid values: true, false. Default: false.
+* `enable_route_resolver` - (Optional) Enable the Smart Gateway route resolver on this group. Unset keeps the controller's value. Requires the underlay mesh from [`aviatrix_smart_gateway_fabric`](aviatrix_smart_gateway_fabric.md). The controller sets the resolver only on a group that has a gateway, so `true` on a new group takes effect on the next apply after its first instance exists; the first apply shows a warning.
 * `enable_gro_gso` - (Optional) Enable GRO/GSO. Valid values: true, false. Default: true.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server. Valid values: true, false. Default: false.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive balancing. Valid values: true, false. Default: false.

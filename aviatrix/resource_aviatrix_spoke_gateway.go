@@ -70,6 +70,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Name of the gateway group which is going to be created.",
 			},
+			smartGatewayResolverAttr: smartGatewayResolverSchema(),
 			"vpc_id": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -770,6 +771,11 @@ func handleIPv6SubnetForceNew(d *schema.ResourceDiff, fieldName string) error {
 }
 
 func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	noLu := d.NewValueKnown("enable_bgp") && !getBool(d, "enable_bgp")
+	if err := validateSmartGatewayResolverDiff(d, noLu, "on a non-BGP cloud spoke gateway"); err != nil {
+		return err
+	}
+
 	// Only force recreation for primary gateway's IPv6 CIDR changes
 	// HA gateway IPv6 CIDR changes are handled by Update function (recreates only HA gateway)
 	if err := handleIPv6SubnetForceNew(d, "subnet_ipv6_cidr"); err != nil {
@@ -798,6 +804,9 @@ func resourceAviatrixSpokeGatewayCustomizeDiff(_ context.Context, d *schema.Reso
 
 func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
+	if err := checkSmartGatewayResolverBeforeCreate(context.Background(), d, client, getBool(d, "enable_bgp")); err != nil {
+		return err
+	}
 
 	gateway := &goaviatrix.SpokeVpc{
 		CloudType:              getInt(d, "cloud_type"),
@@ -1656,6 +1665,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		}
 	}
 
+	// Only warn, so the new gateway is not tainted.
+	if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
+		log.Printf("[WARN] gateway %q created but %s was not applied: %v", getString(d, "gw_name"), smartGatewayResolverAttr, err)
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1698,6 +1712,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 
 	log.Printf("[TRACE] reading spoke gateway %s: %#v", getString(d, "gw_name"), gw)
 	mustSet(d, "group_name", gw.GroupName)
+	readSmartGatewayResolver(context.Background(), d, client, gw.GroupName)
 	mustSet(d, "cloud_type", gw.CloudType)
 	mustSet(d, "account_name", gw.AccountName)
 	mustSet(d, "enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -3043,6 +3058,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
 		if err != nil {
 			return fmt.Errorf("could not set tunnel cipher settings during gateway update: %w", err)
+		}
+	}
+
+	if d.HasChange(smartGatewayResolverAttr) {
+		if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
+			return err
 		}
 	}
 

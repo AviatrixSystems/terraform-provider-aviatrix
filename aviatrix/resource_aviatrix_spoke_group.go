@@ -23,6 +23,7 @@ func resourceAviatrixSpokeGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: resourceAviatrixSpokeGroupCustomizeDiff,
 
 		Schema: MergeSchemaMaps(
 			// Required attributes from group schema
@@ -130,6 +131,7 @@ func spokeGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable symmetric routing for the spoke group. Only valid for AWS and Azure.",
 		},
+		smartGatewayResolverAttr: smartGatewayResolverSchema(),
 
 		// ============================================================================
 		// BGP CONFIGURATION
@@ -703,6 +705,10 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
+	if err := checkSmartGatewayResolverBeforeCreate(ctx, d, client, !spokeGroupWithoutBgpLu(normalizeGwType(d.Get("gw_type")), getBool(d, "enable_bgp"))); err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Create the spoke group
 	log.Printf("[INFO] Creating Spoke Group: %#v", spokeGroup)
 	if err := client.CreateGatewayGroup(ctx, spokeGroup); err != nil {
@@ -742,7 +748,24 @@ func resourceAviatrixSpokeGroupCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed to apply spoke-specific settings: %s", err)
 	}
 
+	if err := applySmartGatewayResolver(ctx, d, client, groupName); err != nil {
+		return append(resourceAviatrixSpokeGroupRead(ctx, d, meta), smartGatewayResolverCreateWarning(err))
+	}
+
 	return resourceAviatrixSpokeGroupRead(ctx, d, meta)
+}
+
+func resourceAviatrixSpokeGroupCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown("gw_type") || !d.NewValueKnown("enable_bgp") {
+		return nil
+	}
+	noLu := spokeGroupWithoutBgpLu(normalizeGwType(d.Get("gw_type")), getBool(d, "enable_bgp"))
+	return validateSmartGatewayResolverDiff(d, noLu, "on a standalone or non-BGP cloud spoke group")
+}
+
+// Matches the controller's is_no_lu_gateway, plus standalone groups.
+func spokeGroupWithoutBgpLu(gwType string, enableBgp bool) bool {
+	return gwType == "STANDALONE" || (gwType == "SPOKE" && !enableBgp)
 }
 
 //nolint:cyclop,funlen
@@ -811,6 +834,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "enable_gro_gso", spokeGroup.EnableGroGso)
 	mustSet(d, "enable_vpc_dns_server", spokeGroup.EnableVpcDNSServer)
 	mustSet(d, "enable_symmetric_routing", spokeGroup.EnableSymmetricRouting)
+	readSmartGatewayResolver(ctx, d, client, spokeGroup.GroupName)
 
 	// BGP Configuration
 	mustSet(d, "enable_bgp", spokeGroup.EnableBgp)
@@ -1117,6 +1141,15 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 			if err != nil {
 				return diag.Errorf("could not disable ipv6 during spoke group update: %s", err)
 			}
+		}
+	}
+
+	// ============================================================================
+	// Smart Gateway route resolver - API: enable_smart_gw_resolver / disable_smart_gw_resolver
+	// ============================================================================
+	if d.HasChange(smartGatewayResolverAttr) {
+		if err := applySmartGatewayResolver(ctx, d, client, groupName); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 

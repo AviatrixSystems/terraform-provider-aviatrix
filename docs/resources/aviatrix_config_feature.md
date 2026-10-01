@@ -50,6 +50,8 @@ The following arguments are supported:
   * `vrf`
 * `is_enabled` - (Required) If set to true, the feature is enabled, set to false the feature is disabled.
 
+-> After enabling `smart_gateway`, turn on the underlay mesh with [`aviatrix_smart_gateway_fabric`](aviatrix_smart_gateway_fabric.md), then set `enable_route_resolver` on each gateway.
+
 ## Import
 
 **aviatrix_config_feature** can be imported using feature name, e.g. feature_name is : microseg

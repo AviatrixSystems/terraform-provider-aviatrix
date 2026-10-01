@@ -71,6 +71,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Name of the gateway group which is going to be created.",
 			},
+			smartGatewayResolverAttr: smartGatewayResolverSchema(),
 			"vpc_id": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -1076,6 +1077,9 @@ func resourceAviatrixTransitGatewayCustomizeDiff(_ context.Context, d *schema.Re
 
 func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) error {
 	client := mustClient(meta)
+	if err := checkSmartGatewayResolverBeforeCreate(context.Background(), d, client, true); err != nil {
+		return err
+	}
 
 	cloudType := getInt(d, "cloud_type")
 	flag := false
@@ -2044,6 +2048,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 		}
 	}
 
+	// Only warn, so the new gateway is not tainted.
+	if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
+		log.Printf("[WARN] gateway %q created but %s was not applied: %v", getString(d, "gw_name"), smartGatewayResolverAttr, err)
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -2089,6 +2098,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 	mustSet(d, "account_name", gw.AccountName)
 	mustSet(d, "gw_name", gw.GwName)
 	mustSet(d, "group_name", gw.GroupName)
+	readSmartGatewayResolver(context.Background(), d, client, gw.GroupName)
 	mustSet(d, "gw_size", gw.GwSize)
 	mustSet(d, "enable_ipv6", gw.EnableIPv6)
 	mustSet(d, "tunnel_encryption_cipher", gw.TunnelEncryptionCipher)
@@ -4099,6 +4109,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta any) erro
 		err := client.SetGatewayPhase2Policy(gateway.GwName, encPolicy, pfsPolicy)
 		if err != nil {
 			return fmt.Errorf("could not set phase tunnel encryption cipher during transit gateway update: %w", err)
+		}
+	}
+
+	if d.HasChange(smartGatewayResolverAttr) {
+		if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
+			return err
 		}
 	}
 

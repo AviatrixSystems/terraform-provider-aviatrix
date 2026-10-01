@@ -188,6 +188,7 @@ func Provider() *schema.Provider {
 			"aviatrix_site2cloud":                                             resourceAviatrixSite2Cloud(),
 			"aviatrix_site2cloud_ca_cert_tag":                                 resourceAviatrixSite2CloudCaCertTag(),
 			"aviatrix_sla_class":                                              resourceAviatrixSLAClass(),
+			"aviatrix_smart_gateway_fabric":                                   resourceAviatrixSmartGatewayFabric(),
 			"aviatrix_smart_group":                                            resourceAviatrixSmartGroup(),
 			"aviatrix_splunk_logging":                                         resourceAviatrixSplunkLogging(),
 			"aviatrix_spoke_group":                                            resourceAviatrixSpokeGroup(),
