@@ -1,8 +1,11 @@
 package goaviatrix
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,7 +40,28 @@ func (c *Client) CreateDomainConn(domainConn *DomainConn) error {
 		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
 		"async":                         "true",
 	}
-	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+	if err := c.PostAsyncAPI(form["action"], form, BasicCheck); err != nil {
+		return err
+	}
+
+	// The async task can report "done" before the new connection is visible to
+	// list_connected_route_domains (controller-side propagation lag), which is
+	// more likely when both endpoint domains were created in the same apply.
+	// Poll until it shows up so the provider's post-Create Read does not
+	// momentarily miss it and clear the ID (AVX-82583).
+	return Retry(RetryConfig{
+		MaxTries: 5,
+		Backoff:  2 * time.Second,
+		ShouldRetry: func(err error) bool {
+			return errors.Is(err, ErrNotFound)
+		},
+		OnRetry: func(attempt int, backoff time.Duration, err error) {
+			log.Printf("[INFO] domain connection %s:%s~%s:%s not yet visible, waiting %v before retry (attempt %d/5)",
+				domainConn.TgwName1, domainConn.DomainName1, domainConn.TgwName2, domainConn.DomainName2, backoff, attempt)
+		},
+	}, func() error {
+		return c.GetDomainConn(domainConn)
+	})
 }
 
 func (c *Client) GetDomainConn(domainConn *DomainConn) error {
