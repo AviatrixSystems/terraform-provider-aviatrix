@@ -42,6 +42,7 @@ The following arguments are supported:
 * `customized_routes` - (Optional) Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 * `customized_route_advertisement` - (Optional and ForceNew) Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 * `disable_local_route_propagation` - (Optional and ForceNew) Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same network domain. Valid values: true, false. Default value: false.
+* `appliance_mode` - (Optional and ForceNew) Advanced option. If set to true, it enables appliance mode on the TGW VPC attachment, so both directions of a flow go through the same appliance, e.g. in your own inspection VPC. Not supported in an Aviatrix Firewall Domain; FireNet manages appliance mode on its own attachments. Valid values: true, false. Default value: false. Available as of provider version R10.2.0+.
 * `edge_attachment` - (Optional) Advanced option. To allow access to the private IP of the MGMT interface of the Firewalls, set this attribute to enable Management Access From Onprem. This feature advertises the Firewalls private MGMT subnet to your Edge domain. Example: "vpn-0068bb31917ff2289".
 
 The following argument is deprecated:

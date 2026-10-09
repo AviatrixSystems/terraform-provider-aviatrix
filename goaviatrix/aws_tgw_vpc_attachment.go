@@ -20,7 +20,10 @@ type AwsTgwVpcAttachment struct {
 	CustomizedRouteAdvertisement string
 	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation,omitempty" json:"disable_local_route_propagation,omitempty"`
 	EdgeAttachment               string
+	ApplianceMode                bool
 }
+
+const applianceModeEnabled = "enable"
 
 type DomainListResp struct {
 	Return  bool     `json:"return,omitempty"`
@@ -41,6 +44,9 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	}
 	if awsTgwVpcAttachment.DisableLocalRoutePropagation {
 		form["disable_local_propagation"] = "true"
+	}
+	if awsTgwVpcAttachment.ApplianceMode {
+		form["appliance_mode"] = "true"
 	}
 
 	if awsTgwVpcAttachment.CustomizedRoutes != "" {
@@ -118,13 +124,16 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 		return nil, errors.New("aws tgw does not have security domain: " + err.Error())
 	}
 
-	aTVA, err := c.GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment)
+	aTVA, isFirewallDomain, err := c.GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return nil, err
 		}
 		return nil, errors.New("could not get security domain details: " + err.Error())
 	}
+	// FireNet turns appliance mode on by itself for GWLB, so in a firewall
+	// domain the stored value says nothing about the user's configuration.
+	aTVA.ApplianceMode = !isFirewallDomain && tgwAttachmentInfo.ApplianceModeSupport == applianceModeEnabled
 
 	ARTDetail, err := c.GetAttachmentRouteTableDetails(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.VpcID)
 	if err != nil {
@@ -230,7 +239,8 @@ func (c *Client) GetAwsTgwDomain(awsTgwName string, sDM string) error {
 	return nil
 }
 
-func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
+// GetVPCAttachmentRouteTableDetails also reports whether the attachment's domain is an Aviatrix Firewall Domain.
+func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, bool, error) {
 	var data RouteDomainAPIResp
 	form := map[string]string{
 		"CID":               c.CID,
@@ -241,18 +251,18 @@ func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVp
 
 	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	routeDomainDetail := data.Results
 	attachedVPCs := routeDomainDetail[0].AttachedVPC
 	for i := range attachedVPCs {
 		if attachedVPCs[i].VPCId == awsTgwVpcAttachment.VpcID {
 			awsTgwVpcAttachment.VpcAccountName = attachedVPCs[i].AccountName
-			return awsTgwVpcAttachment, nil
+			return awsTgwVpcAttachment, routeDomainDetail[0].AviatrixFirewallDomain, nil
 		}
 	}
 
-	return nil, ErrNotFound
+	return nil, false, ErrNotFound
 }
 
 func (c *Client) EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {

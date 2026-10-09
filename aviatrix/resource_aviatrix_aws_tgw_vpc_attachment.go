@@ -84,6 +84,14 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same network domain.",
 			},
+			"appliance_mode": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+				Description: "Advanced option. If set to true, it enables appliance mode on the TGW VPC attachment, so both " +
+					"directions of a flow use the same appliance. Not supported in an Aviatrix Firewall Domain.",
+			},
 			"edge_attachment": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -110,6 +118,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta any)
 		DisableLocalRoutePropagation: getBool(d, "disable_local_route_propagation"),
 		EdgeAttachment:               getString(d, "edge_attachment"),
 		SecurityDomainName:           getString(d, "network_domain_name"),
+		ApplianceMode:                getBool(d, "appliance_mode"),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
@@ -118,6 +127,9 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta any)
 			return fmt.Errorf("could not find Security Domain: %s", awsTgwVpcAttachment.SecurityDomainName)
 		}
 		return fmt.Errorf("could not find Security Domain due to: %w", err)
+	}
+	if isFirewallSecurityDomain && awsTgwVpcAttachment.ApplianceMode {
+		return fmt.Errorf("appliance_mode is not supported in an Aviatrix Firewall Domain")
 	}
 
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
@@ -194,6 +206,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta any) e
 		mustSet(d, "vpc_account_name", aTVA.VpcAccountName)
 		mustSet(d, "vpc_id", aTVA.VpcID)
 		mustSet(d, "disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
+		mustSet(d, "appliance_mode", aTVA.ApplianceMode)
 
 		if getString(d, "subnets") != "" {
 			subnetsFromConfigList := strings.Split(getString(d, "subnets"), ",")

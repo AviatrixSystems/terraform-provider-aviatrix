@@ -7,6 +7,15 @@ description: |-
 
 # Aviatrix Provider: Release Note
 
+## 10.2.0
+### Notes:
+- Supported Controller version: **10.2.0**
+
+### Enhancements:
+| Enhancement | Description |
+| :--- | :--- |
+| AVX-80622 | Added `appliance_mode` to `aviatrix_aws_tgw_vpc_attachment`. It enables appliance mode when the VPC is attached, and changing it replaces the attachment. It is not supported in an Aviatrix Firewall Domain. |
+
 ## 10.1.0
 ### Notes:
 - Supported Controller version: **10.1.0**

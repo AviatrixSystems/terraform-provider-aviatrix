@@ -34,6 +34,7 @@ type AttachmentInfo struct {
 	AwsSideAsnRaw           json.RawMessage `json:"aws_side_asn"`
 	EnableGlobalAccelerator bool            `json:"enable_acceleration"`
 	AccessFromEdge          []string        `json:"access_from_edge"`
+	ApplianceModeSupport    string          `json:"appliance_mode_support"`
 }
 
 func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) error {
