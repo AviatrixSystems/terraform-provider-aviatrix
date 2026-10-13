@@ -14,6 +14,7 @@ description: |-
 ### Enhancements:
 | Enhancement | Description |
 | :--- | :--- |
+| AVX-80617 | `aviatrix_aws_tgw_peering` can now peer two TGWs in the same region. No configuration change is needed; the Controller used to refuse same-region peering. |
 | AVX-80622 | Added `appliance_mode` to `aviatrix_aws_tgw_vpc_attachment`. It enables appliance mode when the VPC is attached, and changing it replaces the attachment. It is not supported in an Aviatrix Firewall Domain. |
 
 ## 10.1.0

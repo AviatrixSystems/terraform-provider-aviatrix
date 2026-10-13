@@ -3,12 +3,14 @@ subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_peering"
 description: |-
-  Creates and manages Aviatrix inter-region AWS TGW peerings
+  Creates and manages Aviatrix AWS TGW peerings, within a region or across regions
 ---
 
 # aviatrix_aws_tgw_peering
 
-The **aviatrix_aws_tgw_peering** resource allows the creation and management of Aviatrix-created inter-region peerings between AWS TGWs.
+The **aviatrix_aws_tgw_peering** resource allows the creation and management of Aviatrix-created peerings between AWS TGWs. The two TGWs can be in the same region or in different regions.
+
+-> **NOTE:** Peering two TGWs in the same region requires Controller version 10.2.0 or later. Earlier Controllers only allow peering across regions.
 
 ## Example Usage
 
