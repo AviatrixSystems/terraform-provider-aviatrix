@@ -160,6 +160,17 @@ resource "aviatrix_spoke_external_device_conn" "test" {
 
 The following arguments are supported:
 
+~> **NOTE:** `remote_gateway_ip`, `bgp_remote_as_num`, `pre_shared_key`, `local_tunnel_cidr`, `remote_tunnel_cidr` and their `backup_*` counterparts can be changed in place, without recreating the connection, when `connection_type` = 'bgp' and `tunnel_protocol` = 'IPsec'. On a 'static' connection, or over 'LAN' or 'GRE', changing any of them still forces the connection to be replaced. Requires Controller version 10.1+. A few things to be aware of:
+
+* Changing any of these re-establishes the affected tunnel, so the BGP session over it goes down and comes back up. Only the tunnels whose values changed are touched.
+* An edit can change a tunnel's values but cannot add or remove tunnels, so the number of comma-separated values must stay the same.
+* Write the tunnel CIDRs the way the Controller reports them, including the `/30`. A configuration that omits the prefix length produces a diff that never clears, because the Controller stores the prefixed form and Terraform compares the strings.
+* On a connection where both tunnels share one pre-shared key, or one remote gateway IP, changing it for either tunnel changes it for both. `pre_shared_key` is never read back from the Controller, so Terraform cannot detect this and the value in your configuration for the other tunnel may no longer match the device.
+* Because `pre_shared_key` is never read back, an apply that fails part way through a key change leaves Terraform recording the new key for every tunnel while the Controller still holds the old one on the tunnels it did not reach. The next plan is empty even though the connection is diverged. If an apply that changes a key fails, set the keys again or replace the connection.
+* Moving an address onto a tunnel while another tunnel still holds it is refused — a swap, or a partial move such as `A,B` to `B,C`. Each value is edited into the tunnel that holds the old value at the same position, one request at a time, so part way through the apply two tunnels would hold that address. An apply interrupted there leaves a connection whose tunnels can no longer be told apart by address, which blocks every later edit of that side. Change the addresses one at a time, or replace the connection.
+* Clearing one of these attributes is not an edit the Controller supports. To go back to a Controller-generated `pre_shared_key`, or to remove a value, replace the connection.
+* Setting `bgp_admin_shutdown` in the same apply is sequenced around these edits: a shutdown is applied before them, and a shutdown being lifted is applied after them, so the session is down while the tunnel is re-addressed or re-keyed.
+
 ### Required
 
 -> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "<vnet-name>:<rg-name>:<resource-guid>".
@@ -177,6 +188,7 @@ The following arguments are supported:
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `enable_bgp_multihop` - (Optional) Whether to enable multihop on a BFD connection. Valid values: true, false. Default: true.
+* `bgp_admin_shutdown` - (Optional) Administratively shut down the BGP neighbors of this connection while leaving the IPsec tunnels up. Valid values: true, false. Only supported when `connection_type` = 'bgp' and `tunnel_protocol` = 'IPsec'. Requires Controller version 10.1+. Omitting this attribute leaves the BGP admin state as the Controller reports it, so a connection shut down outside Terraform stays shut down; set it to `false` explicitly to bring the neighbors up. It cannot be set when the connection is created over 'LAN' or 'GRE', or when `connection_type` = 'static' - that is rejected at plan time.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 * `local_subnet` - (Optional) Local CIDRs joined as a string with ','. Optional config when proxy ID is enabled.
 * `proxy_id_enabled` - (Optional) Enable proxy ID for transit external device connection. Valid values: true, false. Default: false. When enabled, local and remote CIDRs are used to configure precise traffic-selectors for static route based S2C connections.

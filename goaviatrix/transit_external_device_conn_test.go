@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/ajg/form"
@@ -325,5 +326,62 @@ func TestConfigureLocalGatewayHAEnabled(t *testing.T) {
 		assert.Equal(t, remoteTunnel1, conn.RemoteTunnelCidr)
 		assert.Equal(t, remoteTunnel2, conn.BackupRemoteTunnelCidr)
 		assert.Equal(t, backupRemoteAS, conn.BackupBgpRemoteAsNum)
+	})
+}
+
+// TestAsNumberWrapperAcceptsBothJsonTypes guards the decode of the ASN fields.
+// The controller quotes one written by create and leaves one written by the
+// edit action bare, so both spellings reach this struct on the same connection,
+// before and after an ASN edit.
+func TestAsNumberWrapperAcceptsBothJsonTypes(t *testing.T) {
+	t.Run("quoted, as the create path writes it", func(t *testing.T) {
+		var detail EditExternalDeviceConnDetail
+		err := json.Unmarshal([]byte(`{
+			"bgp_local_asn_number": "65100",
+			"bgp_remote_asn_number": "65096",
+			"bgp_remote_backup_asn_number": "65096"
+		}`), &detail)
+		assert.NoError(t, err)
+		assert.Equal(t, AsNumberWrapper("65100"), detail.BgpLocalAsNum)
+		assert.Equal(t, AsNumberWrapper("65096"), detail.BgpRemoteAsNum)
+		assert.Equal(t, AsNumberWrapper("65096"), detail.BackupBgpRemoteAsNum)
+	})
+
+	t.Run("unquoted, as the edit path writes it", func(t *testing.T) {
+		var detail EditExternalDeviceConnDetail
+		err := json.Unmarshal([]byte(`{
+			"bgp_local_asn_number": "65100",
+			"bgp_remote_asn_number": 65097,
+			"bgp_remote_backup_asn_number": 65097
+		}`), &detail)
+		assert.NoError(t, err)
+		assert.Equal(t, AsNumberWrapper("65097"), detail.BgpRemoteAsNum)
+		assert.Equal(t, AsNumberWrapper("65097"), detail.BackupBgpRemoteAsNum)
+	})
+
+	// No backup reports null rather than omitting the field.
+	t.Run("null and absent both read as empty", func(t *testing.T) {
+		var detail EditExternalDeviceConnDetail
+		err := json.Unmarshal([]byte(`{"bgp_remote_backup_asn_number": null}`), &detail)
+		assert.NoError(t, err)
+		assert.Equal(t, AsNumberWrapper(""), detail.BackupBgpRemoteAsNum)
+		assert.Equal(t, AsNumberWrapper(""), detail.BgpRemoteAsNum)
+		assert.Equal(t, 0, parseBackupBgpRemoteAsNumber(detail.BackupBgpRemoteAsNum))
+	})
+
+	// The decode has to survive the hand-off to the ints the resource reads.
+	t.Run("an edited ASN reaches the connection as an int", func(t *testing.T) {
+		detail := EditExternalDeviceConnDetail{
+			BgpStatus:      "enabled",
+			BgpLocalAsNum:  "65100",
+			BgpRemoteAsNum: "65097",
+			Tunnels:        []TunnelInfo{{TunnelProtocol: "IPsec"}},
+		}
+		conn := &ExternalDeviceConn{}
+		populateConnectionTypeInfo(conn, detail)
+
+		assert.Equal(t, "bgp", conn.ConnectionType)
+		assert.Equal(t, 65100, conn.BgpLocalAsNum)
+		assert.Equal(t, 65097, conn.BgpRemoteAsNum)
 	})
 }

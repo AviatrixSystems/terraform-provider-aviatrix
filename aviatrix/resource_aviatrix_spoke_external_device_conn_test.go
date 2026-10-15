@@ -155,6 +155,106 @@ resource "aviatrix_spoke_external_device_conn" "test" {
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName)
 }
 
+func TestSpokeExternalDeviceConnSchema_EditableAttrsAreNotForceNew(t *testing.T) {
+	assertEdcEditableAttrsNotForceNew(t, resourceAviatrixSpokeExternalDeviceConn().Schema,
+		"aviatrix_spoke_external_device_conn")
+}
+
+// TestAccAviatrixSpokeExternalDeviceConn_editInPlace is the spoke counterpart of
+// the transit edit test. The edit API admits BGP spokes as well as transits - its
+// gate is "transit or spoke" - but nothing exercised a successful spoke edit
+// before this.
+func TestAccAviatrixSpokeExternalDeviceConn_editInPlace(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	if os.Getenv("SKIP_SPOKE_EXTERNAL_DEVICE_CONN_EDIT") == "yes" {
+		t.Skip("Skipping the spoke external device connection edit test as " +
+			"'SKIP_SPOKE_EXTERNAL_DEVICE_CONN_EDIT' is set")
+	}
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_spoke_external_device_conn.test"
+	var connID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_SPOKE_EXTERNAL_DEVICE_CONN_EDIT' to 'yes' to skip the "+
+				"Site2Cloud spoke external device connection edit test")
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return Provider(), nil },
+		},
+		CheckDestroy: testAccCheckSpokeExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpokeExternalDeviceConnConfigEditable(rName, "345",
+					"169.254.20.1/30", "169.254.20.2/30", "172.12.13.14", "psk-before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_tunnel_cidr", "169.254.20.2/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+				),
+			},
+			{
+				Config: testAccSpokeExternalDeviceConnConfigEditable(rName, "346",
+					"169.254.21.1/30", "169.254.21.2/30", "172.12.13.15", "psk-after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpokeExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "346"),
+					resource.TestCheckResourceAttr(resourceName, "local_tunnel_cidr", "169.254.21.1/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_tunnel_cidr", "169.254.21.2/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.15"),
+				),
+			},
+		},
+	})
+}
+
+// testAccSpokeExternalDeviceConnConfigEditable takes the editable values as
+// arguments so both steps of the edit test share one config, which keeps the
+// diff between them to exactly the attributes under test.
+func testAccSpokeExternalDeviceConnConfigEditable(rName, remoteASN, localCidr, remoteCidr, remoteGatewayIP, psk string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_spoke_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+	enable_bgp   = true
+}
+resource "aviatrix_spoke_external_device_conn" "test" {
+	vpc_id             = aviatrix_spoke_gateway.test.vpc_id
+	connection_name    = "%s"
+	gw_name            = aviatrix_spoke_gateway.test.gw_name
+	connection_type    = "bgp"
+	tunnel_protocol    = "IPsec"
+	bgp_local_as_num   = "123"
+	bgp_remote_as_num  = "%s"
+	local_tunnel_cidr  = "%s"
+	remote_tunnel_cidr = "%s"
+	remote_gateway_ip  = "%s"
+	pre_shared_key     = "%s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName,
+		remoteASN, localCidr, remoteCidr, remoteGatewayIP, psk)
+}
+
 func testAccCheckSpokeExternalDeviceConnExists(n string, externalDeviceConn *goaviatrix.ExternalDeviceConn) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

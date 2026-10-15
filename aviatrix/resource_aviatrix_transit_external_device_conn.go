@@ -38,6 +38,10 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			State: schema.ImportStatePassthrough, //nolint:staticcheck // SA1019: deprecated but requires structural changes to migrate,
 		},
 
+		// Which of the editable attributes still force a replacement depends
+		// on the connection - see edcCustomizeDiff.
+		CustomizeDiff: edcCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,
@@ -62,7 +66,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Remote Gateway IP.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					oldIpList := strings.Split(old, ",")
@@ -116,7 +119,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"bgp_remote_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				Description:  "BGP remote ASN (Autonomous System Number). Integer between 1-4294967294.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
@@ -150,14 +152,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				ForceNew:    true,
 				Description: "If left blank, the pre-shared key will be auto generated.",
 			},
 			"local_tunnel_cidr": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Source CIDR for the tunnel from the Aviatrix transit gateway.",
 			},
@@ -165,7 +165,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Destination CIDR for the tunnel to the external device.",
 			},
@@ -246,14 +245,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				ForceNew:    true,
 				Description: "Backup remote gateway IP.",
 			},
 			"backup_bgp_remote_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
-				ForceNew:     true,
 				Description:  "Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
@@ -262,14 +259,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Sensitive:   true,
-				ForceNew:    true,
 				Description: "Backup pre shared key.",
 			},
 			"backup_local_tunnel_cidr": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Source CIDR for the tunnel from the backup Aviatrix transit gateway.",
 			},
@@ -277,7 +272,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Destination CIDR for the tunnel to the backup external device.",
 			},
@@ -463,6 +457,19 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 				Description: "Enable multihop on BGP connection.",
+			},
+			"bgp_admin_shutdown": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				// Computed, not Default: false, so a config that says nothing
+				// leaves the state alone. With a default, a connection shut
+				// down outside terraform reads back true, the default supplies
+				// false, and the next apply brings the neighbors up.
+				Computed: true,
+				Description: "Administratively shut down the BGP neighbors of this connection, leaving the " +
+					"IPsec tunnels up. Covers every tunnel of the connection, including tunnels added while " +
+					"it is shut down. Only supported on a BGP connection over IPsec. Omit it to leave the " +
+					"Controller's current state untouched.",
 			},
 			"enable_edge_underlay": {
 				Type:        schema.TypeBool,
@@ -1065,6 +1072,16 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	// Last, because it is the only step that deliberately leaves the connection
+	// in a degraded state: everything above has to have succeeded before the
+	// BGP neighbors are taken down.
+	//
+	// The name comes from externalDeviceConn, not the config: an edge underlay
+	// connection must leave connection_name empty and is named above.
+	if err := createExternalDeviceConnBgpAdminShutdown(d, client, externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
+		return err
+	}
+
 	return resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
 }
 
@@ -1266,6 +1283,9 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			}
 			mustSet(d, "phase1_remote_identifier", ph1RemoteId)
 		}
+		// The read API reports this as a boolean even though the edit action
+		// takes "yes"/"no", so no translation is needed in this direction.
+		mustSet(d, "bgp_admin_shutdown", conn.BgpAdminShutdown)
 		mustSet(d, "enable_bfd", conn.EnableBfd)
 		if conn.EnableBfd {
 			var bgpBfdConfig []map[string]any
@@ -1696,6 +1716,14 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		if err != nil {
 			return fmt.Errorf("failed to update proxy_id_enabled: %w", err)
 		}
+	}
+
+	// Last: these are the attributes that used to be ForceNew, so an operator
+	// who changes one is re-addressing or re-keying a live tunnel. Running them
+	// after the rest means the connection-level settings above are already in
+	// place when the tunnels are disturbed.
+	if err := updateExternalDeviceConnInPlace(d, client, gwName, connName, getString(d, "vpc_id")); err != nil {
+		return err
 	}
 
 	d.Partial(false)

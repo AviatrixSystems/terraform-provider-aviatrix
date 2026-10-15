@@ -267,3 +267,29 @@ func TestWriteTransitInstanceZtpFile(t *testing.T) {
 		assert.Contains(t, err.Error(), "no ZTP content found")
 	})
 }
+
+func TestSplitTrimmed(t *testing.T) {
+	tt := []struct {
+		Name     string
+		In       string
+		Expected []string
+	}{
+		{Name: "empty is nil, not one empty value", In: "", Expected: nil},
+		{Name: "whitespace only is nil", In: "  ", Expected: nil},
+		{Name: "single value", In: "169.254.0.1/30", Expected: []string{"169.254.0.1/30"}},
+		{
+			Name:     "spacing around each value is dropped",
+			In:       " 169.254.0.1/30 ,169.254.1.1/30 ",
+			Expected: []string{"169.254.0.1/30", "169.254.1.1/30"},
+		},
+		// Positional callers index into the result, so an empty element has to
+		// stay in place rather than collapse the list and shift the rest.
+		{Name: "empty element is kept", In: "a,,b", Expected: []string{"a", "", "b"}},
+	}
+
+	for _, test := range tt {
+		t.Run(test.Name, func(t *testing.T) {
+			assert.Equal(t, test.Expected, SplitTrimmed(test.In))
+		})
+	}
+}

@@ -75,6 +75,13 @@ type EdgeExternalDeviceConn struct {
 	ExternalDeviceBackupIPv6 string `form:"external_device_backup_ipv6,omitempty"`
 	RemoteLanIPv6            string `form:"remote_lan_ipv6_ip,omitempty"`
 	BackupRemoteLanIPv6      string `form:"backup_remote_lan_ipv6_ip,omitempty"`
+	// BgpAdminShutdown is never set on an edge connection; it is here because
+	// ExternalDeviceConn is converted to this type field for field, so the two
+	// have to stay identical. The edit action that would set it refuses the LAN
+	// connections this resource creates. json:"-" because this struct is sent
+	// as JSON, so an untagged field would add "BgpAdminShutdown":false to every
+	// edge request.
+	BgpAdminShutdown bool `json:"-"`
 }
 
 func (c *Client) CreateEdgeExternalDeviceConn(edgeExternalDeviceConn *EdgeExternalDeviceConn) (string, error) {

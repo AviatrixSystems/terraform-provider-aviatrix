@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -8,6 +9,33 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// AsNumberWrapper is an ASN as get_site2cloud_conn_detail reports it: quoted
+// when create wrote it, a bare number when edit_external_device_conn did. A
+// plain string field decodes until the first ASN edit and then fails every
+// Read, wedging plan and destroy as well as apply. Both land as a decimal
+// string. Mirrors CloudnNeighborAsNumberWrapper.
+type AsNumberWrapper string
+
+func (w *AsNumberWrapper) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*w = ""
+		return nil
+	}
+	// json.Number accepts a bare number, rejects a quoted one, and keeps the
+	// digits as written.
+	var num json.Number
+	if err := json.Unmarshal(data, &num); err == nil {
+		*w = AsNumberWrapper(num.String())
+		return nil
+	}
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return fmt.Errorf("ASN %s is neither a JSON number nor a JSON string: %w", data, err)
+	}
+	*w = AsNumberWrapper(str)
+	return nil
+}
 
 // ExternalDeviceConn: a simple struct to hold external device connection details
 const (
@@ -116,35 +144,41 @@ type ExternalDeviceConn struct {
 	ExternalDeviceBackupIPv6 string `form:"external_device_backup_ipv6,omitempty"`
 	RemoteLanIPv6            string `form:"remote_lan_ipv6_ip,omitempty"`
 	BackupRemoteLanIPv6      string `form:"backup_remote_lan_ipv6_ip,omitempty"`
+	// BgpAdminShutdown carries no form tag on purpose: the create action does
+	// not accept it. A connection is always created with its BGP neighbors up
+	// (the controller writes bgp_admin_shutdown=False itself), so a
+	// configuration asking for one shut down has to reach that state through
+	// edit_external_device_conn after the create.
+	BgpAdminShutdown bool `form:"-"`
 }
 
 type EditExternalDeviceConnDetail struct {
-	VpcID                      []string      `json:"vpc_id,omitempty"`
-	ConnectionName             []string      `json:"name,omitempty"`
-	GwName                     string        `json:"gw_name,omitempty"`
-	BgpLocalAsNum              string        `json:"bgp_local_asn_number,omitempty"`
-	BgpRemoteAsNum             string        `json:"bgp_remote_asn_number,omitempty"`
-	BgpStatus                  string        `json:"bgp_status,omitempty"`
-	BgpSendCommunities         string        `json:"conn_bgp_send_communities,omitempty"`
-	BgpSendCommunitiesAdditive bool          `json:"conn_bgp_send_communities_additive,omitempty"`
-	BgpSendCommunitiesBlock    bool          `json:"conn_bgp_send_communities_block,omitempty"`
-	EnableBgpLanActiveMesh     bool          `json:"bgp_lan_activemesh,omitempty"`
-	RemoteGatewayIP            string        `json:"peer_ip,omitempty"`
-	RemoteSubnet               string        `json:"remote_cidr,omitempty"`
-	LocalSubnet                string        `json:"local_cidr,omitempty"`
-	DirectConnect              bool          `json:"direct_connect_primary,omitempty"`
-	LocalTunnelCidr            string        `json:"bgp_local_ip,omitempty"`
-	RemoteTunnelCidr           string        `json:"bgp_remote_ip,omitempty"`
-	Algorithm                  AlgorithmInfo `json:"algorithm,omitempty"`
-	HAEnabled                  string        `json:"ha_status,omitempty"`
-	BackupBgpRemoteAsNum       string        `json:"bgp_remote_backup_asn_number,omitempty"`
-	BackupLocalTunnelCidr      string        `json:"bgp_backup_local_ip,omitempty"`
-	BackupRemoteTunnelCidr     string        `json:"bgp_backup_remote_ip,omitempty"`
-	BackupDirectConnect        bool          `json:"direct_connect_backup,omitempty"`
-	EnableEdgeSegmentation     bool          `json:"enable_edge_segmentation,omitempty"`
-	Tunnels                    []TunnelInfo  `json:"tunnels,omitempty"`
-	ActiveActiveHA             string        `json:"active_active_ha,omitempty"`
-	ManualBGPCidrs             []string      `json:"conn_bgp_manual_advertise_cidrs,omitempty"`
+	VpcID                      []string        `json:"vpc_id,omitempty"`
+	ConnectionName             []string        `json:"name,omitempty"`
+	GwName                     string          `json:"gw_name,omitempty"`
+	BgpLocalAsNum              AsNumberWrapper `json:"bgp_local_asn_number,omitempty"`
+	BgpRemoteAsNum             AsNumberWrapper `json:"bgp_remote_asn_number,omitempty"`
+	BgpStatus                  string          `json:"bgp_status,omitempty"`
+	BgpSendCommunities         string          `json:"conn_bgp_send_communities,omitempty"`
+	BgpSendCommunitiesAdditive bool            `json:"conn_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock    bool            `json:"conn_bgp_send_communities_block,omitempty"`
+	EnableBgpLanActiveMesh     bool            `json:"bgp_lan_activemesh,omitempty"`
+	RemoteGatewayIP            string          `json:"peer_ip,omitempty"`
+	RemoteSubnet               string          `json:"remote_cidr,omitempty"`
+	LocalSubnet                string          `json:"local_cidr,omitempty"`
+	DirectConnect              bool            `json:"direct_connect_primary,omitempty"`
+	LocalTunnelCidr            string          `json:"bgp_local_ip,omitempty"`
+	RemoteTunnelCidr           string          `json:"bgp_remote_ip,omitempty"`
+	Algorithm                  AlgorithmInfo   `json:"algorithm,omitempty"`
+	HAEnabled                  string          `json:"ha_status,omitempty"`
+	BackupBgpRemoteAsNum       AsNumberWrapper `json:"bgp_remote_backup_asn_number,omitempty"`
+	BackupLocalTunnelCidr      string          `json:"bgp_backup_local_ip,omitempty"`
+	BackupRemoteTunnelCidr     string          `json:"bgp_backup_remote_ip,omitempty"`
+	BackupDirectConnect        bool            `json:"direct_connect_backup,omitempty"`
+	EnableEdgeSegmentation     bool            `json:"enable_edge_segmentation,omitempty"`
+	Tunnels                    []TunnelInfo    `json:"tunnels,omitempty"`
+	ActiveActiveHA             string          `json:"active_active_ha,omitempty"`
+	ManualBGPCidrs             []string        `json:"conn_bgp_manual_advertise_cidrs,omitempty"`
 	BackupRemoteGatewayIP      string
 	PreSharedKey               string
 	BackupPreSharedKey         string
@@ -175,6 +209,9 @@ type EditExternalDeviceConnDetail struct {
 	ExternalBackupLocalIPv6    string         `json:"bgp_backup_local_ipv6,omitempty"`
 	RemoteLanIPv6              string         `json:"remote_lan_ipv6_ip,omitempty"`
 	BackupRemoteLanIPv6        string         `json:"backup_remote_lan_ipv6_ip,omitempty"`
+	// The controller reports bgp_admin_shutdown on every connection, static and
+	// LAN ones included, so a false here means "reported, not shut down".
+	BgpAdminShutdown bool `json:"bgp_admin_shutdown"`
 }
 
 type BgpBfdConfig struct {
@@ -568,9 +605,9 @@ func populateBasicConnectionInfo(externalDeviceConn *ExternalDeviceConn, externa
 // populateConnectionTypeInfo populates connection type and BGP information
 func populateConnectionTypeInfo(externalDeviceConn *ExternalDeviceConn, externalDeviceConnDetail EditExternalDeviceConnDetail) {
 	if externalDeviceConnDetail.BgpStatus == "enabled" || externalDeviceConnDetail.BgpStatus == "Enabled" {
-		bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
+		bgpLocalAsNumber, _ := strconv.Atoi(string(externalDeviceConnDetail.BgpLocalAsNum))
 		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
-		bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
+		bgpRemoteAsNumber, _ := strconv.Atoi(string(externalDeviceConnDetail.BgpRemoteAsNum))
 		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
 		externalDeviceConn.ConnectionType = "bgp"
 		if len(externalDeviceConnDetail.Tunnels) >= 1 {
@@ -625,9 +662,9 @@ func populateDirectConnectInfo(externalDeviceConn *ExternalDeviceConn, externalD
 }
 
 // parseBackupBgpRemoteAsNumber parses backup BGP remote AS number
-func parseBackupBgpRemoteAsNumber(backupBgpRemoteAsNumStr string) int {
+func parseBackupBgpRemoteAsNumber(backupBgpRemoteAsNumStr AsNumberWrapper) int {
 	if backupBgpRemoteAsNumStr != "" {
-		backupBgpRemoteAsNumberRead, _ := strconv.Atoi(backupBgpRemoteAsNumStr)
+		backupBgpRemoteAsNumberRead, _ := strconv.Atoi(string(backupBgpRemoteAsNumStr))
 		return backupBgpRemoteAsNumberRead
 	}
 	return 0
@@ -789,6 +826,7 @@ func populateAdditionalConnectionInfo(externalDeviceConn *ExternalDeviceConn, ex
 	}
 	externalDeviceConn.EnableBgpMultihop = externalDeviceConnDetail.EnableBgpMultihop
 	externalDeviceConn.ProxyIdEnabled = externalDeviceConnDetail.ProxyIdEnabled
+	externalDeviceConn.BgpAdminShutdown = externalDeviceConnDetail.BgpAdminShutdown
 }
 
 // populateIPv6ConnectionInfo populates IPv6 related connection information

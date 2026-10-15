@@ -316,6 +316,37 @@ func MapContains(m map[string]interface{}, key string) bool {
 	}
 }
 
+// SplitTrimmed splits a comma-separated attribute into its values, dropping the
+// spacing around each so it is never sent to the controller. Positional, so an
+// empty element is kept rather than collapsed.
+func SplitTrimmed(s string) []string {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	for i, p := range parts {
+		parts[i] = strings.TrimSpace(p)
+	}
+	return parts
+}
+
+// SameBgpIP compares two addresses ignoring surrounding whitespace and a
+// missing prefix length, so that "169.254.0.1/30" and " 169.254.0.1" match. The
+// read API and terraform configurations do not always agree on the /30 suffix,
+// so an exact compare would re-send an edit - bouncing the session - on every
+// apply. Also used for the outer PeerIP, which never carries a prefix at all.
+func SameBgpIP(a, b string) bool {
+	strip := func(s string) string {
+		s = strings.TrimSpace(s)
+		if i := strings.IndexByte(s, '/'); i >= 0 {
+			s = s[:i]
+		}
+		return s
+	}
+	as, bs := strip(a), strip(b)
+	return as != "" && as == bs
+}
+
 // diffStrings compares two string slices and returns the elements that need to
 // be added to and deleted from the first slice to match the second slice.
 func diffStrings(curr, want []string) (add, del []string) {

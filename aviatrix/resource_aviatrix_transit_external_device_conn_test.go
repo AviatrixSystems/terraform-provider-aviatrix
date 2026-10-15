@@ -306,6 +306,212 @@ func TestTransitExternalDeviceConnSchema_LocalSubnetAndProxyIdComparison(t *test
 	assert.Equal(t, schema.TypeBool, proxyIdEnabledField.Type, "proxy_id_enabled should be TypeBool")
 }
 
+func TestTransitExternalDeviceConnSchema_EditableAttrsAreNotForceNew(t *testing.T) {
+	assertEdcEditableAttrsNotForceNew(t, resourceAviatrixTransitExternalDeviceConn().Schema,
+		"aviatrix_transit_external_device_conn")
+}
+
+// TestAccAviatrixTransitExternalDeviceConn_editInPlace changes every attribute
+// the edit API can change and asserts the connection was edited rather than
+// destroyed and recreated. Before this feature each of these was ForceNew, so
+// the same plan replaced the connection and dropped the BGP session.
+func TestAccAviatrixTransitExternalDeviceConn_editInPlace(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	if os.Getenv("SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT") == "yes" {
+		t.Skip("Skipping the transit external device connection edit test as " +
+			"'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT' is set")
+	}
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_external_device_conn.test"
+	var connID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT' to 'yes' to skip the "+
+				"Site2Cloud transit external device connection edit test")
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return Provider(), nil },
+		},
+		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitExternalDeviceConnConfigEditable(rName, "345",
+					"169.254.10.1/30", "169.254.10.2/30", "172.12.13.14", "psk-before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "345"),
+					resource.TestCheckResourceAttr(resourceName, "remote_tunnel_cidr", "169.254.10.2/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.14"),
+				),
+			},
+			{
+				// The remote ASN, both inner addresses, the pre-shared key and the
+				// outer peer IP all change at once, which is also the case that
+				// exercises ordering: the remote_device_ip edit re-keys the tunnel,
+				// so it has to run after the address edits.
+				Config: testAccTransitExternalDeviceConnConfigEditable(rName, "346",
+					"169.254.11.1/30", "169.254.11.2/30", "172.12.13.15", "psk-after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_remote_as_num", "346"),
+					resource.TestCheckResourceAttr(resourceName, "local_tunnel_cidr", "169.254.11.1/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_tunnel_cidr", "169.254.11.2/30"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "172.12.13.15"),
+				),
+			},
+		},
+	})
+}
+
+// testAccTransitExternalDeviceConnConfigEditable takes the editable values as
+// arguments so both steps of the edit test share one config, which keeps the
+// diff between them to exactly the attributes under test.
+func testAccTransitExternalDeviceConnConfigEditable(rName, remoteASN, localCidr, remoteCidr, remoteGatewayIP, psk string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_transit_external_device_conn" "test" {
+	vpc_id             = aviatrix_transit_gateway.test.vpc_id
+	connection_name    = "%s"
+	gw_name            = aviatrix_transit_gateway.test.gw_name
+	connection_type    = "bgp"
+	tunnel_protocol    = "IPsec"
+	bgp_local_as_num   = "123"
+	bgp_remote_as_num  = "%s"
+	local_tunnel_cidr  = "%s"
+	remote_tunnel_cidr = "%s"
+	remote_gateway_ip  = "%s"
+	pre_shared_key     = "%s"
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName,
+		remoteASN, localCidr, remoteCidr, remoteGatewayIP, psk)
+}
+
+// TestAccAviatrixTransitExternalDeviceConn_bgpAdminShutdown toggles the
+// connection-wide BGP admin state and asserts the connection is edited rather
+// than replaced each time.
+//
+// The first step is the one worth having: it creates the connection with
+// bgp_admin_shutdown already true, which the create API cannot express. Getting
+// true back out of a plan that reports no further changes is what demonstrates
+// the post-create edit ran - if it had been skipped, the connection would exist
+// with BGP up and the next plan would want to change it.
+func TestAccAviatrixTransitExternalDeviceConn_bgpAdminShutdown(t *testing.T) {
+	var externalDeviceConn goaviatrix.ExternalDeviceConn
+
+	if os.Getenv("SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT") == "yes" {
+		t.Skip("Skipping the transit external device connection BGP admin shutdown test as " +
+			"'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT' is set")
+	}
+
+	rName := acctest.RandString(5)
+	resourceName := "aviatrix_transit_external_device_conn.test"
+	var connID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN_EDIT' to 'yes' to skip the "+
+				"Site2Cloud transit external device connection BGP admin shutdown test")
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return Provider(), nil },
+		},
+		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitExternalDeviceConnConfigBgpAdminShutdown(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_admin_shutdown", "true"),
+				),
+			},
+			{
+				// Lifting it reaches the other branch of the ordering rule.
+				Config: testAccTransitExternalDeviceConnConfigBgpAdminShutdown(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_admin_shutdown", "false"),
+				),
+			},
+			{
+				// And back down, so the test covers a shutdown applied to a
+				// connection that has been up as well as to a fresh one.
+				Config: testAccTransitExternalDeviceConnConfigBgpAdminShutdown(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
+					testAccCheckEdcIDUnchanged(resourceName, &connID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_admin_shutdown", "true"),
+				),
+			},
+		},
+	})
+}
+
+// testAccTransitExternalDeviceConnConfigBgpAdminShutdown varies only
+// bgp_admin_shutdown, so that each step's diff is the one attribute under test
+// and no tunnel edit rides along with it.
+func testAccTransitExternalDeviceConnConfigBgpAdminShutdown(rName string, shutdown bool) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_transit_gateway" "test" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+}
+resource "aviatrix_transit_external_device_conn" "test" {
+	vpc_id             = aviatrix_transit_gateway.test.vpc_id
+	connection_name    = "%s"
+	gw_name            = aviatrix_transit_gateway.test.gw_name
+	connection_type    = "bgp"
+	tunnel_protocol    = "IPsec"
+	bgp_local_as_num   = "123"
+	bgp_remote_as_num  = "345"
+	local_tunnel_cidr  = "169.254.10.1/30"
+	remote_tunnel_cidr = "169.254.10.2/30"
+	remote_gateway_ip  = "172.12.13.14"
+	pre_shared_key     = "psk-shutdown"
+	bgp_admin_shutdown = %t
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName, shutdown)
+}
+
 func testAccTransitExternalDeviceConnConfigBgpBfd(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_transit_gateway" "transit_gateway_1" {
