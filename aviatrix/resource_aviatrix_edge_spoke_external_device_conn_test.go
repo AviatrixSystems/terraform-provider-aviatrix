@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -595,5 +596,53 @@ func TestBuildEdgeSpokeExternalDeviceConnForDisableHa(t *testing.T) {
 				tt.validate(t, conn)
 			}
 		})
+	}
+}
+
+func TestEdgeSpokeExternalDeviceConnImport_SeedsRetryDefaults(t *testing.T) {
+	r := resourceAviatrixEdgeSpokeExternalDeviceConn()
+
+	// The schema defaults are what an import has to fall back to, so they must
+	// stay in sync with the constants the importer seeds.
+	assert.Equal(t, edgeSpokeExternalDeviceConnDefaultNumberOfRetries, r.Schema["number_of_retries"].Default)
+	assert.Equal(t, edgeSpokeExternalDeviceConnDefaultRetryInterval, r.Schema["retry_interval"].Default)
+
+	// An import hands the provider an instance state that carries the import ID
+	// and nothing else.
+	d := r.Data(&terraform.InstanceState{ID: "conn-test~site-123~edge-gw"})
+	results, err := r.Importer.StateContext(context.Background(), d, nil)
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+
+	imported := results[0].State()
+	assert.Equal(t, "0", imported.Attributes["number_of_retries"], "number_of_retries should be seeded on import")
+	assert.Equal(t, "300", imported.Attributes["retry_interval"], "retry_interval should be seeded on import")
+	assert.Equal(t, "conn-test~site-123~edge-gw", results[0].Id(), "import ID should be preserved")
+}
+
+func TestEdgeSpokeExternalDeviceConnImport_NoPerpetualRetryDiff(t *testing.T) {
+	r := resourceAviatrixEdgeSpokeExternalDeviceConn()
+
+	d := r.Data(&terraform.InstanceState{ID: "conn-test~site-123~edge-gw"})
+	results, err := r.Importer.StateContext(context.Background(), d, nil)
+	assert.NoError(t, err)
+	imported := results[0].State()
+
+	// Planning the imported state against a configuration that leaves both
+	// attributes out must not want to change them.
+	config := terraform.NewResourceConfigRaw(map[string]any{
+		"site_id":         "site-123",
+		"connection_name": "conn-test",
+		"gw_name":         "edge-gw",
+	})
+	diff, err := r.Diff(context.Background(), imported, config, nil)
+	assert.NoError(t, err)
+
+	if diff != nil {
+		for _, key := range []string{"number_of_retries", "retry_interval"} {
+			if attr, ok := diff.Attributes[key]; ok {
+				assert.Equal(t, attr.Old, attr.New, "plan should not change %s after import", key)
+			}
+		}
 	}
 }
