@@ -156,6 +156,7 @@ go_test(
     name = "goaviatrix_test",
     srcs = [
         "account_test.go",
+        "aws_tgw_peering_test.go",
         "aws_tgw_vpc_attachment_test.go",
         "check_test.go",
         "const_test.go",

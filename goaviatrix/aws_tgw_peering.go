@@ -10,17 +10,36 @@ import (
 )
 
 type AwsTgwPeering struct {
-	Action   string `form:"action,omitempty"`
-	CID      string `form:"CID,omitempty"`
-	TgwName1 string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
-	TgwName2 string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
-	Async    bool   `form:"async,omitempty"`
+	Action        string `form:"action,omitempty"`
+	CID           string `form:"CID,omitempty"`
+	TgwName1      string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
+	TgwName2      string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
+	PeerTgwID     string `form:"peer_tgw_id,omitempty" json:"peer_tgw_id,omitempty"`
+	PeerAccountID string `form:"peer_account_id,omitempty" json:"peer_account_id,omitempty"`
+	PeerRegion    string `form:"peer_region,omitempty" json:"peer_region,omitempty"`
+	Async         bool   `form:"async,omitempty"`
 }
 
 type AwsTgwPeeringAPIResp struct {
 	Return  bool     `json:"return"`
 	Results []string `json:"results"`
 	Reason  string   `json:"reason"`
+}
+
+type awsTgwPeeringAttachment struct {
+	Type          string `json:"type"`
+	PeerTgwName   string `json:"peer_tgw_name"`
+	ExternalPeer  bool   `json:"external_peer"`
+	PeerAccountID string `json:"peer_account_id"`
+	PeerRegion    string `json:"peer_region"`
+}
+
+type awsTgwPeeringDetailsResp struct {
+	Return  bool `json:"return"`
+	Results struct {
+		Attachments map[string]awsTgwPeeringAttachment `json:"attachments"`
+	} `json:"results"`
+	Reason string `json:"reason"`
 }
 
 func (c *Client) CreateAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
@@ -63,11 +82,55 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	return ErrNotFound
 }
 
+// GetAwsTgwExternalPeering fills the peer TGW ID, account ID and region of a
+// peering whose tgw_name2 is a label for a TGW that TGW-O does not manage. It
+// returns false, leaving the fields alone, when tgw_name2 is a managed TGW.
+// A PeerTgwID already set picks between peerings that share a label.
+func (c *Client) GetAwsTgwExternalPeering(awsTgwPeering *AwsTgwPeering) (bool, error) {
+	var data awsTgwPeeringDetailsResp
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_tgw_details",
+		"tgw_name": awsTgwPeering.TgwName1,
+	}
+	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
+		return false, err
+	}
+
+	var matches []string
+	for peerTgwID, attm := range data.Results.Attachments {
+		if attm.Type != "peering" || !attm.ExternalPeer || attm.PeerTgwName != awsTgwPeering.TgwName2 {
+			continue
+		}
+		if awsTgwPeering.PeerTgwID != "" && peerTgwID != awsTgwPeering.PeerTgwID {
+			continue
+		}
+		matches = append(matches, peerTgwID)
+	}
+	if len(matches) == 0 {
+		return false, nil
+	}
+	if len(matches) > 1 {
+		return false, fmt.Errorf("TGW %s has more than one external peering labeled %s; set peer_tgw_id to choose one", awsTgwPeering.TgwName1, awsTgwPeering.TgwName2)
+	}
+
+	attm := data.Results.Attachments[matches[0]]
+	awsTgwPeering.PeerTgwID = matches[0]
+	awsTgwPeering.PeerAccountID = attm.PeerAccountID
+	awsTgwPeering.PeerRegion = attm.PeerRegion
+	return true, nil
+}
+
 func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
-	awsTgwPeering.CID = c.CID
-	awsTgwPeering.Action = "delete_tgw_peering"
-	awsTgwPeering.Async = true
-	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	form := &AwsTgwPeering{
+		CID:       c.CID,
+		Action:    "delete_tgw_peering",
+		TgwName1:  awsTgwPeering.TgwName1,
+		TgwName2:  awsTgwPeering.TgwName2,
+		PeerTgwID: awsTgwPeering.PeerTgwID,
+		Async:     true,
+	}
+	return c.PostAsyncAPI(form.Action, form, BasicCheck)
 }
 
 func DiffSuppressFuncAwsTgwPeeringTgwName1(k, old, new string, d *schema.ResourceData) bool {
