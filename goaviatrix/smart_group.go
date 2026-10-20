@@ -25,6 +25,7 @@ type SmartGroupMatchExpression struct {
 	K8sNamespace     string `json:"k8s_namespace,omitempty"`
 	K8sClusterID     string `json:"k8s_cluster_id,omitempty"`
 	K8sPodName       string `json:"k8s_pod,omitempty"`
+	ServerlessKind   string `json:"serverless_kind,omitempty"`
 	S2C              string `json:"s2c,omitempty"`
 	External         string `json:"external,omitempty"`
 	Tags             map[string]string
@@ -82,6 +83,7 @@ const (
 	K8sNamespaceKey        = "k8s_namespace"
 	K8sServiceKey          = "k8s_service"
 	K8sPodNameKey          = "k8s_pod"
+	ServerlessKindKey      = "serverless_kind"
 	S2CKey                 = "s2c"
 	ExternalKey            = "external"
 
@@ -111,6 +113,7 @@ func NewSmartGroupMatchExpression(filterMap map[string]interface{}) *SmartGroupM
 	setFilterInterface(&smartGroup.K8sNamespace, filterMap, K8sNamespaceKey)
 	setFilterInterface(&smartGroup.K8sService, filterMap, K8sServiceKey)
 	setFilterInterface(&smartGroup.K8sPodName, filterMap, K8sPodNameKey)
+	setFilterInterface(&smartGroup.ServerlessKind, filterMap, ServerlessKindKey)
 	setFilterInterface(&smartGroup.S2C, filterMap, S2CKey)
 	setFilterInterface(&smartGroup.External, filterMap, ExternalKey)
 	return smartGroup
@@ -175,6 +178,7 @@ func smartGroupFilterToMapBasic(filter *SmartGroupMatchExpression, keepMaps bool
 	setFilter(filter.K8sNamespace, filterMap, K8sNamespaceKey)
 	setFilter(filter.K8sService, filterMap, K8sServiceKey)
 	setFilter(filter.K8sPodName, filterMap, K8sPodNameKey)
+	setFilter(filter.ServerlessKind, filterMap, ServerlessKindKey)
 	setFilter(filter.S2C, filterMap, S2CKey)
 	setFilter(filter.External, filterMap, ExternalKey)
 	if keepMaps {

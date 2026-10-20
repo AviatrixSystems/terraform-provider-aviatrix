@@ -124,6 +124,11 @@ func dataSourceAviatrixSmartGroups() *schema.Resource {
 													Computed:    true,
 													Description: "Name of the Kubernetes Pod this expression matches.",
 												},
+												goaviatrix.ServerlessKindKey: {
+													Type:        schema.TypeString,
+													Computed:    true,
+													Description: "Kind of serverless resources this expression matches.",
+												},
 												goaviatrix.K8sServiceKey: {
 													Type:        schema.TypeString,
 													Computed:    true,
@@ -212,5 +217,6 @@ func smartGroupDataSourceMatchExpression(filter *goaviatrix.SmartGroupMatchExpre
 		goaviatrix.K8sNamespaceKey:        filter.K8sNamespace,
 		goaviatrix.K8sServiceKey:          filter.K8sService,
 		goaviatrix.K8sPodNameKey:          filter.K8sPodName,
+		goaviatrix.ServerlessKindKey:      filter.ServerlessKind,
 	}
 }

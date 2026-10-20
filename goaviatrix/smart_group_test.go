@@ -75,6 +75,13 @@ func TestSmartGroupRoundTrip_resourceGroupAndVpcEndpointSelectors(t *testing.T) 
 				ResourceGroup: "my-private-endpoint-resource-group",
 			},
 		},
+		{
+			name: "Serverless kind",
+			filter: &SmartGroupMatchExpression{
+				Type:           "serverless",
+				ServerlessKind: "AWS_LAMBDA",
+			},
+		},
 	}
 
 	for _, tt := range tests {

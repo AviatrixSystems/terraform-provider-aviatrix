@@ -587,9 +587,11 @@ func TestAccAviatrixSmartGroup_serverless(t *testing.T) {
 					testAccCheckSmartGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "serverless-test-smart-group"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.type", "serverless"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.name", "test-function"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.type", "serverless"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.serverless_kind", "AWS_LAMBDA"),
 				),
 			},
 			{
@@ -610,6 +612,10 @@ resource "aviatrix_smart_group" "serverless" {
 		match_expressions {
 			type = "serverless"
 			name = "test-function"
+		}
+		match_expressions {
+			type            = "serverless"
+			serverless_kind = "AWS_LAMBDA"
 		}
 	}
 }

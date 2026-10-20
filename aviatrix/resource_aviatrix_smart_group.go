@@ -147,6 +147,11 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "Map of Kubernetes namespace labels this expression matches. Only valid when type is k8s.",
 									},
+									goaviatrix.ServerlessKindKey: {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Kind of serverless resources this expression matches. Only valid when type is serverless.",
+									},
 									goaviatrix.ExtArgsPrefix: {
 										Type:        schema.TypeMap,
 										Optional:    true,

@@ -100,6 +100,12 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
       name     = "my-function"
     }
 
+    match_expressions {
+      type            = "serverless"
+      serverless_kind = "AWS_LAMBDA"
+      region          = "us-east-1"
+    }
+
     // Below are external group type examples
 
     // generic format
@@ -182,6 +188,11 @@ The following arguments are supported:
     * `k8s_pod` - (Optional) - Kubernetes pod name this expression matches.
       This property can only be used when `type` is set to `"k8s"` and `k8s_cluster_id` and `k8s_namespace` are also set.
       This property must not be used when `k8s_service` is set.
+    * `serverless_kind` - (Optional) - Kind of serverless resources this expression matches.
+      It must be one of "AWS_LAMBDA", "AWS_ECS", "GCP_CLOUD_FUNCTIONS", "GCP_CLOUD_RUN", "AZURE_FUNCTIONS", "AZURE_CONTAINER_APPS" or "AWS_BEDROCK_AGENTCORE_RUNTIME".
+      The values are case-sensitive.
+      This property can only be used when `type` is set to `"serverless"`.
+      If it is not set, the expression matches serverless resources of all kinds.
     * `s2c` - (Optional) - Name of the remote site. Represents the CIDRs associated with the remote site.
     * `external` - (Optional) - Specifies an external feed, currently either "geo" or "threatiq".
     * `ext_args` - (Optional) - Map of the arguments associated with the external feed such as "country_iso_code" for the "geo" feed.

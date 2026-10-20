@@ -45,3 +45,5 @@ The following attributes are exported:
             * `k8s_namespace` - Kubernetes namespace this expression matches.
             * `k8s_service` - Kubernetes service name this expression matches.
             * `k8s_pod` - Kubernetes pod name this expression matches.
+            * `serverless_kind` - Kind of serverless resources this expression matches.
+              One of "AWS_LAMBDA", "AWS_ECS", "GCP_CLOUD_FUNCTIONS", "GCP_CLOUD_RUN", "AZURE_FUNCTIONS", "AZURE_CONTAINER_APPS" or "AWS_BEDROCK_AGENTCORE_RUNTIME" (case-sensitive).
