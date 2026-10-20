@@ -1016,7 +1016,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 	if bgpOverLan && !enableBgp {
 		return fmt.Errorf("'enable_bgp' is required to be true to enable bgp over lan")
 	}
-	if bgpOverLan && !(goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+	if bgpOverLan && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
 	bgpLanInterfacesCount, isCountSet := d.GetOk("bgp_lan_interfaces_count")

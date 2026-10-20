@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/internal/util"
 )
 
 type proxyProfile struct {
@@ -74,24 +75,9 @@ func edgePlatformProxyProfileFromProxyProfile(proxy *proxyProfile) *goaviatrix.E
 	return &goaviatrix.EdgePlatformProxyProfile{
 		AccountName: proxy.AccountName,
 		Name:        proxy.Name,
-		Address: func() string {
-			if proxy.Address == nil {
-				return ""
-			}
-			return *proxy.Address
-		}(),
-		Port: func() int {
-			if proxy.Port == nil {
-				return 0
-			}
-			return *proxy.Port
-		}(),
-		CACert: func() string {
-			if proxy.CACert == nil {
-				return ""
-			}
-			return *proxy.CACert
-		}(),
+		Address:     util.DerefZero(proxy.Address),
+		Port:        util.DerefZero(proxy.Port),
+		CACert:      util.DerefZero(proxy.CACert),
 	}
 }
 

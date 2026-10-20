@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
+	"aviatrix.com/terraform-provider-aviatrix/internal/util"
 )
 
 // resource_aviatrix_telix_profile.go implements the lifecycle for the
@@ -614,7 +615,7 @@ func flattenTelixProfileDetail(d *schema.ResourceData, detail *goaviatrix.TelixP
 }
 
 func flattenTelixDestination(d *schema.ResourceData, dest *goaviatrix.TelixDestination) error {
-	hasHeaders := derefBool(dest.Otlp.HasHeaders)
+	hasHeaders := util.DerefZero(dest.Otlp.HasHeaders)
 	otlp := map[string]any{
 		"endpoint":    dest.Otlp.Endpoint,
 		"protocol":    dest.Otlp.Protocol,
@@ -644,13 +645,13 @@ func flattenTelixTLS(d *schema.ResourceData, tls *goaviatrix.TelixTLSConfig) []a
 		return []any{}
 	}
 
-	hasCa := derefBool(tls.HasCaCertificate)
-	hasClientCert := derefBool(tls.HasClientCertificate)
-	hasClientKey := derefBool(tls.HasClientPrivateKey)
+	hasCa := util.DerefZero(tls.HasCaCertificate)
+	hasClientCert := util.DerefZero(tls.HasClientCertificate)
+	hasClientKey := util.DerefZero(tls.HasClientPrivateKey)
 
 	out := map[string]any{
-		"server_name_override":   derefString(tls.ServerNameOverride),
-		"insecure_skip_verify":   derefBool(tls.InsecureSkipVerify),
+		"server_name_override":   util.DerefZero(tls.ServerNameOverride),
+		"insecure_skip_verify":   util.DerefZero(tls.InsecureSkipVerify),
 		"has_ca_certificate":     hasCa,
 		"has_client_certificate": hasClientCert,
 		"has_client_private_key": hasClientKey,
@@ -706,20 +707,6 @@ func flattenTelixFilters(d *schema.ResourceData, filters *goaviatrix.TelixFilter
 		f["dcf_actions"] = filters.DcfActions
 	}
 	return d.Set("filters", []any{f})
-}
-
-func derefBool(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
-}
-
-func derefString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
 
 func resourceAviatrixTelixProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

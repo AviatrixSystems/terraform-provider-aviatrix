@@ -1336,7 +1336,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 		}
 
 		bgpOverLan := getBool(d, "enable_bgp_over_lan")
-		if bgpOverLan && !(goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP)) {
+		if bgpOverLan && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP) {
 			return fmt.Errorf("'enable_bgp_over_lan' is only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048)")
 		}
 		bgpLanInterfacesCount, isCountSet := d.GetOk("bgp_lan_interfaces_count")
@@ -1365,7 +1365,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 		if (!bgpOverLan || haSubnet == "") && len(haBgpLanVpcID) != 0 {
 			return fmt.Errorf("'ha_bgp_lan_interfaces' is only valid with enable_bgp_over_lan is set true and HA is enabled")
 		}
-		if (len(bgpLanVpcID) != 0 || len(haBgpLanVpcID) != 0) && !(goaviatrix.IsCloudType(cloudType, goaviatrix.GCP)) {
+		if (len(bgpLanVpcID) != 0 || len(haBgpLanVpcID) != 0) && !goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
 			return fmt.Errorf("'bgp_lan_interfaces' and 'ha_bgp_lan_interfaces' are only valid for GCP (4)")
 		}
 		if bgpOverLan {

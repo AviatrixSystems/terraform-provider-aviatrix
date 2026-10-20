@@ -209,6 +209,7 @@ go_library(
     visibility = ["//go/aviatrix.com/terraform-provider-aviatrix:__subpackages__"],
     deps = [
         "//go/aviatrix.com/terraform-provider-aviatrix/goaviatrix",
+        "//go/aviatrix.com/terraform-provider-aviatrix/internal/util",
         "@com_github_google_uuid//:uuid",
         "@com_github_hashicorp_go_cty//cty",
         "@com_github_hashicorp_go_version//:go-version",
