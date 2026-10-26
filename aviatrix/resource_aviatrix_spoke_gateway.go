@@ -661,6 +661,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Set to true to enable global VPC. Only supported for GCP.",
 			},
+			"enable_symmetric_routing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				// Computed so upgrading the provider doesn't disable symmetric routing enabled outside Terraform.
+				Computed:    true,
+				Description: "Enable symmetric routing on the spoke gateway's group. Only valid for AWS and Azure. Unset keeps the controller's value.",
+			},
 			"bgp_send_communities": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -1174,6 +1181,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
+	if getBool(d, "enable_symmetric_routing") && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.SymmetricRoutingSupportedCloudTypes) {
+		return fmt.Errorf("'enable_symmetric_routing' is only valid for AWS and Azure related cloud types")
+	}
+
 	insertionGateway := getBool(d, "insertion_gateway")
 	insertionGatewayAz := getString(d, "insertion_gateway_az")
 
@@ -1665,6 +1676,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		}
 	}
 
+	// Enable after HA and managed route tables so owners are computed once.
+	if getBool(d, "enable_symmetric_routing") {
+		if err := setSpokeGatewaySymmetricRouting(context.Background(), client, getString(d, "gw_name"), true); err != nil {
+			return fmt.Errorf("could not enable symmetric routing after spoke gateway creation: %w", err)
+		}
+	}
+
 	// Only warn, so the new gateway is not tainted.
 	if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
 		log.Printf("[WARN] gateway %q created but %s was not applied: %v", getString(d, "gw_name"), smartGatewayResolverAttr, err)
@@ -1781,6 +1799,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 	mustSet(d, "rx_queue_size", gw.RxQueueSize)
 	mustSet(d, "public_ip", gw.PublicIP)
 	mustSet(d, "enable_global_vpc", gw.EnableGlobalVpc)
+	mustSet(d, "enable_symmetric_routing", gw.EnableSymmetricRouting)
 
 	setGatewayIPv6IPState(d, gw)
 
@@ -2250,6 +2269,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 
 	if d.HasChange("enable_global_vpc") && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("global vpc can only be enabled for GCP")
+	}
+
+	if d.HasChange("enable_symmetric_routing") && getBool(d, "enable_symmetric_routing") &&
+		!goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.SymmetricRoutingSupportedCloudTypes) {
+		return fmt.Errorf("'enable_symmetric_routing' is only valid for AWS and Azure related cloud types")
 	}
 
 	if d.HasChange("enable_preserve_as_path") {
@@ -3061,6 +3085,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 		}
 	}
 
+	// Toggle after any HA changes so the controller sees the final group members.
+	if d.HasChange("enable_symmetric_routing") {
+		if err := setSpokeGatewaySymmetricRouting(context.Background(), client, gateway.GwName, getBool(d, "enable_symmetric_routing")); err != nil {
+			return fmt.Errorf("could not update symmetric routing during spoke gateway update: %w", err)
+		}
+	}
+
 	if d.HasChange(smartGatewayResolverAttr) {
 		if err := applySmartGatewayResolverForGateway(context.Background(), d, client); err != nil {
 			return err
@@ -3070,6 +3101,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta any) error 
 	d.Partial(false)
 	d.SetId(gateway.GwName)
 	return resourceAviatrixSpokeGatewayRead(d, meta)
+}
+
+// setSpokeGatewaySymmetricRouting toggles symmetric routing on the group that owns gwName.
+func setSpokeGatewaySymmetricRouting(ctx context.Context, client *goaviatrix.Client, gwName string, enable bool) error {
+	gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: gwName})
+	if err != nil {
+		return fmt.Errorf("could not get spoke gateway %s: %w", gwName, err)
+	}
+	if gw.GroupUUID == "" {
+		return fmt.Errorf("spoke gateway %s has no gateway group", gwName)
+	}
+	return client.SetSymmetricRoutingGatewayGroup(ctx, gw.GroupUUID, enable)
 }
 
 // isHADeletionInProgress reports whether the error indicates the controller is
