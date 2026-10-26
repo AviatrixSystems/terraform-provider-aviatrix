@@ -1,0 +1,99 @@
+package aviatrix
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
+)
+
+func TestAccAviatrixControllerConfig_basic(t *testing.T) {
+	rName := acctest.RandString(5)
+
+	skipAcc := os.Getenv("SKIP_CONTROLLER_CONFIG")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Controller Config test as SKIP_CONTROLLER_CONFIG is set")
+	}
+	msgCommon := ". Set SKIP_CONTROLLER_CONFIG to yes to skip Controller Config tests"
+	resourceName := "aviatrix_controller_config.test_controller_config"
+	importStateVerifyIgnore := []string{"backup_cloud_type", "backup_configuration", "manage_gateway_upgrades", "multiple_backups"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckControllerConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccControllerConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControllerConfigExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_vpc_dns_server", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
+			},
+		},
+	})
+}
+
+func testAccControllerConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_account" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
+resource "aviatrix_controller_config" "test_controller_config" {
+	fqdn_exception_rule   = false
+	enable_vpc_dns_server = true
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
+}
+
+func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("controller config ID Not found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no controller config ID is set")
+		}
+
+		client := testAccProvider.Meta().(*goaviatrix.Client)
+
+		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
+			return fmt.Errorf("controller config ID not found")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckControllerConfigDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aviatrix_controller_config" {
+			continue
+		}
+	}
+
+	return nil
+}

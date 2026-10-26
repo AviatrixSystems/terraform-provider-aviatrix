@@ -1,0 +1,462 @@
+package aviatrix
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
+)
+
+func resourceAviatrixGatewaySNat() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceAviatrixGatewaySNatCreate,
+		Read:   resourceAviatrixGatewaySNatRead,
+		Update: resourceAviatrixGatewaySNatUpdate,
+		Delete: resourceAviatrixGatewaySNatDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"gw_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Name of the gateway.",
+			},
+			"snat_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "customized_snat",
+				ValidateFunc: validation.StringInSlice([]string{"customized_snat"}, false),
+				Description:  "Nat mode. Currently only supports 'customized_snat'.",
+			},
+			"snat_policy": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				Default:          nil,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncGatewaySNat,
+				Description:      "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a qualifier condition that specifies a source IP address range " +
+								"where the rule applies. When left blank, this field is not used.",
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a qualifier condition that specifies a source port that the rule applies. " +
+								"When left blank, this field is not used.",
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a qualifier condition that specifies a destination IP address range " +
+								"where the rule applies. When left blank, this field is not used.",
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a qualifier condition that specifies a destination port " +
+								"where the rule applies. When left blank, this field is not used.",
+						},
+						"interface": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: DiffSuppressFuncNatInterface,
+							Description: "This is a qualifier condition that specifies output interface " +
+								"where the rule applies. When left blank, this field is not used.",
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a qualifier condition that specifies a tag or mark of a TCP session " +
+								"where the rule applies. When left blank, this field is not used.",
+						},
+						"snat_ips": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a rule field that specifies the changed source IP address " +
+								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
+								"One of the rule fields must be specified for this rule to take effect.",
+						},
+						"snat_port": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Description: "This is a rule field that specifies the changed source port " +
+								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
+								"One of the rule fields must be specified for this rule to take effect.",
+						},
+						"exclude_rtb": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
+						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "all",
+							ValidateFunc: validation.StringInSlice([]string{"all", "tcp", "udp", "icmp"}, false),
+							Description: "This is a qualifier condition that specifies a destination port protocol " +
+								"where the rule applies. Default: all.",
+						},
+						"connection": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "None",
+							Description: "This is a qualifier condition that specifies output connection where the rule applies. When left blank, this field is not used.",
+						},
+						"apply_route_entry": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							Description: "This is an option to program the route entry 'DST CIDR pointing to Aviatrix Gateway' into Cloud platform routing table. Type: Boolean. Default: True.",
+						},
+					},
+				},
+			},
+			"sync_to_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether to sync the policies to the HA gateway.",
+			},
+			"connection_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous connection policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"interface_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous interface policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	gateway := &goaviatrix.Gateway{
+		GatewayName: d.Get("gw_name").(string),
+	}
+
+	if len(d.Get("snat_policy").([]interface{})) == 0 {
+		return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
+	}
+	gateway.EnableNat = "yes"
+	gateway.SnatMode = "custom"
+
+	if _, ok := d.GetOk("snat_policy"); ok {
+		policies := d.Get("snat_policy").([]interface{})
+		for _, policy := range policies {
+			pl := policy.(map[string]interface{})
+			customPolicy := &goaviatrix.PolicyRule{
+				SrcIP:           pl["src_cidr"].(string),
+				SrcPort:         pl["src_port"].(string),
+				DstIP:           pl["dst_cidr"].(string),
+				DstPort:         pl["dst_port"].(string),
+				Protocol:        pl["protocol"].(string),
+				Interface:       pl["interface"].(string),
+				Connection:      pl["connection"].(string),
+				Mark:            pl["mark"].(string),
+				NewSrcIP:        pl["snat_ips"].(string),
+				NewSrcPort:      pl["snat_port"].(string),
+				ExcludeRTB:      pl["exclude_rtb"].(string),
+				ApplyRouteEntry: pl["apply_route_entry"].(bool),
+			}
+			gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
+		}
+	}
+
+	d.SetId(gateway.GatewayName)
+	flag := false
+	defer resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
+
+	err := client.EnableCustomizedSNat(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %s", err)
+	}
+
+	return resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixGatewaySNatReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixGatewaySNatRead(d, meta)
+	}
+	return nil
+}
+
+func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
+	gateway := &goaviatrix.Gateway{
+		GwName: d.Get("gw_name").(string),
+	}
+
+	gw, err := client.GetGateway(gateway)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("couldn't find Aviatrix gateway: %s", err)
+	}
+
+	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
+	if gw != nil {
+		d.Set("gw_name", gw.GwName)
+
+		gwDetail, err := client.GetGatewayDetail(gateway)
+		if err != nil {
+			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %s", gw.GwName, err)
+		}
+		if gw.NatEnabled && gw.SnatMode == "customized" {
+			d.Set("snat_mode", "customized_snat")
+			var snatPolicy []map[string]interface{}
+			var connectionPolicy []map[string]interface{}
+			var interfacePolicy []map[string]interface{}
+
+			// Duplicate SNAT policies can be returned from the API.
+			// Before we save the policies to state we need to deduplicate.
+			dedupMap := make(map[string]struct{})
+			for _, policy := range gwDetail.SnatPolicy {
+				sP := make(map[string]interface{})
+				sP["src_cidr"] = policy.SrcIP
+				sP["src_port"] = policy.SrcPort
+				sP["dst_cidr"] = policy.DstIP
+				sP["dst_port"] = policy.DstPort
+				sP["protocol"] = policy.Protocol
+				sP["interface"] = policy.Interface
+				sP["connection"] = policy.Connection
+				sP["mark"] = policy.Mark
+				sP["snat_ips"] = policy.NewSrcIP
+				sP["snat_port"] = policy.NewSrcPort
+				sP["exclude_rtb"] = policy.ExcludeRTB
+				sP["apply_route_entry"] = policy.ApplyRouteEntry
+
+				// To deduplicate we will generate a unique key for each policy.
+				key := fmt.Sprintf("%s~%s~%s~%s~%s~%s~%s~%s~%s~%s~%s", policy.SrcIP, policy.SrcPort, policy.DstIP,
+					policy.DstPort, policy.Protocol, policy.Interface, policy.Connection, policy.Mark, policy.NewSrcIP, policy.NewSrcPort, policy.ExcludeRTB)
+				// If the map already contains the unique key then we know this policy is a duplicate.
+				if _, ok := dedupMap[key]; ok {
+					continue
+				}
+
+				// Otherwise, its a unique policy so we write it to state and the dedupMap.
+				dedupMap[key] = struct{}{}
+				snatPolicy = append(snatPolicy, sP)
+
+				if policy.Connection != "None" {
+					connectionPolicy = append(connectionPolicy, sP)
+				}
+				if policy.Interface != "" {
+					interfacePolicy = append(interfacePolicy, sP)
+				}
+			}
+
+			if err := d.Set("snat_policy", snatPolicy); err != nil {
+				log.Printf("[WARN] Error setting 'snat_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("connection_policy", connectionPolicy); err != nil {
+				log.Printf("[WARN] Error setting 'connection_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("interface_policy", interfacePolicy); err != nil {
+				log.Printf("[WARN] Error setting 'interface_policy' for (%s): %s", d.Id(), err)
+			}
+		} else {
+			d.SetId("")
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
+
+	d.Partial(true)
+	gateway := &goaviatrix.Gateway{
+		GatewayName: d.Get("gw_name").(string),
+	}
+
+	if d.HasChange("snat_policy") {
+		if len(d.Get("snat_policy").([]interface{})) == 0 {
+			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
+		}
+
+		gateway.SnatMode = "custom"
+		if _, ok := d.GetOk("snat_policy"); ok {
+			policies := d.Get("snat_policy").([]interface{})
+			for _, policy := range policies {
+				pl := policy.(map[string]interface{})
+				customPolicy := &goaviatrix.PolicyRule{
+					SrcIP:           pl["src_cidr"].(string),
+					SrcPort:         pl["src_port"].(string),
+					DstIP:           pl["dst_cidr"].(string),
+					DstPort:         pl["dst_port"].(string),
+					Protocol:        pl["protocol"].(string),
+					Interface:       pl["interface"].(string),
+					Connection:      pl["connection"].(string),
+					Mark:            pl["mark"].(string),
+					NewSrcIP:        pl["snat_ips"].(string),
+					NewSrcPort:      pl["snat_port"].(string),
+					ExcludeRTB:      pl["exclude_rtb"].(string),
+					ApplyRouteEntry: pl["apply_route_entry"].(bool),
+				}
+				gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
+			}
+		}
+
+		err := client.EnableCustomizedSNat(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT of 'customized_snat': %s", err)
+		}
+	}
+
+	d.Partial(false)
+	d.SetId(gateway.GatewayName)
+	return resourceAviatrixGatewaySNatRead(d, meta)
+}
+
+func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+	gateway := &goaviatrix.Gateway{
+		GatewayName: d.Get("gw_name").(string),
+		SnatMode:    "custom",
+	}
+
+	err := client.DisableCustomSNat(gateway)
+	if err != nil {
+		return fmt.Errorf("failed to disable SNAT for Aviatrix gateway(name: %s) due to: %s", gateway.GatewayName, err)
+	}
+
+	return nil
+}
