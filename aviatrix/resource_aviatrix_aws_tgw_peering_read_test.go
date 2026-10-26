@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -24,12 +25,16 @@ const (
 	testTgwPeeringRegion    = "us-west-2"
 )
 
-// fakeTgwPeeringController answers the calls the peering Read makes and
-// counts list_tgw_details calls.
+// fakeTgwPeeringController answers the calls the peering resource makes,
+// counts list_tgw_details calls and records remote CIDR updates. A non-empty
+// cidrUpdateErr makes every remote CIDR update fail with that reason.
 type fakeTgwPeeringController struct {
-	peeredNames  []string
-	attachments  map[string]any
-	detailsCalls int
+	peeredNames   []string
+	attachments   map[string]any
+	detailsCalls  int
+	creates       int
+	cidrUpdates   []url.Values
+	cidrUpdateErr string
 }
 
 func (f *fakeTgwPeeringController) client(t *testing.T) *goaviatrix.Client {
@@ -64,6 +69,26 @@ func (f *fakeTgwPeeringController) respond(t *testing.T, params url.Values) map[
 			"name":        params.Get("tgw_name"),
 			"attachments": f.attachments,
 		}}
+	case "add_tgw_peering":
+		f.creates++
+		return map[string]any{"return": true, "results": "request-1"}
+	case "check_task_status":
+		return map[string]any{"return": true, "results": "done"}
+	case "update_tgw_peering_remote_cidrs":
+		f.cidrUpdates = append(f.cidrUpdates, params)
+		if f.cidrUpdateErr != "" {
+			return map[string]any{"return": false, "reason": f.cidrUpdateErr}
+		}
+		cidrs := []string{}
+		if list := params.Get("cidr_list"); list != "" {
+			cidrs = strings.Split(list, ",")
+		}
+		for _, attm := range f.attachments {
+			if attm, ok := attm.(map[string]any); ok && attm["peer_tgw_name"] == params.Get("peer_tgw_name") {
+				attm["remote_cidrs"] = cidrs
+			}
+		}
+		return map[string]any{"return": true, "results": map[string]any{"text": "updated"}}
 	default:
 		t.Errorf("unexpected action %q", action)
 		return map[string]any{"return": false, "reason": "unexpected action"}
@@ -77,6 +102,7 @@ func externalTgwPeeringAttachments() map[string]any {
 		"external_peer":   true,
 		"peer_account_id": testTgwPeeringAccountID,
 		"peer_region":     testTgwPeeringRegion,
+		"remote_cidrs":    []string{"10.50.0.0/16", "10.60.0.0/16"},
 	}}
 }
 
@@ -96,6 +122,7 @@ func TestResourceAviatrixAWSTgwPeeringRead(t *testing.T) {
 		controller      fakeTgwPeeringController
 		wantID          string
 		wantPeer        map[string]string
+		wantRemoteCidrs []string
 		wantDetailsCall bool
 	}{
 		{
@@ -108,6 +135,7 @@ func TestResourceAviatrixAWSTgwPeeringRead(t *testing.T) {
 			},
 			wantID:          externalID,
 			wantPeer:        map[string]string{"peer_tgw_id": testTgwPeeringPeerID, "peer_account_id": testTgwPeeringAccountID, "peer_region": testTgwPeeringRegion},
+			wantRemoteCidrs: []string{"10.50.0.0/16", "10.60.0.0/16"},
 			wantDetailsCall: true,
 		},
 		{
@@ -120,6 +148,33 @@ func TestResourceAviatrixAWSTgwPeeringRead(t *testing.T) {
 			},
 			wantID:          externalID,
 			wantPeer:        map[string]string{"peer_tgw_id": testTgwPeeringPeerID, "peer_account_id": testTgwPeeringAccountID, "peer_region": testTgwPeeringRegion},
+			wantRemoteCidrs: []string{"10.50.0.0/16", "10.60.0.0/16"},
+			wantDetailsCall: true,
+		},
+		{
+			name: "refresh of an external peering with no remote CIDRs set",
+			id:   externalID,
+			state: map[string]any{
+				"tgw_name1":       testTgwPeeringOurTgw,
+				"tgw_name2":       testTgwPeeringLabel,
+				"peer_tgw_id":     testTgwPeeringPeerID,
+				"peer_account_id": testTgwPeeringAccountID,
+				"peer_region":     testTgwPeeringRegion,
+				"remote_cidrs":    []any{"10.50.0.0/16"},
+			},
+			controller: fakeTgwPeeringController{
+				peeredNames: []string{testTgwPeeringLabel},
+				attachments: map[string]any{testTgwPeeringPeerID: map[string]any{
+					"type":            "peering",
+					"peer_tgw_name":   testTgwPeeringLabel,
+					"external_peer":   true,
+					"peer_account_id": testTgwPeeringAccountID,
+					"peer_region":     testTgwPeeringRegion,
+				}},
+			},
+			wantID:          externalID,
+			wantPeer:        map[string]string{"peer_tgw_id": testTgwPeeringPeerID},
+			wantRemoteCidrs: []string{},
 			wantDetailsCall: true,
 		},
 		{
@@ -168,12 +223,16 @@ func TestResourceAviatrixAWSTgwPeeringRead(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, resourceAviatrixAWSTgwPeering().Schema, tt.state)
 			d.SetId(tt.id)
 
-			require.NoError(t, resourceAviatrixAWSTgwPeeringRead(d, tt.controller.client(t)))
+			diags := resourceAviatrixAWSTgwPeeringRead(context.Background(), d, tt.controller.client(t))
+			require.False(t, diags.HasError(), "%v", diags)
 
 			assert.Equal(t, tt.wantID, d.Id())
 			assert.Equal(t, tt.wantDetailsCall, tt.controller.detailsCalls > 0)
 			for key, want := range tt.wantPeer {
 				assert.Equalf(t, want, getString(d, key), "%s", key)
+			}
+			if tt.wantRemoteCidrs != nil {
+				assert.ElementsMatch(t, tt.wantRemoteCidrs, getStringSet(d, "remote_cidrs"))
 			}
 		})
 	}
@@ -186,9 +245,10 @@ func TestResourceAviatrixAWSTgwPeeringImportRejectsBadID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, resourceAviatrixAWSTgwPeering().Schema, map[string]any{})
 			d.SetId(id)
 
-			err := resourceAviatrixAWSTgwPeeringRead(d, controller.client(t))
+			diags := resourceAviatrixAWSTgwPeeringRead(context.Background(), d, controller.client(t))
 
-			require.ErrorContains(t, err, "invalid import ID")
+			require.True(t, diags.HasError())
+			assert.Contains(t, diags[0].Summary, "invalid import ID")
 		})
 	}
 }

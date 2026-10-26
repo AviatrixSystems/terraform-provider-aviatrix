@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -92,7 +93,7 @@ func TestCreateAwsTgwPeeringSendsExternalPeer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			client, submitted := newAwsTgwPeeringStub(t, nil)
 
-			require.NoError(t, client.CreateAwsTgwPeering(&tt.peering))
+			require.NoError(t, client.CreateAwsTgwPeering(context.Background(), &tt.peering))
 
 			form := submitted["add_tgw_peering"]
 			require.NotNil(t, form, "add_tgw_peering was not submitted")
@@ -111,7 +112,7 @@ func TestCreateAwsTgwPeeringSendsExternalPeer(t *testing.T) {
 func TestDeleteAwsTgwPeeringSendsOnlyPeerTgwID(t *testing.T) {
 	client, submitted := newAwsTgwPeeringStub(t, nil)
 
-	require.NoError(t, client.DeleteAwsTgwPeering(&AwsTgwPeering{
+	require.NoError(t, client.DeleteAwsTgwPeering(context.Background(), &AwsTgwPeering{
 		TgwName1:      testPeeringTgwName,
 		TgwName2:      testPeerLabel,
 		PeerTgwID:     testPeerTgwID,
@@ -183,7 +184,7 @@ func TestGetAwsTgwExternalPeering(t *testing.T) {
 			client, _ := newAwsTgwPeeringStub(t, tt.attachments)
 			peering := &AwsTgwPeering{TgwName1: testPeeringTgwName, TgwName2: tt.label, PeerTgwID: tt.knownTgwID}
 
-			external, err := client.GetAwsTgwExternalPeering(peering)
+			external, err := client.GetAwsTgwExternalPeering(context.Background(), peering)
 
 			if tt.wantErr != "" {
 				require.ErrorContains(t, err, tt.wantErr)

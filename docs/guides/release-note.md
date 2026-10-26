@@ -16,6 +16,7 @@ description: |-
 | :--- | :--- |
 | AVX-80617 | `aviatrix_aws_tgw_peering` can now peer two TGWs in the same region. No configuration change is needed; the Controller used to refuse same-region peering. |
 | AVX-80618 | `aviatrix_aws_tgw_peering` can now peer an Aviatrix-managed TGW with a TGW that the Controller does not manage. Set `peer_tgw_id`, `peer_account_id` and `peer_region`; `tgw_name2` is then a label for that TGW. The peer's AWS account must be onboarded on the Controller. |
+| AVX-80621 | Added `remote_cidrs` to `aviatrix_aws_tgw_peering`, for a peering with a TGW that the Controller does not manage. It lists the CIDRs behind that TGW; network domains connected to `peering_<tgw_name2>` route them through the peering. It can be changed in place, and Export writes it. |
 | AVX-80622 | Added `appliance_mode` to `aviatrix_aws_tgw_vpc_attachment`. It enables appliance mode when the VPC is attached, and changing it replaces the attachment. It is not supported in an Aviatrix Firewall Domain. |
 
 ## 10.1.0

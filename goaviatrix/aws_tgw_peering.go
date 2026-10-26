@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,15 +10,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// AwsTgwPeering is the form that add_tgw_peering and delete_tgw_peering send.
+// RemoteCidrs stays out of it: those actions don't take CIDRs. The Controller
+// takes them only through update_tgw_peering_remote_cidrs, as one
+// comma-separated cidr_list, which UpdateAwsTgwPeeringRemoteCidrs builds.
 type AwsTgwPeering struct {
-	Action        string `form:"action,omitempty"`
-	CID           string `form:"CID,omitempty"`
-	TgwName1      string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
-	TgwName2      string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
-	PeerTgwID     string `form:"peer_tgw_id,omitempty" json:"peer_tgw_id,omitempty"`
-	PeerAccountID string `form:"peer_account_id,omitempty" json:"peer_account_id,omitempty"`
-	PeerRegion    string `form:"peer_region,omitempty" json:"peer_region,omitempty"`
-	Async         bool   `form:"async,omitempty"`
+	Action        string   `form:"action,omitempty"`
+	CID           string   `form:"CID,omitempty"`
+	TgwName1      string   `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
+	TgwName2      string   `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
+	PeerTgwID     string   `form:"peer_tgw_id,omitempty" json:"peer_tgw_id,omitempty"`
+	PeerAccountID string   `form:"peer_account_id,omitempty" json:"peer_account_id,omitempty"`
+	PeerRegion    string   `form:"peer_region,omitempty" json:"peer_region,omitempty"`
+	Async         bool     `form:"async,omitempty"`
+	RemoteCidrs   []string `form:"-" json:"-"` // sent by UpdateAwsTgwPeeringRemoteCidrs; see the type comment
 }
 
 type AwsTgwPeeringAPIResp struct {
@@ -27,11 +33,12 @@ type AwsTgwPeeringAPIResp struct {
 }
 
 type awsTgwPeeringAttachment struct {
-	Type          string `json:"type"`
-	PeerTgwName   string `json:"peer_tgw_name"`
-	ExternalPeer  bool   `json:"external_peer"`
-	PeerAccountID string `json:"peer_account_id"`
-	PeerRegion    string `json:"peer_region"`
+	Type          string   `json:"type"`
+	PeerTgwName   string   `json:"peer_tgw_name"`
+	ExternalPeer  bool     `json:"external_peer"`
+	PeerAccountID string   `json:"peer_account_id"`
+	PeerRegion    string   `json:"peer_region"`
+	RemoteCidrs   []string `json:"remote_cidrs"`
 }
 
 type awsTgwPeeringDetailsResp struct {
@@ -42,14 +49,14 @@ type awsTgwPeeringDetailsResp struct {
 	Reason string `json:"reason"`
 }
 
-func (c *Client) CreateAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
+func (c *Client) CreateAwsTgwPeering(ctx context.Context, awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "add_tgw_peering"
 	awsTgwPeering.Async = true
-	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	return c.PostAsyncAPIContext(ctx, awsTgwPeering.Action, awsTgwPeering, BasicCheck)
 }
 
-func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
+func (c *Client) GetAwsTgwPeering(ctx context.Context, awsTgwPeering *AwsTgwPeering) error {
 	var data AwsTgwPeeringAPIResp
 	form := map[string]string{
 		"CID":      c.CID,
@@ -65,7 +72,7 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 		}
 		return nil
 	}
-	err := c.GetAPI(&data, form["action"], form, check)
+	err := c.GetAPIContext(ctx, &data, form["action"], form, check)
 	if err != nil {
 		return err
 	}
@@ -82,18 +89,19 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	return ErrNotFound
 }
 
-// GetAwsTgwExternalPeering fills the peer TGW ID, account ID and region of a
-// peering whose tgw_name2 is a label for a TGW that TGW-O does not manage. It
-// returns false, leaving the fields alone, when tgw_name2 is a managed TGW.
+// GetAwsTgwExternalPeering fills the peer TGW ID, account ID, region and
+// remote CIDRs of a peering whose tgw_name2 is a label for a TGW that TGW-O
+// does not manage. It returns false, leaving the fields alone, when tgw_name2
+// is a managed TGW.
 // A PeerTgwID already set picks between peerings that share a label.
-func (c *Client) GetAwsTgwExternalPeering(awsTgwPeering *AwsTgwPeering) (bool, error) {
+func (c *Client) GetAwsTgwExternalPeering(ctx context.Context, awsTgwPeering *AwsTgwPeering) (bool, error) {
 	var data awsTgwPeeringDetailsResp
 	form := map[string]string{
 		"CID":      c.CID,
 		"action":   "list_tgw_details",
 		"tgw_name": awsTgwPeering.TgwName1,
 	}
-	if err := c.GetAPI(&data, form["action"], form, BasicCheck); err != nil {
+	if err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck); err != nil {
 		return false, err
 	}
 
@@ -118,10 +126,24 @@ func (c *Client) GetAwsTgwExternalPeering(awsTgwPeering *AwsTgwPeering) (bool, e
 	awsTgwPeering.PeerTgwID = matches[0]
 	awsTgwPeering.PeerAccountID = attm.PeerAccountID
 	awsTgwPeering.PeerRegion = attm.PeerRegion
+	awsTgwPeering.RemoteCidrs = attm.RemoteCidrs
 	return true, nil
 }
 
-func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
+// UpdateAwsTgwPeeringRemoteCidrs replaces the CIDRs behind the external TGW
+// labeled TgwName2. An empty list removes them all.
+func (c *Client) UpdateAwsTgwPeeringRemoteCidrs(ctx context.Context, awsTgwPeering *AwsTgwPeering) error {
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "update_tgw_peering_remote_cidrs",
+		"tgw_name":      awsTgwPeering.TgwName1,
+		"peer_tgw_name": awsTgwPeering.TgwName2,
+		"cidr_list":     strings.Join(awsTgwPeering.RemoteCidrs, ","),
+	}
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DeleteAwsTgwPeering(ctx context.Context, awsTgwPeering *AwsTgwPeering) error {
 	form := &AwsTgwPeering{
 		CID:       c.CID,
 		Action:    "delete_tgw_peering",
@@ -130,7 +152,7 @@ func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 		PeerTgwID: awsTgwPeering.PeerTgwID,
 		Async:     true,
 	}
-	return c.PostAsyncAPI(form.Action, form, BasicCheck)
+	return c.PostAsyncAPIContext(ctx, form.Action, form, BasicCheck)
 }
 
 func DiffSuppressFuncAwsTgwPeeringTgwName1(k, old, new string, d *schema.ResourceData) bool {

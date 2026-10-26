@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -160,7 +161,7 @@ func tesAccCheckAWSTgwPeeringExists(n string, awsTgwPeering *goaviatrix.AwsTgwPe
 			TgwName1: rs.Primary.Attributes["tgw_name1"],
 			TgwName2: rs.Primary.Attributes["tgw_name2"],
 		}
-		err := client.GetAwsTgwPeering(foundAwsTgwPeering)
+		err := client.GetAwsTgwPeering(context.Background(), foundAwsTgwPeering)
 		if err != nil {
 			if errors.Is(err, goaviatrix.ErrNotFound) {
 				return fmt.Errorf("no aviatrix AWS tgw peering is found")
@@ -186,7 +187,7 @@ func testAccCheckAWSTgwPeeringDestroy(s *terraform.State) error {
 			TgwName2: rs.Primary.Attributes["tgw_name2"],
 		}
 
-		err := client.GetAwsTgwPeering(foundAwsTgwPeering)
+		err := client.GetAwsTgwPeering(context.Background(), foundAwsTgwPeering)
 		if !errors.Is(err, goaviatrix.ErrNotFound) {
 			return fmt.Errorf("aviatrix AWS tgw peering still exists")
 		}

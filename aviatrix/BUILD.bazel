@@ -266,6 +266,7 @@ go_test(
         "resource_aviatrix_aws_tgw_network_domain_test.go",
         "resource_aviatrix_aws_tgw_peering_domain_conn_test.go",
         "resource_aviatrix_aws_tgw_peering_read_test.go",
+        "resource_aviatrix_aws_tgw_peering_remote_cidrs_test.go",
         "resource_aviatrix_aws_tgw_peering_test.go",
         "resource_aviatrix_aws_tgw_test.go",
         "resource_aviatrix_aws_tgw_transit_gateway_attachment_test.go",
