@@ -83,6 +83,7 @@ type TransitVpc struct {
 	PrivateSubnetEgressTarget    string              `form:"private_subnet_egress_target,omitempty"`
 	TunnelEncryptionCipher       string              `form:"ph2_encryption_policy,omitempty"`
 	TunnelForwardSecrecy         string              `form:"ph2_pfs_policy,omitempty"`
+	DesiredVersion               string              `form:"desired_version,omitempty" json:"desired_version,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

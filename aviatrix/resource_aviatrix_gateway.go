@@ -544,6 +544,13 @@ func resourceAviatrixGateway() *schema.Resource {
 					"If set, we will attempt to update the gateway to the specified version.",
 				Deprecated: "Image versions should not be manually specified.",
 			},
+			"desired_version": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: DiffSuppressFuncCreateOnly,
+				Description:      "QA-only: software version to launch the gateway at. Applies at create only; the controller then manages it on upgrade, replace and rollback.",
+			},
 			"peering_ha_image_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -639,6 +646,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta any) error {
 		SaveTemplate:       "no",
 		AvailabilityDomain: getString(d, "availability_domain"),
 		FaultDomain:        getString(d, "fault_domain"),
+		DesiredVersion:     getString(d, "desired_version"),
 	}
 
 	err := checkPublicSubnetFilteringConfig(d)
@@ -1345,6 +1353,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 	mustSet(d, "tunnel_detection_time", gw.TunnelDetectionTime)
 	mustSet(d, "image_version", gw.ImageVersion)
 	mustSet(d, "software_version", gw.SoftwareVersion)
+	if gw.DesiredVersion != "" {
+		mustSet(d, "desired_version", gw.DesiredVersion)
+	}
 	mustSet(d, "rx_queue_size", gw.RxQueueSize)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {

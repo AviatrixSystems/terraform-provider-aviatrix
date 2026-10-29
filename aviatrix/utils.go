@@ -326,6 +326,12 @@ func validateAzureEipNameResourceGroup(i any, k string) (warnings []string, erro
 	return
 }
 
+// DiffSuppressFuncCreateOnly ignores changes once the resource exists, for
+// inputs that only apply at create and are then managed by the controller.
+func DiffSuppressFuncCreateOnly(k, old, new string, d *schema.ResourceData) bool {
+	return d.Id() != ""
+}
+
 func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bool {
 	cloudType := getInt(d, "cloud_type")
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {

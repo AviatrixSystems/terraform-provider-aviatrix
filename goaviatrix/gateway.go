@@ -39,6 +39,7 @@ type Gateway struct {
 	CloudnBkupGatewayInstID      string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
 	CloudnGatewayInstID          string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
 	ConnectedTransit             string `json:"connected_transit,omitempty"`
+	DesiredVersion               string `form:"desired_version,omitempty" json:"desired_version,omitempty"`
 	DirectInternet               string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
 	DockerConsulIP               string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
 	DockerNtwkCidr               string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`

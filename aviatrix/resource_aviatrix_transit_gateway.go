@@ -698,6 +698,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"If set, we will attempt to update the gateway to the specified version.",
 				Deprecated: "Image versions should not be manually specified.",
 			},
+			"desired_version": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: DiffSuppressFuncCreateOnly,
+				Description:      "QA-only: software version to launch the gateway at. Applies at create only; the controller then manages it on upgrade, replace and rollback.",
+			},
 			"ha_image_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1110,6 +1117,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta any) erro
 			Transit:                  true,
 			TunnelEncryptionCipher:   getString(d, "tunnel_encryption_cipher"),
 			TunnelForwardSecrecy:     getString(d, "tunnel_forward_secrecy"),
+			DesiredVersion:           getString(d, "desired_version"),
 		}
 
 		// for CSPs the enable_jumbo_frame is set to true if not explicitly set by the user
@@ -2274,6 +2282,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) error 
 		mustSet(d, "bgp_neighbor_status_polling_time", gw.BgpBfdPollingTime)
 		mustSet(d, "image_version", gw.ImageVersion)
 		mustSet(d, "software_version", gw.SoftwareVersion)
+		if gw.DesiredVersion != "" {
+			mustSet(d, "desired_version", gw.DesiredVersion)
+		}
 		mustSet(d, "rx_queue_size", gw.RxQueueSize)
 		mustSet(d, "subnet", gw.VpcNet)
 

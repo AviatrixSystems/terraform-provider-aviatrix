@@ -327,6 +327,11 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Software version of the gateway.",
 			},
+			"desired_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version the controller wants the gateway to run.",
+			},
 			"peering_ha_software_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -617,6 +622,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "private_ip", gw.PrivateIP)
 		mustSet(d, "image_version", gw.ImageVersion)
 		mustSet(d, "software_version", gw.SoftwareVersion)
+		mustSet(d, "desired_version", gw.DesiredVersion)
 
 		if gw.InsaneMode == "yes" {
 			mustSet(d, "insane_mode", true)

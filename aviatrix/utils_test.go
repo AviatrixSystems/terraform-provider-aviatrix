@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
@@ -523,4 +524,12 @@ func TestValidateEgressPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDiffSuppressFuncCreateOnly(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceAviatrixSpokeGateway().Schema, map[string]any{})
+	assert.False(t, DiffSuppressFuncCreateOnly("desired_version", "", "8.2.1000", d), "create must not suppress")
+
+	d.SetId("spoke-gw")
+	assert.True(t, DiffSuppressFuncCreateOnly("desired_version", "8.2.1000", "9.0.4985", d), "existing resource must suppress")
 }

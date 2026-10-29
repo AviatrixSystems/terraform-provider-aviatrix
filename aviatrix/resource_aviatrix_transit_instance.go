@@ -253,6 +253,7 @@ func buildTransitInstanceConfig(ctx context.Context, d *schema.ResourceData, cli
 		Subnet:                    getString(d, "subnet"),
 		Transit:                   true,
 		PrivateSubnetEgressTarget: getString(d, "private_subnet_egress_target"),
+		DesiredVersion:            getString(d, "desired_version"),
 	}
 
 	// Validate and configure basic settings
@@ -870,6 +871,9 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "single_az_ha", gw.SingleAZ == "yes")
 	mustSet(d, "image_version", gw.ImageVersion)
 	mustSet(d, "software_version", gw.SoftwareVersion)
+	if gw.DesiredVersion != "" {
+		mustSet(d, "desired_version", gw.DesiredVersion)
+	}
 	mustSet(d, "rx_queue_size", gw.RxQueueSize)
 	mustSet(d, "subnet", gw.VpcNet)
 	setTunnelDetectionTimeState(d, client, gw.GwName, gw.TunnelDetectionTime)

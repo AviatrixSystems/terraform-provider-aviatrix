@@ -92,6 +92,7 @@ func buildSpokeVpcFromResourceData(d *schema.ResourceData, gatewayGroup *goaviat
 		BgpLanInterfacesCount: getInt(d, "bgp_lan_interfaces_count"),
 		AvailabilityDomain:    getString(d, "availability_domain"),
 		FaultDomain:           getString(d, "fault_domain"),
+		DesiredVersion:        getString(d, "desired_version"),
 	}
 
 	// Single AZ HA
@@ -731,6 +732,9 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 	mustSet(d, "eip", gateway.PublicIP)
 	mustSet(d, "software_version", gateway.SoftwareVersion)
 	mustSet(d, "image_version", gateway.ImageVersion)
+	if gateway.DesiredVersion != "" {
+		mustSet(d, "desired_version", gateway.DesiredVersion)
+	}
 	setGatewayIPv6IPState(d, gateway)
 
 	// AWS specific
@@ -804,6 +808,9 @@ func readEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *
 	// Computed attributes from base gateway
 	mustSet(d, "software_version", gateway.SoftwareVersion)
 	mustSet(d, "image_version", gateway.ImageVersion)
+	if gateway.DesiredVersion != "" {
+		mustSet(d, "desired_version", gateway.DesiredVersion)
+	}
 
 	return nil
 }

@@ -595,6 +595,13 @@ func transitInstanceComputedSchema() map[string]*schema.Schema {
 			Description: "image_version can be used to set the desired image version of the gateway. " +
 				"If set, we will attempt to update the gateway to the specified version.",
 		},
+		"desired_version": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			DiffSuppressFunc: DiffSuppressFuncCreateOnly,
+			Description:      "QA-only: software version to launch the gateway at. Applies at create only; the controller then manages it on upgrade, replace and rollback.",
+		},
 	}
 }
 

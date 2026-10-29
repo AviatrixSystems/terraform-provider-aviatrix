@@ -572,6 +572,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 					"If set, we will attempt to update the gateway to the specified version.",
 				Deprecated: "Image versions should not be manually specified.",
 			},
+			"desired_version": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: DiffSuppressFuncCreateOnly,
+				Description:      "QA-only: software version to launch the gateway at. Applies at create only; the controller then manages it on upgrade, replace and rollback.",
+			},
 			"ha_image_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -828,6 +835,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta any) error 
 		EnableGlobalVpc:        getBool(d, "enable_global_vpc"),
 		TunnelEncryptionCipher: getString(d, "tunnel_encryption_cipher"),
 		TunnelForwardSecrecy:   getString(d, "tunnel_forward_secrecy"),
+		DesiredVersion:         getString(d, "desired_version"),
 	}
 
 	if !getBool(d, "manage_ha_gateway") {
@@ -1844,6 +1852,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta any) error {
 	mustSet(d, "tunnel_detection_time", gw.TunnelDetectionTime)
 	mustSet(d, "image_version", gw.ImageVersion)
 	mustSet(d, "software_version", gw.SoftwareVersion)
+	if gw.DesiredVersion != "" {
+		mustSet(d, "desired_version", gw.DesiredVersion)
+	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		azureEip := strings.Split(gw.ReuseEip, ":")

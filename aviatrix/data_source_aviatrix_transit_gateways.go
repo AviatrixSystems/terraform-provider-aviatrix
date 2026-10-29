@@ -186,6 +186,11 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 							Computed:    true,
 							Description: "Software version of the gateway.",
 						},
+						"desired_version": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Software version the controller wants the gateway to run.",
+						},
 						"image_version": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -412,6 +417,7 @@ func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.Resour
 		transitGateway["enable_multi_tier_transit"] = gw.EnableMultitierTransit
 		transitGateway["image_version"] = gw.ImageVersion
 		transitGateway["software_version"] = gw.SoftwareVersion
+		transitGateway["desired_version"] = gw.DesiredVersion
 		transitGateway["enable_private_oob"] = gw.EnablePrivateOob
 		if gw.EnablePrivateOob {
 			transitGateway["oob_management_subnet"] = strings.Split(gw.OobManagementSubnet, "~~")[0]

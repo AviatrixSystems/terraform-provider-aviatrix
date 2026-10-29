@@ -294,6 +294,11 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Software version of the gateway.",
 			},
+			"desired_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version the controller wants the gateway to run.",
+			},
 			"ha_software_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -599,6 +604,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta any) erro
 		mustSet(d, "enable_multi_tier_transit", gw.EnableMultitierTransit)
 		mustSet(d, "image_version", gw.ImageVersion)
 		mustSet(d, "software_version", gw.SoftwareVersion)
+		mustSet(d, "desired_version", gw.DesiredVersion)
 		mustSet(d, "eip", gw.PublicIP)
 		mustSet(d, "ha_eip", gw.HaGw.PublicIP)
 		mustSet(d, "enable_private_oob", gw.EnablePrivateOob)

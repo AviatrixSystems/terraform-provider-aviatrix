@@ -179,6 +179,11 @@ func dataSourceAviatrixSpokeGateways() *schema.Resource {
 							Computed:    true,
 							Description: "Software version of the gateway.",
 						},
+						"desired_version": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Software version the controller wants the gateway to run.",
+						},
 						"image_version": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -364,6 +369,7 @@ func dataSourceAviatrixSpokeGatewaysRead(ctx context.Context, d *schema.Resource
 		spokeGateway["private_ip"] = gw.PrivateIP
 		spokeGateway["image_version"] = gw.ImageVersion
 		spokeGateway["software_version"] = gw.SoftwareVersion
+		spokeGateway["desired_version"] = gw.DesiredVersion
 		spokeGateway["eip"] = gw.PublicIP
 		spokeGateway["enable_private_oob"] = gw.EnablePrivateOob
 		if gw.EnablePrivateOob {
