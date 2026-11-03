@@ -69,7 +69,6 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   zone                                        = "us-west-1b"
   enable_public_subnet_filtering              = true
   public_subnet_filtering_route_tables        = [data.aviatrix_vpc.test_vpc.route_tables[0]]
-  public_subnet_filtering_guard_duty_enforced = true
   single_az_ha                                = true
   enable_encrypt_volume                       = true
 }
@@ -90,7 +89,6 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   peering_ha_subnet                           = "10.10.0.64/26"
   peering_ha_zone                             = "us-west-1b"
   public_subnet_filtering_ha_route_tables     = [data.aviatrix_vpc.test_vpc.route_tables[1]]
-  public_subnet_filtering_guard_duty_enforced = true
   single_az_ha                                = true
   enable_encrypt_volume                       = true
 }
@@ -408,7 +406,7 @@ The following arguments are supported:
 * `enable_public_subnet_filtering` - (Optional) Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 * `public_subnet_filtering_route_tables` - (Optional) Route tables whose associated public subnets are protected. Only valid when `enable_public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
 * `public_subnet_filtering_ha_route_tables` - (Optional) Route tables whose associated public subnets are protected for the HA PSF gateway. Required when `enable_public_subnet_filtering` and `peering_ha_subnet` are set. Available as of provider version R2.18+.
-* `public_subnet_filtering_guard_duty_enforced` - (Optional) Whether to enforce Guard Duty IP blocking.  Only valid when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true. Available as of provider version R2.18+.
+* `public_subnet_filtering_guard_duty_enforced` - (Optional) **Deprecated**: Guard Duty enforcement is no longer supported, so setting this to true is rejected by the controller. Remove this attribute from your configuration. Default value: false.
 
 ## Attribute Reference
 

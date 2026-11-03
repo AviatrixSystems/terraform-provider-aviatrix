@@ -651,7 +651,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 			mustSet(d, "enable_public_subnet_filtering", false)
 			mustSet(d, "public_subnet_filtering_route_tables", nil)
 			mustSet(d, "public_subnet_filtering_ha_route_tables", nil)
-			mustSet(d, "public_subnet_filtering_guard_duty_enforced", true)
+			mustSet(d, "public_subnet_filtering_guard_duty_enforced", false)
 		} else {
 			mustSet(d, "enable_public_subnet_filtering", true)
 			if err := d.Set("public_subnet_filtering_route_tables", gw.PsfDetails.RouteTableList); err != nil {

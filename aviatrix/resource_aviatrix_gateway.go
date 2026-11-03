@@ -369,7 +369,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:  false,
 				RequiredWith: []string{
 					"public_subnet_filtering_route_tables",
-					"public_subnet_filtering_guard_duty_enforced",
 				},
 				ConflictsWith: conflictingPublicSubnetFilteringGatewayConfigKeys,
 				Description:   "Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html).",
@@ -388,9 +387,10 @@ func resourceAviatrixGateway() *schema.Resource {
 			},
 			"public_subnet_filtering_guard_duty_enforced": {
 				Type:        schema.TypeBool,
-				Default:     true,
+				Default:     false,
 				Optional:    true,
-				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true.",
+				Deprecated:  "AWS Guard Duty enforcement is no longer supported and this attribute will be removed. Remove it from your configuration.",
+				Description: "Whether to enforce Guard Duty IP blocking. Deprecated: Guard Duty enforcement is no longer supported, setting this to true is rejected by the controller. Default value: false.",
 			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
@@ -1525,7 +1525,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta any) error {
 		mustSet(d, "enable_public_subnet_filtering", false)
 		mustSet(d, "public_subnet_filtering_route_tables", []string{})
 		mustSet(d, "public_subnet_filtering_ha_route_tables", []string{})
-		mustSet(d, "public_subnet_filtering_guard_duty_enforced", true)
+		mustSet(d, "public_subnet_filtering_guard_duty_enforced", false)
 	} else {
 		mustSet(d, "enable_public_subnet_filtering", true)
 		if err := d.Set("public_subnet_filtering_route_tables", gw.PsfDetails.RouteTableList); err != nil {
