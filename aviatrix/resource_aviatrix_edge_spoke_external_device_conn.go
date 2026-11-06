@@ -18,6 +18,14 @@ import (
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
+const (
+	// Defaults for the connection create retry loop. These are provider side
+	// knobs, the controller does not store them, so the schema defaults are
+	// also what an imported connection has to fall back to.
+	edgeSpokeExternalDeviceConnDefaultNumberOfRetries = 0
+	edgeSpokeExternalDeviceConnDefaultRetryInterval   = 300
+)
+
 func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnCreate,
@@ -25,7 +33,7 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 		UpdateWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnUpdate,
 		DeleteWithoutTimeout: resourceAviatrixEdgeSpokeExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceAviatrixEdgeSpokeExternalDeviceConnImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,13 +111,13 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 			"number_of_retries": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     0,
+				Default:     edgeSpokeExternalDeviceConnDefaultNumberOfRetries,
 				Description: "Number of retries.",
 			},
 			"retry_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     300,
+				Default:     edgeSpokeExternalDeviceConnDefaultRetryInterval,
 				Description: "Retry interval in seconds.",
 			},
 			"enable_edge_underlay": {
@@ -450,6 +458,22 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID + "~" + externalDeviceConn.GwName)
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
+}
+
+// resourceAviatrixEdgeSpokeExternalDeviceConnImport seeds the attributes that the
+// controller does not keep, so that an imported connection lines up with the
+// configuration it is imported into.
+//
+// 'number_of_retries' and 'retry_interval' only drive the create retry loop in
+// this provider, there is nothing to read them back from. Left unset by the
+// import they stay absent from the state while the configuration keeps applying
+// the schema defaults, and every subsequent plan reports a change that no apply
+// can settle.
+func resourceAviatrixEdgeSpokeExternalDeviceConnImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	mustSet(d, "number_of_retries", edgeSpokeExternalDeviceConnDefaultNumberOfRetries)
+	mustSet(d, "retry_interval", edgeSpokeExternalDeviceConnDefaultRetryInterval)
+
+	return schema.ImportStatePassthroughContext(ctx, d, meta)
 }
 
 func resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx context.Context, d *schema.ResourceData, meta any, flag *bool) diag.Diagnostics {
