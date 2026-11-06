@@ -145,6 +145,7 @@ The following arguments are supported:
     * `src_smart_groups` - (Required) Set of Smart Group UUIDs for the source for the rule.
     * `dst_smart_groups` - (Required) Set of Smart Group UUIDs for the destination for the rule.
     * `web_groups` - (Optional) Set of Web Group UUIDs for the rule.
+    * `http_filters` - (Optional) Set of DCF HTTP filter UUIDs for the rule. Use the `aviatrix_dcf_http_filter` resource or data source to obtain the UUID.
     * `flow_app_requirement` - (Optional) Flow application requirement for the rule. Must be one of APP_UNSPECIFIED, TLS_REQUIRED or NOT_TLS_REQUIRED.
     * `decrypt_policy` - (Optional) Decryption options for the rule. Must be one of DECRYPT_UNSPECIFIED, DECRYPT_ALLOWED or DECRYPT_NOT_ALLOWED.
     * `exclude_sg_orchestration` - (Optional) If this flag is set to true, this rule will be ignored for SG orchestration. Valid values: true, false. Default: false.

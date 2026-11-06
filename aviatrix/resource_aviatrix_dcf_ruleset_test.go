@@ -333,6 +333,7 @@ func TestMarshalDcfPolicyInput_EnforcementSetsField(t *testing.T) {
 		"src_smart_groups":         schema.NewSet(schema.HashString, []any{}),
 		"dst_smart_groups":         schema.NewSet(schema.HashString, []any{}),
 		"web_groups":               schema.NewSet(schema.HashString, []any{}),
+		"http_filters":             schema.NewSet(schema.HashString, []any{}),
 		"port_ranges":              []any{},
 	}
 
@@ -353,6 +354,98 @@ func TestMarshalDcfPolicyInput_EnforcementSetsField(t *testing.T) {
 	}
 	if !policy.Watch {
 		t.Error("expected Watch=true when enforcement is absent and watch=true")
+	}
+}
+
+// Verify http_filters UUIDs are passed through to the policy request.
+func TestMarshalDcfPolicyInput_HTTPFilters(t *testing.T) {
+	rule := map[string]any{
+		"name":                     "test-rule",
+		"action":                   "PERMIT",
+		"priority":                 0,
+		"protocol":                 "TCP",
+		"logging":                  false,
+		"watch":                    false,
+		"enforcement":              "ENFORCE",
+		"decrypt_policy":           "DECRYPT_UNSPECIFIED",
+		"flow_app_requirement":     "APP_UNSPECIFIED",
+		"exclude_sg_orchestration": false,
+		"tls_profile":              "",
+		"uuid":                     "",
+		"log_profile":              "def000ad-7000-0000-0000-000000000001",
+		"egress_path":              "EGRESS_PATH_DEFAULT",
+		"src_smart_groups":         schema.NewSet(schema.HashString, []any{}),
+		"dst_smart_groups":         schema.NewSet(schema.HashString, []any{}),
+		"web_groups":               schema.NewSet(schema.HashString, []any{}),
+		"http_filters":             schema.NewSet(schema.HashString, []any{"0d1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6"}),
+		"port_ranges":              []any{},
+	}
+
+	policy, err := marshalPolicyInput(rule)
+	if err != nil {
+		t.Fatalf("marshalPolicyInput: %v", err)
+	}
+	if len(policy.HTTPFilters) != 1 || policy.HTTPFilters[0] != "0d1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6" {
+		t.Errorf("expected HTTPFilters to contain the configured UUID, got %v", policy.HTTPFilters)
+	}
+}
+
+// An existing configuration that never set http_filters must not plan a change
+// once Read starts populating http_filters, including when the controller omits
+// the field from its response.
+func TestDcfRulesetDiff_NoDiffWhenHTTPFiltersUnset(t *testing.T) {
+	testResource := &schema.Resource{Schema: resourceAviatrixDCFRuleset().Schema}
+
+	d := schema.TestResourceDataRaw(t, testResource.Schema, map[string]any{"name": "test-ruleset"})
+	d.SetId("test-ruleset-id")
+	// Mirror what resourceAviatrixDCFRulesetRead writes for the rule built by dcfRulesetTestRule.
+	mustSet(d, "rules", []map[string]any{{
+		"name":                     "test-rule-1",
+		"action":                   "PERMIT",
+		"priority":                 2,
+		"protocol":                 "TCP",
+		"logging":                  true,
+		"enforcement":              "ENFORCE",
+		"watch":                    false,
+		"decrypt_policy":           "DECRYPT_UNSPECIFIED",
+		"flow_app_requirement":     "APP_UNSPECIFIED",
+		"exclude_sg_orchestration": true,
+		"tls_profile":              "",
+		"log_profile":              "def000ad-7000-0000-0000-000000000001",
+		"egress_path":              "EGRESS_PATH_DEFAULT",
+		"uuid":                     "93d4d7eb-b77c-4179-985d-f2c85bf818c5",
+		"src_smart_groups":         []string{"def000ad-0000-0000-0000-000000000000"},
+		"dst_smart_groups":         []string{"def000ad-0000-0000-0000-000000000000"},
+		"web_groups":               []string(nil),
+		"http_filters":             []string(nil),
+		"port_ranges":              []map[string]any{{"lo": 443, "hi": 443}},
+	}})
+	oldState := d.State()
+
+	newConfig := terraform.NewResourceConfigRaw(map[string]any{
+		"name":  "test-ruleset",
+		"rules": []any{dcfRulesetTestRule(true, 443, 443)},
+	})
+	instanceDiff, err := testResource.Diff(context.Background(), oldState, newConfig, nil)
+	if err != nil {
+		t.Fatalf("Diff returned an error: %v", err)
+	}
+	if instanceDiff != nil && len(instanceDiff.Attributes) > 0 {
+		t.Errorf("expected no diff for a rule without http_filters, got %#v", instanceDiff.Attributes)
+	}
+
+	withFilter := dcfRulesetTestRule(true, 443, 443)
+	withFilter["http_filters"] = []any{"0d1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6"}
+	newConfig = terraform.NewResourceConfigRaw(map[string]any{
+		"name":  "test-ruleset",
+		"rules": []any{withFilter},
+	})
+	instanceDiff, err = testResource.Diff(context.Background(), oldState, newConfig, nil)
+	if err != nil {
+		t.Fatalf("Diff returned an error: %v", err)
+	}
+	if instanceDiff == nil || len(instanceDiff.Attributes) == 0 {
+		t.Error("expected a diff when http_filters is added to the rule")
 	}
 }
 
@@ -540,6 +633,99 @@ resource "aviatrix_dcf_ruleset" "test" {
   }
 }
 `
+}
+
+func TestAccAviatrixDcfRuleset_httpFilters(t *testing.T) {
+	if os.Getenv("SKIP_DCF_RULESET") == "yes" {
+		t.Skip("Skipping DCF Ruleset test as SKIP_DCF_RULESET is set")
+	}
+	resourceName := "aviatrix_dcf_ruleset.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return testAccProviderVersionValidation, nil },
+		},
+		CheckDestroy: testAccCheckDcfRulesetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDcfRulesetWithHTTPFilters(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfRulesetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.http_filters.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rules.0.http_filters.*", "aviatrix_dcf_http_filter.test", "uuid"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Removing http_filters must clear them on the controller.
+				Config: testAccDcfRulesetWithHTTPFilters(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfRulesetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.http_filters.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDcfRulesetWithHTTPFilters(withFilters bool) string {
+	httpFilters := ""
+	if withFilters {
+		httpFilters = "http_filters     = [aviatrix_dcf_http_filter.test.uuid]"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_smart_group" "ad1" {
+	name = "test-smart-group-http-filter-1"
+	selector {
+		match_expressions {
+			cidr = "10.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_smart_group" "ad2" {
+	name = "test-smart-group-http-filter-2"
+	selector {
+		match_expressions {
+			cidr = "11.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_dcf_http_filter" "test" {
+	name = "test-dcf-ruleset-http-filter"
+	filters {
+		all {
+			header = ":method"
+			values = ["GET"]
+		}
+	}
+}
+
+resource "aviatrix_dcf_ruleset" "test" {
+	name = "test-dcf-ruleset-http-filters"
+	rules {
+		name             = "test-http-filter-rule"
+		action           = "PERMIT"
+		priority         = 0
+		protocol         = "TCP"
+		src_smart_groups = [aviatrix_smart_group.ad1.uuid]
+		dst_smart_groups = [aviatrix_smart_group.ad2.uuid]
+		%s
+
+		port_ranges {
+			lo = 443
+		}
+	}
+}
+`, httpFilters)
 }
 
 func TestAccAviatrixDcfRuleset_uuidPreservedOnUpdate(t *testing.T) {

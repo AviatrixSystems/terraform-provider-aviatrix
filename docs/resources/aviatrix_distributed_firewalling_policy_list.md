@@ -114,6 +114,7 @@ The following arguments are supported:
     * `src_smart_groups` - (Required) List of Smart Group UUIDs for the source for the policy.
     * `dst_smart_groups` - (Required) List of Smart Group UUIDs for the destination for the policy.
     * `web_groups` - (Optional) List of Web Group UUIDs for the policy. Available as of provider version 3.1.0+.
+    * `http_filters` - (Optional) Set of DCF HTTP filter UUIDs for the policy. Use the `aviatrix_dcf_http_filter` resource or data source to obtain the UUID.
     * `flow_app_requirement` - (Optional) Flow application requirement for the policy. Available as of provider version 3.1.0+.
     * `decrypt_policy` - (Optional) Decryption options for the policy. Available as of provider version 3.1.0+.
     * `exclude_sg_orchestration` - (Optional) If this flag is set to true, this policy will be ignored for SG orchestration. Valid values: true, false. Default: false. Available as of provider version 3.1.1+.

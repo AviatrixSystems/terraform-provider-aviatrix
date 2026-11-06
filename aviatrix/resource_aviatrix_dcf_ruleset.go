@@ -143,6 +143,12 @@ var dcfRuleElem = &schema.Resource{
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: "Set of Web Group UUIDs for the rule.",
 		},
+		"http_filters": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsUUID},
+			Description: "Set of DCF HTTP filter UUIDs for the rule.",
+		},
 		"log_profile": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -300,7 +306,7 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	// Set diff in Terraform does not compare each object attributes in details, but instead it just compares the object hash
 	// If the hash is different, the object is removed and a new object matching user input is added, so here oldPoliciesSet and newPoliciesSet are the old and new sets of rules, respectively.
 	// The oldPoliciesSet contains a set of rules with UUIDs which match the user state before the update, and newPoliciesSet contains a set of rules along with new rules that had any attributes changed.
-	// These new rules do not have UUIDs as it is a computed field, and if the newPoliciesSet is sent as is then the backend will generate new UUIDs for the rules which had attibutes changed.
+	// These new rules do not have UUIDs as it is a computed field, and if the newPoliciesSet is sent as is then the backend will generate new UUIDs for the rules which had attributes changed.
 	// This is not what we want, as we want to update the rules that had attributes changed, and not update the rule UUIDs.
 	// To solve this, we will build a map of name -> UUID for the old rules, and then use this map to set the UUIDs for the new rules which match the name of the old rules.
 	// This way, we can update the rules that had attributes changed, and not update the rule UUIDs as backend will not create new UUIDs if we pass in a UUID with our request.
@@ -423,6 +429,11 @@ func marshalPolicyInput(policyMap map[string]any) (*goaviatrix.DCFPolicy, error)
 	}
 
 	policy.WebGroups, err = marshalSmartGroupsInput(policyMap, "web_groups")
+	if err != nil {
+		return nil, err
+	}
+
+	policy.HTTPFilters, err = marshalSmartGroupsInput(policyMap, "http_filters")
 	if err != nil {
 		return nil, err
 	}
@@ -562,6 +573,7 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 		p["src_smart_groups"] = policy.SrcSmartGroups
 		p["dst_smart_groups"] = policy.DstSmartGroups
 		p["web_groups"] = policy.WebGroups
+		p["http_filters"] = policy.HTTPFilters
 		p["logging"] = policy.Logging
 		p["enforcement"] = policy.Enforcement
 		p["watch"] = policy.Enforcement == "MONITOR"

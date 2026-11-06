@@ -62,6 +62,12 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "Set of Web Group UUIDs for the policy.",
 						},
+						"http_filters": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsUUID},
+							Description: "Set of DCF HTTP filter UUIDs for the policy.",
+						},
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -216,6 +222,10 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.WebGroups = append(distributedFirewallingPolicy.WebGroups, mustString(webGroup))
 		}
 
+		for _, httpFilter := range mustSchemaSet(policy["http_filters"]).List() {
+			distributedFirewallingPolicy.HTTPFilters = append(distributedFirewallingPolicy.HTTPFilters, mustString(httpFilter))
+		}
+
 		if logging, loggingOk := policy["logging"]; loggingOk {
 			distributedFirewallingPolicy.Logging = mustBool(logging)
 		}
@@ -313,6 +323,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["src_smart_groups"] = policy.SrcSmartGroups
 		p["dst_smart_groups"] = policy.DstSmartGroups
 		p["web_groups"] = policy.WebGroups
+		p["http_filters"] = policy.HTTPFilters
 		p["logging"] = policy.Logging
 		p["enforcement"] = policy.Enforcement
 		p["watch"] = policy.Enforcement == "MONITOR"

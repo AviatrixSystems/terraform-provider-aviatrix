@@ -320,6 +320,42 @@ func TestMarshalDistributedFirewallingPolicyListInput_EnforcementTakesPrecedence
 	assert.False(t, policyList.Policies[0].Watch)
 }
 
+// Verify http_filters UUIDs are passed through to the policy request, and omitted when unset.
+func TestMarshalDistributedFirewallingPolicyListInput_HTTPFilters(t *testing.T) {
+	const httpFilterUUID = "0d1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6"
+	tests := []struct {
+		name        string
+		httpFilters []any
+		want        []string
+	}{
+		{name: "unset", httpFilters: nil, want: nil},
+		{name: "single filter", httpFilters: []any{httpFilterUUID}, want: []string{httpFilterUUID}},
+	}
+
+	res := resourceAviatrixDistributedFirewallingPolicyList()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			policy := map[string]any{
+				"name":             "test-pol",
+				"action":           "PERMIT",
+				"src_smart_groups": []any{},
+				"dst_smart_groups": []any{},
+				"protocol":         "TCP",
+			}
+			if tt.httpFilters != nil {
+				policy["http_filters"] = tt.httpFilters
+			}
+			d := schema.TestResourceDataRaw(t, res.Schema, map[string]any{"policies": []any{policy}})
+
+			policyList, err := marshalDistributedFirewallingPolicyListInput(d)
+			assert.NoError(t, err)
+			assert.Len(t, policyList.Policies, 1)
+			assert.Equal(t, tt.want, policyList.Policies[0].HTTPFilters)
+		})
+	}
+}
+
 // Verify the read path derives watch=true only for enforcement=monitor, and false for all other values.
 func TestReadDistributedFirewallingPolicy_WatchDerivedFromEnforcement(t *testing.T) {
 	tests := []struct {

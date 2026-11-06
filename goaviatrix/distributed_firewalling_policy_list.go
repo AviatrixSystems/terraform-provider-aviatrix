@@ -14,6 +14,7 @@ type DistributedFirewallingPolicy struct {
 	DstSmartGroups         []string                          `json:"dst_ads"`
 	SrcSmartGroups         []string                          `json:"src_ads"`
 	WebGroups              []string                          `json:"web_filters,omitempty"`
+	HTTPFilters            []string                          `json:"http_filters,omitempty"`
 	PortRanges             []DistributedFirewallingPortRange `json:"port_ranges,omitempty"`
 	Priority               int                               `json:"priority"`
 	Protocol               string                            `json:"protocol"`
