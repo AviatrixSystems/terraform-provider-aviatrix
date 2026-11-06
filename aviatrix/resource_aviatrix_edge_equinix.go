@@ -198,8 +198,10 @@ func resourceAviatrixEdgeEquinix() *schema.Resource {
 				DiffSuppressFunc: goaviatrix.DiffSuppressFuncEdgeSpokeCoordinate,
 			},
 			"rx_queue_size": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed: controller may populate this on its own; avoid phantom diffs (AVX-84374).
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K"}, false),
 				Description:  "Ethernet interface RX queue size.",
 			},
@@ -982,7 +984,8 @@ func resourceAviatrixEdgeEquinixUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChange("rx_queue_size") {
+	// Skip empty: the controller rejects an empty rx_queue_size (AVX-84374).
+	if d.HasChange("rx_queue_size") && edgeEquinix.RxQueueSize != "" {
 		gatewayForGatewayFunctions.RxQueueSize = edgeEquinix.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
