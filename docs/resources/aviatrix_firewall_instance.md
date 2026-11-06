@@ -62,7 +62,7 @@ The following arguments are supported:
 ### Required
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Security VPC. For GCP, `vpc_id` must be in the form vpc_id~-~gcloud_project_id.
-* `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. **Required for all FireNet deployments that do not utilize the TGW-Integrated FireNet with AWS Native GWLB VPC.**
+* `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. **Required for all FireNet deployments that do not utilize the TGW-Integrated FireNet with AWS Native GWLB VPC or Azure FireNet with horizontal scaling.** With Azure horizontal scaling, firewalls are attached to the FireNet VNet instead of a gateway, so this attribute can be omitted.
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
 * `firewall_image_id` - (Optional) Firewall image ID. Only applicable to AWS. Please use AMI ID. Available as of provider version R2.19+.

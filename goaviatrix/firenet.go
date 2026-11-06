@@ -26,6 +26,7 @@ type FireNetDetail struct {
 	Gateway                  []GatewayInfo          `json:"gateway,omitempty"`
 	FirewallEgress           string                 `json:"firewall_egress,omitempty"`
 	NativeGwlb               bool                   `json:"native_gwlb"`
+	HorizontalScaling        bool                   `json:"horizontal_scaling"`
 	Inspection               string                 `json:"inspection,omitempty"`
 	HashingAlgorithm         string                 `json:"firewall_hashing,omitempty"`
 	TgwSegmentationForEgress string                 `json:"tgw_segmentation"`

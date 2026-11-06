@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -345,27 +346,17 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta any) er
 	}
 
 	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: firewallInstance.VpcID})
-	var isNativeGWLBVpc bool
 	if err != nil {
 		log.Printf("[INFO] Could not get FireNet detail for vpc_id(%s) because of (%v),"+
 			" assuming this is a non-GWLB vpc", firewallInstance.VpcID, err)
-	} else {
-		isNativeGWLBVpc = firenetDetail.NativeGwlb
+		firenetDetail = nil
 	}
-	if isNativeGWLBVpc {
-		if firewallInstance.GwName != "" {
-			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'firenet_gw_name' was provided. "+
-				"Please remove 'firenet_gw_name' when using a Native GWLB enabled VPC", firewallInstance.VpcID)
-		}
-		if d.Get("zone") == "" {
-			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'zone' was not provided. "+
-				"Please provide a 'zone' in your terraform config", firewallInstance.VpcID)
-		}
-	} else {
-		if firewallInstance.GwName == "" {
-			return fmt.Errorf("'firenet_gw_name' is required when using a non Native GWLB VPC. " +
-				"Please provide a 'firenet_gw_name' in your terraform config")
-		}
+	if err = validateFirenetGwName(firewallInstance.GwName, firewallInstance.VpcID, firenetDetail); err != nil {
+		return err
+	}
+	if firenetDetail != nil && firenetDetail.NativeGwlb && d.Get("zone") == "" {
+		return fmt.Errorf("VPC %s has Native GWLB enabled but a 'zone' was not provided. "+
+			"Please provide a 'zone' in your terraform config", firewallInstance.VpcID)
 	}
 
 	zone := getString(d, "zone")
@@ -465,6 +456,37 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta any) er
 
 	d.SetId(instanceID)
 	return resourceAviatrixFirewallInstanceRead(d, meta)
+}
+
+// validateFirenetGwName checks 'firenet_gw_name' against the FireNet mode of the
+// VPC. Native GWLB VPCs and Azure horizontally scaled FireNet attach firewalls to
+// the VPC instead of a gateway: the gateway must be empty for Native GWLB and is
+// optional for Azure horizontal scaling. All other FireNets require it.
+// firenetDetail is nil when the FireNet detail could not be fetched.
+func validateFirenetGwName(gwName, vpcID string, firenetDetail *goaviatrix.FireNetDetail) error {
+	if firenetDetail != nil && firenetDetail.NativeGwlb {
+		if gwName != "" {
+			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'firenet_gw_name' was provided. "+
+				"Please remove 'firenet_gw_name' when using a Native GWLB enabled VPC", vpcID)
+		}
+		return nil
+	}
+	if gwName == "" && !isAzureHorizontalScalingFireNet(firenetDetail) {
+		return fmt.Errorf("'firenet_gw_name' is required when using a non Native GWLB VPC, " +
+			"except for Azure FireNet with horizontal scaling. " +
+			"Please provide a 'firenet_gw_name' in your terraform config")
+	}
+	return nil
+}
+
+// isAzureHorizontalScalingFireNet reports whether the FireNet is an Azure FireNet
+// running the horizontally scaled (post-inspection LB) model.
+func isAzureHorizontalScalingFireNet(firenetDetail *goaviatrix.FireNetDetail) bool {
+	if firenetDetail == nil || !firenetDetail.HorizontalScaling {
+		return false
+	}
+	cloudType, err := strconv.Atoi(firenetDetail.CloudType)
+	return err == nil && goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes)
 }
 
 func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta any) error {

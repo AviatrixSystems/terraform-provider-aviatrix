@@ -335,6 +335,7 @@ go_test(
         "resource_aviatrix_external_connection_test.go",
         "resource_aviatrix_firenet_test.go",
         "resource_aviatrix_firewall_instance_association_test.go",
+        "resource_aviatrix_firewall_instance_gw_name_test.go",
         "resource_aviatrix_firewall_instance_test.go",
         "resource_aviatrix_firewall_management_access_test.go",
         "resource_aviatrix_firewall_policy_test.go",
