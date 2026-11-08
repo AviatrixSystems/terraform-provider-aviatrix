@@ -390,6 +390,7 @@ go_test(
         "resource_aviatrix_trans_peer_test.go",
         "resource_aviatrix_transit_external_device_conn_test.go",
         "resource_aviatrix_transit_firenet_policy_test.go",
+        "resource_aviatrix_transit_gateway_peering_filters_test.go",
         "resource_aviatrix_transit_gateway_peering_helpers_test.go",
         "resource_aviatrix_transit_gateway_peering_test.go",
         "resource_aviatrix_transit_gateway_test.go",

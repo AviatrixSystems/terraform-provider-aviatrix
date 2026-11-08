@@ -90,3 +90,105 @@ func TestUpdateEdgeSpokeTransitPeeringTunnelCount(t *testing.T) {
 		})
 	}
 }
+
+// TestUpdateTransitGatewayPeeringFilters asserts the wire form of the peering
+// filter edit (AVX-83481). The controller treats an absent filter cidr key as
+// "preserve" and an empty value as "clear", so every filter key must reach the
+// controller on every filter edit, empty ones included. The whole form is
+// compared so a dropped or unexpected key fails the test.
+func TestUpdateTransitGatewayPeeringFilters(t *testing.T) {
+	var form map[string][]string
+
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		assert.NoError(t, r.ParseForm())
+		form = r.Form
+		assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"return": true, "results": "Success"}))
+	}))
+	defer server.Close()
+
+	client := &Client{
+		HTTPClient: server.Client(),
+		CID:        "test-cid",
+		baseURL:    server.URL,
+	}
+
+	// wantForm builds the expected form: the fixed keys plus every filter key,
+	// defaulting to "" and overridden by the case's non-empty values.
+	wantForm := func(set map[string]string) map[string][]string {
+		f := map[string][]string{
+			"CID":                             {"test-cid"},
+			"action":                          {"edit_inter_transit_gateway_peering"},
+			"gateway1":                        {"transit-1"},
+			"gateway2":                        {"transit-2"},
+			"src_filter_list":                 {""},
+			"dst_filter_list":                 {""},
+			"src_to_dst_filter_cidrs":         {""},
+			"dst_to_src_filter_cidrs":         {""},
+			"source_exclude_connections":      {""},
+			"destination_exclude_connections": {""},
+		}
+		for k, v := range set {
+			f[k] = []string{v}
+		}
+		return f
+	}
+
+	tests := []struct {
+		name    string
+		peering TransitGatewayPeering
+		set     map[string]string
+	}{
+		{
+			name: "empty lists are sent as empty values",
+			peering: TransitGatewayPeering{
+				TransitGatewayName1: "transit-1",
+				TransitGatewayName2: "transit-2",
+			},
+		},
+		{
+			name: "one side cleared, the other kept",
+			peering: TransitGatewayPeering{
+				TransitGatewayName1:            "transit-1",
+				TransitGatewayName2:            "transit-2",
+				Gateway2ExcludedCIDRs:          "10.1.0.0/16",
+				Gateway2ToGateway1FilterCIDRs:  "100.82.0.0/16",
+				Gateway2ExcludedTGWConnections: "conn-2",
+			},
+			set: map[string]string{
+				"dst_filter_list":                 "10.1.0.0/16",
+				"dst_to_src_filter_cidrs":         "100.82.0.0/16",
+				"destination_exclude_connections": "conn-2",
+			},
+		},
+		{
+			name: "non-empty lists are sent as-is",
+			peering: TransitGatewayPeering{
+				TransitGatewayName1:            "transit-1",
+				TransitGatewayName2:            "transit-2",
+				Gateway1ExcludedCIDRs:          "10.0.0.0/16",
+				Gateway2ExcludedCIDRs:          "10.1.0.0/16",
+				Gateway1ToGateway2FilterCIDRs:  "100.81.0.0/16,100.83.0.0/16",
+				Gateway2ToGateway1FilterCIDRs:  "100.82.0.0/16",
+				Gateway1ExcludedTGWConnections: "conn-1",
+				Gateway2ExcludedTGWConnections: "conn-2",
+			},
+			set: map[string]string{
+				"src_filter_list":                 "10.0.0.0/16",
+				"dst_filter_list":                 "10.1.0.0/16",
+				"src_to_dst_filter_cidrs":         "100.81.0.0/16,100.83.0.0/16",
+				"dst_to_src_filter_cidrs":         "100.82.0.0/16",
+				"source_exclude_connections":      "conn-1",
+				"destination_exclude_connections": "conn-2",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form = nil
+			require.NoError(t, client.UpdateTransitGatewayPeeringFilters(&tt.peering))
+			assert.Equal(t, wantForm(tt.set), form)
+		})
+	}
+}

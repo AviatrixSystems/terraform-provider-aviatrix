@@ -1,10 +1,15 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetEdgeSpokeTransitAttachment(t *testing.T) {
@@ -196,4 +201,55 @@ func TestEdgeSpokeTransitAttachmentResultsStructTags(t *testing.T) {
 	// Check that the field is present in JSON output
 	_, exists := result["enable_firenet_for_edge"]
 	assert.True(t, exists, "enable_firenet_for_edge field should be present in JSON output")
+}
+
+// TestEditSpokeTransitAttachmentFilters asserts the JSON body of the
+// spoke-transit filter edit (AVX-83481). The controller treats an absent filter
+// key as "preserve" and "" as "clear", so an empty list in Terraform must reach
+// the controller as a present-but-empty key rather than being omitted.
+func TestEditSpokeTransitAttachmentFilters(t *testing.T) {
+	var body map[string]any
+
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		body = nil
+		assert.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"return": true, "results": "Success"}))
+	}))
+	defer server.Close()
+
+	client := &Client{
+		HTTPClient:   server.Client(),
+		CID:          "test-cid",
+		ControllerIP: strings.TrimPrefix(server.URL, "https://"),
+	}
+
+	tests := []struct {
+		name     string
+		s2t, t2s string
+	}{
+		{name: "empty lists are sent as empty values", s2t: "", t2s: ""},
+		{name: "one direction cleared", s2t: "", t2s: "100.82.0.0/16"},
+		{name: "non-empty lists are sent as-is", s2t: "100.81.0.0/16,100.83.0.0/16", t2s: "100.82.0.0/16"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, client.EditSpokeTransitAttachmentFilters(context.Background(), &SpokeTransitAttachment{
+				SpokeGwName:               "spoke-1",
+				TransitGwName:             "transit-1",
+				SpokeToTransitFilterCIDRs: tt.s2t,
+				TransitToSpokeFilterCIDRs: tt.t2s,
+			}))
+
+			assert.Equal(t, map[string]any{
+				"CID":                           "test-cid",
+				"action":                        "edit_attach_spoke_to_transit_gw",
+				"spoke_gw":                      "spoke-1",
+				"transit_gw":                    "transit-1",
+				"spoke_to_transit_filter_cidrs": tt.s2t,
+				"transit_to_spoke_filter_cidrs": tt.t2s,
+			}, body)
+		})
+	}
 }

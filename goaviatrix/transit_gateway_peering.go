@@ -226,11 +226,49 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	return transitGatewayPeering, nil
 }
 
+// UpdateTransitGatewayPeering posts the TransitGatewayPeering struct as an
+// edit_inter_transit_gateway_peering request. Use it for edits that are not
+// filter edits, such as enable_az_affinity. To change filter or exclude-
+// connection fields, use UpdateTransitGatewayPeeringFilters instead.
+//
+// The struct's omitempty tags drop empty filter fields, and the controller
+// keeps the stored value for any filter key that is absent. So a filter left
+// empty here is preserved, which is what a non-filter edit needs, and why
+// clearing a filter through this function would silently do nothing.
+// enable_az_affinity has no omitempty and is always sent, so the caller must
+// set it to the value it wants.
 func (c *Client) UpdateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
 
 	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
+}
+
+// UpdateTransitGatewayPeeringFilters edits the filters on a transit peering.
+// Every filter key is always sent, even when empty: the controller treats an
+// absent filter cidr key as "preserve the stored value" and "" as "clear", so
+// omitting an empty list would make clearing a filter in Terraform a no-op
+// (AVX-83481). Exclude connections are cleared when absent today, but are sent
+// the same way so the provider doesn't depend on that controller default.
+//
+// Every filter key is sent, so the caller must fill in all six from the full
+// desired configuration, not only the fields that changed: any field left
+// empty clears that filter. enable_az_affinity is left out on purpose. Use
+// UpdateTransitGatewayPeering for that and other non-filter edits.
+func (c *Client) UpdateTransitGatewayPeeringFilters(p *TransitGatewayPeering) error {
+	action := "edit_inter_transit_gateway_peering"
+	return c.PostAPI(action, map[string]string{
+		"CID":                             c.CID,
+		"action":                          action,
+		"gateway1":                        p.TransitGatewayName1,
+		"gateway2":                        p.TransitGatewayName2,
+		"src_filter_list":                 p.Gateway1ExcludedCIDRs,
+		"dst_filter_list":                 p.Gateway2ExcludedCIDRs,
+		"src_to_dst_filter_cidrs":         p.Gateway1ToGateway2FilterCIDRs,
+		"dst_to_src_filter_cidrs":         p.Gateway2ToGateway1FilterCIDRs,
+		"source_exclude_connections":      p.Gateway1ExcludedTGWConnections,
+		"destination_exclude_connections": p.Gateway2ExcludedTGWConnections,
+	}, BasicCheck)
 }
 
 func (c *Client) UpdateTransitGatewayPeeringTunnelCount(transitGatewayPeering *TransitGatewayPeeringEdit) error {

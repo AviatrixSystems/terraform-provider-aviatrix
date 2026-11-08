@@ -75,11 +75,22 @@ func (c *Client) CreateSpokeTransitAttachment(ctx context.Context, spokeTransitA
 // EditSpokeTransitAttachmentFilters updates the spoke-to-transit and
 // transit-to-spoke route advertisement filter CIDRs on an existing
 // spoke-transit attachment without recreating the attachment.
+//
+// Both filter keys are always sent, even when empty: the controller treats an
+// absent key as "preserve the stored value" and "" as "clear", so the struct's
+// omitempty tags would make clearing a filter in Terraform a no-op (AVX-83481).
+// The struct itself keeps omitempty because create posts it too, and an
+// explicit filter key on attach trips extra controller checks.
 func (c *Client) EditSpokeTransitAttachmentFilters(ctx context.Context, spokeTransitAttachment *SpokeTransitAttachment) error {
 	action := "edit_attach_spoke_to_transit_gw"
-	spokeTransitAttachment.CID = c.CID
-	spokeTransitAttachment.Action = action
-	return c.PostAPIContext2(ctx, nil, action, spokeTransitAttachment, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, action, map[string]string{
+		"CID":                           c.CID,
+		"action":                        action,
+		"spoke_gw":                      spokeTransitAttachment.SpokeGwName,
+		"transit_gw":                    spokeTransitAttachment.TransitGwName,
+		"spoke_to_transit_filter_cidrs": spokeTransitAttachment.SpokeToTransitFilterCIDRs,
+		"transit_to_spoke_filter_cidrs": spokeTransitAttachment.TransitToSpokeFilterCIDRs,
+	}, BasicCheck)
 }
 
 // GetSpokeTransitAttachmentFilterCIDRs reads the advertisement filter cidrs for

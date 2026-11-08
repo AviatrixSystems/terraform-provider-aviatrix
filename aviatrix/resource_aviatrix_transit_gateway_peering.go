@@ -592,7 +592,7 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta an
 		transitGatewayPeering.Gateway2ToGateway1FilterCIDRs = strings.Join(gw2ToGw1FilterCIDRs, ",")
 
 		log.Printf("[INFO] Updating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
-		err := client.UpdateTransitGatewayPeering(transitGatewayPeering)
+		err := client.UpdateTransitGatewayPeeringFilters(transitGatewayPeering)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Transit Gateway peering: %w", err)
 		}
