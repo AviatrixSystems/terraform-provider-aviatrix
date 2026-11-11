@@ -55,9 +55,24 @@ func resourceAviatrixKubernetesCluster() *schema.Resource {
 				Description: "Whether to enable gateway tunnel for the cluster. Requires controller feature k8s_gateway_tunnel.",
 			},
 			"intra_cluster_inspection_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether to enable intra-cluster (east-west) traffic inspection for this cluster. Requires controller feature k8s_network_policy.",
+				Type: schema.TypeBool,
+				// Kept only so configurations that still set it keep planning. The value
+				// is never sent nor read back; intra_cluster_inspection_active is the output.
+				Optional: true,
+				Deprecated: "intra_cluster_inspection_enabled has no effect and will be removed in a future release. " +
+					"Inspection is managed through the intra-cluster cluster list; read " +
+					"intra_cluster_inspection_active for the current state.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
+				Description: "Deprecated, has no effect. Use intra_cluster_inspection_active to read whether " +
+					"intra-cluster inspection is orchestrated for this cluster.",
+			},
+			"intra_cluster_inspection_active": {
+				Type:     schema.TypeBool,
+				Computed: true,
+				Description: "Whether intra-cluster (east-west) traffic inspection is orchestrated for this cluster. " +
+					"The controller derives it from the intra-cluster cluster list, which is managed outside this resource.",
 			},
 			"cluster_details": {
 				Type:        schema.TypeList,
@@ -161,8 +176,9 @@ func marshalKubernetesClusterInput(d *schema.ResourceData) (*goaviatrix.Kubernet
 			UseCspCredentials: getBool(d, "use_csp_credentials"),
 			KubeConfig:        getString(d, "kube_config"),
 		},
-		GatewayTunnelEnabled:          getBool(d, "gateway_tunnel_enabled"),
-		IntraClusterInspectionEnabled: getBool(d, "intra_cluster_inspection_enabled"),
+		// intra_cluster_inspection_enabled is read-only and never sent: the
+		// controller rejects a request carrying it.
+		GatewayTunnelEnabled: getBool(d, "gateway_tunnel_enabled"),
 	}
 
 	if clusterDetails, ok := d.GetOk("cluster_details"); ok {
@@ -224,7 +240,7 @@ func resourceAviatrixKubernetesClusterRead(ctx context.Context, d *schema.Resour
 	}
 	mustSet(d, "cluster_id", kubernetesCluster.ClusterID)
 	mustSet(d, "gateway_tunnel_enabled", kubernetesCluster.GatewayTunnelEnabled)
-	mustSet(d, "intra_cluster_inspection_enabled", kubernetesCluster.IntraClusterInspectionEnabled)
+	mustSet(d, "intra_cluster_inspection_active", kubernetesCluster.IntraClusterInspectionEnabled)
 	if kubernetesCluster.Credential != nil {
 		credential := kubernetesCluster.Credential
 		mustSet(d, "use_csp_credentials", credential.UseCspCredentials)

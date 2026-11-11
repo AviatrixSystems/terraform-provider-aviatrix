@@ -143,6 +143,7 @@ The following arguments are supported:
 * `kube_config` - (Optional) The kubeconfig file for the Kubernetes cluster. This is a sensitive value.
 * `use_csp_credentials` - (Optional) Whether to use the CSP credentials for the Kubernetes cluster. Valid values: true, false. Default value: false.
 * `gateway_tunnel_enabled` - (Optional) Whether to enable the gateway tunnel for the Kubernetes cluster. This is useful for clusters with private API servers that are reachable from a spoke gateway but not the controller. Requires the `k8s_gateway_tunnel` controller feature to be enabled, for example with an `aviatrix_config_feature` resource. Valid values: true, false. Default value: false.
+* `intra_cluster_inspection_enabled` - (Optional, Deprecated) Has no effect and will be removed in a future release. Intra-cluster inspection is managed through the intra-cluster cluster list; read `intra_cluster_inspection_active` for the current state.
 
 * `cluster_details` - (Optional) If the cluster is not managed by the CSP, but created directly with tools like kops, information about the cluster itself have to be provided.
   For clusters managed by the CSP this should not be set.
@@ -186,3 +187,9 @@ The following arguments are supported:
       }
       ```
   * `tags` - (Optional) A map of tags to assign to the Kubernetes cluster.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attribute is exported:
+
+* `intra_cluster_inspection_active` - Whether intra-cluster (east-west) traffic inspection is orchestrated for the Kubernetes cluster. The controller sets it from the intra-cluster cluster list (`/microseg/intra-cluster`), which is managed outside this resource.

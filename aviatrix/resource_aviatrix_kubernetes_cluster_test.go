@@ -98,7 +98,7 @@ func TestAccAviatrixKubernetesCluster_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
 				),
 			},
 		},
@@ -221,7 +221,6 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 				resource "aviatrix_kubernetes_cluster" "test" {
 					cluster_id = "test-cluster-id4"
 					use_csp_credentials = true
-					intra_cluster_inspection_enabled = true
 					cluster_details {
 						account_name = "test-account"
 						account_id = "test-account-id"
@@ -244,7 +243,6 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
-						IntraClusterInspectionEnabled: true,
 						Resource: &goaviatrix.ClusterResource{
 							Name:         "test-name",
 							Region:       "test-region",
@@ -266,7 +264,7 @@ func TestAccAviatrixKubernetesCluster_resource(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id4"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_details.0.account_name", "test-account"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_details.0.entra_id_authn", "true"),
 				),
@@ -304,7 +302,7 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
 				),
 			},
 			{
@@ -327,32 +325,7 @@ func TestAccAviatrixKubernetesCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
 					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "false"),
-				),
-			},
-			{
-				Config: GatewayTunnelFeatureConfig + `
-					resource "aviatrix_kubernetes_cluster" "test" {
-						cluster_id = "test-cluster-id6"
-						use_csp_credentials = false
-						gateway_tunnel_enabled = true
-						intra_cluster_inspection_enabled = true
-						depends_on = [aviatrix_config_feature.k8s_gateway_tunnel]
-					}
-				`,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
-						ClusterID: "test-cluster-id6",
-						Credential: &goaviatrix.KubernetesCredential{
-							UseCspCredentials: false,
-						},
-						GatewayTunnelEnabled:          true,
-						IntraClusterInspectionEnabled: true,
-					}),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id6"),
-					resource.TestCheckResourceAttr(resourceName, "use_csp_credentials", "false"),
-					resource.TestCheckResourceAttr(resourceName, "gateway_tunnel_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
 				),
 			},
 		},
@@ -409,6 +382,10 @@ func TestAccAviatrixKubernetesCluster_intraClusterInspectionEnabled(t *testing.T
 		CheckDestroy: testAccCheckAviatrixKubernetesClusterDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
+				// intra_cluster_inspection_enabled is a deprecated, no-effect input:
+				// the controller derives the state from the intra-cluster cluster
+				// list, which is managed outside this resource, and reports it in
+				// intra_cluster_inspection_active.
 				Config: `
 					resource "aviatrix_kubernetes_cluster" "test" {
 						cluster_id = "test-cluster-id-intracluster"
@@ -417,15 +394,26 @@ func TestAccAviatrixKubernetesCluster_intraClusterInspectionEnabled(t *testing.T
 					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
+				),
+			},
+			{
+				Config: `
+					resource "aviatrix_kubernetes_cluster" "test" {
+						cluster_id = "test-cluster-id-intracluster"
+						use_csp_credentials = true
+					}
+				`,
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAviatrixKubernetesClusterExists(resourceName, goaviatrix.KubernetesCluster{
 						ClusterID: "test-cluster-id-intracluster",
 						Credential: &goaviatrix.KubernetesCredential{
 							UseCspCredentials: true,
 						},
-						IntraClusterInspectionEnabled: true,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-cluster-id-intracluster"),
-					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "intra_cluster_inspection_active", "false"),
 				),
 			},
 		},
