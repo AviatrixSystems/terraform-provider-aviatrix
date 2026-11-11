@@ -896,15 +896,17 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 
 	// BGP LAN IP list for Azure
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
-		bgpLanIPInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		// Fallback for older controllers only: list_aviatrix_transit_advanced_config
+		// returns the group primary's IPs even when asked with this instance's name.
+		err := setAzureBgpLanState(d, gw, func() ([]string, error) {
+			bgpLanIPInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+			if err != nil {
+				return nil, err
+			}
+			return bgpLanIPInfo.AzureBgpLanIpList, nil
+		})
 		if err != nil {
-			return diag.Errorf("could not get BGP LAN IP info for Azure transit instance %s: %v", gateway.GwName, err)
-		}
-		if err = d.Set("bgp_lan_ip_list", bgpLanIPInfo.AzureBgpLanIpList); err != nil {
-			return diag.Errorf("could not set bgp_lan_ip_list into state: %v", err)
-		}
-		if err = d.Set("azure_bgp_lan_ip_list", bgpLanIPInfo.AzureBgpLanIpList); err != nil {
-			return diag.Errorf("could not set azure_bgp_lan_ip_list into state: %v", err)
+			return diag.FromErr(err)
 		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 		bgpLanIPInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
@@ -1075,6 +1077,57 @@ func resourceAviatrixTransitInstanceRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	return nil
+}
+
+// getInstanceBgpLanIPList returns the BGP over LAN interface IPs of one
+// gateway-group instance.
+//
+//   - ownIPList is the instance's own list from its list_vpcs_summary entry
+//     (e.g. Gateway.AzureBgpLanIPList). Controllers that report it always send
+//     a non-nil list, empty if the instance has no BGP LAN interfaces, so it is
+//     used as-is.
+//   - ownIPList is nil on older controllers. The only other source is
+//     getPrimaryIPList (list_aviatrix_transit_advanced_config), which always
+//     answers for the group primary whatever gateway name it is given. That is
+//     correct for the primary itself, but for a non-primary instance (is_hagw)
+//     it would be the primary's IPs, and external connections pinned to them
+//     fail on the controller. Leave the list empty for those instead.
+func getInstanceBgpLanIPList(gw *goaviatrix.Gateway, ownIPList []string, getPrimaryIPList func() ([]string, error)) ([]string, error) {
+	if ownIPList != nil {
+		return ownIPList, nil
+	}
+	if gw.IsHagw == "yes" {
+		log.Printf("[WARN] controller did not report BGP LAN IPs for non-primary instance %s; leaving its BGP LAN IP list empty", gw.GwName)
+		return nil, nil
+	}
+	return getPrimaryIPList()
+}
+
+// setAzureBgpLanState sets bgp_lan_ip_list and azure_bgp_lan_ip_list for an
+// Azure transit instance. Both attributes hold the same list on Azure.
+//
+// gw is the instance's own list_vpcs_summary entry (GetGateway). With BGP over
+// LAN disabled both lists are cleared. Otherwise the list comes from
+// getInstanceBgpLanIPList: the instance's own gw.AzureBgpLanIPList, falling
+// back to getPrimaryIPList only for the primary on older controllers.
+func setAzureBgpLanState(d *schema.ResourceData, gw *goaviatrix.Gateway, getPrimaryIPList func() ([]string, error)) error {
+	if !gw.EnableBgpOverLan {
+		mustSet(d, "bgp_lan_ip_list", nil)
+		mustSet(d, "azure_bgp_lan_ip_list", nil)
+		return nil
+	}
+
+	bgpLanIPList, err := getInstanceBgpLanIPList(gw, gw.AzureBgpLanIPList, getPrimaryIPList)
+	if err != nil {
+		return fmt.Errorf("could not get BGP LAN IP info for Azure transit instance %s: %w", gw.GwName, err)
+	}
+	if err := d.Set("bgp_lan_ip_list", bgpLanIPList); err != nil {
+		return fmt.Errorf("could not set bgp_lan_ip_list into state: %w", err)
+	}
+	if err := d.Set("azure_bgp_lan_ip_list", bgpLanIPList); err != nil {
+		return fmt.Errorf("could not set azure_bgp_lan_ip_list into state: %w", err)
+	}
 	return nil
 }
 

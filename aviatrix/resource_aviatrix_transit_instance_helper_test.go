@@ -1,10 +1,13 @@
 package aviatrix
 
 import (
+	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -77,6 +80,106 @@ func TestConfigureTransitInstanceEncryption(t *testing.T) {
 			assert.False(t, diags.HasError())
 			assert.Equal(t, tt.expectedEnc, gateway.EncVolume)
 			assert.Equal(t, tt.expectedCmk, gateway.CustomerManagedKeys)
+		})
+	}
+}
+
+func TestGatewayAzureBgpLanIPListJSON(t *testing.T) {
+	var withList goaviatrix.Gateway
+	require.NoError(t, json.Unmarshal([]byte(`{"arm_bgp_lan_ip_list": ["10.1.2.4", "10.1.2.12"]}`), &withList))
+	assert.Equal(t, []string{"10.1.2.4", "10.1.2.12"}, withList.AzureBgpLanIPList)
+
+	var emptyList goaviatrix.Gateway
+	require.NoError(t, json.Unmarshal([]byte(`{"arm_bgp_lan_ip_list": []}`), &emptyList))
+	assert.NotNil(t, emptyList.AzureBgpLanIPList)
+	assert.Empty(t, emptyList.AzureBgpLanIPList)
+
+	var withoutList goaviatrix.Gateway
+	require.NoError(t, json.Unmarshal([]byte(`{}`), &withoutList))
+	assert.Nil(t, withoutList.AzureBgpLanIPList)
+}
+
+func TestSetAzureBgpLanState(t *testing.T) {
+	primaryIPs := []string{"10.1.2.4", "10.1.2.12"}
+
+	tests := []struct {
+		name           string
+		gw             *goaviatrix.Gateway
+		fallbackErr    error
+		expectErr      bool
+		expectFallback bool
+		expectedIPs    []any
+	}{
+		{
+			name: "primary instance uses its own IPs",
+			gw: &goaviatrix.Gateway{
+				GwName: "transit-1", IsHagw: "no", EnableBgpOverLan: true,
+				AzureBgpLanIPList: []string{"10.1.2.4", "10.1.2.12"},
+			},
+			expectedIPs: []any{"10.1.2.4", "10.1.2.12"},
+		},
+		{
+			name: "non-primary instance uses its own IPs, not the primary's",
+			gw: &goaviatrix.Gateway{
+				GwName: "transit-3", IsHagw: "yes", EnableBgpOverLan: true,
+				AzureBgpLanIPList: []string{"10.1.2.36", "10.1.2.44"},
+			},
+			expectedIPs: []any{"10.1.2.36", "10.1.2.44"},
+		},
+		{
+			name: "older controller falls back for the primary instance",
+			gw: &goaviatrix.Gateway{
+				GwName: "transit-1", IsHagw: "no", EnableBgpOverLan: true,
+			},
+			expectFallback: true,
+			expectedIPs:    []any{"10.1.2.4", "10.1.2.12"},
+		},
+		{
+			name: "older controller leaves non-primary IPs empty",
+			gw: &goaviatrix.Gateway{
+				GwName: "transit-3", IsHagw: "yes", EnableBgpOverLan: true,
+			},
+			expectedIPs: []any{},
+		},
+		{
+			name:        "instance without BGP over LAN clears the lists",
+			gw:          &goaviatrix.Gateway{GwName: "transit-2", IsHagw: "yes"},
+			expectedIPs: []any{},
+		},
+		{
+			name: "fallback error is returned",
+			gw: &goaviatrix.Gateway{
+				GwName: "transit-1", IsHagw: "no", EnableBgpOverLan: true,
+			},
+			fallbackErr:    errors.New("boom"),
+			expectFallback: true,
+			expectErr:      true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourceAviatrixTransitInstance().Schema, map[string]any{})
+			fallbackCalled := false
+			getPrimaryIPList := func() ([]string, error) {
+				fallbackCalled = true
+				if tt.fallbackErr != nil {
+					return nil, tt.fallbackErr
+				}
+				return primaryIPs, nil
+			}
+
+			err := setAzureBgpLanState(d, tt.gw, getPrimaryIPList)
+
+			assert.Equal(t, tt.expectFallback, fallbackCalled)
+			if tt.expectErr {
+				require.Error(t, err)
+				assert.ErrorIs(t, err, tt.fallbackErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedIPs, d.Get("bgp_lan_ip_list"))
+			assert.Equal(t, tt.expectedIPs, d.Get("azure_bgp_lan_ip_list"))
 		})
 	}
 }

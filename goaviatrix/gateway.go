@@ -221,6 +221,7 @@ type Gateway struct {
 	TransitVpc               string                    `json:"transit_vpc"`
 	EnableBgp                bool                      `json:"bgp_enabled,omitempty"`
 	BgpLanInterfaces         []BundleVpcLanInfo        `json:"gce_bgp_lan_info,omitempty"`
+	AzureBgpLanIPList        []string                  `json:"arm_bgp_lan_ip_list,omitempty"` // this instance's own BGP LAN IPs (eth4, eth5, ...)
 	Async                    bool                      `form:"async,omitempty"`
 	DisableRoutePropagation  bool                      `json:"disable_route_propagation,omitempty"`
 	EnableS2CRxBalancing     bool                      `json:"s2c_rx_balancing,omitempty"`

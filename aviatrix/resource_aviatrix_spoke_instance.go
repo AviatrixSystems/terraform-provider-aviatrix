@@ -678,11 +678,18 @@ func resourceAviatrixSpokeInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	// Azure BGP LAN IP list
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gateway.EnableBgpOverLan {
-		bgpLanIPInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		// Fallback for older controllers only: list_aviatrix_transit_advanced_config
+		// returns the group primary's IPs even when asked with this instance's name.
+		err := setSpokeAzureBgpLanState(d, gateway, func() ([]string, error) {
+			bgpLanIPInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+			if err != nil {
+				return nil, err
+			}
+			return bgpLanIPInfo.AzureBgpLanIpList, nil
+		})
 		if err != nil {
-			return diag.Errorf("could not get BGP LAN IP info for Azure spoke instance %s: %s", gateway.GwName, err)
+			return diag.FromErr(err)
 		}
-		mustSet(d, "azure_bgp_lan_ip_list", bgpLanIPInfo.AzureBgpLanIpList)
 	} else {
 		mustSet(d, "azure_bgp_lan_ip_list", nil)
 	}
@@ -812,6 +819,19 @@ func readEdgeSpokeInstance(ctx context.Context, d *schema.ResourceData, client *
 		mustSet(d, "desired_version", gateway.DesiredVersion)
 	}
 
+	return nil
+}
+
+// setSpokeAzureBgpLanState sets azure_bgp_lan_ip_list for an Azure spoke
+// instance with BGP over LAN enabled, from its own list_vpcs_summary entry.
+func setSpokeAzureBgpLanState(d *schema.ResourceData, gw *goaviatrix.Gateway, getPrimaryIPList func() ([]string, error)) error {
+	bgpLanIPList, err := getInstanceBgpLanIPList(gw, gw.AzureBgpLanIPList, getPrimaryIPList)
+	if err != nil {
+		return fmt.Errorf("could not get BGP LAN IP info for Azure spoke instance %s: %w", gw.GwName, err)
+	}
+	if err := d.Set("azure_bgp_lan_ip_list", bgpLanIPList); err != nil {
+		return fmt.Errorf("could not set azure_bgp_lan_ip_list into state: %w", err)
+	}
 	return nil
 }
 

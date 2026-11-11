@@ -1,10 +1,12 @@
 package aviatrix
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -88,6 +90,77 @@ func TestConfigureSpokeInstanceEIP(t *testing.T) {
 			configureSpokeInstanceEIP(d, spokeGateway, tt.privateNetwork)
 
 			assert.Equal(t, tt.expectedEip, spokeGateway.Eip)
+		})
+	}
+}
+
+func TestSetSpokeAzureBgpLanState(t *testing.T) {
+	primaryIPs := []string{"10.1.2.4", "10.1.2.12"}
+
+	tests := []struct {
+		name           string
+		gw             *goaviatrix.Gateway
+		fallbackErr    error
+		expectErr      bool
+		expectFallback bool
+		expectedIPs    []any
+	}{
+		{
+			name: "non-primary instance uses its own IPs, not the primary's",
+			gw: &goaviatrix.Gateway{
+				GwName: "spoke-3", IsHagw: "yes", EnableBgpOverLan: true,
+				AzureBgpLanIPList: []string{"10.1.2.36", "10.1.2.44"},
+			},
+			expectedIPs: []any{"10.1.2.36", "10.1.2.44"},
+		},
+		{
+			name: "older controller falls back for the primary instance",
+			gw: &goaviatrix.Gateway{
+				GwName: "spoke-1", IsHagw: "no", EnableBgpOverLan: true,
+			},
+			expectFallback: true,
+			expectedIPs:    []any{"10.1.2.4", "10.1.2.12"},
+		},
+		{
+			name: "older controller leaves non-primary IPs empty",
+			gw: &goaviatrix.Gateway{
+				GwName: "spoke-3", IsHagw: "yes", EnableBgpOverLan: true,
+			},
+			expectedIPs: []any{},
+		},
+		{
+			name: "fallback error is returned",
+			gw: &goaviatrix.Gateway{
+				GwName: "spoke-1", IsHagw: "no", EnableBgpOverLan: true,
+			},
+			fallbackErr:    errors.New("boom"),
+			expectFallback: true,
+			expectErr:      true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourceAviatrixSpokeInstance().Schema, map[string]any{})
+			fallbackCalled := false
+			getPrimaryIPList := func() ([]string, error) {
+				fallbackCalled = true
+				if tt.fallbackErr != nil {
+					return nil, tt.fallbackErr
+				}
+				return primaryIPs, nil
+			}
+
+			err := setSpokeAzureBgpLanState(d, tt.gw, getPrimaryIPList)
+
+			assert.Equal(t, tt.expectFallback, fallbackCalled)
+			if tt.expectErr {
+				require.Error(t, err)
+				assert.ErrorIs(t, err, tt.fallbackErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedIPs, d.Get("azure_bgp_lan_ip_list"))
 		})
 	}
 }
