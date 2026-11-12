@@ -178,7 +178,7 @@ The following arguments are supported:
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~project_name".
 * `connection_name` - (Optional) Transit external device connection name. Required when 'enable_edge_underlay' is false, must set to empty when 'enable_edge_underlay' is true
-* `gw_name` - (Required) Aviatrix transit gateway name.
+* `gw_name` - (Required) Aviatrix transit gateway name. For a gateway group created with `aviatrix_transit_group` or `aviatrix_spoke_group`, this must be the name of the group's current primary instance. The group name matches the primary's name only until the primary changes, for example when the original primary instance is deleted and another member is promoted. Edge BGP over LAN connections are the exception: they can name a non-primary member.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
 
