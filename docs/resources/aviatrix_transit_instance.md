@@ -326,7 +326,7 @@ The following arguments are supported:
 
 ### Optional - Azure Specific
 
-* `zone` - (Optional) Availability Zone. Must be in the form 'az-n', for example, 'az-2'.
+* `zone` - (Optional) Availability Zone. Must be in the form 'az-n', for example, 'az-2'. If omitted, the gateway is deployed in an availability set.
 * `azure_eip_name_resource_group` - (Optional) The name of the public IP address and its resource group in Azure.
 
 ### Optional - OCI Specific

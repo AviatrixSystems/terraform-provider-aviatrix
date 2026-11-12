@@ -309,7 +309,8 @@ func transitInstanceOptionalAzureSchema() map[string]*schema.Schema {
 			Optional: true,
 			ForceNew: true,
 			Description: "Availability Zone. Required for GCP (4); use the GCP zone format, for example, 'us-east1-b'. " +
-				"Required for Azure (8), Azure GOV (32) and Azure CHINA (2048); must be in the form 'az-n', for example, 'az-2'.",
+				"Optional for Azure (8), Azure GOV (32) and Azure CHINA (2048); must be in the form 'az-n', for example, 'az-2'. " +
+				"If omitted on Azure, the gateway is deployed in an availability set.",
 		},
 		"azure_eip_name_resource_group": {
 			Type:         schema.TypeString,

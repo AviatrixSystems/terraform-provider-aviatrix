@@ -183,3 +183,62 @@ func TestSetAzureBgpLanState(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAndConfigureBasicSettingsZone(t *testing.T) {
+	tests := []struct {
+		name           string
+		cloudType      int
+		zone           string
+		expectErr      bool
+		expectedSubnet string
+	}{
+		{
+			name:           "Azure without zone uses availability set",
+			cloudType:      goaviatrix.Azure,
+			expectedSubnet: "10.99.3.0/24",
+		},
+		{
+			name:           "Azure with zone appends it to subnet",
+			cloudType:      goaviatrix.Azure,
+			zone:           "az-2",
+			expectedSubnet: "10.99.3.0/24~~az-2~~",
+		},
+		{
+			name:      "Azure with invalid zone is rejected",
+			cloudType: goaviatrix.Azure,
+			zone:      "2",
+			expectErr: true,
+		},
+		{
+			name:      "GCP without zone is rejected",
+			cloudType: goaviatrix.GCP,
+			expectErr: true,
+		},
+		{
+			name:      "AWS with zone is rejected",
+			cloudType: goaviatrix.AWS,
+			zone:      "az-1",
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := map[string]any{"subnet": "10.99.3.0/24"}
+			if tt.zone != "" {
+				raw["zone"] = tt.zone
+			}
+			d := schema.TestResourceDataRaw(t, resourceAviatrixTransitInstance().Schema, raw)
+			gateway := &goaviatrix.TransitVpc{CloudType: tt.cloudType, Subnet: getString(d, "subnet")}
+
+			diags := validateAndConfigureBasicSettings(d, gateway, tt.cloudType)
+
+			if tt.expectErr {
+				assert.True(t, diags.HasError())
+				return
+			}
+			assert.False(t, diags.HasError())
+			assert.Equal(t, tt.expectedSubnet, gateway.Subnet)
+		})
+	}
+}

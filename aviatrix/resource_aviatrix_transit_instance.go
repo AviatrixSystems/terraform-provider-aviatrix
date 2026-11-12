@@ -350,10 +350,8 @@ func validateAndConfigureBasicSettings(d *schema.ResourceData, gateway *goaviatr
 	if zone != "" && !isAzure && !isGCP {
 		return diag.Errorf("attribute 'zone' is only for use with Azure (8), Azure GOV (32), Azure CHINA (2048) and GCP (4)")
 	}
-	if isAzure {
-		if zone == "" {
-			return diag.Errorf("'zone' is required for Azure (8), Azure GOV (32) and Azure CHINA (2048)")
-		}
+	// Azure zone is optional; without it the gateway is deployed in an availability set.
+	if isAzure && zone != "" {
 		if _, errs := validateAzureAZ(zone, "zone"); len(errs) > 0 {
 			return diag.Errorf("%s", errs[0].Error())
 		}
