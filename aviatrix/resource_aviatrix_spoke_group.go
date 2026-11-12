@@ -763,7 +763,7 @@ func resourceAviatrixSpokeGroupCustomizeDiff(_ context.Context, d *schema.Resour
 	return validateSmartGatewayResolverDiff(d, noLu, "on a standalone or non-BGP cloud spoke group")
 }
 
-// Matches the controller's is_no_lu_gateway, plus standalone groups.
+// Matches the controller's is_no_lu_gateway.
 func spokeGroupWithoutBgpLu(gwType string, enableBgp bool) bool {
 	return gwType == "STANDALONE" || (gwType == "SPOKE" && !enableBgp)
 }
