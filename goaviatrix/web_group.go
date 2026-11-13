@@ -7,9 +7,19 @@ import (
 	"strings"
 )
 
+const (
+	SniFilterKey   = "snifilter"
+	UrlFilterKey   = "urlfilter"
+	ExternalURLKey = "external_url"
+	ExternalSNIKey = "external_sni"
+)
+
 type WebGroupMatchExpression struct {
-	SniFilter string `json:"snifilter,omitempty"`
-	UrlFilter string `json:"urlfilter,omitempty"`
+	SniFilter   string `json:"snifilter,omitempty"`
+	UrlFilter   string `json:"urlfilter,omitempty"`
+	ExternalURL string `json:"external_url,omitempty"`
+	ExternalSNI string `json:"external_sni,omitempty"`
+	ExtArgs     map[string]string
 }
 
 type WebGroupSelector struct {
@@ -37,11 +47,21 @@ type WebGroupResult struct {
 func webGroupFilterToMap(filter *WebGroupMatchExpression) map[string]string {
 	filterMap := make(map[string]string)
 
+	// External feed arguments sit alongside the feed key in the same "all" map.
+	for key, value := range filter.ExtArgs {
+		filterMap[key] = value
+	}
 	if len(filter.SniFilter) > 0 {
-		filterMap["snifilter"] = filter.SniFilter
+		filterMap[SniFilterKey] = filter.SniFilter
 	}
 	if len(filter.UrlFilter) > 0 {
-		filterMap["urlfilter"] = filter.UrlFilter
+		filterMap[UrlFilterKey] = filter.UrlFilter
+	}
+	if len(filter.ExternalURL) > 0 {
+		filterMap[ExternalURLKey] = filter.ExternalURL
+	}
+	if len(filter.ExternalSNI) > 0 {
+		filterMap[ExternalSNIKey] = filter.ExternalSNI
 	}
 
 	log.Printf("[DEBUG] POST filter map: %v\n", filterMap)
@@ -67,6 +87,44 @@ func makeWebGroupForm(webGroup *WebGroup) map[string]interface{} {
 	}
 
 	return form
+}
+
+// newWebGroupMatchExpression converts one API "all" map into a match expression.
+func newWebGroupMatchExpression(filterMap map[string]string) *WebGroupMatchExpression {
+	filter := &WebGroupMatchExpression{
+		ExternalURL: filterMap[ExternalURLKey],
+		ExternalSNI: filterMap[ExternalSNIKey],
+	}
+	if filter.ExternalURL == "" && filter.ExternalSNI == "" {
+		filter.SniFilter = filterMap[SniFilterKey]
+		filter.UrlFilter = filterMap[UrlFilterKey]
+		return filter
+	}
+
+	// Every key other than the feed key is an argument of the external feed.
+	extArgs := make(map[string]string)
+	for key, value := range filterMap {
+		if key == ExternalURLKey || key == ExternalSNIKey {
+			continue
+		}
+		extArgs[key] = value
+	}
+	if len(extArgs) > 0 {
+		filter.ExtArgs = extArgs
+	}
+	return filter
+}
+
+// newWebGroup converts an API app domain response into a WebGroup.
+func newWebGroup(data WebGroupResult) *WebGroup {
+	webGroup := &WebGroup{
+		Name: data.Name,
+		UUID: data.UUID,
+	}
+	for _, filterResult := range data.Selector.Any {
+		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, newWebGroupMatchExpression(filterResult.All))
+	}
+	return webGroup
 }
 
 func (c *Client) CreateWebGroup(ctx context.Context, webGroup *WebGroup) (string, error) {
@@ -97,22 +155,7 @@ func (c *Client) GetWebGroupByName(ctx context.Context, name string) (*WebGroup,
 		return nil, err
 	}
 	if data.Name == name {
-		webGroup := &WebGroup{
-			Name: data.Name,
-			UUID: data.UUID,
-		}
-
-		for _, filterResult := range data.Selector.Any {
-			filterMap := filterResult.All
-
-			filter := &WebGroupMatchExpression{
-				SniFilter: filterMap["snifilter"],
-				UrlFilter: filterMap["urlfilter"],
-			}
-
-			webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
-		}
-		return webGroup, nil
+		return newWebGroup(data), nil
 	}
 	return nil, ErrNotFound
 }
@@ -130,22 +173,7 @@ func (c *Client) GetWebGroup(ctx context.Context, uuid string) (*WebGroup, error
 	}
 
 	if data.UUID == uuid {
-		webGroup := &WebGroup{
-			Name: data.Name,
-			UUID: data.UUID,
-		}
-
-		for _, filterResult := range data.Selector.Any {
-			filterMap := filterResult.All
-
-			filter := &WebGroupMatchExpression{
-				SniFilter: filterMap["snifilter"],
-				UrlFilter: filterMap["urlfilter"],
-			}
-
-			webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
-		}
-		return webGroup, nil
+		return newWebGroup(data), nil
 	}
 	return nil, ErrNotFound
 }

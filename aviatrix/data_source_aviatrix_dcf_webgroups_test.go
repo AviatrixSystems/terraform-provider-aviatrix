@@ -33,6 +33,14 @@ func TestAccDataSourceAviatrixDcfWebgroups_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "selector.#", "1"),
 				),
 			},
+			{
+				Config: testAccDataSourceAviatrixDcfWebgroupsConfigExternal(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAviatrixDcfWebgroups(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.external_sni", "malicious-domain-feed"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.ext_args.filterA", "valueA"),
+				),
+			},
 		},
 	})
 }
@@ -44,6 +52,27 @@ resource aviatrix_web_group "test_webgroup" {
 	selector {
 		match_expressions {
 			snifilter = "example.com"
+		}
+	}
+}
+
+data "aviatrix_web_group" "test" {
+	depends_on = [aviatrix_web_group.test_webgroup]
+	name = "test-webgroup"
+}
+	`
+}
+
+func testAccDataSourceAviatrixDcfWebgroupsConfigExternal() string {
+	return `
+resource aviatrix_web_group "test_webgroup" {
+	name = "test-webgroup"
+	selector {
+		match_expressions {
+			external_sni = "malicious-domain-feed"
+			ext_args = {
+				filterA = "valueA"
+			}
 		}
 	}
 }

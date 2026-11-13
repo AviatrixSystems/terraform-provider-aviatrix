@@ -177,6 +177,7 @@ go_test(
         "tunnel_test.go",
         "utils_test.go",
         "vpc_test.go",
+        "web_group_test.go",
     ],
     embed = [":goaviatrix"],
     deps = [

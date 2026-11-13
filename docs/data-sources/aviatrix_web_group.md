@@ -35,3 +35,6 @@ The following attributes are exported:
         * `match_expressions` - List of match expressions for the Web Group.
                 * `snifilter` - Server name indication this expression matches.
                 * `urlfilter` - URL address this expression matches.
+                * `external_url` - Name of the external domain feed whose URLs this expression matches.
+                * `external_sni` - Name of the external domain feed whose server names this expression matches.
+                * `ext_args` - Map of arguments passed to the external feed.

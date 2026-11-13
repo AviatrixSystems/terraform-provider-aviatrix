@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,6 +53,24 @@ func resourceAviatrixWebGroup() *schema.Resource {
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 										Description:  "URL address this expression matches.",
 									},
+									goaviatrix.ExternalURLKey: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+										Description:  "Name of the external domain feed whose URLs this expression matches.",
+									},
+									goaviatrix.ExternalSNIKey: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+										Description:  "Name of the external domain feed whose server names this expression matches.",
+									},
+									goaviatrix.ExtArgsPrefix: {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Map of arguments passed to the external feed. Only valid with external_url or external_sni.",
+									},
 								},
 							},
 						},
@@ -77,22 +96,83 @@ func marshalWebGroupInput(d *schema.ResourceData) (*goaviatrix.WebGroup, error) 
 		if selectorInterface == nil {
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
-		selectorInfo := mustMap(selectorInterface)
-		var filter *goaviatrix.WebGroupMatchExpression
-
-		if goaviatrix.MapContains(selectorInfo, "snifilter") && goaviatrix.MapContains(selectorInfo, "urlfilter") {
-			return nil, fmt.Errorf("snifilter and urlfilter can't be set at the same time under the same match_expressions")
-		}
-
-		filter = &goaviatrix.WebGroupMatchExpression{
-			SniFilter: mustString(selectorInfo["snifilter"]),
-			UrlFilter: mustString(selectorInfo["urlfilter"]),
+		filter, err := marshalWebGroupMatchExpression(mustMap(selectorInterface))
+		if err != nil {
+			return nil, err
 		}
 
 		webGroup.Selector.Expressions = append(webGroup.Selector.Expressions, filter)
 	}
 
 	return webGroup, nil
+}
+
+// webGroupFilterKeys are the keys that each select what a match_expressions block matches.
+var webGroupFilterKeys = []string{
+	goaviatrix.SniFilterKey,
+	goaviatrix.UrlFilterKey,
+	goaviatrix.ExternalURLKey,
+	goaviatrix.ExternalSNIKey,
+}
+
+// marshalWebGroupMatchExpression builds one match expression from a match_expressions block.
+func marshalWebGroupMatchExpression(selectorInfo map[string]any) (*goaviatrix.WebGroupMatchExpression, error) {
+	filterCount := 0
+	for _, key := range webGroupFilterKeys {
+		if goaviatrix.MapContains(selectorInfo, key) {
+			filterCount++
+		}
+	}
+	if filterCount > 1 {
+		return nil, fmt.Errorf("only one of snifilter, urlfilter, external_url and external_sni can be set in the same match_expressions block")
+	}
+
+	filter := &goaviatrix.WebGroupMatchExpression{
+		SniFilter:   mustString(selectorInfo[goaviatrix.SniFilterKey]),
+		UrlFilter:   mustString(selectorInfo[goaviatrix.UrlFilterKey]),
+		ExternalURL: mustString(selectorInfo[goaviatrix.ExternalURLKey]),
+		ExternalSNI: mustString(selectorInfo[goaviatrix.ExternalSNIKey]),
+	}
+
+	extArgsMap, _ := selectorInfo[goaviatrix.ExtArgsPrefix].(map[string]any)
+	if len(extArgsMap) == 0 {
+		return filter, nil
+	}
+	if filter.ExternalURL == "" && filter.ExternalSNI == "" {
+		return nil, fmt.Errorf("ext_args can only be set together with external_url or external_sni")
+	}
+	filter.ExtArgs = make(map[string]string)
+	for key, value := range extArgsMap {
+		// ext_args share the API "all" map with the filter keys, so a colliding key would replace the filter.
+		if slices.Contains(webGroupFilterKeys, key) {
+			return nil, fmt.Errorf("ext_args cannot contain the key %q", key)
+		}
+		filter.ExtArgs[key] = mustString(value)
+	}
+	return filter, nil
+}
+
+// flattenWebGroupSelector converts a Web Group's match expressions into the selector block shared by the resource and data source.
+func flattenWebGroupSelector(webGroup *goaviatrix.WebGroup) []any {
+	var expressions []any
+	for _, filter := range webGroup.Selector.Expressions {
+		filterMap := map[string]any{
+			goaviatrix.SniFilterKey:   filter.SniFilter,
+			goaviatrix.UrlFilterKey:   filter.UrlFilter,
+			goaviatrix.ExternalURLKey: filter.ExternalURL,
+			goaviatrix.ExternalSNIKey: filter.ExternalSNI,
+		}
+		if len(filter.ExtArgs) > 0 {
+			filterMap[goaviatrix.ExtArgsPrefix] = filter.ExtArgs
+		}
+		expressions = append(expressions, filterMap)
+	}
+
+	return []any{
+		map[string]any{
+			"match_expressions": expressions,
+		},
+	}
 }
 
 func resourceAviatrixWebGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -138,23 +218,7 @@ func resourceAviatrixWebGroupRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	mustSet(d, "name", webGroup.Name)
 
-	var expressions []any
-
-	for _, filter := range webGroup.Selector.Expressions {
-		filterMap := map[string]any{
-			"snifilter": filter.SniFilter,
-			"urlfilter": filter.UrlFilter,
-		}
-
-		expressions = append(expressions, filterMap)
-	}
-
-	selector := []any{
-		map[string]any{
-			"match_expressions": expressions,
-		},
-	}
-	if err := d.Set("selector", selector); err != nil {
+	if err := d.Set("selector", flattenWebGroupSelector(webGroup)); err != nil {
 		return diag.Errorf("failed to set selector during Web Group read: %s", err)
 	}
 

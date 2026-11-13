@@ -5,6 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixDcfWebgroups() *schema.Resource {
@@ -35,6 +37,22 @@ func dataSourceAviatrixDcfWebgroups() *schema.Resource {
 										Type:        schema.TypeString,
 										Computed:    true,
 										Description: "URL address this expression matches.",
+									},
+									goaviatrix.ExternalURLKey: {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Name of the external domain feed whose URLs this expression matches.",
+									},
+									goaviatrix.ExternalSNIKey: {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Name of the external domain feed whose server names this expression matches.",
+									},
+									goaviatrix.ExtArgsPrefix: {
+										Type:        schema.TypeMap,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Map of arguments passed to the external feed.",
 									},
 								},
 							},
@@ -74,23 +92,7 @@ func dataSourceAviatrixDcfWebgroupsRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("could not set uuid: %s", err)
 	}
-	var expressions []any
-
-	for _, filter := range webGroup.Selector.Expressions {
-		filterMap := map[string]any{
-			"snifilter": filter.SniFilter,
-			"urlfilter": filter.UrlFilter,
-		}
-
-		expressions = append(expressions, filterMap)
-	}
-
-	selector := []any{
-		map[string]any{
-			"match_expressions": expressions,
-		},
-	}
-	if err := d.Set("selector", selector); err != nil {
+	if err := d.Set("selector", flattenWebGroupSelector(webGroup)); err != nil {
 		return diag.Errorf("failed to set selector during Web Group read: %s", err)
 	}
 

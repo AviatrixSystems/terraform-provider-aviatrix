@@ -33,7 +33,7 @@ The following arguments are supported:
 
 -> **NOTE:** `transit_gateway_name` is an optional and computed attribute now, and it will only be a computed attribute in the V3.2.0 release.
 
-* `transit_gateway_name` - (Optional) Name of the Transit Gateway.
+* `transit_gateway_name` - (Optional) Name of the Transit Gateway. For an Aviatrix spoke gateway, the controller reports the transit the spoke is attached to and a change to this value is ignored, because the spoke keeps its domain when it moves. For an attachment whose domain membership belongs to one transit — an Azure native spoke, Site2Cloud connection, Azure VNG connection, TGW domain, or Edge VLAN — changing this to a different transit replaces the association so the attachment is associated again on the new transit. A gateway group name and that group's primary gateway name are the same transit and do not replace the association. When moving an Azure native spoke, keep `depends_on` pointed at the native peering so the peering is replaced before the association is created again.
 
 ## Import
 
