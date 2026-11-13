@@ -127,6 +127,12 @@ func transitGroupOptionalSchema() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable Transit FireNet for the transit group.",
 		},
+		"enable_egress_transit_firenet": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable Egress Transit FireNet for the transit group. Requires 'enable_transit_firenet' to be true.",
+		},
 		"enable_advertise_transit_cidr": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -309,6 +315,7 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 	transitGroup.EnableConnectedTransit = getBool(d, "enable_connected_transit")
 	transitGroup.EnableFirenet = getBool(d, "enable_firenet")
 	transitGroup.EnableTransitFirenet = getBool(d, "enable_transit_firenet")
+	transitGroup.EnableEgressTransitFirenet = getBool(d, "enable_egress_transit_firenet")
 	transitGroup.EnableAdvertiseTransitCidr = getBool(d, "enable_advertise_transit_cidr")
 	transitGroup.EnableTransitSummarizeCidrToTgw = getBool(d, "enable_transit_summarize_cidr_to_tgw")
 	transitGroup.EnableMultiTierTransit = getBool(d, "enable_multi_tier_transit")
@@ -405,6 +412,40 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
 
+	return validateTransitGroupEgressTransitFireNet(transitGroup)
+}
+
+// validateTransitGroupEgressTransitFireNet checks the prerequisites for 'enable_egress_transit_firenet'.
+// The controller only checks the gateway-level conflicts when the first instance
+// launches, so catch them at plan time instead of failing that launch.
+func validateTransitGroupEgressTransitFireNet(transitGroup *goaviatrix.GatewayGroup) error {
+	if !transitGroup.EnableEgressTransitFirenet {
+		return nil
+	}
+	egressClouds := goaviatrix.AWSRelatedCloudTypes | goaviatrix.GCPRelatedCloudTypes | (goaviatrix.AzureArmRelatedCloudTypes &^ goaviatrix.AzureChina) | goaviatrix.OCIRelatedCloudTypes
+	if !goaviatrix.IsCloudType(transitGroup.CloudType, egressClouds) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is only supported in %s", goaviatrix.CloudTypesToString(egressClouds))
+	}
+	if !transitGroup.EnableTransitFirenet {
+		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
+	}
+	conflicts := []struct {
+		enabled bool
+		attr    string
+	}{
+		{transitGroup.EnableConnectedTransit, "enable_connected_transit"},
+		{transitGroup.BgpEcmp, "enable_bgp_ecmp"},
+		{transitGroup.EnableActiveStandby, "enable_active_standby"},
+		{len(transitGroup.PrependAsPath) > 0, "prepend_as_path"},
+		{transitGroup.EnableLearnedCidrsApproval, "enable_learned_cidrs_approval"},
+		{transitGroup.EnableMultiTierTransit, "enable_multi_tier_transit"},
+		{transitGroup.EnableSegmentation, "enable_segmentation"},
+	}
+	for _, c := range conflicts {
+		if c.enabled {
+			return fmt.Errorf("'enable_egress_transit_firenet' cannot be enabled together with '%s'", c.attr)
+		}
+	}
 	return nil
 }
 
@@ -566,6 +607,14 @@ func applyTransitFireNetSettings(ctx context.Context, d *schema.ResourceData, cl
 			if err := client.EnableTransitFireNetGatewayGroup(ctx, groupName); err != nil {
 				return fmt.Errorf("failed to enable Transit FireNet: %w", err)
 			}
+		}
+	}
+
+	// Must follow Transit FireNet, which it depends on.
+	if getBool(d, "enable_egress_transit_firenet") {
+		log.Printf("[INFO] Enabling Egress Transit FireNet for transit group: %s", groupName)
+		if err := client.EnableEgressTransitFireNetGatewayGroup(ctx, groupName); err != nil {
+			return fmt.Errorf("failed to enable Egress Transit FireNet: %w", err)
 		}
 	}
 
@@ -796,6 +845,7 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "enable_connected_transit", transitGroup.EnableConnectedTransit)
 	mustSet(d, "enable_firenet", transitGroup.EnableFirenet)
 	mustSet(d, "enable_transit_firenet", transitGroup.EnableTransitFirenet)
+	mustSet(d, "enable_egress_transit_firenet", transitGroup.EnableEgressTransitFirenet)
 	mustSet(d, "enable_advertise_transit_cidr", transitGroup.EnableAdvertiseTransitCidr)
 	mustSet(d, "enable_transit_summarize_cidr_to_tgw", transitGroup.EnableTransitSummarizeCidrToTgw)
 	mustSet(d, "enable_multi_tier_transit", transitGroup.EnableMultiTierTransit)
@@ -883,6 +933,10 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	transitFireNetClouds := goaviatrix.AWSRelatedCloudTypes | goaviatrix.GCPRelatedCloudTypes | goaviatrix.AzureArmRelatedCloudTypes | goaviatrix.OCIRelatedCloudTypes
 	if getBool(d, "enable_transit_firenet") && !goaviatrix.IsCloudType(cloudType, transitFireNetClouds) {
 		return diag.Errorf("'enable_transit_firenet' is only supported in %s", goaviatrix.CloudTypesToString(transitFireNetClouds))
+	}
+
+	if err := validateTransitGroupEgressTransitFireNet(buildTransitGroupFromResourceData(d)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSChina|goaviatrix.AzureChina) {
@@ -1374,6 +1428,14 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
 
+	// Egress Transit depends on Transit FireNet: disable it first, enable it last.
+	enableEgressTransitFireNet := getBool(d, "enable_egress_transit_firenet")
+	if d.HasChange("enable_egress_transit_firenet") && !enableEgressTransitFireNet {
+		if err := client.DisableEgressTransitFireNetGatewayGroup(ctx, groupName); err != nil {
+			return diag.Errorf("failed to disable Egress Transit FireNet during transit group update: %s", err)
+		}
+	}
+
 	if d.HasChange("enable_firenet") && d.HasChange("enable_transit_firenet") {
 		// Both changed at once - disable firenet first, then enable transit_firenet if needed
 		if !enableFireNet {
@@ -1453,6 +1515,12 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.Errorf("can not disable 'enable_gateway_load_balancer' when 'enable_firenet' or 'enable_transit_firenet' is " +
 				"still enabled. Changing from GWLB FireNet to non-GWLB FireNet requires 2 separate " +
 				"`terraform apply` steps, once to disable GWLB FireNet, then again to enable non-GWLB FireNet")
+		}
+	}
+
+	if d.HasChange("enable_egress_transit_firenet") && enableEgressTransitFireNet {
+		if err := client.EnableEgressTransitFireNetGatewayGroup(ctx, groupName); err != nil {
+			return diag.Errorf("failed to enable Egress Transit FireNet during transit group update: %s", err)
 		}
 	}
 

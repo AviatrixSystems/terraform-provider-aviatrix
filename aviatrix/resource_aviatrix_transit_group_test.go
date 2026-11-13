@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -1192,4 +1193,62 @@ func testAccCheckTransitGroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestValidateTransitGroupEgressTransitFireNet(t *testing.T) {
+	// valid returns a GCP group with egress and its prerequisites set; each case
+	// changes one field from there.
+	valid := func() *goaviatrix.GatewayGroup {
+		return &goaviatrix.GatewayGroup{
+			CloudType:                  goaviatrix.GCP,
+			EnableTransitFirenet:       true,
+			EnableEgressTransitFirenet: true,
+		}
+	}
+	tests := []struct {
+		name    string
+		mutate  func(g *goaviatrix.GatewayGroup)
+		wantErr string
+	}{
+		{name: "valid", mutate: func(g *goaviatrix.GatewayGroup) {}},
+		{name: "egress disabled skips checks", mutate: func(g *goaviatrix.GatewayGroup) {
+			g.EnableEgressTransitFirenet, g.EnableTransitFirenet, g.EnableConnectedTransit = false, false, true
+		}},
+		{name: "without transit firenet", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableTransitFirenet = false }, wantErr: "requires 'enable_transit_firenet'"},
+		{name: "azure china", mutate: func(g *goaviatrix.GatewayGroup) { g.CloudType = goaviatrix.AzureChina }, wantErr: "only supported in"},
+		{name: "azure", mutate: func(g *goaviatrix.GatewayGroup) { g.CloudType = goaviatrix.Azure }},
+		{name: "connected transit", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableConnectedTransit = true }, wantErr: "enable_connected_transit"},
+		{name: "bgp ecmp", mutate: func(g *goaviatrix.GatewayGroup) { g.BgpEcmp = true }, wantErr: "enable_bgp_ecmp"},
+		{name: "active standby", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableActiveStandby = true }, wantErr: "enable_active_standby"},
+		{name: "prepend as path", mutate: func(g *goaviatrix.GatewayGroup) { g.PrependAsPath = []string{"65001"} }, wantErr: "prepend_as_path"},
+		{name: "learned cidrs approval", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableLearnedCidrsApproval = true }, wantErr: "enable_learned_cidrs_approval"},
+		{name: "multi tier transit", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableMultiTierTransit = true }, wantErr: "enable_multi_tier_transit"},
+		{name: "segmentation", mutate: func(g *goaviatrix.GatewayGroup) { g.EnableSegmentation = true }, wantErr: "enable_segmentation"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := valid()
+			tt.mutate(g)
+			err := validateTransitGroupEgressTransitFireNet(g)
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("error = %v, want it to contain %q", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestTransitGroupSchemaHasEgressTransitFireNet(t *testing.T) {
+	s, ok := resourceAviatrixTransitGroup().Schema["enable_egress_transit_firenet"]
+	if !ok {
+		t.Fatal("aviatrix_transit_group is missing 'enable_egress_transit_firenet'")
+	}
+	if !s.Optional || s.Default != false {
+		t.Fatalf("expected optional bool defaulting to false, got Optional=%v Default=%v", s.Optional, s.Default)
+	}
 }

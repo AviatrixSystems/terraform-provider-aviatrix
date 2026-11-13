@@ -95,6 +95,8 @@ type GatewayGroup struct {
 	EnableTransitSummarizeCidrToTgw bool `form:"transit_summarize_cidr_to_tgw,omitempty" json:"transit_summarize_cidr_to_tgw,omitempty"`
 	EnableMultiTierTransit          bool `form:"multi_tier_transit,omitempty" json:"multi_tier_transit,omitempty"`
 	EnableGatewayLoadBalancer       bool `form:"enable_gateway_load_balancer,omitempty" json:"enable_gateway_load_balancer,omitempty"`
+	// Set post-create via enable_transit_firenet_on_egress_transit_gateway, not sent on create/update.
+	EnableEgressTransitFirenet bool `form:"-" json:"egress_transit_firenet_enabled,omitempty"`
 
 	// Computed (read-only)
 	GwUUIDList         []string `json:"gw_uuid_list,omitempty"`
@@ -1099,6 +1101,28 @@ func (c *Client) EnableTransitFireNetWithGWLBGatewayGroup(ctx context.Context, g
 		"CID":          c.CID,
 		"gateway_name": groupName,
 		"mode":         "gwlb",
+	}
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
+// EnableEgressTransitFireNetGatewayGroup enables Egress Transit FireNet for a gateway group
+func (c *Client) EnableEgressTransitFireNetGatewayGroup(ctx context.Context, groupName string) error {
+	form := map[string]string{
+		"action":       "enable_transit_firenet_on_egress_transit_gateway",
+		"CID":          c.CID,
+		"gateway_name": groupName,
+	}
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
+// DisableEgressTransitFireNetGatewayGroup disables Egress Transit FireNet for a gateway group
+func (c *Client) DisableEgressTransitFireNetGatewayGroup(ctx context.Context, groupName string) error {
+	form := map[string]string{
+		"action":       "disable_transit_firenet_on_egress_transit_gateway",
+		"CID":          c.CID,
+		"gateway_name": groupName,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
