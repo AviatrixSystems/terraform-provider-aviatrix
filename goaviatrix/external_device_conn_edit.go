@@ -122,6 +122,31 @@ func (c *Client) EditExternalDeviceConnBgpAdminShutdown(edit *EditExternalDevice
 	return c.PostAPI2(edit.Action, edit, BasicCheck)
 }
 
+// EditExternalDeviceConnEnableIkev2 moves a whole external device connection
+// from IKEv1 to IKEv2 through the edit_external_device_conn action.
+//
+// Connection-wide like EditExternalDeviceConnBgpAdminShutdown, so it must be
+// sent alone, without a tunnel_name. The controller only accepts "true": there
+// is no in-place move back to IKEv1.
+type EditExternalDeviceConnEnableIkev2 struct {
+	Action         string `form:"action,omitempty"`
+	CID            string `form:"CID,omitempty"`
+	GwName         string `form:"gateway_name,omitempty"`
+	ConnectionName string `form:"conn_name,omitempty"`
+	EnableIkev2    string `form:"enable_ikev2,omitempty"`
+}
+
+// EditExternalDeviceConnEnableIkev2 moves every tunnel of the connection to
+// IKEv2; each tunnel re-negotiates its IKE SA.
+func (c *Client) EditExternalDeviceConnEnableIkev2(edit *EditExternalDeviceConnEnableIkev2) error {
+	edit.CID = c.CID
+	edit.Action = "edit_external_device_conn"
+	edit.EnableIkev2 = "true"
+
+	// PostAPI2, not PostAPI: this action is only reachable under /v2/api.
+	return c.PostAPI2(edit.Action, edit, BasicCheck)
+}
+
 // GetExternalDeviceConnTunnels returns the connection's tunnels, each carrying
 // the Name that EditExternalDeviceConnTunnel selects by.
 //

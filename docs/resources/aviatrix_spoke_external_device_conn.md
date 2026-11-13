@@ -244,7 +244,7 @@ The following arguments are supported:
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with `connection_type` = 'bgp'. Requires the spoke_gateway's `learned_cidrs_approval_mode` attribute be set to 'connection'. Valid values: true, false. Default value: false.
 * `approved_cidrs` - (Optional/Computed) Set of approved CIDRs. Requires `enable_learned_cidrs_approval` to be true. Type: Set(String).
-* `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
+* `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol. Changing it from false to true on an 'IPsec' connection, 'bgp' or 'static', moves every tunnel to IKEv2 in place: each tunnel re-negotiates its IKE SA, so the remote device must be switched to IKEv2 too. Requires Controller version 10.2+. Changing it from true to false, or over 'LAN' or 'GRE', still forces the connection to be replaced.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires spoke to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R3.0.2+.

@@ -164,6 +164,7 @@ go_test(
         "dcf_http_filter_test.go",
         "dcf_trustbundle_test.go",
         "edge_external_device_conn_test.go",
+        "external_device_conn_edit_test.go",
         "gateway_group_test.go",
         "gateway_insertion_test.go",
         "site2cloud_update_test.go",

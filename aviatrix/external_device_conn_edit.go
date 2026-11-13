@@ -42,6 +42,12 @@ var edcEditableAttrs = []string{
 // sequenced together - see updateExternalDeviceConnInPlace.
 const edcBgpAdminShutdownAttr = "bgp_admin_shutdown"
 
+// edcEnableIkev2Attr is the connection-wide IKE version. Connection-wide like
+// edcBgpAdminShutdownAttr, but not BGP-only: the controller edits it on any
+// IPsec connection, static included. Only false -> true is editable; every
+// other change still replaces the connection (edcIkev2Upgrade).
+const edcEnableIkev2Attr = "enable_ikev2"
+
 // edcSide names the attributes describing one side of a connection. Terraform
 // models HA as a primary set plus a parallel backup_* set, whereas the edit API
 // addresses one tunnel at a time by name; a side is the bridge between the two.
@@ -322,6 +328,18 @@ func edcConnIsEditable(d edcDiff) bool {
 		(tunnelProtocol == "" || strings.EqualFold(tunnelProtocol, "IPsec"))
 }
 
+// edcIkev2Upgrade reports whether the diff moves an IPsec connection from IKEv1
+// to IKEv2, the only enable_ikev2 change the edit API supports.
+func edcIkev2Upgrade(d edcDiff) bool {
+	if !d.HasChange(edcEnableIkev2Attr) {
+		return false
+	}
+	oldV, newV := d.GetChange(edcEnableIkev2Attr)
+	tunnelProtocol := getString(d, "tunnel_protocol")
+	return !mustBool(oldV) && mustBool(newV) &&
+		(tunnelProtocol == "" || strings.EqualFold(tunnelProtocol, "IPsec"))
+}
+
 // edcReplacementAttrs names the changed attributes that still have to replace
 // the connection; empty on a BGP-over-IPsec one, where all of them are editable.
 //
@@ -360,7 +378,11 @@ func edcCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 		}
 	}
 
-	for _, attr := range edcReplacementAttrs(d) {
+	replace := edcReplacementAttrs(d)
+	if d.HasChange(edcEnableIkev2Attr) && !edcIkev2Upgrade(d) {
+		replace = append(replace, edcEnableIkev2Attr)
+	}
+	for _, attr := range replace {
 		if err := d.ForceNew(attr); err != nil {
 			return fmt.Errorf("could not mark %q as requiring connection %q to be replaced: %w",
 				attr, getString(d, "connection_name"), err)
@@ -402,6 +424,19 @@ func applyEdcBgpAdminShutdown(client *goaviatrix.Client, gwName, connName string
 	return nil
 }
 
+// applyEdcEnableIkev2 moves the connection from IKEv1 to IKEv2.
+func applyEdcEnableIkev2(client *goaviatrix.Client, gwName, connName string) error {
+	log.Printf("[INFO] Setting enable_ikev2=true on external device conn %s", connName)
+	edit := &goaviatrix.EditExternalDeviceConnEnableIkev2{
+		GwName:         gwName,
+		ConnectionName: connName,
+	}
+	if err := client.EditExternalDeviceConnEnableIkev2(edit); err != nil {
+		return fmt.Errorf("failed to move external device conn %s to IKEv2: %w", connName, err)
+	}
+	return nil
+}
+
 // edcUpdateStep is one stage of an in-place update. An update runs its steps in
 // the order planExternalDeviceConnUpdate returns them.
 type edcUpdateStep int
@@ -409,6 +444,8 @@ type edcUpdateStep int
 const (
 	// edcStepShutdown sends the connection-wide BGP admin shutdown.
 	edcStepShutdown edcUpdateStep = iota
+	// edcStepEnableIkev2 moves the connection from IKEv1 to IKEv2.
+	edcStepEnableIkev2
 	// edcStepTunnelEdits sends the per-tunnel field edits, one request each.
 	edcStepTunnelEdits
 	// edcStepNoShutdown lifts the connection-wide BGP admin shutdown.
@@ -419,6 +456,8 @@ func (s edcUpdateStep) String() string {
 	switch s {
 	case edcStepShutdown:
 		return "bgp_admin_shutdown=true"
+	case edcStepEnableIkev2:
+		return "enable_ikev2=true"
 	case edcStepTunnelEdits:
 		return "per-tunnel edits"
 	case edcStepNoShutdown:
@@ -440,6 +479,9 @@ func (s edcUpdateStep) String() string {
 // configuration, which is the same ordering the gateway uses when it emits the
 // neighbor deltas.
 //
+// The IKEv2 move re-negotiates every IKE SA, so it sits in the same window:
+// after a shutdown, before the tunnel edits.
+//
 // The two shutdown steps are mutually exclusive: both derive from the one
 // bgp_admin_shutdown attribute, so a plan holds at most one of them.
 func planExternalDeviceConnUpdate(d edcDiff) []edcUpdateStep {
@@ -448,6 +490,9 @@ func planExternalDeviceConnUpdate(d edcDiff) []edcUpdateStep {
 	shutdownChanged := d.HasChange(edcBgpAdminShutdownAttr)
 	if shutdownChanged && getBool(d, edcBgpAdminShutdownAttr) {
 		steps = append(steps, edcStepShutdown)
+	}
+	if edcIkev2Upgrade(d) {
+		steps = append(steps, edcStepEnableIkev2)
 	}
 	if d.HasChanges(edcEditableAttrs...) {
 		steps = append(steps, edcStepTunnelEdits)
@@ -460,7 +505,8 @@ func planExternalDeviceConnUpdate(d edcDiff) []edcUpdateStep {
 }
 
 // updateExternalDeviceConnInPlace applies every in-place edit the diff calls
-// for: the connection-wide BGP admin state and the per-tunnel fields.
+// for: the connection-wide BGP admin state and IKE version, and the per-tunnel
+// fields.
 //
 // Called from Update on the transit and spoke external device connection
 // resources, in place of the ForceNew these attributes used to carry. The
@@ -471,9 +517,12 @@ func updateExternalDeviceConnInPlace(d *schema.ResourceData, client *goaviatrix.
 		return nil
 	}
 
+	// enable_ikev2 is not BGP-only; edcCustomizeDiff already limited it to IPsec.
 	changed := edcChangedAttrs(d, append(slices.Clone(edcEditableAttrs), edcBgpAdminShutdownAttr)...)
-	if err := edcEditableConn(d, connName, changed); err != nil {
-		return err
+	if len(changed) > 0 {
+		if err := edcEditableConn(d, connName, changed); err != nil {
+			return err
+		}
 	}
 
 	for _, step := range steps {
@@ -481,6 +530,8 @@ func updateExternalDeviceConnInPlace(d *schema.ResourceData, client *goaviatrix.
 		switch step {
 		case edcStepShutdown:
 			err = applyEdcBgpAdminShutdown(client, gwName, connName, true)
+		case edcStepEnableIkev2:
+			err = applyEdcEnableIkev2(client, gwName, connName)
 		case edcStepTunnelEdits:
 			err = editExternalDeviceConnTunnels(d, client, gwName, connName, vpcID)
 		case edcStepNoShutdown:

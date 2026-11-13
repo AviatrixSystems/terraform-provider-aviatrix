@@ -282,11 +282,11 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 					"Valid values: true, false. Default value: false.",
 			},
 			"enable_ikev2": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				ForceNew:    true,
-				Description: "Set as true if use IKEv2.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Set as true to use IKEv2. Changing false to true on an IPsec connection is " +
+					"applied in place; any other change replaces the connection.",
 			},
 			"enable_event_triggered_ha": {
 				Type:        schema.TypeBool,

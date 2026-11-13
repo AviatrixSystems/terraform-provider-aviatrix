@@ -2,7 +2,10 @@ package aviatrix
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"slices"
 	"strings"
 	"testing"
@@ -522,7 +525,7 @@ func TestExternalDeviceConnTunnelName(t *testing.T) {
 func assertEdcEditableAttrsNotForceNew(t *testing.T, schemaMap map[string]*schema.Schema, resourceName string) {
 	t.Helper()
 
-	for _, attr := range append(slices.Clone(edcEditableAttrs), edcBgpAdminShutdownAttr) {
+	for _, attr := range append(slices.Clone(edcEditableAttrs), edcBgpAdminShutdownAttr, edcEnableIkev2Attr) {
 		field, ok := schemaMap[attr]
 		if !ok {
 			t.Errorf("%s: %q should exist in the schema", resourceName, attr)
@@ -670,6 +673,22 @@ func TestPlanExternalDeviceConnUpdate(t *testing.T) {
 			boolState: map[string]bool{"bgp_admin_shutdown": true},
 			boolWant:  map[string]bool{"bgp_admin_shutdown": false},
 			steps:     []edcUpdateStep{edcStepTunnelEdits, edcStepNoShutdown},
+		},
+		{
+			// Shutdown first, then the IKE SAs re-negotiate, then the tunnels
+			// are re-keyed - all while the session is down.
+			name:      "the IKEv2 move sits between a shutdown and the tunnel edits",
+			want:      map[string]string{"pre_shared_key": "rotated"},
+			boolState: map[string]bool{"bgp_admin_shutdown": false, "enable_ikev2": false},
+			boolWant:  map[string]bool{"bgp_admin_shutdown": true, "enable_ikev2": true},
+			steps:     []edcUpdateStep{edcStepShutdown, edcStepEnableIkev2, edcStepTunnelEdits},
+		},
+		{
+			// Replaced at plan time instead (edcCustomizeDiff).
+			name:      "IKEv2 back to IKEv1 is not an in-place step",
+			boolState: map[string]bool{"enable_ikev2": true},
+			boolWant:  map[string]bool{"enable_ikev2": false},
+			steps:     nil,
 		},
 		{
 			name:      "an unchanged shutdown contributes no step of its own",
@@ -1056,4 +1075,198 @@ func TestEdcCustomizeDiffBgpOverLan(t *testing.T) {
 			t.Error("bgp_remote_as_num must be editable in place on a BGP-over-IPsec connection")
 		}
 	})
+
+	// enable_ikev2 is not BGP-only, so a static IPsec connection is used.
+	staticIpsecConn := with(lanConn, map[string]any{
+		"connection_type":   "static",
+		"tunnel_protocol":   "IPsec",
+		"remote_lan_ip":     "",
+		"bgp_local_as_num":  "",
+		"bgp_remote_as_num": "",
+		"remote_gateway_ip": "172.12.13.14",
+		"remote_subnet":     "10.70.0.0/16",
+	})
+	for _, test := range []struct {
+		name        string
+		from, to    bool
+		requiresNew bool
+	}{
+		{name: "enable_ikev2 false to true is applied in place", from: false, to: true},
+		{name: "enable_ikev2 true to false replaces the connection", from: true, to: false, requiresNew: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			res := resourceAviatrixTransitExternalDeviceConn()
+			state := priorState(t, res, with(staticIpsecConn, map[string]any{"enable_ikev2": test.from}))
+			config := terraform.NewResourceConfigRaw(with(staticIpsecConn, map[string]any{"enable_ikev2": test.to}))
+
+			diff, err := res.Diff(context.Background(), state, config, nil)
+			if err != nil {
+				t.Fatalf("Diff returned an error: %v", err)
+			}
+			attr, ok := diff.Attributes[edcEnableIkev2Attr]
+			if !ok {
+				t.Fatalf("expected a diff entry for enable_ikev2, attributes: %#v", diff.Attributes)
+			}
+			if attr.RequiresNew != test.requiresNew {
+				t.Errorf("expected RequiresNew=%t for enable_ikev2, got %#v", test.requiresNew, attr)
+			}
+		})
+	}
+}
+
+// newEdcEditTestClient returns a logged-in Client against a fake controller
+// that records every edit_external_device_conn form and answers it with
+// editOK.
+func newEdcEditTestClient(t *testing.T, editOK bool) (*goaviatrix.Client, *[]map[string]string) {
+	t.Helper()
+	var edits []map[string]string
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		if err := r.ParseForm(); err != nil {
+			t.Errorf("ParseForm failed: %v", err)
+			return
+		}
+		// NewClient first GETs get_api_token, then POSTs login as a JSON body
+		// rather than a form, so login is the POST with no form action.
+		var resp map[string]any
+		switch {
+		case r.Method == http.MethodGet:
+			resp = map[string]any{"return": true, "results": map[string]any{"api_token": "token"}}
+		case r.Form.Get("action") != "edit_external_device_conn":
+			resp = map[string]any{"return": true, "CID": "test-cid"}
+		default:
+			form := make(map[string]string)
+			for k, v := range r.Form {
+				form[k] = v[0]
+			}
+			edits = append(edits, form)
+			resp = map[string]any{"return": editOK, "results": "done", "reason": "controller refused"}
+		}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Errorf("Encode failed: %v", err)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := goaviatrix.NewClient("admin", "password", strings.TrimPrefix(server.URL, "https://"), server.Client(), nil)
+	if err != nil {
+		t.Fatalf("NewClient failed: %v", err)
+	}
+	return client, &edits
+}
+
+func TestUpdateExternalDeviceConnInPlaceEnableIkev2(t *testing.T) {
+	// A static IPsec connection: enable_ikev2 is the only change, and it is
+	// not one of the BGP-only attributes edcEditableConn guards.
+	staticIpsecConn := map[string]any{
+		"vpc_id":            "vpc-1",
+		"gw_name":           "transit1",
+		"connection_name":   "conn1",
+		"connection_type":   "static",
+		"tunnel_protocol":   "IPsec",
+		"remote_gateway_ip": "172.12.13.14",
+		"remote_subnet":     "10.70.0.0/16",
+	}
+	withIkev2 := func(v bool, extra map[string]any) map[string]any {
+		out := make(map[string]any, len(staticIpsecConn)+len(extra)+1)
+		for k, val := range staticIpsecConn {
+			out[k] = val
+		}
+		for k, val := range extra {
+			out[k] = val
+		}
+		out[edcEnableIkev2Attr] = v
+		return out
+	}
+
+	// The ResourceData Update sees for an IKEv1 -> IKEv2 plan, plus any extra
+	// configuration changes.
+	upgradeData := func(t *testing.T, extra map[string]any) *schema.ResourceData {
+		t.Helper()
+		res := resourceAviatrixTransitExternalDeviceConn()
+		prior := schema.TestResourceDataRaw(t, res.Schema, withIkev2(false, nil))
+		prior.SetId("conn1~vpc-1")
+		state := prior.State()
+		diff, err := res.Diff(context.Background(), state, terraform.NewResourceConfigRaw(withIkev2(true, extra)), nil)
+		if err != nil {
+			t.Fatalf("Diff returned an error: %v", err)
+		}
+		d, err := schema.InternalMap(res.Schema).Data(state, diff)
+		if err != nil {
+			t.Fatalf("Data returned an error: %v", err)
+		}
+		return d
+	}
+
+	t.Run("sends a single connection-wide enable_ikev2 edit", func(t *testing.T) {
+		client, edits := newEdcEditTestClient(t, true)
+
+		if err := updateExternalDeviceConnInPlace(upgradeData(t, nil), client, "transit1", "conn1", "vpc-1"); err != nil {
+			t.Fatalf("updateExternalDeviceConnInPlace returned an error: %v", err)
+		}
+		if len(*edits) != 1 {
+			t.Fatalf("expected exactly one edit request, got %d: %#v", len(*edits), *edits)
+		}
+		got := (*edits)[0]
+		for key, want := range map[string]string{
+			"gateway_name": "transit1",
+			"conn_name":    "conn1",
+			"enable_ikev2": "true",
+		} {
+			if got[key] != want {
+				t.Errorf("expected %s=%q, got %q (form %#v)", key, want, got[key], got)
+			}
+		}
+		if _, ok := got["tunnel_name"]; ok {
+			t.Errorf("enable_ikev2 is connection-wide and must be sent without tunnel_name, got %#v", got)
+		}
+	})
+
+	t.Run("a controller failure is returned", func(t *testing.T) {
+		client, _ := newEdcEditTestClient(t, false)
+
+		err := updateExternalDeviceConnInPlace(upgradeData(t, nil), client, "transit1", "conn1", "vpc-1")
+		if err == nil {
+			t.Fatal("expected an error, got none")
+		}
+		for _, want := range []string{"failed to move external device conn conn1 to IKEv2", "controller refused"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("expected error to contain %q, got %q", want, err)
+			}
+		}
+	})
+
+	// edcCustomizeDiff replaces a static connection whose BGP-only attributes
+	// change, so this is the backstop: nothing is sent, not even the IKE move.
+	t.Run("a BGP-only change on a static connection is refused before any edit", func(t *testing.T) {
+		client, edits := newEdcEditTestClient(t, true)
+
+		d := upgradeData(t, map[string]any{"pre_shared_key": "rotated"})
+		err := updateExternalDeviceConnInPlace(d, client, "transit1", "conn1", "vpc-1")
+		if err == nil {
+			t.Fatal("expected an error, got none")
+		}
+		for _, want := range []string{"cannot update pre_shared_key in place", "only a BGP connection over IPsec can be edited"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("expected error to contain %q, got %q", want, err)
+			}
+		}
+		if len(*edits) != 0 {
+			t.Errorf("expected no edit requests, got %#v", *edits)
+		}
+	})
+}
+
+func TestEdcUpdateStepString(t *testing.T) {
+	for step, want := range map[edcUpdateStep]string{
+		edcStepShutdown:    "bgp_admin_shutdown=true",
+		edcStepEnableIkev2: "enable_ikev2=true",
+		edcStepTunnelEdits: "per-tunnel edits",
+		edcStepNoShutdown:  "bgp_admin_shutdown=false",
+		edcUpdateStep(99):  "edcUpdateStep(99)",
+	} {
+		if got := step.String(); got != want {
+			t.Errorf("expected %q for step %d, got %q", want, int(step), got)
+		}
+	}
 }
