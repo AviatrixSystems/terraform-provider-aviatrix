@@ -19,6 +19,10 @@ type TLSProfile struct {
 
 	// VerifySni Configuration to verify SNI of client
 	VerifySni bool `json:"verify_sni"`
+
+	// TLSLogFieldsExtension TLS log fields to include in the logs. Omitted when
+	// empty because controllers without this field reject unknown keys.
+	TLSLogFieldsExtension []string `json:"tls_log_fields_extension,omitempty"`
 }
 
 type TLSProfileWithID struct {
@@ -37,6 +41,9 @@ type TLSProfileWithID struct {
 
 	// VerifySni Configuration to verify SNI of client
 	VerifySni bool `json:"verify_sni"`
+
+	// TLSLogFieldsExtension TLS log fields included in the logs
+	TLSLogFieldsExtension []string `json:"tls_log_fields_extension,omitempty"`
 }
 
 type TLSProfileResponse struct {

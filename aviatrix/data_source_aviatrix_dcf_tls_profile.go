@@ -39,6 +39,12 @@ func dataSourceAviatrixDCFTLSProfile() *schema.Resource {
 				Computed:    true,
 				Description: "UUID of the CA bundle used for origin certificate validation.",
 			},
+			"tls_log_fields_extension": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "TLS log fields included in the logs.",
+			},
 		},
 	}
 }
@@ -65,6 +71,7 @@ func dataSourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.Resource
 	mustSet(d, "uuid", tlsProfile.UUID)
 	mustSet(d, "certificate_validation", tlsProfile.CertificateValidation)
 	mustSet(d, "verify_sni", tlsProfile.VerifySni)
+	mustSet(d, "tls_log_fields_extension", tlsProfile.TLSLogFieldsExtension)
 
 	if tlsProfile.CABundleID != nil {
 		mustSet(d, "ca_bundle_id", *tlsProfile.CABundleID)

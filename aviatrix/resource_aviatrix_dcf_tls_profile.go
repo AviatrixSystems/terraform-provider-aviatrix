@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,7 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: resourceAviatrixDCFTLSProfileCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			"display_name": {
 				Type:        schema.TypeString,
@@ -44,6 +46,15 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 				Optional:    true,
 				Description: "UUID of the CA bundle that should be used for origin certificate validation. If not populated the default bundle would be used. The aviatrix_dcf_trustbundle data source can be used to get the UUID from the bundle name.",
 			},
+			"tls_log_fields_extension": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(append([]string{tlsLogAllField}, allTLSLogFields...), false),
+				},
+				Description: "TLS log fields to include in the logs. Use TLS_LOG_FIELDS_ALL on its own to include every field. Omitting this argument includes no fields.",
+			},
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -51,6 +62,80 @@ func resourceAviatrixDCFTLSProfile() *schema.Resource {
 			},
 		},
 	}
+}
+
+// tlsLogAllField is a provider-only shorthand for every value in allTLSLogFields.
+const tlsLogAllField = "TLS_LOG_FIELDS_ALL"
+
+// allTLSLogFields lists every TLS log field the controller API accepts.
+var allTLSLogFields = []string{
+	"TLS_CLIENT_VERSIONS",
+	"TLS_CLIENT_CIPHERS",
+	"TLS_CLIENT_KEY_SHARE_GROUPS",
+	"TLS_CLIENT_SIGNATURE_ALGORITHMS",
+	"TLS_CLIENT_JA4_FINGERPRINT",
+	"TLS_CLIENT_SNI",
+	"TLS_CLIENT_SUPPORTED_GROUPS",
+	"TLS_CLIENT_ALPNS",
+	"TLS_CLIENT_ECH_PRESENT",
+}
+
+// resourceAviatrixDCFTLSProfileCustomizeDiff rejects TLS_LOG_FIELDS_ALL combined with other log fields at plan time.
+func resourceAviatrixDCFTLSProfileCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return nil
+	}
+	raw := rawConfig.GetAttr("tls_log_fields_extension")
+	if raw.IsNull() || !raw.IsWhollyKnown() {
+		return nil
+	}
+	var fields []string
+	for it := raw.ElementIterator(); it.Next(); {
+		_, v := it.Element()
+		fields = append(fields, v.AsString())
+	}
+	return validateTLSLogFields(fields)
+}
+
+// validateTLSLogFields returns an error when TLS_LOG_FIELDS_ALL is not the only configured value.
+func validateTLSLogFields(fields []string) error {
+	if slices.Contains(fields, tlsLogAllField) && len(fields) > 1 {
+		return fmt.Errorf("tls_log_fields_extension: %s must be the only value when set", tlsLogAllField)
+	}
+	return nil
+}
+
+// expandTLSLogFields converts configured log fields into the API request list.
+func expandTLSLogFields(fields []string) []string {
+	// The API has no ALL value; it recognizes the complete list of fields instead.
+	if slices.Contains(fields, tlsLogAllField) {
+		return slices.Clone(allTLSLogFields)
+	}
+	return fields
+}
+
+// flattenTLSLogFields converts the API's log fields into the state value.
+func flattenTLSLogFields(apiFields, priorFields []string) []string {
+	// The API reports ALL as the complete list of fields; keep the shorthand in
+	// state when the prior state used it so configs using it do not plan a diff.
+	if slices.Contains(priorFields, tlsLogAllField) && isAllTLSLogFields(apiFields) {
+		return []string{tlsLogAllField}
+	}
+	return apiFields
+}
+
+// isAllTLSLogFields reports whether fields contains exactly every TLS log field.
+func isAllTLSLogFields(fields []string) bool {
+	if len(fields) != len(allTLSLogFields) {
+		return false
+	}
+	for _, f := range allTLSLogFields {
+		if !slices.Contains(fields, f) {
+			return false
+		}
+	}
+	return true
 }
 
 func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, error) {
@@ -75,6 +160,12 @@ func marshalDCFTLSProfileInput(d *schema.ResourceData) (*goaviatrix.TLSProfile, 
 		tlsProfile.CABundleID = &caBundleID
 	}
 
+	tlsLogFields := getStringSet(d, "tls_log_fields_extension")
+	if err := validateTLSLogFields(tlsLogFields); err != nil {
+		return nil, err
+	}
+	tlsProfile.TLSLogFieldsExtension = expandTLSLogFields(tlsLogFields)
+
 	return tlsProfile, nil
 }
 
@@ -92,7 +183,7 @@ func resourceAviatrixDCFTLSProfileCreate(ctx context.Context, d *schema.Resource
 	}
 	d.SetId(uuid)
 	mustSet(d, "uuid", uuid)
-	return nil
+	return resourceAviatrixDCFTLSProfileRead(ctx, d, meta)
 }
 
 func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -127,6 +218,8 @@ func resourceAviatrixDCFTLSProfileRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	mustSet(d, "tls_log_fields_extension", flattenTLSLogFields(tlsProfile.TLSLogFieldsExtension, getStringSet(d, "tls_log_fields_extension")))
+
 	if err := d.Set("uuid", uuid); err != nil {
 		return diag.Errorf("failed to set uuid during DCF TLS Profile read: %s", err)
 	}
@@ -148,7 +241,7 @@ func resourceAviatrixDCFTLSProfileUpdate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("failed to update DCF TLS Profile: %s", err)
 	}
 
-	return nil
+	return resourceAviatrixDCFTLSProfileRead(ctx, d, meta)
 }
 
 func resourceAviatrixDCFTLSProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

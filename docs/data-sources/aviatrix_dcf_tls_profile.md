@@ -33,3 +33,4 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate_validation` - (String) Certificate validation mode.
 * `verify_sni` - (Boolean) Toggle to enable advanced SNI verification of client connections.
 * `ca_bundle_id` - (String) UUID of the CA bundle used for origin certificate validation.
+* `tls_log_fields_extension` - (Set of String) TLS log fields included in the logs, as individual field names.
