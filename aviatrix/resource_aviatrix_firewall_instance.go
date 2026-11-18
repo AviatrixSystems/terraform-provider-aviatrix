@@ -31,8 +31,13 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description:      "ID of the Security VPC.",
 			},
 			"firenet_gw_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed: for Azure FireNet with horizontal scaling the gateway is
+				// optional and the controller reports the transit group name; without
+				// Computed that read-back would diff against a null config and force
+				// replacement.
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Name of the primary FireNet gateway.",
 			},

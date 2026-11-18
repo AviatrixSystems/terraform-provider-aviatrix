@@ -1,9 +1,12 @@
 package aviatrix
 
 import (
+	"context"
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -73,6 +76,38 @@ func TestValidateFirenetGwName(t *testing.T) {
 			}
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+}
+
+// TestFirenetGwNameReadBackNoReplacement guards against a regression where a
+// firewall created without 'firenet_gw_name' (Azure horizontal scaling) was
+// replaced on the next plan because the controller reports the transit group
+// name on read and the config has no value.
+func TestFirenetGwNameReadBackNoReplacement(t *testing.T) {
+	resources := map[string]*schema.Resource{
+		"aviatrix_firewall_instance":             resourceAviatrixFirewallInstance(),
+		"aviatrix_firewall_instance_association": resourceAviatrixFirewallInstanceAssociation(),
+	}
+	for name, r := range resources {
+		t.Run(name, func(t *testing.T) {
+			s := r.Schema["firenet_gw_name"]
+			require.NotNil(t, s)
+			assert.True(t, s.Optional)
+			assert.True(t, s.Computed)
+
+			state := &terraform.InstanceState{
+				ID:         "id",
+				Attributes: map[string]string{"firenet_gw_name": "azure-transit-gw"},
+			}
+			config := terraform.NewResourceConfigRaw(map[string]any{})
+			diff, err := schema.InternalMap(map[string]*schema.Schema{"firenet_gw_name": s}).
+				Diff(context.Background(), state, config, nil, nil, true)
+			require.NoError(t, err)
+			if diff != nil {
+				assert.NotContains(t, diff.Attributes, "firenet_gw_name")
+				assert.False(t, diff.RequiresNew())
+			}
 		})
 	}
 }

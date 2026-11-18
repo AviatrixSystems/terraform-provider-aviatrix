@@ -31,8 +31,11 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 				Description: "VPC ID.",
 			},
 			"firenet_gw_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed: optional for Azure FireNet with horizontal scaling, where
+				// the controller reports the transit group name on read.
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Name of the gateway to launch the firewall instance.",
 			},
