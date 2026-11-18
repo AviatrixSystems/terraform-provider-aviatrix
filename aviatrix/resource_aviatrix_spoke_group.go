@@ -36,6 +36,8 @@ func resourceAviatrixSpokeGroup() *schema.Resource {
 			GroupOptionalSchema(),
 			// Resource-specific optional attributes
 			spokeGroupOptionalSchema(),
+			// Azure BGP over LAN, shared with the other group resource
+			GroupBgpOverLanSchema(),
 		),
 	}
 }
@@ -321,6 +323,8 @@ func buildSpokeGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gateway
 	spokeGroup.EnablePreserveAsPath = getBool(d, "enable_preserve_as_path")
 	spokeGroup.EnableAutoAdvertiseS2cCidrs = getBool(d, "enable_auto_advertise_s2c_cidrs")
 	spokeGroup.BgpEcmp = getBool(d, "enable_bgp_ecmp")
+	spokeGroup.EnableBgpOverLan = getBool(d, "enable_bgp_over_lan")
+	spokeGroup.BgpLanInterfacesCount = getInt(d, "bgp_lan_interfaces_count")
 
 	// BGP Timers
 	spokeGroup.BgpPollingTime = getInt(d, "bgp_polling_time")
@@ -394,6 +398,13 @@ func validateSpokeGroupConfiguration(spokeGroup *goaviatrix.GatewayGroup) error 
 
 	if spokeGroup.DisableRoutePropagation && !spokeGroup.EnableBgp {
 		return fmt.Errorf("disable_route_propagation requires enable_bgp to be true")
+	}
+
+	if spokeGroup.EnableBgpOverLan && !spokeGroup.EnableBgp {
+		return fmt.Errorf("enable_bgp_over_lan requires enable_bgp to be true")
+	}
+	if err := validateGroupBgpOverLan(spokeGroup.CloudType, spokeGroup.EnableBgpOverLan, spokeGroup.BgpLanInterfacesCount); err != nil {
+		return err
 	}
 
 	if spokeGroup.EnableActiveStandbyPreemptive && !spokeGroup.EnableActiveStandby {
@@ -548,6 +559,12 @@ func applyBgpConfiguration(ctx context.Context, d *schema.ResourceData, client *
 	if val, ok := d.GetOk("enable_bgp_ecmp"); ok {
 		if err := client.SetBgpEcmpGatewayGroup(ctx, groupName, mustBool(val)); err != nil {
 			return fmt.Errorf("failed to set BGP ECMP: %w", err)
+		}
+	}
+
+	if getBool(d, "enable_bgp_over_lan") {
+		if err := client.UpdateBgpOverLanIntfCntGatewayGroup(ctx, groupName, getInt(d, "bgp_lan_interfaces_count")); err != nil {
+			return fmt.Errorf("failed to set BGP over LAN interface count: %w", err)
 		}
 	}
 
@@ -845,6 +862,7 @@ func resourceAviatrixSpokeGroupRead(ctx context.Context, d *schema.ResourceData,
 	mustSet(d, "enable_preserve_as_path", spokeGroup.EnablePreserveAsPath)
 	mustSet(d, "enable_auto_advertise_s2c_cidrs", spokeGroup.EnableAutoAdvertiseS2cCidrs)
 	mustSet(d, "enable_bgp_ecmp", spokeGroup.BgpEcmp)
+	setGroupBgpOverLan(d, spokeGroup)
 
 	// BGP Timers - Set to schema defaults if API returns 0
 	if spokeGroup.BgpPollingTime == 0 {
@@ -912,6 +930,16 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if !getBool(d, "enable_learned_cidrs_approval") && len(getStringSet(d, "approved_learned_cidrs")) > 0 {
 		return diag.Errorf("approved_learned_cidrs requires enable_learned_cidrs_approval to be true")
+	}
+
+	if getBool(d, "enable_bgp_over_lan") && !getBool(d, "enable_bgp") {
+		return diag.Errorf("enable_bgp_over_lan requires enable_bgp to be true")
+	}
+	if err := validateGroupBgpOverLan(cloudType, getBool(d, "enable_bgp_over_lan"), getInt(d, "bgp_lan_interfaces_count")); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := validateGroupBgpOverLanChange(d); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// ============================================================================
@@ -1063,6 +1091,16 @@ func resourceAviatrixSpokeGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		err := client.SetBgpEcmpGatewayGroup(ctx, groupName, enableBgpEcmp)
 		if err != nil {
 			return diag.Errorf("could not enable bgp ecmp during spoke group update: %s", err)
+		}
+	}
+
+	// ============================================================================
+	// BGP over LAN - API: update_gateway_group_bgp_over_lan_intf_cnt
+	// ============================================================================
+	// The controller rejects a change once the group's BGP spoke gateways exist.
+	if d.HasChanges("enable_bgp_over_lan", "bgp_lan_interfaces_count") {
+		if err := client.UpdateBgpOverLanIntfCntGatewayGroup(ctx, groupName, getInt(d, "bgp_lan_interfaces_count")); err != nil {
+			return diag.Errorf("could not update BGP over LAN interface count during spoke group update: %s", err)
 		}
 	}
 

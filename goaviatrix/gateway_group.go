@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -64,6 +65,8 @@ type GatewayGroup struct {
 
 	// BGP over LAN
 	EnableBgpOverLan bool `form:"enable_bgp_over_lan,omitempty" json:"enable_bgp_over_lan,omitempty"`
+	// BgpLanInterfacesCount is read from get_gateway_group_details; set via UpdateBgpOverLanIntfCntGatewayGroup.
+	BgpLanInterfacesCount int `json:"bgp_lan_interfaces_count,omitempty"`
 
 	// Learned CIDR Approval
 	EnableLearnedCidrsApproval bool     `form:"learned_cidrs_approval,omitempty" json:"learned_cidrs_approval,omitempty"`
@@ -1089,6 +1092,20 @@ func (c *Client) EnableTransitFireNetGatewayGroup(ctx context.Context, groupName
 		"action":       "enable_gateway_for_transit_firenet",
 		"CID":          c.CID,
 		"gateway_name": groupName,
+	}
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
+// UpdateBgpOverLanIntfCntGatewayGroup sets the BGP over LAN interface count for
+// every gateway in an Azure transit or BGP spoke group. On an empty group the
+// count is stored and applied when the first gateway launches.
+func (c *Client) UpdateBgpOverLanIntfCntGatewayGroup(ctx context.Context, groupName string, count int) error {
+	form := map[string]string{
+		"action":                "update_gateway_group_bgp_over_lan_intf_cnt",
+		"CID":                   c.CID,
+		"gateway_group_name":    groupName,
+		"bgp_over_lan_intf_cnt": strconv.Itoa(count),
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)

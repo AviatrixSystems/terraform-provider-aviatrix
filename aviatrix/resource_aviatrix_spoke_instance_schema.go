@@ -144,16 +144,19 @@ func spokeInstanceOptionalBasicSchema() map[string]*schema.Schema {
 		"enable_bgp_over_lan": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Default:  false,
+			Computed: true,
 			ForceNew: true,
 			Description: "Pre-allocate a network interface(eth4) for 'BGP over LAN' functionality. " +
-				"Only valid for Azure (8), AzureGov (32) or AzureChina (2048).",
+				"Only valid for Azure (8), AzureGov (32) or AzureChina (2048). " +
+				"For a BGP spoke group, set it on aviatrix_spoke_group instead so it applies to every gateway in the group.",
 		},
 		"bgp_lan_interfaces_count": {
 			Type:         schema.TypeInt,
 			Optional:     true,
+			Computed:     true,
 			ForceNew:     true,
 			ValidateFunc: validation.IntAtLeast(1),
+			Deprecated:   "Set 'bgp_lan_interfaces_count' on aviatrix_spoke_group instead; it applies to every gateway in the group.",
 			Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
 				"Valid values: 1-5. Default value: 1.",
 		},

@@ -2,7 +2,9 @@ package goaviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 )
 
@@ -60,10 +62,19 @@ func (c *Client) GetExternalConnection(ctx context.Context, uuid string) (*Exter
 	var data ExternalConnection
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
-		return nil, err
+		return nil, mapExternalConnectionNotFound(err)
 	}
 
 	return &data, nil
+}
+
+// mapExternalConnectionNotFound converts an HTTP 404 from the external-connections API into ErrNotFound.
+func mapExternalConnectionNotFound(err error) error {
+	var statusErr StatusError
+	if errors.As(err, &statusErr) && statusErr.StatusCode() == http.StatusNotFound {
+		return fmt.Errorf("%w: %w", ErrNotFound, err)
+	}
+	return err
 }
 
 type ExternalConnectionUpdate struct {

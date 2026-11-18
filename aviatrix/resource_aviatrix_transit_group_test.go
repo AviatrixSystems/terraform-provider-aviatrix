@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
@@ -1243,6 +1244,31 @@ func TestValidateTransitGroupEgressTransitFireNet(t *testing.T) {
 	}
 }
 
+func TestValidateGroupBgpOverLan(t *testing.T) {
+	tests := []struct {
+		name      string
+		cloudType int
+		enable    bool
+		count     int
+		wantErr   bool
+	}{
+		{name: "disabled", cloudType: goaviatrix.AWS},
+		{name: "azure enabled with count", cloudType: goaviatrix.Azure, enable: true, count: 3},
+		{name: "azure gov enabled with count", cloudType: goaviatrix.AzureGov, enable: true, count: 1},
+		{name: "azure enabled without count", cloudType: goaviatrix.Azure, enable: true, wantErr: true},
+		{name: "count without enable", cloudType: goaviatrix.Azure, count: 2, wantErr: true},
+		{name: "non-azure enabled", cloudType: goaviatrix.GCP, enable: true, count: 1, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateGroupBgpOverLan(tt.cloudType, tt.enable, tt.count)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateGroupBgpOverLan() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestTransitGroupSchemaHasEgressTransitFireNet(t *testing.T) {
 	s, ok := resourceAviatrixTransitGroup().Schema["enable_egress_transit_firenet"]
 	if !ok {
@@ -1251,4 +1277,80 @@ func TestTransitGroupSchemaHasEgressTransitFireNet(t *testing.T) {
 	if !s.Optional || s.Default != false {
 		t.Fatalf("expected optional bool defaulting to false, got Optional=%v Default=%v", s.Optional, s.Default)
 	}
+}
+
+func TestValidateGroupBgpOverLanChange(t *testing.T) {
+	tests := []struct {
+		name           string
+		oldCfg, newCfg map[string]any
+		wantErr        bool
+	}{
+		{
+			name:   "enable",
+			oldCfg: map[string]any{"enable_bgp_over_lan": false},
+			newCfg: map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 2},
+		},
+		{
+			name:   "increase count",
+			oldCfg: map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 2},
+			newCfg: map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 3},
+		},
+		{
+			name:    "decrease count",
+			oldCfg:  map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 3},
+			newCfg:  map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 2},
+			wantErr: true,
+		},
+		{
+			name:    "disable",
+			oldCfg:  map[string]any{"enable_bgp_over_lan": true, "bgp_lan_interfaces_count": 2},
+			newCfg:  map[string]any{"enable_bgp_over_lan": false},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := transitGroupResourceDataWithChange(t, tt.oldCfg, tt.newCfg)
+			err := validateGroupBgpOverLanChange(d)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateGroupBgpOverLanChange() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// transitGroupResourceDataWithChange builds ResourceData whose state is oldCfg and whose config is newCfg.
+func transitGroupResourceDataWithChange(t *testing.T, oldCfg, newCfg map[string]any) *schema.ResourceData {
+	t.Helper()
+	res := resourceAviatrixTransitGroup()
+	base := map[string]any{
+		"group_name":          "tg",
+		"cloud_type":          goaviatrix.Azure,
+		"gw_type":             "TRANSIT",
+		"group_instance_size": "Standard_B2ms",
+		"vpc_id":              "vnet:rg:guid",
+		"account_name":        "acct",
+	}
+	merge := func(m map[string]any) map[string]any {
+		out := map[string]any{}
+		for k, v := range base {
+			out[k] = v
+		}
+		for k, v := range m {
+			out[k] = v
+		}
+		return out
+	}
+	prior := schema.TestResourceDataRaw(t, res.Schema, merge(oldCfg))
+	prior.SetId("uuid")
+	state := prior.State()
+	diff, err := schema.InternalMap(res.Schema).Diff(context.Background(), state, terraform.NewResourceConfigRaw(merge(newCfg)), nil, nil, true)
+	if err != nil {
+		t.Fatalf("diff: %v", err)
+	}
+	d, err := schema.InternalMap(res.Schema).Data(state, diff)
+	if err != nil {
+		t.Fatalf("data: %v", err)
+	}
+	return d
 }

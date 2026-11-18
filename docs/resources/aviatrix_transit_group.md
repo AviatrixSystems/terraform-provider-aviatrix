@@ -199,6 +199,8 @@ The following arguments are supported:
 * `prepend_as_path` - (Optional) List of AS numbers to prepend to the AS_Path field. Valid only when `local_as_number` is set. Example: ["65001", "65001"].
 * `enable_preserve_as_path` - (Optional) Preserve AS path when advertising manual summary CIDRs. Valid values: true, false. Default: false.
 * `enable_bgp_ecmp` - (Optional) Enable BGP ECMP. Valid values: true, false. Default: false.
+* `enable_bgp_over_lan` - (Optional) Enable BGP over LAN on every gateway in this group. Every gateway in a BGP over LAN Azure transit group must have the same BGP over LAN interfaces, so this is a group-level setting: if set while the group has no gateways, the primary gateway launches with it and later gateways copy it. Only valid for Azure (8), AzureGov (32) and AzureChina (2048). Requires `bgp_lan_interfaces_count`. Cannot be disabled once enabled. Valid values: true, false. Default: false.
+* `bgp_lan_interfaces_count` - (Optional) Number of BGP over LAN interfaces on every gateway in this group. Requires `enable_bgp_over_lan`. Can only be increased; an increase is applied to each gateway in turn, and each gateway is briefly drained while its interfaces are added.
 
 ### Optional - BGP Timers
 

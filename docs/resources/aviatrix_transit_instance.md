@@ -59,15 +59,15 @@ resource "aviatrix_transit_instance" "azure_transit" {
 
 ### Azure Transit Instance with BGP over LAN
 
+BGP over LAN is configured on the group (`enable_bgp_over_lan` and `bgp_lan_interfaces_count` on `aviatrix_transit_group`); every instance in the group launches with it.
+
 ```hcl
 resource "aviatrix_transit_instance" "azure_transit_bgp" {
-  group_uuid               = aviatrix_transit_group.azure_transit_group.group_uuid
-  gw_name                  = "my-azure-transit-bgp"
-  subnet                   = "10.1.1.0/24"
-  gw_size                  = "Standard_B2ms"
-  zone                     = "az-2"
-  enable_bgp_over_lan      = true
-  bgp_lan_interfaces_count = 2
+  group_uuid = aviatrix_transit_group.azure_transit_group.group_uuid
+  gw_name    = "my-azure-transit-bgp"
+  subnet     = "10.1.1.0/24"
+  gw_size    = "Standard_B2ms"
+  zone       = "az-2"
 }
 ```
 
@@ -303,8 +303,8 @@ The following arguments are supported:
 
 * `lan_vpc_id` - (Optional) LAN VPC ID. Only used for GCP Transit FireNet, and required when the transit group has `enable_transit_firenet = true` on GCP.
 * `lan_private_subnet` - (Optional) LAN Private Subnet. Only used for GCP Transit FireNet, and required when the transit group has `enable_transit_firenet = true` on GCP.
-* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface for "BGP over LAN" functionality. Only valid for GCP and Azure. Default: false.
-* `bgp_lan_interfaces_count` - (Optional) Number of interfaces for BGP over LAN enabled Azure transit.
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface for "BGP over LAN" functionality. Only valid for GCP and Azure. Default: false. For Azure, set `enable_bgp_over_lan` on `aviatrix_transit_group` instead so it applies to every gateway in the group.
+* `bgp_lan_interfaces_count` - (Optional, **Deprecated**) Number of interfaces for BGP over LAN enabled Azure transit. Only takes effect on the group's primary gateway. Use `bgp_lan_interfaces_count` on `aviatrix_transit_group` instead.
 
 ### Optional - Spot Instance (AWS and Azure)
 

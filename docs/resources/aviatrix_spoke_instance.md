@@ -72,15 +72,15 @@ resource "aviatrix_spoke_instance" "azure_spoke" {
 
 ### Azure Spoke Instance with BGP over LAN
 
+For a BGP spoke group, BGP over LAN is configured on the group (`enable_bgp_over_lan` and `bgp_lan_interfaces_count` on `aviatrix_spoke_group`); every instance in the group launches with it.
+
 ```hcl
 resource "aviatrix_spoke_instance" "azure_spoke_bgp" {
-  group_uuid              = aviatrix_spoke_group.azure_spoke_group.group_uuid
-  gw_name                 = "my-azure-spoke-bgp"
-  subnet                  = "10.1.1.0/24"
-  gw_size                 = "Standard_B2ms"
-  zone                    = "az-2"
-  enable_bgp_over_lan     = true
-  bgp_lan_interfaces_count = 2
+  group_uuid = aviatrix_spoke_group.azure_spoke_group.group_uuid
+  gw_name    = "my-azure-spoke-bgp"
+  subnet     = "10.1.1.0/24"
+  gw_size    = "Standard_B2ms"
+  zone       = "az-2"
 }
 ```
 
@@ -342,8 +342,8 @@ The following arguments are supported:
 
 ### Optional - BGP over LAN (Azure only)
 
-* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface (eth4) for 'BGP over LAN' functionality. Only valid for Azure (8), AzureGov (32) or AzureChina (2048). Default: false.
-* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure spoke. Valid values: 1-5.
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface (eth4) for 'BGP over LAN' functionality. Only valid for Azure (8), AzureGov (32) or AzureChina (2048). For a BGP spoke group, set it on `aviatrix_spoke_group` instead; the instance reports the value it launched with.
+* `bgp_lan_interfaces_count` - (Optional, **Deprecated**) Number of interfaces that will be created for BGP over LAN enabled Azure spoke. Valid values: 1-5. Set `bgp_lan_interfaces_count` on `aviatrix_spoke_group` instead; it applies to every gateway in the group.
 
 ### Optional - Encryption (AWS only)
 

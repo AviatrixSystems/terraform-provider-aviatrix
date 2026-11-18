@@ -194,6 +194,8 @@ The following arguments are supported:
 * `enable_preserve_as_path` - (Optional) Preserve AS path when advertising manual summary CIDRs. Valid values: true, false. Default: false.
 * `enable_auto_advertise_s2c_cidrs` - (Optional) Auto advertise Site2Cloud CIDRs. Valid values: true, false. Default: false.
 * `enable_bgp_ecmp` - (Optional) Enable BGP ECMP. Valid values: true, false. Default: false.
+* `enable_bgp_over_lan` - (Optional) Enable BGP over LAN on every gateway in this BGP spoke group. Every gateway in the group must have the same BGP over LAN interfaces, so this is a group-level setting: the primary gateway launches with it and later gateways copy it. Only valid for Azure (8), AzureGov (32) and AzureChina (2048) with `enable_bgp` set to true. Requires `bgp_lan_interfaces_count`. Cannot be disabled once enabled. Valid values: true, false. Default: false.
+* `bgp_lan_interfaces_count` - (Optional) Number of BGP over LAN interfaces on every gateway in this group. Requires `enable_bgp_over_lan`. Can only be changed while the group has no gateways; BGP spoke gateways cannot be resized in place.
 
 ### Optional - BGP Timers
 

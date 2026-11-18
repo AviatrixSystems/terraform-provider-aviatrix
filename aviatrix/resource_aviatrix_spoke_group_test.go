@@ -849,3 +849,33 @@ func TestValidateSpokeGroupConfigurationSymmetricRouting(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateSpokeGroupConfigurationBgpOverLan(t *testing.T) {
+	cases := []struct {
+		name      string
+		cloudType int
+		enableBgp bool
+		count     int
+		wantErr   bool
+	}{
+		{name: "azure bgp spoke", cloudType: goaviatrix.Azure, enableBgp: true, count: 2},
+		{name: "azure non-bgp spoke", cloudType: goaviatrix.Azure, count: 2, wantErr: true},
+		{name: "azure bgp spoke without count", cloudType: goaviatrix.Azure, enableBgp: true, wantErr: true},
+		{name: "aws bgp spoke", cloudType: goaviatrix.AWS, enableBgp: true, count: 1, wantErr: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			spokeGroup := &goaviatrix.GatewayGroup{
+				CloudType:             tc.cloudType,
+				GroupInstanceSize:     "Standard_B2ms",
+				EnableBgp:             tc.enableBgp,
+				EnableBgpOverLan:      true,
+				BgpLanInterfacesCount: tc.count,
+			}
+			err := validateSpokeGroupConfiguration(spokeGroup)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateSpokeGroupConfiguration() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}

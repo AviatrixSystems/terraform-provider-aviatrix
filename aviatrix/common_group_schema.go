@@ -1,7 +1,12 @@
 package aviatrix
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
 
 // GroupRequiredSchema returns the required schema attributes for group resources.
@@ -123,4 +128,61 @@ func MergeSchemaMaps(schemaMaps ...map[string]*schema.Schema) map[string]*schema
 		}
 	}
 	return result
+}
+
+// GroupBgpOverLanSchema returns the Azure BGP over LAN attributes shared by the transit and spoke group resources.
+func GroupBgpOverLanSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"enable_bgp_over_lan": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable BGP over LAN on every gateway in the group. Only valid for Azure (8), AzureGov (32) and AzureChina (2048). Requires 'bgp_lan_interfaces_count'. Cannot be disabled once enabled.",
+		},
+		"bgp_lan_interfaces_count": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntAtLeast(1),
+			Description:  "Number of BGP over LAN interfaces on every gateway in the group. Requires 'enable_bgp_over_lan'. Can only be increased.",
+		},
+	}
+}
+
+// validateGroupBgpOverLan checks 'enable_bgp_over_lan' and 'bgp_lan_interfaces_count' are set together on Azure.
+func validateGroupBgpOverLan(cloudType int, enable bool, count int) error {
+	if !enable {
+		if count > 0 {
+			return fmt.Errorf("'bgp_lan_interfaces_count' requires 'enable_bgp_over_lan' to be set to true")
+		}
+		return nil
+	}
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("'enable_bgp_over_lan' on a gateway group is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	if count == 0 {
+		return fmt.Errorf("'bgp_lan_interfaces_count' is required when 'enable_bgp_over_lan' is set to true")
+	}
+	return nil
+}
+
+// validateGroupBgpOverLanChange rejects disabling BGP over LAN or removing interfaces, which the controller does not support.
+func validateGroupBgpOverLanChange(d *schema.ResourceData) error {
+	if d.HasChange("enable_bgp_over_lan") && !getBool(d, "enable_bgp_over_lan") {
+		return fmt.Errorf("disabling BGP over LAN is not supported for gateway group: %s", getString(d, "group_name"))
+	}
+	oldCount, newCount := d.GetChange("bgp_lan_interfaces_count")
+	if mustInt(newCount) < mustInt(oldCount) {
+		return fmt.Errorf("decreasing 'bgp_lan_interfaces_count' is not supported for gateway group: %s", getString(d, "group_name"))
+	}
+	return nil
+}
+
+// setGroupBgpOverLan reads the group's BGP over LAN settings into state.
+func setGroupBgpOverLan(d *schema.ResourceData, group *goaviatrix.GatewayGroup) {
+	mustSet(d, "enable_bgp_over_lan", group.EnableBgpOverLan)
+	if group.EnableBgpOverLan {
+		mustSet(d, "bgp_lan_interfaces_count", group.BgpLanInterfacesCount)
+	} else {
+		mustSet(d, "bgp_lan_interfaces_count", nil)
+	}
 }

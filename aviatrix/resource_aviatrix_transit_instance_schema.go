@@ -204,13 +204,15 @@ func transitInstanceOptionalFeatureSchema() map[string]*schema.Schema {
 		"enable_bgp_over_lan": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
-			Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 4 (GCP) and 8 (Azure). Valid values: true or false. Default value: false. Available as of provider version R2.18+. Updatable as of provider version 3.0.3+.",
+			Computed:    true,
+			Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 4 (GCP) and 8 (Azure). Valid values: true or false. Default value: false. For Azure, set it on aviatrix_transit_group instead so it applies to every gateway in the group.",
 		},
 		"bgp_lan_interfaces_count": {
 			Type:         schema.TypeInt,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.IntAtLeast(1),
+			Deprecated:   "Set 'bgp_lan_interfaces_count' on aviatrix_transit_group instead; it applies to every gateway in the group.",
 			Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit. Applies on HA Transit as well if enabled. Updatable as of provider version 3.0.3+.",
 		},
 	}

@@ -36,6 +36,8 @@ func resourceAviatrixTransitGroup() *schema.Resource {
 			GroupOptionalSchema(),
 			// Resource-specific optional attributes
 			transitGroupOptionalSchema(),
+			// Azure BGP over LAN, shared with the other group resource
+			GroupBgpOverLanSchema(),
 		),
 	}
 }
@@ -332,6 +334,8 @@ func buildTransitGroupFromResourceData(d *schema.ResourceData) *goaviatrix.Gatew
 
 	transitGroup.EnablePreserveAsPath = getBool(d, "enable_preserve_as_path")
 	transitGroup.BgpEcmp = getBool(d, "enable_bgp_ecmp")
+	transitGroup.EnableBgpOverLan = getBool(d, "enable_bgp_over_lan")
+	transitGroup.BgpLanInterfacesCount = getInt(d, "bgp_lan_interfaces_count")
 
 	// BGP Timers
 	transitGroup.BgpPollingTime = getInt(d, "bgp_polling_time")
@@ -412,7 +416,10 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
 
-	return validateTransitGroupEgressTransitFireNet(transitGroup)
+	if err := validateTransitGroupEgressTransitFireNet(transitGroup); err != nil {
+		return err
+	}
+	return validateGroupBgpOverLan(transitGroup.CloudType, transitGroup.EnableBgpOverLan, transitGroup.BgpLanInterfacesCount)
 }
 
 // validateTransitGroupEgressTransitFireNet checks the prerequisites for 'enable_egress_transit_firenet'.
@@ -551,6 +558,12 @@ func applyTransitBgpConfiguration(ctx context.Context, d *schema.ResourceData, c
 					return fmt.Errorf("failed to set prepend AS path: %w", err)
 				}
 			}
+		}
+	}
+
+	if getBool(d, "enable_bgp_over_lan") {
+		if err := client.UpdateBgpOverLanIntfCntGatewayGroup(ctx, groupName, getInt(d, "bgp_lan_interfaces_count")); err != nil {
+			return fmt.Errorf("failed to set BGP over LAN interface count: %w", err)
 		}
 	}
 
@@ -857,6 +870,7 @@ func resourceAviatrixTransitGroupRead(ctx context.Context, d *schema.ResourceDat
 	mustSet(d, "prepend_as_path", transitGroup.PrependAsPath)
 	mustSet(d, "enable_preserve_as_path", transitGroup.EnablePreserveAsPath)
 	mustSet(d, "enable_bgp_ecmp", transitGroup.BgpEcmp)
+	setGroupBgpOverLan(d, transitGroup)
 
 	// BGP Timers - Set to schema defaults if API returns 0
 	if transitGroup.BgpPollingTime == 0 {
@@ -936,6 +950,12 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err := validateTransitGroupEgressTransitFireNet(buildTransitGroupFromResourceData(d)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := validateGroupBgpOverLan(cloudType, getBool(d, "enable_bgp_over_lan"), getInt(d, "bgp_lan_interfaces_count")); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := validateGroupBgpOverLanChange(d); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1082,6 +1102,15 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return diag.Errorf("could not set prepend_as_path for transit group: %s", err)
 			}
+		}
+	}
+
+	// ============================================================================
+	// BGP over LAN - API: update_gateway_group_bgp_over_lan_intf_cnt
+	// ============================================================================
+	if d.HasChanges("enable_bgp_over_lan", "bgp_lan_interfaces_count") {
+		if err := client.UpdateBgpOverLanIntfCntGatewayGroup(ctx, groupName, getInt(d, "bgp_lan_interfaces_count")); err != nil {
+			return diag.Errorf("could not update BGP over LAN interface count during transit group update: %s", err)
 		}
 	}
 
