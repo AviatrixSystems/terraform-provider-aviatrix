@@ -120,7 +120,7 @@ The following arguments are supported:
 ### BGP
 
 * `bgp_local_as_number` - (Optional) BGP local ASN. If not specified, the gateway group's local ASN is used. Changing this forces a new resource.
-* `bgp_remote_as_number` - (Optional) Connection-level BGP remote ASN. If not specified, each tunnel must provide its own `bgp_remote_as_number`. Changing this forces a new resource.
+* `bgp_remote_as_number` - (Optional) Connection-level BGP remote ASN. If not specified, each tunnel must provide its own `bgp_remote_as_number`, and when all tunnels share one remote ASN it is read back into this attribute. Changing this forces a new resource.
 
 ### Mutable Connection Settings
 

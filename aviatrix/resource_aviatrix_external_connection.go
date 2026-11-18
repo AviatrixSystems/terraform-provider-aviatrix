@@ -112,14 +112,16 @@ func resourceAviatrixExternalConnection() *schema.Resource {
 			"bgp_local_as_number": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Description: "BGP local ASN.",
+				Description: "BGP local ASN. Defaults to the gateway group's local ASN.",
 			},
 			"bgp_remote_as_number": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Description: "Connection-level BGP remote ASN.",
+				Description: "Connection-level BGP remote ASN. When omitted, the tunnels' common remote ASN is reported.",
 			},
 			"peer_vnet_id": {
 				Type:        schema.TypeString,

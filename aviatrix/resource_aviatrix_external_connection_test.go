@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -380,6 +383,97 @@ resource "aviatrix_external_connection" "test_md5" {
 	}
 }
 `, name, md5Key)
+}
+
+// The controller fills in both ASNs when the config leaves them out, so an
+// omitted ASN must not plan a replacement of a live connection.
+func TestExternalConnectionAsnDiff(t *testing.T) {
+	tunnelHash := tunnelSetHash(map[string]any{
+		"local_gw_name":    "transit-gw",
+		"remote_device_ip": "10.1.0.91",
+	})
+	tunnelPrefix := fmt.Sprintf("tunnels.%d.", tunnelHash)
+	state := &terraform.InstanceState{
+		ID: "8aa0ac233f4e42a4897c6030f38dd09a",
+		Attributes: map[string]string{
+			"id":                              "8aa0ac233f4e42a4897c6030f38dd09a",
+			"uuid":                            "8aa0ac233f4e42a4897c6030f38dd09a",
+			"name":                            "conn",
+			"group_uuid":                      "25649ff81aad431e8911671714c5922b",
+			"routing_protocol":                "bgp",
+			"tunnel_protocol":                 "LAN",
+			"bgp_local_as_number":             "65001",
+			"bgp_remote_as_number":            "65101",
+			"peer_vnet_id":                    "",
+			"ipv6_enabled":                    "false",
+			"edge_underlay":                   "false",
+			"bgp_lan_activemesh":              "false",
+			"enable_bgp_multihop":             "true",
+			"jumbo_frame":                     "false",
+			"enable_bfd":                      "false",
+			"conn_learned_cidrs_approval":     "false",
+			"tunnels.#":                       "1",
+			tunnelPrefix + "local_gw_name":    "transit-gw",
+			tunnelPrefix + "remote_device_ip": "10.1.0.91",
+		},
+	}
+
+	tests := []struct {
+		name          string
+		asns          map[string]any
+		wantChanged   []string
+		wantReplacing bool
+	}{
+		{name: "omitted", asns: map[string]any{}},
+		{
+			name: "same values",
+			asns: map[string]any{"bgp_local_as_number": 65001, "bgp_remote_as_number": 65101},
+		},
+		{
+			name:          "remote changed",
+			asns:          map[string]any{"bgp_remote_as_number": 65102},
+			wantChanged:   []string{"bgp_remote_as_number"},
+			wantReplacing: true,
+		},
+		{
+			name:          "local changed",
+			asns:          map[string]any{"bgp_local_as_number": 65002},
+			wantChanged:   []string{"bgp_local_as_number"},
+			wantReplacing: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := map[string]any{
+				"name":             "conn",
+				"group_uuid":       "25649ff81aad431e8911671714c5922b",
+				"routing_protocol": "bgp",
+				"tunnel_protocol":  "LAN",
+				"tunnels": []any{map[string]any{
+					"local_gw_name":    "transit-gw",
+					"remote_device_ip": "10.1.0.91",
+				}},
+			}
+			for k, v := range tt.asns {
+				raw[k] = v
+			}
+
+			diff, err := resourceAviatrixExternalConnection().Diff(
+				context.Background(), state, terraform.NewResourceConfigRaw(raw), nil)
+			require.NoError(t, err)
+
+			for _, attr := range []string{"bgp_local_as_number", "bgp_remote_as_number"} {
+				var attrDiff *terraform.ResourceAttrDiff
+				if diff != nil {
+					attrDiff = diff.Attributes[attr]
+				}
+				// On replacement an omitted computed ASN is "known after apply", not a change.
+				changed := attrDiff != nil && !attrDiff.NewComputed && attrDiff.Old != attrDiff.New
+				assert.Equal(t, slices.Contains(tt.wantChanged, attr), changed, "%s diff: %+v", attr, attrDiff)
+			}
+			assert.Equal(t, tt.wantReplacing, diff != nil && diff.RequiresNew())
+		})
+	}
 }
 
 func testAccCheckExternalConnectionExists(resourceName string) resource.TestCheckFunc {
