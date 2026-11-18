@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -210,114 +211,32 @@ func TestDistributedFirewallingPolicyListSchema_EnforcementAndWatch(t *testing.T
 	assert.NotEmpty(t, watchField.Deprecated, "watch must be marked as deprecated")
 }
 
-// Verify each enforcement value is passed through to the struct, and watch falls back correctly when enforcement is absent.
-func TestMarshalDistributedFirewallingPolicyListInput_EnforcementSetsField(t *testing.T) {
+// Verify enforcement is resolved from the user's config: an explicit enforcement
+// wins, otherwise watch maps to MONITOR/ENFORCE, otherwise ENFORCE. watch is
+// always sent consistent with enforcement.
+func TestResolveDistributedFirewallingPolicyEnforcement(t *testing.T) {
+	nullStr, nullBool := cty.NullVal(cty.String), cty.NullVal(cty.Bool)
 	tests := []struct {
-		name                string
-		enforcement         string
-		watch               bool
-		watchSet            bool
-		wantEnforcement     string
-		wantProtoWatchClear bool
+		name        string
+		enforcement cty.Value
+		watch       cty.Value
+		want        string
 	}{
-		{
-			name:            "enforcement=MONITOR is passed through",
-			enforcement:     "MONITOR",
-			wantEnforcement: "MONITOR",
-		},
-		{
-			name:            "enforcement=ENFORCE is passed through",
-			enforcement:     "ENFORCE",
-			wantEnforcement: "ENFORCE",
-		},
-		{
-			name:            "enforcement=DISABLE is passed through",
-			enforcement:     "DISABLE",
-			wantEnforcement: "DISABLE",
-		},
-		{
-			name:            "watch=true falls back when no enforcement",
-			watchSet:        true,
-			watch:           true,
-			wantEnforcement: "",
-		},
+		{"enforcement=MONITOR", cty.StringVal("MONITOR"), nullBool, "MONITOR"},
+		{"enforcement=ENFORCE", cty.StringVal("ENFORCE"), nullBool, "ENFORCE"},
+		{"enforcement=DISABLE", cty.StringVal("DISABLE"), nullBool, "DISABLE"},
+		{"watch=true", nullStr, cty.True, "MONITOR"},
+		{"watch=false", nullStr, cty.False, "ENFORCE"},
+		{"neither set", nullStr, nullBool, "ENFORCE"},
 	}
-
-	res := resourceAviatrixDistributedFirewallingPolicyList()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			raw := map[string]any{
-				"policies": []any{
-					map[string]any{
-						"name":                     "test-pol",
-						"action":                   "PERMIT",
-						"src_smart_groups":         []any{},
-						"dst_smart_groups":         []any{},
-						"web_groups":               []any{},
-						"protocol":                 "TCP",
-						"flow_app_requirement":     "APP_UNSPECIFIED",
-						"decrypt_policy":           "DECRYPT_UNSPECIFIED",
-						"priority":                 0,
-						"logging":                  false,
-						"exclude_sg_orchestration": false,
-						"port_ranges":              []any{},
-						"uuid":                     "",
-						"tls_profile":              "",
-						"log_profile":              "",
-						"enforcement":              tt.enforcement,
-						"watch":                    tt.watch,
-					},
-				},
-			}
-			d := schema.TestResourceDataRaw(t, res.Schema, raw)
-
-			policyList, err := marshalDistributedFirewallingPolicyListInput(d)
-			assert.NoError(t, err)
-			assert.Len(t, policyList.Policies, 1)
-
-			pol := policyList.Policies[0]
-			if tt.watchSet && tt.enforcement == "" {
-				assert.Equal(t, tt.watch, pol.Watch)
-			} else {
-				assert.Equal(t, tt.wantEnforcement, pol.Enforcement)
-			}
+			raw := cty.ObjectVal(map[string]cty.Value{"enforcement": tt.enforcement, "watch": tt.watch})
+			enforcement, watch := resolveDistributedFirewallingPolicyEnforcement(raw)
+			assert.Equal(t, tt.want, enforcement)
+			assert.Equal(t, tt.want == "MONITOR", watch)
 		})
 	}
-}
-
-// Verify that when enforcement is set, it is written to the struct and watch is not set.
-func TestMarshalDistributedFirewallingPolicyListInput_EnforcementTakesPrecedence(t *testing.T) {
-	res := resourceAviatrixDistributedFirewallingPolicyList()
-	raw := map[string]any{
-		"policies": []any{
-			map[string]any{
-				"name":                     "test-pol",
-				"action":                   "PERMIT",
-				"src_smart_groups":         []any{},
-				"dst_smart_groups":         []any{},
-				"web_groups":               []any{},
-				"protocol":                 "TCP",
-				"flow_app_requirement":     "APP_UNSPECIFIED",
-				"decrypt_policy":           "DECRYPT_UNSPECIFIED",
-				"priority":                 0,
-				"logging":                  false,
-				"exclude_sg_orchestration": false,
-				"port_ranges":              []any{},
-				"uuid":                     "",
-				"tls_profile":              "",
-				"log_profile":              "",
-				"enforcement":              "DISABLE",
-				"watch":                    false,
-			},
-		},
-	}
-	d := schema.TestResourceDataRaw(t, res.Schema, raw)
-
-	policyList, err := marshalDistributedFirewallingPolicyListInput(d)
-	assert.NoError(t, err)
-	assert.Equal(t, "DISABLE", policyList.Policies[0].Enforcement)
-	assert.False(t, policyList.Policies[0].Watch)
 }
 
 // Verify http_filters UUIDs are passed through to the policy request, and omitted when unset.

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -189,8 +190,10 @@ func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goaviatrix.DistributedFirewallingPolicyList, error) {
 	policyList := &goaviatrix.DistributedFirewallingPolicyList{}
 
+	rawPolicies := rawConfigPolicies(d.GetRawConfig())
+
 	policies := getList(d, "policies")
-	for _, policyInterface := range policies {
+	for i, policyInterface := range policies {
 		policy := mustMap(policyInterface)
 
 		distributedFirewallingPolicy := &goaviatrix.DistributedFirewallingPolicy{
@@ -230,11 +233,11 @@ func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goav
 			distributedFirewallingPolicy.Logging = mustBool(logging)
 		}
 
-		if enforcement, hasEnforcement := policy["enforcement"].(string); hasEnforcement && enforcement != "" {
-			distributedFirewallingPolicy.Enforcement = enforcement
-		} else if watch, watchOk := policy["watch"]; watchOk {
-			distributedFirewallingPolicy.Watch = mustBool(watch)
+		rawPolicy := cty.NilVal
+		if i < len(rawPolicies) {
+			rawPolicy = rawPolicies[i]
 		}
+		distributedFirewallingPolicy.Enforcement, distributedFirewallingPolicy.Watch = resolveDistributedFirewallingPolicyEnforcement(rawPolicy)
 
 		if goaviatrix.MapContains(policy, "port_ranges") {
 			if distributedFirewallingPolicy.Protocol == "ICMP" {
@@ -326,7 +329,7 @@ func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d
 		p["http_filters"] = policy.HTTPFilters
 		p["logging"] = policy.Logging
 		p["enforcement"] = policy.Enforcement
-		p["watch"] = policy.Enforcement == "MONITOR"
+		p["watch"] = policy.Enforcement == enforcementMonitor
 		p["uuid"] = policy.UUID
 		p["exclude_sg_orchestration"] = policy.ExcludeSgOrchestration
 		p["log_profile"] = policy.LogProfile
@@ -392,16 +395,45 @@ func validateDistributedFirewallingPolicyWatchEnforcement(index int, watchSet, e
 	return nil
 }
 
-// CustomizeDiff is used to ensure both watch and enforcement are not set at the same time.
-// Can be removed once watch is removed from Terraform.
-func resourceAviatrixDistributedFirewallingPolicyListCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
-	rawPolicies := d.GetRawConfig().GetAttr("policies")
+const (
+	enforcementEnforce = "ENFORCE"
+	enforcementMonitor = "MONITOR"
+)
+
+// rawConfigPolicies returns the per-policy objects from the user's raw config,
+// or nil if the raw config is unavailable or not yet known.
+func rawConfigPolicies(rawConfig cty.Value) []cty.Value {
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || !rawConfig.Type().IsObjectType() ||
+		!rawConfig.Type().HasAttribute("policies") {
+		return nil
+	}
+	rawPolicies := rawConfig.GetAttr("policies")
 	if rawPolicies.IsNull() || !rawPolicies.IsKnown() {
 		return nil
 	}
-	i := 0
-	for it := rawPolicies.ElementIterator(); it.Next(); i++ {
-		_, val := it.Element()
+	return rawPolicies.AsValueSlice()
+}
+
+// Returns a consistent (enforcement, watch) pair: an explicit 'enforcement' wins,
+// otherwise 'watch' maps to MONITOR/ENFORCE, otherwise ENFORCE (the pre-10.1
+// default, when 'watch' was Default: false).
+func resolveDistributedFirewallingPolicyEnforcement(rawPolicy cty.Value) (string, bool) {
+	if rawPolicy.IsNull() || !rawPolicy.IsKnown() {
+		return enforcementEnforce, false
+	}
+	if e := rawPolicy.GetAttr("enforcement"); !e.IsNull() && e.IsKnown() && e.AsString() != "" {
+		return e.AsString(), e.AsString() == enforcementMonitor
+	}
+	if w := rawPolicy.GetAttr("watch"); !w.IsNull() && w.IsKnown() && w.True() {
+		return enforcementMonitor, true
+	}
+	return enforcementEnforce, false
+}
+
+// CustomizeDiff is used to ensure both watch and enforcement are not set at the same time.
+// Can be removed once watch is removed from Terraform.
+func resourceAviatrixDistributedFirewallingPolicyListCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	for i, val := range rawConfigPolicies(d.GetRawConfig()) {
 		rawEnforcement := val.GetAttr("enforcement")
 		rawWatch := val.GetAttr("watch")
 		enforcementSet := !rawEnforcement.IsNull() && rawEnforcement.IsKnown()

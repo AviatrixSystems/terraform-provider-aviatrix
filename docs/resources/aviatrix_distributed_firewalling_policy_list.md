@@ -21,7 +21,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     priority         = 1
     protocol         = "ICMP"
     logging          = false
-    watch            = false
+    enforcement      = "ENFORCE"
     src_smart_groups = [
       "f15c9890-c8c4-4c1a-a2b5-ef0ab34d2e30"
     ]
@@ -78,7 +78,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "test" {
     priority                 = 1
     protocol                 = "ICMP"
     logging                  = false
-    watch                    = false
+    enforcement              = "MONITOR"
     exclude_sg_orchestration = true
     src_smart_groups         = [
       "f15c9890-c8c4-4c1a-a2b5-ef0ab34d2e30"
@@ -121,7 +121,13 @@ The following arguments are supported:
     * `port_ranges` - (Optional) List of port ranges for the policy. Cannot be used when `protocol` is "ICMP".
       * `lo` - (Required) Lower bound for the range of ports.
       * `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the policy.
-    * `watch` - (Optional) Whether to enforce the policy or only watch packets. If "true" packets are only watched. This allows you to observe if the traffic impacted by this rule causes any inadvertent issues (such as traffic being dropped). Type: Boolean.
+    * `enforcement` - (Optional) Enforcement mode for the policy. Must be one of:
+      * `ENFORCE` - The policy's `action` is applied to matching traffic.
+      * `MONITOR` - The `action` is not applied to matching packets. This allows you to observe if the traffic impacted by this policy causes any inadvertent issues before enforcing it.
+      * `DISABLE` - The policy is kept in the configuration but is not pushed to gateways, so it has no effect on traffic. This option can be used to quickly roll back a policy without deleting it entirely.
+
+      Default: `ENFORCE`. Cannot be set together with `watch`. Available as of provider version 10.1.0+.
+    * `watch` - (Optional) **Deprecated**: Use `enforcement` instead. Whether to enforce the policy, only match packets, or not send the policy to gateways. `watch = true` is equivalent to `enforcement = "MONITOR"`, and `watch = false` is equivalent to `enforcement = "ENFORCE"`. `watch` cannot be set together with `enforcement`; to migrate, replace `watch` with the equivalent `enforcement` value. Type: Boolean.
     * `logging` - (Optional) Whether to enable logging for packets that match the policy. Type: Boolean.
     * `uuid` - (Computed) UUID for the Policy.
     * `tls_profile` - (Optional) TLS profile UUID for the policy.
