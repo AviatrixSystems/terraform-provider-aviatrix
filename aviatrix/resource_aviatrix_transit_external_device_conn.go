@@ -1366,6 +1366,11 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	gwName := getString(d, "gw_name")
 	connName := getString(d, "connection_name")
 	connType := getString(d, "connection_type")
+
+	if err := edcPreflight(d, gwName, connName); err != nil {
+		return err
+	}
+
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
 	if err != nil {
 		return fmt.Errorf("could not get advanced config for transit gateway: %w", err)

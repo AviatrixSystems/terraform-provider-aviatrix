@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/netip"
 	"slices"
 	"strings"
 
@@ -389,7 +390,93 @@ func edcCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 		}
 	}
 
+	// A replacement goes through create, which validates the peer IP itself.
+	if len(replace) == 0 {
+		var known []string
+		for _, side := range edcSides {
+			if d.NewValueKnown(side.peerIP) {
+				known = append(known, side.peerIP)
+			}
+		}
+		if err := edcValidatePeerIPs(d, known...); err != nil {
+			return err
+		}
+		// Unknown side reads as "".
+		if len(known) == len(edcSides) {
+			if err := edcValidatePeerIPsDistinct(d); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
+}
+
+// edcValidatePeerIPs rejects a changed peer IP in attrs that is not IPv4,
+// mirroring the controller's edit check.
+func edcValidatePeerIPs(d edcDiff, attrs ...string) error {
+	for _, attr := range attrs {
+		if !d.HasChange(attr) {
+			continue
+		}
+		for _, ip := range goaviatrix.SplitTrimmed(getString(d, attr)) {
+			if addr, err := netip.ParseAddr(ip); err != nil || !addr.Is4() {
+				return fmt.Errorf("%q: %q is not a valid IPv4 address; the remote gateway IP of an "+
+					"existing connection can only be changed to an IPv4 address", attr, ip)
+			}
+		}
+	}
+	return nil
+}
+
+// edcValidatePeerIPsDistinct rejects moving one side onto the other's old or
+// new peer IP. Old counts too: sides are edited one at a time, so a swap clashes.
+func edcValidatePeerIPsDistinct(d edcDiff) error {
+	pairs := [][2]string{
+		{"remote_gateway_ip", "backup_remote_gateway_ip"},
+		{"backup_remote_gateway_ip", "remote_gateway_ip"},
+	}
+	for _, pair := range pairs {
+		attr, other := pair[0], pair[1]
+		if !d.HasChange(attr) {
+			continue
+		}
+		oldOther, newOther := d.GetChange(other)
+		held := map[netip.Addr]bool{}
+		for _, ip := range slices.Concat(goaviatrix.SplitTrimmed(mustString(oldOther)),
+			goaviatrix.SplitTrimmed(mustString(newOther))) {
+			if addr, err := netip.ParseAddr(ip); err == nil {
+				held[addr] = true
+			}
+		}
+		for _, ip := range goaviatrix.SplitTrimmed(getString(d, attr)) {
+			// Invalid: edcValidatePeerIPs reports it.
+			if addr, err := netip.ParseAddr(ip); err == nil && held[addr] {
+				return fmt.Errorf("%q: %q is also an address of %q; 'backup_remote_gateway_ip' must "+
+					"differ from 'remote_gateway_ip', and one side cannot move onto an address the "+
+					"other side holds in the same apply", attr, ip, other)
+			}
+		}
+	}
+	return nil
+}
+
+// edcPreflight runs the in-place edit's checks without sending anything, so
+// Update can fail before its first request rather than after a partial apply.
+func edcPreflight(d edcDiff, gwName, connName string) error {
+	if !d.HasChanges(edcEditableAttrs...) {
+		return nil
+	}
+	if err := edcEditableConn(d, connName, edcChangedAttrs(d, edcEditableAttrs...)); err != nil {
+		return err
+	}
+	if _, err := planExternalDeviceConnEdits(d, gwName, connName); err != nil {
+		return err
+	}
+	if err := edcValidatePeerIPs(d, "remote_gateway_ip", "backup_remote_gateway_ip"); err != nil {
+		return err
+	}
+	return edcValidatePeerIPsDistinct(d)
 }
 
 // edcChangedAttrs names the attributes of attrs the diff changes, for an error

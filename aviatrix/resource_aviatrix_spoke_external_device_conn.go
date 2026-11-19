@@ -1260,6 +1260,10 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	connName := getString(d, "connection_name")
 	connType := getString(d, "connection_type")
 
+	if err := edcPreflight(d, gwName, connName); err != nil {
+		return err
+	}
+
 	if d.HasChange("enable_learned_cidrs_approval") {
 		enableLearnedCIDRApproval := getBool(d, "enable_learned_cidrs_approval")
 		if enableLearnedCIDRApproval {

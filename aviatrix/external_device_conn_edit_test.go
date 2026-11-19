@@ -1270,3 +1270,492 @@ func TestEdcUpdateStepString(t *testing.T) {
 		}
 	}
 }
+
+func TestEdcValidatePeerIPs(t *testing.T) {
+	bothPeerIPs := []string{"remote_gateway_ip", "backup_remote_gateway_ip"}
+
+	tests := []struct {
+		name    string
+		state   map[string]string
+		want    map[string]string
+		attrs   []string
+		errWant []string
+	}{
+		{
+			name:  "a valid IPv4 change passes",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "198.51.100.7"},
+			attrs: bothPeerIPs,
+		},
+		{
+			name:  "a valid IPv4 list passes",
+			state: activemeshState(),
+			want:  map[string]string{"backup_remote_gateway_ip": "192.0.2.42, 192.0.2.43"},
+			attrs: bothPeerIPs,
+		},
+		{
+			name:    "a value that is not an address names the attribute and the value",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "not-an-ip"},
+			attrs:   bothPeerIPs,
+			errWant: []string{`"remote_gateway_ip"`, `"not-an-ip"`, "is not a valid IPv4 address"},
+		},
+		{
+			name:    "an IPv6 address is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "2001:db8::1"},
+			attrs:   bothPeerIPs,
+			errWant: []string{`"remote_gateway_ip"`, `"2001:db8::1"`, "is not a valid IPv4 address"},
+		},
+		{
+			name:    "an IPv4-mapped IPv6 address is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "::ffff:192.0.2.1"},
+			attrs:   bothPeerIPs,
+			errWant: []string{`"::ffff:192.0.2.1"`},
+		},
+		{
+			name:    "a CIDR is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "192.0.2.1/32"},
+			attrs:   bothPeerIPs,
+			errWant: []string{`"192.0.2.1/32"`},
+		},
+		{
+			name:    "one bad entry in a list is refused and named",
+			state:   haState(),
+			want:    map[string]string{"backup_remote_gateway_ip": "192.0.2.42,not-an-ip"},
+			attrs:   bothPeerIPs,
+			errWant: []string{`"backup_remote_gateway_ip"`, `"not-an-ip"`},
+		},
+		{
+			name: "an unchanged invalid value is not checked",
+			state: func() map[string]string {
+				s := haState()
+				s["remote_gateway_ip"] = "not-an-ip"
+				return s
+			}(),
+			want:  map[string]string{"pre_shared_key": "rotated"},
+			attrs: bothPeerIPs,
+		},
+		{
+			name:  "an attribute not asked about is not checked",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "not-an-ip"},
+			attrs: []string{"backup_remote_gateway_ip"},
+		},
+		{
+			name:  "no attributes checks nothing",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "not-an-ip"},
+			attrs: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := edcValidatePeerIPs(fakeEdcDiff{state: test.state, want: test.want}, test.attrs...)
+			if len(test.errWant) == 0 {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected an error containing %q, got none", test.errWant)
+			}
+			for _, want := range test.errWant {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("expected the error to contain %q, got %q", want, err)
+				}
+			}
+		})
+	}
+}
+
+func TestEdcValidatePeerIPsDistinct(t *testing.T) {
+	// haState: remote_gateway_ip 203.0.113.1, backup_remote_gateway_ip 203.0.113.2.
+	tests := []struct {
+		name    string
+		state   map[string]string
+		want    map[string]string
+		errWant []string
+	}{
+		{
+			name:  "no peer IP change passes",
+			state: haState(),
+			want:  map[string]string{"pre_shared_key": "rotated"},
+		},
+		{
+			name:  "moving the primary to a free address passes",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "198.51.100.7"},
+		},
+		{
+			name:  "moving both sides to free, distinct addresses passes",
+			state: haState(),
+			want: map[string]string{
+				"remote_gateway_ip":        "198.51.100.7",
+				"backup_remote_gateway_ip": "198.51.100.8",
+			},
+		},
+		{
+			name:  "a connection without a backup passes",
+			state: map[string]string{"remote_gateway_ip": "203.0.113.1"},
+			want:  map[string]string{"remote_gateway_ip": "198.51.100.7"},
+		},
+		{
+			name:    "the primary moved onto the backup's address is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "203.0.113.2"},
+			errWant: []string{`"remote_gateway_ip"`, `"203.0.113.2"`, `"backup_remote_gateway_ip"`, "must differ"},
+		},
+		{
+			name:    "the backup moved onto the primary's address is refused",
+			state:   haState(),
+			want:    map[string]string{"backup_remote_gateway_ip": "203.0.113.1"},
+			errWant: []string{`"backup_remote_gateway_ip"`, `"203.0.113.1"`, `"remote_gateway_ip"`},
+		},
+		{
+			name:  "both sides moved onto the same new address is refused",
+			state: haState(),
+			want: map[string]string{
+				"remote_gateway_ip":        "198.51.100.7",
+				"backup_remote_gateway_ip": "198.51.100.7",
+			},
+			errWant: []string{`"198.51.100.7"`},
+		},
+		{
+			// Each side moves onto the other's current IP.
+			name:  "a swap is refused",
+			state: haState(),
+			want: map[string]string{
+				"remote_gateway_ip":        "203.0.113.2",
+				"backup_remote_gateway_ip": "203.0.113.1",
+			},
+			errWant: []string{`"remote_gateway_ip"`, `"203.0.113.2"`},
+		},
+		{
+			name:  "a move onto the backup's address while the backup moves away is refused",
+			state: haState(),
+			want: map[string]string{
+				"remote_gateway_ip":        "203.0.113.2",
+				"backup_remote_gateway_ip": "198.51.100.8",
+			},
+			errWant: []string{`"203.0.113.2"`},
+		},
+		{
+			name:    "whitespace does not hide a clash",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": " 203.0.113.2 "},
+			errWant: []string{`"203.0.113.2"`},
+		},
+		{
+			name:    "a clash inside a list is refused",
+			state:   activemeshState(),
+			want:    map[string]string{"backup_remote_gateway_ip": "192.0.2.42,203.0.113.1"},
+			errWant: []string{`"backup_remote_gateway_ip"`, `"203.0.113.1"`},
+		},
+		{
+			name:  "an invalid value is left to edcValidatePeerIPs",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "not-an-ip"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := edcValidatePeerIPsDistinct(fakeEdcDiff{state: test.state, want: test.want})
+			if len(test.errWant) == 0 {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected an error containing %q, got none", test.errWant)
+			}
+			for _, want := range test.errWant {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("expected the error to contain %q, got %q", want, err)
+				}
+			}
+		})
+	}
+}
+
+func TestEdcPreflight(t *testing.T) {
+	staticState := func() map[string]string {
+		s := haState()
+		s["connection_type"] = "static"
+		return s
+	}
+
+	tests := []struct {
+		name    string
+		state   map[string]string
+		want    map[string]string
+		errWant []string
+	}{
+		{
+			name:  "no change passes",
+			state: haState(),
+		},
+		{
+			name: "a change to no editable attribute passes",
+			state: func() map[string]string {
+				s := haState()
+				s["remote_gateway_ip"] = "not-an-ip"
+				return s
+			}(),
+			want: map[string]string{"phase1_remote_identifier": "198.51.100.7"},
+		},
+		{
+			name:  "a valid peer IP change passes",
+			state: haState(),
+			want:  map[string]string{"remote_gateway_ip": "198.51.100.7"},
+		},
+		{
+			name:    "an invalid peer IP is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "not-an-ip"},
+			errWant: []string{`"remote_gateway_ip"`, `"not-an-ip"`, "is not a valid IPv4 address"},
+		},
+		{
+			// Two backup tunnels, so the planner's count check passes.
+			name:    "an invalid backup peer IP is refused",
+			state:   activemeshState(),
+			want:    map[string]string{"backup_remote_gateway_ip": "192.0.2.42,not-an-ip"},
+			errWant: []string{`"backup_remote_gateway_ip"`, `"not-an-ip"`},
+		},
+		{
+			name:  "an invalid peer IP is refused alongside a connection-level change",
+			state: haState(),
+			want: map[string]string{
+				"phase1_remote_identifier": "not-an-ip",
+				"remote_gateway_ip":        "not-an-ip",
+			},
+			errWant: []string{`"remote_gateway_ip"`, `"not-an-ip"`},
+		},
+		{
+			name:    "the primary moved onto the backup's address is refused",
+			state:   haState(),
+			want:    map[string]string{"remote_gateway_ip": "203.0.113.2"},
+			errWant: []string{`"remote_gateway_ip"`, `"203.0.113.2"`, "must differ"},
+		},
+		{
+			name:  "a peer IP clash is refused alongside a connection-level change",
+			state: haState(),
+			want: map[string]string{
+				"phase1_remote_identifier": "203.0.113.9,203.0.113.2",
+				"remote_gateway_ip":        "203.0.113.2",
+			},
+			errWant: []string{`"remote_gateway_ip"`, "must differ"},
+		},
+		{
+			name:    "an editable change on a static connection is refused",
+			state:   staticState(),
+			want:    map[string]string{"pre_shared_key": "rotated"},
+			errWant: []string{"cannot update pre_shared_key in place", "only a BGP connection over IPsec can be edited", `"static"`},
+		},
+		{
+			name:    "a planner refusal surfaces",
+			state:   haState(),
+			want:    map[string]string{"remote_tunnel_cidr": "169.254.0.2/30,169.254.9.2/30"},
+			errWant: []string{`"remote_tunnel_cidr" has 2 values`, "cannot add or remove tunnels"},
+		},
+		{
+			name:    "a peer IP list of the wrong length surfaces from the planner",
+			state:   activemeshState(),
+			want:    map[string]string{"remote_gateway_ip": "192.0.2.1,192.0.2.2,192.0.2.3"},
+			errWant: []string{`"remote_gateway_ip" has 3 values`},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := edcPreflight(fakeEdcDiff{state: test.state, want: test.want}, "gw1", "conn1")
+			if len(test.errWant) == 0 {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected an error containing %q, got none", test.errWant)
+			}
+			for _, want := range test.errWant {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("expected the error to contain %q, got %q", want, err)
+				}
+			}
+		})
+	}
+}
+
+func TestEdcCustomizeDiffPeerIP(t *testing.T) {
+	ipsecConn := map[string]any{
+		"vpc_id":             "vpc-1",
+		"gw_name":            "gw1",
+		"connection_name":    "conn1",
+		"connection_type":    "bgp",
+		"tunnel_protocol":    "IPsec",
+		"bgp_local_as_num":   "65100",
+		"bgp_remote_as_num":  "65201",
+		"remote_gateway_ip":  "172.12.13.14",
+		"local_tunnel_cidr":  "169.254.10.1/30",
+		"remote_tunnel_cidr": "169.254.10.2/30",
+	}
+	staticConn := map[string]any{
+		"vpc_id":            "vpc-1",
+		"gw_name":           "gw1",
+		"connection_name":   "conn1",
+		"connection_type":   "static",
+		"tunnel_protocol":   "IPsec",
+		"remote_gateway_ip": "172.12.13.14",
+		"remote_subnet":     "10.70.0.0/16",
+	}
+	haConn := map[string]any{
+		"vpc_id":                    "vpc-1",
+		"gw_name":                   "gw1",
+		"connection_name":           "conn1",
+		"connection_type":           "bgp",
+		"tunnel_protocol":           "IPsec",
+		"bgp_local_as_num":          "65100",
+		"bgp_remote_as_num":         "65201",
+		"remote_gateway_ip":         "172.12.13.14",
+		"local_tunnel_cidr":         "169.254.10.1/30",
+		"remote_tunnel_cidr":        "169.254.10.2/30",
+		"ha_enabled":                true,
+		"backup_remote_gateway_ip":  "172.12.13.15",
+		"backup_bgp_remote_as_num":  "65201",
+		"backup_local_tunnel_cidr":  "169.254.11.1/30",
+		"backup_remote_tunnel_cidr": "169.254.11.2/30",
+	}
+	with := func(base map[string]any, changes map[string]any) map[string]any {
+		out := make(map[string]any, len(base)+len(changes))
+		for k, v := range base {
+			out[k] = v
+		}
+		for k, v := range changes {
+			out[k] = v
+		}
+		return out
+	}
+
+	tests := []struct {
+		name        string
+		base        map[string]any
+		changes     map[string]any
+		errWant     []string
+		requiresNew bool
+	}{
+		{
+			name:    "an invalid peer IP on an in-place edit fails the plan",
+			base:    ipsecConn,
+			changes: map[string]any{"remote_gateway_ip": "not-an-ip"},
+			errWant: []string{`"remote_gateway_ip"`, `"not-an-ip"`, "is not a valid IPv4 address"},
+		},
+		{
+			name:    "an invalid peer IP fails the plan even beside a connection-level change",
+			base:    ipsecConn,
+			changes: map[string]any{"remote_gateway_ip": "not-an-ip", "phase1_remote_identifier": "not-an-ip"},
+			errWant: []string{`"remote_gateway_ip"`, `"not-an-ip"`},
+		},
+		{
+			name:    "an IPv6 peer IP on an in-place edit fails the plan",
+			base:    ipsecConn,
+			changes: map[string]any{"remote_gateway_ip": "2001:db8::1"},
+			errWant: []string{`"2001:db8::1"`},
+		},
+		{
+			name:    "a valid peer IP change plans an in-place edit",
+			base:    ipsecConn,
+			changes: map[string]any{"remote_gateway_ip": "198.51.100.7"},
+		},
+		{
+			name:    "an unknown peer IP is left for apply time",
+			base:    ipsecConn,
+			changes: map[string]any{"remote_gateway_ip": edcTestUnknownValue},
+		},
+		{
+			name:    "the primary moved onto the backup's address fails the plan",
+			base:    haConn,
+			changes: map[string]any{"remote_gateway_ip": "172.12.13.15"},
+			errWant: []string{`"remote_gateway_ip"`, `"172.12.13.15"`, "must differ"},
+		},
+		{
+			name: "a primary/backup swap fails the plan",
+			base: haConn,
+			changes: map[string]any{
+				"remote_gateway_ip":        "172.12.13.15",
+				"backup_remote_gateway_ip": "172.12.13.14",
+			},
+			errWant: []string{`"172.12.13.15"`, "must differ"},
+		},
+		{
+			name:    "an HA primary moved to a free address plans an in-place edit",
+			base:    haConn,
+			changes: map[string]any{"remote_gateway_ip": "198.51.100.7"},
+		},
+		{
+			name:    "an unknown backup leaves the clash check for apply time",
+			base:    haConn,
+			changes: map[string]any{"remote_gateway_ip": "172.12.13.15", "backup_remote_gateway_ip": edcTestUnknownValue},
+		},
+		{
+			name:        "a replacement is not checked here",
+			base:        staticConn,
+			changes:     map[string]any{"remote_gateway_ip": "not-an-ip"},
+			requiresNew: true,
+		},
+	}
+
+	for _, r := range []struct {
+		name string
+		res  func() *schema.Resource
+	}{
+		{"transit", resourceAviatrixTransitExternalDeviceConn},
+		{"spoke", resourceAviatrixSpokeExternalDeviceConn},
+	} {
+		for _, test := range tests {
+			t.Run(r.name+"/"+test.name, func(t *testing.T) {
+				res := r.res()
+				prior := schema.TestResourceDataRaw(t, res.Schema, test.base)
+				prior.SetId("conn1~vpc-1")
+				state := prior.State()
+				if state == nil {
+					t.Fatal("expected a non-nil state once an ID is set")
+				}
+				config := terraform.NewResourceConfigRaw(with(test.base, test.changes))
+
+				diff, err := res.Diff(context.Background(), state, config, nil)
+				if len(test.errWant) != 0 {
+					if err == nil {
+						t.Fatalf("expected the plan to fail with %q, got diff %#v", test.errWant, diff)
+					}
+					for _, want := range test.errWant {
+						if !strings.Contains(err.Error(), want) {
+							t.Errorf("expected the error to contain %q, got %q", want, err)
+						}
+					}
+					return
+				}
+				if err != nil {
+					t.Fatalf("Diff returned an error: %v", err)
+				}
+				attr, ok := diff.Attributes["remote_gateway_ip"]
+				if !ok {
+					t.Fatalf("expected a diff entry for remote_gateway_ip, attributes: %#v", diff.Attributes)
+				}
+				if attr.RequiresNew != test.requiresNew {
+					t.Errorf("expected RequiresNew=%t for remote_gateway_ip, got %#v", test.requiresNew, attr)
+				}
+			})
+		}
+	}
+}
+
+// edcTestUnknownValue is the SDK's unknown-value placeholder
+// (hcl2shim.UnknownVariableValue, internal to the SDK).
+const edcTestUnknownValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
