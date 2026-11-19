@@ -51,10 +51,9 @@ resource "aviatrix_external_connection" "full" {
   conn_learned_cidrs_approval = false
 
   tunnels {
-    local_gw_name        = "transit-gw"
-    remote_device_ip     = "10.0.4.10"
-    bgp_remote_as_number = 65002
-    bgp_md5_key          = "my-secret-key"
+    local_gw_name    = "transit-gw"
+    remote_device_ip = "10.0.4.10"
+    bgp_md5_key      = "my-secret-key"
   }
 
   tunnels {
@@ -139,7 +138,7 @@ These attributes can be updated in-place without recreating the connection.
 * `peer_vnet_id` - (Optional) Peer VNet ID. Required for Azure BGP over LAN connections. Format: `vnet-name:resource-group:subscription-id`. Changing this forces a new resource.
 * `ipv6_enabled` - (Optional) Enable IPv6 for this connection. When true, each tunnel must include `local_device_ipv6` and `remote_device_ipv6`. Valid values: true, false. Default: `false`. Changing this forces a new resource.
 * `edge_underlay` - (Optional) Whether the connection uses Edge underlay. When true, all gateways in the group must have a tunnel configured. Valid values: true, false. Default: `false`. Changing this forces a new resource.
-* `bgp_lan_activemesh` - (Optional) Enable BGP LAN ActiveMesh mode. Only valid for GCP, Azure, and Edge gateways. Valid values: true, false. Default: `false`. Changing this forces a new resource.
+* `bgp_lan_activemesh` - (Optional) Enable BGP LAN ActiveMesh mode. Only valid for GCP, Azure, and Edge gateways. Without it, each gateway can hold only one tunnel of the connection. Valid values: true, false. Default: `false`. Changing this forces a new resource.
 
 ### Tunnels
 
@@ -147,14 +146,22 @@ Each `tunnels` block supports the following:
 
 * `local_gw_name` - (Required) Local Aviatrix gateway name. Must be a member of the gateway group.
 * `remote_device_ip` - (Required) Remote device IPv4 address.
-* `local_device_ip` - (Optional/Computed) Local device IPv4 address. If not provided, assigned by the server (for LAN protocol on AWS/Azure).
-* `bgp_remote_as_number` - (Optional) Per-tunnel BGP remote ASN override. If the connection-level `bgp_remote_as_number` is not set, this is required on each tunnel.
-* `local_device_ipv6` - (Optional) Local device IPv6 address with prefix length. Required when `ipv6_enabled` is true.
-* `remote_device_ipv6` - (Optional) Remote device IPv6 address with prefix length. Required when `ipv6_enabled` is true.
-* `bgp_md5_key` - (Optional, Sensitive) BGP MD5 authentication key. Can be updated in-place without recreating the tunnel.
+* `local_device_ip` - (Optional) Local device IPv4 address. If not provided, assigned by the server (for LAN protocol on AWS/Azure), and changes to the assigned address are not reported as drift. The address in use is exported as `assigned_local_device_ip`.
+* `bgp_remote_as_number` - (Optional) Per-tunnel BGP remote ASN. If the connection-level `bgp_remote_as_number` is not set, this is required on each tunnel. All tunnels must use the same remote ASN, matching the connection-level one if set, unless `edge_underlay` is true and the connection-level ASN is not set.
+* `local_device_ipv6` - (Optional) Local device IPv6 address with prefix length. Required when `ipv6_enabled` is true, and not allowed otherwise.
+* `remote_device_ipv6` - (Optional) Remote device IPv6 address with prefix length. Required when `ipv6_enabled` is true, and not allowed otherwise.
+* `bgp_md5_key` - (Optional, Sensitive) BGP MD5 authentication key. Must be set on all tunnels or on none. Can be updated in-place without recreating the tunnel.
 * `direct_connect` - (Optional) Whether this tunnel uses direct-connect underlay. Valid values: true, false. Default: `false`.
 
-~> **NOTE:** A tunnel is identified by the combination of `local_gw_name` and `remote_device_ip`. Changing either of these values will delete the old tunnel and create a new one. Changes to other tunnel fields (except `bgp_md5_key`) also trigger a delete+recreate. `bgp_md5_key` changes are applied in-place via PATCH.
+~> **NOTE:** Only `bgp_md5_key` is updated in place. Other tunnel changes are applied as follows:
+* Changing `local_device_ip`, `local_device_ipv6` or `remote_device_ipv6` (including only the prefix length), or `remote_device_ip`, deletes the tunnel and creates it again, one tunnel at a time. On a connection with only one tunnel, the whole connection is replaced instead, because its last tunnel cannot be deleted.
+* Adding tunnels, removing tunnels, and moving a tunnel to another `local_gw_name` are applied in place. Tunnels on new gateways are created before removed tunnels are deleted.
+* Changing `direct_connect`, or changing a tunnel `bgp_remote_as_number` to a different ASN, replaces the connection. The exception is an `edge_underlay` connection without a connection-level `bgp_remote_as_number`, where the tunnel is deleted and created again.
+* A change that already matches the running tunnel, such as setting `local_device_ip` to the assigned address or a tunnel `bgp_remote_as_number` equal to the connection-level ASN, is recorded in state without touching the tunnel.
+
+If a tunnel operation fails partway, the state keeps the previous tunnels and the next plan shows what remains to be done.
+
+~> **NOTE:** Because `tunnels` is a set, the plan shows a changed tunnel as the old block removed and the new block added.
 
 ## Attribute Reference
 
@@ -162,6 +169,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `uuid` - Server-assigned UUID of the external connection. This is also used as the resource ID.
 * `tunnels.*.status` - Tunnel status as reported by the server. Possible values: `UP`, `DOWN`, `UNKNOWN`.
+* `tunnels.*.assigned_local_device_ip` - Local device IPv4 address in use, as reported by the server.
 
 ## Import
 
@@ -171,4 +179,6 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aviatrix_external_connection.example 5f4b1a3e-2c8d-4a7e-9b1f-0a3c2d6e8f01
 ```
 
-~> **NOTE:** `bgp_md5_key` is not returned by the server and will not be populated after import. You must re-add the `bgp_md5_key` values in your configuration file and run `terraform apply` to re-sync.
+~> **NOTE:** `bgp_md5_key` is not returned by the server, which reports only whether a key is set. After import, a tunnel with a key shows one in-place update that sets the key from your configuration. A key added or removed outside Terraform is reported as drift, but a key changed outside Terraform is not.
+
+~> **NOTE:** After import, a tunnel that leaves out `local_device_ip` or `bgp_remote_as_number` shows one in-place update. Applying it does not change the tunnel.

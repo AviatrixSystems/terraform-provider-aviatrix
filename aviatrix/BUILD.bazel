@@ -417,6 +417,7 @@ go_test(
         "@com_github_google_go_cmp//cmp",
         "@com_github_google_uuid//:uuid",
         "@com_github_hashicorp_go_cty//cty",
+        "@com_github_hashicorp_go_cty//cty/json",
         "@com_github_hashicorp_terraform_plugin_sdk_v2//diag",
         "@com_github_hashicorp_terraform_plugin_sdk_v2//helper/acctest",
         "@com_github_hashicorp_terraform_plugin_sdk_v2//helper/resource",
