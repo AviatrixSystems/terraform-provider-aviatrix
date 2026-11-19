@@ -850,6 +850,18 @@ func (c *Client) EnableTransitLearnedCidrsApprovalGatewayGroup(ctx context.Conte
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
 }
 
+// SetTransitLearnedCidrsApprovalModeGatewayGroup sets the learned CIDRs approval mode ("gateway" or "connection") for a transit gateway group
+func (c *Client) SetTransitLearnedCidrsApprovalModeGatewayGroup(ctx context.Context, groupName, mode string) error {
+	form := map[string]string{
+		"action":       "set_bgp_gateway_cidr_approval_mode",
+		"CID":          c.CID,
+		"gateway_name": groupName,
+		"mode":         mode,
+	}
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
 // DisableTransitLearnedCidrsApprovalGatewayGroup disables learned CIDRs approval for a transit gateway group
 func (c *Client) DisableTransitLearnedCidrsApprovalGatewayGroup(ctx context.Context, groupName string) error {
 	form := map[string]string{

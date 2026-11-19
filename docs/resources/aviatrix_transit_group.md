@@ -216,7 +216,7 @@ The following arguments are supported:
 ### Optional - Learned CIDR Approval
 
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDR approval. Valid values: true, false. Default: false.
-* `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Valid values: "gateway", "connection". Default: "gateway".
+* `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Valid values: "gateway", "connection". Default: "gateway". With "connection", `enable_learned_cidrs_approval` must be false; enable approval per connection with `conn_learned_cidrs_approval` on `aviatrix_external_connection` instead.
 * `approved_learned_cidrs` - (Optional) Set of approved learned CIDRs. Valid only when `enable_learned_cidrs_approval` is true. Example: ["10.1.0.0/16", "10.2.0.0/16"].
 
 ### Optional - Active-Standby

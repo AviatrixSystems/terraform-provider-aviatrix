@@ -403,6 +403,10 @@ func validateTransitGroupConfiguration(transitGroup *goaviatrix.GatewayGroup) er
 		return fmt.Errorf("approved_learned_cidrs requires enable_learned_cidrs_approval to be true")
 	}
 
+	if transitGroup.EnableLearnedCidrsApproval && transitGroup.LearnedCidrsApprovalMode != "gateway" {
+		return fmt.Errorf("enable_learned_cidrs_approval requires learned_cidrs_approval_mode to be 'gateway'; in 'connection' mode, set conn_learned_cidrs_approval on each connection instead")
+	}
+
 	if transitGroup.EnableFirenet && transitGroup.EnableTransitFirenet {
 		return fmt.Errorf("can't enable firenet and transit firenet at the same time")
 	}
@@ -640,6 +644,14 @@ func applyTransitSpecificSettings(ctx context.Context, d *schema.ResourceData, c
 		log.Printf("[INFO] Enabling Preserve AS Path for transit group: %s", groupName)
 		if err := client.EnableTransitPreserveAsPathGatewayGroup(ctx, groupName); err != nil {
 			return fmt.Errorf("failed to enable Preserve AS Path: %w", err)
+		}
+	}
+
+	// create_gateway_group ignores the mode; "gateway" is already the controller default.
+	if mode := getString(d, "learned_cidrs_approval_mode"); mode == "connection" {
+		log.Printf("[INFO] Setting learned CIDRs approval mode to %s for transit group: %s", mode, groupName)
+		if err := client.SetTransitLearnedCidrsApprovalModeGatewayGroup(ctx, groupName, mode); err != nil {
+			return fmt.Errorf("failed to set learned CIDRs approval mode: %w", err)
 		}
 	}
 
@@ -940,6 +952,10 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("approved_learned_cidrs requires enable_learned_cidrs_approval to be true")
 	}
 
+	if getBool(d, "enable_learned_cidrs_approval") && getString(d, "learned_cidrs_approval_mode") != "gateway" {
+		return diag.Errorf("enable_learned_cidrs_approval requires learned_cidrs_approval_mode to be 'gateway'; in 'connection' mode, set conn_learned_cidrs_approval on each connection instead")
+	}
+
 	if getBool(d, "enable_firenet") && getBool(d, "enable_transit_firenet") {
 		return diag.Errorf("can't enable firenet and transit firenet at the same time")
 	}
@@ -1233,6 +1249,16 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 	// ============================================================================
 	// Learned CIDRs Approval - API: enable_transit_learned_cidrs_approval / disable_transit_learned_cidrs_approval
 	// ============================================================================
+	// Gateway-level approval can only be edited in gateway mode: switch to gateway
+	// before editing it, and to connection only after it has been disabled.
+	approvalMode := getString(d, "learned_cidrs_approval_mode")
+	approvalModeChanged := d.HasChange("learned_cidrs_approval_mode")
+	if approvalModeChanged && approvalMode == "gateway" {
+		if err := client.SetTransitLearnedCidrsApprovalModeGatewayGroup(ctx, groupName, approvalMode); err != nil {
+			return diag.Errorf("failed to set learned cidrs approval mode for transit group: %s", err)
+		}
+	}
+
 	learnedCidrsApproval := getBool(d, "enable_learned_cidrs_approval")
 	if d.HasChange("enable_learned_cidrs_approval") {
 		if learnedCidrsApproval {
@@ -1256,6 +1282,12 @@ func resourceAviatrixTransitGroupUpdate(ctx context.Context, d *schema.ResourceD
 		err := client.UpdateTransitPendingApprovedCidrsGatewayGroup(ctx, groupName, approvedLearnedCidrs)
 		if err != nil {
 			return diag.Errorf("could not update approved CIDRs: %s", err)
+		}
+	}
+
+	if approvalModeChanged && approvalMode == "connection" {
+		if err := client.SetTransitLearnedCidrsApprovalModeGatewayGroup(ctx, groupName, approvalMode); err != nil {
+			return diag.Errorf("failed to set learned cidrs approval mode for transit group: %s", err)
 		}
 	}
 

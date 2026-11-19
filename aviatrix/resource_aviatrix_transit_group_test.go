@@ -1354,3 +1354,36 @@ func transitGroupResourceDataWithChange(t *testing.T, oldCfg, newCfg map[string]
 	}
 	return d
 }
+
+func TestValidateTransitGroupLearnedCidrsApprovalMode(t *testing.T) {
+	tests := []struct {
+		name     string
+		mode     string
+		approval bool
+		wantErr  bool
+	}{
+		{name: "gateway mode with approval", mode: "gateway", approval: true},
+		{name: "connection mode without approval", mode: "connection"},
+		{name: "connection mode with gateway approval", mode: "connection", approval: true, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := &goaviatrix.GatewayGroup{
+				CloudType:                  goaviatrix.AWS,
+				GroupInstanceSize:          "t3.medium",
+				LearnedCidrsApprovalMode:   tt.mode,
+				EnableLearnedCidrsApproval: tt.approval,
+			}
+			err := validateTransitGroupConfiguration(g)
+			if tt.wantErr {
+				if err == nil || !strings.Contains(err.Error(), "learned_cidrs_approval_mode") {
+					t.Fatalf("error = %v, want it to mention learned_cidrs_approval_mode", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
