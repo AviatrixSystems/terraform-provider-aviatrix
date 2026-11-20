@@ -371,9 +371,19 @@ func resourceAviatrixExternalConnectionCustomizeDiff(_ context.Context, d *schem
 	}
 
 	tunnels := expandTunnelList(getSet(d, "tunnels").List())
-	allKnown := true
+	keys, allKnown := configTunnelKeys(d)
 	seen := make(map[tunnelKey]bool)
 	gateways := make(map[string]bool)
+	for _, key := range keys {
+		if seen[key] {
+			return fmt.Errorf("duplicate tunnel (local_gw_name=%s, remote_device_ip=%s)", key.localGwName, key.remoteDevice)
+		}
+		seen[key] = true
+		if !activeMesh && gateways[key.localGwName] {
+			return fmt.Errorf("gateway %s has more than one tunnel; multiple tunnels per gateway require bgp_lan_activemesh = true", key.localGwName)
+		}
+		gateways[key.localGwName] = true
+	}
 	remoteASNs := make(map[int]bool)
 	if connASN := getInt(d, "bgp_remote_as_number"); connASN != 0 && configSets(d, "bgp_remote_as_number") {
 		remoteASNs[connASN] = true
@@ -386,20 +396,6 @@ func resourceAviatrixExternalConnectionCustomizeDiff(_ context.Context, d *schem
 		if t.BgpRemoteAsNum != 0 {
 			remoteASNs[t.BgpRemoteAsNum] = true
 		}
-		// Values not yet known at plan time read as empty.
-		if t.LocalGwName == "" || t.RemoteDeviceIP == "" {
-			allKnown = false
-			continue
-		}
-		key := tunnelKeyFrom(t)
-		if seen[key] {
-			return fmt.Errorf("duplicate tunnel (local_gw_name=%s, remote_device_ip=%s)", t.LocalGwName, t.RemoteDeviceIP)
-		}
-		seen[key] = true
-		if !activeMesh && gateways[t.LocalGwName] {
-			return fmt.Errorf("gateway %s has more than one tunnel; multiple tunnels per gateway require bgp_lan_activemesh = true", t.LocalGwName)
-		}
-		gateways[t.LocalGwName] = true
 	}
 	if !pc.perTunnelASN && len(remoteASNs) > 1 {
 		return errors.New("all tunnels must use the same bgp_remote_as_number, matching the connection-level bgp_remote_as_number if set; " +
@@ -417,6 +413,37 @@ func resourceAviatrixExternalConnectionCustomizeDiff(_ context.Context, d *schem
 		return forceNewTunnels(d)
 	}
 	return nil
+}
+
+// configTunnelKeys returns the key of each configured tunnel whose local_gw_name
+// and remote_device_ip are known at plan time, and whether every tunnel's are. It
+// reads the raw config because the SDK does not report unknown values inside a set
+// element as unknown.
+func configTunnelKeys(d *schema.ResourceDiff) ([]tunnelKey, bool) {
+	rc := d.GetRawConfig()
+	if rc.IsNull() || !rc.IsKnown() {
+		return nil, false
+	}
+	tunnels := rc.GetAttr("tunnels")
+	if tunnels.IsNull() || !tunnels.IsKnown() {
+		return nil, false
+	}
+	var keys []tunnelKey
+	allKnown := true
+	for it := tunnels.ElementIterator(); it.Next(); {
+		_, tunnel := it.Element()
+		if !tunnel.IsKnown() {
+			allKnown = false
+			continue
+		}
+		gw, remote := tunnel.GetAttr("local_gw_name"), tunnel.GetAttr("remote_device_ip")
+		if !gw.IsKnown() || !remote.IsKnown() || gw.IsNull() || remote.IsNull() {
+			allKnown = false
+			continue
+		}
+		keys = append(keys, tunnelKey{localGwName: gw.AsString(), remoteDevice: remote.AsString()})
+	}
+	return keys, allKnown
 }
 
 // forceNewTunnels plans the replacement of the connection. ForceNew on the tunnels

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	ctyjson "github.com/hashicorp/go-cty/cty/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -633,12 +634,20 @@ func externalConnectionDiff(t *testing.T, stateTunnels, configTunnels []map[stri
 const unknownValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
 // withRawConfig sets the raw config on state, which Terraform always sends with a
-// plan request but the SDK's Diff does not derive from the ResourceConfig.
+// plan request but the SDK's Diff does not derive from the ResourceConfig. A string
+// equal to unknownValue becomes an unknown value, as Terraform sends it.
 func withRawConfig(t *testing.T, state *terraform.InstanceState, raw map[string]any) *terraform.InstanceState {
 	t.Helper()
 	b, err := json.Marshal(raw)
 	require.NoError(t, err)
-	state.RawConfig, err = ctyjson.Unmarshal(b, resourceAviatrixExternalConnection().CoreConfigSchema().ImpliedType())
+	rc, err := ctyjson.Unmarshal(b, resourceAviatrixExternalConnection().CoreConfigSchema().ImpliedType())
+	require.NoError(t, err)
+	state.RawConfig, err = cty.Transform(rc, func(_ cty.Path, v cty.Value) (cty.Value, error) {
+		if v.Type() == cty.String && v.IsKnown() && !v.IsNull() && v.AsString() == unknownValue {
+			return cty.UnknownVal(cty.String), nil
+		}
+		return v, nil
+	})
 	require.NoError(t, err)
 	return state
 }
@@ -923,6 +932,20 @@ func TestExternalConnectionCustomizeDiff(t *testing.T) {
 			tunnels: []any{tunnel("gw-1", "10.1.0.91"), tunnel("gw-1", "10.1.0.92")},
 		},
 		{
+			name: "gateway names not yet known",
+			tunnels: []any{
+				tunnel(unknownValue, "10.1.10.5"), tunnel(unknownValue, "10.1.11.5"), tunnel(unknownValue, "10.1.12.5"),
+			},
+		},
+		{
+			name: "remote device IPs not yet known",
+			conn: map[string]any{"bgp_lan_activemesh": true},
+			tunnels: []any{
+				map[string]any{"local_gw_name": "gw-1", "remote_device_ip": unknownValue, "local_device_ip": "10.1.10.6"},
+				map[string]any{"local_gw_name": "gw-1", "remote_device_ip": unknownValue, "local_device_ip": "10.1.11.6"},
+			},
+		},
+		{
 			name:    "tunnel ASNs differ with edge_underlay not yet known",
 			conn:    map[string]any{"edge_underlay": unknownValue},
 			tunnels: []any{withASN(tunnel("gw-1", "10.1.0.91"), 65101), withASN(tunnel("gw-2", "10.1.0.92"), 65102)},
@@ -949,8 +972,8 @@ func TestExternalConnectionCustomizeDiff(t *testing.T) {
 			}
 			maps.Copy(raw, tt.conn)
 			state := &terraform.InstanceState{}
-			// The raw config cannot hold an unknown value, so only the
-			// ResourceConfig carries it.
+			// withRawConfig cannot make an unknown bool, so only the
+			// ResourceConfig carries a connection-level unknown.
 			if !slices.Contains(slices.Collect(maps.Values(tt.conn)), any(unknownValue)) {
 				state = withRawConfig(t, state, raw)
 			}
