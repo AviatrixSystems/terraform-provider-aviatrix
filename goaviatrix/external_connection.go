@@ -40,6 +40,12 @@ type ExternalConnection struct {
 	EdgeUnderlay             bool                       `json:"edge_underlay"`
 	BgpLanActivemesh         bool                       `json:"bgp_lan_activemesh"`
 	ConnLearnedCidrsApproval bool                       `json:"conn_learned_cidrs_approval"`
+	ApprovedCidrs            []string                   `json:"approved_cidrs,omitempty"`
+	ManualBgpAdvertisedCidrs []string                   `json:"manual_bgp_advertised_cidrs,omitempty"`
+	PrependAsPath            []int                      `json:"prepend_as_path,omitempty"`
+	BgpSendCommunities       string                     `json:"connection_bgp_send_communities,omitempty"`
+	BgpSendCommunitiesAdd    bool                       `json:"connection_bgp_send_communities_additive"`
+	BgpSendCommunitiesBlock  bool                       `json:"connection_bgp_send_communities_block"`
 }
 
 func (c *Client) CreateExternalConnection(ctx context.Context, conn *ExternalConnection) (string, error) {
@@ -77,14 +83,22 @@ func mapExternalConnectionNotFound(err error) error {
 	return err
 }
 
+// ExternalConnectionUpdate fields left nil are not changed. A pointer to an
+// empty slice or string clears the setting.
 type ExternalConnectionUpdate struct {
-	EnableBgpMultihop        *bool `json:"enable_bgp_multihop,omitempty"`
-	JumboFrame               *bool `json:"jumbo_frame,omitempty"`
-	EnableBfd                *bool `json:"enable_bfd,omitempty"`
-	BfdTxInterval            *int  `json:"bfd_transmit_interval,omitempty"`
-	BfdRxInterval            *int  `json:"bfd_receive_interval,omitempty"`
-	BfdDetectMult            *int  `json:"bfd_detect_multiplier,omitempty"`
-	ConnLearnedCidrsApproval *bool `json:"conn_learned_cidrs_approval,omitempty"`
+	EnableBgpMultihop        *bool     `json:"enable_bgp_multihop,omitempty"`
+	JumboFrame               *bool     `json:"jumbo_frame,omitempty"`
+	EnableBfd                *bool     `json:"enable_bfd,omitempty"`
+	BfdTxInterval            *int      `json:"bfd_transmit_interval,omitempty"`
+	BfdRxInterval            *int      `json:"bfd_receive_interval,omitempty"`
+	BfdDetectMult            *int      `json:"bfd_detect_multiplier,omitempty"`
+	ConnLearnedCidrsApproval *bool     `json:"conn_learned_cidrs_approval,omitempty"`
+	ApprovedCidrs            *[]string `json:"approved_cidrs,omitempty"`
+	ManualBgpAdvertisedCidrs *[]string `json:"manual_bgp_advertised_cidrs,omitempty"`
+	PrependAsPath            *[]int    `json:"prepend_as_path,omitempty"`
+	BgpSendCommunities       *string   `json:"connection_bgp_send_communities,omitempty"`
+	BgpSendCommunitiesAdd    *bool     `json:"connection_bgp_send_communities_additive,omitempty"`
+	BgpSendCommunitiesBlock  *bool     `json:"connection_bgp_send_communities_block,omitempty"`
 }
 
 type ExternalConnectionTunnelUpdate struct {

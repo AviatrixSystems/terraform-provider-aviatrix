@@ -64,6 +64,31 @@ resource "aviatrix_external_connection" "full" {
 }
 ```
 
+### BGP Route Settings
+
+```hcl
+resource "aviatrix_external_connection" "routes" {
+  name                 = "my-ext-conn-routes"
+  group_uuid           = aviatrix_transit_gateway.gw.group_uuid
+  routing_protocol     = "bgp"
+  tunnel_protocol      = "LAN"
+  bgp_local_as_number  = 65000
+  bgp_remote_as_number = 65001
+
+  conn_learned_cidrs_approval              = true
+  approved_cidrs                           = ["10.10.0.0/16"]
+  manual_bgp_advertised_cidrs              = ["10.20.0.0/16", "10.30.0.0/16"]
+  prepend_as_path                          = ["65000", "65000"]
+  connection_bgp_send_communities          = "111:111 444:444"
+  connection_bgp_send_communities_additive = true
+
+  tunnels {
+    local_gw_name    = "transit-gw"
+    remote_device_ip = "10.0.4.10"
+  }
+}
+```
+
 ### Azure BGP over LAN with Peer VNet
 
 ```hcl
@@ -128,10 +153,16 @@ These attributes can be updated in-place without recreating the connection.
 * `enable_bgp_multihop` - (Optional) Enable BGP multihop. Valid values: true, false. Default: `true`.
 * `jumbo_frame` - (Optional) Enable jumbo frames. Valid values: true, false. Default: `false`.
 * `enable_bfd` - (Optional) Enable BFD (Bidirectional Forwarding Detection). Valid values: true, false. Default: `false`.
-* `bfd_transmit_interval` - (Optional) BFD transmit interval in milliseconds. Valid values: 10-60000.
-* `bfd_receive_interval` - (Optional) BFD receive interval in milliseconds. Valid values: 10-60000.
-* `bfd_detect_multiplier` - (Optional) BFD detect multiplier. Valid values: 2-255.
+* `bfd_transmit_interval` - (Optional/Computed) BFD transmit interval in milliseconds. Valid values: 10-60000. If not set, the controller default is used.
+* `bfd_receive_interval` - (Optional/Computed) BFD receive interval in milliseconds. Valid values: 10-60000. If not set, the controller default is used.
+* `bfd_detect_multiplier` - (Optional/Computed) BFD detect multiplier. Valid values: 2-255. If not set, the controller default is used.
 * `conn_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for this connection. Valid values: true, false. Default: `false`.
+* `approved_cidrs` - (Optional/Computed) Set of approved learned CIDRs. Requires `conn_learned_cidrs_approval` to be true. When approval is enabled, the controller pre-approves the CIDRs already learned on the connection, so this attribute is populated even if it isn't configured. Disabling `conn_learned_cidrs_approval` removes all approved CIDRs.
+* `manual_bgp_advertised_cidrs` - (Optional) Set of manual BGP advertised CIDRs for this connection. Not supported on Edge underlay connections.
+* `prepend_as_path` - (Optional) List of AS numbers prepended to routes advertised on this connection. Each AS number must equal the connection's local ASN. Maximum 25 entries.
+* `connection_bgp_send_communities` - (Optional) Additional BGP communities sent on this connection, separated by spaces. E.g. `"111:111 444:444"`. Requires the BGP communities feature to be enabled on the controller.
+* `connection_bgp_send_communities_additive` - (Optional) Add the communities to the existing ones instead of replacing them. Valid values: true, false. Default: `false`.
+* `connection_bgp_send_communities_block` - (Optional) Block advertisement of any BGP communities on this connection. Cannot be combined with `connection_bgp_send_communities` or `connection_bgp_send_communities_additive`. Valid values: true, false. Default: `false`.
 
 ### Other
 

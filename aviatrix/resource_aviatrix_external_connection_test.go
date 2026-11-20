@@ -14,6 +14,7 @@ import (
 	ctyjson "github.com/hashicorp/go-cty/cty/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -309,6 +310,101 @@ func TestAccAviatrixExternalConnection_connUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAviatrixExternalConnection_bgpRouteSettings(t *testing.T) {
+	if os.Getenv("SKIP_EXTERNAL_CONNECTION") == "yes" {
+		t.Skip("Skipping external connection test as SKIP_EXTERNAL_CONNECTION is set")
+	}
+
+	resourceName := "aviatrix_external_connection.test_route"
+	connName := "ext-conn-route-" + acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return testAccProvider, nil },
+		},
+		CheckDestroy: testAccCheckExternalConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExternalConnectionBgpRouteSettings(connName, `
+	conn_learned_cidrs_approval              = true
+	approved_cidrs                           = ["10.10.0.0/16"]
+	manual_bgp_advertised_cidrs              = ["10.20.0.0/16", "10.30.0.0/16"]
+	prepend_as_path                          = ["65000", "65000"]
+	connection_bgp_send_communities          = "111:111 444:444"
+	connection_bgp_send_communities_additive = true`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "approved_cidrs.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "approved_cidrs.*", "10.10.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "manual_bgp_advertised_cidrs.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "manual_bgp_advertised_cidrs.*", "10.20.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.0", "65000"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities", "111:111 444:444"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_additive", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_block", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccExternalConnectionBgpRouteSettings(connName, `
+	conn_learned_cidrs_approval           = true
+	approved_cidrs                        = ["10.10.0.0/16", "10.11.0.0/16"]
+	manual_bgp_advertised_cidrs           = ["10.40.0.0/16"]
+	prepend_as_path                       = ["65000"]
+	connection_bgp_send_communities_block = true`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "approved_cidrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "manual_bgp_advertised_cidrs.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "manual_bgp_advertised_cidrs.*", "10.40.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_additive", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_block", "true"),
+				),
+			},
+			{
+				Config: testAccExternalConnectionBgpRouteSettings(connName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "conn_learned_cidrs_approval", "false"),
+					resource.TestCheckResourceAttr(resourceName, "approved_cidrs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "manual_bgp_advertised_cidrs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prepend_as_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_bgp_send_communities_block", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccExternalConnectionBgpRouteSettings(name, settings string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_external_connection" "test_route" {
+	name                 = "%s"
+	group_uuid           = "test-group-uuid"
+	routing_protocol     = "bgp"
+	tunnel_protocol      = "LAN"
+	bgp_local_as_number  = 65000
+	bgp_remote_as_number = 65001
+%s
+
+	tunnels {
+		local_gw_name    = "gw-1"
+		remote_device_ip = "10.0.4.10"
+	}
+}
+`, name, settings)
+}
+
 func TestAccAviatrixExternalConnection_tunnelMd5Update(t *testing.T) {
 	if os.Getenv("SKIP_EXTERNAL_CONNECTION") == "yes" {
 		t.Skip("Skipping external connection test as SKIP_EXTERNAL_CONNECTION is set")
@@ -505,7 +601,10 @@ func externalConnectionDiff(t *testing.T, stateTunnels, configTunnels []map[stri
 		"jumbo_frame":                 "false",
 		"enable_bfd":                  "false",
 		"conn_learned_cidrs_approval": "false",
-		"tunnels.#":                   strconv.Itoa(len(stateTunnels)),
+		"approved_cidrs.#":            "0",
+		"connection_bgp_send_communities_additive": "false",
+		"connection_bgp_send_communities_block":    "false",
+		"tunnels.#":                                strconv.Itoa(len(stateTunnels)),
 	}
 	for _, tunnel := range stateTunnels {
 		prefix := fmt.Sprintf("tunnels.%d.", tunnelSetHash(tunnel))

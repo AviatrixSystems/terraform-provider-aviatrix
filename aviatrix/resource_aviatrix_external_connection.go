@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"net/netip"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -171,18 +173,21 @@ func resourceAviatrixExternalConnection() *schema.Resource {
 			"bfd_transmit_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "BFD transmit interval in milliseconds.",
 			},
 			"bfd_receive_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "BFD receive interval in milliseconds.",
 			},
 			"bfd_detect_multiplier": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
 				Description: "BFD detect multiplier.",
 			},
@@ -207,6 +212,49 @@ func resourceAviatrixExternalConnection() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether the connection learned CIDRs are approved.",
 			},
+			"approved_cidrs": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Computed:    true,
+				Description: "Set of approved learned CIDRs. Requires 'conn_learned_cidrs_approval' to be true.",
+			},
+			"manual_bgp_advertised_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Manual BGP advertised CIDRs for this connection. Not supported on Edge underlay connections.",
+			},
+			"prepend_as_path": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				Optional:    true,
+				MaxItems:    25,
+				Description: "AS path prepended to routes advertised on this connection. Each AS number must equal the local ASN.",
+			},
+			"connection_bgp_send_communities": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Additional BGP communities sent on this connection, separated by spaces. E.g. \"111:111 444:444\".",
+			},
+			"connection_bgp_send_communities_additive": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Add the communities to the existing ones instead of replacing them.",
+			},
+			"connection_bgp_send_communities_block": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Block advertisement of any BGP communities on this connection.",
+			},
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -216,7 +264,49 @@ func resourceAviatrixExternalConnection() *schema.Resource {
 	}
 }
 
-func marshalExternalConnectionInput(d *schema.ResourceData) *goaviatrix.ExternalConnection {
+// externalConnectionStringSet returns a non-nil slice so that an empty set
+// is sent as [] (clear) rather than null (no change).
+func externalConnectionStringSet(d *schema.ResourceData, key string) []string {
+	v := getStringSet(d, key)
+	if v == nil {
+		return []string{}
+	}
+	return v
+}
+
+func expandExternalConnectionPrependASPath(d *schema.ResourceData) ([]int, error) {
+	asPath := []int{}
+	for _, v := range getStringList(d, "prepend_as_path") {
+		asn, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid AS number %q in 'prepend_as_path': %w", v, err)
+		}
+		asPath = append(asPath, asn)
+	}
+	return asPath, nil
+}
+
+func validateExternalConnectionSendCommunities(d *schema.ResourceData) error {
+	if getBool(d, "connection_bgp_send_communities_block") &&
+		(getString(d, "connection_bgp_send_communities") != "" || getBool(d, "connection_bgp_send_communities_additive")) {
+		return errors.New("'connection_bgp_send_communities' and 'connection_bgp_send_communities_additive' " +
+			"cannot be set when 'connection_bgp_send_communities_block' is true")
+	}
+	return nil
+}
+
+func marshalExternalConnectionInput(d *schema.ResourceData) (*goaviatrix.ExternalConnection, error) {
+	if err := validateExternalConnectionSendCommunities(d); err != nil {
+		return nil, err
+	}
+	if !getBool(d, "conn_learned_cidrs_approval") && len(getStringSet(d, "approved_cidrs")) > 0 {
+		return nil, errors.New("'approved_cidrs' requires 'conn_learned_cidrs_approval' to be true")
+	}
+	prependASPath, err := expandExternalConnectionPrependASPath(d)
+	if err != nil {
+		return nil, err
+	}
+
 	conn := &goaviatrix.ExternalConnection{
 		Name:                     getString(d, "name"),
 		GroupUUID:                getString(d, "group_uuid"),
@@ -235,10 +325,16 @@ func marshalExternalConnectionInput(d *schema.ResourceData) *goaviatrix.External
 		EdgeUnderlay:             getBool(d, "edge_underlay"),
 		BgpLanActivemesh:         getBool(d, "bgp_lan_activemesh"),
 		ConnLearnedCidrsApproval: getBool(d, "conn_learned_cidrs_approval"),
+		ApprovedCidrs:            getStringSet(d, "approved_cidrs"),
+		ManualBgpAdvertisedCidrs: getStringSet(d, "manual_bgp_advertised_cidrs"),
+		PrependAsPath:            prependASPath,
+		BgpSendCommunities:       getString(d, "connection_bgp_send_communities"),
+		BgpSendCommunitiesAdd:    getBool(d, "connection_bgp_send_communities_additive"),
+		BgpSendCommunitiesBlock:  getBool(d, "connection_bgp_send_communities_block"),
 	}
 
 	conn.Tunnels = marshalTunnelSpecs(d)
-	return conn
+	return conn, nil
 }
 
 // tunnelSetHash must cover every user-settable tunnel field: the SDK plans no
@@ -262,6 +358,10 @@ func tunnelSetHash(v any) int {
 }
 
 func resourceAviatrixExternalConnectionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if err := customizeApprovedCidrsDiff(d); err != nil {
+		return err
+	}
+
 	// A flag not yet known at plan time is assumed to allow the configuration.
 	ipv6Enabled := !d.NewValueKnown("ipv6_enabled") || getBool(d, "ipv6_enabled")
 	activeMesh := !d.NewValueKnown("bgp_lan_activemesh") || getBool(d, "bgp_lan_activemesh")
@@ -621,7 +721,10 @@ func tunnelKeyFrom(t goaviatrix.ExternalConnectionTunnel) tunnelKey {
 func resourceAviatrixExternalConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := mustClient(meta)
 
-	conn := marshalExternalConnectionInput(d)
+	conn, err := marshalExternalConnectionInput(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	uuid, err := client.CreateExternalConnection(ctx, conn)
 	if err != nil {
@@ -664,6 +767,16 @@ func resourceAviatrixExternalConnectionRead(ctx context.Context, d *schema.Resou
 	mustSet(d, "edge_underlay", conn.EdgeUnderlay)
 	mustSet(d, "bgp_lan_activemesh", conn.BgpLanActivemesh)
 	mustSet(d, "conn_learned_cidrs_approval", conn.ConnLearnedCidrsApproval)
+	mustSet(d, "approved_cidrs", conn.ApprovedCidrs)
+	mustSet(d, "manual_bgp_advertised_cidrs", conn.ManualBgpAdvertisedCidrs)
+	prependASPath := make([]string, 0, len(conn.PrependAsPath))
+	for _, asn := range conn.PrependAsPath {
+		prependASPath = append(prependASPath, strconv.Itoa(asn))
+	}
+	mustSet(d, "prepend_as_path", prependASPath)
+	mustSet(d, "connection_bgp_send_communities", conn.BgpSendCommunities)
+	mustSet(d, "connection_bgp_send_communities_additive", conn.BgpSendCommunitiesAdd)
+	mustSet(d, "connection_bgp_send_communities_block", conn.BgpSendCommunitiesBlock)
 
 	prior := make(map[tunnelKey]goaviatrix.ExternalConnectionTunnel)
 	if oldTunnels, ok := d.GetOk("tunnels"); ok {
@@ -701,7 +814,9 @@ func resourceAviatrixExternalConnectionUpdate(ctx context.Context, d *schema.Res
 
 	if d.HasChanges("enable_bgp_multihop", "jumbo_frame", "enable_bfd",
 		"bfd_transmit_interval", "bfd_receive_interval", "bfd_detect_multiplier",
-		"conn_learned_cidrs_approval") {
+		"conn_learned_cidrs_approval", "approved_cidrs", "manual_bgp_advertised_cidrs",
+		"prepend_as_path", "connection_bgp_send_communities",
+		"connection_bgp_send_communities_additive", "connection_bgp_send_communities_block") {
 
 		update := &goaviatrix.ExternalConnectionUpdate{}
 		if d.HasChange("enable_bgp_multihop") {
@@ -712,25 +827,51 @@ func resourceAviatrixExternalConnectionUpdate(ctx context.Context, d *schema.Res
 			v := getBool(d, "jumbo_frame")
 			update.JumboFrame = &v
 		}
-		if d.HasChange("enable_bfd") {
-			v := getBool(d, "enable_bfd")
-			update.EnableBfd = &v
-		}
-		if d.HasChange("bfd_transmit_interval") {
-			v := getInt(d, "bfd_transmit_interval")
-			update.BfdTxInterval = &v
-		}
-		if d.HasChange("bfd_receive_interval") {
-			v := getInt(d, "bfd_receive_interval")
-			update.BfdRxInterval = &v
-		}
-		if d.HasChange("bfd_detect_multiplier") {
-			v := getInt(d, "bfd_detect_multiplier")
-			update.BfdDetectMult = &v
+		// Send the BFD settings together; zero intervals are omitted so the
+		// controller keeps the current values or uses its defaults.
+		if d.HasChanges("enable_bfd", "bfd_transmit_interval", "bfd_receive_interval", "bfd_detect_multiplier") {
+			enableBfd := getBool(d, "enable_bfd")
+			update.EnableBfd = &enableBfd
+			if v := getInt(d, "bfd_transmit_interval"); v != 0 {
+				update.BfdTxInterval = &v
+			}
+			if v := getInt(d, "bfd_receive_interval"); v != 0 {
+				update.BfdRxInterval = &v
+			}
+			if v := getInt(d, "bfd_detect_multiplier"); v != 0 {
+				update.BfdDetectMult = &v
+			}
 		}
 		if d.HasChange("conn_learned_cidrs_approval") {
 			v := getBool(d, "conn_learned_cidrs_approval")
 			update.ConnLearnedCidrsApproval = &v
+		}
+		if d.HasChange("approved_cidrs") || externalConnectionApprovalEnabledWithApprovedCidrs(d) {
+			v := externalConnectionStringSet(d, "approved_cidrs")
+			update.ApprovedCidrs = &v
+		}
+		if d.HasChange("manual_bgp_advertised_cidrs") {
+			v := externalConnectionStringSet(d, "manual_bgp_advertised_cidrs")
+			update.ManualBgpAdvertisedCidrs = &v
+		}
+		if d.HasChange("prepend_as_path") {
+			v, err := expandExternalConnectionPrependASPath(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			update.PrependAsPath = &v
+		}
+		if d.HasChanges("connection_bgp_send_communities", "connection_bgp_send_communities_additive",
+			"connection_bgp_send_communities_block") {
+			if err := validateExternalConnectionSendCommunities(d); err != nil {
+				return diag.FromErr(err)
+			}
+			communities := getString(d, "connection_bgp_send_communities")
+			additive := getBool(d, "connection_bgp_send_communities_additive")
+			block := getBool(d, "connection_bgp_send_communities_block")
+			update.BgpSendCommunities = &communities
+			update.BgpSendCommunitiesAdd = &additive
+			update.BgpSendCommunitiesBlock = &block
 		}
 
 		_, err := client.UpdateExternalConnection(ctx, uuid, update)
@@ -786,6 +927,44 @@ func applyTunnelOp(ctx context.Context, client *goaviatrix.Client, uuid string, 
 		return fmt.Errorf("failed to %s tunnel (local_gw_name=%s, remote_device_ip=%s): %w", action, t.LocalGwName, t.RemoteDeviceIP, err)
 	}
 	return nil
+}
+
+// Enabling conn_learned_cidrs_approval makes the controller pre-approve the
+// CIDRs already learned on the connection. A configured approved_cidrs, even an
+// empty one the plan sees as unchanged, must be sent to replace that list.
+func externalConnectionApprovalEnabledWithApprovedCidrs(d *schema.ResourceData) bool {
+	if !d.HasChange("conn_learned_cidrs_approval") || !getBool(d, "conn_learned_cidrs_approval") {
+		return false
+	}
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	return !rawConfig.GetAttr("approved_cidrs").IsNull()
+}
+
+// The controller resets approved_cidrs when conn_learned_cidrs_approval is
+// toggled. Without new-computed the plan keeps the prior set and the SDK
+// replaces the empty set read back after apply with it, leaving stale state.
+func customizeApprovedCidrsDiff(d *schema.ResourceDiff) error {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
+		return nil
+	}
+	approvedCidrs := rawConfig.GetAttr("approved_cidrs")
+	approval := rawConfig.GetAttr("conn_learned_cidrs_approval")
+	if approval.IsKnown() && (approval.IsNull() || approval.False()) &&
+		approvedCidrs.IsWhollyKnown() && !approvedCidrs.IsNull() && approvedCidrs.LengthInt() > 0 {
+		return errors.New("'approved_cidrs' requires 'conn_learned_cidrs_approval' to be true")
+	}
+
+	if d.Id() == "" || !d.HasChange("conn_learned_cidrs_approval") {
+		return nil
+	}
+	if !approvedCidrs.IsNull() {
+		return nil
+	}
+	return d.SetNewComputed("approved_cidrs")
 }
 
 func resourceAviatrixExternalConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
