@@ -10,11 +10,10 @@ description: |-
 
 The **aviatrix_dcf_log_profile** data source provides details about a specific Distributed Cloud Firewall (DCF) log profile.
 
-There are 4 system defined log_profiles that can be referenced:
+There are 3 system defined log_profiles that can be referenced:
 1. start - Log profile for logging session start only
 2. end - Log profile for logging session end only
 3. start/end - Log profile for logging session start and end
-4. LOG_ALL_WITH_TLS - Log profile for logging session start and end, with TLS visibility enabled
 
 
 ## Example Usage
