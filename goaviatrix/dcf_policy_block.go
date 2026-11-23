@@ -2,7 +2,9 @@ package goaviatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 )
 
 type DCFPolicyBlock struct {
@@ -11,7 +13,16 @@ type DCFPolicyBlock struct {
 	SystemResource bool                   `json:"system_resource,omitempty"`
 	UUID           string                 `json:"uuid,omitempty"`
 	AttachTo       string                 `json:"attach_to,omitempty"`
+	ScopeConfig    *DCFPolicyScopeConfig  `json:"scope_config,omitempty"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type DCFPolicyScopeConfig struct {
+	ScopeUUIDs []string `json:"scope_uuids"`
+}
+
+type DCFPolicyScopeConfigPatch struct {
+	ScopeConfig DCFPolicyScopeConfig `json:"scope_config"`
 }
 
 type DCFSubPolicy struct {
@@ -63,6 +74,10 @@ func (c *Client) GetDCFPolicyBlock(ctx context.Context, uuid string) (*DCFPolicy
 	var policyBlock DCFPolicyBlock
 	err := c.GetAPIContext25(ctx, &policyBlock, endpoint, nil)
 	if err != nil {
+		var statusErr StatusError
+		if errors.As(err, &statusErr) && statusErr.StatusCode() == http.StatusNotFound {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
@@ -86,4 +101,18 @@ func (c *Client) UpdateDCFPolicyBlock(ctx context.Context, policyBlock *DCFPolic
 func (c *Client) DeleteDCFPolicyBlock(ctx context.Context, uuid string) error {
 	endpoint := fmt.Sprintf("microseg/policy-list3/%s", uuid)
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
+}
+
+// PatchDCFPolicyScopeConfig replaces the scope configuration of a DCF policy object.
+func (c *Client) PatchDCFPolicyScopeConfig(ctx context.Context, policyUUID string, scopeUUIDs []string) (*DCFPolicyBlock, error) {
+	endpoint := fmt.Sprintf("microseg/policy-list3/%s", policyUUID)
+	request := DCFPolicyScopeConfigPatch{
+		ScopeConfig: DCFPolicyScopeConfig{ScopeUUIDs: scopeUUIDs},
+	}
+
+	var policyBlock DCFPolicyBlock
+	if err := c.PatchAPIContext25(ctx, &policyBlock, endpoint, request); err != nil {
+		return nil, fmt.Errorf("patching DCF policy scope config %q: %w", policyUUID, err)
+	}
+	return &policyBlock, nil
 }

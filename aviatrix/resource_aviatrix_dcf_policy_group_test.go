@@ -8,8 +8,48 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func TestMarshalDCFPolicyBlockInputScopes(t *testing.T) {
+	const scopeUUID = "123e4567-e89b-12d3-a456-426614174000"
+	resourceSchema := resourceAviatrixDCFPolicyGroup().Schema
+
+	withScopes := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"name": "group",
+		"scope_config": []any{map[string]any{
+			"scope_uuids": []any{scopeUUID},
+		}},
+		"ruleset_reference": []any{map[string]any{
+			"priority":    1,
+			"target_uuid": "ruleset-uuid",
+		}},
+	})
+	policyBlock, err := marshalDCFPolicyBlockInput(withScopes)
+	if err != nil {
+		t.Fatalf("marshal policy group with scopes: %v", err)
+	}
+	if policyBlock.ScopeConfig == nil || len(policyBlock.ScopeConfig.ScopeUUIDs) != 1 ||
+		policyBlock.ScopeConfig.ScopeUUIDs[0] != scopeUUID {
+		t.Fatalf("unexpected policy group scope config: %#v", policyBlock.ScopeConfig)
+	}
+
+	withoutScopes := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"name": "group",
+		"ruleset_reference": []any{map[string]any{
+			"priority":    1,
+			"target_uuid": "ruleset-uuid",
+		}},
+	})
+	policyBlock, err = marshalDCFPolicyBlockInput(withoutScopes)
+	if err != nil {
+		t.Fatalf("marshal policy group without scopes: %v", err)
+	}
+	if policyBlock.ScopeConfig != nil {
+		t.Fatalf("scope_config must be omitted when scope_uuids is unset: %#v", policyBlock.ScopeConfig)
+	}
+}
 
 func TestAccAviatrixDcfPolicyGroup_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_DCF_POLICY_GROUP")
@@ -30,6 +70,7 @@ func TestAccAviatrixDcfPolicyGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDcfPolicyGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-dcf-policy-group"),
+					resource.TestCheckResourceAttr(resourceName, "scope_config.0.scope_uuids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ruleset_reference.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_group_reference.0.priority", "1"),
 				),
@@ -44,7 +85,14 @@ func TestAccAviatrixDcfPolicyGroup_basic(t *testing.T) {
 }
 
 func testAccCheckDcfPolicyGroupBasic() string {
-	return `resource "aviatrix_smart_group" "ad1" {
+	return `resource "aviatrix_dcf_policy_scope" "test" {
+	name = "test-policy-scope"
+	included {
+		preset = ["all"]
+	}
+}
+
+resource "aviatrix_smart_group" "ad1" {
 	name = "test-smart_group-1"
 	selector {
 		match_expressions {
@@ -64,6 +112,9 @@ resource "aviatrix_smart_group" "ad2" {
 
 resource "aviatrix_dcf_ruleset" "test_list" {
 	name = "test-dcf-ruleset"
+	scope_config {
+		scope_uuids = [aviatrix_dcf_policy_scope.test.uuid]
+	}
 	rules {
 		name             = "test-distributed-firewalling-rule"
 		action           = "PERMIT"
@@ -94,6 +145,9 @@ resource "aviatrix_dcf_policy_group" "nested_group" {
 
 resource "aviatrix_dcf_policy_group" "test" {
 	name = "test-dcf-policy-group"
+	scope_config {
+		scope_uuids = [aviatrix_dcf_policy_scope.test.uuid]
+	}
 	ruleset_reference {
 		priority = 0
 		target_uuid = aviatrix_dcf_ruleset.test_list.id
@@ -104,6 +158,72 @@ resource "aviatrix_dcf_policy_group" "test" {
 	}
 }
 `
+}
+
+// TestAccAviatrixDcfPolicyGroup_removeScope verifies removing scope_config clears the policy group scopes.
+// Requires a controller that clears scope_config when a policy group PUT omits it.
+func TestAccAviatrixDcfPolicyGroup_removeScope(t *testing.T) {
+	if os.Getenv("SKIP_DCF_POLICY_GROUP") == "yes" {
+		t.Skip("Skipping DCF Policy Group test as SKIP_DCF_POLICY_GROUP is set")
+	}
+	resourceName := "aviatrix_dcf_policy_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return testAccProviderVersionValidation, nil },
+		},
+		CheckDestroy: testAccCheckDcfPolicyGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDcfPolicyGroupWithScope(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfPolicyGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scope_config.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "scope_config.0.scope_uuids.*", "aviatrix_dcf_policy_scope.test", "uuid"),
+				),
+			},
+			{
+				Config: testAccDcfPolicyGroupWithScope(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfPolicyGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scope_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDcfPolicyGroupWithScope(withScope bool) string {
+	scopeConfig := ""
+	if withScope {
+		scopeConfig = `
+	scope_config {
+		scope_uuids = [aviatrix_dcf_policy_scope.test.uuid]
+	}`
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_dcf_policy_scope" "test" {
+	name = "test-policy-group-remove-scope"
+	included {
+		preset = ["all"]
+	}
+}
+
+resource "aviatrix_dcf_ruleset" "test_list" {
+	name = "test-dcf-policy-group-remove-scope-ruleset"
+}
+
+resource "aviatrix_dcf_policy_group" "test" {
+	name = "test-dcf-policy-group-remove-scope"%s
+	ruleset_reference {
+		priority    = 0
+		target_uuid = aviatrix_dcf_ruleset.test_list.id
+	}
+}
+`, scopeConfig)
 }
 
 func testAccCheckDcfPolicyGroupExists(n string) resource.TestCheckFunc {

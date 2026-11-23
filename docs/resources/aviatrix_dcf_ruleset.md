@@ -30,14 +30,49 @@ We need to get the attachment point ID based on its name (the name should be glo
 data "aviatrix_dcf_attachment_point" "tf_before_ui" {
     name = "TERRAFORM_BEFORE_UI_MANAGED"
 }
+```
 
 We can then retrieve the ID of the attachment point and attach the ruleset to it using the attach_to field.
+```hcl
+resource "aviatrix_dcf_policy_scope" "production" {
+    name = "production"
+    included {
+        csps = ["AWS"]
+    }
+}
+
 resource "aviatrix_dcf_ruleset" "base_ruleset" {
     # attach_to field can be used to attach to any other attachment_point in another policy_group
     attach_to = data.aviatrix_dcf_attachment_point.tf_before_ui.id
     name = "example-ruleset"
+    scope_config {
+        scope_uuids = [aviatrix_dcf_policy_scope.production.uuid]
+    }
 }
 ```
+
+`scope_config` narrows this ruleset to the referenced policy scopes. Omit the
+block to inherit the scope chain from ancestor policy groups.
+
+### Scope Narrowing
+
+Each policy scope UUID resolves to that scope's effective enforcement points
+after its included and excluded selectors are evaluated. Multiple
+`scope_uuids` in this `scope_config` block are **unioned (ORed)** to form the
+ruleset's scope level. That level is then **intersected (ANDed)** with every
+configured scope level inherited from the system root and ancestor policy
+groups.
+
+For example, assume the root references scopes `R1` and `R2`, an ancestor
+policy group references `G1`, and this ruleset references `L1` and `L2`. Rules
+in this ruleset apply to:
+
+`(R1 union R2) intersect G1 intersect (L1 union L2)`
+
+Omitting `scope_config` from the ruleset does not make it global or reset the
+scope chain. The ruleset contributes no additional level, so its rules use the
+accumulated ancestor narrowing. If the intersection is empty, the rules apply
+to no enforcement points.
 
 ```hcl
 # Create an Aviatrix Distributed Firewalling Ruleset
@@ -137,6 +172,10 @@ The following arguments are supported:
 
 ### Required
 * `name` - (Required) Name of the ruleset
+
+### Optional
+* `scope_config` - (Optional) DCF policy scope configuration applied at this ruleset level and intersected with configured ancestor levels. Omit this block to add no narrowing at this level and inherit the ancestor scope chain.
+    * `scope_uuids` - (Required) Unordered set of one or more DCF policy scope UUIDs unioned at this level. UUIDs can be obtained from `aviatrix_dcf_policy_scope.<name>.uuid`.
 * `rules` - (Optional) Set of rules.
     * `name` - (Required) Name of the rule.
     * `action` - (Required) Action for the rule. Must be one of PERMIT, DENY, or INTRUSION_DETECTION_PERMIT.

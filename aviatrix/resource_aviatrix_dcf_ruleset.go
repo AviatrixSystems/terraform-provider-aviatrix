@@ -234,6 +234,26 @@ func resourceAviatrixDCFRuleset() *schema.Resource {
 				Optional:    true,
 				Description: "The attachment point to which the ruleset is attached.",
 			},
+			"scope_config": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "DCF policy scopes at this ruleset level. Their effective enforcement points are unioned, then intersected with every configured ancestor scope level. If omitted, the ruleset adds no narrowing and inherits the ancestor scope chain.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"scope_uuids": {
+							Type:        schema.TypeSet,
+							Required:    true,
+							MinItems:    1,
+							Description: "Set of DCF policy scope UUIDs unioned at this ruleset level.",
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsUUID,
+							},
+						},
+					},
+				},
+			},
 			"rules": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -302,6 +322,13 @@ func marshalDCFRulesetInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyList, 
 	attachTo := getString(d, "attach_to")
 
 	policyList.AttachTo = attachTo
+
+	scopeConfig := getList(d, "scope_config")
+	if len(scopeConfig) > 0 {
+		config := mustMap(scopeConfig[0])
+		scopeUUIDs := mustSchemaSet(config["scope_uuids"])
+		policyList.ScopeConfig = &goaviatrix.DCFPolicyScopeConfig{ScopeUUIDs: expandStringSet(scopeUUIDs)}
+	}
 
 	// Set diff in Terraform does not compare each object attributes in details, but instead it just compares the object hash
 	// If the hash is different, the object is removed and a new object matching user input is added, so here oldPoliciesSet and newPoliciesSet are the old and new sets of rules, respectively.
@@ -612,6 +639,13 @@ func resourceAviatrixDCFRulesetRead(ctx context.Context, d *schema.ResourceData,
 
 	if err := d.Set("rules", policies); err != nil {
 		return diag.Errorf("failed to set rules during DCF Ruleset read: %s", err)
+	}
+	if policyList.ScopeConfig == nil || len(policyList.ScopeConfig.ScopeUUIDs) == 0 {
+		mustSet(d, "scope_config", []any{})
+	} else {
+		mustSet(d, "scope_config", []map[string]any{{
+			"scope_uuids": policyList.ScopeConfig.ScopeUUIDs,
+		}})
 	}
 
 	d.SetId(policyList.UUID)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"aviatrix.com/terraform-provider-aviatrix/goaviatrix"
 )
@@ -36,6 +37,27 @@ func resourceAviatrixDCFPolicyGroup() *schema.Resource {
 				Description: "Name of the DCF Policy Group.",
 				Required:    true,
 				Type:        schema.TypeString,
+			},
+			"scope_config": {
+				Description: "DCF policy scopes at this group level. Their effective enforcement points are unioned, then intersected with every configured ancestor scope level. " +
+					"If omitted, this group adds no narrowing and inherits the ancestor scope chain.",
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"scope_uuids": {
+							Description: "Set of DCF policy scope UUIDs unioned at this policy group level.",
+							Type:        schema.TypeSet,
+							Required:    true,
+							MinItems:    1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsUUID,
+							},
+						},
+					},
+				},
 			},
 			"policy_group_reference": {
 				Description: "Static set of DCF Policy Groups.",
@@ -119,6 +141,13 @@ func marshalDCFPolicyBlockInput(d *schema.ResourceData) (*goaviatrix.DCFPolicyBl
 	attachTo := getString(d, "attach_to")
 
 	policyBlock.AttachTo = attachTo
+
+	scopeConfig := getList(d, "scope_config")
+	if len(scopeConfig) > 0 {
+		config := mustMap(scopeConfig[0])
+		scopeUUIDs := mustSchemaSet(config["scope_uuids"])
+		policyBlock.ScopeConfig = &goaviatrix.DCFPolicyScopeConfig{ScopeUUIDs: expandStringSet(scopeUUIDs)}
+	}
 
 	policyBlocks, ok := d.Get("policy_group_reference").(*schema.Set)
 	if !ok {
@@ -280,6 +309,13 @@ func resourceAviatrixDCFPolicyGroupRead(ctx context.Context, d *schema.ResourceD
 	}
 	if err := d.Set("attach_to", policyBlock.AttachTo); err != nil {
 		return diag.Errorf("failed to set attach_to during DCF Policy Group read: %s", err)
+	}
+	if policyBlock.ScopeConfig == nil || len(policyBlock.ScopeConfig.ScopeUUIDs) == 0 {
+		mustSet(d, "scope_config", []any{})
+	} else {
+		mustSet(d, "scope_config", []map[string]any{{
+			"scope_uuids": policyBlock.ScopeConfig.ScopeUUIDs,
+		}})
 	}
 	policyLists, ok := d.Get("ruleset_reference").(*schema.Set)
 	if !ok {

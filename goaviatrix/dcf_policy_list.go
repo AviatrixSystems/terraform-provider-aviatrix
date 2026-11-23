@@ -11,6 +11,7 @@ type DCFPolicyList struct {
 	Policies       []DCFPolicy            `json:"policies"`
 	SystemResource bool                   `json:"system_resource,omitempty"`
 	UUID           string                 `json:"uuid,omitempty"`
+	ScopeConfig    *DCFPolicyScopeConfig  `json:"scope_config,omitempty"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 

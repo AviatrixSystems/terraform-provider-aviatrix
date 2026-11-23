@@ -13,6 +13,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestMarshalDCFRulesetInputScopes(t *testing.T) {
+	const scopeUUID = "123e4567-e89b-12d3-a456-426614174000"
+	resourceSchema := resourceAviatrixDCFRuleset().Schema
+
+	withScopes := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"name": "ruleset",
+		"scope_config": []any{map[string]any{
+			"scope_uuids": []any{scopeUUID},
+		}},
+	})
+	policyList, err := marshalDCFRulesetInput(withScopes)
+	if err != nil {
+		t.Fatalf("marshal ruleset with scopes: %v", err)
+	}
+	if policyList.ScopeConfig == nil || len(policyList.ScopeConfig.ScopeUUIDs) != 1 ||
+		policyList.ScopeConfig.ScopeUUIDs[0] != scopeUUID {
+		t.Fatalf("unexpected ruleset scope config: %#v", policyList.ScopeConfig)
+	}
+
+	withoutScopes := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"name": "ruleset",
+	})
+	policyList, err = marshalDCFRulesetInput(withoutScopes)
+	if err != nil {
+		t.Fatalf("marshal ruleset without scopes: %v", err)
+	}
+	if policyList.ScopeConfig != nil {
+		t.Fatalf("scope_config must be omitted when scope_uuids is unset: %#v", policyList.ScopeConfig)
+	}
+}
+
 // dcfRulesetTestRule returns the raw config value for one rule, so old/new
 // variants used in diff tests only differ in the fields the test cares about.
 func dcfRulesetTestRule(logging bool, lo, hi int) map[string]any {
@@ -633,6 +664,95 @@ resource "aviatrix_dcf_ruleset" "test" {
   }
 }
 `
+}
+
+// TestAccAviatrixDcfRuleset_removeScope verifies removing scope_config clears the ruleset scopes.
+// Requires a controller that clears scope_config when a ruleset PUT omits it.
+func TestAccAviatrixDcfRuleset_removeScope(t *testing.T) {
+	if os.Getenv("SKIP_DCF_RULESET") == "yes" {
+		t.Skip("Skipping DCF Ruleset test as SKIP_DCF_RULESET is set")
+	}
+	resourceName := "aviatrix_dcf_ruleset.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			"aviatrix": func() (*schema.Provider, error) { return testAccProviderVersionValidation, nil },
+		},
+		CheckDestroy: testAccCheckDcfRulesetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDcfRulesetWithScope(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfRulesetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scope_config.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "scope_config.0.scope_uuids.*", "aviatrix_dcf_policy_scope.test", "uuid"),
+				),
+			},
+			{
+				Config: testAccDcfRulesetWithScope(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDcfRulesetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scope_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDcfRulesetWithScope(withScope bool) string {
+	scopeConfig := ""
+	if withScope {
+		scopeConfig = `
+	scope_config {
+		scope_uuids = [aviatrix_dcf_policy_scope.test.uuid]
+	}`
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_dcf_policy_scope" "test" {
+	name = "test-ruleset-remove-scope"
+	included {
+		preset = ["all"]
+	}
+}
+
+resource "aviatrix_smart_group" "ad1" {
+	name = "test-smart_group-1"
+	selector {
+		match_expressions {
+			cidr = "10.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_smart_group" "ad2" {
+	name = "test-smart-group-2"
+	selector {
+		match_expressions {
+			cidr = "11.0.0.0/16"
+		}
+	}
+}
+
+resource "aviatrix_dcf_ruleset" "test" {
+	name = "test-dcf-ruleset"%s
+	rules {
+		name             = "test-distributed-firewalling-rule"
+		action           = "PERMIT"
+		logging          = true
+		priority         = 0
+		protocol         = "TCP"
+		src_smart_groups = [aviatrix_smart_group.ad1.uuid]
+		dst_smart_groups = [aviatrix_smart_group.ad2.uuid]
+		port_ranges {
+			hi = 10
+			lo = 1
+		}
+	}
+}
+`, scopeConfig)
 }
 
 func TestAccAviatrixDcfRuleset_httpFilters(t *testing.T) {

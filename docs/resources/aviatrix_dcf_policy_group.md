@@ -26,13 +26,48 @@ We need to get the attachment point ID based on its name (the name should be glo
 data "aviatrix_dcf_attachment_point" "tf_before_ui" {
     name = "TERRAFORM_BEFORE_UI_MANAGED"
 }
+```
 
 We can then retrieve the ID of the attachment point and attach the ruleset to it using the attach_to field.
+```hcl
+resource "aviatrix_dcf_policy_scope" "production" {
+    name = "production"
+    included {
+        csps = ["AWS"]
+    }
+}
+
 resource "aviatrix_dcf_policy_group" "base_policy_group" {
     attach_to = data.aviatrix_dcf_attachment_point.tf_before_ui.id
     name = "example-policy-group"
+    scope_config {
+        scope_uuids = [aviatrix_dcf_policy_scope.production.uuid]
+    }
 }
 ```
+
+`scope_config` narrows the policies below this group to the referenced policy
+scopes. Omit the block to inherit the scope chain from ancestor policy groups.
+
+### Scope Narrowing
+
+Each policy scope UUID resolves to that scope's effective enforcement points
+after its included and excluded selectors are evaluated. Multiple
+`scope_uuids` in the same `scope_config` block are **unioned (ORed)** to form
+one scope level. Scope levels configured along the policy hierarchy are then
+**intersected (ANDed)** from the system root through each policy group and,
+finally, the ruleset.
+
+For example, assume the root references scopes `R1` and `R2`, this policy group
+references `G1` and `G2`, and a descendant ruleset references `L1`. The rules
+in that ruleset apply to:
+
+`(R1 union R2) intersect (G1 union G2) intersect L1`
+
+Omitting `scope_config` from a group does not create an unrestricted scope or
+reset the chain. That group contributes no additional scope level, so its
+descendants inherit the accumulated ancestor narrowing. If the intersection is
+empty, the descendant rules apply to no enforcement points.
 
 Once you have the base policy group, you can attach more objects to this, either using a ruleset/policy_group reference or attachment_points.
 
@@ -88,6 +123,8 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the DCF Policy Group.
 * `attach_to` - (Optional) Will be set to empty string if not provided. This is the uuid of the parent to which this policy group is attached to.
+* `scope_config` - (Optional) DCF policy scope configuration applied at this policy group level. This level is intersected with configured ancestor and descendant levels. Omit this block to add no narrowing at this level and inherit the ancestor scope chain.
+    * `scope_uuids` - (Required) Unordered set of one or more DCF policy scope UUIDs unioned at this level. UUIDs can be obtained from `aviatrix_dcf_policy_scope.<name>.uuid`.
 * `policy_group_reference` - (Optional) Static set of DCF Policy Groups. Each group supports:
     * `priority` - (Required) Priority of the DCF Policy Group. Type: Integer
     * `target_uuid` - (Required) Target UUID of the DCF Policy Group. Type: String
