@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -694,17 +695,33 @@ func validateDCFRuleWatchEnforcement(ruleName string, watchSet, enforcementSet b
 // CustomizeDiff is used to ensure both watch and enforcement are not set at the same time.
 // Can be removed once watch is removed from Terraform.
 func resourceAviatrixDCFRulesetCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
-	rawRules := d.GetRawConfig().GetAttr("rules")
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return nil
+	}
+	return validateDCFRulesetRawRules(rawConfig.GetAttr("rules"))
+}
+
+// validateDCFRulesetRawRules applies validateDCFRuleWatchEnforcement to each rule
+// in the raw 'rules' config. Values that are not yet known at plan time are skipped.
+func validateDCFRulesetRawRules(rawRules cty.Value) error {
 	if rawRules.IsNull() || !rawRules.IsKnown() {
 		return nil
 	}
 	for it := rawRules.ElementIterator(); it.Next(); {
 		_, val := it.Element()
+		if val.IsNull() || !val.IsKnown() {
+			continue
+		}
 		rawEnforcement := val.GetAttr("enforcement")
 		rawWatch := val.GetAttr("watch")
 		enforcementSet := !rawEnforcement.IsNull() && rawEnforcement.IsKnown()
 		watchSet := !rawWatch.IsNull() && rawWatch.IsKnown()
-		if err := validateDCFRuleWatchEnforcement(val.GetAttr("name").AsString(), watchSet, enforcementSet); err != nil {
+		ruleName := "<unknown>"
+		if rawName := val.GetAttr("name"); !rawName.IsNull() && rawName.IsKnown() {
+			ruleName = rawName.AsString()
+		}
+		if err := validateDCFRuleWatchEnforcement(ruleName, watchSet, enforcementSet); err != nil {
 			return err
 		}
 	}

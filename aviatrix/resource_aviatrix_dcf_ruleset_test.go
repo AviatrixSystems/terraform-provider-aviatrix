@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -515,6 +516,64 @@ func TestDcfRulesetCustomizeDiff_RejectsBothWatchAndEnforcement(t *testing.T) {
 	}
 	if err := validateDCFRuleWatchEnforcement("test-rule", false, false); err != nil {
 		t.Errorf("expected no error when neither is set, got: %v", err)
+	}
+}
+
+// Verify the raw-config rule validation does not panic when values are unknown at plan time,
+// e.g. a rule name interpolated from another resource's computed attribute.
+func TestValidateDCFRulesetRawRules(t *testing.T) {
+	rule := func(name, enforcement, watch cty.Value) cty.Value {
+		return cty.ObjectVal(map[string]cty.Value{"name": name, "enforcement": enforcement, "watch": watch})
+	}
+	ruleType := rule(cty.StringVal(""), cty.StringVal(""), cty.False).Type()
+	nullStr := cty.NullVal(cty.String)
+	nullBool := cty.NullVal(cty.Bool)
+
+	tests := []struct {
+		name      string
+		rules     cty.Value
+		wantError string
+	}{
+		{
+			name:  "unknown name, valid rule",
+			rules: cty.SetVal([]cty.Value{rule(cty.UnknownVal(cty.String), cty.StringVal("MONITOR"), nullBool)}),
+		},
+		{
+			name:      "unknown name, both watch and enforcement set",
+			rules:     cty.SetVal([]cty.Value{rule(cty.UnknownVal(cty.String), cty.StringVal("MONITOR"), cty.True)}),
+			wantError: `rule "<unknown>"`,
+		},
+		{
+			name:      "known name, both watch and enforcement set",
+			rules:     cty.SetVal([]cty.Value{rule(cty.StringVal("r1"), cty.StringVal("ENFORCE"), cty.False)}),
+			wantError: `rule "r1"`,
+		},
+		{
+			name:  "known name, only watch set",
+			rules: cty.SetVal([]cty.Value{rule(cty.StringVal("r1"), nullStr, cty.True)}),
+		},
+		{
+			name:  "unknown rules set",
+			rules: cty.UnknownVal(cty.Set(ruleType)),
+		},
+		{
+			name:  "null rules set",
+			rules: cty.NullVal(cty.Set(ruleType)),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateDCFRulesetRawRules(tt.rules)
+			if tt.wantError == "" {
+				if err != nil {
+					t.Errorf("expected no error, got: %v", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.wantError) {
+				t.Errorf("expected error containing %q, got: %v", tt.wantError, err)
+			}
+		})
 	}
 }
 
